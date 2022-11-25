@@ -551,18 +551,17 @@ export class WebpackCompilerService
 			path.join(platformData.appDestinationDirectoryPath, "app", asset)
 		);
 
-		// console.log({ staleFiles });
-
 		// extract last hash from emitted filenames
 		const lastHash = (() => {
-			const fileWithLastHash = files.find((fileName: string) =>
+			const absoluteFileNameWithLastHash = files.find((fileName: string) =>
 				fileName.endsWith("hot-update.js")
 			);
-
-			if (!fileWithLastHash) {
+			
+			if (!absoluteFileNameWithLastHash) {
 				return null;
 			}
-			const matches = fileWithLastHash.match(/\.(.+).hot-update\.js/);
+			const fileNameWithLastHash = path.basename(absoluteFileNameWithLastHash);
+			const matches = fileNameWithLastHash.match(/\.(.+).hot-update\.js/);
 
 			if (matches) {
 				return matches[1];
