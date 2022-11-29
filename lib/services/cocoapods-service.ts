@@ -20,6 +20,7 @@ import {
 	ISpawnResult,
 } from "../common/declarations";
 import { injector } from "../common/yok";
+import { XcodeSelectService } from "../common/services/xcode-select-service";
 
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
@@ -32,7 +33,8 @@ export class CocoaPodsService implements ICocoaPodsService {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $config: IConfiguration,
-		private $xcconfigService: IXcconfigService
+		private $xcconfigService: IXcconfigService,
+		private $xcodeSelectService: XcodeSelectService
 	) {
 		this.getCocoaPodsFromPodfile = _.memoize(
 			this._getCocoaPodsFromPodfile,
@@ -179,13 +181,17 @@ post_install do |installer|
 end`.trim();
 			this.$fs.writeFile(exclusionsPodfile, exclusions);
 		}
-
-		await this.applyPodfileToProject(
-			"NativeScript-CLI-Architecture-Exclusions",
-			exclusionsPodfile,
-			projectData,
-			platformData
-		);
+		const xcodeVersionData = await this.$xcodeSelectService.getXcodeVersion();
+		if (+xcodeVersionData.major < 13) {
+			// apply EXCLUDED_ARCHS workaround on XCode <13
+			// XCode 13+ no longer requires the workaround
+			await this.applyPodfileToProject(
+				"NativeScript-CLI-Architecture-Exclusions",
+				exclusionsPodfile,
+				projectData,
+				platformData
+			);
+		}
 
 		// clean up
 		this.$fs.deleteFile(exclusionsPodfile);
