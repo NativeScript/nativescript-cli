@@ -70,7 +70,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			versions: true,
 		});
 
-		return semver.maxSatisfying(data, versionRange);
+		return semver.maxSatisfying(data.versions || data, versionRange);
 	}
 
 	public async getMaxSatisfyingVersionSafe(
