@@ -158,6 +158,7 @@ export class ITMSConstants {
 	};
 	static iTMSExecutableName = "iTMSTransporter";
 	static iTMSDirectoryName = "itms";
+	static altoolExecutableName = "altool";
 }
 
 class ItunesConnectApplicationTypesClass
