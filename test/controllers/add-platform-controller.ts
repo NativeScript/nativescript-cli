@@ -5,10 +5,10 @@ import { assert } from "chai";
 import { format } from "util";
 import * as _ from "lodash";
 import { AddPlaformErrors } from "../../lib/constants";
-import { PackageManager } from "../../lib/package-manager";
-import { NodePackageManager } from "../../lib/node-package-manager";
-import { YarnPackageManager } from "../../lib/yarn-package-manager";
-import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
+import { PackageManager } from "../../lib/package-managers";
+import { NPM } from "../../lib/package-managers/npm";
+import { PNPM } from "../../lib/package-managers/pnpm";
+import { Yarn } from "../../lib/package-managers/yarn";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 
 let actualMessage: string = null;
@@ -27,9 +27,9 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 		trackEventActionInGoogleAnalytics: () => ({}),
 	});
 	injector.register("packageManager", PackageManager);
-	injector.register("npm", NodePackageManager);
-	injector.register("yarn", YarnPackageManager);
-	injector.register("pnpm", PnpmPackageManager);
+	injector.register("npm", NPM);
+	injector.register("yarn", Yarn);
+	injector.register("pnpm", PNPM);
 	injector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});

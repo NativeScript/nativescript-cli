@@ -1,13 +1,13 @@
 import * as path from "path";
 import * as _ from "lodash";
 import { BasePackageManager } from "./base-package-manager";
-import { exported } from "./common/decorators";
-import { CACACHE_DIRECTORY_NAME } from "./constants";
+import { exported } from "../common/decorators";
+import { CACACHE_DIRECTORY_NAME } from "../constants";
 import {
 	INodePackageManagerInstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
@@ -15,10 +15,10 @@ import {
 	IHostInfo,
 	Server,
 	IDictionary,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
-export class PnpmPackageManager extends BasePackageManager {
+export class PNPM extends BasePackageManager {
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -149,4 +149,4 @@ export class PnpmPackageManager extends BasePackageManager {
 	}
 }
 
-injector.register("pnpm", PnpmPackageManager);
+injector.register("pnpm", PNPM);

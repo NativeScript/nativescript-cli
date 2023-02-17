@@ -1,12 +1,12 @@
 import * as path from "path";
 import * as _ from "lodash";
 import { BasePackageManager } from "./base-package-manager";
-import { exported } from "./common/decorators";
+import { exported } from "../common/decorators";
 import {
 	INodePackageManagerInstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
@@ -14,10 +14,10 @@ import {
 	IHostInfo,
 	Server,
 	IDictionary,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
-export class YarnPackageManager extends BasePackageManager {
+export class Yarn extends BasePackageManager {
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -147,4 +147,4 @@ export class YarnPackageManager extends BasePackageManager {
 	}
 }
 
-injector.register("yarn", YarnPackageManager);
+injector.register("yarn", Yarn);

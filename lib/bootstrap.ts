@@ -215,10 +215,10 @@ injector.require(
 
 injector.requireCommand("setup|*", "./commands/setup");
 
-injector.requirePublic("packageManager", "./package-manager");
-injector.requirePublic("npm", "./node-package-manager");
-injector.requirePublic("yarn", "./yarn-package-manager");
-injector.requirePublic("pnpm", "./pnpm-package-manager");
+injector.requirePublic("packageManager", "./package-managers/index");
+injector.requirePublic("npm", "./package-managers/npm");
+injector.requirePublic("pnpm", "./package-managers/pnpm");
+injector.requirePublic("yarn", "./package-managers/yarn");
 injector.requireCommand(
 	"package-manager|*get",
 	"./commands/package-manager-get"
@@ -230,7 +230,7 @@ injector.requireCommand(
 
 injector.require(
 	"packageInstallationManager",
-	"./package-installation-manager"
+	"./package-managers/package-installation-manager"
 );
 
 injector.require("deviceLogProvider", "./common/mobile/device-log-provider");

@@ -19,7 +19,8 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 		projectData,
 	}: IPrepareNodeModulesData): Promise<void> {
 		let dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(
-			projectData.projectDir, projectData.ignoredDependencies
+			projectData.projectDir,
+			projectData.ignoredDependencies
 		);
 		dependencies = await platformData.platformProjectService.beforePrepareAllPlugins(
 			projectData,

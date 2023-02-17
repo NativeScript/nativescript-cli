@@ -1,10 +1,10 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
-import { PackageManager } from "../lib/package-manager";
-import { PackageInstallationManager } from "../lib/package-installation-manager";
-import { NodePackageManager } from "../lib/node-package-manager";
-import { YarnPackageManager } from "../lib/yarn-package-manager";
-import { PnpmPackageManager } from "../lib/pnpm-package-manager";
+import { PackageManager } from "../lib/package-managers";
+import { PackageInstallationManager } from "../lib/package-managers/package-installation-manager";
+import { NPM } from "../lib/package-managers/npm";
+import { PNPM } from "../lib/package-managers/pnpm";
+import { Yarn } from "../lib/package-managers/yarn";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
 import { Options } from "../lib/options";
@@ -68,13 +68,13 @@ function createTestInjector() {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
 	testInjector.register("packageManager", PackageManager);
+	testInjector.register("npm", NPM);
+	testInjector.register("yarn", Yarn);
+	testInjector.register("pnpm", PNPM);
 	testInjector.register(
 		"projectConfigService",
 		stubs.PackageInstallationManagerStub
 	);
-	testInjector.register("npm", NodePackageManager);
-	testInjector.register("yarn", YarnPackageManager);
-	testInjector.register("pnpm", PnpmPackageManager);
 	testInjector.register("fs", FileSystem);
 	// const fileSystemStub = new stubs.FileSystemStub();
 	// fileSystemStub.exists = (fileName: string) => {

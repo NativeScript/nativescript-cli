@@ -49,9 +49,7 @@ import {
 	IDeviceDebugService,
 	IDebugResultInfo,
 } from "../lib/definitions/debug";
-import {
-	IDependencyData,
-} from "../lib/declarations";
+import { IDependencyData } from "../lib/declarations";
 import { IBuildData } from "../lib/definitions/build";
 import {
 	IFileSystem,

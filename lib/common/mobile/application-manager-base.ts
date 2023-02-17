@@ -122,9 +122,7 @@ export abstract class ApplicationManagerBase
 		appIdentifier?: string,
 		buildData?: IBuildData
 	): Promise<void>;
-	public abstract uninstallApplication(
-		appIdentifier: string
-	): Promise<void>;
+	public abstract uninstallApplication(appIdentifier: string): Promise<void>;
 	public abstract startApplication(
 		appData: Mobile.IApplicationData
 	): Promise<void>;

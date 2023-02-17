@@ -304,8 +304,10 @@ export class HooksService implements IHooksService {
 
 	private getCustomHooksByName(hookName: string): IHook[] {
 		const hooks: IHook[] = [];
-		const customHooks: INsConfigHooks[] =
-			this.$projectConfigService.getValue("hooks", []);
+		const customHooks: INsConfigHooks[] = this.$projectConfigService.getValue(
+			"hooks",
+			[]
+		);
 
 		for (const cHook of customHooks) {
 			if (cHook.type === hookName) {
