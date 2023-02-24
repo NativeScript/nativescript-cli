@@ -132,9 +132,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 		this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
 
-		const password = data.user.isTwoFactorAuthenticationEnabled
-			? data.applicationSpecificPassword
-			: data.credentials.password;
+		const password = data.applicationSpecificPassword;
 
 		const args = [
 			"--upload-app",
