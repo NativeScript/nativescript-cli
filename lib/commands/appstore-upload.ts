@@ -48,28 +48,25 @@ export class PublishIOS implements ICommand {
 			args[0] ||
 			(await this.$prompter.getString("Apple ID", { allowEmpty: false }));
 
-		let password;
-		let user;
-		if (true) {
-			password =
-				args[1] || (await this.$prompter.getPassword("Apple ID password"));
+		const password =
+			args[1] || (await this.$prompter.getPassword("Apple ID password"));
 
-			user = await this.$applePortalSessionService.createUserSession(
-				{ username, password },
-				{
-					applicationSpecificPassword: this.$options
-						.appleApplicationSpecificPassword,
-					sessionBase64: this.$options.appleSessionBase64,
-					requireInteractiveConsole: true,
-					requireApplicationSpecificPassword: true,
-				}
-			);
-			if (!user.areCredentialsValid) {
-				this.$errors.fail(
-					`Invalid username and password combination. Used '${username}' as the username.`
-				);
+		const user = await this.$applePortalSessionService.createUserSession(
+			{ username, password },
+			{
+				applicationSpecificPassword: this.$options
+					.appleApplicationSpecificPassword,
+				sessionBase64: this.$options.appleSessionBase64,
+				requireInteractiveConsole: true,
+				requireApplicationSpecificPassword: true,
 			}
+		);
+		if (!user.areCredentialsValid) {
+			this.$errors.fail(
+				`Invalid username and password combination. Used '${username}' as the username.`
+			);
 		}
+
 		const mobileProvisionIdentifier = this.$options.provision ?? args[2];
 
 		let ipaFilePath = this.$options.ipa

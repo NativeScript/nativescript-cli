@@ -151,7 +151,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			args.push("--asc-provider");
 			args.push(data.teamId);
 		}
-		console.log("****Verbose loggin is ", data.verboseLogging);
+
 		if (data.verboseLogging) {
 			args.push("--verbose");
 		}
