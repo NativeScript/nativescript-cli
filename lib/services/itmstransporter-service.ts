@@ -33,16 +33,38 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		return this.$injector.resolve("projectData");
 	}
 
-	public async validate(): Promise<void> {
+	public async validate(appSpecificPassword?: string): Promise<void> {
 		const itmsTransporterPath = await this.getITMSTransporterPath();
-		if (!this.$fs.exists(itmsTransporterPath)) {
-			this.$errors.fail(
-				"iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged."
-			);
+		var version = await this.$xcodeSelectService.getXcodeVersion();
+		if (+version.major < 14) {
+			if (!this.$fs.exists(itmsTransporterPath)) {
+				this.$errors.fail(
+					"iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged."
+				);
+			}
+		} else {
+			const altoolPath = await this.getAltoolPath();
+			if (!this.$fs.exists(altoolPath)) {
+				this.$errors.fail(
+					"altool not found on this machine - make sure your Xcode installation is not damaged."
+				);
+			}
+			if (!appSpecificPassword) {
+				this.$errors.fail(
+					"An app-specific password is required from xCode versions 14 and above, Use the --appleApplicationSpecificPassword to supply it."
+				);
+			}
 		}
 	}
-
 	public async upload(data: IITMSData): Promise<void> {
+		var version = await this.$xcodeSelectService.getXcodeVersion();
+		if (+version.major < 14) {
+			await this.upload_iTMSTransporter(data);
+		} else {
+			await this.upload_altool(data);
+		}
+	}
+	public async upload_iTMSTransporter(data: IITMSData): Promise<void> {
 		const itmsTransporterPath = await this.getITMSTransporterPath();
 		const ipaFileName = "app.ipa";
 		const itmsDirectory = await this.$tempService.mkdirSync("itms-");
@@ -97,6 +119,46 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			"close",
 			{ stdio: "inherit" }
 		);
+	}
+
+	public async upload_altool(data: IITMSData): Promise<void> {
+		const altoolPath = await this.getAltoolPath();
+		const ipaFileName = "app.ipa";
+		const itmsDirectory = await this.$tempService.mkdirSync("itms-");
+		const innerDirectory = path.join(itmsDirectory, "mybundle.itmsp");
+		const ipaFileLocation = path.join(innerDirectory, ipaFileName);
+
+		this.$fs.createDirectory(innerDirectory);
+
+		this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
+
+		const password = data.applicationSpecificPassword;
+
+		const args = [
+			"--upload-app",
+			"-t",
+			"ios",
+			"-f",
+			ipaFileLocation,
+			"-u",
+			data.credentials.username,
+			"-p",
+			password,
+			"-k 100000",
+		];
+
+		if (data.teamId) {
+			args.push("--asc-provider");
+			args.push(data.teamId);
+		}
+		console.log("****Verbose loggin is ", data.verboseLogging);
+		if (data.verboseLogging) {
+			args.push("--verbose");
+		}
+
+		await this.$childProcess.spawnFromEvent(altoolPath, args, "close", {
+			stdio: "inherit",
+		});
 	}
 
 	private async getBundleIdentifier(data: IITMSData): Promise<string> {
@@ -154,6 +216,22 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		}
 
 		return this.$projectData.projectIdentifiers.ios;
+	}
+
+	@cache()
+	private async getAltoolPath(): Promise<string> {
+		const xcodePath = await this.$xcodeSelectService.getContentsDirectoryPath();
+		let itmsTransporterPath = path.join(
+			xcodePath,
+			"..",
+			"Contents",
+			"Developer",
+			"usr",
+			"bin",
+			ITMSConstants.altoolExecutableName
+		);
+
+		return itmsTransporterPath;
 	}
 
 	@cache()
