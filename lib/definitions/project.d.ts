@@ -315,13 +315,50 @@ interface IProjectCleanupService {
 	 * Clean multiple paths
 	 * @param {string[]} pathsToClean
 	 */
-	clean(pathsToClean: string[]): Promise<boolean>;
+	clean(
+		pathsToClean: string[],
+		options?: IProjectCleanupOptions
+	): Promise<IProjectCleanupResult>;
 
 	/**
 	 * Clean a single path
 	 * @param {string} pathToClean
 	 */
-	cleanPath(pathToClean: string): Promise<boolean>;
+	cleanPath(
+		pathToClean: string,
+		options?: IProjectCleanupOptions
+	): Promise<IProjectCleanupResult>;
+}
+
+interface IProjectCleanupOptions {
+	/**
+	 * When set, the cleanup service will calculate the size of the cleaned up files.
+	 */
+	stats?: boolean;
+	/**
+	 * When set, the cleanup service will not delete any files.
+	 */
+	dryRun?: boolean;
+	/**
+	 * When set, the cleanup service will not print any messages to the console.
+	 */
+	silent?: boolean;
+}
+
+interface IProjectCleanupResult {
+	ok: boolean;
+	/**
+	 * When stats is set to true, this will contain a map of the cleaned up paths and their size.
+	 */
+	stats?: Map<string, number>;
+}
+
+interface IProjectPathCleanupResult {
+	ok: boolean;
+	/**
+	 * When stats is set to true, this will contain the size of the cleaned path in bytes.
+	 */
+	size?: number;
 }
 
 interface IBackup {

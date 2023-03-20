@@ -642,6 +642,8 @@ interface IOptions
 	skipRefresh: boolean;
 	file: string;
 	analyticsClient: string;
+	analyticsLogFile: string;
+	disableAnalytics: boolean;
 	force: boolean;
 	sdk: string;
 	template: string;
@@ -683,13 +685,13 @@ interface IOptions
 	background: string;
 	hmr: boolean;
 	link: boolean;
-	analyticsLogFile: string;
 	performance: Object;
 	cleanupLogFile: string;
 	appleApplicationSpecificPassword: string;
 	appleSessionBase64: string;
 	markingMode: boolean;
 	git: boolean;
+	dryRun: boolean;
 }
 
 interface IEnvOptions {

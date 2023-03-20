@@ -62,7 +62,11 @@ export class CommandsService implements ICommandsService {
 		this.commands.push({ commandName, commandArguments });
 		const command = this.$injector.resolveCommand(commandName);
 		if (command) {
-			if (!this.$staticConfig.disableAnalytics && !command.disableAnalytics) {
+			if (
+				!this.$staticConfig.disableAnalytics &&
+				!command.disableAnalytics &&
+				!this.$options.disableAnalytics
+			) {
 				const analyticsService = this.$injector.resolve<IAnalyticsService>(
 					"analyticsService"
 				); // This should be resolved here due to cyclic dependency

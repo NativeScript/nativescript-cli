@@ -19,6 +19,10 @@ import { injector } from "../common/yok";
 import { PackageVersion } from "../constants";
 import { IDependency } from "../definitions/migrate";
 import { IPluginsService } from "../definitions/plugins";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerService,
+} from "../definitions/terminal-spinner-service";
 
 export class UpdateController
 	extends UpdateControllerBase

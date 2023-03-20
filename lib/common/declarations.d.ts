@@ -339,6 +339,13 @@ interface IFileSystem {
 	getFileSize(path: string): number;
 
 	/**
+	 * Returns the size of specified path (recurses into all sub-directories if the path is a directory).
+	 * @param {string} path Path to file or directory.
+	 * @returns {number} File size in bytes.
+	 */
+	getSize(path: string): number;
+
+	/**
 	 * Change file timestamps of the file referenced by the supplied path.
 	 * @param {string} path  File path
 	 * @param {Date}   atime Access time
