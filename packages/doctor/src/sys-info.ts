@@ -4,9 +4,8 @@ import { HostInfo } from "./host-info";
 import { ExecOptions } from "child_process";
 import { WinReg } from "./winreg";
 import { Helpers } from "./helpers";
-import { platform, EOL } from "os";
+import { platform, EOL, homedir } from "os";
 import * as path from "path";
-import * as osenv from "osenv";
 import * as temp from "temp";
 import * as semver from "semver";
 import { Constants } from "./constants";
@@ -399,7 +398,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			() => this.isCocoaPodsWorkingCorrectlyCache,
 			async (): Promise<boolean> => {
 				if (this.hostInfo.isDarwin) {
-					if (!this.fileSystem.exists(path.join(osenv.home(), ".cocoapods"))) {
+					if (!this.fileSystem.exists(path.join(homedir(), ".cocoapods"))) {
 						return true;
 					}
 					temp.track();
@@ -685,7 +684,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 				// os stuff
 				result.platform = platform();
-				result.shell = osenv.shell();
+				result.shell = process.env.SHELL;
 				result.os = await this.getOs();
 				result.procArch = process.arch;
 				result.nodeVer = await this.getNodeVersion();
