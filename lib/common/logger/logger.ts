@@ -2,7 +2,7 @@ import * as log4js from "log4js";
 import * as util from "util";
 import * as readline from "readline";
 import * as stream from "stream";
-import * as marked from "marked";
+import { marked } from "marked";
 import * as _ from "lodash";
 import { cache } from "../decorators";
 import { layout } from "./layouts/cli-layout";
