@@ -36,6 +36,7 @@ import {
 	resolvePackagePath,
 	resolvePackageJSONPath,
 } from "../helpers/package-path-helper";
+import { color } from "../color";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -551,8 +552,9 @@ export class PluginsService implements IPluginsService {
 								(d) => d.depth
 							);
 							this.$logger.info(
-								`CLI will use only the native code from '${selectedPackage.directory}'.`
-									.green
+								color.green(
+									`CLI will use only the native code from '${selectedPackage.directory}'.`
+								)
 							);
 							_.each(dependencyOccurrences, (dependency) => {
 								if (dependency !== selectedPackage) {

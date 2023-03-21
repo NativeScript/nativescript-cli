@@ -20,6 +20,7 @@ import {
 } from "../../definitions/project";
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
+import { color } from "../../color";
 
 class Hook implements IHook {
 	constructor(public name: string, public fullPath: string) {}
@@ -195,9 +196,9 @@ export class HooksService implements IHooksService {
 				this.$logger.warn(
 					`${
 						hook.fullPath
-					} will NOT be executed because it has invalid arguments - ${
-						invalidArguments.join(", ").grey
-					}.`
+					} will NOT be executed because it has invalid arguments - ${color.grey(
+						invalidArguments.join(", ")
+					)}.`
 				);
 				return;
 			}
@@ -304,8 +305,10 @@ export class HooksService implements IHooksService {
 
 	private getCustomHooksByName(hookName: string): IHook[] {
 		const hooks: IHook[] = [];
-		const customHooks: INsConfigHooks[] =
-			this.$projectConfigService.getValue("hooks", []);
+		const customHooks: INsConfigHooks[] = this.$projectConfigService.getValue(
+			"hooks",
+			[]
+		);
 
 		for (const cHook of customHooks) {
 			if (cHook.type === hookName) {

@@ -2,6 +2,7 @@ import { IProjectCleanupService } from "../definitions/project";
 import { IFileSystem, IProjectHelper } from "../common/declarations";
 import { injector } from "../common/yok";
 import * as path from "path";
+import { color } from "../color";
 
 export class ProjectCleanupService implements IProjectCleanupService {
 	private spinner: ITerminalSpinner;
@@ -43,10 +44,9 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		}
 
 		const filePath = path.resolve(this.$projectHelper.projectDir, pathToClean);
-		const displayPath = `${path.relative(
-			this.$projectHelper.projectDir,
-			filePath
-		)}`.yellow;
+		const displayPath = color.yellow(
+			`${path.relative(this.$projectHelper.projectDir, filePath)}`
+		);
 
 		this.$logger.trace(`Trying to clean '${filePath}'`);
 
@@ -67,7 +67,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			if (success) {
 				this.spinner.succeed(`Cleaned ${fileType} ${displayPath}`);
 			} else {
-				const message = `Failed to Clean ${fileType}`.red;
+				const message = color.red(`Failed to Clean ${fileType}`);
 				this.spinner.fail(`${message} ${displayPath}`);
 			}
 			return success;

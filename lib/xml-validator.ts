@@ -4,6 +4,7 @@ import * as constants from "./constants";
 import { IXmlValidator } from "./declarations";
 import { IFileSystem } from "./common/declarations";
 import { injector } from "./common/yok";
+import { color } from "./color";
 
 export class XmlValidator implements IXmlValidator {
 	constructor(private $fs: IFileSystem, private $logger: ILogger) {}
@@ -17,8 +18,8 @@ export class XmlValidator implements IXmlValidator {
 				const hasErrors = !!errorOutput;
 				xmlHasErrors = xmlHasErrors || hasErrors;
 				if (hasErrors) {
-					this.$logger.info(`${file} has syntax errors.`.red.bold);
-					this.$logger.info(errorOutput.yellow);
+					this.$logger.info(color.red.bold(`${file} has syntax errors.`));
+					this.$logger.info(color.yellow(errorOutput));
 				}
 			});
 		return !xmlHasErrors;

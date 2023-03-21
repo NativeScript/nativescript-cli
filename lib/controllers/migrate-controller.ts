@@ -41,6 +41,7 @@ import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 import * as temp from "temp";
+import { color } from "../color";
 
 // const wait: (ms: number) => Promise<void> = (ms: number = 1000) =>
 // 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -418,13 +419,15 @@ export class MigrateController
 		if (!this.$fs.exists(newConfigPath)) {
 			// migrate configs
 			this.spinner.info(
-				`Migrating project to use ${"nativescript.config.ts".green}`
+				`Migrating project to use ${color.green("nativescript.config.ts")}`
 			);
 
 			await this.migrateConfigs(projectDir);
 
 			this.spinner.succeed(
-				`Project has been migrated to use ${"nativescript.config.ts".green}`
+				`Project has been migrated to use ${color.green(
+					"nativescript.config.ts"
+				)}`
 			);
 		}
 
@@ -451,7 +454,7 @@ export class MigrateController
 		// update tsconfig
 		const tsConfigPath = path.resolve(projectDir, "tsconfig.json");
 		if (this.$fs.exists(tsConfigPath)) {
-			this.spinner.info(`Updating ${"tsconfig.json".yellow}`);
+			this.spinner.info(`Updating ${color.yellow("tsconfig.json")}`);
 
 			await this.migrateTSConfig({
 				tsConfigPath,
@@ -459,7 +462,7 @@ export class MigrateController
 				polyfillsPath,
 			});
 
-			this.spinner.succeed(`Updated ${"tsconfig.json".yellow}`);
+			this.spinner.succeed(`Updated ${color.yellow("tsconfig.json")}`);
 		}
 
 		await this.migrateWebpack5(projectDir, projectData);
@@ -670,7 +673,7 @@ export class MigrateController
 				this.$errors.fail("Not in Git repo.");
 				return false;
 			}
-			this.spinner.warn(`Not in Git repo, but using ${"--force".red}`);
+			this.spinner.warn(`Not in Git repo, but using ${color.red("--force")}`);
 			return true;
 		}
 
@@ -683,7 +686,9 @@ export class MigrateController
 				this.$errors.fail("Git branch not clean.");
 				return false;
 			}
-			this.spinner.warn(`Git branch not clean, but using ${"--force".red}`);
+			this.spinner.warn(
+				`Git branch not clean, but using ${color.red("--force")}`
+			);
 			return true;
 		}
 
@@ -951,9 +956,9 @@ export class MigrateController
 
 			this.spinner.clear();
 			this.$logger.info(
-				`  - ${dependency.packageName.yellow} ${
-					`${version}`.green
-				} has been added`
+				`  - ${color.yellow(dependency.packageName)} ${color.green(
+					version
+				)} has been added`
 			);
 			this.spinner.render();
 
@@ -998,9 +1003,11 @@ export class MigrateController
 
 			this.spinner.clear();
 			this.$logger.info(
-				`  - ${dependency.packageName.yellow} has been replaced with ${
-					replacementDep.packageName.cyan
-				} ${`${version}`.green}`
+				`  - ${color.yellow(
+					dependency.packageName
+				)} has been replaced with ${color.cyan(
+					replacementDep.packageName
+				)} ${color.green(version)}`
 			);
 			this.spinner.render();
 
@@ -1035,9 +1042,9 @@ export class MigrateController
 
 		this.spinner.clear();
 		this.$logger.info(
-			`  - ${dependency.packageName.yellow} has been updated to ${
-				`${version}`.green
-			}`
+			`  - ${color.yellow(
+				dependency.packageName
+			)} has been updated to ${color.green(version)}`
 		);
 		this.spinner.render();
 	}
@@ -1288,7 +1295,7 @@ export class MigrateController
 		// clean up temp project
 		this.$fs.deleteDirectory(tempDir);
 
-		this.spinner.succeed(`Created fresh ${"polyfills.ts".cyan}`);
+		this.spinner.succeed(`Created fresh ${color.cyan("polyfills.ts")}`);
 
 		return "./" + path.relative(projectDir, possiblePaths[0]);
 	}
@@ -1536,7 +1543,7 @@ export class MigrateController
 
 			if (webpackConfigContent.includes("webpack.init(")) {
 				this.spinner.succeed(
-					`Project already using new ${"webpack.config.js".yellow}`
+					`Project already using new ${color.yellow("webpack.config.js")}`
 				);
 				return;
 			}
@@ -1544,7 +1551,7 @@ export class MigrateController
 		// clean old config before generating new one
 		await this.$projectCleanupService.clean(["webpack.config.js"]);
 
-		this.spinner.info(`Initializing new ${"webpack.config.js".yellow}`);
+		this.spinner.info(`Initializing new ${color.yellow("webpack.config.js")}`);
 		const { desiredVersion: webpackVersion } = this.migrationDependencies.find(
 			(dep) => dep.packageName === constants.WEBPACK_PLUGIN_NAME
 		);
@@ -1561,9 +1568,13 @@ export class MigrateController
 				"nativescript-webpack",
 				"init",
 			]);
-			this.spinner.succeed(`Initialized new ${"webpack.config.js".yellow}`);
+			this.spinner.succeed(
+				`Initialized new ${color.yellow("webpack.config.js")}`
+			);
 		} catch (err) {
-			this.spinner.fail(`Failed to initialize ${"webpack.config.js".yellow}`);
+			this.spinner.fail(
+				`Failed to initialize ${color.yellow("webpack.config.js")}`
+			);
 			this.$logger.trace(
 				"Failed to initialize webpack.config.js. Error is: ",
 				err
@@ -1607,7 +1618,9 @@ export class MigrateController
 			this.$fs.writeJson(projectData.projectFilePath, packageJSON);
 
 			this.spinner.info(
-				`Updated ${"package.json".yellow} main field to ${replacedMain.green}`
+				`Updated ${color.yellow("package.json")} main field to ${color.green(
+					replacedMain
+				)}`
 			);
 		} else {
 			this.$logger.warn();

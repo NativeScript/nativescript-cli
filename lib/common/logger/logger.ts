@@ -13,8 +13,8 @@ import {
 } from "../../constants";
 import { IDictionary } from "../declarations";
 import { injector } from "../yok";
+import { color } from "../../color";
 const TerminalRenderer = require("marked-terminal");
-const chalk = require("chalk");
 
 export class Logger implements ILogger {
 	private log4jsLogger: log4js.Logger = null;
@@ -134,9 +134,9 @@ export class Logger implements ILogger {
 	public printMarkdown(...args: string[]): void {
 		const opts = {
 			unescape: true,
-			link: chalk.red,
-			strong: chalk.green.bold,
-			firstHeading: chalk.blue.bold,
+			link: color.red,
+			strong: color.green.bold,
+			firstHeading: color.blue.bold,
 			tableOptions: {
 				chars: { mid: "", "left-mid": "", "mid-mid": "", "right-mid": "" },
 				style: {

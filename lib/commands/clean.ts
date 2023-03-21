@@ -1,3 +1,4 @@
+import { color } from "../color";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
 import * as constants from "../constants";
@@ -51,7 +52,7 @@ export class CleanCommand implements ICommand {
 		if (success) {
 			spinner.succeed("Project successfully cleaned.");
 		} else {
-			spinner.fail(`${"Project unsuccessfully cleaned.".red}`);
+			spinner.fail(color.red("Project unsuccessfully cleaned."));
 		}
 	}
 }

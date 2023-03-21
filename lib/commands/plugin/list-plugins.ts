@@ -7,6 +7,7 @@ import {
 } from "../../definitions/plugins";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { injector } from "../../common/yok";
+import { color } from "../../color";
 
 export class ListPluginsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -52,8 +53,12 @@ export class ListPluginsCommand implements ICommand {
 			this.$logger.info("There are no dev dependencies.");
 		}
 
-		const viewDependenciesCommand: string = "npm view <pluginName> grep dependencies".cyan.toString();
-		const viewDevDependenciesCommand: string = "npm view <pluginName> grep devDependencies".cyan.toString();
+		const viewDependenciesCommand: string = color.cyan(
+			"npm view <pluginName> grep dependencies"
+		);
+		const viewDevDependenciesCommand: string = color.cyan(
+			"npm view <pluginName> grep devDependencies"
+		);
 
 		this.$logger.warn("NOTE:");
 		this.$logger.warn(

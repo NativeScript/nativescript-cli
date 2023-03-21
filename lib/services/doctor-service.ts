@@ -24,6 +24,7 @@ import {
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { color } from "../color";
 
 export class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(
@@ -359,7 +360,9 @@ export class DoctorService implements IDoctorService {
 			infos.map((info) => {
 				let message = info.message;
 				if (info.type === constants.WARNING_TYPE_NAME) {
-					message = `WARNING: ${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
+					message = `WARNING: ${color.yellow(info.message)} ${EOL} ${
+						info.additionalInformation
+					} ${EOL}`;
 				}
 				this.$logger.info(message);
 			});
@@ -377,7 +380,9 @@ export class DoctorService implements IDoctorService {
 			.filter((info) => info.type === constants.WARNING_TYPE_NAME)
 			.map((info) => {
 				const spinner = this.$terminalSpinnerService.createSpinner();
-				spinner.text = `${info.message.yellow} ${EOL} ${info.additionalInformation} ${EOL}`;
+				spinner.text = `${color.yellow(info.message)} ${EOL} ${
+					info.additionalInformation
+				} ${EOL}`;
 				spinner.fail();
 			});
 	}
