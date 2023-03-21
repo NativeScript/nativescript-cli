@@ -64,7 +64,6 @@ import {
 	IHooksService,
 	IAllowEmpty,
 	IPrompterOptions,
-	IQrCodeImageData,
 	ISpawnFromEventOptions,
 	IAnalyticsService,
 	IProxySettings,

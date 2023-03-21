@@ -9,7 +9,7 @@ import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IMigrateController } from "../definitions/migrate";
 import { IOptions, IPlatformValidationService } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { IAnalyticsService, IErrors, IHostInfo } from "../common/declarations";
+import { IErrors, IHostInfo } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 
