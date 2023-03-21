@@ -91,7 +91,7 @@ function createTestInjector() {
 	const injector = new InjectorStub();
 
 	injector.register("addPlatformService", {});
-	injector.register("buildArtefactsService", {});
+	injector.register("buildArtifactsService", {});
 	injector.register("buildController", {
 		buildPlatform: async () => {
 			return buildOutputPath;

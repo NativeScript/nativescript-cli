@@ -100,7 +100,7 @@ injector.require(
 	"./services/platform/platform-validation-service"
 );
 
-injector.require("buildArtefactsService", "./services/build-artefacts-service");
+injector.require("buildArtifactsService", "./services/build-artifacts-service");
 
 injector.require(
 	"deviceInstallAppService",
