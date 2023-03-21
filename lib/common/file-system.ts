@@ -18,6 +18,7 @@ import { EOL } from "os";
 import * as detectNewline from "detect-newline";
 import { IFileSystem, IReadFileOptions, IFsStats } from "./declarations";
 import { IInjector } from "./definitions/yok";
+import { create as createArchiver } from "archiver";
 
 const stringifyPackage: any = require("stringify-package");
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
@@ -30,7 +31,6 @@ export class FileSystem implements IFileSystem {
 
 	constructor(private $injector: IInjector) {}
 
-	//TODO: try 'archiver' module for zipping
 	public async zipFiles(
 		zipFile: string,
 		files: string[],
@@ -38,39 +38,28 @@ export class FileSystem implements IFileSystem {
 	): Promise<void> {
 		//we are resolving it here instead of in the constructor, because config has dependency on file system and config shouldn't require logger
 		const $logger = this.$injector.resolve("logger");
-		const zipstream = require("zipstream");
-		const zip = zipstream.createZip({ level: 9 });
+		const zip = createArchiver("zip", {
+			zlib: {
+				level: 9,
+			},
+		});
 		const outFile = fs.createWriteStream(zipFile);
 		zip.pipe(outFile);
 
 		return new Promise<void>((resolve, reject) => {
 			outFile.on("error", (err: Error) => reject(err));
+			outFile.on("close", () => {
+				$logger.trace("zip: %d bytes written", zip.pointer());
+				resolve();
+			});
 
-			let fileIdx = -1;
-			const zipCallback = () => {
-				fileIdx++;
-				if (fileIdx < files.length) {
-					const file = files[fileIdx];
-
-					let relativePath = zipPathCallback(file);
-					relativePath = relativePath.replace(/\\/g, "/");
-					$logger.trace("zipping as '%s' file '%s'", relativePath, file);
-
-					zip.addFile(
-						fs.createReadStream(file),
-						{ name: relativePath },
-						zipCallback
-					);
-				} else {
-					outFile.on("finish", () => resolve());
-
-					zip.finalize((bytesWritten: number) => {
-						$logger.trace("zipstream: %d bytes written", bytesWritten);
-						outFile.end();
-					});
-				}
-			};
-			zipCallback();
+			for (const file of files) {
+				let relativePath = zipPathCallback(file);
+				relativePath = relativePath.replace(/\\/g, "/");
+				$logger.trace("zipping as '%s' file '%s'", relativePath, file);
+				zip.append(fs.createReadStream(file), { name: relativePath });
+			}
+			zip.finalize();
 		});
 	}
 
@@ -483,7 +472,7 @@ export class FileSystem implements IFileSystem {
 
 	public async getFileShasum(
 		fileName: string,
-		options?: { algorithm?: string; encoding?: crypto.HexBase64Latin1Encoding }
+		options?: { algorithm?: string; encoding?: "hex" | "base64" }
 	): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			const algorithm = (options && options.algorithm) || "sha1";

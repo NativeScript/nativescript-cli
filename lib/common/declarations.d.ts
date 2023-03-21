@@ -550,7 +550,7 @@ interface IFileSystem {
 	 */
 	getFileShasum(
 		fileName: string,
-		options?: { algorithm?: string; encoding?: "latin1" | "hex" | "base64" }
+		options?: { algorithm?: string; encoding?: "hex" | "base64" }
 	): Promise<string>;
 
 	// shell.js wrappers
@@ -1690,16 +1690,6 @@ interface IiOSNotificationService {
 		commandType?: string
 	): Promise<number>;
 }
-
-// declare module "stringify-package" {
-// 	function stringifyPackage(data: any, indent: any, newline: string): string
-// 	export = stringifyPackage
-// }
-
-// declare module "detect-newline" {
-// 	function detectNewline(data: string): string | null;
-// 	export = detectNewline
-// }
 
 /**
  * Describes information for application.

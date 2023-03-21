@@ -650,7 +650,7 @@ export async function connectEventually(
 
 export function getHash(
 	str: string,
-	options?: { algorithm?: string; encoding?: crypto.HexBase64Latin1Encoding }
+	options?: { algorithm?: string; encoding?: crypto.BinaryToTextEncoding }
 ): string {
 	return crypto
 		.createHash((options && options.algorithm) || "sha256")
@@ -845,7 +845,8 @@ export function getFormattedMilliseconds(date: Date): string {
 
 const CLASS_NAME = /class\s+([A-Z].+?)(?:\s+.*?)?\{/;
 const CONSTRUCTOR_ARGS = /constructor\s*([^\(]*)\(\s*([^\)]*)\)/m;
-const FN_NAME_AND_ARGS = /^(?:function)?\s*([^\(]*)\(\s*([^\)]*)\)\s*(=>)?\s*[{_]/m;
+const FN_NAME_AND_ARGS =
+	/^(?:function)?\s*([^\(]*)\(\s*([^\)]*)\)\s*(=>)?\s*[{_]/m;
 const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 

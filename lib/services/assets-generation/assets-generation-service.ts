@@ -1,5 +1,5 @@
-const Jimp = require("jimp");
-const Color = require("color");
+import * as Jimp from "jimp";
+import * as Color from "color";
 import { exported } from "../../common/decorators";
 import { AssetConstants } from "../../constants";
 import {
@@ -118,7 +118,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 				continue;
 			}
 
-			let image: typeof Jimp;
+			let image: Jimp;
 			switch (operation) {
 				case Operations.OverlayWith:
 					const overlayImageScale =
@@ -174,7 +174,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		imagePath: string,
 		width: number,
 		height: number
-	): Promise<typeof Jimp> {
+	): Promise<Jimp> {
 		const image = await Jimp.read(imagePath);
 		return image.scaleToFit(width, height);
 	}
@@ -184,8 +184,8 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		width: number,
 		height: number,
 		outputPath: string,
-		overlayImage?: typeof Jimp
-	): typeof Jimp {
+		overlayImage?: Jimp
+	): Jimp {
 		// Typescript declarations for Jimp are not updated to define the constructor with backgroundColor so we workaround it by casting it to <any> for this case only.
 		const J = <any>Jimp;
 		const backgroundColor = this.getRgbaNumber(background);
