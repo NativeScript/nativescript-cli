@@ -15,11 +15,11 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-const stringifyPackage: any = require("stringify-package");
-import detectNewline = require("detect-newline");
+import * as detectNewline from "detect-newline";
 import { IFileSystem, IReadFileOptions, IFsStats } from "./declarations";
 import { IInjector } from "./definitions/yok";
 
+const stringifyPackage: any = require("stringify-package");
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
 

@@ -14,9 +14,8 @@ import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-devi
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
-import { XmlValidator } from "../lib/xml-validator";
 import * as ChildProcessLib from "../lib/common/child-process";
-import ProjectChangesLib = require("../lib/services/project-changes-service");
+import * as ProjectChangesLib from "../lib/services/project-changes-service";
 import { Messages } from "../lib/common/messages/messages";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { PlatformValidationService } from "../lib/services/platform/platform-validation-service";
@@ -200,7 +199,6 @@ function createTestInjector() {
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
-	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("npm", {});
 	testInjector.register("prepareNativePlatformService", {});
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);

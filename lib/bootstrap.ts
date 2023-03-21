@@ -310,7 +310,6 @@ injector.require(
 	"./device-sockets/ios/socket-request-executor"
 );
 injector.require("messages", "./common/messages/messages");
-injector.require("xmlValidator", "./xml-validator");
 
 injector.requireCommand("post-install-cli", "./commands/post-install");
 injector.requireCommand("migrate", "./commands/migrate");

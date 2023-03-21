@@ -3,10 +3,10 @@ import { IChildProcess, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
 import { IOptions, IPackageManager } from "../declarations";
 import { IProjectData } from "../definitions/project";
-import path = require("path");
 import { resolvePackagePath } from "@rigor789/resolve-package-path";
 import { PackageManagers } from "../constants";
 import { color } from "../color";
+import * as path from "path";
 
 const PREVIEW_CLI_PACKAGE = "@nativescript/preview-cli";
 

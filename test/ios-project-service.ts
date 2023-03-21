@@ -38,7 +38,7 @@ import {
 	ProjectConfigServiceStub,
 } from "./stubs";
 import { xcode } from "../lib/node/xcode";
-import temp = require("temp");
+import * as temp from "temp";
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
 import { XcodebuildService } from "../lib/services/ios/xcodebuild-service";
 import { XcodebuildCommandService } from "../lib/services/ios/xcodebuild-command-service";

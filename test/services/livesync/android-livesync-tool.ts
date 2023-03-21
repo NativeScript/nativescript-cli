@@ -9,7 +9,7 @@ import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { FileSystem } from "../../../lib/common/file-system";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import * as path from "path";
-import temp = require("temp");
+import * as temp from "temp";
 import * as crypto from "crypto";
 import { IInjector } from "../../../lib/common/definitions/yok";
 import { IDictionary } from "../../../lib/common/declarations";

@@ -1,4 +1,4 @@
-import xopen = require("open");
+import * as xopen from "open";
 import { IOpener } from "../declarations";
 import { injector } from "./yok";
 

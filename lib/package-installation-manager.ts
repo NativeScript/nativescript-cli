@@ -16,7 +16,7 @@ import {
 } from "./common/declarations";
 import { injector } from "./common/yok";
 
-const semver = require("semver");
+import * as semver from "semver";
 
 export class PackageInstallationManager implements IPackageInstallationManager {
 	constructor(
@@ -70,7 +70,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			versions: true,
 		});
 
-		return semver.maxSatisfying(data, versionRange);
+		return semver.maxSatisfying(data, versionRange)?.toString();
 	}
 
 	public async getMaxSatisfyingVersionSafe(

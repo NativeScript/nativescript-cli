@@ -917,25 +917,6 @@ interface IiOSSocketRequestExecutor {
 }
 
 /**
- * Describes validation methods for XMLs.
- */
-interface IXmlValidator {
-	/**
-	 * Checks the passed xml files for errors and if such exists, print them on the stdout.
-	 * @param {string[]} sourceFiles Files to be checked. Only the ones that ends with .xml are filtered.
-	 * @return {boolean} true in case there are no errors in specified files and false in case there's at least one error.
-	 */
-	validateXmlFiles(sourceFiles: string[]): boolean;
-
-	/**
-	 * Checks the passed xml file for errors and returns them as a result.
-	 * @param {string} sourceFile File to be checked.
-	 * @return {string} The errors detected (as a single string) or null in case there are no errors.
-	 */
-	getXmlFileErrors(sourceFile: string): string;
-}
-
-/**
  * Describes methods for working with versions.
  */
 interface IVersionsService {

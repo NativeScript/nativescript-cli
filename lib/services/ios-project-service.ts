@@ -8,7 +8,7 @@ import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession, Reporter } from "plist-merge-patch";
 import { EOL } from "os";
-const plist = require("plist");
+import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
@@ -1495,8 +1495,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			return;
 		}
 
-		const infoPlist = plist.parse(this.$fs.readText(infoPlistPath));
-		const mergedPlist = plist.parse(this.$fs.readText(mergedPlistPath));
+		const infoPlist = plist.parse(
+			this.$fs.readText(infoPlistPath)
+		) as plist.PlistObject;
+		const mergedPlist = plist.parse(
+			this.$fs.readText(mergedPlistPath)
+		) as plist.PlistObject;
 
 		if (
 			infoPlist.CFBundleIdentifier &&

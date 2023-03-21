@@ -15,7 +15,7 @@ import {
 } from "./declarations";
 import { IAndroidSigningData } from "../definitions/build";
 
-const Table = require("cli-table");
+import * as Table from "cli-table";
 const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
 
 export function stripComments(content: string): string {

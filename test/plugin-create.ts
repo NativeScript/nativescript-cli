@@ -2,9 +2,9 @@ import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
 import { assert } from "chai";
-import helpers = require("../lib/common/helpers");
+import * as helpers from "../lib/common/helpers";
 import * as sinon from "sinon";
-import temp = require("temp");
+import * as temp from "temp";
 import * as path from "path";
 import * as util from "util";
 import { IOptions } from "../lib/declarations";
@@ -74,6 +74,7 @@ describe("Plugin create command tests", () => {
 	let createPluginCommand: CreatePluginCommand;
 
 	beforeEach(() => {
+		// @ts-expect-error
 		helpers.isInteractive = () => true;
 		testInjector = createTestInjector();
 		options = testInjector.resolve("$options");
@@ -81,6 +82,7 @@ describe("Plugin create command tests", () => {
 	});
 
 	afterEach(() => {
+		// @ts-expect-error
 		helpers.isInteractive = originalIsInteractive;
 	});
 
@@ -90,6 +92,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should use correct directory when path parameter is passed", async () => {
+			// @ts-expect-error
 			helpers.isInteractive = () => false;
 			const dummyPath = "dummyPath";
 			options.path = dummyPath;
@@ -99,6 +102,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should use correct download path when template parameter is passed", async () => {
+			// @ts-expect-error
 			helpers.isInteractive = () => false;
 			const dummyTemplate = "dummyTemplate";
 			options.template = dummyTemplate;
@@ -108,6 +112,7 @@ describe("Plugin create command tests", () => {
 		});
 
 		it("should pass when only project name is set in non-interactive shell.", async () => {
+			// @ts-expect-error
 			helpers.isInteractive = () => false;
 			await createPluginCommand.execute(dummyArgs);
 		});
