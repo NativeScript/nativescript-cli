@@ -6,7 +6,6 @@ import * as _ from "lodash";
 import { IOptions, IOptionsTracker } from "../../declarations";
 import {
 	IErrors,
-	IAnalyticsSettingsService,
 	IHooksService,
 	IAnalyticsService,
 	GoogleAnalyticsDataType,
@@ -37,7 +36,6 @@ export class CommandsService implements ICommandsService {
 	private commands: ICommandData[] = [];
 
 	constructor(
-		private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $errors: IErrors,
 		private $hooksService: IHooksService,
 		private $injector: IInjector,
@@ -77,16 +75,6 @@ export class CommandsService implements ICommandsService {
 					path: beautifiedCommandName,
 					title: beautifiedCommandName,
 				};
-
-				const playgrounInfo = await this.$analyticsSettingsService.getPlaygroundInfo(
-					null
-				);
-				if (playgrounInfo && playgrounInfo.id) {
-					googleAnalyticsPageData.customDimensions = {
-						[GoogleAnalyticsCustomDimensions.playgroundId]: playgrounInfo.id,
-						[GoogleAnalyticsCustomDimensions.usedTutorial]: playgrounInfo.usedTutorial.toString(),
-					};
-				}
 
 				await analyticsService.trackInGoogleAnalytics(googleAnalyticsPageData);
 				await this.$optionsTracker.trackOptions(this.$options);

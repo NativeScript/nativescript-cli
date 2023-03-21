@@ -147,7 +147,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 				dependencyType
 			);
 		} catch (error) {
-			this.$logger.debug(error);
+			this.$logger.trace(error);
 
 			throw error;
 		}
@@ -165,7 +165,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 				projectDir
 			);
 		} catch (error) {
-			this.$logger.debug(error);
+			this.$logger.trace(error);
 
 			throw error;
 		}

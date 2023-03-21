@@ -65,7 +65,7 @@ export class FileSystem implements IFileSystem {
 					outFile.on("finish", () => resolve());
 
 					zip.finalize((bytesWritten: number) => {
-						$logger.debug("zipstream: %d bytes written", bytesWritten);
+						$logger.trace("zipstream: %d bytes written", bytesWritten);
 						outFile.end();
 					});
 				}

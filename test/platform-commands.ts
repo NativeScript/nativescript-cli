@@ -225,9 +225,7 @@ function createTestInjector() {
 		}),
 	});
 	testInjector.register("extensibilityService", {});
-	testInjector.register("analyticsSettingsService", {
-		getPlaygroundInfo: () => Promise.resolve(null),
-	});
+	testInjector.register("analyticsSettingsService", {});
 	testInjector.register("filesHashService", {});
 	testInjector.register("platformEnvironmentRequirements", {
 		checkEnvironmentRequirements: async (

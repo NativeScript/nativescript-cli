@@ -3,6 +3,7 @@ import { getMessageWithBorders } from "../../helpers";
 import { LoggingEvent } from "log4js";
 import { LoggerConfigData, LoggerLevel } from "../../../constants";
 import { EOL } from "os";
+import { color } from "../../../color";
 
 export function layout(config: any) {
 	return function (logEvent: LoggingEvent): string {
@@ -21,11 +22,15 @@ export function layout(config: any) {
 		}
 
 		if (logEvent.level.isEqualTo(LoggerLevel.ERROR)) {
-			return msg.red.bold;
+			return color.red.bold(msg);
 		}
 
 		if (logEvent.level.isEqualTo(LoggerLevel.WARN)) {
-			return msg.yellow;
+			return color.yellow(msg);
+		}
+
+		if (logEvent.level.isEqualTo(LoggerLevel.TRACE)) {
+			return color.gray(msg);
 		}
 
 		return msg;

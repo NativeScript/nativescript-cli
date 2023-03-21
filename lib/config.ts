@@ -16,11 +16,6 @@ export class Configuration implements IConfiguration {
 	DEBUG = false;
 	ANDROID_DEBUG_UI: string = null;
 	USE_POD_SANDBOX: boolean = false;
-	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string = null;
-	SHORTEN_URL_ENDPOINT: string = null;
-	INSIGHTS_URL_ENDPOINT: string = null;
-	WHOAMI_URL_ENDPOINT: string = null;
-	PREVIEW_APP_ENVIRONMENT: string = null;
 	GA_TRACKING_ID: string = null;
 	DISABLE_HOOKS: boolean = false;
 

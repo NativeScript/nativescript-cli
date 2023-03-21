@@ -342,20 +342,20 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		);
 
 		if (this.$fs.exists(xcschemeFilePath)) {
-			this.$logger.debug(
+			this.$logger.trace(
 				"Found shared scheme at xcschemeFilePath, renaming to match project name."
 			);
-			this.$logger.debug("Checkpoint 0");
+			this.$logger.trace("Checkpoint 0");
 			this.replaceFileContent(xcschemeFilePath, projectData);
-			this.$logger.debug("Checkpoint 1");
+			this.$logger.trace("Checkpoint 1");
 			this.replaceFileName(
 				IosProjectConstants.XcodeSchemeExtName,
 				xcschemeDirPath,
 				projectData
 			);
-			this.$logger.debug("Checkpoint 2");
+			this.$logger.trace("Checkpoint 2");
 		} else {
-			this.$logger.debug(
+			this.$logger.trace(
 				"Copying xcscheme from template not found at " + xcschemeFilePath
 			);
 		}

@@ -372,7 +372,7 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				"",
 			].join("\n")
 		);
-		// Commented as we may bring this back with a playground revision/rewrite
+		// todo: add back ns preview
 		// this.$logger.printMarkdown(
 		// 	`After that you can preview it on device by executing \`$ ns preview\``
 		// );

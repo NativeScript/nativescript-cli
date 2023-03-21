@@ -1,4 +1,3 @@
-require("colors");
 import { join } from "path";
 import {
 	IStringDictionary,
@@ -247,7 +246,6 @@ export const enum TrackActionNames {
 	Options = "Options",
 	AcceptTracking = "Accept Tracking",
 	Performance = "Performance",
-	PreviewAppData = "Preview App Data",
 	UninstallCLI = "Uninstall CLI",
 	UsingRuntimeVersion = "Using Runtime Version",
 	AddPlatform = "Add Platform",

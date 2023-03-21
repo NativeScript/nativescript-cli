@@ -176,9 +176,7 @@ function createTestInjector() {
 		"androidPluginBuildService",
 		stubs.AndroidPluginBuildServiceStub
 	);
-	testInjector.register("analyticsSettingsService", {
-		getPlaygroundInfo: () => Promise.resolve(null),
-	});
+	testInjector.register("analyticsSettingsService", {});
 	testInjector.register(
 		"androidResourcesMigrationService",
 		stubs.AndroidResourcesMigrationServiceStub

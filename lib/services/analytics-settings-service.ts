@@ -6,8 +6,6 @@ import {
 	IUserSettingsService,
 	IHostInfo,
 	IOsInfo,
-	IPlaygroundService,
-	IPlaygroundInfo,
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
@@ -21,8 +19,7 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
 		private $osInfo: IOsInfo,
-		private $logger: ILogger,
-		private $playgroundService: IPlaygroundService
+		private $logger: ILogger
 	) {}
 
 	public async canDoRequest(): Promise<boolean> {
@@ -38,11 +35,6 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		return this.getSettingValueOrDefault(
 			this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME
 		);
-	}
-
-	@exported("analyticsSettingsService")
-	public async getPlaygroundInfo(projectDir: string): Promise<IPlaygroundInfo> {
-		return this.$playgroundService.getPlaygroundInfo(projectDir);
 	}
 
 	public getClientName(): string {

@@ -5,6 +5,7 @@ import { ICommand, ICommandParameter } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
 import { IInjector } from "../../definitions/yok";
 import { injector } from "../../yok";
+import { color } from "../../../color";
 
 export class ListDevicesCommand implements ICommand {
 	constructor(
@@ -48,12 +49,9 @@ export class ListDevicesCommand implements ICommand {
 			devices.available = emulators;
 
 			if (!this.$options.json) {
-				this.printEmulators("\nAvailable emulators", emulators);
+				this.$logger.info(color.bold("\n Available emulators"));
+				this.printEmulators(emulators);
 			}
-		}
-
-		if (!this.$options.json) {
-			this.$logger.info("\nConnected devices & emulators");
 		}
 
 		let index = 1;
@@ -65,6 +63,10 @@ export class ListDevicesCommand implements ICommand {
 			skipEmulatorStart: true,
 			fullDiscovery: true,
 		});
+
+		if (!this.$options.json) {
+			this.$logger.info(color.bold("\n Connected devices & emulators"));
+		}
 
 		const table: any = createTable(
 			[
@@ -112,8 +114,7 @@ export class ListDevicesCommand implements ICommand {
 		}
 	}
 
-	private printEmulators(title: string, emulators: Mobile.IDeviceInfo[]) {
-		this.$logger.info(title);
+	private printEmulators(emulators: Mobile.IDeviceInfo[]) {
 		const table: any = createTable(
 			[
 				"Device Name",
@@ -121,7 +122,7 @@ export class ListDevicesCommand implements ICommand {
 				"Version",
 				"Device Identifier",
 				"Image Identifier",
-				"Error Help",
+				// "Error Help",
 			],
 			[]
 		);
@@ -132,7 +133,7 @@ export class ListDevicesCommand implements ICommand {
 				info.version,
 				info.identifier || "",
 				info.imageIdentifier || "",
-				info.errorHelp || "",
+				// info.errorHelp || "",
 			]);
 		}
 

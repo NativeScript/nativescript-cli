@@ -71,7 +71,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 			const socket = net.connect(data.port, "127.0.0.1");
 			return socket;
 		} catch (e) {
-			this.$logger.debug(e);
+			this.$logger.trace(e);
 		}
 	}
 

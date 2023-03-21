@@ -69,7 +69,7 @@
     pixelmatch "^4.0.2"
     tinycolor2 "^1.4.1"
 
-"@jimp/custom@^0.14.0", "@jimp/custom@>=0.3.5":
+"@jimp/custom@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/custom/-/custom-0.14.0.tgz"
   integrity sha512-kQJMeH87+kWJdVw8F9GQhtsageqqxrvzg7yyOw3Tx/s7v5RToe8RnKyMM+kVtBJtNAG+Xyv/z01uYQ2jiZ3GwA==
@@ -96,7 +96,7 @@
     "@jimp/utils" "^0.14.0"
     jpeg-js "^0.4.0"
 
-"@jimp/plugin-blit@^0.14.0", "@jimp/plugin-blit@>=0.3.5":
+"@jimp/plugin-blit@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/plugin-blit/-/plugin-blit-0.14.0.tgz"
   integrity sha512-YoYOrnVHeX3InfgbJawAU601iTZMwEBZkyqcP1V/S33Qnz9uzH1Uj1NtC6fNgWzvX6I4XbCWwtr4RrGFb5CFrw==
@@ -104,7 +104,7 @@
     "@babel/runtime" "^7.7.2"
     "@jimp/utils" "^0.14.0"
 
-"@jimp/plugin-blur@^0.14.0", "@jimp/plugin-blur@>=0.3.5":
+"@jimp/plugin-blur@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/plugin-blur/-/plugin-blur-0.14.0.tgz"
   integrity sha512-9WhZcofLrT0hgI7t0chf7iBQZib//0gJh9WcQMUt5+Q1Bk04dWs8vTgLNj61GBqZXgHSPzE4OpCrrLDBG8zlhQ==
@@ -120,7 +120,7 @@
     "@babel/runtime" "^7.7.2"
     "@jimp/utils" "^0.14.0"
 
-"@jimp/plugin-color@^0.14.0", "@jimp/plugin-color@>=0.8.0":
+"@jimp/plugin-color@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/plugin-color/-/plugin-color-0.14.0.tgz"
   integrity sha512-JJz512SAILYV0M5LzBb9sbOm/XEj2fGElMiHAxb7aLI6jx+n0agxtHpfpV/AePTLm1vzzDxx6AJxXbKv355hBQ==
@@ -145,7 +145,7 @@
     "@babel/runtime" "^7.7.2"
     "@jimp/utils" "^0.14.0"
 
-"@jimp/plugin-crop@^0.14.0", "@jimp/plugin-crop@>=0.3.5":
+"@jimp/plugin-crop@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/plugin-crop/-/plugin-crop-0.14.0.tgz"
   integrity sha512-Ojtih+XIe6/XSGtpWtbAXBozhCdsDMmy+THUJAGu2x7ZgKrMS0JotN+vN2YC3nwDpYkM+yOJImQeptSfZb2Sug==
@@ -226,7 +226,7 @@
     "@jimp/utils" "^0.14.0"
     load-bmfont "^1.4.0"
 
-"@jimp/plugin-resize@^0.14.0", "@jimp/plugin-resize@>=0.3.5", "@jimp/plugin-resize@>=0.8.0":
+"@jimp/plugin-resize@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/plugin-resize/-/plugin-resize-0.14.0.tgz"
   integrity sha512-qFeMOyXE/Bk6QXN0GQo89+CB2dQcXqoxUcDb2Ah8wdYlKqpi53skABkgVy5pW3EpiprDnzNDboMltdvDslNgLQ==
@@ -234,7 +234,7 @@
     "@babel/runtime" "^7.7.2"
     "@jimp/utils" "^0.14.0"
 
-"@jimp/plugin-rotate@^0.14.0", "@jimp/plugin-rotate@>=0.3.5":
+"@jimp/plugin-rotate@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/plugin-rotate/-/plugin-rotate-0.14.0.tgz"
   integrity sha512-aGaicts44bvpTcq5Dtf93/8TZFu5pMo/61lWWnYmwJJU1RqtQlxbCLEQpMyRhKDNSfPbuP8nyGmaqXlM/82J0Q==
@@ -242,7 +242,7 @@
     "@babel/runtime" "^7.7.2"
     "@jimp/utils" "^0.14.0"
 
-"@jimp/plugin-scale@^0.14.0", "@jimp/plugin-scale@>=0.3.5":
+"@jimp/plugin-scale@^0.14.0":
   version "0.14.0"
   resolved "https://registry.npmjs.org/@jimp/plugin-scale/-/plugin-scale-0.14.0.tgz"
   integrity sha512-ZcJk0hxY5ZKZDDwflqQNHEGRblgaR+piePZm7dPwPUOSeYEH31P0AwZ1ziceR74zd8N80M0TMft+e3Td6KGBHw==
@@ -1390,7 +1390,7 @@ chai-as-promised@7.1.1:
   dependencies:
     check-error "^1.0.2"
 
-"chai@>= 2.1.2 < 5", chai@4.2.0:
+chai@4.2.0:
   version "4.2.0"
   resolved "https://registry.npmjs.org/chai/-/chai-4.2.0.tgz"
   integrity sha512-XQU3bhBukrOsQCuwZndwGcCVQHyZi53fQ6Ys1Fym7E4olpIqqZZhhoFJoaKVvV17lWQoXYwgWN2nF5crA8J2jw==
@@ -1564,12 +1564,14 @@ cli-spinners@^2.4.0:
   resolved "https://registry.npmjs.org/cli-spinners/-/cli-spinners-2.4.0.tgz"
   integrity sha512-sJAofoarcm76ZGpuooaO0eDy8saEy+YoZBLjC4h8srt4jeBnkYeOgqxgsJQTpyt2LjI5PTfLJHSL+41Yu4fEJA==
 
-cli-table@0.3.11:
-  version "0.3.11"
-  resolved "https://registry.npmjs.org/cli-table/-/cli-table-0.3.11.tgz"
-  integrity sha512-IqLQi4lO0nIB4tcdTpN4LCB9FI3uqrJZK7RC515EnhZ6qBaglkIgICb1wjeAqpdoOabm1+SuQtkXIPdYC93jhQ==
+"cli-table@npm:cli-table3@0.6.3":
+  version "0.6.3"
+  resolved "https://registry.npmjs.org/cli-table3/-/cli-table3-0.6.3.tgz"
+  integrity sha512-w5Jac5SykAeZJKntOxJCrm63Eg5/4dhMWIcuTbo9rpE+brgaSZo0RuNJZeOyMgsUdhDeojvgyQLmjI+K50ZGyg==
   dependencies:
-    colors "1.0.3"
+    string-width "^4.2.0"
+  optionalDependencies:
+    "@colors/colors" "1.5.0"
 
 cli-table3@^0.6.1:
   version "0.6.3"
@@ -1696,16 +1698,6 @@ colors@~1.1.2:
   version "1.1.2"
   resolved "https://registry.npmjs.org/colors/-/colors-1.1.2.tgz"
   integrity sha1-FopHAXVran9RoSzgyXv6KMCE7WM=
-
-colors@~1.4.0:
-  version "1.4.0"
-  resolved "https://registry.npmjs.org/colors/-/colors-1.4.0.tgz"
-  integrity sha512-a+UqTh4kgZg/SlGvfbzDHpgRu7AAQOmmqRHJnxhRZICKFUT91brVhNNt58CMWU9PsBbv3PDCZUHbVxuDiH2mtA==
-
-colors@1.0.3:
-  version "1.0.3"
-  resolved "https://registry.npmjs.org/colors/-/colors-1.0.3.tgz"
-  integrity sha1-BDP0TYCWgP3rYO0mDxsMJi6CpAs=
 
 combined-stream@^1.0.6, combined-stream@^1.0.8, combined-stream@~1.0.6:
   version "1.0.8"
@@ -2228,7 +2220,7 @@ end-of-stream@^1.1.0:
   dependencies:
     once "^1.4.0"
 
-enquirer@^2.3.6, "enquirer@>= 2.3.0 < 3":
+enquirer@^2.3.6:
   version "2.3.6"
   resolved "https://registry.npmjs.org/enquirer/-/enquirer-2.3.6.tgz"
   integrity sha512-yjNnPr315/FjS4zIsUxYguYUPP2e1NK4d7E7ZOLiyYCcbFBiTMyID+2wvm2w6+pZ/odMA7cRkjhsPbltwBOrLg==
@@ -3105,7 +3097,7 @@ grunt-ts@6.0.0-beta.22:
     semver "^5.3.0"
     strip-bom "^2.0.0"
 
-"grunt@^1.0.0 || ^0.4.0", grunt@>=0.4.0, grunt@>=0.4.5, grunt@>=1, grunt@1.2.1:
+grunt@1.2.1:
   version "1.2.1"
   resolved "https://registry.npmjs.org/grunt/-/grunt-1.2.1.tgz"
   integrity sha512-zgJjn9N56tScvRt/y0+1QA+zDBnKTrkpyeSBqQPLcZvbqTD/oyGMrdZQXmm6I3828s+FmPvxc3Xv+lgKFtudOw==
@@ -3419,13 +3411,12 @@ ios-mobileprovision-finder@1.0.11:
     plist "^2.0.1"
     yargs "^6.5.0"
 
-ios-sim-portable@4.2.5:
-  version "4.2.5"
-  resolved "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.2.5.tgz"
-  integrity sha512-2xuE60u+cjSwDoj3rXeN7PbuVtCDTZUhY5vkWWjlJj/TlWuLJMFEx9lgr5OGuYv7jRldpqD/nwGhtOdM2llKHw==
+ios-sim-portable@4.3.0:
+  version "4.3.0"
+  resolved "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.3.0.tgz"
+  integrity sha512-FZ4JgO8L7H5IoFoA8Qa5h1n4pm3E/8PrNagGFBH5nORIHn8ibWk5CvP2ixiPYOgPlVxbTVLVd/j5kfO+0+OLjA==
   dependencies:
     bplist-parser "https://github.com/telerik/node-bplist-parser/tarball/master"
-    colors "~1.4.0"
     lodash "~4.17.15"
     osenv "~0.1.5"
     plist "3.0.1"
@@ -4318,7 +4309,7 @@ marked-terminal@5.1.1:
     node-emoji "^1.11.0"
     supports-hyperlinks "^2.2.0"
 
-"marked@^1.0.0 || ^2.0.0 || ^3.0.0 || ^4.0.0", marked@1.1.1:
+marked@1.1.1:
   version "1.1.1"
   resolved "https://registry.npmjs.org/marked/-/marked-1.1.1.tgz"
   integrity sha512-mJzT8D2yPxoPh7h0UXkB+dBj4FykPJ2OIfxAWeIHrvoHDkFxukV/29QxoFQoPM6RLEwhIFdJpmKBlqVM3s2ZIw==
@@ -6795,15 +6786,15 @@ type-fest@^1.0.2:
   resolved "https://registry.npmjs.org/type-fest/-/type-fest-1.4.0.tgz"
   integrity sha512-yGSza74xk0UG8k+pLh5oeoYirvIiWo5t0/o3zHHAO2tRDiZcxWP7fywNlXhqb6/r6sWvwi+RsyQMWhVLe4BVuA==
 
-typescript@>=1, typescript@4.5.5:
-  version "4.5.5"
-  resolved "https://registry.npmjs.org/typescript/-/typescript-4.5.5.tgz"
-  integrity sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==
-
 typescript@~4.0.2:
   version "4.0.2"
   resolved "https://registry.npmjs.org/typescript/-/typescript-4.0.2.tgz"
   integrity sha512-e4ERvRV2wb+rRZ/IQeb3jm2VxBsirQLpQhdxplZ2MEzGvDkkMmPglecnNDfSUBivMjP93vRbngYYDQqQ/78bcQ==
+
+typescript@4.5.5:
+  version "4.5.5"
+  resolved "https://registry.npmjs.org/typescript/-/typescript-4.5.5.tgz"
+  integrity sha512-TCTIul70LyWe6IJWT8QSYeA54WQe8EjQFU4wY52Fasj5UKx88LNYKCgBEHcOMOrFF1rKGbD8v/xcNWVUq9SymA==
 
 uglify-js@^3.1.4:
   version "3.10.3"

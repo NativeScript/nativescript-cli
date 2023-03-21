@@ -461,7 +461,7 @@ export class PluginsService implements IPluginsService {
 					const versions = _.keys(dependencyOccurrencesGroupedByVersion);
 					if (versions.length === 1) {
 						// all dependencies with this name have the same version
-						this.$logger.debug(
+						this.$logger.trace(
 							`Detected same versions (${_.first(
 								versions
 							)}) of the ${dependencyName} installed at locations: ${_.map(
@@ -470,7 +470,7 @@ export class PluginsService implements IPluginsService {
 							).join(", ")}`
 						);
 					} else {
-						this.$logger.debug(
+						this.$logger.trace(
 							`Detected different versions of the ${dependencyName} installed at locations: ${_.map(
 								dependencyOccurrences,
 								(d) => d.directory

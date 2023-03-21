@@ -123,9 +123,6 @@ abstract class TestCommandBase {
 				platform: this.platform,
 				projectDir: this.$projectData.projectDir,
 				options: this.$options,
-				notConfiguredEnvOptions: {
-					hideSyncToPreviewAppOption: true,
-				},
 			}
 		);
 

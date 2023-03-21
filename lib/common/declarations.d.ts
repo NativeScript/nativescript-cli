@@ -218,11 +218,6 @@ declare const enum TrackingTypes {
 	GoogleAnalyticsData = "googleAnalyticsData",
 
 	/**
-	 * Defines that the broker process should get and track the data from preview app to Google Analytics
-	 */
-	PreviewAppData = "PreviewAppData",
-
-	/**
 	 * Defines that the broker process should send all the pending information to Analytics.
 	 * After that the process should send information it has finished tracking and die gracefully.
 	 */
@@ -809,11 +804,6 @@ interface IAnalyticsService {
 	trackEventActionInGoogleAnalytics(data: IEventActionData): Promise<void>;
 
 	/**
-	 * Tracks preview's app data to Google Analytics project.
-	 */
-	trackPreviewAppData(platform: string, projectDir: string): Promise<void>;
-
-	/**
 	 * Defines if the instance should be disposed.
 	 * @param {boolean} shouldDispose Defines if the instance should be disposed and the child processes should be disconnected.
 	 * @returns {void}
@@ -878,37 +868,6 @@ interface IAnalyticsSettingsService {
 	 * @returns {string} The user agent string.
 	 */
 	getUserAgentString(identifier: string): string;
-
-	/**
-	 * Gets information for projects that are exported from playground
-	 * @param projectDir Project directory path
-	 */
-	getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo>;
-}
-
-/**
- * Designed for getting information for projects that are exported from playground.
- */
-interface IPlaygroundService {
-	/**
-	 * Gets information for projects that are exported from playground
-	 * @return {Promise<IPlaygroundInfo>} collected info
-	 * @param projectDir Project directory path
-	 */
-	getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo>;
-}
-/**
- * Describes information about project that is exported from playground.
- */
-interface IPlaygroundInfo {
-	/**
-	 * The unique client identifier
-	 */
-	id: string;
-	/**
-	 * Whether the user comes from tutorial page. Can be true or false
-	 */
-	usedTutorial: boolean;
 }
 
 interface IAutoCompletionService {

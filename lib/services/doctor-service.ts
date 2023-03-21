@@ -122,7 +122,7 @@ export class DoctorService implements IDoctorService {
 			// all projects need to be rechecked
 			this.$fs.deleteFile(this.jsonFileSettingsPath);
 		} else {
-			this.$logger.info("No issues were detected.".bold);
+			this.$logger.info(color.bold("No issues were detected."));
 			await this.$jsonFileSettingsService.saveSetting(
 				this.getKeyForConfiguration(getInfosData),
 				infos
