@@ -236,6 +236,9 @@ function createTestInjector(
 		},
 	});
 	testInjector.register("tempService", TempServiceStub);
+	testInjector.register("spmService", {
+		applySPMPackages: () => Promise.resolve(),
+	});
 
 	return testInjector;
 }
@@ -1288,5 +1291,11 @@ describe("handleNativeDependenciesChange", () => {
 			"podInstall",
 			"podMerge",
 		]);
+	});
+});
+
+describe("SPM Packages", () => {
+	it("should add SPM packages to the project", async () => {
+		// todo: add tests for SPM packages
 	});
 });
