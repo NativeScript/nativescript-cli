@@ -58,6 +58,7 @@ injector.require("iOSProjectService", "./services/ios-project-service");
 injector.require("iOSProvisionService", "./services/ios-provision-service");
 injector.require("xcconfigService", "./services/xcconfig-service");
 injector.require("iOSSigningService", "./services/ios/ios-signing-service");
+injector.require("spmService", "./services/ios/spm-service");
 injector.require(
 	"xcodebuildArgsService",
 	"./services/ios/xcodebuild-args-service"

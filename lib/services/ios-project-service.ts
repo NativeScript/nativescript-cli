@@ -100,7 +100,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSWatchAppService: IIOSWatchAppService,
 		private $iOSNativeTargetService: IIOSNativeTargetService,
 		private $sysInfo: ISysInfo,
-		private $tempService: ITempService
+		private $tempService: ITempService,
+		private $spmService: ISPMService
 	) {
 		super($fs, $projectDataService);
 	}
@@ -980,6 +981,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				opts
 			);
 		}
+
+		await this.$spmService.applySPMPackages(platformData, projectData);
 
 		const pbxProjPath = this.getPbxProjPath(projectData);
 		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
