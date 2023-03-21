@@ -163,7 +163,6 @@
     "latest-version": "5.1.0",
     "lint-staged": "^13.2.0",
     "mocha": "10.2.0",
-    "should": "13.2.3",
     "sinon": "15.0.2",
     "source-map-support": "0.5.21"
   },
