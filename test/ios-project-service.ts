@@ -129,6 +129,7 @@ function createTestInjector(
 	testInjector.register("messages", Messages);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("deviceLogProvider", DeviceLogProvider);
+	testInjector.register("timelineProfilerService", {});
 	testInjector.register("logFilter", LogFilter);
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
