@@ -5,21 +5,22 @@ import { AssetConstants } from "../../constants";
 import {
 	IAssetsGenerationService,
 	IResourceGenerationData,
-	ISplashesGenerationData,
 } from "../../declarations";
 import {
 	IProjectDataService,
 	IAssetGroup,
 	IAssetSubGroup,
 } from "../../definitions/project";
-import { IDictionary } from "../../common/declarations";
+import { IDictionary, IFileSystem } from "../../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../../common/yok";
+import { EOL } from "os";
 
 export const enum Operations {
 	OverlayWith = "overlayWith",
 	Blank = "blank",
 	Resize = "resize",
+	OuterScale = "outerScale",
 }
 
 export class AssetsGenerationService implements IAssetsGenerationService {
@@ -32,7 +33,8 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 
 	constructor(
 		private $logger: ILogger,
-		private $projectDataService: IProjectDataService
+		private $projectDataService: IProjectDataService,
+		private $fs: IFileSystem
 	) {}
 
 	@exported("assetsGenerationService")
@@ -49,7 +51,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 
 	@exported("assetsGenerationService")
 	public async generateSplashScreens(
-		splashesGenerationData: ISplashesGenerationData
+		splashesGenerationData: IResourceGenerationData
 	): Promise<void> {
 		this.$logger.info("Generating splash screens ...");
 		await this.generateImagesForDefinitions(
@@ -60,10 +62,10 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	}
 
 	private async generateImagesForDefinitions(
-		generationData: ISplashesGenerationData,
+		generationData: IResourceGenerationData,
 		propertiesToEnumerate: string[]
 	): Promise<void> {
-		generationData.background = generationData.background || "white";
+		const background = generationData.background || "white";
 		const assetsStructure = await this.$projectDataService.getAssetsStructure(
 			generationData
 		);
@@ -88,6 +90,45 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 			.value();
 
 		for (const assetItem of assetItems) {
+			if (assetItem.operation === "delete") {
+				if (this.$fs.exists(assetItem.path)) {
+					this.$fs.deleteFile(assetItem.path);
+				}
+				continue;
+			}
+
+			if (assetItem.operation === "writeXMLColor") {
+				const colorName = assetItem.data?.colorName;
+				if (!colorName) {
+					continue;
+				}
+				try {
+					const color =
+						(generationData as any)[assetItem.data?.fromKey] ??
+						assetItem.data?.default ??
+						"white";
+
+					const colorHEX: number = Jimp.cssColorToHex(color);
+					const hex = colorHEX?.toString(16).substring(0, 6) ?? "FFFFFF";
+
+					this.$fs.writeFile(
+						assetItem.path,
+						[
+							`<?xml version="1.0" encoding="utf-8"?>`,
+							`<resources>`,
+							`    <color name="${colorName}">#${hex.toUpperCase()}</color>`,
+							`</resources>`,
+						].join(EOL)
+					);
+				} catch (err) {
+					this.$logger.info(
+						`Failed to write provided color to ${assetItem.path} -> ${colorName}. See --log trace for more info.`
+					);
+					this.$logger.trace(err);
+				}
+				continue;
+			}
+
 			const operation = assetItem.resizeOperation || Operations.Resize;
 			let tempScale: number = null;
 			if (assetItem.scale) {
@@ -133,7 +174,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 						imageResize
 					);
 					image = this.generateImage(
-						generationData.background,
+						background,
 						width,
 						height,
 						outputPath,
@@ -141,15 +182,26 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 					);
 					break;
 				case Operations.Blank:
-					image = this.generateImage(
-						generationData.background,
-						width,
-						height,
-						outputPath
-					);
+					image = this.generateImage(background, width, height, outputPath);
 					break;
 				case Operations.Resize:
 					image = await this.resize(generationData.imagePath, width, height);
+					break;
+				case Operations.OuterScale:
+					// Resize image without applying scale
+					image = await this.resize(
+						generationData.imagePath,
+						assetItem.width,
+						assetItem.height
+					);
+					// The scale will apply to the underlying layer of the generated image
+					image = this.generateImage(
+						"#00000000",
+						width,
+						height,
+						outputPath,
+						image
+					);
 					break;
 				default:
 					throw new Error(`Invalid image generation operation: ${operation}`);

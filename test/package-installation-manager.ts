@@ -6,6 +6,7 @@ import * as HostInfoLib from "../lib/common/host-info";
 import * as LoggerLib from "../lib/common/logger/logger";
 import * as NpmLib from "../lib/node-package-manager";
 import * as YarnLib from "../lib/yarn-package-manager";
+import * as Yarn2Lib from "../lib/yarn2-package-manager";
 import * as PnpmLib from "../lib/pnpm-package-manager";
 import * as PackageManagerLib from "../lib/package-manager";
 import * as PackageInstallationManagerLib from "../lib/package-installation-manager";
@@ -46,6 +47,7 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register("npm", NpmLib.NodePackageManager);
 	testInjector.register("yarn", YarnLib.YarnPackageManager);
+	testInjector.register("yarn2", Yarn2Lib.Yarn2PackageManager);
 	testInjector.register("pnpm", PnpmLib.PnpmPackageManager);
 	testInjector.register("packageManager", PackageManagerLib.PackageManager);
 	testInjector.register("projectConfigService", ProjectConfigServiceStub);

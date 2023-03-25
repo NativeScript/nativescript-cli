@@ -321,6 +321,14 @@ export class ProjectChangesService implements IProjectChangesService {
 	): string {
 		const projectFilePath = path.join(projectDir, PACKAGE_JSON_FILE_NAME);
 		const projectFileContents = this.$fs.readJson(projectFilePath);
+
+		const relevantProperties = ["dependencies"];
+
+		const projectFileStrippedContents = _.pick(
+			projectFileContents,
+			relevantProperties
+		);
+
 		// _(this.$devicePlatformsConstants)
 		// 	.keys()
 		// 	.map(k => k.toLowerCase())
@@ -329,7 +337,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		// 		delete projectFileContents.nativescript[`tns-${otherPlatform}`];
 		// 	});
 
-		return getHash(JSON.stringify(projectFileContents));
+		return getHash(JSON.stringify(projectFileStrippedContents));
 	}
 
 	private isProjectFileChanged(

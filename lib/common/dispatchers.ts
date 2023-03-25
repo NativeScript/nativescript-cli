@@ -109,12 +109,10 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 		const spinner = this.$terminalSpinnerService.createSpinner();
 		spinner.start("Checking for updates...");
-		const nativescriptCliVersion =
-			await this.$versionsService.getNativescriptCliVersion();
+		const nativescriptCliVersion = await this.$versionsService.getNativescriptCliVersion();
 		spinner.stop();
 
-		const packageManagerName =
-			await this.$packageManager.getPackageManagerName();
+		const packageManagerName = await this.$packageManager.getPackageManagerName();
 		let updateCommand = "";
 
 		switch (packageManagerName) {
@@ -122,6 +120,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 				updateCommand = "npm i -g nativescript";
 				break;
 			case PackageManagers.yarn:
+			case PackageManagers.yarn2:
 				updateCommand = "yarn global add nativescript";
 				break;
 			case PackageManagers.pnpm:

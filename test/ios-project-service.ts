@@ -129,6 +129,7 @@ function createTestInjector(
 	testInjector.register("messages", Messages);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("deviceLogProvider", DeviceLogProvider);
+	testInjector.register("timelineProfilerService", {});
 	testInjector.register("logFilter", LogFilter);
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
@@ -236,6 +237,9 @@ function createTestInjector(
 		},
 	});
 	testInjector.register("tempService", TempServiceStub);
+	testInjector.register("spmService", {
+		applySPMPackages: () => Promise.resolve(),
+	});
 
 	return testInjector;
 }
@@ -1288,5 +1292,11 @@ describe("handleNativeDependenciesChange", () => {
 			"podInstall",
 			"podMerge",
 		]);
+	});
+});
+
+describe("SPM Packages", () => {
+	it("should add SPM packages to the project", async () => {
+		// todo: add tests for SPM packages
 	});
 });

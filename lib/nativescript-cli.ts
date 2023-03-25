@@ -18,7 +18,7 @@ installUncaughtExceptionListener(
 );
 
 const logger: ILogger = injector.resolve("logger");
-const originalProcessOn = process.on;
+export const originalProcessOn = process.on.bind(process);
 
 process.on = (event: string, listener: any): any => {
 	if (event === "SIGINT") {
@@ -36,7 +36,7 @@ process.on = (event: string, listener: any): any => {
 			)
 		);
 	} else {
-		return originalProcessOn.apply(process, [event, listener]);
+		return originalProcessOn(event, listener);
 	}
 };
 
@@ -52,8 +52,9 @@ process.on = (event: string, listener: any): any => {
 	const err: IErrors = injector.resolve("$errors");
 	err.printCallStack = config.DEBUG;
 
-	const $initializeService =
-		injector.resolve<IInitializeService>("initializeService");
+	const $initializeService = injector.resolve<IInitializeService>(
+		"initializeService"
+	);
 	await $initializeService.initialize();
 
 	const extensibilityService: IExtensibilityService = injector.resolve(
@@ -65,8 +66,9 @@ process.on = (event: string, listener: any): any => {
 		logger.trace("Unable to load extensions. Error is: ", err);
 	}
 
-	const commandDispatcher: ICommandDispatcher =
-		injector.resolve("commandDispatcher");
+	const commandDispatcher: ICommandDispatcher = injector.resolve(
+		"commandDispatcher"
+	);
 
 	// unused...
 	// const messages: IMessagesService = injector.resolve("$messagesService");

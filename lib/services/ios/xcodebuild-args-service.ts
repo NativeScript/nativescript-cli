@@ -14,10 +14,6 @@ import * as _ from "lodash";
 
 const DevicePlatformSdkName = "iphoneos";
 const SimulatorPlatformSdkName = "iphonesimulator";
-enum ProductArgs {
-	target = "target",
-	scheme = "scheme",
-}
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
 	constructor(
@@ -35,9 +31,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	): Promise<string[]> {
 		let args = await this.getArchitecturesArgs(buildConfig);
 
-		let productType: ProductArgs;
 		if (this.$iOSWatchAppService.hasWatchApp(platformData, projectData)) {
-			productType = ProductArgs.scheme;
 			args = args.concat(["CODE_SIGNING_ALLOWED=NO"]);
 		} else {
 			args = args.concat(["CODE_SIGN_IDENTITY="]);
@@ -59,13 +53,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				)
 			)
 			.concat(this.getBuildLoggingArgs())
-			.concat(
-				this.getXcodeProjectArgs(
-					platformData.projectRoot,
-					projectData,
-					productType
-				)
-			);
+			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData));
 
 		return args;
 	}
@@ -90,13 +78,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			buildConfig.release ? Configurations.Release : Configurations.Debug,
 			"-allowProvisioningUpdates",
 		]
-			.concat(
-				this.getXcodeProjectArgs(
-					platformData.projectRoot,
-					projectData,
-					ProductArgs.scheme
-				)
-			)
+			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData))
 			.concat(architectures)
 			.concat(
 				this.getBuildCommonArgs(
@@ -125,10 +107,9 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		return args;
 	}
 
-	private getXcodeProjectArgs(
+	public getXcodeProjectArgs(
 		projectRoot: string,
-		projectData: IProjectData,
-		product?: ProductArgs
+		projectData: IProjectData
 	): string[] {
 		const xcworkspacePath = path.join(
 			projectRoot,
@@ -147,12 +128,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			projectRoot,
 			`${projectData.projectName}.xcodeproj`
 		);
-		return [
-			"-project",
-			xcodeprojPath,
-			product ? "-" + product : "-target",
-			projectData.projectName,
-		];
+		return ["-project", xcodeprojPath, "-scheme", projectData.projectName];
 	}
 
 	private getBuildLoggingArgs(): string[] {

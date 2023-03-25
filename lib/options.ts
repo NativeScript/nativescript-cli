@@ -136,6 +136,7 @@ export class Options {
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
 			yarn: { type: OptionType.Boolean, hasSensitiveValue: false },
+			yarn2: { type: OptionType.Boolean, hasSensitiveValue: false },
 			pnpm: { type: OptionType.Boolean, hasSensitiveValue: false },
 			androidTypings: { type: OptionType.Boolean, hasSensitiveValue: false },
 			bundle: { type: OptionType.String, hasSensitiveValue: false },
@@ -419,8 +420,9 @@ export class Options {
 		this.$settingsService.setSettings({
 			profileDir: <string>this.argv.profileDir,
 		});
-		this.argv.profileDir = this.argv["profile-dir"] =
-			this.$settingsService.getProfileDir();
+		this.argv.profileDir = this.argv[
+			"profile-dir"
+		] = this.$settingsService.getProfileDir();
 
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (this.argv.justlaunch) {
