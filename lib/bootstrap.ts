@@ -219,6 +219,7 @@ injector.requireCommand("setup|*", "./commands/setup");
 injector.requirePublic("packageManager", "./package-manager");
 injector.requirePublic("npm", "./node-package-manager");
 injector.requirePublic("yarn", "./yarn-package-manager");
+injector.requirePublic("yarn2", "./yarn2-package-manager");
 injector.requirePublic("pnpm", "./pnpm-package-manager");
 injector.requireCommand(
 	"package-manager|*get",

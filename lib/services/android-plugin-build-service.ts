@@ -375,7 +375,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
 		const buildGradlePath = path.join(pluginTempDir, "build.gradle");
 		const settingsGradlePath = path.join(pluginTempDir, "settings.gradle");
-		
+
 		this.$fs.copyFile(allGradleTemplateFiles, pluginTempDir);
 		const runtimeGradleVersions = await this.getRuntimeGradleVersions(
 			projectDir
@@ -430,12 +430,13 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		let runtimeVersion: string = null;
 
 		try {
-			const result = await this.$packageManager.view(
+			let result = await this.$packageManager.view(
 				SCOPED_ANDROID_RUNTIME_NAME,
 				{
 					"dist-tags": true,
 				}
 			);
+			result = result?.["dist-tags"] ?? result;
 			runtimeVersion = result.latest;
 		} catch (err) {
 			this.$logger.trace(
@@ -529,6 +530,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
 				{ version_info: true }
 			);
+			output = output?.["version_info"] ?? output;
 
 			if (!output) {
 				/**
@@ -543,6 +545,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 					`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
 					{ gradle: true }
 				);
+				output = output?.["gradle"] ?? output;
 
 				const { version, android } = output;
 
@@ -709,7 +712,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				projectDir: pluginBuildSettings.projectDir,
 			});
 			pluginBuildSettings.androidToolsInfo = this.$androidToolsInfo.getToolsInfo(
-				{ projectDir: pluginBuildSettings.projectDir }
+				{
+					projectDir: pluginBuildSettings.projectDir,
+				}
 			);
 		}
 

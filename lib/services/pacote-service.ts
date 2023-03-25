@@ -29,7 +29,8 @@ export class PacoteService implements IPacoteService {
 		options?: IPacoteManifestOptions
 	): Promise<any> {
 		this.$logger.trace(
-			`Calling pacoteService.manifest for packageName: '${packageName}' and options: ${options}`
+			`Calling pacoteService.manifest for packageName: '${packageName}' and options: `,
+			options
 		);
 		const manifestOptions: IPacoteBaseOptions = await this.getPacoteBaseOptions();
 
@@ -39,13 +40,12 @@ export class PacoteService implements IPacoteService {
 
 		packageName = this.getRealPackageName(packageName);
 		this.$logger.trace(
-			`Calling pacote.manifest for packageName: ${packageName} and options: ${JSON.stringify(
-				manifestOptions,
-				null,
-				2
-			)}`
+			`Calling pacote.manifest for packageName: ${packageName} and manifestOptions:`,
+			manifestOptions
 		);
-		const result = pacote.manifest(packageName, manifestOptions);
+		const result = await pacote.manifest(packageName, manifestOptions);
+
+		this.$logger.trace("pacote.manifest result:", result);
 
 		return result;
 	}
