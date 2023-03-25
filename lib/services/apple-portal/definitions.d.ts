@@ -39,6 +39,7 @@ interface IAppleLoginResult {
 	xAppleIdSessionId: string;
 	isTwoFactorAuthenticationEnabled: boolean;
 	areCredentialsValid: boolean;
+	hashcash: string;
 }
 
 interface IApplePortalUserDetail extends IAppleLoginResult {
