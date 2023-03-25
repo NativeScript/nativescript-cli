@@ -61,6 +61,7 @@ export class GenerateIconsCommand
 	): Promise<void> {
 		await this.$assetsGenerationService.generateIcons({
 			imagePath,
+			background,
 			projectDir: this.$projectData.projectDir,
 		});
 	}

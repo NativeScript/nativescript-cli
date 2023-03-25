@@ -236,7 +236,19 @@ export class ProjectDataService implements IProjectDataService {
 			? path.join(pathToAndroidDir, SRC_DIR, MAIN_DIR, RESOURCES_DIR)
 			: pathToAndroidDir;
 
-		const content = this.getImageDefinitions().android;
+		let useLegacy = false;
+		try {
+			const manifest = this.$fs.readText(
+				path.resolve(basePath, "../AndroidManifest.xml")
+			);
+			useLegacy = !manifest.includes(`android:icon="@mipmap/ic_launcher"`);
+		} catch (err) {
+			// ignore
+		}
+
+		const content = this.getImageDefinitions()[
+			useLegacy ? "android_legacy" : "android"
+		];
 
 		return {
 			icons: this.getAndroidAssetSubGroup(content.icons, basePath),
@@ -460,7 +472,9 @@ export class ProjectDataService implements IProjectDataService {
 				assetItem.filename
 			);
 			assetItem.path = imagePath;
-			assetItem.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+			if (assetItem.width && assetItem.height) {
+				assetItem.size = `${assetItem.width}${AssetConstants.sizeDelimiter}${assetItem.height}`;
+			}
 			assetSubGroup.images.push(assetItem);
 		});
 
