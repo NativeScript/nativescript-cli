@@ -119,6 +119,17 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 			);
 		});
 
+		this.$logger.info(
+			color.green(
+				"\n\nTo view the timeline data, open the following URL in Chrome, and load the json file:"
+			)
+		);
+		this.$logger.info(
+			color.green(
+				"devtools://devtools/bundled/inspector.html?panel=timeline\n\n"
+			)
+		);
+
 		process.exit();
 	}
 }
