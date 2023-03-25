@@ -33,7 +33,7 @@
     "build": "grunt",
     "build.all": "grunt test",
     "dev": "tsc --watch",
-    "setup": "npm i --ignore-scripts --legacy-peer-deps && npx husky install",
+    "setup": "npm i --ignore-scripts && npx husky install",
     "test": "mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
