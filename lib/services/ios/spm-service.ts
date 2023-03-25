@@ -16,7 +16,7 @@ export class SPMService implements ISPMService {
 
 	public getSPMPackages(projectData: IProjectData): IosSPMPackageDefinition[] {
 		const spmPackages = this.$projectConfigService.getValue(
-			"ios.experimentalSPMPackages",
+			"ios.SPMPackages",
 			[]
 		);
 
