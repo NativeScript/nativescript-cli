@@ -224,7 +224,7 @@ export class ProjectService implements IProjectService {
 	}
 
 	@performanceLog()
-	private async ensureAppResourcesExist(projectDir: string): Promise<void> {
+	public async ensureAppResourcesExist(projectDir: string): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const appResourcesDestinationPath = projectData.getAppResourcesDirectoryPath(
 			projectDir

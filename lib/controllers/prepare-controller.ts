@@ -18,6 +18,7 @@ import {
 	IProjectConfigService,
 	IProjectData,
 	IProjectDataService,
+	IProjectService,
 } from "../definitions/project";
 import {
 	INodeModulesDependenciesBuilder,
@@ -64,7 +65,8 @@ export class PrepareController extends EventEmitter {
 		private $watchIgnoreListService: IWatchIgnoreListService,
 		private $analyticsService: IAnalyticsService,
 		private $markingModeService: IMarkingModeService,
-		private $projectConfigService: IProjectConfigService
+		private $projectConfigService: IProjectConfigService,
+		private $projectService: IProjectService
 	) {
 		super();
 	}
@@ -127,6 +129,7 @@ export class PrepareController extends EventEmitter {
 		prepareData: IPrepareData,
 		projectData: IProjectData
 	): Promise<IPrepareResultData> {
+		await this.$projectService.ensureAppResourcesExist(projectData.projectDir);
 		await this.$platformController.addPlatformIfNeeded(
 			prepareData,
 			projectData

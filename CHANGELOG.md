@@ -1,3 +1,48 @@
+# [8.4.0](https://github.com/NativeScript/nativescript-cli/compare/v8.3.3...v8.4.0) (2022-11-30)
+
+
+### Bug Fixes
+
+* get `targetSdkVersion` from project ext ([#5656](https://github.com/NativeScript/nativescript-cli/issues/5656)) ([7574be2](https://github.com/NativeScript/nativescript-cli/commit/7574be2f4cd19b3f9ed28bf351f59ed22f11d7ae))
+* handle unknown/undefined platform edge case ([#5694](https://github.com/NativeScript/nativescript-cli/issues/5694)) ([aa3de73](https://github.com/NativeScript/nativescript-cli/commit/aa3de73193356eedc8ba1c68c9ae9e62b3902832))
+* hmr doesn't work properly in paths with the character '.' ([#5703](https://github.com/NativeScript/nativescript-cli/issues/5703)) ([7a312a2](https://github.com/NativeScript/nativescript-cli/commit/7a312a2113796a75d4fa22541249526bd4ef2dd6))
+* only include EXCLUDED_ARCHS workaround in xcode 12 ([#5705](https://github.com/NativeScript/nativescript-cli/issues/5705)) ([3e430cf](https://github.com/NativeScript/nativescript-cli/commit/3e430cffb52e5f210d3e32e293b9f464f2fc75b6))
+* **testing:** pin karma-jasmine to 4.0.2 ([#5695](https://github.com/NativeScript/nativescript-cli/issues/5695)) ([a5bbac7](https://github.com/NativeScript/nativescript-cli/commit/a5bbac7d32c0a60ea3426b3fbd9b795402d757d1)), closes [#5690](https://github.com/NativeScript/nativescript-cli/issues/5690)
+
+
+### Features
+
+* **doctor:** more informative android compile SDK messages ([#5697](https://github.com/NativeScript/nativescript-cli/issues/5697)) ([cfaa882](https://github.com/NativeScript/nativescript-cli/commit/cfaa882dd42d0d2447efb597442359ed19d9665d))
+* include-settings.gradle plugin ([#5693](https://github.com/NativeScript/nativescript-cli/issues/5693)) ([6155ff7](https://github.com/NativeScript/nativescript-cli/commit/6155ff7f40c37c1183f9cf66b3ea0a464fb6497c))
+* pass in tempPlugin flag during plugin build ([#5691](https://github.com/NativeScript/nativescript-cli/issues/5691)) ([645e9ea](https://github.com/NativeScript/nativescript-cli/commit/645e9ea516063db5da230fbd08db7d9fe37ab971))
+* **migrations:** use Angular 14.2 ([3dc0323](https://github.com/NativeScript/nativescript-cli/commit/3dc03231c7edc7efce9f97445a211f7657c8da1e))
+
+
+
+## [8.3.3](https://github.com/NativeScript/nativescript-cli/compare/v8.3.2...v8.3.3) (2022-08-22)
+
+
+### Bug Fixes
+
+* **console:** disable long line splitting ([be8274d](https://github.com/NativeScript/nativescript-cli/commit/be8274d7dce5f9d43a4aa3bf78d6beb414115dfc))
+* **preview:** windows spawn error ([f737579](https://github.com/NativeScript/nativescript-cli/commit/f73757929550f54fca4509f597da4dd746297ba7))
+
+
+### Features
+
+* ensure App_Resources exists before running ([#5689](https://github.com/NativeScript/nativescript-cli/issues/5689)) ([ba8dd58](https://github.com/NativeScript/nativescript-cli/commit/ba8dd58e289c0e2b8a3bc847a4c8a4e5d1bc0d73))
+
+
+
+## [8.3.2](https://github.com/NativeScript/nativescript-cli/compare/v8.3.1...v8.3.2) (2022-07-31)
+
+
+### Bug Fixes
+
+* **logger:** don't trim text if maxWidth is NaN or <10 ([5415582](https://github.com/NativeScript/nativescript-cli/commit/541558270d54be32f2d38f0848a958e0cbca2a0b))
+
+
+
 ## [8.3.1](https://github.com/NativeScript/nativescript-cli/compare/v8.3.0...v8.3.1) (2022-07-29)
 
 

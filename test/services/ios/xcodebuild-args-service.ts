@@ -42,10 +42,7 @@ function getCommonArgs() {
 	];
 }
 
-function getXcodeProjectArgs(data?: {
-	hasProjectWorkspace: boolean;
-	hasTarget?: boolean;
-}) {
+function getXcodeProjectArgs(data?: { hasProjectWorkspace: boolean }) {
 	return data && data.hasProjectWorkspace
 		? [
 				"-workspace",
@@ -56,7 +53,7 @@ function getXcodeProjectArgs(data?: {
 		: [
 				"-project",
 				path.join(projectRoot, `${projectName}.xcodeproj`),
-				data && data.hasTarget ? "-target" : "-scheme",
+				"-scheme",
 				projectName,
 		  ];
 }
@@ -106,9 +103,7 @@ describe("xcodebuildArgsService", () => {
 						]
 							.concat(getCommonArgs())
 							.concat(getBuildLoggingArgs(logLevel))
-							.concat(
-								getXcodeProjectArgs({ hasProjectWorkspace, hasTarget: true })
-							);
+							.concat(getXcodeProjectArgs({ hasProjectWorkspace }));
 
 						assert.deepStrictEqual(actualArgs, expectedArgs);
 					});

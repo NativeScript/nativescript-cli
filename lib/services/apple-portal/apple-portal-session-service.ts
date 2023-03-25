@@ -8,6 +8,7 @@ import {
 	IAppleLoginResult,
 	IApplePortalSessionService,
 } from "./definitions";
+import * as crypto from "crypto";
 
 export class ApplePortalSessionService implements IApplePortalSessionService {
 	private loginConfigEndpoint =
@@ -38,7 +39,8 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 				await this.handleTwoFactorAuthentication(
 					loginResult.scnt,
 					loginResult.xAppleIdSessionId,
-					authServiceKey
+					authServiceKey,
+					loginResult.hashcash
 				);
 			}
 
@@ -114,6 +116,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 			xAppleIdSessionId: <string>null,
 			isTwoFactorAuthenticationEnabled: false,
 			areCredentialsValid: true,
+			hashcash: <string>null,
 		};
 
 		if (opts && opts.sessionBase64) {
@@ -130,6 +133,12 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 				await this.loginCore(credentials);
 			} catch (err) {
 				const statusCode = err && err.response && err.response.status;
+
+				const bits = err?.response?.headers["x-apple-hc-bits"];
+				const challenge = err?.response?.headers["x-apple-hc-challenge"];
+				const hashcash = makeHashCash(bits, challenge);
+				result.hashcash = hashcash;
+
 				result.areCredentialsValid = statusCode !== 401 && statusCode !== 403;
 				result.isTwoFactorAuthenticationEnabled = statusCode === 409;
 
@@ -216,12 +225,14 @@ For more details how to set up your environment, please execute "tns publish ios
 	private async handleTwoFactorAuthentication(
 		scnt: string,
 		xAppleIdSessionId: string,
-		authServiceKey: string
+		authServiceKey: string,
+		hashcash: string
 	): Promise<void> {
 		const headers = {
 			scnt: scnt,
 			"X-Apple-Id-Session-Id": xAppleIdSessionId,
 			"X-Apple-Widget-Key": authServiceKey,
+			"X-Apple-HC": hashcash,
 			Accept: "application/json",
 		};
 		const authResponse = await this.$httpClient.httpRequest({
@@ -231,21 +242,48 @@ For more details how to set up your environment, please execute "tns publish ios
 		});
 
 		const data = JSON.parse(authResponse.body);
-		if (data.trustedPhoneNumbers && data.trustedPhoneNumbers.length) {
+
+		const isSMS =
+			data.trustedPhoneNumbers &&
+			data.trustedPhoneNumbers.length === 1 &&
+			data.noTrustedDevices; // 1 device and no trusted devices means sms was automatically sent.
+		const multiSMS =
+			data.trustedPhoneNumbers &&
+			data.trustedPhoneNumbers.length !== 1 &&
+			data.noTrustedDevices; // Not handling more than 1 sms device and no trusted devices.
+
+		let token: string;
+
+		if (
+			data.trustedPhoneNumbers &&
+			data.trustedPhoneNumbers.length &&
+			!multiSMS
+		) {
 			const parsedAuthResponse = JSON.parse(authResponse.body);
-			const token = await this.$prompter.getString(
+			token = await this.$prompter.getString(
 				`Please enter the ${parsedAuthResponse.securityCode.length} digit code`,
 				{ allowEmpty: false }
 			);
+			const body: any = {
+				securityCode: {
+					code: token.toString(),
+				},
+			};
+			let url = `https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode`;
+
+			if (isSMS) {
+				// No trusted devices means it must be sms.
+				body.mode = "sms";
+				body.phoneNumber = {
+					id: data.trustedPhoneNumbers[0].id,
+				};
+				url = `https://idmsa.apple.com/appleauth/auth/verify/phone/securitycode`;
+			}
 
 			await this.$httpClient.httpRequest({
-				url: `https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode`,
+				url,
 				method: "POST",
-				body: {
-					securityCode: {
-						code: token.toString(),
-					},
-				},
+				body,
 				headers: { ...headers, "Content-Type": "application/json" },
 			});
 
@@ -258,6 +296,10 @@ For more details how to set up your environment, please execute "tns publish ios
 			this.$applePortalCookieService.updateUserSessionCookie(
 				authTrustResponse.headers["set-cookie"]
 			);
+		} else if (multiSMS) {
+			this.$errors.fail(
+				`The NativeScript CLI does not support SMS authenticaton with multiple registered phone numbers.`
+			);
 		} else {
 			this.$errors.fail(
 				`Although response from Apple indicated activated Two-step Verification or Two-factor Authentication, NativeScript CLI don't know how to handle this response: ${data}`
@@ -266,3 +308,52 @@ For more details how to set up your environment, please execute "tns publish ios
 	}
 }
 injector.register("applePortalSessionService", ApplePortalSessionService);
+
+function makeHashCash(bits: string, challenge: string): string {
+	const version = 1;
+
+	const dateString = getHashCanDateString();
+	let result: string;
+	for (let counter = 0; ; counter++) {
+		const hc = [version, bits, dateString, challenge, `:${counter}`].join(":");
+
+		const shasumData = crypto.createHash("sha1");
+
+		shasumData.update(hc);
+		const digest = shasumData.digest();
+		if (checkBits(+bits, digest)) {
+			result = hc;
+			break;
+		}
+	}
+	return result;
+}
+
+function getHashCanDateString(): string {
+	const now = new Date();
+
+	return `${now.getFullYear()}${padTo2Digits(now.getMonth() + 1)}${padTo2Digits(
+		now.getDate()
+	)}${padTo2Digits(now.getHours())}${padTo2Digits(
+		now.getMinutes()
+	)}${padTo2Digits(now.getSeconds())}`;
+}
+function padTo2Digits(num: number) {
+	return num.toString().padStart(2, "0");
+}
+
+function checkBits(bits: number, digest: Buffer) {
+	let result = true;
+	for (let i = 0; i < bits; ++i) {
+		result = checkBit(i, digest);
+		if (!result) break;
+	}
+	return result;
+}
+
+function checkBit(position: number, buffer: Buffer): boolean {
+	const bitOffset = position & 7; // in byte
+	const byteIndex = position >> 3; // in buffer
+	const bit = (buffer[byteIndex] >> bitOffset) & 1;
+	return bit === 0;
+}

@@ -663,6 +663,7 @@ interface IOptions
 	frameworkName: string;
 	frameworkVersion: string;
 	yarn: string;
+	yarn2: string;
 	pnpm: string;
 	ipa: string;
 	tsc: boolean;
@@ -765,13 +766,18 @@ interface IITMSData {
 	 * @type {string}
 	 */
 	verboseLogging?: boolean;
+	/**
+	 * Specifies the team id
+	 * @type {string}
+	 */
+	teamId?: string;
 }
 
 /**
  * Used for communicating with Xcode iTMS Transporter tool.
  */
 interface IITMSTransporterService {
-	validate(): Promise<void>;
+	validate(appSpecificPassword?: string): Promise<void>;
 	/**
 	 * Uploads an .ipa package to iTunes Connect.
 	 * @param  {IITMSData}     data Data needed to upload the package

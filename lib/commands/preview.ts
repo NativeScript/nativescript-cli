@@ -51,6 +51,7 @@ export class PreviewCommand implements ICommand {
 					installCommand = "npm install --save-dev @nativescript/preview-cli";
 					break;
 				case PackageManagers.yarn:
+				case PackageManagers.yarn2:
 					installCommand = "yarn add -D @nativescript/preview-cli";
 					break;
 				case PackageManagers.pnpm:
@@ -82,9 +83,13 @@ export class PreviewCommand implements ICommand {
 
 		const commandIndex = process.argv.indexOf("preview");
 		const commandArgs = process.argv.slice(commandIndex + 1);
-		this.$childProcess.spawn(previewCLIBinPath, commandArgs, {
-			stdio: "inherit",
-		});
+		this.$childProcess.spawn(
+			process.execPath,
+			[previewCLIBinPath, ...commandArgs],
+			{
+				stdio: "inherit",
+			}
+		);
 	}
 
 	async canExecute(args: string[]): Promise<boolean> {

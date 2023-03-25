@@ -19,6 +19,7 @@ const prepareData = {
 let isCompileWithWatchCalled = false;
 let isCompileWithoutWatchCalled = false;
 let isNativePrepareCalled = false;
+let isEnsuringAppResourcesExist = false;
 let emittedEventNames: string[] = [];
 let emittedEventData: any[] = [];
 
@@ -64,6 +65,12 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	});
 
 	injector.register("tempService", TempServiceStub);
+	injector.register("projectService", {
+		ensureAppResourcesExist(projectDir: string): Promise<void> {
+			isEnsuringAppResourcesExist = true;
+			return;
+		},
+	});
 
 	const prepareController: PrepareController = injector.resolve(
 		"prepareController"
@@ -84,6 +91,7 @@ describe("prepareController", () => {
 		isNativePrepareCalled = false;
 		isCompileWithWatchCalled = false;
 		isCompileWithoutWatchCalled = false;
+		isEnsuringAppResourcesExist = false;
 
 		emittedEventNames = [];
 		emittedEventData = [];
@@ -102,6 +110,7 @@ describe("prepareController", () => {
 
 					assert.isTrue(isCompileWithWatchCalled);
 					assert.isTrue(isNativePrepareCalled);
+					assert.isTrue(isEnsuringAppResourcesExist);
 				});
 			});
 			it(`should respect native changes that are made before the initial preparation of the project had been done for ${platform}`, async () => {
@@ -161,6 +170,7 @@ describe("prepareController", () => {
 				assert.isTrue(isNativePrepareCalled);
 				assert.isTrue(isCompileWithoutWatchCalled);
 				assert.isFalse(isCompileWithWatchCalled);
+				assert.isTrue(isEnsuringAppResourcesExist);
 			});
 		});
 	});

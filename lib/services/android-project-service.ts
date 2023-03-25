@@ -242,11 +242,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 						],
 						regexes: [
 							new RegExp(
-								`${constants.APP_FOLDER_NAME}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`,
-								"i"
-							),
-							new RegExp(
-								`${packageName}-.*-(${Configurations.Debug}|${Configurations.Release})${constants.APK_EXTENSION_NAME}`,
+								`(${packageName}|${constants.APP_FOLDER_NAME})-.*-(${Configurations.Debug}|${Configurations.Release})(-unsigned)?${constants.APK_EXTENSION_NAME}`,
 								"i"
 							),
 						],

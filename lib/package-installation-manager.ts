@@ -70,7 +70,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			versions: true,
 		});
 
-		return semver.maxSatisfying(data, versionRange);
+		return semver.maxSatisfying(data?.versions ?? data, versionRange);
 	}
 
 	public async getMaxSatisfyingVersionSafe(
@@ -320,9 +320,10 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		version: string
 	): Promise<string> {
-		const data: any = await this.$packageManager.view(packageName, {
+		let data: any = await this.$packageManager.view(packageName, {
 			"dist-tags": true,
 		});
+		data = data?.["dist-tags"] ?? data;
 		this.$logger.trace("Using version %s. ", data[version]);
 
 		return data[version];
