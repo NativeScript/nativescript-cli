@@ -6,12 +6,7 @@ shelljs.config.fatal = true;
 import { installUncaughtExceptionListener } from "./common/errors";
 import { settlePromises } from "./common/helpers";
 import { injector } from "./common/yok";
-import {
-	ErrorCodes,
-	IErrors,
-	ICommandDispatcher,
-	IMessagesService,
-} from "./common/declarations";
+import { ErrorCodes, IErrors, ICommandDispatcher } from "./common/declarations";
 import {
 	IExtensibilityService,
 	IExtensionData,
