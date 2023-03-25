@@ -323,7 +323,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		let data: any = await this.$packageManager.view(packageName, {
 			"dist-tags": true,
 		});
-		data = data['dist-tags'] || data;
+		data = data?.["dist-tags"] ?? data;
 		this.$logger.trace("Using version %s. ", data[version]);
 
 		return data[version];
