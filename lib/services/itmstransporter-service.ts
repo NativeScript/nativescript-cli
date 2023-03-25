@@ -35,7 +35,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 
 	public async validate(appSpecificPassword?: string): Promise<void> {
 		const itmsTransporterPath = await this.getITMSTransporterPath();
-		var version = await this.$xcodeSelectService.getXcodeVersion();
+		const version = await this.$xcodeSelectService.getXcodeVersion();
 		if (+version.major < 14) {
 			if (!this.$fs.exists(itmsTransporterPath)) {
 				this.$errors.fail(
@@ -57,7 +57,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		}
 	}
 	public async upload(data: IITMSData): Promise<void> {
-		var version = await this.$xcodeSelectService.getXcodeVersion();
+		const version = await this.$xcodeSelectService.getXcodeVersion();
 		if (+version.major < 14) {
 			await this.upload_iTMSTransporter(data);
 		} else {

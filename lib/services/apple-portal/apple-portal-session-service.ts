@@ -264,12 +264,12 @@ For more details how to set up your environment, please execute "tns publish ios
 				`Please enter the ${parsedAuthResponse.securityCode.length} digit code`,
 				{ allowEmpty: false }
 			);
-			var body: any = {
+			const body: any = {
 				securityCode: {
 					code: token.toString(),
 				},
 			};
-			var url = `https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode`;
+			let url = `https://idmsa.apple.com/appleauth/auth/verify/trusteddevice/securitycode`;
 
 			if (isSMS) {
 				// No trusted devices means it must be sms.
@@ -313,8 +313,8 @@ function makeHashCash(bits: string, challenge: string): string {
 	const version = 1;
 
 	const dateString = getHashCanDateString();
-	var result: string;
-	for (var counter = 0; ; counter++) {
+	let result: string;
+	for (let counter = 0; ; counter++) {
 		const hc = [version, bits, dateString, challenge, `:${counter}`].join(":");
 
 		const shasumData = crypto.createHash("sha1");
@@ -343,8 +343,8 @@ function padTo2Digits(num: number) {
 }
 
 function checkBits(bits: number, digest: Buffer) {
-	var result = true;
-	for (var i = 0; i < bits; ++i) {
+	let result = true;
+	for (let i = 0; i < bits; ++i) {
 		result = checkBit(i, digest);
 		if (!result) break;
 	}
