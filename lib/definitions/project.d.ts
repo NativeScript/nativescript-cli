@@ -407,6 +407,10 @@ interface IAssetItem {
 	resizeOperation?: string;
 	overlayImageScale?: number;
 	rgba?: boolean;
+
+	// additional operations for special cases
+	operation?: "delete" | "writeXMLColor";
+	data?: any;
 }
 
 interface IAssetSubGroup {
@@ -438,6 +442,7 @@ interface IImageDefinitionGroup {
 interface IImageDefinitionsStructure {
 	ios: IImageDefinitionGroup;
 	android: IImageDefinitionGroup;
+	android_legacy: IImageDefinitionGroup;
 }
 
 interface ITemplateData {
