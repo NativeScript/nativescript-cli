@@ -51,6 +51,7 @@ export class PreviewCommand implements ICommand {
 					installCommand = "npm install --save-dev @nativescript/preview-cli";
 					break;
 				case PackageManagers.yarn:
+				case PackageManagers.yarn2:
 					installCommand = "yarn add -D @nativescript/preview-cli";
 					break;
 				case PackageManagers.pnpm:

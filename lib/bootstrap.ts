@@ -58,6 +58,7 @@ injector.require("iOSProjectService", "./services/ios-project-service");
 injector.require("iOSProvisionService", "./services/ios-provision-service");
 injector.require("xcconfigService", "./services/xcconfig-service");
 injector.require("iOSSigningService", "./services/ios/ios-signing-service");
+injector.require("spmService", "./services/ios/spm-service");
 injector.require(
 	"xcodebuildArgsService",
 	"./services/ios/xcodebuild-args-service"
@@ -218,6 +219,7 @@ injector.requireCommand("setup|*", "./commands/setup");
 injector.requirePublic("packageManager", "./package-manager");
 injector.requirePublic("npm", "./node-package-manager");
 injector.requirePublic("yarn", "./yarn-package-manager");
+injector.requirePublic("yarn2", "./yarn2-package-manager");
 injector.requirePublic("pnpm", "./pnpm-package-manager");
 injector.requireCommand(
 	"package-manager|*get",

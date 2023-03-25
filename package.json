@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "preferGlobal": true,
-  "version": "8.3.3",
+  "version": "8.5.0-dev.0",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -60,6 +60,7 @@
     "@nativescript/doctor": "2.0.9",
     "@nativescript/schematics-executor": "0.0.2",
     "@rigor789/resolve-package-path": "^1.0.5",
+    "@rigor789/trapezedev-project": "^7.1.0",
     "axios": "^0.21.1",
     "byline": "5.0.0",
     "chalk": "4.1.0",

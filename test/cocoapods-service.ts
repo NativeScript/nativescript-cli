@@ -38,6 +38,13 @@ function createTestInjector(): IInjector {
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("config", {});
 	testInjector.register("xcconfigService", XcconfigService);
+	testInjector.register("xcodeSelectService", {
+		getXcodeVersion() {
+			return {
+				major: 14,
+			};
+		},
+	});
 	testInjector.register("projectData", {});
 	testInjector.register("cocoaPodsPlatformManager", CocoaPodsPlatformManager);
 
