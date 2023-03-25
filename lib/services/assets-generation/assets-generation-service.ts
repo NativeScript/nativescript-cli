@@ -65,7 +65,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		generationData: IResourceGenerationData,
 		propertiesToEnumerate: string[]
 	): Promise<void> {
-		// generationData.background = generationData.background || "white";
+		const background = generationData.background || "white";
 		const assetsStructure = await this.$projectDataService.getAssetsStructure(
 			generationData
 		);
@@ -174,7 +174,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 						imageResize
 					);
 					image = this.generateImage(
-						generationData.background,
+						background,
 						width,
 						height,
 						outputPath,
@@ -182,12 +182,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 					);
 					break;
 				case Operations.Blank:
-					image = this.generateImage(
-						generationData.background,
-						width,
-						height,
-						outputPath
-					);
+					image = this.generateImage(background, width, height, outputPath);
 					break;
 				case Operations.Resize:
 					image = await this.resize(generationData.imagePath, width, height);
