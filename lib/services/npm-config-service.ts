@@ -7,18 +7,16 @@ import { cache } from "../common/decorators";
 export class NpmConfigService implements INpmConfigService {
 	private config: IDictionary<any> = {};
 
-	constructor() {
-		this.readConfig();
-	}
-
 	public getConfig(): IDictionary<any> {
+		this.readConfig();
+
 		return this.config;
 	}
 
 	@cache()
 	private readConfig(): void {
 		try {
-			const res = execSync("npm config list --json");
+			const res = execSync("npm config list --json --global");
 			// const data: any = npmconfig.read();
 			const data: Record<string, any> = JSON.parse(res.toString());
 
