@@ -6,11 +6,14 @@ import * as chalk from "chalk";
 import { LoggerConfigData } from "../../constants";
 import { IOptions } from "../../declarations";
 
+import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
+
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(
 		protected $logFilter: Mobile.ILogFilter,
 		protected $logger: ILogger,
 		protected $logSourceMapService: Mobile.ILogSourceMapService,
+		protected $timelineProfilerService: ITimelineProfilerService,
 		protected $options: IOptions
 	) {
 		super($logFilter, $logger, $logSourceMapService);
@@ -29,7 +32,9 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			data,
 			loggingOptions
 		);
+
 		if (data) {
+			this.$timelineProfilerService.processLogData(data, deviceIdentifier);
 			this.logDataCore(data, deviceIdentifier);
 			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier, platform);
 		}

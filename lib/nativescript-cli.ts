@@ -22,7 +22,7 @@ installUncaughtExceptionListener(
 );
 
 const logger: ILogger = injector.resolve("logger");
-const originalProcessOn = process.on;
+export const originalProcessOn = process.on.bind(process);
 
 process.on = (event: string, listener: any): any => {
 	if (event === "SIGINT") {
@@ -33,7 +33,7 @@ process.on = (event: string, listener: any): any => {
 		const stackTrace = new Error(msg).stack || "";
 		logger.trace(stackTrace.replace(`Error: ${msg}`, msg));
 	} else {
-		return originalProcessOn.apply(process, [event, listener]);
+		return originalProcessOn(event, listener);
 	}
 };
 
