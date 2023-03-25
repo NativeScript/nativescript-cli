@@ -668,7 +668,6 @@ interface IFutureDispatcher {
 
 interface ICommandDispatcher {
 	dispatchCommand(): Promise<void>;
-	completeCommand(): Promise<boolean>;
 }
 
 interface ICancellationService extends IDisposable {

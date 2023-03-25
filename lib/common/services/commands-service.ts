@@ -61,9 +61,8 @@ export class CommandsService implements ICommandsService {
 		const command = this.$injector.resolveCommand(commandName);
 		if (command) {
 			if (!this.$staticConfig.disableAnalytics && !command.disableAnalytics) {
-				const analyticsService = this.$injector.resolve<IAnalyticsService>(
-					"analyticsService"
-				); // This should be resolved here due to cyclic dependency
+				const analyticsService =
+					this.$injector.resolve<IAnalyticsService>("analyticsService"); // This should be resolved here due to cyclic dependency
 				await analyticsService.checkConsent();
 
 				const beautifiedCommandName = this.beautifyCommandName(
@@ -242,9 +241,10 @@ export class CommandsService implements ICommandsService {
 			defaultCommandDelimiter: CommandsDelimiters.DefaultHierarchicalCommand,
 		};
 
-		const extensionData = await this.$extensibilityService.getExtensionNameWhereCommandIsRegistered(
-			commandInfo
-		);
+		const extensionData =
+			await this.$extensibilityService.getExtensionNameWhereCommandIsRegistered(
+				commandInfo
+			);
 
 		if (extensionData) {
 			this.$logger.warn(extensionData.installationMessage);
@@ -405,145 +405,12 @@ export class CommandsService implements ICommandsService {
 		}
 	}
 
-	public async completeCommand(): Promise<boolean> {
-		const tabtab = require("tabtab");
-
-		const completeCallback = (err: Error, data: any) => {
-			if (err || !data) {
-				return;
-			}
-
-			const commands = this.$injector.getRegisteredCommandsNames(false);
-			const splittedLine = data.line.split(/[ ]+/);
-			const line = _.filter(splittedLine, (w) => w !== "");
-			let commandName = <string>line[line.length - 2];
-
-			const childrenCommands = this.$injector.getChildrenCommandsNames(
-				commandName
-			);
-
-			if (data.last && _.startsWith(data.last, "--")) {
-				return tabtab.log(_.keys(this.$options.options), data, "--");
-			}
-
-			if (data.last && _.startsWith(data.last, "-")) {
-				return tabtab.log(this.$options.shorthands, data, "-");
-			}
-
-			if (data.words === 1) {
-				const allCommands = this.allCommands({ includeDevCommands: false });
-				return tabtab.log(allCommands, data);
-			}
-
-			if (data.words >= 2) {
-				// Hierarchical command
-				if (data.words !== line.length) {
-					commandName = `${line[data.words - 2]}|${line[data.words - 1]}`;
-				} else {
-					commandName = `${line[line.length - 1]}`;
-				}
-			}
-
-			const command = this.$injector.resolveCommand(commandName);
-			if (command) {
-				const completionData = command.completionData;
-				if (completionData) {
-					return tabtab.log(completionData, data);
-				} else {
-					return this.logChildrenCommandsNames(
-						commandName,
-						commands,
-						tabtab,
-						data
-					);
-				}
-			} else if (childrenCommands) {
-				let nonDefaultSubCommands = _.reject(
-					childrenCommands,
-					(children: string) => children[0] === "*"
-				);
-				let sanitizedChildrenCommands: string[] = [];
-
-				if (data.words !== line.length) {
-					sanitizedChildrenCommands = nonDefaultSubCommands.map(
-						(commandToMap: string) => {
-							const pipePosition = commandToMap.indexOf("|");
-							return commandToMap.substring(
-								0,
-								pipePosition !== -1 ? pipePosition : commandToMap.length
-							);
-						}
-					);
-				} else {
-					nonDefaultSubCommands = nonDefaultSubCommands.filter(
-						(commandNameToFilter: string) =>
-							commandNameToFilter.indexOf("|") !== -1
-					);
-					sanitizedChildrenCommands = nonDefaultSubCommands.map(
-						(commandToMap: string) => {
-							const pipePosition = commandToMap.lastIndexOf("|");
-							return commandToMap.substring(
-								pipePosition !== -1 ? pipePosition + 1 : 0,
-								commandToMap.length
-							);
-						}
-					);
-				}
-
-				return tabtab.log(sanitizedChildrenCommands, data);
-			} else {
-				return this.logChildrenCommandsNames(
-					commandName,
-					commands,
-					tabtab,
-					data
-				);
-			}
-		};
-
-		// aliases to do autocompletion for
-		const aliases = ["ns", "nsc", "tns", "nativescript"];
-
-		for await (const alias of aliases) {
-			await tabtab.complete(alias, completeCallback);
-		}
-
-		return true;
-	}
-
 	private beautifyCommandName(commandName: string): string {
 		if (commandName.indexOf("*") > 0) {
-			return commandName.substr(0, commandName.indexOf("|"));
+			return commandName.substring(0, commandName.indexOf("|"));
 		}
 
 		return commandName;
-	}
-
-	private logChildrenCommandsNames(
-		commandName: string,
-		commands: string[],
-		tabtab: any,
-		data: any
-	) {
-		const matchingCommands = commands
-			.filter((commandToFilter: string) => {
-				return (
-					commandToFilter.indexOf(commandName + "|") !== -1 &&
-					commandToFilter !== commandName
-				);
-			})
-			.map((commandToMap: string) => {
-				const commandResult = commandToMap.replace(commandName + "|", "");
-
-				return commandResult.substring(
-					0,
-					commandResult.indexOf("|") !== -1
-						? commandResult.indexOf("|")
-						: commandResult.length
-				);
-			});
-
-		return tabtab.log(matchingCommands, data);
 	}
 }
 injector.register("commandsService", CommandsService);
