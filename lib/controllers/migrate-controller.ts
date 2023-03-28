@@ -1355,7 +1355,7 @@ export class MigrateController
 			{
 				packageName: "zone.js",
 				minVersion: "0.11.1",
-				desiredVersion: "~0.12.0",
+				desiredVersion: "~0.13.0",
 				shouldAddIfMissing: true,
 			},
 
