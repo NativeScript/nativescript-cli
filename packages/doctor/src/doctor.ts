@@ -255,7 +255,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					infoMessage: "Python installed and configured correctly.",
 					warningMessage: `Couldn't retrieve installed python packages.`,
 					additionalInformation:
-						"We cannot verify your python installation is setup correctly. Please, make sure you have both 'python' and 'pip' installed." +
+						"We cannot verify your python installation is setup correctly. Please, make sure you have both 'python3' and 'pip3' installed." +
 						EOL +
 						`Error while validating Python packages. Error is: ${sysInfoData.pythonInfo.installationErrorMessage}`,
 					platforms: [Constants.IOS_PLATFORM_NAME],
