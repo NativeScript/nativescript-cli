@@ -57,7 +57,7 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/doctor": "2.0.10",
+    "@nativescript/doctor": "2.0.11",
     "@nativescript/schematics-executor": "0.0.2",
     "@rigor789/resolve-package-path": "^1.0.5",
     "@rigor789/trapezedev-project": "^7.1.0",

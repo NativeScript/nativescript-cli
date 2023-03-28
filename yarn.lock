@@ -440,10 +440,10 @@
   resolved "https://registry.npmjs.org/@kwsites/promise-deferred/-/promise-deferred-1.1.1.tgz"
   integrity sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw==
 
-"@nativescript/doctor@2.0.9":
-  version "2.0.9"
-  resolved "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.9.tgz"
-  integrity sha512-/4Y3wkB5fQHr7oZVl15uQz1vwZPeL5dxVdts/djakJczIFKHozTL4k31rH1/82fExB5HvzzfJZhEvocwkS+/lw==
+"@nativescript/doctor@2.0.11":
+  version "2.0.11"
+  resolved "https://registry.npmjs.org/@nativescript/doctor/-/doctor-2.0.11.tgz"
+  integrity sha512-SLeZaiBGlXVbpqZubD5O44B9wSJp3ffmzgDvczSsGrRwmoo3jyL+OO/GxLoVyM414nFvVBJfrAJcjIaCC//2+w==
   dependencies:
     lodash "4.17.21"
     osenv "0.1.5"
