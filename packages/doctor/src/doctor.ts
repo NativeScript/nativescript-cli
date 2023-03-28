@@ -265,7 +265,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					infoMessage: `The Python 'six' package is found.`,
 					warningMessage: `The Python 'six' package not found.`,
 					additionalInformation:
-						"This package is required by the Debugger library (LLDB) for iOS. You can install it by first making sure you have pip installed and then running 'pip install six' from the terminal.",
+						"This package is required by the Debugger library (LLDB) for iOS. You can install it by first making sure you have pip3 installed and then running 'pip3 install six' from the terminal.",
 					platforms: [Constants.IOS_PLATFORM_NAME],
 				})
 			);
