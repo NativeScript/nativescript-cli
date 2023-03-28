@@ -255,7 +255,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					infoMessage: "Python installed and configured correctly.",
 					warningMessage: `Couldn't retrieve installed python packages.`,
 					additionalInformation:
-						"We cannot verify your python installation is setup correctly. Please, make sure you have both 'python' and 'pip' installed." +
+						"We cannot verify your python installation is setup correctly. Please, make sure you have both 'python3' and 'pip3' installed." +
 						EOL +
 						`Error while validating Python packages. Error is: ${sysInfoData.pythonInfo.installationErrorMessage}`,
 					platforms: [Constants.IOS_PLATFORM_NAME],
@@ -265,7 +265,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					infoMessage: `The Python 'six' package is found.`,
 					warningMessage: `The Python 'six' package not found.`,
 					additionalInformation:
-						"This package is required by the Debugger library (LLDB) for iOS. You can install it by first making sure you have pip installed and then running 'pip install six' from the terminal.",
+						"This package is required by the Debugger library (LLDB) for iOS. You can install it by first making sure you have pip3 installed and then running 'pip3 install six' from the terminal.",
 					platforms: [Constants.IOS_PLATFORM_NAME],
 				})
 			);

@@ -48,8 +48,7 @@ import { color } from "../color";
 
 export class MigrateController
 	extends UpdateControllerBase
-	implements IMigrateController
-{
+	implements IMigrateController {
 	constructor(
 		protected $fs: IFileSystem,
 		protected $platformCommandHelper: IPlatformCommandHelper,
@@ -117,7 +116,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~8.4.0",
+			desiredVersion: "~8.5.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -127,7 +126,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.4.0",
+			desiredVersion: "~8.5.0",
 			isDev: true,
 		},
 		{
@@ -160,7 +159,7 @@ export class MigrateController
 		{
 			packageName: "nativescript-vue",
 			minVersion: "2.7.0",
-			desiredVersion: "~2.9.2",
+			desiredVersion: "~2.9.3",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -186,7 +185,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "~14.2.0",
+			desiredVersion: "~15.2.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -291,13 +290,13 @@ export class MigrateController
 		{
 			packageName: "@nativescript/ios",
 			minVersion: "6.5.3",
-			desiredVersion: "~8.4.0",
+			desiredVersion: "~8.5.0",
 			isDev: true,
 		},
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.4.0",
+			desiredVersion: "~8.5.0",
 			isDev: true,
 		},
 	];
@@ -579,11 +578,10 @@ export class MigrateController
 		projectData: IProjectData,
 		loose: boolean
 	): Promise<boolean> {
-		const installedVersion =
-			await this.$packageInstallationManager.getInstalledDependencyVersion(
-				dependency.packageName,
-				projectData.projectDir
-			);
+		const installedVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
+			dependency.packageName,
+			projectData.projectDir
+		);
 
 		const desiredVersion = dependency.desiredVersion ?? dependency.minVersion;
 		const minVersion = dependency.minVersion ?? dependency.desiredVersion;
@@ -722,10 +720,12 @@ export class MigrateController
 			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		]);
 
-		const { dependencies, devDependencies } =
-			await this.$pluginsService.getDependenciesFromPackageJson(
-				projectData.projectDir
-			);
+		const {
+			dependencies,
+			devDependencies,
+		} = await this.$pluginsService.getDependenciesFromPackageJson(
+			projectData.projectDir
+		);
 		const hasSchematics = [...dependencies, ...devDependencies].find(
 			(p) => p.name === "@nativescript/schematics"
 		);
@@ -1114,11 +1114,10 @@ export class MigrateController
 		// force the config service to use nativescript.config.ts
 		this.$projectConfigService.setForceUsingNewConfig(true);
 		// migrate data into nativescript.config.ts
-		const hasUpdatedConfigSuccessfully =
-			await this.$projectConfigService.setValue(
-				"", // root
-				configData as { [key: string]: SupportedConfigValues }
-			);
+		const hasUpdatedConfigSuccessfully = await this.$projectConfigService.setValue(
+			"", // root
+			configData as { [key: string]: SupportedConfigValues }
+		);
 
 		if (!hasUpdatedConfigSuccessfully) {
 			if (typeof newConfigPath === "string") {
@@ -1306,7 +1305,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~14.2.0";
+		const desiredVersion = "~15.2.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
@@ -1360,13 +1359,13 @@ export class MigrateController
 			{
 				packageName: "rxjs",
 				minVersion: "6.6.0",
-				desiredVersion: "~7.5.0",
+				desiredVersion: "~7.6.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "zone.js",
 				minVersion: "0.11.1",
-				desiredVersion: "~0.11.5",
+				desiredVersion: "~0.13.0",
 				shouldAddIfMissing: true,
 			},
 
@@ -1405,7 +1404,7 @@ export class MigrateController
 			{
 				packageName: "nativescript-vue-template-compiler",
 				minVersion: "2.7.0",
-				desiredVersion: "~2.9.2",
+				desiredVersion: "~2.9.3",
 				isDev: true,
 				shouldAddIfMissing: true,
 			},
@@ -1562,11 +1561,10 @@ export class MigrateController
 
 		try {
 			const scopedWebpackPackage = `@nativescript/webpack`;
-			const resolvedVersion =
-				await this.$packageInstallationManager.getMaxSatisfyingVersion(
-					scopedWebpackPackage,
-					webpackVersion
-				);
+			const resolvedVersion = await this.$packageInstallationManager.getMaxSatisfyingVersion(
+				scopedWebpackPackage,
+				webpackVersion
+			);
 			await this.runNPX([
 				"--package",
 				`${scopedWebpackPackage}@${resolvedVersion}`,
