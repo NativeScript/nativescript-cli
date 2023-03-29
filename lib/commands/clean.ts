@@ -198,7 +198,7 @@ export class CleanCommand implements ICommand {
 			paths,
 			(p) => {
 				return this.$childProcess
-					.exec(`${CLIPath} clean --dry-run --json --disable-analytics`, {
+					.exec(`node ${CLIPath} clean --dry-run --json --disable-analytics`, {
 						cwd: p,
 					})
 					.then((res) => {
@@ -286,7 +286,7 @@ export class CleanCommand implements ICommand {
 
 			const ok = await this.$childProcess
 				.exec(
-					`${CLIPath} clean ${
+					`node ${CLIPath} clean ${
 						this.$options.dryRun ? "--dry-run" : ""
 					} --json --disable-analytics`,
 					{
