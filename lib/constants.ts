@@ -158,6 +158,7 @@ export class ITMSConstants {
 	};
 	static iTMSExecutableName = "iTMSTransporter";
 	static iTMSDirectoryName = "itms";
+	static altoolExecutableName = "altool";
 }
 
 class ItunesConnectApplicationTypesClass
@@ -492,4 +493,5 @@ export enum PackageManagers {
 	npm = "npm",
 	pnpm = "pnpm",
 	yarn = "yarn",
+	yarn2 = "yarn2",
 }

@@ -4,6 +4,7 @@ import { PackageManager } from "../lib/package-manager";
 import { PackageInstallationManager } from "../lib/package-installation-manager";
 import { NodePackageManager } from "../lib/node-package-manager";
 import { YarnPackageManager } from "../lib/yarn-package-manager";
+import { Yarn2PackageManager } from "../lib/yarn2-package-manager";
 import { PnpmPackageManager } from "../lib/pnpm-package-manager";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
@@ -74,6 +75,7 @@ function createTestInjector() {
 	);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
+	testInjector.register("yarn2", Yarn2PackageManager);
 	testInjector.register("pnpm", PnpmPackageManager);
 	testInjector.register("fs", FileSystem);
 	// const fileSystemStub = new stubs.FileSystemStub();

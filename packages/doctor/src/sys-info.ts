@@ -494,7 +494,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			async (): Promise<NativeScriptDoctor.IPythonInfo> => {
 				if (this.hostInfo.isDarwin) {
 					try {
-						await this.childProcess.exec(`python -c "import six"`);
+						await this.childProcess.exec(`python3 -c "import six"`);
 					} catch (error) {
 						// error.code = 1 so the Python is present, but we don't have six.
 						if (error.code === 1) {

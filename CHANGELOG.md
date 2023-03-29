@@ -1,3 +1,33 @@
+## [8.5.1](https://github.com/NativeScript/nativescript-cli/compare/v8.5.0...v8.5.1) (2023-03-29)
+
+
+### Reverts
+
+* "fix: build plugins using same gradle config structure as apps ([#5671](https://github.com/NativeScript/nativescript-cli/issues/5671))" ([2c2c964](https://github.com/NativeScript/nativescript-cli/commit/2c2c964c791a831f091a5a10432d4b9f6266e5d4))
+
+
+
+# [8.5.0](https://github.com/NativeScript/nativescript-cli/compare/v8.4.0...v8.5.0) (2023-03-28)
+
+
+### Bug Fixes
+
+* **publish:** various apple publish/sign-in fixes ([#5718](https://github.com/NativeScript/nativescript-cli/issues/5718)) ([1c27c2b](https://github.com/NativeScript/nativescript-cli/commit/1c27c2bf17a7df1fcfa434b7c04fda3a41f38a34))
+* build plugins using same gradle config structure as apps ([#5671](https://github.com/NativeScript/nativescript-cli/issues/5671)) ([40e459a](https://github.com/NativeScript/nativescript-cli/commit/40e459ac2669bed5a1b661f47336691cc8d0b997))
+* **android:** support unsigned apks ([#5706](https://github.com/NativeScript/nativescript-cli/issues/5706)) ([32d3a0f](https://github.com/NativeScript/nativescript-cli/commit/32d3a0fe4a83943c2580b42c1e1536236a3d6164))
+* **doctor:** check for python3 instead of python ([f21156c](https://github.com/NativeScript/nativescript-cli/commit/f21156c8d02964308f503dcdf8f9dc2764745b4e))
+
+
+### Features
+
+* **migrate:** 8.5.0 migrations ([#5725](https://github.com/NativeScript/nativescript-cli/issues/5725)) ([b11357d](https://github.com/NativeScript/nativescript-cli/commit/b11357d1c1c7ee717acd43fbccee568367d77016))
+* support generating android adaptive icons ([#5667](https://github.com/NativeScript/nativescript-cli/issues/5667)) ([73694bd](https://github.com/NativeScript/nativescript-cli/commit/73694bd447625f3df91f999c66e13e9ddc6fb01e))
+* **profiling:** generate chrome compatible timeline data ([#5686](https://github.com/NativeScript/nativescript-cli/issues/5686)) ([0569873](https://github.com/NativeScript/nativescript-cli/commit/0569873139576c3264c631699d9357a96d2d4dbf))
+* experimental SPM support ([#5721](https://github.com/NativeScript/nativescript-cli/issues/5721)) ([1443240](https://github.com/NativeScript/nativescript-cli/commit/14432403857354a8281b8fd1c1d3b4c2f6659403))
+* experimental yarn2+ support ([#5701](https://github.com/NativeScript/nativescript-cli/issues/5701)) ([363db96](https://github.com/NativeScript/nativescript-cli/commit/363db96d7a07245cf1635a2dc22b7a2110941f29))
+
+
+
 # [8.4.0](https://github.com/NativeScript/nativescript-cli/compare/v8.3.3...v8.4.0) (2022-11-30)
 
 

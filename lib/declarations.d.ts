@@ -665,6 +665,7 @@ interface IOptions
 	frameworkName: string;
 	frameworkVersion: string;
 	yarn: string;
+	yarn2: string;
 	pnpm: string;
 	ipa: string;
 	tsc: boolean;
@@ -767,13 +768,18 @@ interface IITMSData {
 	 * @type {string}
 	 */
 	verboseLogging?: boolean;
+	/**
+	 * Specifies the team id
+	 * @type {string}
+	 */
+	teamId?: string;
 }
 
 /**
  * Used for communicating with Xcode iTMS Transporter tool.
  */
 interface IITMSTransporterService {
-	validate(): Promise<void>;
+	validate(appSpecificPassword?: string): Promise<void>;
 	/**
 	 * Uploads an .ipa package to iTunes Connect.
 	 * @param  {IITMSData}     data Data needed to upload the package
@@ -1140,12 +1146,7 @@ interface IResourceGenerationData extends IProjectDir {
 	 * @param {string} platform Specify for which platform to generate assets. If not defined will generate for all platforms
 	 */
 	platform?: string;
-}
 
-/**
- * Describes the data needed for splash screens generation
- */
-interface ISplashesGenerationData extends IResourceGenerationData {
 	/**
 	 * @param {string} background Background color that will be used for background. Defaults to #FFFFFF
 	 */
@@ -1165,11 +1166,11 @@ interface IAssetsGenerationService {
 
 	/**
 	 * Generate splash screens for iOS and Android
-	 * @param {ISplashesGenerationData} splashesGenerationData Provides the data needed for splash screens generation
+	 * @param {IResourceGenerationData} splashesGenerationData Provides the data needed for splash screens generation
 	 * @returns {Promise<void>}
 	 */
 	generateSplashScreens(
-		splashesGenerationData: ISplashesGenerationData
+		splashesGenerationData: IResourceGenerationData
 	): Promise<void>;
 }
 

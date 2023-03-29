@@ -125,6 +125,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 				updateCommand = "npm i -g nativescript";
 				break;
 			case PackageManagers.yarn:
+			case PackageManagers.yarn2:
 				updateCommand = "yarn global add nativescript";
 				break;
 			case PackageManagers.pnpm:

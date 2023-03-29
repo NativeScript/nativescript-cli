@@ -76,6 +76,10 @@ const createTestInjector = (): IInjector => {
 		},
 	});
 
+	testInjector.register("timelineProfilerService", {
+		processLogData() {},
+	});
+
 	const logger = testInjector.resolve<CommonLoggerStub>("logger");
 	logger.info = (...args: any[]): void => {
 		args = args.filter((arg) => Object.keys(arg).indexOf("skipNewLine") === -1);

@@ -113,7 +113,7 @@ function createChildProcessResults(
 		"tns --version": childProcessResult.nativeScriptCliVersion,
 		emulator: { shouldThrowError: false },
 		"which git": childProcessResult.git,
-		'python -c "import six"': childProcessResult.pythonInfo,
+		'python3 -c "import six"': childProcessResult.pythonInfo,
 	};
 }
 
@@ -608,7 +608,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 					isInstalled: false,
 					isSixPackageInstalled: false,
 					installationErrorMessage:
-						'This one throws error. (python -c "import six")',
+						'This one throws error. (python3 -c "import six")',
 				});
 			});
 			it("should return {isInstalled: true, isSixPackageInstalled: false} when python is installed but six package is not", async () => {
