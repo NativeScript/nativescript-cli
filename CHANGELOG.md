@@ -1,3 +1,12 @@
+## [8.5.1](https://github.com/NativeScript/nativescript-cli/compare/v8.5.0...v8.5.1) (2023-03-29)
+
+
+### Reverts
+
+* "fix: build plugins using same gradle config structure as apps ([#5671](https://github.com/NativeScript/nativescript-cli/issues/5671))" ([2c2c964](https://github.com/NativeScript/nativescript-cli/commit/2c2c964c791a831f091a5a10432d4b9f6266e5d4))
+
+
+
 # [8.5.0](https://github.com/NativeScript/nativescript-cli/compare/v8.4.0...v8.5.0) (2023-03-28)
 
 
