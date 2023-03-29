@@ -42,69 +42,8 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {
-		let result = "";
-		try {
-			result = await this.adb.executeShellCommand(["pm", "list", "packages"]);
-
-			// if the command fails - it doesn't necessarily throw here, so we check the output and throw
-			// and handle it below (using a throw since the command might otherwise still throw)
-			if (result.includes("Exception occurred while executing")) {
-				throw result;
-			}
-		} catch (err) {
-			this.$logger.trace(
-				"Failed to list installed packages on device. Error is:",
-				err
-			);
-			this.$logger.trace(
-				"Attempting alternate method now. (list users + their packages individually)"
-			);
-
-			/**
-			 * on some devices (Samsung) listing packages is prevented by a permission error
-			 * notably, some system apps (bloatware) is installed under user 150
-			 * and listing these packages results in a permission error.
-			 * if this happens, we have to first list all the users, and then loop through
-			 * all the users and trying to list packages for that specific user, ignoring
-			 * any errors. These are all then concatenated together and parsed normally.
-			 * This is a slower operation, so we only do it in case listing failed in the first place.
-			 */
-			const userIDs: string[] = [];
-			const users = await this.adb.executeShellCommand(["pm", "list", "users"]);
-			/**
-			 * Users:
-			 *   UserInfo{0:Owner:c13} running
-			 */
-
-			const userIDRegex = /UserInfo{(\d+)[:}]/;
-			users.split(EOL).forEach((line: string) => {
-				const [, userID] = line.match(userIDRegex) ?? [];
-
-				if (userID) {
-					userIDs.push(userID);
-				}
-			});
-
-			for (let id of userIDs) {
-				try {
-					result +=
-						EOL +
-						(await this.adb.executeShellCommand([
-							"pm",
-							"list",
-							"packages",
-							"--user",
-							id,
-						]));
-				} catch (err) {
-					// ignore - likely permission denied.
-					this.$logger.trace(
-						`Failed to list packages for user ${id}. Error is:`,
-						err
-					);
-				}
-			}
-		}
+		const result =
+			(await this.adb.executeShellCommand(["pm", "list", "packages"])) || "";
 		const regex = /package:(.+)/;
 		return result
 			.split(EOL)

@@ -48,7 +48,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 		// If adb -s <invalid device id> install <smth> is executed the childProcess won't get any response
 		// because the adb will be waiting for valid device and will not send close or exit event.
 		// For example `adb -s <invalid device id> install <smth>` throws error 'error: device \'030939f508e6c773\' not found\r\n' exitCode 4294967295
-		const result = await this.$childProcess.spawnFromEvent(
+		const result: any = await this.$childProcess.spawnFromEvent(
 			command.command,
 			command.args,
 			event,
@@ -68,7 +68,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 		// Some adb commands returns array of strings instead of object with stdout and stderr. (adb start-server)
 		return result.stdout === undefined || result.stdout === null
 			? result
-			: result.stdout.concat(result.stderr);
+			: result.stdout;
 	}
 
 	@invokeInit()
