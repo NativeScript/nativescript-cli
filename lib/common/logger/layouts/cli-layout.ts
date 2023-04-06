@@ -30,7 +30,7 @@ export function layout(config: any) {
 		}
 
 		if (logEvent.level.isEqualTo(LoggerLevel.TRACE)) {
-			return color.gray(msg);
+			return color.grey(msg);
 		}
 
 		return msg;

@@ -66,7 +66,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		options?: IProjectCleanupOptions
 	): Promise<IProjectPathCleanupResult> {
 		const dryRun = options?.dryRun ?? false;
-		const logPrefix = dryRun ? "(dry run) ".grey : "";
+		const logPrefix = dryRun ? color.grey("(dry run) ") : "";
 
 		this.spinner.clear();
 		let fileType: string;
