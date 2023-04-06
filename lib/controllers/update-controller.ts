@@ -20,6 +20,10 @@ import { PackageVersion } from "../constants";
 import { IDependency } from "../definitions/migrate";
 import { IPluginsService } from "../definitions/plugins";
 import { color } from "../color";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerService,
+} from "../definitions/terminal-spinner-service";
 
 export class UpdateController
 	extends UpdateControllerBase

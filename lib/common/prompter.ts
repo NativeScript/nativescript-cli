@@ -92,17 +92,45 @@ export class Prompter implements IPrompter {
 
 	public async promptForChoice(
 		promptMessage: string,
-		choices: string[]
+		choices:
+			| string[]
+			| { title: string; description?: string; value?: string }[],
+		multiple: boolean = false,
+		options: any = {}
 	): Promise<string> {
 		const schema: IPrompterAnswers = {
 			message: promptMessage,
-			type: "select",
+			type: multiple ? "multiselect" : "select",
 			name: "userAnswer",
 			choices,
+			...options,
 		};
 
 		const result = await this.get([schema]);
-		return choices[result.userAnswer];
+
+		type ArrayElement<
+			ArrayType extends readonly unknown[]
+		> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+
+		type Choice = ArrayElement<typeof choices>;
+
+		const extractValue = (choice: number | Choice) => {
+			if (typeof choice === "object") {
+				return choice.value || choice;
+			}
+
+			if (typeof choice === "string") {
+				return choice;
+			}
+
+			if (typeof choice === "number") {
+				return choices[choice];
+			}
+		};
+
+		return multiple
+			? result.userAnswer.map(extractValue)
+			: extractValue(result.userAnswer);
 	}
 
 	public async promptForDetailedChoice(

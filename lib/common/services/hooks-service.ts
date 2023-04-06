@@ -21,6 +21,7 @@ import {
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
 import { color } from "../../color";
+import { cache } from "../decorators";
 
 class Hook implements IHook {
 	constructor(public name: string, public fullPath: string) {}
@@ -51,6 +52,7 @@ export class HooksService implements IHooksService {
 		return "hookArgs";
 	}
 
+	@cache()
 	private initialize(projectDir: string): void {
 		this.cachedHooks = {};
 

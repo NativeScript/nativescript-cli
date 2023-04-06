@@ -25,6 +25,7 @@ import { IJsonFileSettingsService } from "../common/definitions/json-file-settin
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { color } from "../color";
+import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service";
 
 export class DoctorService implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(

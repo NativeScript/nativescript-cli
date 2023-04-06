@@ -60,9 +60,14 @@ export class CommandsService implements ICommandsService {
 		this.commands.push({ commandName, commandArguments });
 		const command = this.$injector.resolveCommand(commandName);
 		if (command) {
-			if (!this.$staticConfig.disableAnalytics && !command.disableAnalytics) {
-				const analyticsService =
-					this.$injector.resolve<IAnalyticsService>("analyticsService"); // This should be resolved here due to cyclic dependency
+			if (
+				!this.$staticConfig.disableAnalytics &&
+				!command.disableAnalytics &&
+				!this.$options.disableAnalytics
+			) {
+				const analyticsService = this.$injector.resolve<IAnalyticsService>(
+					"analyticsService"
+				); // This should be resolved here due to cyclic dependency
 				await analyticsService.checkConsent();
 
 				const beautifiedCommandName = this.beautifyCommandName(
@@ -241,10 +246,9 @@ export class CommandsService implements ICommandsService {
 			defaultCommandDelimiter: CommandsDelimiters.DefaultHierarchicalCommand,
 		};
 
-		const extensionData =
-			await this.$extensibilityService.getExtensionNameWhereCommandIsRegistered(
-				commandInfo
-			);
+		const extensionData = await this.$extensibilityService.getExtensionNameWhereCommandIsRegistered(
+			commandInfo
+		);
 
 		if (extensionData) {
 			this.$logger.warn(extensionData.installationMessage);

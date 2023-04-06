@@ -42,6 +42,10 @@ import { IJsonFileSettingsService } from "../common/definitions/json-file-settin
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 import * as temp from "temp";
 import { color } from "../color";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerService,
+} from "../definitions/terminal-spinner-service";
 
 // const wait: (ms: number) => Promise<void> = (ms: number = 1000) =>
 // 	new Promise((resolve) => setTimeout(resolve, ms));
