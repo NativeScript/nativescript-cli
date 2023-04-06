@@ -9,7 +9,8 @@
 		"experimentalDecorators": true,
 		"skipLibCheck": true,
 		"alwaysStrict": true,
-		"noUnusedLocals": true
+		"noUnusedLocals": true,
+		"lib": ["es2020"]
 	},
 	"include": ["lib/", "test/"]
 }

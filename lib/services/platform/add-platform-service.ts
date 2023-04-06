@@ -14,6 +14,7 @@ import { IProjectData } from "../../definitions/project"; //IProjectDataService
 import { IAnalyticsService, IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { IPackageManager } from "../../declarations";
+import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 
 export class AddPlatformService implements IAddPlatformService {
 	constructor(

@@ -14,6 +14,7 @@ import { IOptions, IPackageManager, IVersionsService } from "../declarations";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 import { PackageManagers } from "../constants";
+import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service";
 
 export class CommandDispatcher implements ICommandDispatcher {
 	constructor(
@@ -35,7 +36,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 			return this.printVersion();
 		}
 
-		if (this.$logger.getLevel() === "TRACE") {
+		if (this.$logger.getLevel() === "TRACE" && !this.$options.json) {
 			// CommandDispatcher is called from external CLI's only, so pass the path to their package.json
 			this.$logger.trace("Collecting system information...");
 			const sysInfo = await this.$sysInfo.getSysInfo({

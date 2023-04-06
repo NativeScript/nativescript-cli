@@ -173,6 +173,43 @@ export class FileSystem implements IFileSystem {
 		return stat.size;
 	}
 
+	public getSize(path: string): number {
+		const dirSize = (
+			dir: string,
+			paths: Map<string, number> = new Map(),
+			root = true
+		) => {
+			const files = fs.readdirSync(dir, { withFileTypes: true });
+			files.map((file: any) => {
+				const path = join(dir, file.name);
+
+				if (file.isDirectory()) {
+					dirSize(path, paths, false);
+					return;
+				}
+
+				if (file.isFile()) {
+					const { size } = fs.statSync(path);
+					paths.set(path, size);
+				}
+			});
+
+			if (root) {
+				// console.log("root", paths);
+				return Array.from(paths.values()).reduce(
+					(sum, current) => sum + current,
+					0
+				);
+			}
+		};
+
+		try {
+			return dirSize(path);
+		} catch (err) {
+			return 0;
+		}
+	}
+
 	public async futureFromEvent(eventEmitter: any, event: string): Promise<any> {
 		return new Promise<any>((resolve, reject) => {
 			eventEmitter.once(event, function () {
