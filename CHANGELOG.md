@@ -1,3 +1,12 @@
+## [8.5.2](https://github.com/NativeScript/nativescript-cli/compare/v8.5.1...v8.5.2) (2023-04-06)
+
+
+### Features
+
+* clean multiple projects ([#5726](https://github.com/NativeScript/nativescript-cli/issues/5726)) ([e39e8db](https://github.com/NativeScript/nativescript-cli/commit/e39e8dbea725bbb541c9f76fc7b8723bf204d423))
+
+
+
 ## [8.5.1](https://github.com/NativeScript/nativescript-cli/compare/v8.5.0...v8.5.1) (2023-03-29)
 
 
