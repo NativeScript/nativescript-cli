@@ -20,7 +20,7 @@ import {
 } from "../../definitions/project";
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
-import { cache } from "../decorators";
+import { memoize } from "../decorators";
 
 class Hook implements IHook {
 	constructor(public name: string, public fullPath: string) {}
@@ -51,7 +51,14 @@ export class HooksService implements IHooksService {
 		return "hookArgs";
 	}
 
-	@cache()
+	@memoize({
+		shouldCache() {
+			// only cache if we have hooks directories, the only case to
+			// not have hooks directories is when the project dir is
+			// not set yet, ie. when creating a project.
+			return !!this.hooksDirectories.length;
+		},
+	})
 	private initialize(projectDir: string): void {
 		this.cachedHooks = {};
 
