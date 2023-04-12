@@ -1,3 +1,14 @@
+## [8.5.3](https://github.com/NativeScript/nativescript-cli/compare/v8.5.2...v8.5.3) (2023-04-12)
+
+
+### Bug Fixes
+
+* correctly merge IPHONEOS_DEPLOYMENT_TARGET in xcconfigs ([#5728](https://github.com/NativeScript/nativescript-cli/issues/5728)) ([e6c09c0](https://github.com/NativeScript/nativescript-cli/commit/e6c09c0048534f6079634291706b0b38ac193a6c))
+* hooks not being called ([#5729](https://github.com/NativeScript/nativescript-cli/issues/5729)) ([c35673e](https://github.com/NativeScript/nativescript-cli/commit/c35673eb9ed02116e1286351ca7a711d6ee231e7))
+* migrate - safeguard possibly null values ([#5730](https://github.com/NativeScript/nativescript-cli/issues/5730)) ([68d9373](https://github.com/NativeScript/nativescript-cli/commit/68d9373aec1427a71e1f6236fff4f8084c33a421))
+
+
+
 ## [8.5.2](https://github.com/NativeScript/nativescript-cli/compare/v8.5.1...v8.5.2) (2023-04-06)
 
 
