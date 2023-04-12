@@ -42,7 +42,13 @@ export class XcconfigService implements IXcconfigService {
 		const escapedDestinationFile = destinationFile.replace(/'/g, "\\'");
 		const escapedSourceFile = sourceFile.replace(/'/g, "\\'");
 
-		const mergeScript = `require 'xcodeproj'; Xcodeproj::Config.new('${escapedDestinationFile}').merge(Xcodeproj::Config.new('${escapedSourceFile}')).save_as(Pathname.new('${escapedDestinationFile}'))`;
+		const mergeScript = `require 'xcodeproj';
+		sourceConfig = Xcodeproj::Config.new('${escapedDestinationFile}')
+		targetConfig = Xcodeproj::Config.new('${escapedSourceFile}')
+		if(sourceConfig.attributes.key?('IPHONEOS_DEPLOYMENT_TARGET') && targetConfig.attributes.key?('IPHONEOS_DEPLOYMENT_TARGET'))
+			sourceConfig.attributes.delete('IPHONEOS_DEPLOYMENT_TARGET')
+		end
+		sourceConfig.merge(targetConfig).save_as(Pathname.new('${escapedDestinationFile}'))`;
 		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
 	}
 
