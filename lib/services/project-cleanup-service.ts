@@ -28,10 +28,10 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		options?: IProjectCleanupOptions
 	): Promise<IProjectCleanupResult> {
 		this.spinner = this.$terminalSpinnerService.createSpinner({
-			isSilent: options.silent,
+			isSilent: options?.silent,
 		});
 
-		let stats = options.stats ? new Map<string, number>() : false;
+		let stats = options?.stats ? new Map<string, number>() : false;
 
 		let success = true;
 		for (const pathToClean of pathsToClean) {
