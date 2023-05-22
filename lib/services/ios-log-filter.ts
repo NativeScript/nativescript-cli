@@ -82,7 +82,11 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 				currentLine = currentLine.replace(filteredLineInfo[0], "");
 			}
 
-			currentLine = currentLine.trim();
+			currentLine = currentLine
+				// remove lading space before CONSOLE
+				.replace(/^\s*CONSOLE/, "CONSOLE")
+				// trim trailing spaces only to preserve indentation
+				.trimEnd();
 
 			// post filtering: (<anything>) check if <anything> is not "NativeScript"
 			const postFilterMatch = this.postFilterRegex.exec(currentLine);

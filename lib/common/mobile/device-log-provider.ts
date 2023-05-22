@@ -143,7 +143,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 			const toLog = [timeLabel ?? "", match ? line.replace(match, "") : line]
 				.join("")
-				.trim();
+				.trimEnd();
 
 			toLog.split("\n").forEach((actualLine) => {
 				this.printLine(
