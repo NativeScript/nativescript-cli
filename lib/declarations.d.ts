@@ -506,11 +506,6 @@ interface IStaticConfig extends Config.IStaticConfig {}
 interface IConfiguration extends Config.IConfig {
 	ANDROID_DEBUG_UI: string;
 	USE_POD_SANDBOX: boolean;
-	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string;
-	SHORTEN_URL_ENDPOINT: string;
-	INSIGHTS_URL_ENDPOINT: string;
-	WHOAMI_URL_ENDPOINT: string;
-	PREVIEW_APP_ENVIRONMENT: string;
 	GA_TRACKING_ID: string;
 }
 
@@ -927,25 +922,6 @@ interface IiOSSocketRequestExecutor {
 		timeout: number,
 		appId: string
 	): Promise<boolean>;
-}
-
-/**
- * Describes validation methods for XMLs.
- */
-interface IXmlValidator {
-	/**
-	 * Checks the passed xml files for errors and if such exists, print them on the stdout.
-	 * @param {string[]} sourceFiles Files to be checked. Only the ones that ends with .xml are filtered.
-	 * @return {boolean} true in case there are no errors in specified files and false in case there's at least one error.
-	 */
-	validateXmlFiles(sourceFiles: string[]): boolean;
-
-	/**
-	 * Checks the passed xml file for errors and returns them as a result.
-	 * @param {string} sourceFile File to be checked.
-	 * @return {string} The errors detected (as a single string) or null in case there are no errors.
-	 */
-	getXmlFileErrors(sourceFile: string): string;
 }
 
 /**

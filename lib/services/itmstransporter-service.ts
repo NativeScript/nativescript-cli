@@ -183,8 +183,8 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			const payloadDir = path.join(destinationDir, "Payload");
 			let allFiles = this.$fs.readDirectory(payloadDir);
 
-			this.$logger.debug("ITMSTransporter .ipa Payload files:");
-			allFiles.forEach((f) => this.$logger.debug(" - " + f));
+			this.$logger.trace("ITMSTransporter .ipa Payload files:");
+			allFiles.forEach((f) => this.$logger.trace(" - " + f));
 
 			allFiles = allFiles.filter(
 				(f) => path.extname(f).toLowerCase() === ".app"

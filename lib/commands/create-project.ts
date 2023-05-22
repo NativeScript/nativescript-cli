@@ -6,6 +6,7 @@ import { IOptions } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
+import { color } from "../color";
 
 export class CreateProjectCommand implements ICommand {
 	public enableHooks = false;
@@ -343,35 +344,35 @@ can skip this prompt next time using the --template option, or the --ng, --react
 		const { projectDir, projectName } = this.createdProjectData;
 		const relativePath = path.relative(process.cwd(), projectDir);
 
-		const greyDollarSign = "$".grey;
+		const greyDollarSign = color.grey("$");
 		this.$logger.clearScreen();
 		this.$logger.info(
 			[
 				[
-					`Project`.green,
-					projectName.cyan,
-					`was successfully created.`.green,
+					color.green(`Project`),
+					color.cyan(projectName),
+					color.green(`was successfully created.`),
 				].join(" "),
 				"",
-				`Now you can navigate to your project with ${
-					`cd ${relativePath}`.cyan
-				} and then:`,
+				`Now you can navigate to your project with ${color.cyan(
+					`cd ${relativePath}`
+				)} and then:`,
 				"",
 				`Run the project on multiple devices:`,
 				"",
-				`  ${greyDollarSign} ${"ns run ios".green}`,
-				`  ${greyDollarSign} ${"ns run android".green}`,
+				`  ${greyDollarSign} ${color.green("ns run ios")}`,
+				`  ${greyDollarSign} ${color.green("ns run android")}`,
 				"",
 				"Debug the project with Chrome DevTools:",
 				"",
-				`  ${greyDollarSign} ${"ns debug ios".green}`,
-				`  ${greyDollarSign} ${"ns debug android".green}`,
+				`  ${greyDollarSign} ${color.green("ns debug ios")}`,
+				`  ${greyDollarSign} ${color.green("ns debug android")}`,
 				``,
-				`For more options consult the docs or run ${"ns --help".green}`,
+				`For more options consult the docs or run ${color.green("ns --help")}`,
 				"",
 			].join("\n")
 		);
-		// Commented as we may bring this back with a playground revision/rewrite
+		// todo: add back ns preview
 		// this.$logger.printMarkdown(
 		// 	`After that you can preview it on device by executing \`$ ns preview\``
 		// );

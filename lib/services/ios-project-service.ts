@@ -8,7 +8,7 @@ import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession, Reporter } from "plist-merge-patch";
 import { EOL } from "os";
-const plist = require("plist");
+import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
@@ -343,20 +343,20 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		);
 
 		if (this.$fs.exists(xcschemeFilePath)) {
-			this.$logger.debug(
+			this.$logger.trace(
 				"Found shared scheme at xcschemeFilePath, renaming to match project name."
 			);
-			this.$logger.debug("Checkpoint 0");
+			this.$logger.trace("Checkpoint 0");
 			this.replaceFileContent(xcschemeFilePath, projectData);
-			this.$logger.debug("Checkpoint 1");
+			this.$logger.trace("Checkpoint 1");
 			this.replaceFileName(
 				IosProjectConstants.XcodeSchemeExtName,
 				xcschemeDirPath,
 				projectData
 			);
-			this.$logger.debug("Checkpoint 2");
+			this.$logger.trace("Checkpoint 2");
 		} else {
-			this.$logger.debug(
+			this.$logger.trace(
 				"Copying xcscheme from template not found at " + xcschemeFilePath
 			);
 		}
@@ -1498,8 +1498,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			return;
 		}
 
-		const infoPlist = plist.parse(this.$fs.readText(infoPlistPath));
-		const mergedPlist = plist.parse(this.$fs.readText(mergedPlistPath));
+		const infoPlist = plist.parse(
+			this.$fs.readText(infoPlistPath)
+		) as plist.PlistObject;
+		const mergedPlist = plist.parse(
+			this.$fs.readText(mergedPlistPath)
+		) as plist.PlistObject;
 
 		if (
 			infoPlist.CFBundleIdentifier &&

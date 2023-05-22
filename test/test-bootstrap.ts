@@ -12,11 +12,6 @@ cliGlobal._ = _;
 import { injector } from "../lib/common/yok";
 cliGlobal.$injector = injector;
 
-// Requiring colors will modify the prototype of String
-// We need it as in some places we use <string>.<color>, which is undefined when colors is not required
-// So we sometimes miss warnings in the tests as we receive "undefined".
-require("colors");
-
 use(require("chai-as-promised"));
 
 cliGlobal.$injector.register("analyticsService", {

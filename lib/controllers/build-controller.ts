@@ -5,7 +5,7 @@ import { attachAwaitDetach } from "../common/helpers";
 import { IProjectDataService } from "../definitions/project";
 import {
 	IBuildController,
-	IBuildArtefactsService,
+	IBuildArtifactsService,
 	IBuildInfoFileService,
 	IBuildData,
 } from "../definitions/build";
@@ -18,7 +18,7 @@ import { performance } from "perf_hooks";
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $buildArtefactsService: IBuildArtefactsService,
+		private $buildArtifactsService: IBuildArtifactsService,
 		private $buildInfoFileService: IBuildInfoFileService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -110,13 +110,13 @@ export class BuildController extends EventEmitter implements IBuildController {
 		this.$logger.info("Project successfully built.");
 		this.$logger.info(`Build time: ${buildTime.toFixed(3)} s.`);
 
-		const result = await this.$buildArtefactsService.getLatestAppPackagePath(
+		const result = await this.$buildArtifactsService.getLatestAppPackagePath(
 			platformData,
 			buildData
 		);
 
 		if (buildData.copyTo) {
-			this.$buildArtefactsService.copyLatestAppPackage(
+			this.$buildArtifactsService.copyLatestAppPackage(
 				buildData.copyTo,
 				platformData,
 				buildData
@@ -168,7 +168,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		const validBuildOutputData = platformData.getValidBuildOutputData(
 			buildData
 		);
-		const packages = this.$buildArtefactsService.getAllAppPackages(
+		const packages = this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
 			validBuildOutputData
 		);

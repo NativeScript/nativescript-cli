@@ -5,7 +5,7 @@ import * as _ from "lodash";
 import { LoggerConfigData } from "../../../constants";
 import { IChildProcess, IUtils } from "../../declarations";
 import { injector } from "../../yok";
-const semver = require("semver");
+import * as semver from "semver";
 
 export class AndroidEmulatorServices
 	implements Mobile.IEmulatorPlatformService {

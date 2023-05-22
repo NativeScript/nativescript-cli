@@ -4,7 +4,6 @@ import * as _ from "lodash";
 (<ICliGlobal>(<unknown>global))._ = _;
 (<ICliGlobal>(<unknown>global)).$injector = injector;
 
-require("colors");
 injector.require("errors", "./errors");
 injector.requirePublic("fs", "./file-system");
 injector.require("hostInfo", "./host-info");

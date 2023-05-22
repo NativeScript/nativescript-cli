@@ -16,7 +16,7 @@ import {
 } from "./common/declarations";
 import { injector } from "./common/yok";
 
-const semver = require("semver");
+import * as semver from "semver";
 
 export class PackageInstallationManager implements IPackageInstallationManager {
 	constructor(
@@ -70,7 +70,9 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			versions: true,
 		});
 
-		return semver.maxSatisfying(data?.versions ?? data, versionRange);
+		return semver
+			.maxSatisfying(data?.versions ?? data, versionRange)
+			?.toString();
 	}
 
 	public async getMaxSatisfyingVersionSafe(
@@ -147,7 +149,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 				dependencyType
 			);
 		} catch (error) {
-			this.$logger.debug(error);
+			this.$logger.trace(error);
 
 			throw error;
 		}
@@ -165,7 +167,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 				projectDir
 			);
 		} catch (error) {
-			this.$logger.debug(error);
+			this.$logger.trace(error);
 
 			throw error;
 		}

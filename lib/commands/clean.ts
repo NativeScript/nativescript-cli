@@ -1,3 +1,4 @@
+import { color } from "../color";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
 import * as constants from "../constants";
@@ -114,9 +115,8 @@ export class CleanCommand implements ICommand {
 		];
 
 		try {
-			const overridePathsToClean = this.$projectConfigService.getValue(
-				"cli.pathsToClean"
-			);
+			const overridePathsToClean =
+				this.$projectConfigService.getValue("cli.pathsToClean");
 			const additionalPaths = this.$projectConfigService.getValue(
 				"cli.additionalPathsToClean"
 			);
@@ -158,7 +158,7 @@ export class CleanCommand implements ICommand {
 		if (res.ok) {
 			spinner.succeed("Project successfully cleaned.");
 		} else {
-			spinner.fail(`${"Project unsuccessfully cleaned.".red}`);
+			spinner.fail(color.red("Project unsuccessfully cleaned."));
 		}
 	}
 
@@ -183,7 +183,7 @@ export class CleanCommand implements ICommand {
 
 		let computed = 0;
 		const updateProgress = () => {
-			const current = `${computed}/${paths.length}`.grey;
+			const current = color.grey(`${computed}/${paths.length}`);
 			spinner.start(
 				`Gathering cleanable sizes. This may take a while... ${current}`
 			);
@@ -236,9 +236,11 @@ export class CleanCommand implements ICommand {
 			.reduce((a, b) => a + b, 0);
 
 		const pathsToClean = await this.$prompter.promptForChoice(
-			`Found ${projects.size} cleanable project(s) with a total size of: ${
-				bytesToHumanReadable(totalSize).green
-			}. Select projects to clean`,
+			`Found ${
+				projects.size
+			} cleanable project(s) with a total size of: ${color.green(
+				bytesToHumanReadable(totalSize)
+			)}. Select projects to clean`,
 			Array.from(projects.keys()).map((p) => {
 				const size = projects.get(p);
 				let description;
@@ -249,7 +251,7 @@ export class CleanCommand implements ICommand {
 				}
 
 				return {
-					title: `${p}${description.grey}`,
+					title: `${p}${color.grey(description)}`,
 					value: p,
 				};
 			}),
@@ -261,9 +263,11 @@ export class CleanCommand implements ICommand {
 		this.$logger.clearScreen();
 
 		spinner.warn(
-			`This will run "${`ns clean`.yellow}" in all the selected projects and ${
-				"delete files from your system".red.bold
-			}!`
+			`This will run "${color.yellow(
+				`ns clean`
+			)}" in all the selected projects and ${color.red.bold(
+				"delete files from your system"
+			)}!`
 		);
 		spinner.warn(`This action cannot be undone!`);
 
@@ -281,7 +285,7 @@ export class CleanCommand implements ICommand {
 			const currentPath = pathsToClean[i];
 
 			spinner.start(
-				`Cleaning ${currentPath.cyan}... ${i + 1}/${pathsToClean.length}`
+				`Cleaning ${color.cyan(currentPath)}... ${i + 1}/${pathsToClean.length}`
 			);
 
 			const ok = await this.$childProcess
@@ -304,19 +308,21 @@ export class CleanCommand implements ICommand {
 
 			if (ok) {
 				const cleanedSize = projects.get(currentPath);
-				const cleanedSizeStr = `- ${bytesToHumanReadable(cleanedSize)}`.grey;
-				spinner.succeed(`Cleaned ${currentPath.cyan} ${cleanedSizeStr}`);
+				const cleanedSizeStr = color.grey(
+					`- ${bytesToHumanReadable(cleanedSize)}`
+				);
+				spinner.succeed(`Cleaned ${color.cyan(currentPath)} ${cleanedSizeStr}`);
 				totalSizeCleaned += cleanedSize;
 			} else {
-				spinner.fail(`Failed to clean ${currentPath.cyan} - skipped`);
+				spinner.fail(`Failed to clean ${color.cyan(currentPath)} - skipped`);
 			}
 		}
 		spinner.clear();
 		spinner.stop();
 		spinner.succeed(
-			`Done! We've just freed up ${
-				bytesToHumanReadable(totalSizeCleaned).green
-			}! Woohoo! 🎉`
+			`Done! We've just freed up ${color.green(
+				bytesToHumanReadable(totalSizeCleaned)
+			)}! Woohoo! 🎉`
 		);
 
 		if (this.$options.dryRun) {

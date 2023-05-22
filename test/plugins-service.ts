@@ -28,9 +28,8 @@ import { LocalToDevicePathDataFactory } from "../lib/common/mobile/local-to-devi
 import { MobileHelper } from "../lib/common/mobile/mobile-helper";
 import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
-import { XmlValidator } from "../lib/xml-validator";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import StaticConfigLib = require("../lib/config");
+import * as StaticConfigLib from "../lib/config";
 import * as path from "path";
 import * as temp from "temp";
 import * as _ from "lodash";
@@ -166,7 +165,6 @@ function createTestInjector() {
 	testInjector.register("projectTemplatesService", {
 		defaultTemplate: Promise.resolve(""),
 	});
-	testInjector.register("xmlValidator", XmlValidator);
 	testInjector.register("config", StaticConfigLib.Configuration);
 	testInjector.register("helpService", {
 		showCommandLineHelp: async (): Promise<void> => undefined,
@@ -178,9 +176,7 @@ function createTestInjector() {
 		"androidPluginBuildService",
 		stubs.AndroidPluginBuildServiceStub
 	);
-	testInjector.register("analyticsSettingsService", {
-		getPlaygroundInfo: () => Promise.resolve(null),
-	});
+	testInjector.register("analyticsSettingsService", {});
 	testInjector.register(
 		"androidResourcesMigrationService",
 		stubs.AndroidResourcesMigrationServiceStub
@@ -607,7 +603,7 @@ describe("Plugins service", () => {
 						platforms: {},
 					},
 					devDependencies: {
-						grunt: "0.4.2",
+						grunt: "*",
 					},
 				};
 				const fs = testInjector.resolve("fs");
@@ -658,10 +654,10 @@ describe("Plugins service", () => {
 						platforms: {},
 					},
 					dependencies: {
-						lodash: "3.8.0",
+						lodash: "*",
 					},
 					devDependencies: {
-						grunt: "0.4.2",
+						grunt: "*",
 					},
 				};
 				const fs = testInjector.resolve("fs");

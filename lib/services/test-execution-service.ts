@@ -221,7 +221,7 @@ export class TestExecutionService implements ITestExecutionService {
 		karmaConfig.debugBrk = this.$options.debugBrk;
 		karmaConfig.appPath = projectData.getAppDirectoryRelativePath();
 		karmaConfig.platform = platform.toLowerCase();
-		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
+		this.$logger.trace(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
 	}

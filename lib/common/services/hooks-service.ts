@@ -20,6 +20,7 @@ import {
 } from "../../definitions/project";
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
+import { color } from "../../color";
 import { memoize } from "../decorators";
 
 class Hook implements IHook {
@@ -204,9 +205,9 @@ export class HooksService implements IHooksService {
 				this.$logger.warn(
 					`${
 						hook.fullPath
-					} will NOT be executed because it has invalid arguments - ${
-						invalidArguments.join(", ").grey
-					}.`
+					} will NOT be executed because it has invalid arguments - ${color.grey(
+						invalidArguments.join(", ")
+					)}.`
 				);
 				return;
 			}

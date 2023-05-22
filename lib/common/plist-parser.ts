@@ -1,11 +1,11 @@
-import * as simplePlist from "simple-plist";
+import { readFileSync, readFile } from "simple-plist";
 import { IPlistParser } from "./declarations";
 import { injector } from "./yok";
 
 export class PlistParser implements IPlistParser {
 	public parseFile(plistFilePath: string): Promise<any> {
 		return new Promise<any>((resolve, reject) => {
-			simplePlist.readFile(plistFilePath, (err: Error, obj: any) => {
+			readFile(plistFilePath, (err: Error, obj: any) => {
 				if (err) {
 					reject(err);
 				} else {
@@ -16,7 +16,7 @@ export class PlistParser implements IPlistParser {
 	}
 
 	public parseFileSync(plistFilePath: string): any {
-		return simplePlist.readFileSync(plistFilePath);
+		return readFileSync(plistFilePath);
 	}
 }
 injector.register("plistParser", PlistParser);

@@ -4,12 +4,14 @@ import { injector } from "../common/yok";
 import { IProjectConfigService } from "../definitions/project";
 import * as path from "path";
 import { originalProcessOn } from "../nativescript-cli";
+import { color } from "../color";
 
 export interface ITimelineProfilerService {
 	processLogData(data: string, deviceIdentifier: string): void;
 }
 
-const TIMELINE_LOG_RE = /Timeline:\s*(\d*.?\d*ms:\s*)?([^\:]*\:)?(.*)\((\d*.?\d*)ms\.?\s*-\s*(\d*.\d*)ms\.?\)/;
+const TIMELINE_LOG_RE =
+	/Timeline:\s*(\d*.?\d*ms:\s*)?([^\:]*\:)?(.*)\((\d*.?\d*)ms\.?\s*-\s*(\d*.\d*)ms\.?\)/;
 
 enum ChromeTraceEventPhase {
 	BEGIN = "B",
@@ -111,9 +113,22 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 				deviceTimeline.timeline
 			);
 			this.$logger.info(
-				`Timeline data for device ${deviceIdentifier} written to ${deviceTimelineFileName}`
+				`Timeline data for device ${color.cyan(
+					deviceIdentifier
+				)} written to ${color.green(deviceTimelineFileName)}`
 			);
 		});
+
+		this.$logger.info(
+			color.green(
+				"\n\nTo view the timeline data, open the following URL in Chrome, and load the json file:"
+			)
+		);
+		this.$logger.info(
+			color.green(
+				"devtools://devtools/bundled/inspector.html?panel=timeline\n\n"
+			)
+		);
 
 		process.exit();
 	}

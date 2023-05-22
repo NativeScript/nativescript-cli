@@ -29,7 +29,7 @@ import {
 } from "prettier";
 import { cache, exported } from "../common/decorators";
 import { IOptions } from "../declarations";
-import semver = require("semver/preload");
+import * as semver from "semver/preload";
 import { ICleanupService } from "../definitions/cleanup-service";
 
 export class ProjectConfigService implements IProjectConfigService {

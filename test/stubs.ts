@@ -64,7 +64,6 @@ import {
 	IHooksService,
 	IAllowEmpty,
 	IPrompterOptions,
-	IQrCodeImageData,
 	ISpawnFromEventOptions,
 	IAnalyticsService,
 	IProxySettings,
@@ -691,7 +690,6 @@ export class ProjectDataStub implements IProjectData {
 	public buildXcconfigPath: string;
 	public podfilePath: string;
 	public isShared: boolean;
-	public previewAppSchema: string;
 
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
@@ -1143,12 +1141,6 @@ export class DebugServiceStub
 export class LiveSyncServiceStub
 	extends EventEmitter
 	implements ILiveSyncService {
-	public async liveSyncToPreviewApp(
-		data: IPreviewAppLiveSyncData
-	): Promise<IQrCodeImageData> {
-		return;
-	}
-
 	public async liveSync(
 		deviceDescriptors: ILiveSyncDeviceDescriptor[],
 		liveSyncData: ILiveSyncInfo
@@ -1454,9 +1446,6 @@ export class AnalyticsService implements IAnalyticsService {
 	async trackAcceptFeatureUsage(settings: {
 		acceptTrackFeatureUsage: boolean;
 	}) {
-		return Promise.resolve();
-	}
-	async trackPreviewAppData() {
 		return Promise.resolve();
 	}
 	async finishTracking() {

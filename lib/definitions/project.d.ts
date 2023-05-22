@@ -152,7 +152,6 @@ interface INsConfig {
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
-	previewAppSchema?: string;
 	overridePods?: string;
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
@@ -186,11 +185,6 @@ interface IProjectData extends ICreateProjectData {
 	 * Value is true when project has nativescript.config and it has `shared: true` in it.
 	 */
 	isShared: boolean;
-
-	/**
-	 * Defines the schema for the preview app
-	 */
-	previewAppSchema: string;
 
 	/**
 	 * Defines the path to the configuration file passed to webpack process.

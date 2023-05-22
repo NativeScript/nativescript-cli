@@ -35,7 +35,6 @@ function createTestInjector() {
 		PlatformEnvironmentRequirements
 	);
 	testInjector.register("staticConfig", { SYS_REQUIREMENTS_LINK: "" });
-	testInjector.register("previewQrCodeService", {});
 
 	return testInjector;
 }
@@ -105,56 +104,7 @@ describe("platformEnvironmentRequirements ", () => {
 			assert.isTrue(result.canExecute);
 			assert.isTrue(promptForChoiceData.length === 0);
 		});
-		// it("should show prompt when environment is not configured", async () => {
-		// 	mockDoctorService({ canExecuteLocalBuild: false });
-		// 	mockPrompter({
-		// 		firstCallOptionName:
-		// 			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-		// 	});
-		//
-		// 	await assert.isRejected(
-		// 		platformEnvironmentRequirements.checkEnvironmentRequirements({
-		// 			platform,
-		// 		})
-		// 	);
-		// 	assert.isTrue(promptForChoiceData.length === 1);
-		// 	assert.deepStrictEqual(
-		// 		"To continue, choose one of the following options: ",
-		// 		promptForChoiceData[0].message
-		// 	);
-		// 	assert.deepStrictEqual(
-		// 		[
-		// 			"Sync to Playground",
-		// 			"Configure for Local Builds",
-		// 			"Skip Step and Configure Manually",
-		// 		],
-		// 		promptForChoiceData[0].choices
-		// 	);
-		// });
 
-		// it("should not show 'Sync to Playground' option when hideSyncToPreviewAppOption is provided", async () => {
-		// 	mockDoctorService({ canExecuteLocalBuild: false });
-		// 	mockPrompter({
-		// 		firstCallOptionName:
-		// 			PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-		// 	});
-		//
-		// 	await assert.isRejected(
-		// 		platformEnvironmentRequirements.checkEnvironmentRequirements({
-		// 			platform,
-		// 			notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true },
-		// 		})
-		// 	);
-		// 	assert.isTrue(promptForChoiceData.length === 1);
-		// 	assert.deepStrictEqual(
-		// 		"To continue, choose one of the following options: ",
-		// 		promptForChoiceData[0].message
-		// 	);
-		// 	assert.deepStrictEqual(
-		// 		["Configure for Local Builds", "Skip Step and Configure Manually"],
-		// 		promptForChoiceData[0].choices
-		// 	);
-		// });
 		it("should skip env check when NS_SKIP_ENV_CHECK environment variable is passed", async () => {
 			(<any>process.env).NS_SKIP_ENV_CHECK = true;
 
@@ -165,71 +115,6 @@ describe("platformEnvironmentRequirements ", () => {
 			assert.isTrue(output.canExecute);
 			assert.isTrue(promptForChoiceData.length === 0);
 		});
-
-		// describe("when local setup option is selected", () => {
-		// 	beforeEach(() => {
-		// 		mockPrompter({
-		// 			firstCallOptionName:
-		// 				PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-		// 		});
-		// 	});
-		//
-		// 	it("should return true when env is configured after executing setup script", async () => {
-		// 		const doctorService = testInjector.resolve("doctorService");
-		// 		doctorService.canExecuteLocalBuild = () => false;
-		// 		doctorService.runSetupScript = async () => {
-		// 			doctorService.canExecuteLocalBuild = () => true;
-		// 		};
-		//
-		// 		const output = await platformEnvironmentRequirements.checkEnvironmentRequirements(
-		// 			{ platform }
-		// 		);
-		// 		assert.isTrue(output.canExecute);
-		// 	});
-		//
-		// 	describe("and env is not configured after executing setup script", () => {
-		// 		beforeEach(() => {
-		// 			mockDoctorService({
-		// 				canExecuteLocalBuild: false,
-		// 				mockSetupScript: true,
-		// 			});
-		// 		});
-		//
-		// 		it("should list 2 posibile options to select", async () => {
-		// 			mockPrompter({
-		// 				firstCallOptionName:
-		// 					PlatformEnvironmentRequirements.LOCAL_SETUP_OPTION_NAME,
-		// 			});
-		//
-		// 			await assert.isRejected(
-		// 				platformEnvironmentRequirements.checkEnvironmentRequirements({
-		// 					platform,
-		// 				}),
-		// 				"The setup script was not able to configure your environment for local builds. To execute local builds, you have to set up your environment manually." +
-		// 					" Please consult our setup instructions here 'https://docs.nativescript.org/start/quick-setup"
-		// 			);
-		// 		});
-		// 	});
-		// });
-
-		// describe("when manually setup option is selected", () => {
-		// 	beforeEach(() => {
-		// 		mockDoctorService({ canExecuteLocalBuild: false });
-		// 		mockPrompter({
-		// 			firstCallOptionName:
-		// 				PlatformEnvironmentRequirements.MANUALLY_SETUP_OPTION_NAME,
-		// 		});
-		// 	});
-		//
-		// 	it("should fail", async () => {
-		// 		await assert.isRejected(
-		// 			platformEnvironmentRequirements.checkEnvironmentRequirements({
-		// 				platform,
-		// 			}),
-		// 			manuallySetupErrorMessage
-		// 		);
-		// 	});
-		// });
 
 		describe("when console is non interactive", () => {
 			beforeEach(() => {

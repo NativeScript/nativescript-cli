@@ -15,6 +15,7 @@ import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 import { PackageManagers } from "../constants";
 import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service";
+import * as semver from "semver";
 
 export class CommandDispatcher implements ICommandDispatcher {
 	constructor(
@@ -79,10 +80,6 @@ export class CommandDispatcher implements ICommandDispatcher {
 		);
 	}
 
-	public async completeCommand(): Promise<boolean> {
-		return this.$commandsService.completeCommand();
-	}
-
 	@hook("resolveCommand")
 	private async resolveCommand(
 		commandName: string,
@@ -114,10 +111,12 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 		const spinner = this.$terminalSpinnerService.createSpinner();
 		spinner.start("Checking for updates...");
-		const nativescriptCliVersion = await this.$versionsService.getNativescriptCliVersion();
+		const nativescriptCliVersion =
+			await this.$versionsService.getNativescriptCliVersion();
 		spinner.stop();
 
-		const packageManagerName = await this.$packageManager.getPackageManagerName();
+		const packageManagerName =
+			await this.$packageManager.getPackageManagerName();
 		let updateCommand = "";
 
 		switch (packageManagerName) {
@@ -132,9 +131,15 @@ export class CommandDispatcher implements ICommandDispatcher {
 				updateCommand = "pnpm i -g nativescript";
 				break;
 		}
+
 		if (
-			nativescriptCliVersion.currentVersion ===
-			nativescriptCliVersion.latestVersion
+			semver.gte(
+				nativescriptCliVersion.currentVersion,
+				nativescriptCliVersion.latestVersion,
+				{
+					loose: true,
+				}
+			)
 		) {
 			// up-to-date
 			spinner.succeed("Up to date.");

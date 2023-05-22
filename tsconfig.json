@@ -10,7 +10,7 @@
 		"skipLibCheck": true,
 		"alwaysStrict": true,
 		"noUnusedLocals": true,
-		"lib": ["es2020"]
+		"lib": ["ESNext"]
 	},
 	"include": ["lib/", "test/"]
 }

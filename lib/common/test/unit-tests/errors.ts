@@ -6,7 +6,8 @@ import * as path from "path";
 import { LoggerLevel } from "../../../constants";
 import { IInjector } from "../../definitions/yok";
 import { IErrors } from "../../declarations";
-const helpers = require("../../helpers");
+
+import * as helpers from "../../helpers";
 const originalIsInteractive = helpers.isInteractive;
 const originalProcessExit = process.exit;
 
@@ -15,10 +16,12 @@ describe("errors", () => {
 	let processExitCode = 0;
 
 	before(() => {
+		// @ts-expect-error
 		helpers.isInteractive = () => isInteractive;
 	});
 
 	after(() => {
+		// @ts-expect-error
 		helpers.isInteractive = originalIsInteractive;
 	});
 

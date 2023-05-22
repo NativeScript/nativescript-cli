@@ -3,9 +3,10 @@ import { IChildProcess, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
 import { IOptions, IPackageManager } from "../declarations";
 import { IProjectData } from "../definitions/project";
-import path = require("path");
 import { resolvePackagePath } from "@rigor789/resolve-package-path";
 import { PackageManagers } from "../constants";
+import { color } from "../color";
+import * as path from "path";
 
 const PREVIEW_CLI_PACKAGE = "@nativescript/preview-cli";
 
@@ -65,12 +66,12 @@ export class PreviewCommand implements ICommand {
 					`This should not happen under regular circumstances, but seems like it did somehow... :(`,
 					`Good news though, you can install the Preview CLI by running`,
 					"",
-					"  " + installCommand.green,
+					"  " + color.green(installCommand),
 					"",
 					"Once installed, run this command again and everything should work!",
 					"If it still fails, you can invoke the preview-cli directly as a last resort with",
 					"",
-					"  ./node_modules/.bin/preview-cli".cyan,
+					color.cyan("  ./node_modules/.bin/preview-cli"),
 					"",
 					"And if you are still having issues, try again - or reach out on Discord/open an issue on GitHub.",
 				].join("\n")
@@ -97,67 +98,4 @@ export class PreviewCommand implements ICommand {
 	}
 }
 
-// export class PreviewCommand implements ICommand {
-// 	public allowedParameters: ICommandParameter[] = [];
-//
-// 	constructor(
-// 		private $analyticsService: IAnalyticsService,
-// 		private $errors: IErrors,
-// 		private $logger: ILogger,
-// 		private $migrateController: IMigrateController,
-// 		private $previewAppController: IPreviewAppController,
-// 		private $networkConnectivityValidator: INetworkConnectivityValidator,
-// 		private $projectData: IProjectData,
-// 		private $options: IOptions,
-// 		private $previewAppLogProvider: IPreviewAppLogProvider,
-// 		private $previewQrCodeService: IPreviewQrCodeService,
-// 		$cleanupService: ICleanupService
-// 	) {
-// 		this.$analyticsService.setShouldDispose(false);
-// 		$cleanupService.setShouldDispose(false);
-// 	}
-//
-// 	public async execute(): Promise<void> {
-// 		this.$previewAppLogProvider.on(
-// 			DEVICE_LOG_EVENT_NAME,
-// 			(deviceId: string, message: string) => {
-// 				this.$logger.info(message);
-// 			}
-// 		);
-//
-// 		await this.$previewAppController.startPreview({
-// 			projectDir: this.$projectData.projectDir,
-// 			useHotModuleReload: this.$options.hmr,
-// 			env: this.$options.env,
-// 		});
-//
-// 		await this.$previewQrCodeService.printLiveSyncQrCode({
-// 			projectDir: this.$projectData.projectDir,
-// 			useHotModuleReload: this.$options.hmr,
-// 			link: this.$options.link,
-// 		});
-// 	}
-//
-// 	public async canExecute(args: string[]): Promise<boolean> {
-// 		if (args && args.length) {
-// 			this.$errors.failWithHelp(
-// 				`The ${args.length > 1 ? "arguments" : "argument"} '${args.join(
-// 					" "
-// 				)}' ${
-// 					args.length > 1 ? "are" : "is"
-// 				} not valid for the preview command.`
-// 			);
-// 		}
-//
-// 		if (!this.$options.force) {
-// 			await this.$migrateController.validate({
-// 				projectDir: this.$projectData.projectDir,
-// 				platforms: [],
-// 			});
-// 		}
-//
-// 		await this.$networkConnectivityValidator.validate();
-// 		return true;
-// 	}
-// }
 injector.registerCommand("preview", PreviewCommand);
