@@ -44,7 +44,8 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		this.$logFilter.loggingLevel = logLevel.toUpperCase();
 	}
 
-	private consoleLogLevelRegex: RegExp = /^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|INFO( .+)):\s/;
+	private consoleLogLevelRegex: RegExp =
+		/^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|INFO( .+)|TIME):\s/;
 	private consoleLevelColor: Record<string, (line: string) => string> = {
 		log: (line) => line,
 		info: color.cyanBright,
@@ -85,6 +86,9 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 
 	private logDataCore(data: string, deviceIdentifier: string): void {
+		// strip android JS: prefix
+		data = data.replace(/^JS:\s/, "");
+
 		// todo: use config to set logger - --env.classicLogs is temporary!
 		if ("classicLogs" in (this.$options.env ?? {})) {
 			// legacy logging
@@ -137,6 +141,8 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			if (timeLabel) {
 				level = "time";
 				timeLabel = timeLabel.replace("INFO ", "").trim() + ": ";
+			} else if (!level && line.startsWith("Trace:")) {
+				level = "trace";
 			} else {
 				level = level?.toLowerCase() ?? "log";
 			}
