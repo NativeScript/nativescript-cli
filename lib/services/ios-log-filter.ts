@@ -10,7 +10,7 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// This: "May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:"
 	// Becomes: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:
 	protected infoFilterRegex = new RegExp(
-		`^.*(?:<Notice>:|<Error>:|<Warning>:|\\(NativeScript\\)|${this.appOutputRegex.source}:){1}`
+		`^.*(?:<Notice>:[ \t]?|<Error>:[ \t]?|<Warning>:[ \t]?|\\(NativeScript\\)[ \t]?|${this.appOutputRegex.source}:[ \t]?){1}`
 	);
 
 	// Used to post filter messages that slip through but are not coming from NativeScript itself.
