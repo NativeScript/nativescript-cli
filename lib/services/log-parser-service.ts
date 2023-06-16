@@ -12,8 +12,7 @@ export class LogParserService
 
 	constructor(
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
-		private $errors: IErrors,
-		private $previewAppLogProvider: IPreviewAppLogProvider
+		private $errors: IErrors
 	) {
 		super();
 	}
@@ -32,12 +31,6 @@ export class LogParserService
 		this.$deviceLogProvider.on(
 			DEVICE_LOG_EVENT_NAME,
 			this.processDeviceLogResponse.bind(this)
-		);
-		this.$previewAppLogProvider.on(
-			DEVICE_LOG_EVENT_NAME,
-			(deviceId: string, message: string) => {
-				this.processDeviceLogResponse(message, deviceId);
-			}
 		);
 	}
 

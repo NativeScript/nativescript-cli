@@ -2,9 +2,11 @@ import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
 import { injector } from "../yok";
 
-import * as chalk from "chalk";
 import { LoggerConfigData } from "../../constants";
 import { IOptions } from "../../declarations";
+import { Color, color } from "../../color";
+
+import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
 
 import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
 
@@ -44,20 +46,21 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		this.$logFilter.loggingLevel = logLevel.toUpperCase();
 	}
 
-	private consoleLogLevelRegex: RegExp = /^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|INFO( .+)):\s/;
+	private consoleLogLevelRegex: RegExp =
+		/^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|INFO( .+)|TIME):\s/;
 	private consoleLevelColor: Record<string, (line: string) => string> = {
 		log: (line) => line,
-		info: chalk.cyanBright,
-		warn: chalk.yellowBright,
-		error: chalk.redBright,
-		trace: chalk.grey,
-		time: chalk.greenBright,
+		info: color.cyanBright,
+		warn: color.yellowBright,
+		error: color.redBright,
+		trace: color.grey,
+		time: color.greenBright,
 	};
 
-	private deviceColorMap = new Map<string, typeof chalk.BackgroundColor>();
+	private deviceColorMap = new Map<string, Color>();
 
-	private colorPool: typeof chalk.BackgroundColor[] = [
-		"bgGray",
+	private colorPool: Color[] = [
+		"bgBlackBright",
 		"bgMagentaBright",
 		"bgBlueBright",
 		"bgWhiteBright",
@@ -85,6 +88,9 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 
 	private logDataCore(data: string, deviceIdentifier: string): void {
+		// strip android JS: prefix
+		data = data.replace(/^JS:\s/, "");
+
 		// todo: use config to set logger - --env.classicLogs is temporary!
 		if ("classicLogs" in (this.$options.env ?? {})) {
 			// legacy logging
@@ -137,17 +143,19 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			if (timeLabel) {
 				level = "time";
 				timeLabel = timeLabel.replace("INFO ", "").trim() + ": ";
+			} else if (!level && line.startsWith("Trace:")) {
+				level = "trace";
 			} else {
 				level = level?.toLowerCase() ?? "log";
 			}
 
 			const toLog = [timeLabel ?? "", match ? line.replace(match, "") : line]
 				.join("")
-				.trim();
+				.trimEnd();
 
 			toLog.split("\n").forEach((actualLine) => {
 				this.printLine(
-					chalk[this.getDeviceColor(deviceIdentifier)](" "),
+					color[this.getDeviceColor(deviceIdentifier)](" "),
 					this.consoleLevelColor[level](actualLine)
 				);
 			});

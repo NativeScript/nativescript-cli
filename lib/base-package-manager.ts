@@ -130,7 +130,11 @@ export abstract class BasePackageManager implements INodePackageManager {
 	protected getFlagsString(config: any, asArray: boolean): any {
 		const array: Array<string> = [];
 		for (const flag in config) {
-			if (flag === "global" && this.packageManager !== "yarn" && this.packageManager !== "yarn2") {
+			if (
+				flag === "global" &&
+				this.packageManager !== "yarn" &&
+				this.packageManager !== "yarn2"
+			) {
 				array.push(`--${flag}`);
 				array.push(`${config[flag]}`);
 			} else if (config[flag]) {
@@ -145,7 +149,6 @@ export abstract class BasePackageManager implements INodePackageManager {
 						array.push(`--fields ${flag}`);
 					} else {
 						array.push(` ${flag}`);
-
 					}
 					continue;
 				}

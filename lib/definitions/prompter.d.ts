@@ -10,7 +10,14 @@ declare global {
 		get(schemas: IPrompterQuestion[]): Promise<any>;
 		getPassword(prompt: string, options?: IAllowEmpty): Promise<string>;
 		getString(prompt: string, options?: IPrompterOptions): Promise<string>;
-		promptForChoice(promptMessage: string, choices: string[]): Promise<string>;
+		promptForChoice(
+			promptMessage: string,
+			choices:
+				| string[]
+				| { title: string; description?: string; value?: string }[],
+			multiple: boolean = false,
+			options: any = {}
+		): Promise<string>;
 		promptForDetailedChoice(
 			promptMessage: string,
 			choices: { key: string; description: string }[]

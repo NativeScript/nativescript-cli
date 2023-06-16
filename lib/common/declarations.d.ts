@@ -218,11 +218,6 @@ declare const enum TrackingTypes {
 	GoogleAnalyticsData = "googleAnalyticsData",
 
 	/**
-	 * Defines that the broker process should get and track the data from preview app to Google Analytics
-	 */
-	PreviewAppData = "PreviewAppData",
-
-	/**
 	 * Defines that the broker process should send all the pending information to Analytics.
 	 * After that the process should send information it has finished tracking and die gracefully.
 	 */
@@ -337,6 +332,13 @@ interface IFileSystem {
 	 * @returns {number} File size in bytes.
 	 */
 	getFileSize(path: string): number;
+
+	/**
+	 * Returns the size of specified path (recurses into all sub-directories if the path is a directory).
+	 * @param {string} path Path to file or directory.
+	 * @returns {number} File size in bytes.
+	 */
+	getSize(path: string): number;
 
 	/**
 	 * Change file timestamps of the file referenced by the supplied path.
@@ -555,7 +557,7 @@ interface IFileSystem {
 	 */
 	getFileShasum(
 		fileName: string,
-		options?: { algorithm?: string; encoding?: "latin1" | "hex" | "base64" }
+		options?: { algorithm?: string; encoding?: "hex" | "base64" }
 	): Promise<string>;
 
 	// shell.js wrappers
@@ -673,7 +675,6 @@ interface IFutureDispatcher {
 
 interface ICommandDispatcher {
 	dispatchCommand(): Promise<void>;
-	completeCommand(): Promise<boolean>;
 }
 
 interface ICancellationService extends IDisposable {
@@ -809,11 +810,6 @@ interface IAnalyticsService {
 	trackEventActionInGoogleAnalytics(data: IEventActionData): Promise<void>;
 
 	/**
-	 * Tracks preview's app data to Google Analytics project.
-	 */
-	trackPreviewAppData(platform: string, projectDir: string): Promise<void>;
-
-	/**
 	 * Defines if the instance should be disposed.
 	 * @param {boolean} shouldDispose Defines if the instance should be disposed and the child processes should be disconnected.
 	 * @returns {void}
@@ -878,37 +874,6 @@ interface IAnalyticsSettingsService {
 	 * @returns {string} The user agent string.
 	 */
 	getUserAgentString(identifier: string): string;
-
-	/**
-	 * Gets information for projects that are exported from playground
-	 * @param projectDir Project directory path
-	 */
-	getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo>;
-}
-
-/**
- * Designed for getting information for projects that are exported from playground.
- */
-interface IPlaygroundService {
-	/**
-	 * Gets information for projects that are exported from playground
-	 * @return {Promise<IPlaygroundInfo>} collected info
-	 * @param projectDir Project directory path
-	 */
-	getPlaygroundInfo(projectDir?: string): Promise<IPlaygroundInfo>;
-}
-/**
- * Describes information about project that is exported from playground.
- */
-interface IPlaygroundInfo {
-	/**
-	 * The unique client identifier
-	 */
-	id: string;
-	/**
-	 * Whether the user comes from tutorial page. Can be true or false
-	 */
-	usedTutorial: boolean;
 }
 
 interface IAutoCompletionService {
@@ -1736,16 +1701,6 @@ interface IiOSNotificationService {
 		commandType?: string
 	): Promise<number>;
 }
-
-// declare module "stringify-package" {
-// 	function stringifyPackage(data: any, indent: any, newline: string): string
-// 	export = stringifyPackage
-// }
-
-// declare module "detect-newline" {
-// 	function detectNewline(data: string): string | null;
-// 	export = detectNewline
-// }
 
 /**
  * Describes information for application.

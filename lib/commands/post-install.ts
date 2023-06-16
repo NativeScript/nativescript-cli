@@ -8,6 +8,7 @@ import {
 	IHostInfo,
 } from "../common/declarations";
 import { injector } from "../common/yok";
+import { color } from "../color";
 
 export class PostInstallCliCommand implements ICommand {
 	constructor(
@@ -54,17 +55,11 @@ export class PostInstallCliCommand implements ICommand {
 	public async postCommandAction(args: string[]): Promise<void> {
 		this.$logger.info("");
 		this.$logger.info(
-			"You have successfully installed the NativeScript CLI!".green.bold
+			color.green.bold("You have successfully installed the NativeScript CLI!")
 		);
 		this.$logger.info("");
 		this.$logger.info("Your next step is to create a new project:");
-		this.$logger.info("ns create".green.bold);
-
-		this.$logger.info("");
-		this.$logger.printMarkdown(
-			"New to NativeScript?".bold +
-				" Try the tutorials in NativeScript Playground: `https://play.nativescript.org`"
-		);
+		this.$logger.info(color.green.bold("ns create"));
 
 		this.$logger.info("");
 		this.$logger.printMarkdown(

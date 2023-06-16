@@ -11,6 +11,7 @@ import {
 	IDictionary,
 	IProjectFilesManager,
 } from "../../common/declarations";
+import { color } from "../../color";
 
 export abstract class PlatformLiveSyncServiceBase {
 	private _deviceLiveSyncServicesCache: IDictionary<
@@ -330,7 +331,10 @@ export abstract class PlatformLiveSyncServiceBase {
 			_.each(localToDevicePaths, (file: Mobile.ILocalToDevicePathData) => {
 				action.call(
 					this.$logger,
-					util.format(message, path.basename(file.getLocalPath()).yellow),
+					util.format(
+						message,
+						color.yellow(path.basename(file.getLocalPath()))
+					),
 					deviceIdentifier
 				);
 			});

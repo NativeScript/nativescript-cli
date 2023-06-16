@@ -40,15 +40,16 @@ export class PublishIOS implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		await this.$itmsTransporterService.validate();
+		await this.$itmsTransporterService.validate(
+			this.$options.appleApplicationSpecificPassword
+		);
 
 		const username =
 			args[0] ||
 			(await this.$prompter.getString("Apple ID", { allowEmpty: false }));
+
 		const password =
 			args[1] || (await this.$prompter.getPassword("Apple ID password"));
-		const mobileProvisionIdentifier = args[2];
-		const codeSignIdentity = args[3];
 
 		const user = await this.$applePortalSessionService.createUserSession(
 			{ username, password },
@@ -66,6 +67,8 @@ export class PublishIOS implements ICommand {
 			);
 		}
 
+		const mobileProvisionIdentifier = this.$options.provision ?? args[2];
+
 		let ipaFilePath = this.$options.ipa
 			? path.resolve(this.$options.ipa)
 			: null;
@@ -76,25 +79,21 @@ export class PublishIOS implements ICommand {
 			);
 		}
 
-		if (!codeSignIdentity && !ipaFilePath) {
-			this.$logger.warn(
-				"No code sign identity set. A default code sign identity will be used. You can set one in app/App_Resources/iOS/build.xcconfig"
-			);
-		}
-
 		this.$options.release = true;
 
 		if (!ipaFilePath) {
 			const platform = this.$devicePlatformsConstants.iOS.toLowerCase();
 			// No .ipa path provided, build .ipa on out own.
-			if (mobileProvisionIdentifier || codeSignIdentity) {
+			if (mobileProvisionIdentifier) {
 				// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
 				this.$logger.info(
-					"Building .ipa with the selected mobile provision and/or certificate."
+					"Building .ipa with the selected mobile provision and/or certificate. " +
+						mobileProvisionIdentifier
 				);
 
 				// As we need to build the package for device
 				this.$options.forDevice = true;
+				this.$options.provision = mobileProvisionIdentifier;
 
 				const buildData = new IOSBuildData(
 					this.$projectData.projectDir,
@@ -124,6 +123,7 @@ export class PublishIOS implements ICommand {
 			ipaFilePath,
 			shouldExtractIpa: !!this.$options.ipa,
 			verboseLogging: this.$logger.getLevel() === "TRACE",
+			teamId: this.$options.teamId,
 		});
 	}
 

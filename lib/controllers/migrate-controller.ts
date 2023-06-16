@@ -1,7 +1,7 @@
 import * as path from "path";
 import * as semver from "semver";
 import * as constants from "../constants";
-import * as glob from "glob";
+import { globSync, GlobOptions } from "glob";
 import * as _ from "lodash";
 import simpleGit, { SimpleGit } from "simple-git";
 import { UpdateControllerBase } from "./update-controller-base";
@@ -41,6 +41,11 @@ import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 import * as temp from "temp";
+import { color } from "../color";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerService,
+} from "../definitions/terminal-spinner-service";
 
 // const wait: (ms: number) => Promise<void> = (ms: number = 1000) =>
 // 	new Promise((resolve) => setTimeout(resolve, ms));
@@ -115,7 +120,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~8.3.0",
+			desiredVersion: "~8.5.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -125,7 +130,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.3.0",
+			desiredVersion: "~8.5.0",
 			isDev: true,
 		},
 		{
@@ -158,7 +163,7 @@ export class MigrateController
 		{
 			packageName: "nativescript-vue",
 			minVersion: "2.7.0",
-			desiredVersion: "~2.9.1",
+			desiredVersion: "~2.9.3",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -184,7 +189,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "~14.2.0",
+			desiredVersion: "~15.2.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -256,19 +261,21 @@ export class MigrateController
 			packageName: "typescript",
 			isDev: true,
 			minVersion: "3.7.0",
-			desiredVersion: "~4.5.5",
+			desiredVersion: "~4.8.4",
 		},
 		{
 			packageName: "node-sass",
 			replaceWith: "sass",
 			minVersion: "0.0.0", // ignore
 			isDev: true,
+			// shouldRemove: true,
 		},
 		{
 			packageName: "sass",
 			minVersion: "0.0.0", // ignore
 			desiredVersion: "~1.49.9",
 			isDev: true,
+			// shouldRemove: true,
 		},
 
 		// runtimes
@@ -287,13 +294,13 @@ export class MigrateController
 		{
 			packageName: "@nativescript/ios",
 			minVersion: "6.5.3",
-			desiredVersion: "~8.3.0",
+			desiredVersion: "~8.5.0",
 			isDev: true,
 		},
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.3.0",
+			desiredVersion: "~8.5.0",
 			isDev: true,
 		},
 	];
@@ -416,13 +423,15 @@ export class MigrateController
 		if (!this.$fs.exists(newConfigPath)) {
 			// migrate configs
 			this.spinner.info(
-				`Migrating project to use ${"nativescript.config.ts".green}`
+				`Migrating project to use ${color.green("nativescript.config.ts")}`
 			);
 
 			await this.migrateConfigs(projectDir);
 
 			this.spinner.succeed(
-				`Project has been migrated to use ${"nativescript.config.ts".green}`
+				`Project has been migrated to use ${color.green(
+					"nativescript.config.ts"
+				)}`
 			);
 		}
 
@@ -449,7 +458,7 @@ export class MigrateController
 		// update tsconfig
 		const tsConfigPath = path.resolve(projectDir, "tsconfig.json");
 		if (this.$fs.exists(tsConfigPath)) {
-			this.spinner.info(`Updating ${"tsconfig.json".yellow}`);
+			this.spinner.info(`Updating ${color.yellow("tsconfig.json")}`);
 
 			await this.migrateTSConfig({
 				tsConfigPath,
@@ -457,7 +466,7 @@ export class MigrateController
 				polyfillsPath,
 			});
 
-			this.spinner.succeed(`Updated ${"tsconfig.json".yellow}`);
+			this.spinner.succeed(`Updated ${color.yellow("tsconfig.json")}`);
 		}
 
 		await this.migrateWebpack5(projectDir, projectData);
@@ -668,7 +677,7 @@ export class MigrateController
 				this.$errors.fail("Not in Git repo.");
 				return false;
 			}
-			this.spinner.warn(`Not in Git repo, but using ${"--force".red}`);
+			this.spinner.warn(`Not in Git repo, but using ${color.red("--force")}`);
 			return true;
 		}
 
@@ -681,7 +690,9 @@ export class MigrateController
 				this.$errors.fail("Git branch not clean.");
 				return false;
 			}
-			this.spinner.warn(`Git branch not clean, but using ${"--force".red}`);
+			this.spinner.warn(
+				`Git branch not clean, but using ${color.red("--force")}`
+			);
 			return true;
 		}
 
@@ -735,16 +746,16 @@ export class MigrateController
 		backup: IBackup,
 		projectData: IProjectData
 	): Promise<void> {
-		const globOptions: glob.IOptions = {
-			silent: true,
+		const globOptions: GlobOptions = {
 			nocase: true,
 			matchBase: true,
 			nodir: true,
 			absolute: false,
 			cwd: projectData.appDirectoryPath,
+			withFileTypes: false,
 		};
 
-		const jsFiles = glob.sync("*.@(js|ts|js.map)", globOptions);
+		const jsFiles = globSync("*.@(js|ts|js.map)", globOptions) as string[];
 		const autoGeneratedJsFiles = this.getGeneratedFiles(
 			jsFiles,
 			[".js"],
@@ -755,7 +766,10 @@ export class MigrateController
 			[".map"],
 			[""]
 		);
-		const cssFiles = glob.sync("*.@(less|sass|scss|css)", globOptions);
+		const cssFiles = globSync(
+			"*.@(less|sass|scss|css)",
+			globOptions
+		) as string[];
 		const autoGeneratedCssFiles = this.getGeneratedFiles(
 			cssFiles,
 			[".css"],
@@ -949,9 +963,9 @@ export class MigrateController
 
 			this.spinner.clear();
 			this.$logger.info(
-				`  - ${dependency.packageName.yellow} ${
-					`${version}`.green
-				} has been added`
+				`  - ${color.yellow(dependency.packageName)} ${color.green(
+					version
+				)} has been added`
 			);
 			this.spinner.render();
 
@@ -996,9 +1010,11 @@ export class MigrateController
 
 			this.spinner.clear();
 			this.$logger.info(
-				`  - ${dependency.packageName.yellow} has been replaced with ${
-					replacementDep.packageName.cyan
-				} ${`${version}`.green}`
+				`  - ${color.yellow(
+					dependency.packageName
+				)} has been replaced with ${color.cyan(
+					replacementDep.packageName
+				)} ${color.green(version)}`
 			);
 			this.spinner.render();
 
@@ -1033,9 +1049,9 @@ export class MigrateController
 
 		this.spinner.clear();
 		this.$logger.info(
-			`  - ${dependency.packageName.yellow} has been updated to ${
-				`${version}`.green
-			}`
+			`  - ${color.yellow(
+				dependency.packageName
+			)} has been updated to ${color.green(version)}`
 		);
 		this.spinner.render();
 	}
@@ -1286,14 +1302,14 @@ export class MigrateController
 		// clean up temp project
 		this.$fs.deleteDirectory(tempDir);
 
-		this.spinner.succeed(`Created fresh ${"polyfills.ts".cyan}`);
+		this.spinner.succeed(`Created fresh ${color.cyan("polyfills.ts")}`);
 
 		return "./" + path.relative(projectDir, possiblePaths[0]);
 	}
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~14.2.0";
+		const desiredVersion = "~15.2.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
@@ -1347,13 +1363,13 @@ export class MigrateController
 			{
 				packageName: "rxjs",
 				minVersion: "6.6.0",
-				desiredVersion: "~7.5.0",
+				desiredVersion: "~7.6.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "zone.js",
 				minVersion: "0.11.1",
-				desiredVersion: "~0.11.5",
+				desiredVersion: "~0.13.0",
 				shouldAddIfMissing: true,
 			},
 
@@ -1392,7 +1408,7 @@ export class MigrateController
 			{
 				packageName: "nativescript-vue-template-compiler",
 				minVersion: "2.7.0",
-				desiredVersion: "~2.9.1",
+				desiredVersion: "~2.9.3",
 				isDev: true,
 				shouldAddIfMissing: true,
 			},
@@ -1534,7 +1550,7 @@ export class MigrateController
 
 			if (webpackConfigContent.includes("webpack.init(")) {
 				this.spinner.succeed(
-					`Project already using new ${"webpack.config.js".yellow}`
+					`Project already using new ${color.yellow("webpack.config.js")}`
 				);
 				return;
 			}
@@ -1542,7 +1558,7 @@ export class MigrateController
 		// clean old config before generating new one
 		await this.$projectCleanupService.clean(["webpack.config.js"]);
 
-		this.spinner.info(`Initializing new ${"webpack.config.js".yellow}`);
+		this.spinner.info(`Initializing new ${color.yellow("webpack.config.js")}`);
 		const { desiredVersion: webpackVersion } = this.migrationDependencies.find(
 			(dep) => dep.packageName === constants.WEBPACK_PLUGIN_NAME
 		);
@@ -1559,9 +1575,13 @@ export class MigrateController
 				"nativescript-webpack",
 				"init",
 			]);
-			this.spinner.succeed(`Initialized new ${"webpack.config.js".yellow}`);
+			this.spinner.succeed(
+				`Initialized new ${color.yellow("webpack.config.js")}`
+			);
 		} catch (err) {
-			this.spinner.fail(`Failed to initialize ${"webpack.config.js".yellow}`);
+			this.spinner.fail(
+				`Failed to initialize ${color.yellow("webpack.config.js")}`
+			);
 			this.$logger.trace(
 				"Failed to initialize webpack.config.js. Error is: ",
 				err
@@ -1605,7 +1625,9 @@ export class MigrateController
 			this.$fs.writeJson(projectData.projectFilePath, packageJSON);
 
 			this.spinner.info(
-				`Updated ${"package.json".yellow} main field to ${replacedMain.green}`
+				`Updated ${color.yellow("package.json")} main field to ${color.green(
+					replacedMain
+				)}`
 			);
 		} else {
 			this.$logger.warn();

@@ -51,7 +51,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 	}
 
 	public async execFile(command: string, args: string[]): Promise<any> {
-		this.$logger.debug(
+		this.$logger.trace(
 			"execFile: %s %s",
 			command,
 			this.getArgumentsAsQuotedString(args)
@@ -82,7 +82,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 			const cwd = options?.cwd ?? process.cwd();
 			command = resolve(cwd, command);
 		}
-		this.$logger.debug(
+		this.$logger.trace(
 			"spawn: %s %s",
 			command,
 			this.getArgumentsAsQuotedString(args)
@@ -95,7 +95,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		args?: string[],
 		options?: any
 	): child_process.ChildProcess {
-		this.$logger.debug(
+		this.$logger.trace(
 			"fork: %s %s",
 			modulePath,
 			this.getArgumentsAsQuotedString(args)

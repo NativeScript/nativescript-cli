@@ -1,7 +1,7 @@
 import { TrackActionNames, HASHES_FILE_NAME } from "../../constants";
 import * as path from "path";
 import {
-	IBuildArtefactsService,
+	IBuildArtifactsService,
 	IBuildInfoFileService,
 	IBuildData,
 } from "../../definitions/build";
@@ -17,7 +17,7 @@ import { injector } from "../../common/yok";
 export class DeviceInstallAppService {
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $buildArtefactsService: IBuildArtefactsService,
+		private $buildArtifactsService: IBuildArtifactsService,
 		private $buildInfoFileService: IBuildInfoFileService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -76,8 +76,11 @@ export class DeviceInstallAppService {
 		}
 
 		if (!packageFile) {
-			this.$logger.error(
-				`Could not find a package corresponding to the device with identifier '${device.deviceInfo.identifier}'.`
+			// this.$logger.error(
+				// `Could not find a package corresponding to the device with identifier '${device.deviceInfo.identifier}'.`);
+			packageFile = await this.$buildArtifactsService.getLatestAppPackagePath(
+				platformData,
+				buildData
 			);
 			return;
 		}

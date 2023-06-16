@@ -12,7 +12,7 @@ import * as path from "path";
 import { Yok } from "../../../yok";
 import { ProjectFilesProviderBase } from "../../../services/project-files-provider-base";
 
-import temp = require("temp");
+import * as temp from "temp";
 import { LiveSyncPaths } from "../../../constants";
 import { TempServiceStub } from "../../../../../test/stubs";
 import { IInjector } from "../../../definitions/yok";

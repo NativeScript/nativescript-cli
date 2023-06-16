@@ -15,6 +15,10 @@ Usage | Synopsis
 ------|-------
 `$ tns resources generate icons <Path to image>` | Generate all icons for Android and iOS based on the specified image.
 
+### Options
+
+* `--background` Sets the background color of the icon. When no color is specified, a default value of `transparent` is used. `<Color>` is a valid color and can be represented with string, like `white`, `black`, `blue`, or with HEX representation, for example `#FFFFFF`, `#000000`, `#0000FF`. NOTE: As the `#` is special symbol in some terminals, make sure to place the value in quotes, for example `$ tns resources generate icons ../myImage.png --background "#FF00FF"`.
+
 ### Arguments
 
 * `<Path to image>` is a valid path to an image that will be used to generate all icons.

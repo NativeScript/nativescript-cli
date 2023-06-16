@@ -2,7 +2,7 @@ import { IOSDeviceLib as IOSDeviceLibModule } from "ios-device-lib";
 import { cache } from "../../../decorators";
 import { DEVICE_LOG_EVENT_NAME } from "../../../constants";
 import * as _ from "lodash";
-import assert = require("assert");
+import * as assert from "assert";
 import { EventEmitter } from "events";
 import {
 	IDisposable,

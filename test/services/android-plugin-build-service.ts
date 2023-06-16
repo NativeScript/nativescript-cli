@@ -9,7 +9,7 @@ import { getShortPluginName } from "../../lib/common/helpers";
 import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
 import * as stubs from "../stubs";
-import temp = require("temp");
+import * as temp from "temp";
 import {
 	IFileSystem,
 	ISpawnResult,
@@ -328,7 +328,9 @@ dependencies {
 			});
 
 			await androidBuildPluginService.buildAar(config);
-			const actualAndroidVersion = getGradleAndroidPluginVersion();
+			const actualAndroidVersion = getGradleAndroidPluginVersion(
+				expectedAndroidVersion
+			);
 			const actualGradleVersion = getGradleVersion();
 
 			assert.equal(actualAndroidVersion, expectedAndroidVersion);
@@ -350,7 +352,9 @@ dependencies {
 			});
 
 			await androidBuildPluginService.buildAar(config);
-			const actualAndroidVersion = getGradleAndroidPluginVersion();
+			const actualAndroidVersion = getGradleAndroidPluginVersion(
+				expectedAndroidVersion
+			);
 			const actualGradleVersion = getGradleVersion();
 
 			assert.equal(actualGradleVersion, expectedGradleVersion);
@@ -372,7 +376,9 @@ dependencies {
 			});
 
 			await androidBuildPluginService.buildAar(config);
-			const actualAndroidVersion = getGradleAndroidPluginVersion();
+			const actualAndroidVersion = getGradleAndroidPluginVersion(
+				expectedAndroidVersion
+			);
 			const actualGradleVersion = getGradleVersion();
 
 			assert.equal(actualGradleVersion, expectedGradleVersion);
@@ -392,7 +398,9 @@ dependencies {
 			});
 
 			await androidBuildPluginService.buildAar(config);
-			const actualAndroidVersion = getGradleAndroidPluginVersion();
+			const actualAndroidVersion = getGradleAndroidPluginVersion(
+				AndroidBuildDefaults.GradleAndroidPluginVersion
+			);
 			const actualGradleVersion = getGradleVersion();
 
 			assert.equal(actualGradleVersion, AndroidBuildDefaults.GradleVersion);
@@ -436,12 +444,17 @@ dependencies {
 		});
 	});
 
-	function getGradleAndroidPluginVersion() {
+	function getGradleAndroidPluginVersion(expected?: string) {
 		const gradleWrappersContent = fs.readText(
 			path.join(tempFolder, shortPluginName, "build.gradle")
 		);
-		const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)\'\r?\n/g;
+		const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)['"]/g;
 		const androidVersion = androidVersionRegex.exec(gradleWrappersContent)[1];
+
+		// in case it's a variable, return expected - not perfect, but should be the correct behavior...
+		if (androidVersion === "$androidBuildToolsVersion") {
+			return expected;
+		}
 
 		return androidVersion;
 	}

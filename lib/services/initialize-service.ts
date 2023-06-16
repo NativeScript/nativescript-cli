@@ -19,10 +19,10 @@ export class InitializeService implements IInitializeService {
 	public async initialize(initOpts?: IInitializeOptions): Promise<void> {
 		initOpts = initOpts || {};
 		const $logger = this.$injector.resolve<ILogger>("logger");
+		const $options = this.$injector.resolve<IOptions>("options");
 		if (initOpts.loggerOptions) {
 			$logger.initialize(initOpts.loggerOptions);
 		} else {
-			const $options = this.$injector.resolve<IOptions>("options");
 			const loggerLevel =
 				$options.log &&
 				LoggerLevel[$options.log.toUpperCase() as keyof typeof LoggerLevel];
@@ -46,7 +46,12 @@ export class InitializeService implements IInitializeService {
 			}
 		}
 
-		await this.showWarnings($logger);
+		if ($options.json) {
+			// speed up --json commands by not gathering system warnings...
+			$logger.trace("Skipping system warnings for --json commands");
+		} else {
+			await this.showWarnings($logger);
+		}
 	}
 
 	private async showWarnings($logger: ILogger): Promise<void> {

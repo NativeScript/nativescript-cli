@@ -73,7 +73,11 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				if (this.$fs.exists(mapFile)) {
 					sourceMapRaw = sourceMapConverter.fromMapFileSource(
 						source,
-						path.dirname(filePath)
+						(filename) => {
+							return this.$fs.readText(
+								path.join(path.dirname(filePath), filename)
+							);
+						}
 					);
 				} else {
 					sourceMapRaw = sourceMapConverter.fromSource(source);
@@ -140,7 +144,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 					outputData +=
 						firstPart +
 						rawLine
-							.substr(lastIndexOfFile)
+							.substring(lastIndexOfFile)
 							.replace(
 								/file:\/\/\/.+?:\d+:\d+/,
 								`${LogSourceMapService.FILE_PREFIX_REPLACEMENT}${sourceFile}:${line}:${column}`
@@ -224,9 +228,8 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 								path.join(projectData.projectDir, platformSpecificFile)
 							)
 						) {
-							this.originalFilesLocationCache[
-								sourceFile
-							] = platformSpecificFile;
+							this.originalFilesLocationCache[sourceFile] =
+								platformSpecificFile;
 						} else {
 							this.originalFilesLocationCache[sourceFile] = sourceFile;
 						}

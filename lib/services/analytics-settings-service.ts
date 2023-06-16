@@ -6,11 +6,10 @@ import {
 	IUserSettingsService,
 	IHostInfo,
 	IOsInfo,
-	IPlaygroundService,
-	IPlaygroundInfo,
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { color } from "../color";
 
 class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	private static SESSIONS_STARTED_KEY_PREFIX = "SESSIONS_STARTED_";
@@ -20,8 +19,7 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
 		private $osInfo: IOsInfo,
-		private $logger: ILogger,
-		private $playgroundService: IPlaygroundService
+		private $logger: ILogger
 	) {}
 
 	public async canDoRequest(): Promise<boolean> {
@@ -39,13 +37,8 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		);
 	}
 
-	@exported("analyticsSettingsService")
-	public async getPlaygroundInfo(projectDir: string): Promise<IPlaygroundInfo> {
-		return this.$playgroundService.getPlaygroundInfo(projectDir);
-	}
-
 	public getClientName(): string {
-		return "" + this.$staticConfig.CLIENT_NAME_ALIAS.cyan.bold;
+		return "" + color.cyan.bold(this.$staticConfig.CLIENT_NAME_ALIAS);
 	}
 
 	public async getUserSessionsCount(projectName: string): Promise<number> {

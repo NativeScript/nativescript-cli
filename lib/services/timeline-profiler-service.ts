@@ -3,12 +3,15 @@ import { cache } from "../common/decorators";
 import { injector } from "../common/yok";
 import { IProjectConfigService } from "../definitions/project";
 import * as path from "path";
+import { originalProcessOn } from "../nativescript-cli";
+import { color } from "../color";
 
 export interface ITimelineProfilerService {
 	processLogData(data: string, deviceIdentifier: string): void;
 }
 
-const TIMELINE_LOG_RE = /Timeline:\s*(\d*.?\d*ms:\s*)?([^\:]*\:)?(.*)\((\d*.?\d*)ms\.?\s*-\s*(\d*.\d*)ms\.?\)/;
+const TIMELINE_LOG_RE =
+	/Timeline:\s*(\d*.?\d*ms:\s*)?([^\:]*\:)?(.*)\((\d*.?\d*)ms\.?\s*-\s*(\d*.\d*)ms\.?\)/;
 
 enum ChromeTraceEventPhase {
 	BEGIN = "B",
@@ -32,22 +35,27 @@ interface DeviceTimeline {
 }
 
 export class TimelineProfilerService implements ITimelineProfilerService {
-	private timelines: Map<string, DeviceTimeline>;
+	private timelines: Map<string, DeviceTimeline> = new Map();
+	private attachedExitHandler: boolean = false;
 	constructor(
 		private $projectConfigService: IProjectConfigService,
 		private $fs: IFileSystem,
 		private $logger: ILogger
-	) {
-		this.timelines = new Map();
+	) {}
 
-		process.on("exit", this.writeTimelines.bind(this));
-		process.on("SIGINT", this.writeTimelines.bind(this));
+	private attachExitHanlder() {
+		if (!this.attachedExitHandler) {
+			this.$logger.info('attached "SIGINT" handler to write timeline data.');
+			originalProcessOn("SIGINT", this.writeTimelines.bind(this));
+			this.attachedExitHandler = true;
+		}
 	}
 
 	public processLogData(data: string, deviceIdentifier: string) {
 		if (!this.isEnabled()) {
 			return;
 		}
+		this.attachExitHanlder();
 
 		if (!this.timelines.has(deviceIdentifier)) {
 			this.timelines.set(deviceIdentifier, {
@@ -97,15 +105,30 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 	}
 
 	private writeTimelines() {
-		if (this.isEnabled()) {
-			this.$logger.info("Writing timeline data to json...");
-			this.timelines.forEach((deviceTimeline, deviceIdentifier) => {
-				this.$fs.writeJson(
-					path.resolve(process.cwd(), `timeline-${deviceIdentifier}.json`),
-					deviceTimeline.timeline
-				);
-			});
-		}
+		this.$logger.info("\n\nWriting timeline data to json...");
+		this.timelines.forEach((deviceTimeline, deviceIdentifier) => {
+			const deviceTimelineFileName = `timeline-${deviceIdentifier}.json`;
+			this.$fs.writeJson(
+				path.resolve(process.cwd(), deviceTimelineFileName),
+				deviceTimeline.timeline
+			);
+			this.$logger.info(
+				`Timeline data for device ${color.cyan(
+					deviceIdentifier
+				)} written to ${color.green(deviceTimelineFileName)}`
+			);
+		});
+
+		this.$logger.info(
+			color.green(
+				"\n\nTo view the timeline data, open the following URL in Chrome, and load the json file:"
+			)
+		);
+		this.$logger.info(
+			color.green(
+				"devtools://devtools/bundled/inspector.html?panel=timeline\n\n"
+			)
+		);
 
 		process.exit();
 	}

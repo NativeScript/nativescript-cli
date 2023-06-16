@@ -36,8 +36,7 @@ import {
 } from "../common/declarations";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
-// import { project } from "nativescript-dev-xcode";
-// import { platform } from "os";
+
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;

@@ -86,7 +86,7 @@ export class HttpClient implements Server.IHttpClient {
 			if (!this.defaultUserAgent) {
 				//TODO: the user agent client name is also passed explicitly during login and should be kept in sync
 				this.defaultUserAgent = `${this.$staticConfig.USER_AGENT_NAME}/${this.$staticConfig.version} (Node.js ${process.versions.node}; ${process.platform}; ${process.arch})`;
-				this.$logger.debug("User-Agent: %s", this.defaultUserAgent);
+				this.$logger.trace("User-Agent: %s", this.defaultUserAgent);
 			}
 
 			headers["User-Agent"] = this.defaultUserAgent;

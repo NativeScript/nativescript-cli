@@ -2,7 +2,7 @@ import * as net from "net";
 import * as path from "path";
 import { EOL } from "os";
 import * as _ from "lodash";
-import * as osenv from "osenv";
+import { homedir } from "os";
 import {
 	AndroidVirtualDevice,
 	DeviceTypes,
@@ -319,7 +319,7 @@ export class AndroidVirtualDeviceService
 		const searchPaths = [
 			process.env.ANDROID_AVD_HOME,
 			path.join(
-				osenv.home(),
+				homedir(),
 				AndroidVirtualDevice.ANDROID_DIR_NAME,
 				AndroidVirtualDevice.AVD_DIR_NAME
 			),
