@@ -468,11 +468,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async isDynamicFramework(frameworkPath: string): Promise<boolean> {
-		const frameworkName = path.basename(
-			frameworkPath,
-			path.extname(frameworkPath)
-		);
-		const isDynamicFrameworkBundle = async (bundlePath: string) => {
+		
+		const isDynamicFrameworkBundle = async (bundlePath: string, frameworkName: string) => {
 			const frameworkBinaryPath = path.join(bundlePath, frameworkName);
 
 			const fileResult = (
@@ -488,25 +485,29 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (path.extname(frameworkPath) === ".xcframework") {
 			let isDynamic = true;
-			const subDirs = this.$fs
-				.readDirectory(frameworkPath)
-				.filter((entry) =>
-					this.$fs.getFsStats(path.join(frameworkPath, entry)).isDirectory()
-				);
-			for (const subDir of subDirs) {
+			const plistJson = this.$plistParser.parseFileSync(path.join(frameworkPath, 'Info.plist'));
+			for (const library of plistJson.AvailableLibraries) {
 				const singlePlatformFramework = path.join(
-					subDir,
-					frameworkName + ".framework"
+					frameworkPath,
+					library.LibraryIdentifier,
+					library.LibraryPath
 				);
 				if (this.$fs.exists(singlePlatformFramework)) {
-					isDynamic = await isDynamicFrameworkBundle(singlePlatformFramework);
+					const frameworkName = path.basename(
+						singlePlatformFramework,
+						path.extname(singlePlatformFramework)
+					);
+					isDynamic = await isDynamicFrameworkBundle(singlePlatformFramework, frameworkName);
 					break;
 				}
 			}
-
 			return isDynamic;
 		} else {
-			return await isDynamicFrameworkBundle(frameworkPath);
+			const frameworkName = path.basename(
+				frameworkPath,
+				path.extname(frameworkPath)
+			);
+			return await isDynamicFrameworkBundle(frameworkPath, frameworkName);
 		}
 	}
 
