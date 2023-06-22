@@ -495,6 +495,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				);
 			for (const subDir of subDirs) {
 				const singlePlatformFramework = path.join(
+					frameworkPath,
 					subDir,
 					frameworkName + ".framework"
 				);
