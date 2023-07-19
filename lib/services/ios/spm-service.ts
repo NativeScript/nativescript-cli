@@ -5,6 +5,7 @@ import {
 	IosSPMPackageDefinition,
 } from "@rigor789/trapezedev-project";
 import { IPlatformData } from "../../definitions/platform";
+import path = require("path");
 
 export class SPMService implements ISPMService {
 	constructor(
@@ -54,6 +55,11 @@ export class SPMService implements ISPMService {
 
 			// todo: handle removing packages? Or just warn and require a clean?
 			for (const pkg of spmPackages) {
+				if ("path" in pkg) {
+					// resolve the path relative to the project root
+					this.$logger.trace("SPM: resolving path for package: ", pkg.path);
+					pkg.path = path.resolve(projectData.projectDir, pkg.path);
+				}
 				this.$logger.trace(`SPM: adding package ${pkg.name} to project.`, pkg);
 				await project.ios.addSPMPackage(projectData.projectName, pkg);
 			}
