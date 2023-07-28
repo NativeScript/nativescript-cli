@@ -4,9 +4,39 @@ import { IProjectData, IBuildConfig } from "../../definitions/project";
 import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { ITempService } from "../../definitions/temp-service";
+import * as constants from "../../constants";
 
 export class ExportOptionsPlistService implements IExportOptionsPlistService {
-	constructor(private $fs: IFileSystem, private $tempService: ITempService) {}
+	constructor(
+		private $fs: IFileSystem,
+		private $tempService: ITempService,
+		private $projectData: IProjectData
+	) {}
+
+	private getExtensionProvisions() {
+		const provisioningJSONPath = path.join(
+			this.$projectData.getAppResourcesDirectoryPath(),
+			"iOS",
+			constants.NATIVE_EXTENSION_FOLDER,
+			"provisioning.json"
+		);
+		if (!this.$fs.exists(provisioningJSONPath)) {
+			return "";
+		}
+
+		interface IProvisioningJSON {
+			[identifier: string]: string;
+		}
+		const provisioningJSON = this.$fs.readJson(
+			provisioningJSONPath
+		) as IProvisioningJSON;
+
+		return Object.entries(provisioningJSON)
+			.map(([id, provision]) => {
+				return `<key>${id}</key>\n	<string>${provision}</string>`;
+			})
+			.join("\n");
+	}
 
 	public async createDevelopmentExportOptionsPlist(
 		archivePath: string,
@@ -31,6 +61,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 <dict>
 	<key>${projectData.projectIdentifiers.ios}</key>
 	<string>${provision}</string>
+	${this.getExtensionProvisions()}
 </dict>`;
 		}
 		plistTemplate += `
@@ -87,6 +118,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
     <dict>
         <key>${projectData.projectIdentifiers.ios}</key>
         <string>${provision}</string>
+        ${this.getExtensionProvisions()}
     </dict>`;
 		}
 		plistTemplate += `    <key>method</key>
