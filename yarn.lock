@@ -3626,10 +3626,10 @@ ios-mobileprovision-finder@1.1.0:
     plist "^3.0.6"
     yargs "^17.7.1"
 
-ios-sim-portable@4.4.1-vision.0:
-  version "4.4.1-vision.0"
-  resolved "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.4.1-vision.0.tgz"
-  integrity sha512-t/YrtIYoIwK/hk7kYL3LFVE0yLRBF8uNOE3JYrqLRS0lz+Jqc1iZbtUmiCrjYnasMKS2YOX8YMtVwfinCQGo7Q==
+ios-sim-portable@4.4.1:
+  version "4.4.1"
+  resolved "https://registry.npmjs.org/ios-sim-portable/-/ios-sim-portable-4.4.1.tgz"
+  integrity sha512-8g/IlCaIQ+2IAe1qrMq2HO2Y+D4pnSk3l5NpabmCiNB/f367Db4a8MVFBVPS9jY65Ao57UedP6kaFFAUPoLnsA==
   dependencies:
     bplist-parser "0.3.2"
     lodash "4.17.21"
