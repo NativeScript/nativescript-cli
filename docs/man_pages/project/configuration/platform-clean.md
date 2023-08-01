@@ -26,7 +26,7 @@ Usage | Synopsis
 ### Command Limitations
 
 * You can run `$ ns platform clean ios` only on macOS systems.
-* Clean command will not preserve your current installed platform version but will download and install latest platform version. If you are using clean with custom version of the runtime, specify the version in the command ns clean ios@2.1.0 or ns clean ios --frameworkPath <path-to-tgz>
+* Clean command will not preserve your current installed platform version but will download and install latest platform version. If you are using clean with custom version of the runtime, specify the version in the command `ns clean ios@2.1.0` or `ns clean ios --frameworkPath <path-to-tgz>`.
 
 ### Related Commands
 
