@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns apple-login
+title: ns apple-login
 position: 5
 ---<% } %>
 
-# tns apple-login
+# ns apple-login
 
 ### Description
 
@@ -13,7 +13,7 @@ Uses the provided Apple credentials to obtain Apple session which can be used wh
 
 Usage | Synopsis
 ---|---
-General | `$ tns apple-login [<Apple ID>] [<Password>]`
+General | `$ ns apple-login [<Apple ID>] [<Password>]`
 
 ### Arguments
 

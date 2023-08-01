@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns device android
+title: ns device android
 position: 1
 ---<% } %>
 
-# tns device android
+# ns device android
 
 ### Description
 
@@ -13,7 +13,7 @@ Lists all recognized connected Android physical and running virtual devices with
 
 Usage | Synopsis
 ------|-------
-General | `$ tns device android [--timeout <Milliseconds>]`
+General | `$ ns device android [--timeout <Milliseconds>]`
 
 ### Options
 

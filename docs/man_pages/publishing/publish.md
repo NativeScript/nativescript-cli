@@ -1,28 +1,28 @@
 <% if (isJekyll) { %>---
-title: tns publish
+title: ns publish
 position: 4
 ---<% } %>
 
-# tns publish
+# ns publish
 
 ### Description
 
 Uploads project to an application store.
 
-<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help publish ios`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ ns help publish ios`<% } %>
 
 ### Commands
 
 Usage | Synopsis
 ---|---
-General | `$ tns publish ios`
+General | `$ ns publish ios`
 
 <% if(isHtml) { %>
 
 ### Command Limitations
 
-* You can run `$ tns publish` only on macOS systems.
-* Currently, you can use `$ tns publish` only to publish iOS applications.
+* You can run `$ ns publish` only on macOS systems.
+* Currently, you can use `$ ns publish` only to publish iOS applications.
 
 ### Related Commands
 

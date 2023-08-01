@@ -1,15 +1,15 @@
 <% if (isJekyll) { %>---
-title: tns debug ios
+title: ns debug ios
 position: 5
 ---<% } %>
 
-# tns debug ios
+# ns debug ios
 
 ### Description
 
 Initiates a debugging session for your project on a connected iOS device or in the iOS simulator. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. While debugging, the output from the application is printed in the console and any changes made to your code are synchronizes with the deployed app. <% if(isHtml) { %>Any debugging traffic is forwarded to port 8080 (or the next available one) from the device to the local machine.<% } %>
 
-<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help debug ios`<% } %>
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ ns help debug ios`<% } %>
 <% if((isConsole && isMacOS) || isHtml) { %>
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your macOS system. <% if(isHtml) { %>For more information, see the [Code Signing](https://developer.apple.com/support/code-signing/) and [Maintain Signing Assets](https://help.apple.com/xcode/mac/current/#/dev3a05256b8) sections from the Apple Developer documentation.<% } %>
 
@@ -17,15 +17,15 @@ Initiates a debugging session for your project on a connected iOS device or in t
 
 Usage | Synopsis
 ---|---
-Deploy on device/emulator, run the app, attach a debugger and generate a Chrome DevTools link for debugging | `$ tns debug ios`
-Deploy on device/simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk [--device <Device ID>] [--no-client]`
-Deploy in the iOS simulator, run the app and stop at the first code statement | `$ tns debug ios --debug-brk --emulator [--no-client]`
-Attach the debug tools to a running app on specified device or simulator| `$ tns debug ios --start [--device <Device ID>] [--no-client]`
-Attach the debug tools to a running app in the iOS simulator | `$ tns debug ios --start --emulator [--no-client]`
+Deploy on device/emulator, run the app, attach a debugger and generate a Chrome DevTools link for debugging | `$ ns debug ios`
+Deploy on device/simulator, run the app and stop at the first code statement | `$ ns debug ios --debug-brk [--device <Device ID>] [--no-client]`
+Deploy in the iOS simulator, run the app and stop at the first code statement | `$ ns debug ios --debug-brk --emulator [--no-client]`
+Attach the debug tools to a running app on specified device or simulator| `$ ns debug ios --start [--device <Device ID>] [--no-client]`
+Attach the debug tools to a running app in the iOS simulator | `$ ns debug ios --start --emulator [--no-client]`
 
 ### Options
 
-* `--device` - Specifies a connected device or iOS simulator on which to run the app. `<Device ID>` is the device identifier of the target device as listed by the `$ tns device ios` command.
+* `--device` - Specifies a connected device or iOS simulator on which to run the app. `<Device ID>` is the device identifier of the target device as listed by the `$ ns device ios` command.
 * `--emulator` - Indicates that you want to debug your app in the iOS simulator.
 * `--debug-brk` - Prepares, builds and deploys the application package on a device or in a simulator, runs the app, launches the developer tools of your Safari browser and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app and launches the developer tools of your Safari browser.
@@ -36,14 +36,14 @@ Attach the debug tools to a running app in the iOS simulator | `$ tns debug ios 
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
 * `--chrome` - Deprecated - default behavior uses '--chrome' implicitly. Allows debugging in Chrome Developer Tools. If set, Safari Web Inspector is not started and debugging is attached to Chrome Developer Tools.
 * `--inspector` - If set, the developer tools in the Safari Web Inspector are used for debugging the application.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% } %>
 <% if(isHtml) { %>
 
 ### Command Limitations
 
-* You can run `$ tns debug ios` only on macOS systems.
+* You can run `$ ns debug ios` only on macOS systems.
 * You must have Google Chrome installed on your machine.
 * If you want to debug in the iOS simulator, you must have the latest versions of Xcode installed on your machine.
 

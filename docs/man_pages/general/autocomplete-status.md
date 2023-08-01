@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns autocomplete status
+title: ns autocomplete status
 position: 3
 ---<% } %>
 
-# tns autocomplete status
+# ns autocomplete status
 
 ### Description
 
@@ -13,7 +13,7 @@ Prints your current command-line completion settings.
 
 Usage | Synopsis
 ------|-------
-General | `$ tns autocomplete status`
+General | `$ ns autocomplete status`
 
 <% if(isHtml) { %>
 

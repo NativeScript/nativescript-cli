@@ -1,15 +1,15 @@
 <% if (isJekyll) { %>---
-title: tns run ios
+title: ns run ios
 position: 11
 ---<% } %>
 
-# tns run ios
+# ns run ios
 
 ### Description
 
 Runs your project on a connected iOS device or in the iOS Simulator, if configured. This is shorthand for prepare, build and deploy. While your app is running, prints the output from the application in the console and watches for changes in your code. Once a change is detected, it synchronizes the change with all selected devices and restarts/refreshes the application.
 
-<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help run ios`<% } %>
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ ns help run ios`<% } %>
 <% if((isConsole && isMacOS) || isHtml) { %>
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your macOS system. <% if(isHtml) { %>For more information, see the [Code Signing](https://developer.apple.com/support/code-signing/) and [Maintain Signing Assets](https://help.apple.com/xcode/mac/current/#/dev3a05256b8) sections from the Apple Developer documentation.<% } %>
 
@@ -21,15 +21,15 @@ When running this command without passing `--release` flag, the HMR (Hot Module 
 
 Usage | Synopsis
 ---|---
-Run on all connected devices | `$ tns run ios [--release] [--justlaunch] [--env.*]]`
-Run on a selected connected device. Will start simulator with specified `Device Identifier`, if not already running. | `$ tns run ios [--device <Device ID>] [--release] [--justlaunch] [--env.*]]`
-Start an emulator and run the app inside it | `$ tns run ios --emulator [--release] [--env.*]]`
-Start an emulator with specified device name and sdk | `$ tns run ios [--device <Device Name>] [--sdk <sdk>]`
-Start an emulator with specified device identifier and sdk | `$ tns run ios [--device <Device Identifier>] [--sdk <sdk>]`
+Run on all connected devices | `$ ns run ios [--release] [--justlaunch] [--env.*]]`
+Run on a selected connected device. Will start simulator with specified `Device Identifier`, if not already running. | `$ ns run ios [--device <Device ID>] [--release] [--justlaunch] [--env.*]]`
+Start an emulator and run the app inside it | `$ ns run ios --emulator [--release] [--env.*]]`
+Start an emulator with specified device name and sdk | `$ ns run ios [--device <Device Name>] [--sdk <sdk>]`
+Start an emulator with specified device identifier and sdk | `$ ns run ios [--device <Device Identifier>] [--sdk <sdk>]`
 
 ### Options
 
-* `--device` - Specifies a connected device/simulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device ios --available-devices` command.
+* `--device` - Specifies a connected device/simulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ ns device ios --available-devices` command.
 * `--emulator` - If set, runs the app in all available and configured ios simulators. It will start a simulator if none are already running.
 * `--sdk` - Specifies the target simulator's sdk.
 * `--justlaunch` - If set, does not print the application output in the console.
@@ -43,7 +43,7 @@ Start an emulator with specified device identifier and sdk | `$ tns run ios [--d
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 ### Environment Variables
 
@@ -59,7 +59,7 @@ Before running the iOS Simulator, verify that your system meets the following re
 
 ### Command Limitations
 
-* You can run `$ tns run ios` only on macOS systems.
+* You can run `$ ns run ios` only on macOS systems.
 * You cannot use `--device` and `--emulator` simultaneously.
 
 ### Related Commands

@@ -7,8 +7,9 @@ position: 1
 
 Usage | Synopsis
 ------|-------
-General | `$ tns <Command> [Command Parameters] [--command <Options>]`
+General | `$ ns <Command> [Command Parameters] [--command <Options>]`
 Alias | `$ nativescript <Command> [Command Parameters] [--command <Options>]`
+Alias | `$ tns <Command> [Command Parameters] [--command <Options>]`
 
 ## General Commands
 

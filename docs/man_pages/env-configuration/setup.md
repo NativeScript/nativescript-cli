@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns setup
+title: ns setup
 position: 5
 ---<% } %>
 
-# tns setup
+# ns setup
 
 ### Description
 
@@ -13,7 +13,7 @@ Run the setup script to automatically install the NativeScript dependencies and 
 
 Usage | Synopsis
 ------|-------
-Run the setup script | `$ tns setup`
+Run the setup script | `$ ns setup`
 
 ### Related Commands
 

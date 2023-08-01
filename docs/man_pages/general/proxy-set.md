@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns proxy set
+title: ns proxy set
 position: 13
 ---<% } %>
 
-# tns proxy set
+# ns proxy set
 
 ### Description
 
@@ -13,7 +13,7 @@ Sets the proxy settings of the NativeScript CLI.
 
 Usage | Synopsis
 ------|-------
-General | `$ tns proxy set [<Url> <% if(isWindows) {%>[<Username> [<Password>]]<%}%>]`
+General | `$ ns proxy set [<Url> <% if(isWindows) {%>[<Username> [<Password>]]<%}%>]`
 
 ### Options
 

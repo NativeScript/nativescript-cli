@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns platform
+title: ns platform
 position: 6
 ---<% } %>
 
-# tns platform
+# ns platform
 
 ### Description
 
@@ -13,7 +13,7 @@ Lists all platforms that the project currently targets. You can build and deploy
 
 Usage | Synopsis
 ---|---
-General | `$ tns platform list`
+General | `$ ns platform list`
 
 <% if(isHtml) { %>
 
