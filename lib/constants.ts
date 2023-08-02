@@ -335,6 +335,8 @@ export type SupportedPlatform = PlatformTypes.ios | PlatformTypes.android;
 
 export const PODFILE_NAME = "Podfile";
 
+export const EXTENSION_PROVISIONING_FILENAME = "provisioning.json";
+
 export class IosProjectConstants {
 	public static XcodeProjExtName = ".xcodeproj";
 	public static XcodeSchemeExtName = ".xcscheme";

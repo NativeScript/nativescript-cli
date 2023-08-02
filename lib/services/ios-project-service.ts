@@ -567,6 +567,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
 		const platformData = this.getPlatformData(projectData);
+
+		const pluginsData = this.getAllProductionPlugins(projectData);
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
+		await this.addExtensions(projectData, pluginsData);
+
 		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		const provision = prepareData && prepareData.provision;
@@ -653,7 +659,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 		}
 
-		const pbxProjPath = this.getPbxProjPath(projectData);
 		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
 		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({
 			watchAppFolderPath: path.join(
@@ -960,6 +965,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			platformData
 		);
 
+		await this.$cocoapodsService.applyPodfileFromExtensions(
+			projectData,
+			platformData
+		);
+
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(
 			platformData.projectRoot
 		);
@@ -983,10 +993,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		await this.$spmService.applySPMPackages(platformData, projectData);
-
-		const pbxProjPath = this.getPbxProjPath(projectData);
-		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
-		await this.addExtensions(projectData, pluginsData);
 	}
 
 	public beforePrepareAllPlugins(

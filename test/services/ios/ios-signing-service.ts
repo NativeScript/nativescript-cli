@@ -22,6 +22,7 @@ const projectData: any = {
 	projectIdentifiers: {
 		ios: "org.nativescript.testApp",
 	},
+	getAppResourcesDirectoryPath: () => "app-resources/path",
 };
 const NativeScriptDev = {
 	Name: "NativeScriptDev",
@@ -59,6 +60,8 @@ const NativeScriptAdHoc = {
 	ProvisionsAllDevices: true,
 	Type: "Distribution",
 };
+
+let provisioningJSON: Record<string, any> | undefined;
 
 class XcodeMock implements IXcodeMock {
 	public isSetManualSigningStyleCalled = false;
@@ -115,7 +118,20 @@ function setup(data: {
 
 	const injector = new Yok();
 	injector.register("errors", Errors);
-	injector.register("fs", {});
+
+	provisioningJSON = undefined;
+	injector.register("fs", {
+		exists(path: string) {
+			return false;
+		},
+		readDirectory: (path: string): string[] => [],
+		readJson() {
+			return provisioningJSON ?? {};
+		},
+		getFsStats(path: string) {
+			return <any>{ isDirectory: () => false };
+		},
+	});
 	injector.register("iOSProvisionService", {
 		getTeamIdsWithName: () => teamIdsForName || [],
 		pick: async (uuidOrName: string, projId: string) => {

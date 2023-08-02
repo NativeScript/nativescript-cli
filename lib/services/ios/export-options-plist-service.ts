@@ -5,6 +5,7 @@ import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { ITempService } from "../../definitions/temp-service";
 import * as constants from "../../constants";
+import { IProvisioningJSON } from "../../declarations";
 
 export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	constructor(
@@ -16,17 +17,14 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	private getExtensionProvisions() {
 		const provisioningJSONPath = path.join(
 			this.$projectData.getAppResourcesDirectoryPath(),
-			"iOS",
+			constants.iOSAppResourcesFolderName,
 			constants.NATIVE_EXTENSION_FOLDER,
-			"provisioning.json"
+			constants.EXTENSION_PROVISIONING_FILENAME
 		);
 		if (!this.$fs.exists(provisioningJSONPath)) {
 			return "";
 		}
 
-		interface IProvisioningJSON {
-			[identifier: string]: string;
-		}
 		const provisioningJSON = this.$fs.readJson(
 			provisioningJSONPath
 		) as IProvisioningJSON;
