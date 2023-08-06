@@ -8,7 +8,9 @@ import { IInjector } from "../../../lib/common/definitions/yok";
 
 interface IXcodeMock {
 	isSetManualSigningStyleCalled: boolean;
+	isSetManualSigningStyleCalledFor(projectName: string): boolean;
 	isSetAutomaticSigningStyleCalled: boolean;
+	isSetAutomaticSigningStyleCalledFor(projectName: string): boolean;
 	isSetManualSigningStyleByTargetProductTypesListCalled: boolean;
 	isSetAutomaticSigningStyleByTargetProductTypesListCalled: boolean;
 	isSaveCalled: boolean;
@@ -61,14 +63,28 @@ const NativeScriptAdHoc = {
 	Type: "Distribution",
 };
 
-let provisioningJSON: Record<string, any> | undefined;
-
 class XcodeMock implements IXcodeMock {
 	public isSetManualSigningStyleCalled = false;
 	public isSetAutomaticSigningStyleCalled = false;
 	public isSetManualSigningStyleByTargetProductTypesListCalled = false;
 	public isSetAutomaticSigningStyleByTargetProductTypesListCalled = false;
 	public isSaveCalled = false;
+
+	private manualSigningStyles: Record<string, ManualSigning> = {};
+	public isSetManualSigningStyleCalledFor(projectName: string) {
+		return (
+			this.isSetManualSigningStyleCalled &&
+			projectName in this.manualSigningStyles
+		);
+	}
+
+	private automaticSigningStyles: Record<string, string> = {};
+	public isSetAutomaticSigningStyleCalledFor(projectName: string) {
+		return (
+			this.isSetAutomaticSigningStyleCalled &&
+			projectName in this.automaticSigningStyles
+		);
+	}
 
 	constructor(private data: { signing: { style: string; team?: string } }) {}
 
@@ -81,10 +97,12 @@ class XcodeMock implements IXcodeMock {
 		configuration: ManualSigning
 	) {
 		this.isSetManualSigningStyleCalled = true;
+		this.manualSigningStyles[projectName] = configuration;
 	}
 
-	public setAutomaticSigningStyle() {
+	public setAutomaticSigningStyle(projectName: string, teamId: string) {
 		this.isSetAutomaticSigningStyleCalled = true;
+		this.automaticSigningStyles[projectName] = teamId;
 	}
 
 	public setManualSigningStyleByTargetProductTypesList() {
@@ -100,46 +118,68 @@ class XcodeMock implements IXcodeMock {
 	}
 }
 
-function setup(data: {
+interface SetupData {
 	hasXCConfigrovisioning?: boolean;
 	hasXCConfigDevelopmentTeam?: boolean;
-	signing?: { style: string };
+	signing?: { style: string; team?: string };
 	teamIdsForName?: string[];
 	provision?: string;
-}): { injector: IInjector; xcodeMock: any } {
+	provisioningJSON?: Record<string, string>;
+	extensions?: string[];
+}
+
+function setup(data: SetupData): { injector: IInjector; xcodeMock: any } {
 	const {
 		hasXCConfigrovisioning,
 		hasXCConfigDevelopmentTeam,
 		signing,
 		teamIdsForName,
 		provision = "myProvision",
+		provisioningJSON,
+		extensions,
 	} = data;
 	const xcodeMock = new XcodeMock({ signing });
 
 	const injector = new Yok();
 	injector.register("errors", Errors);
 
-	provisioningJSON = undefined;
+	// provisioningJSON = undefined;
 	injector.register("fs", {
 		exists(path: string) {
+			if (path.endsWith("provisioning.json")) {
+				return !!provisioningJSON;
+			}
+			if (path.endsWith("extensions")) {
+				return !!extensions?.length;
+			}
 			return false;
 		},
-		readDirectory: (path: string): string[] => [],
+		readDirectory(path: string): string[] {
+			if (path.endsWith("extensions")) {
+				return extensions ?? [];
+			}
+			return [];
+		},
 		readJson() {
 			return provisioningJSON ?? {};
 		},
 		getFsStats(path: string) {
-			return <any>{ isDirectory: () => false };
+			if (path.includes("extensions") && extensions?.length) {
+				return {
+					isDirectory: () => true,
+				};
+			}
+			return { isDirectory: () => false };
 		},
 	});
 	injector.register("iOSProvisionService", {
 		getTeamIdsWithName: () => teamIdsForName || [],
 		pick: async (uuidOrName: string, projId: string) => {
-			return (<any>{
+			return {
 				NativeScriptDev,
 				NativeScriptDist,
 				NativeScriptAdHoc,
-			})[uuidOrName];
+			}[uuidOrName];
 		},
 	});
 	injector.register("logger", {
@@ -169,12 +209,17 @@ function setup(data: {
 	return { injector, xcodeMock };
 }
 
+type TestCase = {
+	name: string;
+	arrangeData: SetupData;
+	assert: (xcodeMock: IXcodeMock) => void;
+};
+
 describe("IOSSigningService", () => {
 	describe("setupSigningForDevice", () => {
-		const testCases = [
+		const testCases: TestCase[] = [
 			{
-				name:
-					"should sign the project manually when PROVISIONING_PROFILE is provided from xcconfig and the project is still not signed",
+				name: "should sign the project manually when PROVISIONING_PROFILE is provided from xcconfig and the project is still not signed",
 				arrangeData: { hasXCConfigrovisioning: true, signing: null },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetManualSigningStyleCalled);
@@ -182,8 +227,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"should sign the project manually when PROVISIONING_PROFILE is provided from xcconfig and the project is automatically signed",
+				name: "should sign the project manually when PROVISIONING_PROFILE is provided from xcconfig and the project is automatically signed",
 				arrangeData: {
 					hasXCConfigrovisioning: true,
 					signing: { style: "Automatic" },
@@ -194,8 +238,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"shouldn't sign the project manually when PROVISIONING_PROFILE is provided from xcconfig and the project is already manually signed",
+				name: "shouldn't sign the project manually when PROVISIONING_PROFILE is provided from xcconfig and the project is already manually signed",
 				arrangeData: {
 					hasXCConfigrovisioning: true,
 					signing: { style: "Manual" },
@@ -206,8 +249,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"should sign the project automatically when PROVISIONING_PROFILE is not provided from xcconfig, DEVELOPMENT_TEAM is provided from xcconfig and the project is still not signed",
+				name: "should sign the project automatically when PROVISIONING_PROFILE is not provided from xcconfig, DEVELOPMENT_TEAM is provided from xcconfig and the project is still not signed",
 				arrangeData: {
 					hasXCConfigrovisioning: false,
 					hasXCConfigDevelopmentTeam: true,
@@ -222,8 +264,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"should sign the project automatically when PROVISIONING_PROFILE is not provided from xcconfig, DEVELOPMENT_TEAM is provided from xcconfig and the project is automatically signed",
+				name: "should sign the project automatically when PROVISIONING_PROFILE is not provided from xcconfig, DEVELOPMENT_TEAM is provided from xcconfig and the project is automatically signed",
 				arrangeData: {
 					hasXCConfigrovisioning: false,
 					hasXCConfigDevelopmentTeam: true,
@@ -238,8 +279,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"shouldn't sign the project when PROVISIONING_PROFILE is not provided from xcconfig, DEVELOPMENT_TEAM is provided from xcconfig and the project is already manually signed",
+				name: "shouldn't sign the project when PROVISIONING_PROFILE is not provided from xcconfig, DEVELOPMENT_TEAM is provided from xcconfig and the project is already manually signed",
 				arrangeData: {
 					hasXCConfigrovisioning: false,
 					hasXCConfigDevelopmentTeam: true,
@@ -252,6 +292,20 @@ describe("IOSSigningService", () => {
 					);
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 					assert.isFalse(xcodeMock.isSaveCalled);
+				},
+			},
+			{
+				name: "should sign extensions",
+				arrangeData: {
+					hasXCConfigrovisioning: true,
+					signing: null as any,
+					extensions: ["testExtension"],
+				},
+				assert: (xcodeMock: IXcodeMock) => {
+					assert.isTrue(
+						xcodeMock.isSetManualSigningStyleCalledFor("testExtension")
+					);
+					assert.isTrue(xcodeMock.isSaveCalled);
 				},
 			},
 		];
@@ -272,11 +326,10 @@ describe("IOSSigningService", () => {
 		});
 	});
 	describe("setupSigningFromTeam", () => {
-		const testCases = [
+		const testCases: TestCase[] = [
 			{
-				name:
-					"should sign the project for given teamId when the project is still not signed",
-				arrangeData: <any>{ signing: null },
+				name: "should sign the project for given teamId when the project is still not signed",
+				arrangeData: { signing: null },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
 					assert.isTrue(
@@ -287,8 +340,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"should sign the project for given teamId when the project is already automatically signed for another team",
+				name: "should sign the project for given teamId when the project is already automatically signed for another team",
 				arrangeData: { signing: { style: "Automatic" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
@@ -300,8 +352,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"shouldn't sign the project for given teamId when the project is already automatically signed for this team",
+				name: "shouldn't sign the project for given teamId when the project is already automatically signed for this team",
 				arrangeData: { signing: { style: "Automatic", team: teamId } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isFalse(xcodeMock.isSetAutomaticSigningStyleCalled);
@@ -313,8 +364,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"shouldn't sign the project for given teamName when the project is already automatically signed for this team",
+				name: "shouldn't sign the project for given teamName when the project is already automatically signed for this team",
 				arrangeData: {
 					signing: { style: "Automatic", team: "anotherTeamId" },
 					teamIdsForName: ["anotherTeamId"],
@@ -329,8 +379,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"should set automatic signing style when the project is already manually signed",
+				name: "should set automatic signing style when the project is already manually signed",
 				arrangeData: { signing: { style: "Manual" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetAutomaticSigningStyleCalled);
@@ -341,15 +390,27 @@ describe("IOSSigningService", () => {
 					assert.isFalse(xcodeMock.isSetManualSigningStyleCalled);
 				},
 			},
+			{
+				name: "should sign extensions",
+				arrangeData: {
+					signing: null,
+					extensions: ["testExtension"],
+				},
+				assert: (xcodeMock: IXcodeMock) => {
+					assert.isTrue(
+						xcodeMock.isSetAutomaticSigningStyleCalledFor("testExtension")
+					);
+					assert.isTrue(xcodeMock.isSaveCalled);
+				},
+			},
 		];
 
 		_.each(testCases, (testCase) => {
 			it(testCase.name, async () => {
 				const { injector, xcodeMock } = setup(testCase.arrangeData);
 
-				const iOSSigningService: IiOSSigningService = injector.resolve(
-					"iOSSigningService"
-				);
+				const iOSSigningService: IiOSSigningService =
+					injector.resolve("iOSSigningService");
 				await iOSSigningService.setupSigningFromTeam(
 					projectRoot,
 					projectData,
@@ -361,10 +422,10 @@ describe("IOSSigningService", () => {
 		});
 	});
 	describe("setupSigningFromProvision", () => {
-		const testCases = [
+		const testCases: TestCase[] = [
 			{
 				name: "should sign the project manually when it is still not signed",
-				arrangeData: <any>{ signing: null },
+				arrangeData: { signing: null },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetManualSigningStyleCalled);
 					assert.isTrue(
@@ -374,8 +435,7 @@ describe("IOSSigningService", () => {
 				},
 			},
 			{
-				name:
-					"should sign the project manually when it is automatically signed",
+				name: "should sign the project manually when it is automatically signed",
 				arrangeData: { signing: { style: "Automatic" } },
 				assert: (xcodeMock: IXcodeMock) => {
 					assert.isTrue(xcodeMock.isSetManualSigningStyleCalled);
@@ -396,6 +456,22 @@ describe("IOSSigningService", () => {
 					assert.isFalse(xcodeMock.isSaveCalled);
 				},
 			},
+			{
+				name: "should sign extensions",
+				arrangeData: {
+					signing: null,
+					extensions: ["testExtension"],
+					provisioningJSON: {
+						testExtension: "<provision>",
+					},
+				},
+				assert: (xcodeMock: IXcodeMock) => {
+					assert.isTrue(
+						xcodeMock.isSetManualSigningStyleCalledFor("testExtension")
+					);
+					assert.isTrue(xcodeMock.isSaveCalled);
+				},
+			},
 		];
 
 		_.each(testCases, (testCase) => {
@@ -403,11 +479,20 @@ describe("IOSSigningService", () => {
 				["NativeScriptDev", "NativeScriptDist", "NativeScriptAdHoc"],
 				(provision) => {
 					it(`${testCase.name} for ${provision} provision`, async () => {
+						// Replace <provision> with the actual provision being tested.
+						if (testCase.arrangeData.provisioningJSON) {
+							Object.entries(testCase.arrangeData.provisioningJSON).forEach(
+								([id, provision_]) => {
+									if (provision_ === "<provision>") {
+										testCase.arrangeData.provisioningJSON[id] = provision;
+									}
+								}
+							);
+						}
 						const { injector, xcodeMock } = setup(testCase.arrangeData);
 
-						const iOSSigningService: IiOSSigningService = injector.resolve(
-							"iOSSigningService"
-						);
+						const iOSSigningService: IiOSSigningService =
+							injector.resolve("iOSSigningService");
 						await iOSSigningService.setupSigningFromProvision(
 							projectRoot,
 							projectData,
@@ -424,9 +509,8 @@ describe("IOSSigningService", () => {
 			const provision = "myTestProvision";
 			const { injector } = setup({ signing: null });
 
-			const iOSSigningService: IiOSSigningService = injector.resolve(
-				"iOSSigningService"
-			);
+			const iOSSigningService: IiOSSigningService =
+				injector.resolve("iOSSigningService");
 			assert.isRejected(
 				iOSSigningService.setupSigningFromProvision(
 					projectRoot,
