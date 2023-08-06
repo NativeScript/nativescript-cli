@@ -122,9 +122,10 @@ ${versionResolutionHint}`);
 		);
 		const podFolder = path.join(platformData.projectRoot, podFilesRootDirName);
 		if (this.$fs.exists(podFolder)) {
-			const pluginsXcconfigFilePaths = this.$xcconfigService.getPluginsXcconfigFilePaths(
-				platformData.projectRoot
-			);
+			const pluginsXcconfigFilePaths =
+				this.$xcconfigService.getPluginsXcconfigFilePaths(
+					platformData.projectRoot
+				);
 			for (const configuration in pluginsXcconfigFilePaths) {
 				const pluginsXcconfigFilePath = pluginsXcconfigFilePaths[configuration];
 				const podXcconfigFilePath = path.join(
@@ -282,16 +283,13 @@ end`.trim();
 			return;
 		}
 
-		const {
-			podfileContent,
-			replacedFunctions,
-			podfilePlatformData,
-		} = this.buildPodfileContent(
-			podfilePath,
-			moduleName,
-			projectData,
-			platformData
-		);
+		const { podfileContent, replacedFunctions, podfilePlatformData } =
+			this.buildPodfileContent(
+				podfilePath,
+				moduleName,
+				projectData,
+				platformData
+			);
 		const pathToProjectPodfile = this.getProjectPodfilePath(nativeProjectPath);
 		const projectPodfileContent = this.$fs.exists(pathToProjectPodfile)
 			? this.$fs.readText(pathToProjectPodfile).trim()
@@ -363,11 +361,12 @@ end`.trim();
 				moduleName,
 				projectPodFileContent
 			);
-			projectPodFileContent = this.$cocoaPodsPlatformManager.removePlatformSection(
-				moduleName,
-				projectPodFileContent,
-				podfilePath
-			);
+			projectPodFileContent =
+				this.$cocoaPodsPlatformManager.removePlatformSection(
+					moduleName,
+					projectPodFileContent,
+					podfilePath
+				);
 
 			const defaultPodfileBeginning = this.getPodfileHeader(
 				projectData.projectName
@@ -557,6 +556,11 @@ end`.trim();
 		pluginPodFilePath = pluginPodFilePath.replace(/\+/g, "\\+");
 		return `# Begin Podfile - ${pluginPodFilePath}`;
 	}
+
+	private getPluginPodfileEnd(): string {
+		return `# End Podfile${EOL}`;
+	}
+
 	private getExtensionPodfileHeader(
 		extensionPodFilePath: string,
 		targetName: string
@@ -565,10 +569,6 @@ end`.trim();
 		return `${this.getPluginPodfileHeader(
 			extensionPodFilePath
 		)}${EOL}${targetHeader}`;
-	}
-
-	private getPluginPodfileEnd(): string {
-		return `# End Podfile${EOL}`;
 	}
 
 	private getExtensionPodfileEnd(): string {

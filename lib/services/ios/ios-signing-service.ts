@@ -52,9 +52,9 @@ export class IOSSigningService implements IiOSSigningService {
 			(!signing || signing.style !== "Manual")
 		) {
 			xcode.setManualSigningStyle(projectData.projectName);
-			this.getExtensionsName(projectData).forEach((name) =>
-				xcode.setManualSigningStyle(name)
-			);
+			this.getExtensionNames(projectData).forEach((name) => {
+				xcode.setManualSigningStyle(name);
+			});
 			xcode.save();
 		} else if (
 			!iOSBuildData.provision &&
@@ -83,9 +83,8 @@ export class IOSSigningService implements IiOSSigningService {
 		if (signing && signing.style === "Automatic") {
 			if (signing.team !== teamId) {
 				// Maybe the provided team is name such as "Telerik AD" and we need to convert it to CH******37
-				const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(
-					teamId
-				);
+				const teamIdsForName =
+					await this.$iOSProvisionService.getTeamIdsWithName(teamId);
 				if (!teamIdsForName.some((id) => id === signing.team)) {
 					shouldUpdateXcode = true;
 				}
@@ -114,9 +113,9 @@ export class IOSSigningService implements IiOSSigningService {
 				],
 				teamId
 			);
-			this.getExtensionsName(projectData).forEach((name) =>
-				xcode.setAutomaticSigningStyle(name, teamId)
-			);
+			this.getExtensionNames(projectData).forEach((name) => {
+				xcode.setAutomaticSigningStyle(name, teamId);
+			});
 
 			xcode.save();
 
@@ -199,7 +198,7 @@ export class IOSSigningService implements IiOSSigningService {
 		}
 	}
 
-	private getExtensionsName(projectData: IProjectData) {
+	private getExtensionNames(projectData: IProjectData) {
 		const extensionFolderPath = path.join(
 			projectData.getAppResourcesDirectoryPath(),
 			constants.iOSAppResourcesFolderName,
@@ -207,15 +206,14 @@ export class IOSSigningService implements IiOSSigningService {
 		);
 
 		if (this.$fs.exists(extensionFolderPath)) {
-			const extensionsName = this.$fs
+			const extensionNames = this.$fs
 				.readDirectory(extensionFolderPath)
 				.filter((fileName) => {
 					const extensionPath = path.join(extensionFolderPath, fileName);
 					const stats = this.$fs.getFsStats(extensionPath);
 					return stats.isDirectory() && !fileName.startsWith(".");
 				});
-
-			return extensionsName;
+			return extensionNames;
 		}
 		return [];
 	}
@@ -233,12 +231,12 @@ export class IOSSigningService implements IiOSSigningService {
 				provisioningJSONPath
 			) as IProvisioningJSON;
 
-			const extensionsName = this.getExtensionsName(projectData);
+			const extensionNames = this.getExtensionNames(projectData);
 
 			const provisioning = Object.entries(provisioningJSON).map(
 				async ([id, provision]) => {
 					const name = id.split(".").at(-1);
-					if (extensionsName.includes(name)) {
+					if (extensionNames.includes(name)) {
 						const configuration = await this.getManualSigningConfiguration(
 							projectData,
 							provision
