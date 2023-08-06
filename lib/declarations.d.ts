@@ -530,6 +530,10 @@ interface IProvision {
 	provision: string;
 }
 
+interface IProvisioningJSON {
+	[identifier: string]: string;
+}
+
 interface ITeamIdentifier {
 	teamId: string;
 }
