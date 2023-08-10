@@ -693,6 +693,7 @@ describe("Plugins service", () => {
 			newPluginHashes?: IStringDictionary;
 			buildDataFileExists?: boolean;
 			hasPluginPlatformsDir?: boolean;
+			pluginHashesAfterPrepare?: IStringDictionary;
 		}): any => {
 			const testData: any = {
 				pluginsService: null,
@@ -730,7 +731,10 @@ describe("Plugins service", () => {
 					currentPluginNativeHashes: IStringDictionary
 				) => !!opts.hasChangesInShasums,
 				generateHashes: async (files: string[]): Promise<IStringDictionary> =>
-					pluginHashes,
+					testData.isPreparePluginNativeCodeCalled &&
+					opts.pluginHashesAfterPrepare
+						? opts.pluginHashesAfterPrepare
+						: pluginHashes,
 			});
 
 			unitTestsInjector.register("fs", {
@@ -767,9 +771,8 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 			unitTestsInjector.register("tempService", stubs.TempServiceStub);
 
-			const pluginsService: PluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: PluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;
 			testData.pluginData = samplePluginData;
 			return testData;
@@ -802,6 +805,25 @@ describe("Plugins service", () => {
 			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
 			assert.deepStrictEqual(testData.dataPassedToWriteJson, {
 				[testData.pluginData.name]: newPluginHashes,
+			});
+		});
+
+		it("should hash the plugin files after prepare", async () => {
+			const newPluginHashes = { file: "hash" };
+			const pluginHashesAfterPrepare = { file: "hasedafterprepare" };
+			const testData = setupTest({
+				newPluginHashes,
+				hasPluginPlatformsDir: true,
+				pluginHashesAfterPrepare,
+			});
+			await testData.pluginsService.preparePluginNativeCode({
+				pluginData: testData.pluginData,
+				platform,
+				projectData,
+			});
+			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
+			assert.deepStrictEqual(testData.dataPassedToWriteJson, {
+				[testData.pluginData.name]: pluginHashesAfterPrepare,
 			});
 		});
 

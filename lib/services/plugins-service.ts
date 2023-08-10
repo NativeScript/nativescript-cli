@@ -268,10 +268,15 @@ export class PluginsService implements IPluginsService {
 					pluginData,
 					projectData
 				);
+
+				const updatedPluginNativeHashes = await this.getPluginNativeHashes(
+					pluginPlatformsFolderPath
+				);
+
 				this.setPluginNativeHashes({
 					pathToPluginsBuildFile,
 					pluginData,
-					currentPluginNativeHashes,
+					currentPluginNativeHashes: updatedPluginNativeHashes,
 					allPluginsNativeHashes,
 				});
 			}
