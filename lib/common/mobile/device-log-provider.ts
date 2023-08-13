@@ -8,8 +8,6 @@ import { Color, color } from "../../color";
 
 import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
 
-import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
-
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(
 		protected $logFilter: Mobile.ILogFilter,
