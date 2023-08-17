@@ -8,7 +8,9 @@ import { DeviceAndroidDebugBridge } from "./device-android-debug-bridge";
 
 interface IDeviceLoggingData {
 	loggingProcess: ChildProcess;
+	appStartTrackingProcess: ChildProcess;
 	lineStream: any;
+	rawLineStream: any;
 	keepSingleProcess: boolean;
 }
 
@@ -25,23 +27,28 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		this.mapDevicesLoggingData = Object.create(null);
 	}
 
-	public async start(options: Mobile.ILogcatStartOptions): Promise<void> {
+	public async start(
+		options: Mobile.ILogcatStartOptions,
+		onAppRestarted?: () => void
+	): Promise<void> {
 		const deviceIdentifier = options.deviceIdentifier;
 		if (deviceIdentifier && !this.mapDevicesLoggingData[deviceIdentifier]) {
 			this.mapDevicesLoggingData[deviceIdentifier] = {
 				loggingProcess: null,
 				lineStream: null,
 				keepSingleProcess: options.keepSingleProcess,
+				appStartTrackingProcess: null,
+				rawLineStream: null,
 			};
 
 			const logcatStream = await this.getLogcatStream(
 				deviceIdentifier,
 				options.pid
 			);
+
 			const lineStream = byline(logcatStream.stdout);
-			this.mapDevicesLoggingData[
-				deviceIdentifier
-			].loggingProcess = logcatStream;
+			this.mapDevicesLoggingData[deviceIdentifier].loggingProcess =
+				logcatStream;
 			this.mapDevicesLoggingData[deviceIdentifier].lineStream = lineStream;
 			logcatStream.stderr.on("data", (data: Buffer) => {
 				this.$logger.trace("ADB logcat stderr: " + data.toString());
@@ -69,6 +76,36 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 						this.$devicePlatformsConstants.Android,
 						deviceIdentifier
 					);
+				}
+			});
+
+			const appStartTrackingStream = await this.getAppStartTrackingLogcatStream(
+				deviceIdentifier,
+				options.appId
+			);
+
+			this.mapDevicesLoggingData[deviceIdentifier].appStartTrackingProcess =
+				appStartTrackingStream;
+
+			const rawLineStream = byline(appStartTrackingStream.stdout);
+			this.mapDevicesLoggingData[deviceIdentifier].rawLineStream =
+				rawLineStream;
+
+			rawLineStream.on("data", (lineBuffer: Buffer) => {
+				if (!this.mapDevicesLoggingData[deviceIdentifier]?.loggingProcess)
+					return;
+				const lines = (lineBuffer.toString() || "").split("\n");
+				for (let line of lines) {
+					if (
+						!line.includes(options.appId) ||
+						!line.includes("START") ||
+						line.indexOf(options.pid) > -1
+					)
+						continue;
+					this.forceStop(deviceIdentifier);
+					if (onAppRestarted) {
+						onAppRestarted();
+					}
 				}
 			});
 		}
@@ -108,13 +145,14 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 	}
 
 	private forceStop(deviceIdentifier: string): void {
-		this.mapDevicesLoggingData[
-			deviceIdentifier
-		].loggingProcess.removeAllListeners();
-		this.mapDevicesLoggingData[deviceIdentifier].loggingProcess.kill("SIGINT");
-		this.mapDevicesLoggingData[
-			deviceIdentifier
-		].lineStream.removeAllListeners();
+		const loggingData = this.mapDevicesLoggingData[deviceIdentifier];
+		loggingData.loggingProcess?.removeAllListeners();
+		loggingData.loggingProcess?.kill("SIGINT");
+		loggingData.lineStream?.removeAllListeners();
+
+		loggingData.appStartTrackingProcess?.kill("SIGINT");
+		loggingData.lineStream?.removeAllListeners();
+
 		delete this.mapDevicesLoggingData[deviceIdentifier];
 	}
 
@@ -131,15 +169,57 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 			DeviceAndroidDebugBridge,
 			{ identifier: deviceIdentifier }
 		);
-		const logcatCommand = ["logcat"];
+		const logcatCommand = ["logcat", "-T", "1"];
+		const acceptedTags = [
+			"chromium",
+			'"Web Console"',
+			"JS",
+			"System.err",
+			"TNS.Native",
+			"TNS.Java",
+		];
 
 		if (pid && isLogcatPidSupported) {
 			logcatCommand.push(`--pid=${pid}`);
+
+			acceptedTags.forEach((tag) => {
+				logcatCommand.push("-s", tag);
+			});
 		}
 		const logcatStream = await adb.executeCommand(logcatCommand, {
 			returnChildProcess: true,
 		});
+
 		return logcatStream;
+	}
+
+	private async getAppStartTrackingLogcatStream(
+		deviceIdentifier: string,
+		appId?: string
+	) {
+		const device = await this.$devicesService.getDevice(deviceIdentifier);
+		const minAndroidWithLogcatPidSupport = "7.0.0";
+		const isLogcatPidSupported =
+			!!device.deviceInfo.version &&
+			semver.gte(
+				semver.coerce(device.deviceInfo.version),
+				minAndroidWithLogcatPidSupport
+			);
+		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(
+			DeviceAndroidDebugBridge,
+			{ identifier: deviceIdentifier }
+		);
+		const logcatCommand = [`logcat`, `-T`, `1`];
+
+		if (appId && isLogcatPidSupported) {
+			logcatCommand.push(`--regex=START.*${appId}`);
+		}
+
+		const appStartTrackingStream = await adb.executeCommand(logcatCommand, {
+			returnChildProcess: true,
+		});
+
+		return appStartTrackingStream;
 	}
 }
 

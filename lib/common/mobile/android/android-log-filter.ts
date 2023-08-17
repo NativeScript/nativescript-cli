@@ -7,7 +7,8 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 
 	// sample line is "11-23 12:39:07.310  1584  1597 I art     : Background sticky concurrent mark sweep GC freed 21966(1780KB) AllocSpace objects, 4(80KB) LOS objects, 77% free, 840KB/3MB, paused 4.018ms total 158.629ms"
 	// or '12-28 10:45:08.020  3329  3329 W chromium: [WARNING:data_reduction_proxy_settings.cc(328)] SPDY proxy OFF at startup'
-	private static API_LEVEL_23_LINE_REGEX = /.+?\s+?(?:[A-Z]\s+?)([A-Za-z \.]+?)\s*?\: (.*)/;
+	private static API_LEVEL_23_LINE_REGEX =
+		/.+?\s+?(?:[A-Z]\s+?)([A-Za-z \.]+?)\s*?\: (.*)/;
 
 	constructor(private $loggingLevels: Mobile.ILoggingLevels) {}
 
@@ -23,7 +24,9 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 			);
 			if (log) {
 				if (log.tag) {
-					return `${log.tag}: ${log.message}` + EOL;
+					return (
+						`${log.tag === "JS" ? "" : `${log.tag}: `}${log.message}` + EOL
+					);
 				} else {
 					return log.message + EOL;
 				}
@@ -35,33 +38,18 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 		return data + EOL;
 	}
 
-	private getConsoleLogFromLine(lineText: string, pid: string): any {
-		// filter log line if it does not belong to the current application process id
-		if (pid && lineText.indexOf(pid) < 0) {
+	getConsoleLogFromLine(lineText: string, pid: string) {
+		if (pid && lineText.indexOf(pid) === -1) {
 			return null;
 		}
 
-		// Messages with category TNS.Native and TNS.Java will be printed by runtime to Logcat only when `__enableVerboseLogging()` is called in the application.
-		const acceptedTags = [
-			"chromium",
-			"Web Console",
-			"JS",
-			"ActivityManager",
-			"System.err",
-			"TNS.Native",
-			"TNS.Java",
-		];
-
-		let consoleLogMessage: { tag?: string; message: string };
-
+		let consoleLogMessage;
 		const match =
 			lineText.match(AndroidLogFilter.LINE_REGEX) ||
 			lineText.match(AndroidLogFilter.API_LEVEL_23_LINE_REGEX);
-
-		if (match && acceptedTags.indexOf(match[1].trim()) !== -1) {
+		if (match) {
 			consoleLogMessage = { tag: match[1].trim(), message: match[2] };
 		}
-
 		return consoleLogMessage;
 	}
 }
