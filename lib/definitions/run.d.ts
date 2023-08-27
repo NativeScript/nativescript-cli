@@ -14,7 +14,10 @@ declare global {
 	interface IStopRunData {
 		projectDir: string;
 		deviceIdentifiers?: string[];
-		stopOptions?: { shouldAwaitAllActions: boolean };
+		stopOptions?: {
+			shouldAwaitAllActions: boolean;
+			keepProcessAlive?: boolean;
+		};
 	}
 
 	interface IRunController extends EventEmitter {

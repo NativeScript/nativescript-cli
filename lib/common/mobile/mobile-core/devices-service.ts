@@ -1,29 +1,28 @@
-import * as util from "util";
-import * as helpers from "../../helpers";
 import * as assert from "assert";
-import * as _ from "lodash";
-import * as constants from "../../constants";
-import { exported } from "../../decorators";
-import { settlePromises } from "../../helpers";
 import { EventEmitter } from "events";
+import * as _ from "lodash";
 import { EOL } from "os";
-import { CONNECTED_STATUS } from "../../constants";
-import { isInteractive } from "../../helpers";
+import * as util from "util";
 import { DebugCommandErrors } from "../../../constants";
-import { performanceLog } from "../../decorators";
+import { IOptions } from "../../../declarations";
+import * as constants from "../../constants";
+import { CONNECTED_STATUS } from "../../constants";
 import {
+	IAppInstalledInfo,
 	IDictionary,
 	IErrors,
 	IHostInfo,
-	IAppInstalledInfo,
 } from "../../declarations";
+import { exported, performanceLog } from "../../decorators";
 import { IInjector } from "../../definitions/yok";
+import * as helpers from "../../helpers";
+import { isInteractive, settlePromises } from "../../helpers";
 import { injector } from "../../yok";
-import { IOptions } from "../../../declarations";
 
 export class DevicesService
 	extends EventEmitter
-	implements Mobile.IDevicesService {
+	implements Mobile.IDevicesService
+{
 	private static DEVICE_LOOKING_INTERVAL = 200;
 	private static EMULATOR_IMAGES_DETECTION_INTERVAL = 60 * 1000;
 	private _devices: IDictionary<Mobile.IDevice> = {};
@@ -190,9 +189,10 @@ export class DevicesService
 		const availableEmulatorsOutput = await this.getEmulatorImages({
 			platform: options.platform,
 		});
-		const emulators = this.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(
-			availableEmulatorsOutput
-		);
+		const emulators =
+			this.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(
+				availableEmulatorsOutput
+			);
 		const errors = this.$emulatorHelper.getErrorsFromAvailableEmulatorsOutput(
 			availableEmulatorsOutput
 		);
@@ -893,7 +893,7 @@ export class DevicesService
 			// TODO: Remove from here as it calls startLookingForDevices, so we double the calls to specific device detection services
 			await this.startEmulatorIfNecessary(deviceInitOpts);
 		}
-
+		deviceInitOpts;
 		const platform = deviceInitOpts.platform;
 		const deviceOption = deviceInitOpts.deviceId;
 		const deviceLookingOptions: Mobile.IDeviceLookingOptions = {
@@ -910,6 +910,7 @@ export class DevicesService
 			);
 			await this.startLookingForDevices(deviceLookingOptions);
 			this._device = await this.getDevice(deviceOption);
+
 			if (this._device.deviceInfo.platform !== this._platform) {
 				this.$errors.fail(constants.ERROR_CANNOT_RESOLVE_DEVICE);
 			}
@@ -1023,9 +1024,8 @@ export class DevicesService
 		appIdentifier: string
 	): Promise<Mobile.IDebugWebViewInfo[]> {
 		const device = this.getDeviceByIdentifier(deviceIdentifier),
-			debuggableViewsPerApp = await device.applicationManager.getDebuggableAppViews(
-				[appIdentifier]
-			);
+			debuggableViewsPerApp =
+				await device.applicationManager.getDebuggableAppViews([appIdentifier]);
 
 		return debuggableViewsPerApp && debuggableViewsPerApp[appIdentifier];
 	}

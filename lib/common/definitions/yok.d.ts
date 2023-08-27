@@ -1,5 +1,6 @@
 import { IDisposable, IDictionary } from "../declarations";
 import { ICommand } from "./commands";
+import { IKeyCommand, IValidKeyCommands } from "./key-commands";
 
 interface IInjector extends IDisposable {
 	require(name: string, file: string): void;
@@ -8,6 +9,7 @@ interface IInjector extends IDisposable {
 	requirePublicClass(names: string | string[], file: string): void;
 	requireCommand(name: string, file: string): void;
 	requireCommand(names: string[], file: string): void;
+	requireKeyCommand(name: string, file: string): void;
 	/**
 	 * Resolves an implementation by constructor function.
 	 * The injector will create new instances for every call.
@@ -22,10 +24,13 @@ interface IInjector extends IDisposable {
 	resolve<T>(name: string, ctorArguments?: IDictionary<any>): T;
 
 	resolveCommand(name: string): ICommand;
+	resolveKeyCommand(key: string): IKeyCommand;
 	register(name: string, resolver: any, shared?: boolean): void;
 	registerCommand(name: string, resolver: any): void;
 	registerCommand(names: string[], resolver: any): void;
+	registerKeyCommand(key: IValidKeyCommands, resolver: any): void;
 	getRegisteredCommandsNames(includeDev: boolean): string[];
+	getRegisteredKeyCommandsNames(): string[];
 	dynamicCallRegex: RegExp;
 	dynamicCall(call: string, args?: any[]): Promise<any>;
 	isDefaultCommand(commandName: string): boolean;

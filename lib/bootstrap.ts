@@ -1,6 +1,7 @@
 import { injector } from "./common/yok";
 
 require("./common/bootstrap");
+
 injector.requirePublicClass("logger", "./common/logger/logger");
 injector.require("config", "./config");
 injector.require("options", "./options");
@@ -278,6 +279,7 @@ injector.require(
 	"./helpers/android-bundle-validator-helper"
 );
 injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
+
 injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
 injector.require("platformCommandHelper", "./helpers/platform-command-helper");
 injector.require("optionsTracker", "./helpers/options-track-helper");
@@ -442,3 +444,10 @@ injector.require(
 injector.require("tempService", "./services/temp-service");
 
 injector.require("sharedEventBus", "./shared-event-bus");
+
+injector.require("keyCommandHelper", "./helpers/key-command-helper");
+
+injector.requireCommand("start", "./commands/start");
+injector.require("startService", "./services/start-service");
+
+require("./key-commands/bootstrap");
