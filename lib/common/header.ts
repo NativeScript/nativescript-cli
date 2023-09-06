@@ -12,7 +12,7 @@ export function printHeader() {
 	].join("");
 	const middle2 = [
 		color.dim("│ "),
-		color.whiteBright.bold(" Empowering JS with Native APIs "),
+		color.whiteBright.bold(" Empower JavaScript with native APIs "),
 		color.dim("  │"),
 	].join("");
 
