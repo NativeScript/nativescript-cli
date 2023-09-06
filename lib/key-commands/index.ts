@@ -81,7 +81,7 @@ export class ShiftA implements IKeyCommand {
 				return;
 			}
 
-			this.$childProcess.exec(`${studioPath} ${androidDir}`);
+			this.$childProcess.exec(`"${studioPath}" "${androidDir}"`);
 		} else if (os === "linux") {
 			if (!fs.existsSync(`/usr/local/android-studio/bin/studio.sh`)) {
 				this.$logger.error("Android Studio is not installed");
