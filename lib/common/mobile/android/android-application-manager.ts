@@ -183,18 +183,16 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 					appData.projectDir
 				);
 
-				await this.$logcatHelper.start(
-					{
-						deviceIdentifier: this.identifier,
-						pid: processIdentifier,
-						appId: appIdentifier,
-					},
-					() => {
+				await this.$logcatHelper.start({
+					deviceIdentifier: this.identifier,
+					pid: processIdentifier,
+					appId: appIdentifier,
+					onAppRestarted: () => {
 						// If the app restarts, we update the PID and
 						// restart log helper.
 						this.onAppLaunch(appData);
-					}
-				);
+					},
+				});
 			} else {
 				await this.$logcatHelper.dump(this.identifier);
 				this.$errors.fail(

@@ -27,10 +27,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		this.mapDevicesLoggingData = Object.create(null);
 	}
 
-	public async start(
-		options: Mobile.ILogcatStartOptions,
-		onAppRestarted?: () => void
-	): Promise<void> {
+	public async start(options: Mobile.ILogcatStartOptions): Promise<void> {
 		const deviceIdentifier = options.deviceIdentifier;
 		if (deviceIdentifier && !this.mapDevicesLoggingData[deviceIdentifier]) {
 			this.mapDevicesLoggingData[deviceIdentifier] = {
@@ -96,15 +93,20 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 					return;
 				const lines = (lineBuffer.toString() || "").split("\n");
 				for (let line of lines) {
+					// 09-11 17:50:26.311   598  1979 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=org.nativescript.myApp/com.tns.NativeScriptActivity} from uid 2000
+					//                                                       ^^^^^                          ^^^^^^^^^^^^^^^^^^^^^^                                        ^^^^
+					// 																										   action                         appId                                                         pid
+
 					if (
-						!line.includes(options.appId) ||
-						!line.includes("START") ||
-						line.indexOf(options.pid) > -1
-					)
-						continue;
-					this.forceStop(deviceIdentifier);
-					if (onAppRestarted) {
-						onAppRestarted();
+						// action
+						line.includes("START") &&
+						// appId
+						line.includes(options.appId) &&
+						// pid - only if it's not the current pid...
+						!line.includes(options.pid)
+					) {
+						this.forceStop(deviceIdentifier);
+						options.onAppRestarted?.();
 					}
 				}
 			});
@@ -156,20 +158,33 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		delete this.mapDevicesLoggingData[deviceIdentifier];
 	}
 
-	private async getLogcatStream(deviceIdentifier: string, pid?: string) {
+	/**
+	 * @deprecated - we likely don't need this anymore, and can simplify the code...
+	 */
+	private async isLogcatPidSupported(deviceIdentifier: string) {
 		const device = await this.$devicesService.getDevice(deviceIdentifier);
 		const minAndroidWithLogcatPidSupport = "7.0.0";
-		const isLogcatPidSupported =
+		return (
 			!!device.deviceInfo.version &&
 			semver.gte(
 				semver.coerce(device.deviceInfo.version),
 				minAndroidWithLogcatPidSupport
-			);
+			)
+		);
+	}
+
+	private async getLogcatStream(deviceIdentifier: string, pid?: string) {
+		const isLogcatPidSupported = await this.isLogcatPidSupported(
+			deviceIdentifier
+		);
 		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(
 			DeviceAndroidDebugBridge,
 			{ identifier: deviceIdentifier }
 		);
+
+		// -T 1 - shows only new logs after starting adb logcat
 		const logcatCommand = ["logcat", "-T", "1"];
+
 		const acceptedTags = [
 			"chromium",
 			'"Web Console"',
@@ -183,9 +198,11 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 			logcatCommand.push(`--pid=${pid}`);
 
 			acceptedTags.forEach((tag) => {
+				// -s <tag> - shows only logs with the specified tag
 				logcatCommand.push("-s", tag);
 			});
 		}
+
 		const logcatStream = await adb.executeCommand(logcatCommand, {
 			returnChildProcess: true,
 		});
@@ -197,21 +214,16 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		deviceIdentifier: string,
 		appId?: string
 	) {
-		const device = await this.$devicesService.getDevice(deviceIdentifier);
-		const minAndroidWithLogcatPidSupport = "7.0.0";
-		const isLogcatPidSupported =
-			!!device.deviceInfo.version &&
-			semver.gte(
-				semver.coerce(device.deviceInfo.version),
-				minAndroidWithLogcatPidSupport
-			);
 		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(
 			DeviceAndroidDebugBridge,
 			{ identifier: deviceIdentifier }
 		);
-		const logcatCommand = [`logcat`, `-T`, `1`];
 
-		if (appId && isLogcatPidSupported) {
+		// -b system  - shows the system buffer/logs only
+		// -T 1 			- shows only new logs after starting adb logcat
+		const logcatCommand = [`logcat`, `-b`, `system`, `-T`, `1`];
+
+		if (appId) {
 			logcatCommand.push(`--regex=START.*${appId}`);
 		}
 

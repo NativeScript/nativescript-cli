@@ -181,13 +181,12 @@ declare global {
 			pid?: string;
 			appId?: string;
 			keepSingleProcess?: boolean;
+
+			onAppRestarted?: () => void;
 		}
 
 		interface ILogcatHelper {
-			start(
-				options: ILogcatStartOptions,
-				onAppRestarted?: () => void
-			): Promise<void>;
+			start(options: ILogcatStartOptions): Promise<void>;
 			stop(deviceIdentifier: string): void;
 			dump(deviceIdentifier: string): Promise<void>;
 		}
