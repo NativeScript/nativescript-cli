@@ -1,60 +1,60 @@
 {
-	"name": "nativescript",
-	"preferGlobal": true,
-	"version": "8.5.5-vision.0",
-	"author": "NativeScript <support@nativescript.org>",
-	"description": "Command-line interface for building NativeScript projects",
-	"bin": {
-		"tns": "./bin/tns",
-		"nativescript": "./bin/tns",
-		"nsc": "./bin/tns",
-		"ns": "./bin/tns"
-	},
-	"main": "./lib/nativescript-cli-lib.js",
-	"files": [
-		"bin/*",
-		"config",
-		"docs",
-		"!docs/html",
-		"lib",
-		"!lib/**/*.ts",
-		"lib/**/*.d.ts",
-		"!lib/**/*.js.map",
-		"!lib/common/test",
-		"!lib/common/docs/fonts",
-		"resources",
-		"setup",
-		"vendor",
-		"postinstall.js",
-		"preuninstall.js"
-	],
-	"scripts": {
-		"clean": "npx rimraf node_modules package-lock.json && npm run setup",
-		"build": "grunt",
-		"build.all": "grunt test",
-		"dev": "tsc --watch",
-		"setup": "npm i --ignore-scripts && npx husky install",
-		"test": "mocha --config=test/.mocharc.yml",
-		"postinstall": "node postinstall.js",
-		"preuninstall": "node preuninstall.js",
-		"prepack": "grunt prepare",
-		"postpack": "grunt set_dev_ga_id",
-		"mocha": "mocha",
-		"tsc": "tsc",
-		"test-watch": "node ./dev/tsc-to-mocha-watch.js",
-		"changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-		"prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/NativeScript/nativescript-cli.git"
-	},
-	"keywords": [
-		"nativescript",
-		"telerik",
-		"mobile"
-	],
-	"dependencies": {
+  "name": "nativescript",
+  "preferGlobal": true,
+  "version": "8.5.5-vision.0",
+  "author": "NativeScript <support@nativescript.org>",
+  "description": "Command-line interface for building NativeScript projects",
+  "bin": {
+    "tns": "./bin/tns",
+    "nativescript": "./bin/tns",
+    "nsc": "./bin/tns",
+    "ns": "./bin/tns"
+  },
+  "main": "./lib/nativescript-cli-lib.js",
+  "files": [
+    "bin/*",
+    "config",
+    "docs",
+    "!docs/html",
+    "lib",
+    "!lib/**/*.ts",
+    "lib/**/*.d.ts",
+    "!lib/**/*.js.map",
+    "!lib/common/test",
+    "!lib/common/docs/fonts",
+    "resources",
+    "setup",
+    "vendor",
+    "postinstall.js",
+    "preuninstall.js"
+  ],
+  "scripts": {
+    "clean": "npx rimraf node_modules package-lock.json && npm run setup",
+    "build": "grunt",
+    "build.all": "grunt test",
+    "dev": "tsc --watch",
+    "setup": "npm i --ignore-scripts && npx husky install",
+    "test": "mocha --config=test/.mocharc.yml",
+    "postinstall": "node postinstall.js",
+    "preuninstall": "node preuninstall.js",
+    "prepack": "grunt prepare",
+    "postpack": "grunt set_dev_ga_id",
+    "mocha": "mocha",
+    "tsc": "tsc",
+    "test-watch": "node ./dev/tsc-to-mocha-watch.js",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NativeScript/nativescript-cli.git"
+  },
+  "keywords": [
+    "nativescript",
+    "telerik",
+    "mobile"
+  ],
+  "dependencies": {
 		"@nativescript/doctor": "2.0.11",
 		"@nativescript/schematics-executor": "0.0.2",
 		"@npmcli/move-file": "^2.0.0",
@@ -169,18 +169,18 @@
 		"sinon": "15.0.3",
 		"source-map-support": "0.5.21"
 	},
-	"license": "Apache-2.0",
-	"engines": {
-		"node": ">=10.0.0"
-	},
-	"lint-staged": {
-		"*.ts": "prettier --write"
-	},
-	"bundleDependencies_comment1": "These dependencies are bundled in the CLI and are not installed from npm to avoid deprecation warnings.",
-	"bundleDependencies_comment2": "Eventually we'll remove them as we replaced their functionality.",
-	"bundleDependencies_comment3": "note: @npmcli/move-file is a transient dep of pacote - we dont use it directly.",
-	"bundleDependencies": [
-		"@npmcli/move-file",
-		"stringify-package"
-	]
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "lint-staged": {
+    "*.ts": "prettier --write"
+  },
+  "bundleDependencies_comment1": "These dependencies are bundled in the CLI and are not installed from npm to avoid deprecation warnings.",
+  "bundleDependencies_comment2": "Eventually we'll remove them as we replaced their functionality.",
+  "bundleDependencies_comment3": "note: @npmcli/move-file is a transient dep of pacote - we dont use it directly.",
+  "bundleDependencies": [
+    "@npmcli/move-file",
+    "stringify-package"
+  ]
 }
