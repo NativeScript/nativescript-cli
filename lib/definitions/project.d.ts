@@ -152,7 +152,6 @@ interface INsConfig {
 	appPath?: string;
 	appResourcesPath?: string;
 	shared?: boolean;
-	previewAppSchema?: string;
 	overridePods?: string;
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
@@ -186,11 +185,6 @@ interface IProjectData extends ICreateProjectData {
 	 * Value is true when project has nativescript.config and it has `shared: true` in it.
 	 */
 	isShared: boolean;
-
-	/**
-	 * Defines the schema for the preview app
-	 */
-	previewAppSchema: string;
 
 	/**
 	 * Defines the path to the configuration file passed to webpack process.
@@ -315,13 +309,50 @@ interface IProjectCleanupService {
 	 * Clean multiple paths
 	 * @param {string[]} pathsToClean
 	 */
-	clean(pathsToClean: string[]): Promise<boolean>;
+	clean(
+		pathsToClean: string[],
+		options?: IProjectCleanupOptions
+	): Promise<IProjectCleanupResult>;
 
 	/**
 	 * Clean a single path
 	 * @param {string} pathToClean
 	 */
-	cleanPath(pathToClean: string): Promise<boolean>;
+	cleanPath(
+		pathToClean: string,
+		options?: IProjectCleanupOptions
+	): Promise<IProjectCleanupResult>;
+}
+
+interface IProjectCleanupOptions {
+	/**
+	 * When set, the cleanup service will calculate the size of the cleaned up files.
+	 */
+	stats?: boolean;
+	/**
+	 * When set, the cleanup service will not delete any files.
+	 */
+	dryRun?: boolean;
+	/**
+	 * When set, the cleanup service will not print any messages to the console.
+	 */
+	silent?: boolean;
+}
+
+interface IProjectCleanupResult {
+	ok: boolean;
+	/**
+	 * When stats is set to true, this will contain a map of the cleaned up paths and their size.
+	 */
+	stats?: Map<string, number>;
+}
+
+interface IProjectPathCleanupResult {
+	ok: boolean;
+	/**
+	 * When stats is set to true, this will contain the size of the cleaned path in bytes.
+	 */
+	size?: number;
 }
 
 interface IBackup {
@@ -407,6 +438,10 @@ interface IAssetItem {
 	resizeOperation?: string;
 	overlayImageScale?: number;
 	rgba?: boolean;
+
+	// additional operations for special cases
+	operation?: "delete" | "writeXMLColor";
+	data?: any;
 }
 
 interface IAssetSubGroup {
@@ -438,6 +473,7 @@ interface IImageDefinitionGroup {
 interface IImageDefinitionsStructure {
 	ios: IImageDefinitionGroup;
 	android: IImageDefinitionGroup;
+	android_legacy: IImageDefinitionGroup;
 }
 
 interface ITemplateData {
@@ -612,6 +648,11 @@ interface ICocoaPodsService {
 	): Promise<void>;
 
 	applyPodfileArchExclusions(
+		projectData: IProjectData,
+		platformData: IPlatformData
+	): Promise<void>;
+
+	applyPodfileFromExtensions(
 		projectData: IProjectData,
 		platformData: IPlatformData
 	): Promise<void>;

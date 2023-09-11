@@ -1,5 +1,5 @@
 import * as constants from "../../constants";
-import * as minimatch from "minimatch";
+import { minimatch } from "minimatch";
 import * as net from "net";
 import * as _ from "lodash";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";

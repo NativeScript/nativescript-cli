@@ -1,12 +1,10 @@
 import { cache } from "../common/decorators";
-import { IConfiguration } from "../declarations";
 import { Server } from "../common/declarations";
 import { injector } from "../common/yok";
 
 export class IPService implements IIPService {
 	private static GET_IP_TIMEOUT = 1000;
 	constructor(
-		private $config: IConfiguration,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger
 	) {}
@@ -14,9 +12,6 @@ export class IPService implements IIPService {
 	@cache()
 	public async getCurrentIPv4Address(): Promise<string> {
 		const ipAddress =
-			(await this.getIPAddressFromServiceReturningJSONWithIPProperty(
-				this.$config.WHOAMI_URL_ENDPOINT
-			)) ||
 			(await this.getIPAddressFromServiceReturningJSONWithIPProperty(
 				"https://api.myip.com"
 			)) ||

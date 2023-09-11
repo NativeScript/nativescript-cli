@@ -1,6 +1,6 @@
 import { exported } from "../decorators";
 import * as path from "path";
-import * as osenv from "osenv";
+import { homedir } from "os";
 import {
 	IHostInfo,
 	ISettingsService,
@@ -36,7 +36,7 @@ export class SettingsService implements ISettingsService {
 	private getDefaultProfileDir(): string {
 		const defaultProfileDirLocation = this.$hostInfo.isWindows
 			? process.env.AppData
-			: path.join(osenv.home(), ".local", "share");
+			: path.join(homedir(), ".local", "share");
 		return path.join(
 			defaultProfileDirLocation,
 			this.$staticConfig.PROFILE_DIR_NAME

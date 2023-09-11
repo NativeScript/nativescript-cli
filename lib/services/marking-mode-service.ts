@@ -6,7 +6,7 @@ import {
 } from "../definitions/project";
 import { injector } from "../common/yok";
 import { IProjectHelper } from "../common/declarations";
-import semver = require("semver/preload");
+import * as semver from "semver/preload";
 
 const enum MarkingMode {
 	None = "none",

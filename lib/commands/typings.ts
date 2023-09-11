@@ -122,17 +122,24 @@ export class TypingsCommand implements ICommand {
 			path.resolve(this.$projectData.projectDir, "typings", "ios")
 		);
 
-		await this.$childProcess.spawnFromEvent("ns", ["build", "ios"], "exit", {
-			env: {
-				...process.env,
-				TNS_TYPESCRIPT_DECLARATIONS_PATH: path.resolve(
-					this.$projectData.projectDir,
-					"typings",
-					"ios"
-				),
-			},
-			stdio: "inherit",
-		});
+		const nsPath = path.resolve(__dirname, "../../bin/nativescript.js");
+
+		await this.$childProcess.spawnFromEvent(
+			"node",
+			[nsPath, "build", "ios"],
+			"exit",
+			{
+				env: {
+					...process.env,
+					TNS_TYPESCRIPT_DECLARATIONS_PATH: path.resolve(
+						this.$projectData.projectDir,
+						"typings",
+						"ios"
+					),
+				},
+				stdio: "inherit",
+			}
+		);
 	}
 }
 

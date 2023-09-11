@@ -17,6 +17,7 @@ import {
 	IDependencyInformation,
 } from "../common/declarations";
 import { injector } from "../common/yok";
+import { color } from "../color";
 
 class TestInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -151,11 +152,13 @@ class TestInitCommand implements ICommand {
 		if (this.$fs.exists(testsDir)) {
 			const specFilenamePattern = `<filename>.spec${projectFilesExtension}`;
 			bufferedLogs.push(
-				[
-					`Note: The "${projectTestsDir}" directory already exists, will not create example tests in the project.`,
-					`You may create "${specFilenamePattern}" files anywhere you'd like.`,
-					"",
-				].join("\n").yellow
+				color.yellow(
+					[
+						`Note: The "${projectTestsDir}" directory already exists, will not create example tests in the project.`,
+						`You may create "${specFilenamePattern}" files anywhere you'd like.`,
+						"",
+					].join("\n")
+				)
 			);
 			shouldCreateSampleTests = false;
 		}
@@ -193,7 +196,7 @@ class TestInitCommand implements ICommand {
 				targetExampleTestPath
 			);
 			bufferedLogs.push(
-				`Added example test: ${targetExampleTestRelativePath.yellow}`
+				`Added example test: ${color.yellow(targetExampleTestRelativePath)}`
 			);
 		}
 
@@ -210,7 +213,7 @@ class TestInitCommand implements ICommand {
 			this.$fs.copyFile(testMainResourcesPath, testMainPath);
 			const testMainRelativePath = path.relative(projectDir, testMainPath);
 			bufferedLogs.push(
-				`Main test entrypoint created: ${testMainRelativePath.yellow}`
+				`Main test entrypoint created: ${color.yellow(testMainRelativePath)}`
 			);
 		}
 
@@ -225,30 +228,32 @@ class TestInitCommand implements ICommand {
 			path.join(projectDir, "tsconfig.spec.json"),
 			testTsConfig
 		);
-		bufferedLogs.push(`Added/replaced ${"tsconfig.spec.json".yellow}`);
+		bufferedLogs.push(`Added/replaced ${color.yellow("tsconfig.spec.json")}`);
 
-		const greyDollarSign = "$".grey;
+		const greyDollarSign = color.grey("$");
 		this.$logger.info(
 			[
 				[
-					`Tests using`.green,
-					frameworkToInstall.cyan,
-					`were successfully initialized.`.green,
+					color.green(`Tests using`),
+					color.cyan(frameworkToInstall),
+					color.green(`were successfully initialized.`),
 				].join(" "),
 				"",
 				...bufferedLogs,
 				"",
-				`Note: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly.`
-					.yellow,
+				color.yellow(
+					`Note: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly.`
+				),
 				"",
-				`For production you may want to move to "devDependencies" and manage the settings yourself.`
-					.yellow,
+				color.yellow(
+					`For production you may want to move to "devDependencies" and manage the settings yourself.`
+				),
 				"",
 				"",
 				`You can now run your tests:`,
 				"",
-				`  ${greyDollarSign} ${"ns test ios".green}`,
-				`  ${greyDollarSign} ${"ns test android".green}`,
+				`  ${greyDollarSign} ${color.green("ns test ios")}`,
+				`  ${greyDollarSign} ${color.green("ns test android")}`,
 				"",
 			].join("\n")
 		);

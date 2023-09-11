@@ -26,6 +26,11 @@ import {
 	IUseCacheOpts,
 	IJsonFileSettingsService,
 } from "../../lib/common/definitions/json-file-settings-service";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerOptions,
+	ITerminalSpinnerService,
+} from "../../lib/definitions/terminal-spinner-service";
 const nativescriptDoctor = require("@nativescript/doctor");
 
 class DoctorServiceInheritor extends DoctorService {

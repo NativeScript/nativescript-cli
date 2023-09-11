@@ -196,31 +196,6 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		await this.trackInGoogleAnalytics(googleAnalyticsEventData);
 	}
 
-	public async trackPreviewAppData(
-		platform: string,
-		projectDir: string
-	): Promise<void> {
-		// const customDimensions: IStringDictionary = {};
-		// this.setProjectRelatedCustomDimensions(customDimensions, projectDir);
-		//
-		// let label: string = "";
-		// label = this.addDataToLabel(
-		// 	label,
-		// 	this.$mobileHelper.normalizePlatformName(platform)
-		// );
-		//
-		// const eventActionData = {
-		// 	googleAnalyticsDataType: GoogleAnalyticsDataType.Event,
-		// 	action: TrackActionNames.PreviewAppData,
-		// 	platform,
-		// 	label,
-		// 	customDimensions,
-		// 	type: TrackingTypes.PreviewAppData,
-		// };
-		//
-		// await this.trackInGoogleAnalytics(eventActionData);
-	}
-
 	public async finishTracking(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (this.brokerProcess && this.brokerProcess.connected) {

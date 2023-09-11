@@ -142,9 +142,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 
 		super.validatePlatform(platform);
 
-		let canExecute = await super.canExecuteCommandBase(platform, {
-			notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true },
-		});
+		let canExecute = await super.canExecuteCommandBase(platform);
 		if (canExecute) {
 			canExecute = await super.validateArgs(args, platform);
 		}
@@ -213,9 +211,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(
 			this.$projectData
 		);
-		let canExecute = await super.canExecuteCommandBase(platform, {
-			notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true },
-		});
+		let canExecute = await super.canExecuteCommandBase(platform);
 		if (canExecute) {
 			if (this.$options.release && !hasValidAndroidSigning(this.$options)) {
 				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);

@@ -18,6 +18,7 @@ import {
 import { injector } from "./common/yok";
 
 export class Yarn2PackageManager extends BasePackageManager {
+	private $hostInfo_: IHostInfo;
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -28,6 +29,17 @@ export class Yarn2PackageManager extends BasePackageManager {
 		$pacoteService: IPacoteService
 	) {
 		super($childProcess, $fs, $hostInfo, $pacoteService, "yarn2");
+		this.$hostInfo_ = $hostInfo;
+	}
+
+	protected getPackageManagerExecutableName(): string {
+		let executableName = "yarn";
+
+		if (this.$hostInfo_.isWindows) {
+			executableName += ".cmd";
+		}
+
+		return executableName;
 	}
 
 	@exported("yarn2")
@@ -46,7 +58,11 @@ export class Yarn2PackageManager extends BasePackageManager {
 		const packageJsonPath = path.join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		const flags = this.getFlagsString(config, true);
+		// remove unsupported flags
+		// todo: refactor all package managers to map typed flags to the actual flags
+		const cleanedConfig = _.omit(config, ["save-dev", "save-exact"]);
+
+		const flags = this.getFlagsString(cleanedConfig, true);
 		let params = [];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -124,7 +140,9 @@ export class Yarn2PackageManager extends BasePackageManager {
 
 	@exported("yarn2")
 	public async getRegistryPackageData(packageName: string): Promise<any> {
-		const registry = await this.$childProcess.exec(`yarn config get npmRegistryServer`);
+		const registry = await this.$childProcess.exec(
+			`yarn config get npmRegistryServer`
+		);
 		const url = `${registry.trim()}/${packageName}`;
 		this.$logger.trace(
 			`Trying to get data from yarn registry for package ${packageName}, url is: ${url}`

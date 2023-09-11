@@ -23,7 +23,6 @@ declare global {
 		isStopped: boolean;
 		deviceDescriptors: ILiveSyncDeviceDescriptor[];
 		currentSyncAction: Promise<any>;
-		syncToPreviewApp: boolean;
 		platforms: string[];
 	}
 
@@ -166,15 +165,6 @@ declare global {
 			deviceDescriptors: ILiveSyncDeviceDescriptor[],
 			liveSyncData: ILiveSyncInfo
 		): Promise<void>;
-
-		/**
-		 * Starts LiveSync operation to Preview app.
-		 * @param {IPreviewAppLiveSyncData} data Describes information about the current operation.
-		 * @returns {Promise<IQrCodeImageData>} Data of the QR code that should be used to start the LiveSync operation.
-		 */
-		liveSyncToPreviewApp(
-			data: IPreviewAppLiveSyncData
-		): Promise<IQrCodeImageData>;
 
 		/**
 		 * Stops LiveSync operation for specified directory.

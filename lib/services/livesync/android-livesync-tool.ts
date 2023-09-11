@@ -4,6 +4,7 @@ import * as crypto from "crypto";
 import { IDictionary, IErrors, IFileSystem } from "../../common/declarations";
 import { IInjector } from "../../common/definitions/yok";
 import { injector } from "../../common/yok";
+import { color } from "../../color";
 
 const PROTOCOL_VERSION_LENGTH_SIZE = 1;
 const PROTOCOL_OPERATION_LENGTH_SIZE = 1;
@@ -420,15 +421,18 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 							lastKnownError
 						);
 						this.$logger.info(
-							`Application ${configuration.appIdentifier} is not running on device ${configuration.deviceIdentifier}.`
-								.yellow
+							color.yellow(
+								`Application ${configuration.appIdentifier} is not running on device ${configuration.deviceIdentifier}.`
+							)
 						);
 						this.$logger.info(
-							`This issue may be caused by:
+							color.cyan(
+								`This issue may be caused by:
 	* crash at startup (try \`tns debug android --debug-brk\` to check why it crashes)
 	* different application identifier in your package.json and in your gradle files (check your identifier in \`package.json\` and in all *.gradle files in your App_Resources directory)
 	* device is locked
-	* manual closing of the application`.cyan
+	* manual closing of the application`
+							)
 						);
 						reject(
 							new Error(

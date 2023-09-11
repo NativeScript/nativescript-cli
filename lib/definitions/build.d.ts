@@ -54,7 +54,7 @@ interface IBuildDataService {
 	getBuildData(projectDir: string, platform: string, data: any): IBuildData;
 }
 
-interface IBuildArtefactsService {
+interface IBuildArtifactsService {
 	getAllAppPackages(
 		buildOutputPath: string,
 		validBuildOutputData: IValidBuildOutputData

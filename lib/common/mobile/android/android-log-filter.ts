@@ -1,6 +1,5 @@
 import { injector } from "../../yok";
-
-const os = require("os");
+import { EOL } from "os";
 
 export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 	//sample line is "I/Web Console(    4438): Received Event: deviceready at file:///storage/emulated/0/Icenium/com.telerik.TestApp/js/index.js:48"
@@ -24,16 +23,16 @@ export class AndroidLogFilter implements Mobile.IPlatformLogFilter {
 			);
 			if (log) {
 				if (log.tag) {
-					return `${log.tag}: ${log.message}` + os.EOL;
+					return `${log.tag}: ${log.message}` + EOL;
 				} else {
-					return log.message + os.EOL;
+					return log.message + EOL;
 				}
 			}
 
 			return null;
 		}
 
-		return data + os.EOL;
+		return data + EOL;
 	}
 
 	private getConsoleLogFromLine(lineText: string, pid: string): any {

@@ -97,7 +97,6 @@ export class ProjectData implements IProjectData {
 	public buildXcconfigPath: string;
 	public podfilePath: string;
 	public isShared: boolean;
-	public previewAppSchema: string;
 	public webpackConfigPath: string;
 	public initialized: boolean;
 
@@ -203,7 +202,6 @@ export class ProjectData implements IProjectData {
 				constants.PODFILE_NAME
 			);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
-			this.previewAppSchema = this.nsConfig && this.nsConfig.previewAppSchema;
 			this.webpackConfigPath =
 				this.nsConfig && this.nsConfig.webpackConfigPath
 					? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath)

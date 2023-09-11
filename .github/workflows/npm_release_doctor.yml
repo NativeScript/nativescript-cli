@@ -2,7 +2,7 @@ name: '@nativescript/doctor -> npm'
 
 on:
   push:
-    branches: [ 'master' ]
+    branches: [ 'main' ]
     paths:
       - 'packages/doctor/**'
   workflow_dispatch:

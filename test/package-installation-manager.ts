@@ -13,7 +13,7 @@ import * as PackageInstallationManagerLib from "../lib/package-installation-mana
 import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
 import * as yok from "../lib/common/yok";
-import ChildProcessLib = require("../lib/common/child-process");
+import * as ChildProcessLib from "../lib/common/child-process";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { ProjectDataService } from "../lib/services/project-data-service";
 import { ProjectConfigServiceStub, ProjectDataStub } from "./stubs";

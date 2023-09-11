@@ -1,6 +1,6 @@
 import * as path from "path";
 import { BaseServiceTest } from "./base-service-test";
-import temp = require("temp");
+import * as temp from "temp";
 import * as _ from "lodash";
 import { assert } from "chai";
 import { PlatformsDataService } from "../lib/services/platforms-data-service";

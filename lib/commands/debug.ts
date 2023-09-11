@@ -114,7 +114,6 @@ export class DebugPlatformCommand
 
 		const result = await super.canExecuteCommandBase(this.platform, {
 			validateOptions: true,
-			notConfiguredEnvOptions: { hideSyncToPreviewAppOption: true },
 		});
 		return result;
 	}

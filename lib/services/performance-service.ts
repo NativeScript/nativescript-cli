@@ -1,5 +1,5 @@
 import { TrackActionNames } from "../constants";
-const EOL = require("os").EOL;
+import { EOL } from "os";
 import { getFixedLengthDateString } from "../common/helpers";
 import * as semver from "semver";
 import * as _ from "lodash";

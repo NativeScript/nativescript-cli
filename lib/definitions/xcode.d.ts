@@ -7,6 +7,6 @@ declare global {
 	export namespace IXcode {
 		export type target = xcode.target;
 		export type project = xcode.project;
-		export interface Options extends xcode.Options {} // tslint:disable-line
+		export interface Options extends xcode.Options {}
 	}
 }

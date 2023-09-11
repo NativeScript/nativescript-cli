@@ -1,3 +1,74 @@
+## [8.5.3](https://github.com/NativeScript/nativescript-cli/compare/v8.5.2...v8.5.3) (2023-04-12)
+
+
+### Bug Fixes
+
+* correctly merge IPHONEOS_DEPLOYMENT_TARGET in xcconfigs ([#5728](https://github.com/NativeScript/nativescript-cli/issues/5728)) ([e6c09c0](https://github.com/NativeScript/nativescript-cli/commit/e6c09c0048534f6079634291706b0b38ac193a6c))
+* hooks not being called ([#5729](https://github.com/NativeScript/nativescript-cli/issues/5729)) ([c35673e](https://github.com/NativeScript/nativescript-cli/commit/c35673eb9ed02116e1286351ca7a711d6ee231e7))
+* migrate - safeguard possibly null values ([#5730](https://github.com/NativeScript/nativescript-cli/issues/5730)) ([68d9373](https://github.com/NativeScript/nativescript-cli/commit/68d9373aec1427a71e1f6236fff4f8084c33a421))
+
+
+
+## [8.5.2](https://github.com/NativeScript/nativescript-cli/compare/v8.5.1...v8.5.2) (2023-04-06)
+
+
+### Features
+
+* clean multiple projects ([#5726](https://github.com/NativeScript/nativescript-cli/issues/5726)) ([e39e8db](https://github.com/NativeScript/nativescript-cli/commit/e39e8dbea725bbb541c9f76fc7b8723bf204d423))
+
+
+
+## [8.5.1](https://github.com/NativeScript/nativescript-cli/compare/v8.5.0...v8.5.1) (2023-03-29)
+
+
+### Reverts
+
+* "fix: build plugins using same gradle config structure as apps ([#5671](https://github.com/NativeScript/nativescript-cli/issues/5671))" ([2c2c964](https://github.com/NativeScript/nativescript-cli/commit/2c2c964c791a831f091a5a10432d4b9f6266e5d4))
+
+
+
+# [8.5.0](https://github.com/NativeScript/nativescript-cli/compare/v8.4.0...v8.5.0) (2023-03-28)
+
+
+### Bug Fixes
+
+* **publish:** various apple publish/sign-in fixes ([#5718](https://github.com/NativeScript/nativescript-cli/issues/5718)) ([1c27c2b](https://github.com/NativeScript/nativescript-cli/commit/1c27c2bf17a7df1fcfa434b7c04fda3a41f38a34))
+* build plugins using same gradle config structure as apps ([#5671](https://github.com/NativeScript/nativescript-cli/issues/5671)) ([40e459a](https://github.com/NativeScript/nativescript-cli/commit/40e459ac2669bed5a1b661f47336691cc8d0b997))
+* **android:** support unsigned apks ([#5706](https://github.com/NativeScript/nativescript-cli/issues/5706)) ([32d3a0f](https://github.com/NativeScript/nativescript-cli/commit/32d3a0fe4a83943c2580b42c1e1536236a3d6164))
+* **doctor:** check for python3 instead of python ([f21156c](https://github.com/NativeScript/nativescript-cli/commit/f21156c8d02964308f503dcdf8f9dc2764745b4e))
+
+
+### Features
+
+* **migrate:** 8.5.0 migrations ([#5725](https://github.com/NativeScript/nativescript-cli/issues/5725)) ([b11357d](https://github.com/NativeScript/nativescript-cli/commit/b11357d1c1c7ee717acd43fbccee568367d77016))
+* support generating android adaptive icons ([#5667](https://github.com/NativeScript/nativescript-cli/issues/5667)) ([73694bd](https://github.com/NativeScript/nativescript-cli/commit/73694bd447625f3df91f999c66e13e9ddc6fb01e))
+* **profiling:** generate chrome compatible timeline data ([#5686](https://github.com/NativeScript/nativescript-cli/issues/5686)) ([0569873](https://github.com/NativeScript/nativescript-cli/commit/0569873139576c3264c631699d9357a96d2d4dbf))
+* experimental SPM support ([#5721](https://github.com/NativeScript/nativescript-cli/issues/5721)) ([1443240](https://github.com/NativeScript/nativescript-cli/commit/14432403857354a8281b8fd1c1d3b4c2f6659403))
+* experimental yarn2+ support ([#5701](https://github.com/NativeScript/nativescript-cli/issues/5701)) ([363db96](https://github.com/NativeScript/nativescript-cli/commit/363db96d7a07245cf1635a2dc22b7a2110941f29))
+
+
+
+# [8.4.0](https://github.com/NativeScript/nativescript-cli/compare/v8.3.3...v8.4.0) (2022-11-30)
+
+
+### Bug Fixes
+
+* get `targetSdkVersion` from project ext ([#5656](https://github.com/NativeScript/nativescript-cli/issues/5656)) ([7574be2](https://github.com/NativeScript/nativescript-cli/commit/7574be2f4cd19b3f9ed28bf351f59ed22f11d7ae))
+* handle unknown/undefined platform edge case ([#5694](https://github.com/NativeScript/nativescript-cli/issues/5694)) ([aa3de73](https://github.com/NativeScript/nativescript-cli/commit/aa3de73193356eedc8ba1c68c9ae9e62b3902832))
+* hmr doesn't work properly in paths with the character '.' ([#5703](https://github.com/NativeScript/nativescript-cli/issues/5703)) ([7a312a2](https://github.com/NativeScript/nativescript-cli/commit/7a312a2113796a75d4fa22541249526bd4ef2dd6))
+* only include EXCLUDED_ARCHS workaround in xcode 12 ([#5705](https://github.com/NativeScript/nativescript-cli/issues/5705)) ([3e430cf](https://github.com/NativeScript/nativescript-cli/commit/3e430cffb52e5f210d3e32e293b9f464f2fc75b6))
+* **testing:** pin karma-jasmine to 4.0.2 ([#5695](https://github.com/NativeScript/nativescript-cli/issues/5695)) ([a5bbac7](https://github.com/NativeScript/nativescript-cli/commit/a5bbac7d32c0a60ea3426b3fbd9b795402d757d1)), closes [#5690](https://github.com/NativeScript/nativescript-cli/issues/5690)
+
+
+### Features
+
+* **doctor:** more informative android compile SDK messages ([#5697](https://github.com/NativeScript/nativescript-cli/issues/5697)) ([cfaa882](https://github.com/NativeScript/nativescript-cli/commit/cfaa882dd42d0d2447efb597442359ed19d9665d))
+* include-settings.gradle plugin ([#5693](https://github.com/NativeScript/nativescript-cli/issues/5693)) ([6155ff7](https://github.com/NativeScript/nativescript-cli/commit/6155ff7f40c37c1183f9cf66b3ea0a464fb6497c))
+* pass in tempPlugin flag during plugin build ([#5691](https://github.com/NativeScript/nativescript-cli/issues/5691)) ([645e9ea](https://github.com/NativeScript/nativescript-cli/commit/645e9ea516063db5da230fbd08db7d9fe37ab971))
+* **migrations:** use Angular 14.2 ([3dc0323](https://github.com/NativeScript/nativescript-cli/commit/3dc03231c7edc7efce9f97445a211f7657c8da1e))
+
+
+
 ## [8.3.3](https://github.com/NativeScript/nativescript-cli/compare/v8.3.2...v8.3.3) (2022-08-22)
 
 

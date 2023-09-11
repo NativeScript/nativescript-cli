@@ -165,7 +165,8 @@ export class PackageManager implements IPackageManager {
 		if (pm === PackageManagers.yarn || this.$options.yarn) {
 			this._packageManagerName = PackageManagers.yarn;
 			return this.$yarn;
-		} if (pm === PackageManagers.yarn2 || this.$options.yarn2) {
+		}
+		if (pm === PackageManagers.yarn2 || this.$options.yarn2) {
 			this._packageManagerName = PackageManagers.yarn2;
 			return this.$yarn2;
 		} else if (pm === PackageManagers.pnpm || this.$options.pnpm) {

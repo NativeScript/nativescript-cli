@@ -1,5 +1,3 @@
-require("colors");
-import { PreviewAppLiveSyncEvents } from "./services/livesync/playground/preview-app-constants";
 import { join } from "path";
 import {
 	IStringDictionary,
@@ -158,6 +156,7 @@ export class ITMSConstants {
 	};
 	static iTMSExecutableName = "iTMSTransporter";
 	static iTMSDirectoryName = "itms";
+	static altoolExecutableName = "altool";
 }
 
 class ItunesConnectApplicationTypesClass
@@ -248,7 +247,6 @@ export const enum TrackActionNames {
 	Options = "Options",
 	AcceptTracking = "Accept Tracking",
 	Performance = "Performance",
-	PreviewAppData = "Preview App Data",
 	UninstallCLI = "Uninstall CLI",
 	UsingRuntimeVersion = "Using Runtime Version",
 	AddPlatform = "Add Platform",
@@ -299,20 +297,6 @@ export const MacOSDeprecationStringFormat =
 export const XcodeDeprecationStringFormat =
 	"The current Xcode version %s will not be supported in the next release of NativeScript. Consider updating your Xcode to latest official version.";
 
-export const PROGRESS_PRIVACY_POLICY_URL =
-	"https://www.progress.com/legal/privacy-policy";
-export class SubscribeForNewsletterMessages {
-	public static AgreeToReceiveEmailMsg =
-		"I agree".green.bold +
-		" to receive email communications in the form of the NativeScript Newsletter. Consent may be withdrawn at any time.";
-	public static ReviewPrivacyPolicyMsg = `You can review the Privacy Policy at \`${PROGRESS_PRIVACY_POLICY_URL}\``;
-	public static PromptMsg =
-		"Input your e-mail address to agree".green +
-		" or " +
-		"leave empty to decline".red.bold +
-		":";
-}
-
 // export class TemplateVersions {
 // 	public static v1 = "v1";
 // 	public static v2 = "v2";
@@ -351,6 +335,8 @@ export type SupportedPlatform = PlatformTypes.ios | PlatformTypes.android;
 
 export const PODFILE_NAME = "Podfile";
 
+export const EXTENSION_PROVISIONING_FILENAME = "provisioning.json";
+
 export class IosProjectConstants {
 	public static XcodeProjExtName = ".xcodeproj";
 	public static XcodeSchemeExtName = ".xcscheme";
@@ -381,7 +367,6 @@ export const RunOnDeviceEvents = {
 	runOnDeviceStopped: "runOnDeviceStopped",
 	// In case we name it error, EventEmitter expects instance of Error to be raised and will also raise uncaught exception in case there's no handler
 	runOnDeviceError: "runOnDeviceError",
-	previewAppLiveSyncError: PreviewAppLiveSyncEvents.PREVIEW_APP_LIVE_SYNC_ERROR,
 	runOnDeviceExecuted: "runOnDeviceExecuted",
 	runOnDeviceStarted: "runOnDeviceStarted",
 	runOnDeviceNotification: "notify",

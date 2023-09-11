@@ -36,7 +36,6 @@ const device = <Mobile.IDevice>{
 function createTestInjector() {
 	const injector = new Yok();
 
-	injector.register("previewAppLogProvider", { on: () => ({}) });
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	injector.register("deviceLogProvider", DeveiceLogProviderMock);
 	injector.register("errors", ErrorsStub);
@@ -44,9 +43,6 @@ function createTestInjector() {
 	injector.register("logParserService", LogParserService);
 	injector.register("iOSProjectService", {
 		getFrameworkVersion: () => "4.1.0",
-	});
-	injector.register("previewSdkService", {
-		on: () => () => ({}),
 	});
 	injector.register("iOSSimResolver", {
 		iOSSim: () => ({}),

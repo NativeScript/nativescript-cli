@@ -9,7 +9,6 @@ interface ICommandsService {
 		commandName: string,
 		commandArguments: string[]
 	): Promise<boolean>;
-	completeCommand(): Promise<boolean>;
 }
 
 /**
