@@ -2,7 +2,7 @@ import { ChildProcess } from "child_process";
 import { IChildProcess } from "../common/declarations";
 import {
 	IKeyCommandHelper,
-	IValidKeyCommands,
+	IValidKeyName,
 } from "../common/definitions/key-commands";
 import { injector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
@@ -84,7 +84,7 @@ export default class StartService implements IStartService {
 	}
 
 	addKeyCommandOverrides() {
-		const keys: IValidKeyCommands[] = ["w", "r", "R"];
+		const keys: IValidKeyName[] = ["w", "r", "R"];
 
 		for (let key of keys) {
 			this.$keyCommandHelper.addOverride(key, async () => {

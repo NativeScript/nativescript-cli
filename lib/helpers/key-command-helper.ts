@@ -1,8 +1,9 @@
-import { color } from "../color";
+import { color, stripColors } from "../color";
 import {
 	IKeyCommandHelper,
 	IKeyCommandPlatform,
-	IValidKeyCommands,
+	IValidKeyName,
+	SpecialKeys,
 	SupportedProcessType,
 } from "../common/definitions/key-commands";
 import { injector } from "../common/yok";
@@ -13,11 +14,11 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 	private processType: SupportedProcessType;
 	private overrides: { [key: string]: () => Promise<boolean> } = {};
 
-	public addOverride(key: IValidKeyCommands, execute: () => Promise<boolean>) {
+	public addOverride(key: IValidKeyName, execute: () => Promise<boolean>) {
 		this.overrides[key] = execute;
 	}
 
-	public removeOverride(key: IValidKeyCommands) {
+	public removeOverride(key: IValidKeyName) {
 		this.overrides[key] = undefined;
 	}
 
@@ -25,13 +26,13 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 		const key = data.toString();
 
 		// Allow Ctrl + C always.
-		if (this.keyCommandExecutionBlocked && key !== "\u0003") return;
+		if (this.keyCommandExecutionBlocked && key !== SpecialKeys.CtrlC) return;
 
 		try {
 			const exists = injector.getRegisteredKeyCommandsNames().includes(key);
 
 			if (exists) {
-				const keyCommand = injector.resolveKeyCommand(key as IValidKeyCommands);
+				const keyCommand = injector.resolveKeyCommand(key as IValidKeyName);
 
 				if (
 					keyCommand.platform === "all" ||
@@ -57,6 +58,16 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 						}
 					}
 
+					if (keyCommand.key !== SpecialKeys.CtrlC) {
+						const line = ` ${color.dim("→")} ${color.bold(keyCommand.key)} — ${
+							keyCommand.description
+						}`;
+						const lineLength = stripColors(line).length - 1;
+						console.log(color.dim(` ┌${"─".repeat(lineLength)}┐`));
+						console.log(line + color.dim(" │"));
+						console.log(color.dim(` └${"─".repeat(lineLength)}┘`));
+						console.log("");
+					}
 					const result = await keyCommand.execute(this.platform);
 					this.keyCommandExecutionBlocked = false;
 
@@ -78,7 +89,7 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 	public printCommands(platform: IKeyCommandPlatform) {
 		const commands = injector.getRegisteredKeyCommandsNames();
 		const commandHelp = commands.reduce((arr, key) => {
-			const command = injector.resolveKeyCommand(key as IValidKeyCommands);
+			const command = injector.resolveKeyCommand(key as IValidKeyName);
 
 			if (
 				!command.description ||
@@ -102,6 +113,7 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 				)}, you can press the following keys any time (make sure the terminal has focus).`,
 				"",
 				...commandHelp,
+				"",
 			].join("\n")
 		);
 	}

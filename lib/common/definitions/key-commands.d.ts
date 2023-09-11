@@ -27,7 +27,16 @@ export type IKeysLowerCase =
 	| "y"
 	| "z";
 
-export type IValidKeyCommands = IKeysLowerCase | `${Uppercase<IKeysLowerCase>}`;
+export type IKeysUpperCase = Uppercase<IKeysLowerCase>;
+
+export const enum SpecialKeys {
+	CtrlC = "\u0003",
+	QuestionMark = "?",
+}
+
+export type IKeysSpecial = `${SpecialKeys}`;
+
+export type IValidKeyName = IKeysLowerCase | IKeysUpperCase | IKeysSpecial;
 
 export interface IKeyCommandHelper {
 	attachKeyCommands: (
@@ -35,15 +44,15 @@ export interface IKeyCommandHelper {
 		processType: SupportedProcessType
 	) => void;
 
-	addOverride(key: IValidKeyCommands, execute: () => Promise<boolean>);
-	removeOverride(key: IValidKeyCommands);
+	addOverride(key: IValidKeyName, execute: () => Promise<boolean>);
+	removeOverride(key: IValidKeyName);
 	printCommands(platform: IKeyCommandPlatform): void;
 }
 
 export type SupportedProcessType = "start" | "run";
 
 export interface IKeyCommand {
-	key: IValidKeyCommands;
+	key: IValidKeyName;
 	platform: IKeyCommandPlatform;
 	description: string;
 	willBlockKeyCommandExecution?: boolean;

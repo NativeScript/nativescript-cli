@@ -1,28 +1,37 @@
 import { color, stripColors } from "../color";
+import { IStaticConfig } from "../declarations";
+import { injector } from "./yok";
 
 export function printHeader() {
 	if (process.env.HIDE_HEADER) return;
-	const version = "8.5.3";
-	const middle = [
-		color.dim("│  "),
-		color.cyanBright.bold(" {N} NativeScript "),
+
+	const $staticConfig: IStaticConfig = injector.resolve("$staticConfig");
+	const version = $staticConfig.version;
+
+	const header = [
+		color.dim("│ "),
+		color.cyanBright.bold("{N} NativeScript "),
 		color.whiteBright.bold("CLI"),
 		color.dim(` [v${version}] `),
-		color.dim("  │"),
+		// color.dim("  │"),
 	].join("");
-	const middle2 = [
+	const tagLine = [
 		color.dim("│ "),
-		color.whiteBright.bold(" Empower JavaScript with native APIs "),
-		color.dim("  │"),
+		color.dim(" → "),
+		color.whiteBright.bold("Empower JavaScript with native APIs "),
+		// color.dim("  │"),
 	].join("");
 
-	const end = [color.dim("─┘")].join("");
+	const headerLength = stripColors(header).length;
+	const tagLineLength = stripColors(tagLine).length;
+	const width = Math.max(headerLength, tagLineLength);
 
-	const width = stripColors(middle).length;
-	const endWidth = stripColors(end).length;
-	console.info(" ");
-	console.info("  " + color.dim("┌" + "─".repeat(width - 2) + "┐"));
-	console.info("  " + middle);
-	console.info("  " + middle2);
-	console.info("  " + color.dim("└" + "─".repeat(width - endWidth - 1)) + end);
+	console.info("  " + color.dim("┌" + "─".repeat(width - 1) + "┐"));
+	console.info(
+		"  " + header + " ".repeat(width - headerLength) + color.dim("│")
+	);
+	console.info(
+		"  " + tagLine + " ".repeat(width - tagLineLength) + color.dim("│")
+	);
+	console.info("  " + color.dim("└" + "─".repeat(width - 1) + "┘"));
 }

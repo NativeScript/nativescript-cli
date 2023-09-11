@@ -1,3 +1,4 @@
+import { SpecialKeys } from "../common/definitions/key-commands";
 import { injector } from "../common/yok";
 
 const path = "./key-commands/index";
@@ -11,4 +12,6 @@ injector.requireKeyCommand("R", path);
 injector.requireKeyCommand("w", path);
 injector.requireKeyCommand("c", path);
 injector.requireKeyCommand("n", path);
-injector.requireKeyCommand("\u0003" as any, path);
+
+injector.requireKeyCommand(SpecialKeys.QuestionMark, path);
+injector.requireKeyCommand(SpecialKeys.CtrlC, path);

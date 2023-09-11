@@ -19,7 +19,6 @@ import {
 	ICommand,
 	ISimilarCommand,
 } from "../definitions/commands";
-import { printHeader } from "../header";
 
 class CommandArgumentsValidationHelper {
 	constructor(public isValid: boolean, _remainingArguments: string[]) {
@@ -183,7 +182,6 @@ export class CommandsService implements ICommandsService {
 				: canExecuteResult;
 
 		if (canExecute) {
-			printHeader();
 			await this.executeCommandAction(
 				commandName,
 				commandArguments,
