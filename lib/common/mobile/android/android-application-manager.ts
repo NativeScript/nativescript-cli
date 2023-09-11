@@ -155,6 +155,11 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 				"1",
 			]);
 		}
+		await this.onAppLaunch(appData);
+	}
+
+	private async onAppLaunch(appData: Mobile.IStartApplicationData) {
+		const appIdentifier = appData.appId;
 
 		if (!this.$options.justlaunch && !appData.justLaunch) {
 			const deviceIdentifier = this.identifier;
@@ -167,13 +172,26 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 					deviceIdentifier,
 					processIdentifier
 				);
+
+				this.$deviceLogProvider.setApplicationIdForDevice(
+					deviceIdentifier,
+					appIdentifier
+				);
+
 				this.$deviceLogProvider.setProjectDirForDevice(
 					deviceIdentifier,
 					appData.projectDir
 				);
+
 				await this.$logcatHelper.start({
 					deviceIdentifier: this.identifier,
 					pid: processIdentifier,
+					appId: appIdentifier,
+					onAppRestarted: () => {
+						// If the app restarts, we update the PID and
+						// restart log helper.
+						this.onAppLaunch(appData);
+					},
 				});
 			} else {
 				await this.$logcatHelper.dump(this.identifier);
@@ -228,11 +246,12 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	public async getDebuggableAppViews(
 		appIdentifiers: string[]
 	): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> {
-		const mappedAppIdentifierPorts = await this.$androidProcessService.getMappedAbstractToTcpPorts(
-				this.identifier,
-				appIdentifiers,
-				TARGET_FRAMEWORK_IDENTIFIERS.Cordova
-			),
+		const mappedAppIdentifierPorts =
+				await this.$androidProcessService.getMappedAbstractToTcpPorts(
+					this.identifier,
+					appIdentifiers,
+					TARGET_FRAMEWORK_IDENTIFIERS.Cordova
+				),
 			applicationViews: IDictionary<Mobile.IDebugWebViewInfo[]> = {};
 
 		await Promise.all(
