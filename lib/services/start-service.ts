@@ -7,6 +7,7 @@ import {
 import { injector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
 import { IStartService } from "./../definitions/start-service.d";
+import { IStaticConfig } from "../declarations";
 
 export default class StartService implements IStartService {
 	ios: ChildProcess;
@@ -18,7 +19,8 @@ export default class StartService implements IStartService {
 		private $childProcess: IChildProcess,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectData: IProjectData,
-		private $logger: ILogger
+		private $logger: ILogger,
+		private $staticConfig: IStaticConfig
 	) {}
 
 	toggleVerbose(): void {
@@ -35,8 +37,8 @@ export default class StartService implements IStartService {
 	async runForPlatform(platform: string) {
 		const platformLowerCase = platform.toLowerCase();
 		(this as any)[platformLowerCase] = this.$childProcess.spawn(
-			"../nativescript-cli/bin/ns",
-			["run", platform.toLowerCase()],
+			"node",
+			[this.$staticConfig.cliBinPath, "run", platform.toLowerCase()],
 			{
 				cwd: this.$projectData.projectDir,
 				stdio: ["ipc"],
@@ -97,7 +99,10 @@ export default class StartService implements IStartService {
 			await this.stopIOS();
 			await this.stopAndroid();
 
-			const clean = this.$childProcess.spawn("ns", ["clean"]);
+			const clean = this.$childProcess.spawn("node", [
+				this.$staticConfig.cliBinPath,
+				"clean",
+			]);
 			clean.stdout.on("data", (data) => {
 				process.stdout.write(data);
 				if (
