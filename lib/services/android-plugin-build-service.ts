@@ -67,7 +67,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	};
 
 	private getAndroidSourceDirectories(source: string): Array<string> {
-		const directories = [RESOURCES_DIR, "java", ASSETS_DIR, "jniLibs"];
+		const directories = [RESOURCES_DIR, "java", ASSETS_DIR, "jniLibs", "cpp"];
 		const resultArr: Array<string> = [];
 
 		this.$fs.enumerateFilesInDirectorySync(source, (file, stat) => {
@@ -357,7 +357,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		for (const dir of androidSourceSetDirectories) {
 			const dirName = path.basename(dir);
 			const destination = path.join(pluginTempMainSrcDir, dirName);
-
 			this.$fs.ensureDirectoryExists(destination);
 			this.$fs.copyFile(path.join(dir, "*"), destination);
 		}
