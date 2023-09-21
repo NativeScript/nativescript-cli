@@ -67,7 +67,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	};
 
 	private getAndroidSourceDirectories(source: string): Array<string> {
-		const directories = [RESOURCES_DIR, "java", ASSETS_DIR, "jniLibs"];
+		const directories = [RESOURCES_DIR, "java", ASSETS_DIR, "jniLibs", "cpp"];
 		const resultArr: Array<string> = [];
 
 		this.$fs.enumerateFilesInDirectorySync(source, (file, stat) => {
