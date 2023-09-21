@@ -50,7 +50,7 @@ export class DeviceInstallAppService {
 		});
 		const buildOutputOptions = platformData.getValidBuildOutputData(buildData);
 		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
-		const packages = await this.$buildArtefactsService.getAllAppPackages(
+		const packages = await this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
 			buildOutputOptions
 		);
@@ -76,11 +76,8 @@ export class DeviceInstallAppService {
 		}
 
 		if (!packageFile) {
-			// this.$logger.error(
-				// `Could not find a package corresponding to the device with identifier '${device.deviceInfo.identifier}'.`);
-			packageFile = await this.$buildArtifactsService.getLatestAppPackagePath(
-				platformData,
-				buildData
+			this.$logger.error(
+				`Could not find a package corresponding to the device with identifier '${device.deviceInfo.identifier}'.`
 			);
 			return;
 		}
