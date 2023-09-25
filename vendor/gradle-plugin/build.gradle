@@ -11,7 +11,7 @@ buildscript {
     def getDepPlatformDir = { dep ->
         file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
     }
-    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.6.0" }
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.8.20" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
         google()
