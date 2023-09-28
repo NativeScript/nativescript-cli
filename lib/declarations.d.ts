@@ -692,6 +692,8 @@ interface IOptions
 	markingMode: boolean;
 	git: boolean;
 	dryRun: boolean;
+
+	platformOverride: string;
 }
 
 interface IEnvOptions {

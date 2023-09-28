@@ -79,6 +79,7 @@ export class ProjectData implements IProjectData {
 		this.warnProjectId();
 		this.projectIdentifiers.ios = identifier;
 		this.projectIdentifiers.android = identifier;
+		this.projectIdentifiers.visionOS = identifier;
 	}
 
 	public projectName: string;
@@ -217,11 +218,10 @@ export class ProjectData implements IProjectData {
 			appResourcesDir,
 			this.$devicePlatformsConstants.Android
 		);
-		const androidManifestDir = this.$androidResourcesMigrationService.hasMigrated(
-			appResourcesDir
-		)
-			? path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR)
-			: androidDirPath;
+		const androidManifestDir =
+			this.$androidResourcesMigrationService.hasMigrated(appResourcesDir)
+				? path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR)
+				: androidDirPath;
 
 		return path.join(androidManifestDir, constants.MANIFEST_FILE_NAME);
 	}
@@ -244,7 +244,8 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getAppResourcesDirectoryPath(projectDir?: string): string {
-		const appResourcesRelativePath = this.getAppResourcesRelativeDirectoryPath();
+		const appResourcesRelativePath =
+			this.getAppResourcesRelativeDirectoryPath();
 
 		return this.resolveToProjectDir(appResourcesRelativePath, projectDir);
 	}
@@ -313,12 +314,14 @@ export class ProjectData implements IProjectData {
 			return {
 				ios: "",
 				android: "",
+				visionOS: "",
 			};
 		}
 
 		const identifier: Mobile.IProjectIdentifier = {
 			ios: config.id,
 			android: config.id,
+			visionOS: config.id,
 		};
 
 		if (config.ios && config.ios.id) {
@@ -326,6 +329,9 @@ export class ProjectData implements IProjectData {
 		}
 		if (config.android && config.android.id) {
 			identifier.android = config.android.id;
+		}
+		if (config.visionOS && config.visionOS.id) {
+			identifier.visionOS = config.visionOS.id;
 		}
 
 		return identifier;

@@ -78,6 +78,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	constructor(
 		$fs: IFileSystem,
+		private $options: IOptions,
 		private $childProcess: IChildProcess,
 		private $cocoapodsService: ICocoaPodsService,
 		private $errors: IErrors,
@@ -101,7 +102,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSNativeTargetService: IIOSNativeTargetService,
 		private $sysInfo: ISysInfo,
 		private $tempService: ITempService,
-		private $spmService: ISPMService
+		private $spmService: ISPMService,
+		private $mobileHelper: Mobile.IMobileHelper
 	) {
 		super($fs, $projectDataService);
 	}
@@ -120,9 +122,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			projectData.platformsDir &&
 			this._platformsDirCache !== projectData.platformsDir
 		) {
+			const platform = this.$mobileHelper.normalizePlatformName(
+				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS
+			);
 			const projectRoot = path.join(
 				projectData.platformsDir,
-				this.$devicePlatformsConstants.iOS.toLowerCase()
+				platform.toLowerCase()
 			);
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
@@ -131,8 +136,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
-				normalizedPlatformName: "iOS",
-				platformNameLowerCase: "ios",
+				normalizedPlatformName: platform,
+				platformNameLowerCase: platform.toLowerCase(),
 				appDestinationDirectoryPath: path.join(
 					projectRoot,
 					projectData.projectName

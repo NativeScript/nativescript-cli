@@ -1037,6 +1037,10 @@ declare global {
 			 * The state of the simulator. Can be 'Shutdown' or 'Booted'
 			 */
 			state?: string;
+			/**
+			 * The platform of the device (iOS, visionOS)
+			 */
+			platform?: string;
 		}
 
 		interface IiOSSimResolver {
@@ -1192,6 +1196,8 @@ declare global {
 			platformNames: string[];
 			isAndroidPlatform(platform: string): boolean;
 			isiOSPlatform(platform: string): boolean;
+			isvisionOSPlatform(platform: string): boolean;
+			isApplePlatfrom(platform: string): boolean;
 			normalizePlatformName(platform: string): string;
 			validatePlatformName(platform: string): string;
 			buildDevicePath(...args: string[]): string;
@@ -1234,6 +1240,7 @@ declare global {
 		interface IDevicePlatformsConstants {
 			iOS: string;
 			Android: string;
+			visionOS: string;
 		}
 
 		interface IDeviceApplication {
