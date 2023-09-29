@@ -675,11 +675,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			this.savePbxProj(project, projectData);
 
-			const resourcesNativeCodePath = path.join(
+			let resourcesNativeCodePath = path.join(
 				resourcesDirectoryPath,
 				platformData.normalizedPlatformName,
 				constants.NATIVE_SOURCE_FOLDER
 			);
+
+			if (!this.$fs.exists(resourcesNativeCodePath)) {
+				resourcesNativeCodePath = path.join(
+					resourcesDirectoryPath,
+					this.$devicePlatformsConstants.iOS,
+					constants.NATIVE_SOURCE_FOLDER
+				);
+			}
 
 			await this.prepareNativeSourceCode(
 				constants.TNS_NATIVE_SOURCE_GROUP_NAME,
