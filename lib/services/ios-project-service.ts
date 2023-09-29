@@ -787,7 +787,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const projectDir = projectData.projectDir;
 		const infoPlistPath = path.join(
 			projectData.appResourcesDirectoryPath,
-			this.getPlatformData(projectData).normalizedPlatformName,
+			// TODO Igor: vision will not merge Info.plist properly without this
+			this.$devicePlatformsConstants.iOS,
+			// this.getPlatformData(projectData).normalizedPlatformName,
 			this.getPlatformData(projectData).configurationFileName
 		);
 		this.ensureConfigurationFileInAppResources();
