@@ -1241,6 +1241,10 @@ declare global {
 			iOS: string;
 			Android: string;
 			visionOS: string;
+
+			isiOS(value: string): boolean;
+			isAndroid(value: string): boolean;
+			isvisionOS(value: string): boolean;
 		}
 
 		interface IDeviceApplication {

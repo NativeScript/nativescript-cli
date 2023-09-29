@@ -13,8 +13,11 @@ import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import * as _ from "lodash";
 
-const DevicePlatformSdkName = "iphoneos";
-const SimulatorPlatformSdkName = "iphonesimulator";
+import {
+	DevicePlatformSdkName,
+	SimulatorPlatformSdkName,
+	VisionSimulatorPlatformSdkName,
+} from "../ios-project-service";
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
 	constructor(
@@ -39,10 +42,23 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			args = args.concat(["CODE_SIGN_IDENTITY="]);
 		}
 
+		let destination = "generic/platform=iOS Simulator";
+
+		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
+			buildConfig.platform
+		);
+
+		if (isvisionOS) {
+			destination = "platform=visionOS Simulator";
+			if (buildConfig._device) {
+				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
+			}
+		}
+
 		args = args
 			.concat([
 				"-destination",
-				"generic/platform=iOS Simulator",
+				destination,
 				"build",
 				"-configuration",
 				buildConfig.release ? Configurations.Release : Configurations.Debug,
@@ -51,7 +67,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				this.getBuildCommonArgs(
 					platformData,
 					projectData,
-					SimulatorPlatformSdkName
+					isvisionOS ? VisionSimulatorPlatformSdkName : SimulatorPlatformSdkName
 				)
 			)
 			.concat(this.getBuildLoggingArgs())
@@ -98,6 +114,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		buildConfig: IBuildConfig
 	): Promise<string[]> {
 		const args = [];
+
+		if (this.$devicePlatformsConstants.isvisionOS(buildConfig.platform)) {
+			args.push("ONLY_ACTIVE_ARCH=YES");
+			return args;
+		}
 
 		const devicesArchitectures = buildConfig.buildForDevice
 			? await this.getArchitecturesFromConnectedDevices(buildConfig)

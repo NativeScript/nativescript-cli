@@ -22,6 +22,7 @@ export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
 export const TNS_IOS_RUNTIME_NAME = "tns-ios";
 export const SCOPED_ANDROID_RUNTIME_NAME = "@nativescript/android";
 export const SCOPED_IOS_RUNTIME_NAME = "@nativescript/ios";
+export const SCOPED_VISIONOS_RUNTIME_NAME = "@nativescript/visionos";
 export const PACKAGE_JSON_FILE_NAME = "package.json";
 export const PACKAGE_LOCK_JSON_FILE_NAME = "package-lock.json";
 export const ANDROID_DEVICE_APP_ROOT_TEMPLATE = `/data/data/%s/files`;
@@ -160,7 +161,8 @@ export class ITMSConstants {
 }
 
 class ItunesConnectApplicationTypesClass
-	implements IiTunesConnectApplicationType {
+	implements IiTunesConnectApplicationType
+{
 	public iOS = "iOS App";
 	public Mac = "Mac OS X App";
 }
@@ -168,7 +170,8 @@ class ItunesConnectApplicationTypesClass
 export const iOSAppResourcesFolderName = "iOS";
 export const androidAppResourcesFolderName = "Android";
 
-export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
+export const ItunesConnectApplicationTypes =
+	new ItunesConnectApplicationTypesClass();
 export const VUE_NAME = "vue";
 export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
@@ -329,9 +332,13 @@ export const PLUGINS_BUILD_DATA_FILENAME = ".ns-plugins-build-data.json";
 export const enum PlatformTypes {
 	ios = "ios",
 	android = "android",
+	visionos = "visionos",
 }
 
-export type SupportedPlatform = PlatformTypes.ios | PlatformTypes.android;
+export type SupportedPlatform =
+	| PlatformTypes.ios
+	| PlatformTypes.android
+	| PlatformTypes.visionos;
 
 export const PODFILE_NAME = "Podfile";
 

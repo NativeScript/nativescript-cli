@@ -63,14 +63,32 @@ interface INativeSourceCodeGroup {
 	files: string[];
 }
 
-const DevicePlatformSdkName = "iphoneos";
-const SimulatorPlatformSdkName = "iphonesimulator";
+export const DevicePlatformSdkName = "iphoneos";
+export const SimulatorPlatformSdkName = "iphonesimulator";
+export const VisionSimulatorPlatformSdkName = "xrsimulator";
+
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
-const getPlatformSdkName = (forDevice: boolean): string =>
-	forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
-const getConfigurationName = (release: boolean): string =>
-	release ? Configurations.Release : Configurations.Debug;
+const getPlatformSdkName = (buildData: IBuildData): string => {
+	const forDevice =
+		!buildData || buildData.buildForDevice || buildData.buildForAppStore;
+	const isvisionOS = injector
+		.resolve("devicePlatformsConstants")
+		.isvisionOS(buildData.platform);
+
+	if (forDevice) {
+		// todo: check on this once Vision Pro is released - we might need to change the sdk name
+		return DevicePlatformSdkName;
+	}
+	if (isvisionOS) {
+		return VisionSimulatorPlatformSdkName;
+	}
+	return SimulatorPlatformSdkName;
+};
+
+const getConfigurationName = (release: boolean): string => {
+	return release ? Configurations.Release : Configurations.Debug;
+};
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
@@ -131,7 +149,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				constants.PlatformTypes.ios
+				platform.toLowerCase() as constants.SupportedPlatform
 			);
 
 			this._platformData = {
@@ -149,9 +167,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					return path.join(
 						projectRoot,
 						constants.BUILD_DIR,
-						`${config}-${getPlatformSdkName(
-							!options || options.buildForDevice || options.buildForAppStore
-						)}`
+						`${config}-${getPlatformSdkName(options)}`
 					);
 				},
 				getValidBuildOutputData: (
@@ -701,14 +717,28 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.deleteDirectory(platformsAppResourcesPath);
 		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
 
-		this.$fs.copyFile(
-			path.join(
-				projectAppResourcesPath,
-				platformData.normalizedPlatformName,
-				"*"
-			),
-			platformsAppResourcesPath
+		const platformAppResourcesPath = path.join(
+			projectAppResourcesPath,
+			platformData.normalizedPlatformName
 		);
+
+		// this allows App_Resources/visionOS
+		if (this.$fs.exists(platformAppResourcesPath)) {
+			this.$fs.copyFile(
+				path.join(platformAppResourcesPath, "*"),
+				platformsAppResourcesPath
+			);
+		} else {
+			// otherwise falls back to App_Resources/iOS
+			this.$fs.copyFile(
+				path.join(
+					projectAppResourcesPath,
+					this.$devicePlatformsConstants.iOS,
+					"*"
+				),
+				platformsAppResourcesPath
+			);
+		}
 
 		this.$fs.deleteFile(
 			path.join(platformsAppResourcesPath, platformData.configurationFileName)

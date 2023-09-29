@@ -158,7 +158,7 @@ interface INsConfig {
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
-	visionOS?: INSConfigVisionOS;
+	visionos?: INSConfigVisionOS;
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
 }
@@ -561,6 +561,8 @@ interface IBuildConfig
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;
+	platform?: string;
+	_device?: Mobile.IDevice;
 }
 
 /**
