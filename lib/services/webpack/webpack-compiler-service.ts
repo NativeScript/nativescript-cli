@@ -48,7 +48,8 @@ interface IWebpackCompilation {
 
 export class WebpackCompilerService
 	extends EventEmitter
-	implements IWebpackCompilerService {
+	implements IWebpackCompilerService
+{
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
 	private expectedHashes: IStringDictionary = {};
 
@@ -129,16 +130,14 @@ export class WebpackCompilerService
 					if (message.emittedFiles) {
 						if (isFirstWebpackWatchCompilation) {
 							isFirstWebpackWatchCompilation = false;
-							this.expectedHashes[
-								platformData.platformNameLowerCase
-							] = prepareData.hmr ? message.hash : "";
+							this.expectedHashes[platformData.platformNameLowerCase] =
+								prepareData.hmr ? message.hash : "";
 							return;
 						}
 
 						// Persist the previousHash value before calling `this.getUpdatedEmittedFiles` as it will modify the expectedHashes object with the current hash
-						const previousHash = this.expectedHashes[
-							platformData.platformNameLowerCase
-						];
+						const previousHash =
+							this.expectedHashes[platformData.platformNameLowerCase];
 						let result;
 
 						if (prepareData.hmr) {
@@ -282,7 +281,8 @@ export class WebpackCompilerService
 		// pnpm does not require symlink (https://github.com/nodejs/node-eps/issues/46#issuecomment-277373566)
 		// and it also does not work in some cases.
 		// Check https://github.com/NativeScript/nativescript-cli/issues/5259 for more information
-		const currentPackageManager = await this.$packageManager.getPackageManagerName();
+		const currentPackageManager =
+			await this.$packageManager.getPackageManagerName();
 		const res = currentPackageManager !== PackageManagers.pnpm;
 		return res;
 	}
@@ -336,10 +336,20 @@ export class WebpackCompilerService
 		const stdio = prepareData.watch
 			? ["inherit", "inherit", "inherit", "ipc"]
 			: "inherit";
-		const childProcess = this.$childProcess.spawn(process.execPath, args, {
+		const options: { [key: string]: any } = {
 			cwd: projectData.projectDir,
 			stdio,
-		});
+		};
+		if (this.$options.androidHost) {
+			options.env = {
+				USER_PROJECT_PLATFORMS_ANDROID: this.$options.androidHost,
+			};
+		}
+		const childProcess = this.$childProcess.spawn(
+			process.execPath,
+			args,
+			options
+		);
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
 		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
@@ -427,16 +437,18 @@ export class WebpackCompilerService
 				envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
 			} else if (this.$hostInfo.isWindows) {
 				const minWebpackPluginWithWinSnapshotsVersion = "1.3.0";
-				const installedWebpackPluginVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
-					WEBPACK_PLUGIN_NAME,
-					projectData.projectDir
-				);
-				const hasWebpackPluginWithWinSnapshotsSupport = !!installedWebpackPluginVersion
-					? semver.gte(
-							semver.coerce(installedWebpackPluginVersion),
-							minWebpackPluginWithWinSnapshotsVersion
-					  )
-					: true;
+				const installedWebpackPluginVersion =
+					await this.$packageInstallationManager.getInstalledDependencyVersion(
+						WEBPACK_PLUGIN_NAME,
+						projectData.projectDir
+					);
+				const hasWebpackPluginWithWinSnapshotsSupport =
+					!!installedWebpackPluginVersion
+						? semver.gte(
+								semver.coerce(installedWebpackPluginVersion),
+								minWebpackPluginWithWinSnapshotsVersion
+						  )
+						: true;
 				if (!hasWebpackPluginWithWinSnapshotsSupport) {
 					this.$errors.fail(
 						`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i ${WEBPACK_PLUGIN_NAME}@latest).`
@@ -556,7 +568,7 @@ export class WebpackCompilerService
 			const absoluteFileNameWithLastHash = files.find((fileName: string) =>
 				fileName.endsWith("hot-update.js")
 			);
-			
+
 			if (!absoluteFileNameWithLastHash) {
 				return null;
 			}

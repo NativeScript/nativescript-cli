@@ -221,6 +221,7 @@ export class Options {
 			},
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
+			androidHost: { type: OptionType.String, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
 			appleApplicationSpecificPassword: {
@@ -422,9 +423,8 @@ export class Options {
 		this.$settingsService.setSettings({
 			profileDir: <string>this.argv.profileDir,
 		});
-		this.argv.profileDir = this.argv[
-			"profile-dir"
-		] = this.$settingsService.getProfileDir();
+		this.argv.profileDir = this.argv["profile-dir"] =
+			this.$settingsService.getProfileDir();
 
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (this.argv.justlaunch) {

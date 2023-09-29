@@ -100,9 +100,8 @@ export class PrepareController extends EventEmitter {
 			await this.watchersData[projectDir][
 				platformLowerCase
 			].nativeFilesWatcher.close();
-			this.watchersData[projectDir][
-				platformLowerCase
-			].nativeFilesWatcher = null;
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher =
+				null;
 		}
 
 		if (
@@ -175,11 +174,12 @@ export class PrepareController extends EventEmitter {
 				projectData,
 				prepareData
 			);
-			const hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(
-				platformData,
-				projectData,
-				prepareData
-			);
+			const hasNativeChanges =
+				await this.$prepareNativePlatformService.prepareNativePlatform(
+					platformData,
+					projectData,
+					prepareData
+				);
 			result = {
 				hasNativeChanges,
 				platform: prepareData.platform.toLowerCase(),
@@ -314,11 +314,12 @@ export class PrepareController extends EventEmitter {
 		}
 
 		if (newNativeWatchStarted) {
-			hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(
-				platformData,
-				projectData,
-				prepareData
-			);
+			hasNativeChanges =
+				await this.$prepareNativePlatformService.prepareNativePlatform(
+					platformData,
+					projectData,
+					prepareData
+				);
 		}
 
 		return hasNativeChanges;
@@ -460,6 +461,7 @@ export class PrepareController extends EventEmitter {
 				"package.json"
 			);
 		} else {
+			console.log("!!!!! VM: proj root: " + platformData.projectRoot);
 			packagePath = path.join(
 				platformData.projectRoot,
 				"app",

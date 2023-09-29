@@ -6,14 +6,17 @@ import { IProjectData } from "../../definitions/project";
 import { IMetadataFilteringService } from "../../definitions/metadata-filtering-service";
 import { IHooksService } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { IOptions } from "../../declarations";
 
 export class PrepareNativePlatformService
-	implements IPrepareNativePlatformService {
+	implements IPrepareNativePlatformService
+{
 	constructor(
 		public $hooksService: IHooksService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $projectChangesService: IProjectChangesService,
-		private $metadataFilteringService: IMetadataFilteringService
+		private $metadataFilteringService: IMetadataFilteringService,
+		private $options: IOptions
 	) {}
 
 	@performanceLog()
@@ -45,7 +48,9 @@ export class PrepareNativePlatformService
 			await this.cleanProject(platformData, { release });
 		}
 
-		platformData.platformProjectService.prepareAppResources(projectData);
+		if (!this.$options.androidHost) {
+			platformData.platformProjectService.prepareAppResources(projectData);
+		}
 
 		if (hasChangesRequirePrepare) {
 			await platformData.platformProjectService.prepareProject(
@@ -98,9 +103,8 @@ export class PrepareNativePlatformService
 			return;
 		}
 
-		const previousPrepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const previousPrepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		if (
 			!previousPrepareInfo ||
 			previousPrepareInfo.nativePlatformStatus !==
