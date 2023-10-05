@@ -132,6 +132,11 @@ export class Options {
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			svelte: { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-ng": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-react": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-solid": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-svelte": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-vue": { type: OptionType.Boolean, hasSensitiveValue: false },
 			tsc: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -422,9 +427,8 @@ export class Options {
 		this.$settingsService.setSettings({
 			profileDir: <string>this.argv.profileDir,
 		});
-		this.argv.profileDir = this.argv[
-			"profile-dir"
-		] = this.$settingsService.getProfileDir();
+		this.argv.profileDir = this.argv["profile-dir"] =
+			this.$settingsService.getProfileDir();
 
 		// if justlaunch is set, it takes precedence over the --watch flag and the default true value
 		if (this.argv.justlaunch) {

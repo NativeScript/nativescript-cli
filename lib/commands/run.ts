@@ -121,7 +121,6 @@ export class RunIosCommand implements ICommand {
 			);
 		}
 
-		console.log("this.platform.toLowerCase()", this.platform.toLowerCase());
 		const result =
 			(await this.runCommand.canExecute(args)) &&
 			(await this.$platformValidationService.validateOptions(
