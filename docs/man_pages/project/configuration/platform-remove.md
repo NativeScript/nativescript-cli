@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns platform remove
+title: ns platform remove
 position: 4
 ---<% } %>
 
-# tns platform remove
+# ns platform remove
 
 ### Description
 
@@ -15,8 +15,8 @@ Removes the selected platform from the platforms that the project currently targ
 
 Usage | Synopsis
 ------|-------
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns platform remove <Platform>`<% } %>
-<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns platform remove android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ ns platform remove <Platform>`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>General | `$ ns platform remove android`<% } %>
 
 <% if(isMacOS) { %>### Arguments
 `<Platform>` is the target mobile platform that you want to remove from your project. You can set the following target platforms.
@@ -27,7 +27,7 @@ Usage | Synopsis
 
 ### Command Limitations
 
-* You can run `$ tns platform remove ios` only on macOS systems.
+* You can run `$ ns platform remove ios` only on macOS systems.
 
 ### Related Commands
 

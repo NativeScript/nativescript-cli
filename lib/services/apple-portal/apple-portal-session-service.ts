@@ -58,8 +58,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 		}
 
 		const userDetailsResponse = await this.$httpClient.httpRequest({
-			url:
-				"https://appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/ra/user/detail",
+			url: "https://appstoreconnect.apple.com/WebObjects/iTunesConnect.woa/ra/user/detail",
 			method: "GET",
 			headers: {
 				"Content-Type": "application/json",
@@ -162,7 +161,7 @@ This password will be used for the iTunes Transporter, which is used to upload y
 				) {
 					this.$errors
 						.fail(`Your account has two-factor authentication enabled, but your console is not interactive.
-For more details how to set up your environment, please execute "tns publish ios --help".`);
+For more details how to set up your environment, please execute "ns publish ios --help".`);
 				}
 
 				const headers = (err && err.response && err.response.headers) || {};

@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns extension
+title: ns extension
 position: 9
 ---<% } %>
 
-# tns extension
+# ns extension
 
 ### Description
 
@@ -13,7 +13,7 @@ Prints information about all installed extensions.
 
 Usage | Synopsis
 ------|-------
-General | `$ tns extension`
+General | `$ ns extension`
 
 <% if(isHtml) { %>
 

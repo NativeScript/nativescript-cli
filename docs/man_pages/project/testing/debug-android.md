@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns debug android
+title: ns debug android
 position: 4
 ---<% } %>
 
-# tns debug android
+# ns debug android
 
 ### Description 
 
@@ -13,15 +13,15 @@ Initiates a debugging session for your project on a connected Android device or 
 
 Usage | Synopsis
 ---|---
-Deploy on device/emulator, run the app and generate a Chrome DevTools link for debugging | `$ tns debug android [--device <Device ID>] [--timeout <timeout>] [--aab]`
-Deploy on device/emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk [--device <Device ID>] [--timeout <timeout>] [--aab]`
-Deploy in the native emulator, run the app and stop at the first code statement | `$ tns debug android --debug-brk --emulator [--timeout <timeout>] [--aab]`
-Attach the debug tools to a running app on device/emulator | `$ tns debug android --start [--device <Device ID>] [--timeout <timeout>] [--aab]`
-Attach the debug tools to a running app in the native emulator | `$ tns debug android --start --emulator [--timeout <timeout>] [--aab]`
+Deploy on device/emulator, run the app and generate a Chrome DevTools link for debugging | `$ ns debug android [--device <Device ID>] [--timeout <timeout>] [--aab]`
+Deploy on device/emulator, run the app and stop at the first code statement | `$ ns debug android --debug-brk [--device <Device ID>] [--timeout <timeout>] [--aab]`
+Deploy in the native emulator, run the app and stop at the first code statement | `$ ns debug android --debug-brk --emulator [--timeout <timeout>] [--aab]`
+Attach the debug tools to a running app on device/emulator | `$ ns debug android --start [--device <Device ID>] [--timeout <timeout>] [--aab]`
+Attach the debug tools to a running app in the native emulator | `$ ns debug android --start --emulator [--timeout <timeout>] [--aab]`
 
 ### Options
 
-* `--device` - Specifies a connected device/emulator on which to debug the app. `<Device ID>` is the device identifier or name of the target device as listed by the `$ tns device android` command.
+* `--device` - Specifies a connected device/emulator on which to debug the app. `<Device ID>` is the device identifier or name of the target device as listed by the `$ ns device android` command.
 * `--emulator` - Specifies that you want to debug the app in the native Android emulator.
 * `--debug-brk` - Prepares, builds and deploys the application package on a device/emulator, generates a link for Chrome Developer Tools and stops at the first code statement.
 * `--start` - Attaches the debug tools to a deployed and running app.
@@ -38,7 +38,7 @@ Attach the debug tools to a running app in the native emulator | `$ tns debug an
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>
 

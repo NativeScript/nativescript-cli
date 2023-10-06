@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns autocomplete disable
+title: ns autocomplete disable
 position: 1
 ---<% } %>
 
-# tns autocomplete disable
+# ns autocomplete disable
 
 ### Description
 
@@ -15,7 +15,7 @@ Disables command-line completion for bash and zsh shells. You need to restart th
 
 Usage | Synopsis
 ------|-------
-General | `$ tns autocomplete disable`
+General | `$ ns autocomplete disable`
 
 <% if(isHtml) { %>
 

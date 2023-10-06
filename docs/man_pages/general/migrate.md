@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns migrate
+title: ns migrate
 position: 15
 ---<% } %>
 
-# tns migrate
+# ns migrate
 
 ### Description
 
@@ -65,7 +65,7 @@ The following dependencies will be updated if needed:
 
 Usage | Synopsis
 ------|-------
-General | `$ tns migrate`
+General | `$ ns migrate`
 
 <% if(isHtml) { %>
 
