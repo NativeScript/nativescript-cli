@@ -893,7 +893,7 @@ export class DevicesService
 			// TODO: Remove from here as it calls startLookingForDevices, so we double the calls to specific device detection services
 			await this.startEmulatorIfNecessary(deviceInitOpts);
 		}
-		deviceInitOpts;
+
 		const platform = deviceInitOpts.platform;
 		const deviceOption = deviceInitOpts.deviceId;
 		const deviceLookingOptions: Mobile.IDeviceLookingOptions = {
