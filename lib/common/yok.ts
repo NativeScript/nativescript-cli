@@ -6,7 +6,7 @@ import { CommandsDelimiters } from "./constants";
 import { IDictionary } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { ICommandArgument, ICommand } from "./definitions/commands";
-import { IKeyCommand, IValidKeyCommands } from "./definitions/key-commands";
+import { IKeyCommand, IValidKeyName } from "./definitions/key-commands";
 
 export let injector: IInjector;
 
@@ -189,10 +189,7 @@ export class Yok implements IInjector {
 		});
 	}
 
-	public registerKeyCommand(
-		name: IValidKeyCommands,
-		resolver: IKeyCommand
-	): void {
+	public registerKeyCommand(name: IValidKeyName, resolver: IKeyCommand): void {
 		this.register(this.createKeyCommandName(name), resolver);
 	}
 
