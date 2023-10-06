@@ -1,15 +1,15 @@
 <% if (isJekyll) { %>---
-title: tns build ios
+title: ns build ios
 position: 2
 ---<% } %>
 
-# tns build ios
+# ns build ios
 
 ### Description
 
 Builds the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on a device.
 
-<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help build ios`<% } %>
+<% if(isConsole && (isWindows || isLinux)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ ns help build ios`<% } %>
 <% if((isConsole && isMacOS) || isHtml) { %>
 <% if(isHtml) { %>> <% } %>IMPORTANT: Before building for iOS device, verify that you have configured a valid pair of certificate and provisioning profile on your macOS system. <% if(isHtml) { %>For more information, see the [Code Signing](https://developer.apple.com/support/code-signing/) and [Maintain Signing Assets](https://help.apple.com/xcode/mac/current/#/dev3a05256b8) sections from the Apple Developer documentation.<% } %>
 
@@ -17,7 +17,7 @@ Builds the project for iOS and produces an `APP` or `IPA` that you can manually 
 
 Usage | Synopsis
 ---|---
-General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [--provision [<UUID/name>]] [--env.*]]`
+General | `$ ns build ios [--for-device] [--release] [--copy-to <File Path>] [--provision [<UUID/name>]] [--env.*]]`
 
 ### Options
 
@@ -33,7 +33,7 @@ General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [-
     *   `--env.report` - creates a Webpack report inside a `report` folder in the root folder.
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 * `--path <Directory>` - Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
 
 <% } %>
@@ -42,7 +42,7 @@ General | `$ tns build ios [--for-device] [--release] [--copy-to <File Path>] [-
 
 ### Command Limitations
 
-* You can run the `$ tns build ios` command only on macOS systems.
+* You can run the `$ ns build ios` command only on macOS systems.
 
 ### Related Commands
 

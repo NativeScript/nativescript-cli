@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns test init
+title: ns test init
 position: 21
 ---<% } %>
 
-# tns test init
+# ns test init
 
 ### Description
 
@@ -13,7 +13,7 @@ Configures your project for unit testing with a selected framework. This operati
 
 Usage | Synopsis
 ------|-------
-General | `$ tns test init [--framework <Framework>]`
+General | `$ ns test init [--framework <Framework>]`
 
 ### Options
 

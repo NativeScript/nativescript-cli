@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns plugin add
+title: ns plugin add
 position: 1
 ---<% } %>
 
-# tns plugin add
+# ns plugin add
 
 ### Description
 
@@ -14,8 +14,8 @@ position: 1
 
 Usage | Synopsis
 ------|-------
-General | `$ tns plugin add <Plugin>`
-Alias | `$ tns plugin install <Plugin>`
+General | `$ ns plugin add <Plugin>`
+Alias | `$ ns plugin install <Plugin>`
 
 ### Arguments
 

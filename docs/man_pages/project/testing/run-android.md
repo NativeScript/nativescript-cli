@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns run android
+title: ns run android
 position: 10
 ---<% } %>
 
-# tns run android
+# ns run android
 
 ### Description
 
@@ -17,13 +17,13 @@ When running this command without passing `--release` flag, the HMR (Hot Module 
 
 Usage | Synopsis
 ---|---
-Run on all connected devices and running emulators | `$ tns run android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
-Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ tns run android --device <Device ID> [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
-Start a default emulator if none are running, or run application on all connected emulators. | `$ tns run android --emulator [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
+Run on all connected devices and running emulators | `$ ns run android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
+Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ ns run android --device <Device ID> [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
+Start a default emulator if none are running, or run application on all connected emulators. | `$ ns run android --emulator [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
 
 ### Options
 
-* `--device` - Specifies a connected device or emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device android --available-devices` command.
+* `--device` - Specifies a connected device or emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ ns device android --available-devices` command.
 * `--emulator` - If set, runs the app in all available and configured Android emulators. It will start an emulator if none are already running.
 * `--justlaunch` - If set, does not print the application output in the console.
 * `--clean` - If set, forces the complete rebuild of the native application.
@@ -43,7 +43,7 @@ Start a default emulator if none are running, or run application on all connecte
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>
 

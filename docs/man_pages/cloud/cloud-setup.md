@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns cloud setup
+title: ns cloud setup
 position: 5
 ---<% } %>
 
-# tns cloud setup
+# ns cloud setup
 
 ### Description
 
@@ -13,13 +13,13 @@ Install the `nativescript-cloud extension` to configure your environment for clo
 
 Usage | Synopsis
 ------|-------
-Install the `nativescript-cloud extension` | `$ tns cloud setup`
-Log in for cloud builds (will open browser login form) | `$ tns login`
-Log in for cloud builds (through the CLI) | `$ tns dev-login <username> <password>`
-Accept EULA agreement | `$ tns accept eula`
-Perform iOS cloud build | `$ tns cloud build ios --accountId=<accountId>`
-Perform Android cloud build | `$ tns cloud build android --accountId=<accountId>`
-View accountId (after logging in) | `$ tns account`
+Install the `nativescript-cloud extension` | `$ ns cloud setup`
+Log in for cloud builds (will open browser login form) | `$ ns login`
+Log in for cloud builds (through the CLI) | `$ ns dev-login <username> <password>`
+Accept EULA agreement | `$ ns accept eula`
+Perform iOS cloud build | `$ ns cloud build ios --accountId=<accountId>`
+Perform Android cloud build | `$ ns cloud build android --accountId=<accountId>`
+View accountId (after logging in) | `$ ns account`
 
 
 ### Related Commands

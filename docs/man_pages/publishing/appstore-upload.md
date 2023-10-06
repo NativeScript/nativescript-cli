@@ -1,24 +1,24 @@
 <% if (isJekyll) { %>---
-title: tns appstore upload
+title: ns appstore upload
 position: 1
 ---<% } %>
 
-# tns appstore upload
+# ns appstore upload
 
 ### Description
 
 Uploads project to iTunes Connect. The command either issues a production build and uploads it to iTunes Connect, or uses an already built package to upload.
-The user will be prompted interactively for verification code when two-factor authentication enabled account is used. As on non-interactive console (CI), you will not be prompt for verification code. In this case, you need to generate a login session for your apple's account in advance using `tns apple-login` command. The generated value must be provided via the `--appleSessionBase64` option and is only valid for up to a month. Meaning you'll need to create a new session every month.
+The user will be prompted interactively for verification code when two-factor authentication enabled account is used. As on non-interactive console (CI), you will not be prompt for verification code. In this case, you need to generate a login session for your apple's account in advance using `ns apple-login` command. The generated value must be provided via the `--appleSessionBase64` option and is only valid for up to a month. Meaning you'll need to create a new session every month.
 
-<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help appstore upload`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ ns help appstore upload`<% } %>
 <% if((isConsole && isMacOS) || isHtml) { %>
 
 ### Commands
 
 Usage | Synopsis
 ---|---
-Build and upload package | `$ tns appstore upload [<Apple ID> [<Password> [<Mobile Provisioning Profile Identifier> [<Code Sign Identity>]]]]]`
-Upload package | `$ tns appstore upload [<Apple ID> [<Password>]] --ipa <Ipa File Path>`
+Build and upload package | `$ ns appstore upload [<Apple ID> [<Password> [<Mobile Provisioning Profile Identifier> [<Code Sign Identity>]]]]]`
+Upload package | `$ ns appstore upload [<Apple ID> [<Password>]] --ipa <Ipa File Path>`
 
 ### Options
 
@@ -36,7 +36,7 @@ Upload package | `$ tns appstore upload [<Apple ID> [<Password>]] --ipa <Ipa Fil
 
 ### Command Limitations
 
-* You can run `$ tns appstore upload` only on macOS systems.
+* You can run `$ ns appstore upload` only on macOS systems.
 
 ### Related Commands
 
