@@ -164,8 +164,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			);
 		}
 		if (projectData && projectData.platformsDir) {
-			const projectRoot = this.$options.androidHost
-				? this.$options.androidHost
+			const projectRoot = this.$options.nativeHost
+				? this.$options.nativeHost
 				: path.join(
 						projectData.platformsDir,
 						AndroidProjectService.ANDROID_PLATFORM_NAME
@@ -748,8 +748,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData,
 		dependencies: IDependencyData[]
 	): IDependencyData[] {
-		const platformDir = this.$options.androidHost
-			? this.$options.androidHost
+		const platformDir = this.$options.nativeHost
+			? this.$options.nativeHost
 			: path.join(
 					projectData.platformsDir,
 					AndroidProjectService.ANDROID_PLATFORM_NAME

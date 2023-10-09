@@ -340,9 +340,11 @@ export class WebpackCompilerService
 			cwd: projectData.projectDir,
 			stdio,
 		};
-		if (this.$options.androidHost) {
+
+		if (this.$options.nativeHost) {
 			options.env = {
-				USER_PROJECT_PLATFORMS_ANDROID: this.$options.androidHost,
+				USER_PROJECT_PLATFORMS_ANDROID: this.$options.nativeHost,
+				USER_PROJECT_PLATFORMS_IOS: this.$options.nativeHost,
 			};
 		}
 		const childProcess = this.$childProcess.spawn(

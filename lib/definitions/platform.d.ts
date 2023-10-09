@@ -118,6 +118,7 @@ interface ICheckEnvironmentRequirementsOutput {
 
 interface IAddPlatformData extends IControllerDataBase {
 	frameworkPath?: string;
+	nativeHost?: string;
 }
 
 interface IPlatformController {

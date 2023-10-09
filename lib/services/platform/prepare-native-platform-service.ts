@@ -48,7 +48,7 @@ export class PrepareNativePlatformService
 			await this.cleanProject(platformData, { release });
 		}
 
-		if (!this.$options.androidHost) {
+		if (!this.$options.nativeHost) {
 			platformData.platformProjectService.prepareAppResources(projectData);
 		}
 

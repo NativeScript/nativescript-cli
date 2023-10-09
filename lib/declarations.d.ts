@@ -581,7 +581,11 @@ interface IAndroidBundleOptions {
 interface IAndroidOptions {
 	gradlePath: string;
 	gradleArgs: string;
-	androidHost: string;
+	nativeHost: string;
+}
+
+interface IIOSOptions {
+	nativeHost: string;
 }
 
 interface ITypingsOptions {
@@ -604,6 +608,7 @@ interface IOptions
 		IProvision,
 		ITeamIdentifier,
 		IAndroidOptions,
+		IIOSOptions,
 		IAndroidReleaseOptions,
 		IAndroidBundleOptions,
 		INpmInstallConfigurationOptions,
@@ -1001,6 +1006,7 @@ interface IXcprojService {
 	 * @return {string} The full path to the xcodeproj
 	 */
 	getXcodeprojPath(projectData: IProjectData, projectRoot: string): string;
+	findXcodeProject(dir: string): string;
 }
 
 /**
@@ -1208,7 +1214,8 @@ interface IPlatformCommandHelper {
 	addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath?: string
+		frameworkPath?: string,
+		nativeHost?: string
 	): Promise<void>;
 	cleanPlatforms(
 		platforms: string[],

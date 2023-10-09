@@ -28,6 +28,8 @@ export class AddPlatformService implements IAddPlatformService {
 		private $analyticsService: IAnalyticsService // private $tempService: ITempService
 	) {}
 
+	public async addProjectHost() {}
+
 	public async addPlatformSafe(
 		projectData: IProjectData,
 		platformData: IPlatformData,
@@ -183,14 +185,15 @@ export class AddPlatformService implements IAddPlatformService {
 		frameworkDirPath: string,
 		frameworkVersion: string
 	): Promise<void> {
-		const platformDir = this.$options.androidHost
-			? this.$options.androidHost
+		//here we should use ios OR android
+		const platformDir = this.$options.nativeHost
+			? this.$options.nativeHost
 			: path.join(
 					projectData.platformsDir,
 					platformData.normalizedPlatformName.toLowerCase()
 			  );
 		this.$fs.deleteDirectory(platformDir);
-
+		//if iosHost - dont create project
 		await platformData.platformProjectService.createProject(
 			path.resolve(frameworkDirPath),
 			frameworkVersion,

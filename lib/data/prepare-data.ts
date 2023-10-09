@@ -7,6 +7,7 @@ export class PrepareData extends ControllerDataBase {
 	public env: any;
 	public watch?: boolean;
 	public watchNative: boolean = true;
+	public nativeHost?: string;
 
 	constructor(public projectDir: string, public platform: string, data: any) {
 		super(projectDir, platform, data);
@@ -36,6 +37,7 @@ export class PrepareData extends ControllerDataBase {
 		if (_.isBoolean(data.watchNative)) {
 			this.watchNative = data.watchNative;
 		}
+		this.nativeHost = data.nativeHost;
 	}
 }
 

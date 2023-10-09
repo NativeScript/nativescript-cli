@@ -36,7 +36,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	public async addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath: string
+		frameworkPath: string,
+		nativeHost?: string
 	): Promise<void> {
 		const platformsDir = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(platformsDir);
@@ -58,6 +59,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				projectDir: projectData.projectDir,
 				platform,
 				frameworkPath,
+				nativeHost,
 			});
 		}
 	}
@@ -104,8 +106,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			}
 
 			try {
-				const platformDir = this.$options.androidHost
-					? this.$options.androidHost
+				const platformDir = this.$options.nativeHost
+					? this.$options.nativeHost
 					: path.join(projectData.platformsDir, platform.toLowerCase());
 				this.$fs.deleteDirectory(platformDir);
 				await this.$packageInstallationManager.uninstall(

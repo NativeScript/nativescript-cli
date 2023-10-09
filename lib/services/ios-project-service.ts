@@ -84,6 +84,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $logger: ILogger,
 		private $injector: IInjector,
 		$projectDataService: IProjectDataService,
+		private $options: IOptions,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $hostInfo: IHostInfo,
 		private $xcprojService: IXcprojService,
@@ -120,10 +121,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			projectData.platformsDir &&
 			this._platformsDirCache !== projectData.platformsDir
 		) {
-			const projectRoot = path.join(
-				projectData.platformsDir,
-				this.$devicePlatformsConstants.iOS.toLowerCase()
-			);
+			const projectRoot = this.$options.nativeHost
+				? this.$options.nativeHost
+				: path.join(
+						projectData.platformsDir,
+						this.$devicePlatformsConstants.iOS.toLowerCase()
+				  );
+
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
 				constants.PlatformTypes.ios
@@ -564,11 +568,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 		prepareData: IOSPrepareData
 	): Promise<void> {
-		const projectRoot = path.join(projectData.platformsDir, "ios");
+		const projectRoot = this.$options.nativeHost
+			? this.$options.nativeHost
+			: path.join(
+					projectData.platformsDir,
+					this.$devicePlatformsConstants.iOS.toLowerCase()
+			  );
 		const platformData = this.getPlatformData(projectData);
 
 		const pluginsData = this.getAllProductionPlugins(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
+
 		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
 		await this.addExtensions(projectData, pluginsData);
 
@@ -860,6 +870,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
+		if (this.$options.nativeHost) {
+			let xcodeProjectPath = this.$xcprojService.findXcodeProject(
+				this.$options.nativeHost
+			);
+			if (!xcodeProjectPath) {
+				this.$errors.fail("Xcode project not found at the specified directory");
+			}
+			return path.join(xcodeProjectPath, "project.pbxproj");
+		}
 		return path.join(
 			this.$xcprojService.getXcodeprojPath(
 				projectData,
