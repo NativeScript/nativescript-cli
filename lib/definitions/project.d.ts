@@ -547,6 +547,8 @@ interface IiCloudContainerEnvironment {
 
 interface INativePrepare {
 	skipNativePrepare: boolean;
+	forceRebuildNativeApp?: boolean;
+	restartLiveSync?: boolean;
 }
 
 interface IBuildConfig

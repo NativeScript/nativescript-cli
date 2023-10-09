@@ -147,18 +147,16 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private getIncludeGradleCompileDependenciesScope(
 		includeGradleFileContent: string
 	): Array<string> {
-		const indexOfDependenciesScope = includeGradleFileContent.indexOf(
-			"dependencies"
-		);
+		const indexOfDependenciesScope =
+			includeGradleFileContent.indexOf("dependencies");
 		const result: Array<string> = [];
 
 		if (indexOfDependenciesScope === -1) {
 			return result;
 		}
 
-		const indexOfRepositoriesScope = includeGradleFileContent.indexOf(
-			"repositories"
-		);
+		const indexOfRepositoriesScope =
+			includeGradleFileContent.indexOf("repositories");
 
 		let repositoriesScope = "";
 		if (indexOfRepositoriesScope >= 0) {
@@ -437,9 +435,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				this.$devicePlatformsConstants.Android,
 				projectData
 			);
-			const projectRuntimeVersion = platformData.platformProjectService.getFrameworkVersion(
-				projectData
-			);
+			const projectRuntimeVersion =
+				platformData.platformProjectService.getFrameworkVersion(projectData);
 			runtimeGradleVersions = await this.getGradleVersions(
 				projectRuntimeVersion
 			);
@@ -527,10 +524,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		if (installedRuntimePackageJSON.version_info) {
-			const {
-				gradle,
-				gradleAndroid,
-			} = installedRuntimePackageJSON.version_info;
+			const { gradle, gradleAndroid } =
+				installedRuntimePackageJSON.version_info;
 
 			return {
 				gradleVersion: gradle,
@@ -682,9 +677,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 		if (this.$fs.exists(includeGradlePath)) {
 			const includeGradleContent = this.$fs.readText(includeGradlePath);
-			const compileDependencies = this.getIncludeGradleCompileDependenciesScope(
-				includeGradleContent
-			);
+			const compileDependencies =
+				this.getIncludeGradleCompileDependenciesScope(includeGradleContent);
 
 			if (compileDependencies.length) {
 				this.$fs.appendFile(
@@ -789,11 +783,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				validateTargetSdk: true,
 				projectDir: pluginBuildSettings.projectDir,
 			});
-			pluginBuildSettings.androidToolsInfo = this.$androidToolsInfo.getToolsInfo(
-				{
+			pluginBuildSettings.androidToolsInfo =
+				this.$androidToolsInfo.getToolsInfo({
 					projectDir: pluginBuildSettings.projectDir,
-				}
-			);
+				});
 		}
 
 		const gradlew =

@@ -296,9 +296,8 @@ async function addPluginWhenExpectingToFail(
 ) {
 	createProjectFile(testInjector);
 
-	const pluginsService: IPluginsService = testInjector.resolve(
-		"pluginsService"
-	);
+	const pluginsService: IPluginsService =
+		testInjector.resolve("pluginsService");
 	pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 		return <any[]>[{ name: "" }];
 	};
@@ -354,9 +353,8 @@ describe("Plugins service", () => {
 				projectData.dependencies[pluginName] = "^1.0.0";
 				fs.writeJson(projectFilePath, projectData);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projData: IProjectData
 				) => {
@@ -415,9 +413,8 @@ describe("Plugins service", () => {
 				};
 
 				// Mock pluginsService
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				const projectData: IProjectData = testInjector.resolve("projectData");
 				projectData.initializeProjectData();
 				pluginsService.getAllInstalledPlugins = async (
@@ -460,9 +457,8 @@ describe("Plugins service", () => {
 				const pluginName = "plugin1";
 				const projectFolder = createProjectFile(testInjector);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -504,9 +500,8 @@ describe("Plugins service", () => {
 				const pluginName = "plugin1";
 				const projectFolder = createProjectFile(testInjector);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -562,9 +557,8 @@ describe("Plugins service", () => {
 					pluginJsonData
 				);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -612,9 +606,8 @@ describe("Plugins service", () => {
 					pluginJsonData
 				);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -666,9 +659,8 @@ describe("Plugins service", () => {
 					pluginJsonData
 				);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -882,9 +874,8 @@ describe("Plugins service", () => {
 
 		it("returns correct pluginData", () => {
 			const unitTestsInjector = createUnitTestsInjector();
-			const pluginsService: PluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: PluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			const pluginData = (<any>pluginsService).convertToPluginData(
 				dataFromPluginPackageJson,
 				"my project dir"
@@ -903,9 +894,8 @@ describe("Plugins service", () => {
 
 		it("always returns lowercased platform in the path to plugins dir", () => {
 			const unitTestsInjector = createUnitTestsInjector();
-			const pluginsService: PluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: PluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			const pluginData = (<any>pluginsService).convertToPluginData(
 				dataFromPluginPackageJson,
 				"my project dir"
@@ -1203,9 +1193,8 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 		for (const testCase of testCases) {
 			it(testCase.testName, () => {
 				const unitTestsInjector: IInjector = createUnitTestsInjector();
-				const pluginsService: IPluginsService = unitTestsInjector.resolve(
-					PluginsService
-				);
+				const pluginsService: IPluginsService =
+					unitTestsInjector.resolve(PluginsService);
 
 				if (testCase.expectedOutput instanceof Error) {
 					assert.throws(
@@ -1225,9 +1214,8 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 					);
 
 					if (testCase.expectedWarning) {
-						const logger = unitTestsInjector.resolve<stubs.LoggerStub>(
-							"logger"
-						);
+						const logger =
+							unitTestsInjector.resolve<stubs.LoggerStub>("logger");
 						assert.equal(testCase.expectedWarning + "\n", logger.warnOutput);
 					}
 
@@ -1245,9 +1233,8 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 
 		it(`caches result based on dependencies`, () => {
 			const unitTestsInjector: IInjector = createUnitTestsInjector();
-			const pluginsService: IPluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: IPluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			const inputDependencies = [
 				{
 					name: "nativescript-ui-core",
