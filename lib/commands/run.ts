@@ -40,10 +40,12 @@ export class RunCommandBase implements ICommand {
 			this.liveSyncCommandHelperAdditionalOptions
 		);
 
-		this.$keyCommandHelper.attachKeyCommands(
-			this.platform as IKeyCommandPlatform,
-			"run"
-		);
+		if (process.env.NS_IS_INTERACTIVE) {
+			this.$keyCommandHelper.attachKeyCommands(
+				this.platform as IKeyCommandPlatform,
+				"run"
+			);
+		}
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

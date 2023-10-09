@@ -45,6 +45,7 @@ export default class StartService implements IStartService {
 				env: {
 					FORCE_COLOR: 1,
 					HIDE_HEADER: true,
+					NS_IS_INTERACTIVE: true,
 					...process.env,
 				},
 			}
