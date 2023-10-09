@@ -207,11 +207,11 @@ export class RunController extends EventEmitter implements IRunController {
 				this.emitCore(RunOnDeviceEvents.runOnDeviceStopped, {
 					projectDir,
 					deviceIdentifier,
-					keepProcessAlive: stopOptions.keepProcessAlive,
+					keepProcessAlive: stopOptions?.keepProcessAlive,
 				});
 			});
 
-			if (stopOptions.keepProcessAlive) {
+			if (stopOptions?.keepProcessAlive) {
 				this.removeAllListeners(RunOnDeviceEvents.runOnDeviceStopped);
 			}
 		}
