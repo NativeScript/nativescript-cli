@@ -1,3 +1,34 @@
+# [8.6.0](https://github.com/NativeScript/nativescript-cli/compare/v8.5.3...v8.6.0) (2023-10-10)
+
+
+### Bug Fixes
+
+* bump resolve-package-path to fix aliased module resolution ([3307155](https://github.com/NativeScript/nativescript-cli/commit/33071556385e9a1ec8945e66eb57b5f1ef744c28))
+* check if interactive before attaching key commands ([27d3940](https://github.com/NativeScript/nativescript-cli/commit/27d394030fec6c39dd58138411a65b80def7fcb8))
+* get framework name from Info.plist ([#5759](https://github.com/NativeScript/nativescript-cli/issues/5759)) ([6bc6ca9](https://github.com/NativeScript/nativescript-cli/commit/6bc6ca91422b6e6d9c7b5dbc4457c69ec58b74f0))
+* hash plugin files after prepare ([#5753](https://github.com/NativeScript/nativescript-cli/issues/5753)) ([ecf1959](https://github.com/NativeScript/nativescript-cli/commit/ecf19599eda49dbbdb0d01333880e736bb02d222))
+* **ios-device-lib:** use 0.9.3 with device core handling ([5cc76f4](https://github.com/NativeScript/nativescript-cli/commit/5cc76f4ad890b3f8e79bfdcd64d6e9842baf081d))
+* **logs:** android log detection fixes ([b5cc32e](https://github.com/NativeScript/nativescript-cli/commit/b5cc32ece0ec7e38fd084ea3398abca2fedc0a9a))
+* **logs:** correctly trim ios logs + fix tests ([be1e737](https://github.com/NativeScript/nativescript-cli/commit/be1e737a7457d4e35eda76619369a52b88d0dcab))
+* **logs:** don't trim leading whitespace ([f522401](https://github.com/NativeScript/nativescript-cli/commit/f522401e03322c328e7859cea2881af73f6889fe))
+* use valid interface ([a35dfa6](https://github.com/NativeScript/nativescript-cli/commit/a35dfa6a4841e01efd9dbc85b66048be90bcee1c))
+
+
+### Features
+
+* add key commands ([5dbc780](https://github.com/NativeScript/nativescript-cli/commit/5dbc780f3b5e216669092db3cb413fa0fc25f53e))
+* allow android plugins to have cpp code ([#5758](https://github.com/NativeScript/nativescript-cli/issues/5758)) ([c5f7b85](https://github.com/NativeScript/nativescript-cli/commit/c5f7b85e55c76eadb9697efc554814a8ed31b1ab))
+* allow running on visionOS ([#5745](https://github.com/NativeScript/nativescript-cli/issues/5745)) ([f6a0fdd](https://github.com/NativeScript/nativescript-cli/commit/f6a0fdd14ee409e791fa75de52cd6f85154db3cb))
+* **angular:** use 16.2.0 on ns update ([a31b3bb](https://github.com/NativeScript/nativescript-cli/commit/a31b3bb881a74e7d46eb30e172c145dd9536e0ad))
+* **extension:** initial per-extension provisioning ([#5749](https://github.com/NativeScript/nativescript-cli/issues/5749)) ([c564e18](https://github.com/NativeScript/nativescript-cli/commit/c564e189b36334a2f8a7a7fc57e911b9139cb358))
+* **extensions:** add extension podfile and setup extension with provision ([#5751](https://github.com/NativeScript/nativescript-cli/issues/5751)) ([ba3293c](https://github.com/NativeScript/nativescript-cli/commit/ba3293c174155b1143e87662ed49c978e9cac32d))
+* **extensions:** allow seperate release/debug build configuration ([#5741](https://github.com/NativeScript/nativescript-cli/issues/5741)) ([fdcc98e](https://github.com/NativeScript/nativescript-cli/commit/fdcc98e9fc45786fd362444dad2fa1d458d09cb6))
+* **ios:** always override xcconfig with user values ([#5735](https://github.com/NativeScript/nativescript-cli/issues/5735)) ([5b88e06](https://github.com/NativeScript/nativescript-cli/commit/5b88e06404bf910da966ec1a7969f13c8f843fe4))
+* **logs:** improve android logging ([#5755](https://github.com/NativeScript/nativescript-cli/issues/5755)) ([8c5ef04](https://github.com/NativeScript/nativescript-cli/commit/8c5ef043bc8355e5ce421dbc4ee02efd78e06caa))
+* **spm:** add support for local SPM packages ([#5748](https://github.com/NativeScript/nativescript-cli/issues/5748)) ([c40e217](https://github.com/NativeScript/nativescript-cli/commit/c40e2177ecbc452d124a6d6f750d1bfeb9de7e50))
+
+
+
 ## [8.5.3](https://github.com/NativeScript/nativescript-cli/compare/v8.5.2...v8.5.3) (2023-04-12)
 
 
