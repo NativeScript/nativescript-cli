@@ -104,6 +104,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					nativePrepare: {
 						forceRebuildNativeApp: additionalOptions.forceRebuildNativeApp,
 					},
+					_device: d,
 				}
 			);
 			this.$androidBundleValidatorHelper.validateDeviceApiLevel(d, buildData);
