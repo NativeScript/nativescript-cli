@@ -6,7 +6,7 @@ export class Constants {
 		Constants.IOS_PLATFORM_NAME,
 	];
 	public static SYSTEM_REQUIREMENTS_LINKS =
-		"https://docs.nativescript.org/environment-setup.html";
+		"https://docs.nativescript.org/setup";
 	public static INFO_TYPE_NAME = "info";
 	public static WARNING_TYPE_NAME = "warning";
 
