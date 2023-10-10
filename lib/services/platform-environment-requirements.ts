@@ -88,11 +88,11 @@ export class PlatformEnvironmentRequirements
 			darwin: "macos",
 		} as any)[process.platform];
 
-		const anchor = platform ? `#${os}-${platform.toLowerCase()}` : "";
+		const anchor = platform ? `/${os}#${platform.toLowerCase()}` : "";
 
 		return (
 			`Verify that your environment is configured according to the system requirements described at\n` +
-			`https://docs.nativescript.org/environment-setup.html${anchor}.`
+			`https://docs.nativescript.org/setup${anchor}.`
 		);
 	}
 }
