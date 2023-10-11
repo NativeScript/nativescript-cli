@@ -88,7 +88,7 @@ export class PlatformEnvironmentRequirements
 			darwin: "macos",
 		} as any)[process.platform];
 
-		const anchor = platform ? `/${os}#${platform.toLowerCase()}` : "";
+		const anchor = platform ? `#setting-up-${os}-for-${platform.toLowerCase()}` : "";
 
 		return (
 			`Verify that your environment is configured according to the system requirements described at\n` +
