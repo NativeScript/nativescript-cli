@@ -66,7 +66,7 @@
     "byline": "5.0.0",
     "chalk": "4.1.2",
     "chokidar": "3.5.3",
-    "cli-table": "npm:cli-table3@0.6.3",
+    "cli-table3": "0.6.3",
     "color": "4.2.3",
     "convert-source-map": "2.0.0",
     "detect-newline": "3.1.0",
