@@ -92,7 +92,7 @@ export class PlatformEnvironmentRequirements
 
 		return (
 			`Verify that your environment is configured according to the system requirements described at\n` +
-			`https://docs.nativescript.org/setup${anchor}.`
+			`https://docs.nativescript.org/setup/${os}${anchor}.`
 		);
 	}
 }
