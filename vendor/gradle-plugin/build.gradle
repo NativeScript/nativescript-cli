@@ -318,6 +318,7 @@ task addDependenciesFromNativeScriptPlugins {
     }
 }
 
+// This wont work with gradle 8 + should be the same as the code  just after
 // afterEvaluate {
 //     def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
 //     def generateR =  project.hasProperty("generateR") ? project.generateR : false
@@ -326,15 +327,15 @@ task addDependenciesFromNativeScriptPlugins {
 //     generateReleaseResValues.enabled = generateR
 //     generateDebugResValues.enabled = generateR
 // }
-tasks.whenTaskAdded({ DefaultTask currentTask ->
-    if (currentTask.name == 'bundleRelease') {
+project.tasks.configureEach {
+    if (name == 'bundleRelease') {
         def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
         def generateR =  project.hasProperty("generateR") ? project.generateR : false
         if (!generateBuildConfig) {
-            currentTask.exclude '**/BuildConfig.class'
+            it.exclude '**/BuildConfig.class'
         }
         if (!generateR) {
-            currentTask.exclude '**/R.class', '**/R$*.class'
+            it.exclude '**/R.class', '**/R$*.class'
         }
     }
-})
+}
