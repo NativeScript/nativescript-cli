@@ -361,7 +361,18 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$fs.copyFile(path.join(dir, "*"), destination);
 		}
 	}
-
+	private extractNamespaceFromManifest(manifestPath:string): string {
+		const fileContent = this.$fs.readText(manifestPath);
+		const contentRegex = new RegExp('package="(.*)"');
+		const match = fileContent.match(contentRegex);
+		let namespace: string;
+		if (match) {
+			namespace = match[1];
+			const replacedFileContent = fileContent.replace(contentRegex, "");
+			this.$fs.writeFile(manifestPath, replacedFileContent);
+		}
+		return namespace;
+	}
 	private async setupGradle(
 		pluginTempDir: string,
 		platformsAndroidDirPath: string,
@@ -379,10 +390,25 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const runtimeGradleVersions = await this.getRuntimeGradleVersions(
 			projectDir
 		);
+		let gradleVersion = runtimeGradleVersions.gradleVersion;
+		if (this.$projectData.nsConfig.android.gradleVersion) {
+			gradleVersion = this.$projectData.nsConfig.android.gradleVersion;
+		}
 		this.replaceGradleVersion(
 			pluginTempDir,
-			runtimeGradleVersions.gradleVersion
+			gradleVersion
 		);
+
+		// In gradle 8 every android project must have a namespace in "android"
+		// and the package property in manifest is now forbidden
+		// let s replace it
+		const manifestFilePath = this.getManifest(path.join(pluginTempDir, 'src', 'main'));
+		let pluginNamespace = this.extractNamespaceFromManifest(manifestFilePath);
+		if (!pluginNamespace) {
+			pluginNamespace = pluginName.replace(/@/g, '').replace(/[/-]/g, '.')
+		}
+
+		this.replaceFileContent(buildGradlePath, "{{pluginNamespace}}", pluginNamespace);
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
 	}

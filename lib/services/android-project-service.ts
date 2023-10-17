@@ -459,6 +459,24 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			gradleSettingsFilePath
 		);
 
+
+		const gradleVersion  = projectData.nsConfig.android.gradleVersion;
+		if (gradleVersion) {
+			// user defined a custom gradle version, let's apply it
+			const gradleWrapperFilePath = path.join(
+				this.getPlatformData(projectData).projectRoot,
+				"gradle",
+				"wrapper",
+				"gradle-wrapper.properties"
+			);
+			shell.sed(
+				"-i",
+				/gradle-([0-9.]+)-bin.zip/,
+				`gradle-${gradleVersion}-bin.zip`,
+				gradleWrapperFilePath
+			);
+		}
+
 		try {
 			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
 			const appGradleContent = this.$fs.readText(projectData.appGradlePath);
@@ -486,6 +504,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			/__PACKAGE__/,
 			projectData.projectIdentifiers.android,
 			manifestPath
+		);
+		const buildGradlePath = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			"app",
+			"build.gradle"
+		);
+		shell.sed(
+			"-i",
+			/__PACKAGE__/,
+			projectData.projectIdentifiers.android,
+			buildGradlePath
 		);
 	}
 
