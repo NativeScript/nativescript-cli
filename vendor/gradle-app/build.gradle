@@ -291,7 +291,7 @@ repositories {
     })
 
     if (!externalRuntimeExists) {
-        pluginDependencies.add("libs/runtime-libs")
+        pluginDependencies.add("$rootDir/app/libs/runtime-libs")
     }
 
     def appResourcesPath = getAppResourcesPath()
