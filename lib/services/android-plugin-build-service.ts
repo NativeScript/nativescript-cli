@@ -399,6 +399,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			gradleVersion
 		);
 
+		this.replaceGradleAndroidPluginVersion(
+			buildGradlePath,
+			runtimeGradleVersions.gradleAndroidPluginVersion
+		);
+
 		// In gradle 8 every android project must have a namespace in "android"
 		// and the package property in manifest is now forbidden
 		// let s replace it
@@ -628,6 +633,22 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			gradleWrapperPropertiesPath,
 			gradleVersionPlaceholder,
 			gradleVersion
+		);
+	}
+
+	private replaceGradleAndroidPluginVersion(
+		buildGradlePath: string,
+		version: string
+	): void {
+		const gradleAndroidPluginVersionPlaceholder =
+			"{{runtimeAndroidPluginVersion}}";
+		const gradleAndroidPluginVersion =
+			version || AndroidBuildDefaults.GradleAndroidPluginVersion;
+
+		this.replaceFileContent(
+			buildGradlePath,
+			gradleAndroidPluginVersionPlaceholder,
+			gradleAndroidPluginVersion
 		);
 	}
 

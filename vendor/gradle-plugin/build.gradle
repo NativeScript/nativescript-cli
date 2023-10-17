@@ -209,7 +209,7 @@ buildscript {
     applyBuildScriptConfigurations()
 
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
-    def computeBuildToolsVersion = { -> project.hasProperty("androidBuildToolsVersion") ? androidBuildToolsVersion : "${NS_DEFAULT_ANDROID_BUILD_TOOLS_VERSION}" }
+    def computeBuildToolsVersion = { -> project.hasProperty("androidBuildToolsVersion") ? androidBuildToolsVersion : "{{runtimeAndroidPluginVersion}}" }
     def kotlinVersion = computeKotlinVersion()
     def androidBuildToolsVersion = computeBuildToolsVersion()
 
