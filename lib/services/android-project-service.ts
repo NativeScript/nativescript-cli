@@ -677,15 +677,31 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			projectAppResourcesPath
 		);
 		if (appResourcesDirStructureHasMigrated) {
+
+			const resourcesPath  =path.join(
+				projectAppResourcesPath,
+				platformData.normalizedPlatformName);
 			this.$fs.copyFile(
 				path.join(
-					projectAppResourcesPath,
-					platformData.normalizedPlatformName,
+					resourcesPath,
 					constants.SRC_DIR,
 					"*"
 				),
 				platformsAppResourcesPath
 			);
+
+			const destinationFolder = this.getPlatformData(projectData).projectRoot;
+			const contents = this.$fs.readDirectory(resourcesPath);
+			_.each(contents, (fileName) => {
+				const filePath = path.join(resourcesPath, fileName);
+				const fsStat = this.$fs.getFsStats(filePath);
+				if (fsStat.isDirectory() && fileName !== constants.SRC_DIR){
+					console.log('copying folder', filePath)
+					this.$fs.copyFile(filePath,
+						destinationFolder
+					);
+				}
+			});
 		} else {
 			this.$fs.copyFile(
 				path.join(
