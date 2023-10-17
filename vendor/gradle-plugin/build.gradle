@@ -14,15 +14,15 @@ buildscript {
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.8.20" }
     def kotlinVersion = computeKotlinVersion()
     def computeBuildToolsVersion = { ->
-        project.hasProperty("buildToolsVersion") ? buildToolsVersion : "{{runtimeAndroidPluginVersion}}"
+        project.hasProperty("androiBuildToolsVersion") ? buildToolsVersion : "{{runtimeAndroidPluginVersion}}"
     }
-    def buildToolsVersion = computeBuildToolsVersion()
+    def androiBuildToolsVersion = computeBuildToolsVersion()
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:$buildToolsVersion"
+        classpath "com.android.tools.build:gradle:$androiBuildToolsVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -152,7 +152,7 @@ allprojects {
 def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 }
 def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 31 as int }
 def computeBuildToolsVersion = { ->
-    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "{{runtimeAndroidPluginVersion}}"
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "33.0.1"
 }
 
 android {
