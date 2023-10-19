@@ -52,7 +52,7 @@ export class PrepareNativePlatformService
 			platformData.platformProjectService.prepareAppResources(projectData);
 		}
 
-		if (hasChangesRequirePrepare) {
+		if (hasChangesRequirePrepare || this.$options.nativeHost) {
 			await platformData.platformProjectService.prepareProject(
 				projectData,
 				prepareData

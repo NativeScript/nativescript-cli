@@ -606,7 +606,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const resources = project.pbxGroupByName("Resources");
 
-		if (resources) {
+		if (this.$options.nativeHost) {
+			try {
+				project.addResourceFile(
+					path.join(this.$options.nativeHost, projectData.projectName)
+				);
+				this.savePbxProj(project, projectData);
+			} catch (err) {
+				console.log(err);
+			}
+		}
+
+		if (resources && !this.$options.nativeHost) {
 			const references = project.pbxFileReferenceSection();
 
 			const xcodeProjectImages = _.map(<any[]>resources.children, (resource) =>
