@@ -718,6 +718,7 @@ task buildMetadata(type: BuildToolTask) {
     }
 
     dependsOn copyMetadataFilters
+    dependsOn collectAllJars
 
     // As some external gradle plugins can reorder the execution order of the tasks it may happen that buildMetadata is executed after merge{Debug/Release}Assets
     // in that case the metadata won't be included in the result apk and it will crash, so to avoid this we are adding the copyMetadata task which will manually copy
@@ -735,7 +736,9 @@ task buildMetadata(type: BuildToolTask) {
     inputs.files(project.fileTree(dir: "$rootDir", include: "**/*.mdg"))
 
     def classesDir = "$buildDir/intermediates/javac"
-    inputs.dir(classesDir)
+    if (file(classesDir).exists()) {
+        inputs.dir(classesDir)
+    }
 
     def kotlinClassesDir = "$buildDir/tmp/kotlin-classes"
     if (file(kotlinClassesDir).exists()) {
@@ -828,9 +831,6 @@ task buildMetadata(type: BuildToolTask) {
         }
 
         args paramz.toArray()
-
-        logger.info("Task buildMetadata: Call android-metadata-generator.jar with arguments: " + paramz.toString().replaceAll(',', ''))
-        outLogger.withStyle(Style.SuccessHeader).println "Task buildMetadata: Call android-metadata-generator.jar with arguments: " + paramz.toString().replaceAll(',', '')
     }
 }
 
@@ -976,7 +976,8 @@ project.tasks.configureEach {
     }
 
     // added because of a error with gradle 8 telling us to add this
-    // could we do it another way?
+    // because buildMetadata uses the output of those
+    // TODO: there must be a way to make it simpler
     if (!(name =~ /AndroidTest/) &&
        (name =~ /merge(Debug|Release)Shaders/ ||
         name =~ /desugar(Debug|Release)FileDependencies/ || 
@@ -993,7 +994,20 @@ project.tasks.configureEach {
         name =~ /bundle(Debug|Release)Resources/ ||
         name =~ /extract(Debug|Release)NativeSymbolTables/ ||
         name =~ /extractProguardFiles/ || 
-        name =~ /validateSigning(Debug|Release)/
+        name =~ /desugarBenchmarkFileDependencies/ ||
+        name =~ /mergeExtDexBenchmark/ ||
+        name =~ /mergeDexBenchmark/ ||
+        name =~ /mergeBenchmarkShaders/ ||
+        name =~ /mergeBenchmarkJavaResource/ ||
+        name =~ /mergeBenchmarkJniLibFolders/ ||
+        name =~ /checkBenchmarkDuplicateClasses/ ||
+        name =~ /bundleBenchmarkResources/ ||
+        name =~ /extractBenchmarkNativeSymbolTables/ ||
+        // name =~ /compressBenchmarkAssets/ ||
+        name =~ /mergeBenchmarkNativeLibs/ ||
+        name =~ /stripBenchmark(Debug|Release)Symbols/ ||
+        name =~ /buildKotlinToolingMetadata/ ||
+        name =~ /validateSigning/
         )) {
         it.finalizedBy(buildMetadata)
     }
