@@ -69,8 +69,8 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 		data.split("\n").forEach((line) => {
 			const trace = this.toTrace(line.trim());
 			if (trace) {
-				deviceTimeline.startPoint ??= trace.from;
-				deviceTimeline.timeline.push(trace);
+				deviceTimeline.startPoint ??= trace[0].ts;
+				deviceTimeline.timeline.push(...trace);
 			}
 		});
 	}
@@ -80,28 +80,36 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 		return this.$projectConfigService.getValue("profiling") === "timeline";
 	}
 
-	private toTrace(text: string): ChromeTraceEvent | undefined {
+	private toTrace(text: string): ChromeTraceEvent[] | undefined {
 		const result = text.match(TIMELINE_LOG_RE);
 		if (!result) {
 			return;
 		}
 
 		const trace = {
-			domain: result[2]?.trim().replace(":", ""),
+			domain: result[2]?.trim().replace(":", ".").toLowerCase(),
 			name: result[3].trim(),
 			from: parseFloat(result[4]),
 			to: parseFloat(result[5]),
 		};
 
-		return {
+		return [{
+			args:{},
 			pid: 1,
 			tid: 1,
 			ts: trace.from * 1000,
-			dur: (trace.to - trace.from) * 1000,
 			name: trace.name,
 			cat: trace.domain ?? "default",
-			ph: ChromeTraceEventPhase.COMPLETE,
-		};
+			ph: ChromeTraceEventPhase.BEGIN,
+		}, {
+			args:{},
+			pid: 1,
+			tid: 1,
+			ts: trace.to * 1000,
+			name: trace.name,
+			cat: trace.domain ?? "default",
+			ph: ChromeTraceEventPhase.END,
+		}];
 	}
 
 	private writeTimelines() {
