@@ -57,6 +57,7 @@
   "dependencies": {
     "@nativescript/doctor": "2.0.11",
     "@nativescript/schematics-executor": "0.0.2",
+    "@npmcli/arborist": "^7.2.0",
     "@npmcli/move-file": "^2.0.0",
     "@rigor789/resolve-package-path": "1.0.7",
     "@rigor789/trapezedev-project": "7.1.1",
@@ -130,6 +131,7 @@
     "@types/lodash": "4.14.192",
     "@types/marked": "^4.0.8",
     "@types/node": "18.15.11",
+    "@types/npmcli__arborist": "^5.6.4",
     "@types/ora": "3.2.0",
     "@types/pacote": "^11.1.5",
     "@types/plist": "^3.0.2",
