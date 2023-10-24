@@ -49,6 +49,7 @@ def enableKotlin = (project.hasProperty("useKotlin") && project.useKotlin == "tr
 if (enableKotlin) {
     apply plugin: 'kotlin-android'
     apply plugin: 'kotlin-parcelize'
+    apply plugin: "org.jetbrains.kotlin.android"
 }
 
 def onlyX86 = project.hasProperty("onlyX86")
@@ -195,8 +196,8 @@ android {
     namespace "__PACKAGE__"
 
     if (enableKotlin) {
-        kotlinOptions {
-            jvmTarget = '1.8'
+        kotlin {
+            jvmToolchain(17)
         }
     }
 
@@ -218,8 +219,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     sourceSets.main {
@@ -1012,8 +1013,12 @@ project.tasks.configureEach {
         it.finalizedBy(buildMetadata)
     }
     // added because of a error with gradle 8 telling us to add this
-    // could we do it another way?
-    if (!(name =~ /AndroidTest/) && (name =~ /process(Debug|Release)Resources/)) {
+    // because buildMetadata uses the output of those
+    // TODO: there must be a way to make it simpler
+    if (!(name =~ /AndroidTest/) && (
+        name =~ /process(Debug|Release)Resources/ || 
+        name =~ /compile(Debug|Release)Kotlin/
+        )) {
         cleanupAllJars.dependsOn(it)
     }
 }
