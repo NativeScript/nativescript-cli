@@ -9,6 +9,7 @@ import {
 	IPlatformCommandHelper,
 	IPackageInstallationManager,
 	IUpdatePlatformOptions,
+	IOptions,
 } from "../declarations";
 import { IPlatformsDataService, IPlatformData } from "../definitions/platform";
 import { IFileSystem, IErrors } from "../common/declarations";
@@ -21,6 +22,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
@@ -34,7 +36,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	public async addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath: string
+		frameworkPath: string,
+		nativeHost?: string
 	): Promise<void> {
 		const platformsDir = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(platformsDir);
@@ -56,6 +59,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				projectDir: projectData.projectDir,
 				platform,
 				frameworkPath,
+				nativeHost,
 			});
 		}
 	}
@@ -102,10 +106,9 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			}
 
 			try {
-				const platformDir = path.join(
-					projectData.platformsDir,
-					platform.toLowerCase()
-				);
+				const platformDir = this.$options.nativeHost
+					? this.$options.nativeHost
+					: path.join(projectData.platformsDir, platform.toLowerCase());
 				this.$fs.deleteDirectory(platformDir);
 				await this.$packageInstallationManager.uninstall(
 					platformData.frameworkPackageName,
@@ -210,9 +213,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			platform,
 			projectData
 		);
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		if (!prepareInfo) {
 			return true;
 		}

@@ -246,9 +246,8 @@ export class ProjectDataService implements IProjectDataService {
 			// ignore
 		}
 
-		const content = this.getImageDefinitions()[
-			useLegacy ? "android_legacy" : "android"
-		];
+		const content =
+			this.getImageDefinitions()[useLegacy ? "android_legacy" : "android"];
 
 		return {
 			icons: this.getAndroidAssetSubGroup(content.icons, basePath),

@@ -13,19 +13,22 @@ import {
 import { IProjectData } from "../../definitions/project"; //IProjectDataService
 import { IAnalyticsService, IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
-import { IPackageManager } from "../../declarations";
+import { IOptions, IPackageManager } from "../../declarations";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 
 export class AddPlatformService implements IAddPlatformService {
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $options: IOptions,
 		// private $pacoteService: IPacoteService,
 		// private $projectDataService: IProjectDataService,
 		private $packageManager: IPackageManager,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $analyticsService: IAnalyticsService // private $tempService: ITempService
 	) {}
+
+	public async addProjectHost() {}
 
 	public async addPlatformSafe(
 		projectData: IProjectData,
@@ -182,12 +185,15 @@ export class AddPlatformService implements IAddPlatformService {
 		frameworkDirPath: string,
 		frameworkVersion: string
 	): Promise<void> {
-		const platformDir = path.join(
-			projectData.platformsDir,
-			platformData.normalizedPlatformName.toLowerCase()
-		);
+		//here we should use ios OR android
+		const platformDir = this.$options.nativeHost
+			? this.$options.nativeHost
+			: path.join(
+					projectData.platformsDir,
+					platformData.normalizedPlatformName.toLowerCase()
+			  );
 		this.$fs.deleteDirectory(platformDir);
-
+		//if iosHost - dont create project
 		await platformData.platformProjectService.createProject(
 			path.resolve(frameworkDirPath),
 			frameworkVersion,

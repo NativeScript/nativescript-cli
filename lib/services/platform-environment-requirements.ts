@@ -15,7 +15,8 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 
 export class PlatformEnvironmentRequirements
-	implements IPlatformEnvironmentRequirements {
+	implements IPlatformEnvironmentRequirements
+{
 	constructor(
 		private $doctorService: IDoctorService,
 		private $errors: IErrors,
@@ -82,13 +83,17 @@ export class PlatformEnvironmentRequirements
 
 	private getEnvVerificationMessage(platform: string) {
 		// map process.platform to OS name used in docs
-		const os = ({
-			linux: "linux",
-			win32: "windows",
-			darwin: "macos",
-		} as any)[process.platform];
+		const os = (
+			{
+				linux: "linux",
+				win32: "windows",
+				darwin: "macos",
+			} as any
+		)[process.platform];
 
-		const anchor = platform ? `#setting-up-${os}-for-${platform.toLowerCase()}` : "";
+		const anchor = platform
+			? `#setting-up-${os}-for-${platform.toLowerCase()}`
+			: "";
 
 		return (
 			`Verify that your environment is configured according to the system requirements described at\n` +
