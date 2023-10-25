@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns generate
+title: ns generate
 position: 9
 ---<% } %>
 
-# tns generate
+# ns generate
 
 ### Description
 
@@ -13,7 +13,7 @@ Modifies the project by executing a specified schematic to it.
 
 Usage | Synopsis
 ------|-------
-General | `$ tns generate <Schematic Name> [--collection <Collection>] [option=value]`
+General | `$ ns generate <Schematic Name> [--collection <Collection>] [option=value]`
 
 ### Options
 

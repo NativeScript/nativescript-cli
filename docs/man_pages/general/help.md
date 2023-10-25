@@ -1,26 +1,26 @@
 <% if (isJekyll) { %>---
-title: tns help
+title: ns help
 position: 10
 ---<% } %>
 
-# tns help
+# ns help
 
 ### Description
 
 Opens the command reference for all commands in your browser or shows information about the selected command in the browser.
 
-To list all commands available in the console, run `$ tns -h`.
-To print information about a selected command in the console, run `$ tns <Command> -h`.
+To list all commands available in the console, run `$ ns -h`.
+To print information about a selected command in the console, run `$ ns <Command> -h`.
 
 ### Commands
 
 Usage | Synopsis
 ------|-------
-General | `$ tns help [<Command>]`
+General | `$ ns help [<Command>]`
 
 ### Arguments
 
-* `<Command>` is any of the available commands as listed by `$ tns help` or `$ tns -h`
+* `<Command>` is any of the available commands as listed by `$ ns help` or `$ ns -h`
 
 <% if(isHtml) { %>
 

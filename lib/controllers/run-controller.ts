@@ -59,16 +59,12 @@ export class RunController extends EventEmitter implements IRunController {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		await this.initializeSetup(projectData);
 
-		const deviceDescriptorsForInitialSync = this.getDeviceDescriptorsForInitialSync(
-			projectDir,
-			deviceDescriptors
-		);
-		const newPlatforms = this.$devicesService.getPlatformsFromDeviceDescriptors(
-			deviceDescriptors
-		);
-		const oldPlatforms = this.$liveSyncProcessDataService.getPlatforms(
-			projectDir
-		);
+		const deviceDescriptorsForInitialSync =
+			this.getDeviceDescriptorsForInitialSync(projectDir, deviceDescriptors);
+		const newPlatforms =
+			this.$devicesService.getPlatformsFromDeviceDescriptors(deviceDescriptors);
+		const oldPlatforms =
+			this.$liveSyncProcessDataService.getPlatforms(projectDir);
 		const platforms = _.uniq(_.concat(newPlatforms, oldPlatforms));
 
 		this.$liveSyncProcessDataService.persistData(
@@ -119,7 +115,6 @@ export class RunController extends EventEmitter implements IRunController {
 				this.prepareReadyEventHandler
 			);
 		}
-
 		await this.syncInitialDataOnDevices(
 			projectData,
 			liveSyncInfo,
@@ -131,9 +126,8 @@ export class RunController extends EventEmitter implements IRunController {
 
 	public async stop(data: IStopRunData): Promise<void> {
 		const { projectDir, deviceIdentifiers, stopOptions } = data;
-		const liveSyncProcessInfo = this.$liveSyncProcessDataService.getPersistedData(
-			projectDir
-		);
+		const liveSyncProcessInfo =
+			this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		if (liveSyncProcessInfo && !liveSyncProcessInfo.isStopped) {
 			// In case we are coming from error during livesync, the current action is the one that erred (but we are still executing it),
 			// so we cannot await it as this will cause infinite loop.
@@ -152,6 +146,7 @@ export class RunController extends EventEmitter implements IRunController {
 			).map((descriptor) => descriptor.identifier);
 
 			// Handle the case when no more devices left for any of the persisted platforms
+
 			for (let i = 0; i < liveSyncProcessInfo.platforms.length; i++) {
 				const platform = liveSyncProcessInfo.platforms[i];
 				const devices = this.$devicesService.getDevicesForPlatform(platform);
@@ -212,8 +207,13 @@ export class RunController extends EventEmitter implements IRunController {
 				this.emitCore(RunOnDeviceEvents.runOnDeviceStopped, {
 					projectDir,
 					deviceIdentifier,
+					keepProcessAlive: stopOptions?.keepProcessAlive,
 				});
 			});
+
+			if (stopOptions?.keepProcessAlive) {
+				this.removeAllListeners(RunOnDeviceEvents.runOnDeviceStopped);
+			}
 		}
 	}
 
@@ -315,9 +315,8 @@ export class RunController extends EventEmitter implements IRunController {
 		const platform = liveSyncResultInfo.deviceAppData.platform;
 		const applicationIdentifier =
 			projectData.projectIdentifiers[platform.toLowerCase()];
-		const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(
-			platform
-		);
+		const platformLiveSyncService =
+			this.$liveSyncServiceResolver.resolveLiveSyncService(platform);
 
 		try {
 			const isFullSync =
@@ -406,9 +405,8 @@ export class RunController extends EventEmitter implements IRunController {
 		projectDir: string,
 		deviceDescriptors: ILiveSyncDeviceDescriptor[]
 	) {
-		const currentRunData = this.$liveSyncProcessDataService.getPersistedData(
-			projectDir
-		);
+		const currentRunData =
+			this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		const isAlreadyLiveSyncing = currentRunData && !currentRunData.isStopped;
 		// Prevent cases where liveSync is called consecutive times with the same device, for example [ A, B, C ] and then [ A, B, D ] - we want to execute initialSync only for D.
 		const deviceDescriptorsForInitialSync = isAlreadyLiveSyncing
@@ -499,6 +497,7 @@ export class RunController extends EventEmitter implements IRunController {
 			const prepareResultData = await this.$prepareController.prepare(
 				prepareData
 			);
+
 			const buildData = {
 				...deviceDescriptor.buildData,
 				buildForDevice: !device.isEmulator,
@@ -532,6 +531,7 @@ export class RunController extends EventEmitter implements IRunController {
 				} else {
 					const shouldBuild =
 						prepareResultData.hasNativeChanges ||
+						buildData.nativePrepare.forceRebuildNativeApp ||
 						(await this.$buildController.shouldBuild(buildData));
 					if (shouldBuild) {
 						packageFilePath = await deviceDescriptor.buildAction();
@@ -555,9 +555,10 @@ export class RunController extends EventEmitter implements IRunController {
 					);
 				}
 
-				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(
-					platformData.platformNameLowerCase
-				);
+				const platformLiveSyncService =
+					this.$liveSyncServiceResolver.resolveLiveSyncService(
+						platformData.platformNameLowerCase
+					);
 				const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({
 					force,
@@ -635,9 +636,10 @@ export class RunController extends EventEmitter implements IRunController {
 		}> = {};
 
 		const deviceAction = async (device: Mobile.IDevice) => {
-			const deviceDescriptors = this.$liveSyncProcessDataService.getDeviceDescriptors(
-				projectData.projectDir
-			);
+			const deviceDescriptors =
+				this.$liveSyncProcessDataService.getDeviceDescriptors(
+					projectData.projectDir
+				);
 			const deviceDescriptor = _.find(
 				deviceDescriptors,
 				(dd) => dd.identifier === device.deviceInfo.identifier
@@ -660,9 +662,10 @@ export class RunController extends EventEmitter implements IRunController {
 			);
 
 			try {
-				const platformLiveSyncService = this.$liveSyncServiceResolver.resolveLiveSyncService(
-					device.deviceInfo.platform
-				);
+				const platformLiveSyncService =
+					this.$liveSyncServiceResolver.resolveLiveSyncService(
+						device.deviceInfo.platform
+					);
 				const allAppFiles = data.hmrData?.fallbackFiles?.length
 					? data.hmrData.fallbackFiles
 					: data.files;
@@ -746,16 +749,18 @@ export class RunController extends EventEmitter implements IRunController {
 					}
 
 					const watchAction = async (): Promise<void> => {
-						const liveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(
-							device,
-							watchInfo
-						);
-						const fullSyncAction = async () => {
-							watchInfo.filesToSync = allAppFiles;
-							const fullLiveSyncResultInfo = await platformLiveSyncService.liveSyncWatchAction(
+						const liveSyncResultInfo =
+							await platformLiveSyncService.liveSyncWatchAction(
 								device,
 								watchInfo
 							);
+						const fullSyncAction = async () => {
+							watchInfo.filesToSync = allAppFiles;
+							const fullLiveSyncResultInfo =
+								await platformLiveSyncService.liveSyncWatchAction(
+									device,
+									watchInfo
+								);
 							// IMPORTANT: keep the same instance as we rely on side effects
 							_.assign(liveSyncResultInfo, fullLiveSyncResultInfo);
 						};
@@ -863,9 +868,10 @@ export class RunController extends EventEmitter implements IRunController {
 
 		await this.addActionToChain(projectData.projectDir, () =>
 			this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => {
-				const liveSyncProcessInfo = this.$liveSyncProcessDataService.getPersistedData(
-					projectData.projectDir
-				);
+				const liveSyncProcessInfo =
+					this.$liveSyncProcessDataService.getPersistedData(
+						projectData.projectDir
+					);
 				return (
 					data.platform.toLowerCase() ===
 						device.deviceInfo.platform.toLowerCase() &&
@@ -884,9 +890,8 @@ export class RunController extends EventEmitter implements IRunController {
 		projectDir: string,
 		action: () => Promise<T>
 	): Promise<T> {
-		const liveSyncInfo = this.$liveSyncProcessDataService.getPersistedData(
-			projectDir
-		);
+		const liveSyncInfo =
+			this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		if (liveSyncInfo) {
 			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain.then(async () => {
 				if (!liveSyncInfo.isStopped) {

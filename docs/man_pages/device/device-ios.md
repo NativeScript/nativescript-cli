@@ -1,21 +1,21 @@
 <% if (isJekyll) { %>---
-title: tns device ios
+title: ns device ios
 position: 2
 ---<% } %>
 
-# tns device ios
+# ns device ios
 
 ### Description
 
 Lists all recognized connected iOS devices with serial number and index.
 
-<% if(isConsole && (isLinux)) { %>WARNING: You can run this command only on Windows and macOS systems. To view the complete help for this command, run `$ tns help device ios`<% } %>
+<% if(isConsole && (isLinux)) { %>WARNING: You can run this command only on Windows and macOS systems. To view the complete help for this command, run `$ ns help device ios`<% } %>
 
 ### Commands
 
 Usage | Synopsis
 ------|-------
-General | `$ tns device ios [--timeout <Milliseconds>]`
+General | `$ ns device ios [--timeout <Milliseconds>]`
 
 <% if((isConsole && (isWindows || isMacOS)) || isHtml) { %>  
 
@@ -26,7 +26,7 @@ General | `$ tns device ios [--timeout <Milliseconds>]`
 
 ### Command Limitations
 
-* You can run `$ tns device ios` on Windows and OS X systems.
+* You can run `$ ns device ios` on Windows and OS X systems.
 
 ### Related Commands
 

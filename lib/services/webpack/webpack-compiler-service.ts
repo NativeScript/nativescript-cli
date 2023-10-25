@@ -89,6 +89,14 @@ export class WebpackCompilerService
 					prepareData
 				);
 
+				childProcess.stdout.on("data", function (data) {
+					process.stdout.write(data);
+				});
+
+				childProcess.stderr.on("data", function (data) {
+					process.stderr.write(data);
+				});
+
 				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
 					this.$logger.trace("Message from webpack", message);
 
@@ -154,7 +162,6 @@ export class WebpackCompilerService
 								hash: "",
 							};
 						}
-
 						const files = result.emittedFiles.map((file: string) =>
 							path.join(platformData.appDestinationDirectoryPath, "app", file)
 						);
@@ -234,6 +241,7 @@ export class WebpackCompilerService
 					projectData,
 					prepareData
 				);
+
 				childProcess.on("error", (err) => {
 					this.$logger.trace(
 						`Unable to start webpack process in non-watch mode. Error is: ${err}`
@@ -333,13 +341,11 @@ export class WebpackCompilerService
 			args.push("--watch");
 		}
 
-		const stdio = prepareData.watch
-			? ["inherit", "inherit", "inherit", "ipc"]
-			: "inherit";
-		const options: { [key: string]: any } = {
+		const stdio = prepareData.watch ? ["ipc"] : "inherit";
+		const childProcess = this.$childProcess.spawn(process.execPath, args, {
 			cwd: projectData.projectDir,
 			stdio,
-		};
+		});
 
 		if (this.$options.nativeHost) {
 			options.env = {
@@ -347,6 +353,7 @@ export class WebpackCompilerService
 				USER_PROJECT_PLATFORMS_IOS: this.$options.nativeHost,
 			};
 		}
+
 		const childProcess = this.$childProcess.spawn(
 			process.execPath,
 			args,

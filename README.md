@@ -335,7 +335,7 @@ cd nativescript-cli
 npm run setup
 ```
 
-To use the locally built CLI instead `tns` you can call `PATH_TO_CLI_FOLDER/bin/tns`. For example:
+To use the locally built CLI instead of `ns` you can call `PATH_TO_CLI_FOLDER/bin/ns`. For example:
 `PATH_TO_CLI_FOLDER/bin/ns run ios|android`
 
 [Back to Top][1]

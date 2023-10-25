@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns proxy clear
+title: ns proxy clear
 position: 12
 ---<% } %>
 
-# tns proxy clear
+# ns proxy clear
 
 ### Description
 
@@ -13,7 +13,7 @@ Clears the currently configured proxy settings of the NativeScript CLI.
 
 Usage | Synopsis
 ------|-------
-General | `$ tns proxy clear`
+General | `$ ns proxy clear`
 
 <% if(isHtml) { %>
 

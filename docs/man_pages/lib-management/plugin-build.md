@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns plugin build
+title: ns plugin build
 position: 8
 ---<% } %>
 
-# tns plugin build
+# ns plugin build
 
 ### Description
 
@@ -14,7 +14,7 @@ position: 8
 
 Usage | Synopsis
 ------|-------
-General | `$ tns plugin build`
+General | `$ ns plugin build`
 
 <% if(isHtml) { %>
 

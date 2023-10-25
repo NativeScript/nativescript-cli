@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns debug
+title: ns debug
 position: 6
 ---<% } %>
 
-# tns debug
+# ns debug
 
 ### Description
 
@@ -35,7 +35,7 @@ When running this command with `--debug-brk` any file change will cause a restar
 
 Usage | Synopsis
 ---|---
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns debug <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns debug android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ ns debug <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ ns debug android`<% } %>
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments
 `<Platform>` is the target mobile platform for which you want to debug your project. You can set the following target platforms:
@@ -46,7 +46,7 @@ Usage | Synopsis
 
 ### Command Limitations
 
-* You can run `$ tns debug ios` only on macOS systems.
+* You can run `$ ns debug ios` only on macOS systems.
 
 ### Related Commands
 

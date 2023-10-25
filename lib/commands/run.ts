@@ -1,22 +1,25 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
-import {
-	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
-	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
-} from "../constants";
-import { cache } from "../common/decorators";
-import { hasValidAndroidSigning } from "../common/helpers";
-import { IProjectData, IProjectDataService } from "../definitions/project";
-import { IMigrateController } from "../definitions/migrate";
-import { IOptions, IPlatformValidationService } from "../declarations";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors, IHostInfo } from "../common/declarations";
+import { cache } from "../common/decorators";
+import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import {
+	IKeyCommandHelper,
+	IKeyCommandPlatform,
+} from "../common/definitions/key-commands";
 import { IInjector } from "../common/definitions/yok";
+import { hasValidAndroidSigning } from "../common/helpers";
 import { injector } from "../common/yok";
+import {
+	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
+	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
+} from "../constants";
+import { IOptions, IPlatformValidationService } from "../declarations";
+import { IMigrateController } from "../definitions/migrate";
+import { IProjectData, IProjectDataService } from "../definitions/project";
 
 export class RunCommandBase implements ICommand {
-	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions = <
-		ILiveSyncCommandHelperAdditionalOptions
-	>{};
+	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions =
+		<ILiveSyncCommandHelperAdditionalOptions>{};
 
 	public platform: string;
 	constructor(
@@ -26,15 +29,23 @@ export class RunCommandBase implements ICommand {
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $migrateController: IMigrateController,
 		private $options: IOptions,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
+		private $keyCommandHelper: IKeyCommandHelper
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
-		return this.$liveSyncCommandHelper.executeCommandLiveSync(
+		await this.$liveSyncCommandHelper.executeCommandLiveSync(
 			this.platform,
 			this.liveSyncCommandHelperAdditionalOptions
 		);
+
+		if (process.env.NS_IS_INTERACTIVE) {
+			this.$keyCommandHelper.attachKeyCommands(
+				this.platform as IKeyCommandPlatform,
+				"run"
+			);
+		}
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {

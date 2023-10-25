@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns error-reporting
+title: ns error-reporting
 position: 6
 ---<% } %>
 
-# tns error-reporting
+# ns error-reporting
 
 ### Description
 
@@ -13,7 +13,7 @@ Configures anonymous error reporting for the NativeScript CLI. All data gathered
 
 Usage | Synopsis
 ------|-------
-General | `$ tns error-reporting [<Command>]`
+General | `$ ns error-reporting [<Command>]`
 
 ### Arguments
 

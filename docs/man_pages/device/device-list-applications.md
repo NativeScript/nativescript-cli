@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns device list-applications
+title: ns device list-applications
 position: 3
 ---<% } %>
 
-# tns device list-applications
+# ns device list-applications
 
 ### Description
 
@@ -13,11 +13,11 @@ Lists the installed applications on all connected Android <% if(isWindows || isM
 
 Usage | Synopsis
 ------|-------
-General | `$ tns device list-applications [--device <Device ID>]`
+General | `$ ns device list-applications [--device <Device ID>]`
 
 ### Options
 
-* `--device` - If multiple devices are connected, sets the device for which you want to list all currently installed applications. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
+* `--device` - If multiple devices are connected, sets the device for which you want to list all currently installed applications. `<Device ID>` is the device index or identifier as listed by the `$ ns device` command.
 
 <% if(isHtml) { %>
 

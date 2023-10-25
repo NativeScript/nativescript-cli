@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns platform clean
+title: ns platform clean
 position: 3
 ---<% } %>
 
-# tns platform clean
+# ns platform clean
 
 ### Description
 
@@ -13,8 +13,8 @@ Removes and adds the selected platform to the project currently targets. <% if(i
 
 Usage | Synopsis
 ------|-------
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns platform clean <Platform>`<% } %>
-<% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns platform clean android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ ns platform clean <Platform>`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>General | `$ ns platform clean android`<% } %>
 
 <% if(isMacOS) { %>### Arguments
 `<Platform>` is the target mobile platform that you want to clean in your project. You can set the following target platforms.
@@ -25,8 +25,8 @@ Usage | Synopsis
 
 ### Command Limitations
 
-* You can run `$ tns platform clean ios` only on macOS systems.
-* Clean command will not preserve your current installed platform version but will download and install latest platform version. If you are using clean with custom version of the runtime, specify the version in the command tns clean ios@2.1.0 or tns clean ios --frameworkPath <path-to-tgz>
+* You can run `$ ns platform clean ios` only on macOS systems.
+* Clean command will not preserve your current installed platform version but will download and install latest platform version. If you are using clean with custom version of the runtime, specify the version in the command `ns clean ios@2.1.0` or `ns clean ios --frameworkPath <path-to-tgz>`.
 
 ### Related Commands
 

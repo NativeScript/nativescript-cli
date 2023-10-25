@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns build android
+title: ns build android
 position: 1
 ---<% } %>
 
-# tns build android
+# ns build android
 
 ### Description
 
@@ -13,7 +13,7 @@ Builds the project for Android and produces an APK that you can manually deploy 
 
 Usage | Synopsis
 ---|---
-General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>] [--env.*]] [--aab]`
+General | `$ ns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>] [--env.*]] [--aab]`
 
 ### Options
 
@@ -34,7 +34,7 @@ General | `$ tns build android [--compileSdk <API Level>] [--key-store-path <Fil
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the build will produce an Android App Bundle(`.aab`) file.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 * `--path <Directory>` - Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
 
 <% if(isHtml) { %>

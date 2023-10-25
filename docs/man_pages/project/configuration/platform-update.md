@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns platform update
+title: ns platform update
 position: 5
 ---<% } %>
 
-# tns platform update
+# ns platform update
 
 ### Description
 
@@ -13,10 +13,10 @@ Updates the NativeScript runtime for the specified platform. <% if(isMacOS) { %>
 
 Usage | Synopsis
 ------|-------
-Android latest runtime |`$ tns platform update android`
-Android selected runtime | `$ tns platform update android@<Version>`
-<% if(isMacOS) { %>iOS latest runtime | `$ tns platform update ios`
-iOS selected runtime | `$ tns platform update ios@<Version>` <% } %> 
+Android latest runtime |`$ ns platform update android`
+Android selected runtime | `$ ns platform update android@<Version>`
+<% if(isMacOS) { %>iOS latest runtime | `$ ns platform update ios`
+iOS selected runtime | `$ ns platform update ios@<Version>` <% } %> 
 
 ### Arguments
 
@@ -24,14 +24,14 @@ iOS selected runtime | `$ tns platform update ios@<Version>` <% } %>
 	* `android` - Updates the Android runtime.
 	* `ios` - Updates the iOS runtime.<% } %>
 * `<Version>` is any available version of the respective platform runtime published in npm. <% if(isHtml) { %>If `@<Version>` is not specified, the NativeScript CLI installs the latest stable runtime for the selected platform.  
-To list all available versions for Android, run `$ npm view tns-android versions`  
-To list only experimental versions for android, run `$ npm view tns-android dist-tags`  
-To list all available versions for iOS, run `$ npm view tns-ios versions`  
-To list only experimental versions for ios, run `$ npm view tns-ios dist-tags` 
+To list all available versions for Android, run `$ npm view @nativescript/android versions`
+To list only experimental versions for Android, run `$ npm view @nativescript/android dist-tags`
+To list all available versions for iOS, run `$ npm view @nativescript/ios versions`
+To list only experimental versions for iOS, run `$ npm view @nativescript/ios dist-tags`
 
 ### Command Limitations
 
-* You can run `$ tns platform update ios` only on macOS systems.
+* You can run `$ ns platform update ios` only on macOS systems.
 
 ### Related Commands
 
