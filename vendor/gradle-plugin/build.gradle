@@ -281,6 +281,9 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    if (project.hasProperty("ndkVersion")) {
+        ndkVersion project.ndkVersion
+    }
 
     defaultConfig {
         targetSdkVersion computeTargetSdkVersion()
