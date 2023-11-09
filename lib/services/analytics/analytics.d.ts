@@ -1,8 +1,5 @@
 import { TrackingTypes } from "../../common/declarations";
-import {
-	IGoogleAnalyticsData,
-	IPreviewAppGoogleAnalyticsData,
-} from "../../common/definitions/google-analytics";
+import { IGoogleAnalyticsData } from "../../common/definitions/google-analytics";
 
 /**
  * Describes the information that will be passed to analytics for tracking.
@@ -43,10 +40,6 @@ interface IAnalyticsBroker {
 
 interface IGoogleAnalyticsTrackingInformation
 	extends IGoogleAnalyticsData,
-		ITrackingInformation {}
-
-interface IPreviewAppTrackingInformation
-	extends IPreviewAppGoogleAnalyticsData,
 		ITrackingInformation {}
 
 /**

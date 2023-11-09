@@ -136,6 +136,7 @@ export class Options {
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
 			yarn: { type: OptionType.Boolean, hasSensitiveValue: false },
+			yarn2: { type: OptionType.Boolean, hasSensitiveValue: false },
 			pnpm: { type: OptionType.Boolean, hasSensitiveValue: false },
 			androidTypings: { type: OptionType.Boolean, hasSensitiveValue: false },
 			bundle: { type: OptionType.String, hasSensitiveValue: false },
@@ -206,6 +207,7 @@ export class Options {
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
 			count: { type: OptionType.Number, hasSensitiveValue: false },
 			analyticsLogFile: { type: OptionType.String, hasSensitiveValue: true },
+			disableAnalytics: { type: OptionType.Boolean, hasSensitiveValue: false },
 			cleanupLogFile: { type: OptionType.String, hasSensitiveValue: true },
 			hooks: {
 				type: OptionType.Boolean,
@@ -234,6 +236,7 @@ export class Options {
 				hasSensitiveValue: false,
 				default: true,
 			},
+			dryRun: { type: OptionType.Boolean, hasSensitiveValue: false },
 		};
 	}
 
@@ -368,7 +371,48 @@ export class Options {
 			opts[this.getDashedOptionName(key)] = value;
 		});
 
-		const parsed = yargs(hideBin(process.argv)).version(false).help(false);
+		const parsed = yargs(hideBin(process.argv))
+			.version(false)
+			.help(false)
+			.completion("completion_generate_script", async (current_, argv) => {
+				const args: string[] = argv._.slice(1);
+				const commands = injector
+					.getRegisteredCommandsNames(false)
+					.filter((c) => c != "/?"); // remove the /? command, looks weird... :D
+				const currentDepth = args.length > 0 ? args.length - 1 : 0;
+				const current = current_ ?? args[currentDepth] ?? "";
+				// split all commands into their components ie. "device|list" => ["device", "list"]
+				const matchGroups = commands.map((c) => c.split("|"));
+				// find all commands that match the current depth and all the previous args
+				const possibleMatches = matchGroups.filter((group) => {
+					return group.slice(0, currentDepth).every((g, i) => {
+						return g === args[i] || args[i].at(0) === "-";
+					});
+				});
+				// filter out duplicates
+				const completions = [
+					...new Set(
+						possibleMatches
+							.map((match) => {
+								return match[currentDepth];
+							})
+							.filter(Boolean)
+					),
+				];
+
+				// autocomplete long -- options
+				if (current.startsWith("--")) {
+					return this.optionNames.filter((o) => o !== "_").map((o) => `--${o}`);
+				}
+
+				// autocomple short - options
+				if (current.startsWith("-")) {
+					return this.shorthands.map((o) => `-${o}`);
+				}
+
+				// autocomplete matched completions
+				return completions;
+			});
 		this.initialArgv = parsed.argv as any;
 		this.argv = parsed.options(<any>opts).argv as any;
 

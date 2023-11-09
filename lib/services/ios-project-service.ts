@@ -8,7 +8,7 @@ import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession, Reporter } from "plist-merge-patch";
 import { EOL } from "os";
-const plist = require("plist");
+import * as plist from "plist";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
@@ -100,7 +100,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSWatchAppService: IIOSWatchAppService,
 		private $iOSNativeTargetService: IIOSNativeTargetService,
 		private $sysInfo: ISysInfo,
-		private $tempService: ITempService
+		private $tempService: ITempService,
+		private $spmService: ISPMService
 	) {
 		super($fs, $projectDataService);
 	}
@@ -258,14 +259,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			return;
 		}
 
-		const checkEnvironmentRequirementsOutput = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(
-			{
+		const checkEnvironmentRequirementsOutput =
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform: this.getPlatformData(projectData).normalizedPlatformName,
 				projectDir: projectData.projectDir,
 				options,
 				notConfiguredEnvOptions,
-			}
-		);
+			});
 
 		if (
 			checkEnvironmentRequirementsOutput &&
@@ -342,20 +342,20 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		);
 
 		if (this.$fs.exists(xcschemeFilePath)) {
-			this.$logger.debug(
+			this.$logger.trace(
 				"Found shared scheme at xcschemeFilePath, renaming to match project name."
 			);
-			this.$logger.debug("Checkpoint 0");
+			this.$logger.trace("Checkpoint 0");
 			this.replaceFileContent(xcschemeFilePath, projectData);
-			this.$logger.debug("Checkpoint 1");
+			this.$logger.trace("Checkpoint 1");
 			this.replaceFileName(
 				IosProjectConstants.XcodeSchemeExtName,
 				xcschemeDirPath,
 				projectData
 			);
-			this.$logger.debug("Checkpoint 2");
+			this.$logger.trace("Checkpoint 2");
 		} else {
-			this.$logger.debug(
+			this.$logger.trace(
 				"Copying xcscheme from template not found at " + xcschemeFilePath
 			);
 		}
@@ -467,11 +467,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async isDynamicFramework(frameworkPath: string): Promise<boolean> {
-		const frameworkName = path.basename(
-			frameworkPath,
-			path.extname(frameworkPath)
-		);
-		const isDynamicFrameworkBundle = async (bundlePath: string) => {
+		const isDynamicFrameworkBundle = async (
+			bundlePath: string,
+			frameworkName: string
+		) => {
 			const frameworkBinaryPath = path.join(bundlePath, frameworkName);
 
 			const fileResult = (
@@ -487,25 +486,34 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (path.extname(frameworkPath) === ".xcframework") {
 			let isDynamic = true;
-			const subDirs = this.$fs
-				.readDirectory(frameworkPath)
-				.filter((entry) =>
-					this.$fs.getFsStats(path.join(frameworkPath, entry)).isDirectory()
-				);
-			for (const subDir of subDirs) {
+			const plistJson = this.$plistParser.parseFileSync(
+				path.join(frameworkPath, "Info.plist")
+			);
+			for (const library of plistJson.AvailableLibraries) {
 				const singlePlatformFramework = path.join(
-					subDir,
-					frameworkName + ".framework"
+					frameworkPath,
+					library.LibraryIdentifier,
+					library.LibraryPath
 				);
 				if (this.$fs.exists(singlePlatformFramework)) {
-					isDynamic = await isDynamicFrameworkBundle(singlePlatformFramework);
+					const frameworkName = path.basename(
+						singlePlatformFramework,
+						path.extname(singlePlatformFramework)
+					);
+					isDynamic = await isDynamicFrameworkBundle(
+						singlePlatformFramework,
+						frameworkName
+					);
 					break;
 				}
 			}
-
 			return isDynamic;
 		} else {
-			return await isDynamicFrameworkBundle(frameworkPath);
+			const frameworkName = path.basename(
+				frameworkPath,
+				path.extname(frameworkPath)
+			);
+			return await isDynamicFrameworkBundle(frameworkPath, frameworkName);
 		}
 	}
 
@@ -518,7 +526,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			const project = this.createPbxProj(projectData);
 			const frameworkAddOptions: IXcode.Options = { customFramework: true };
-			if (await this.isDynamicFramework(frameworkPath)) {
+			const dynamic = await this.isDynamicFramework(frameworkPath);
+			if (dynamic) {
 				frameworkAddOptions["embed"] = true;
 				frameworkAddOptions["sign"] = true;
 			}
@@ -566,6 +575,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	): Promise<void> {
 		const projectRoot = path.join(projectData.platformsDir, "ios");
 		const platformData = this.getPlatformData(projectData);
+
+		const pluginsData = this.getAllProductionPlugins(projectData);
+		const pbxProjPath = this.getPbxProjPath(projectData);
+		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
+		await this.addExtensions(projectData, pluginsData);
+
 		const resourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
 
 		const provision = prepareData && prepareData.provision;
@@ -652,7 +667,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 		}
 
-		const pbxProjPath = this.getPbxProjPath(projectData);
 		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
 		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({
 			watchAppFolderPath: path.join(
@@ -676,9 +690,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const projectAppResourcesPath = projectData.getAppResourcesDirectoryPath(
 			projectData.projectDir
 		);
-		const platformsAppResourcesPath = this.getAppResourcesDestinationDirectoryPath(
-			projectData
-		);
+		const platformsAppResourcesPath =
+			this.getAppResourcesDestinationDirectoryPath(projectData);
 
 		this.$fs.deleteDirectory(platformsAppResourcesPath);
 		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
@@ -958,6 +971,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			projectData,
 			platformData
 		);
+		await this.$cocoapodsService.applyPodfileFromExtensions(
+			projectData,
+			platformData
+		);
 
 		const projectPodfilePath = this.$cocoapodsService.getProjectPodfilePath(
 			platformData.projectRoot
@@ -981,9 +998,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 		}
 
-		const pbxProjPath = this.getPbxProjPath(projectData);
-		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
-		await this.addExtensions(projectData, pluginsData);
+		await this.$spmService.applySPMPackages(platformData, projectData);
 	}
 
 	public beforePrepareAllPlugins(
@@ -1028,9 +1043,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				if (hasTeamId) {
 					if (signing && signing.style === "Automatic") {
 						if (signing.team !== teamId) {
-							const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(
-								teamId
-							);
+							const teamIdsForName =
+								await this.$iOSProvisionService.getTeamIdsWithName(teamId);
 							if (!teamIdsForName.some((id) => id === signing.team)) {
 								changesInfo.signingChanged = true;
 							}
@@ -1176,14 +1190,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		);
 		const platformData = this.getPlatformData(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		const addedExtensionsFromResources = await this.$iOSExtensionsService.addExtensionsFromPath(
-			{
+		const addedExtensionsFromResources =
+			await this.$iOSExtensionsService.addExtensionsFromPath({
 				extensionsFolderPath: resorcesExtensionsPath,
 				projectData,
 				platformData,
 				pbxProjPath,
-			}
-		);
+			});
 		let addedExtensionsFromPlugins = false;
 		for (const pluginIndex in pluginsData) {
 			const pluginData = pluginsData[pluginIndex];
@@ -1195,14 +1208,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				pluginPlatformsFolderPath,
 				constants.NATIVE_EXTENSION_FOLDER
 			);
-			const addedExtensionFromPlugin = await this.$iOSExtensionsService.addExtensionsFromPath(
-				{
+			const addedExtensionFromPlugin =
+				await this.$iOSExtensionsService.addExtensionsFromPath({
 					extensionsFolderPath: extensionPath,
 					projectData,
 					platformData,
 					pbxProjPath,
-				}
-			);
+				});
 			addedExtensionsFromPlugins =
 				addedExtensionsFromPlugins || addedExtensionFromPlugin;
 		}
@@ -1457,9 +1469,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					tempEntitlementsDir,
 					"set-entitlements.xcconfig"
 				);
-				const entitlementsRelativePath = this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
-					projectData
-				);
+				const entitlementsRelativePath =
+					this.$iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
+						projectData
+					);
 				this.$fs.writeFile(
 					tempEntitlementsFilePath,
 					`CODE_SIGN_ENTITLEMENTS = ${entitlementsRelativePath}${EOL}`
@@ -1488,15 +1501,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.getPlatformData(projectData).normalizedPlatformName,
 			this.getPlatformData(projectData).configurationFileName
 		);
-		const mergedPlistPath = this.getPlatformData(projectData)
-			.configurationFilePath;
+		const mergedPlistPath =
+			this.getPlatformData(projectData).configurationFilePath;
 
 		if (!this.$fs.exists(infoPlistPath) || !this.$fs.exists(mergedPlistPath)) {
 			return;
 		}
 
-		const infoPlist = plist.parse(this.$fs.readText(infoPlistPath));
-		const mergedPlist = plist.parse(this.$fs.readText(mergedPlistPath));
+		const infoPlist = plist.parse(
+			this.$fs.readText(infoPlistPath)
+		) as plist.PlistObject;
+		const mergedPlist = plist.parse(
+			this.$fs.readText(mergedPlistPath)
+		) as plist.PlistObject;
 
 		if (
 			infoPlist.CFBundleIdentifier &&

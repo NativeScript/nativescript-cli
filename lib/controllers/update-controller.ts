@@ -19,6 +19,11 @@ import { injector } from "../common/yok";
 import { PackageVersion } from "../constants";
 import { IDependency } from "../definitions/migrate";
 import { IPluginsService } from "../definitions/plugins";
+import { color } from "../color";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerService,
+} from "../definitions/terminal-spinner-service";
 
 export class UpdateController
 	extends UpdateControllerBase
@@ -189,8 +194,10 @@ export class UpdateController
 
 		if (typeof desiredVersion === "boolean") {
 			this.$logger.info(
-				`  - ${dependency.packageName.yellow} does not have version/tag ${version.green}. ` +
-					"Skipping.".yellow
+				`  - ${color.yellow(
+					dependency.packageName
+				)} does not have version/tag ${color.green(version)}. ` +
+					color.yellow("Skipping.")
 			);
 
 			return;
@@ -230,9 +237,9 @@ export class UpdateController
 		);
 
 		this.$logger.info(
-			`  - ${dependency.packageName.yellow} has been updated to ${
-				`${updatedVersion}`.green
-			}`
+			`  - ${color.yellow(
+				dependency.packageName
+			)} has been updated to ${color.green(updatedVersion)}`
 		);
 	}
 

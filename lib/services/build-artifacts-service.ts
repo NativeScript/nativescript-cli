@@ -1,5 +1,5 @@
 import * as path from "path";
-import { IBuildArtefactsService } from "../definitions/build";
+import { IBuildArtifactsService } from "../definitions/build";
 import {
 	IPlatformData,
 	IBuildOutputOptions,
@@ -10,7 +10,7 @@ import { IErrors, IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
 
-export class BuildArtefactsService implements IBuildArtefactsService {
+export class BuildArtifactsService implements IBuildArtifactsService {
 	constructor(
 		private $errors: IErrors,
 		private $fs: IFileSystem,
@@ -32,7 +32,7 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.fail(
-				`Unable to find built application. Try 'tns build ${platformData.platformNameLowerCase}'.`
+				`Unable to find built application. Try 'ns build ${platformData.platformNameLowerCase}'.`
 			);
 		}
 
@@ -168,4 +168,4 @@ export class BuildArtefactsService implements IBuildArtefactsService {
 		});
 	}
 }
-injector.register("buildArtefactsService", BuildArtefactsService);
+injector.register("buildArtifactsService", BuildArtifactsService);

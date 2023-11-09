@@ -4,6 +4,7 @@ import * as crypto from "crypto";
 import { IDictionary, IErrors, IFileSystem } from "../../common/declarations";
 import { IInjector } from "../../common/definitions/yok";
 import { injector } from "../../common/yok";
+import { color } from "../../color";
 
 const PROTOCOL_VERSION_LENGTH_SIZE = 1;
 const PROTOCOL_OPERATION_LENGTH_SIZE = 1;
@@ -178,8 +179,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		);
 		const { doRefresh, timeout, operationId } = options;
 		const id = operationId || this.generateOperationIdentifier();
-		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> = new Promise(
-			(resolve, reject) => {
+		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> =
+			new Promise((resolve, reject) => {
 				if (!this.verifyActiveConnection(reject)) {
 					return;
 				}
@@ -216,8 +217,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					socketId,
 					timeoutId,
 				};
-			}
-		);
+			});
 
 		return operationPromise;
 	}
@@ -410,25 +410,29 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 						clearTimeout(this.pendingConnectionData.socketTimer);
 					}
 
-					const applicationPid = await this.$androidProcessService.getAppProcessId(
-						configuration.deviceIdentifier,
-						configuration.appIdentifier
-					);
+					const applicationPid =
+						await this.$androidProcessService.getAppProcessId(
+							configuration.deviceIdentifier,
+							configuration.appIdentifier
+						);
 					if (!applicationPid) {
 						this.$logger.trace(
 							"In Android LiveSync tool, lastKnownError is: ",
 							lastKnownError
 						);
 						this.$logger.info(
-							`Application ${configuration.appIdentifier} is not running on device ${configuration.deviceIdentifier}.`
-								.yellow
+							color.yellow(
+								`Application ${configuration.appIdentifier} is not running on device ${configuration.deviceIdentifier}.`
+							)
 						);
 						this.$logger.info(
-							`This issue may be caused by:
-	* crash at startup (try \`tns debug android --debug-brk\` to check why it crashes)
+							color.cyan(
+								`This issue may be caused by:
+	* crash at startup (try \`ns debug android --debug-brk\` to check why it crashes)
 	* different application identifier in your package.json and in your gradle files (check your identifier in \`package.json\` and in all *.gradle files in your App_Resources directory)
 	* device is locked
-	* manual closing of the application`.cyan
+	* manual closing of the application`
+							)
 						);
 						reject(
 							new Error(
@@ -559,9 +563,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return error;
 	}
 
-	private getFilePathData(
-		filePath: string
-	): {
+	private getFilePathData(filePath: string): {
 		relativeFilePath: string;
 		filePathLengthBytes: number;
 		filePathLengthString: string;

@@ -1,4 +1,4 @@
-import temp = require("temp");
+import * as temp from "temp";
 import { assert } from "chai";
 import * as _ from "lodash";
 import { XcconfigService } from "../lib/services/xcconfig-service";

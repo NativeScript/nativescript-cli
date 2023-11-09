@@ -141,7 +141,8 @@ export class SettingsService implements ISettingsService {
 }
 
 export class AndroidProcessServiceStub
-	implements Mobile.IAndroidProcessService {
+	implements Mobile.IAndroidProcessService
+{
 	public MapAbstractToTcpPortResult = "stub";
 	public GetDebuggableAppsResult: Mobile.IDeviceApplicationInformation[] = [];
 	public GetMappedAbstractToTcpPortsResult: IDictionary<number> = {};
@@ -212,9 +213,11 @@ export class LogcatHelperStub implements Mobile.ILogcatHelper {
 
 export class DeviceLogProviderStub
 	extends EventEmitter
-	implements Mobile.IDeviceLogProvider {
+	implements Mobile.IDeviceLogProvider
+{
 	public logger = new CommonLoggerStub();
 	public currentDevicePids: IStringDictionary = {};
+	public currentDeviceAppIds: IStringDictionary = {};
 	public currentDeviceProjectNames: IStringDictionary = {};
 	public currentDeviceProjectDirs: IStringDictionary = {};
 
@@ -230,6 +233,10 @@ export class DeviceLogProviderStub
 
 	setApplicationPidForDevice(deviceIdentifier: string, pid: string): void {
 		this.currentDevicePids[deviceIdentifier] = pid;
+	}
+
+	setApplicationIdForDevice(deviceIdentifier: string, appId: string): void {
+		this.currentDeviceAppIds[deviceIdentifier] = appId;
 	}
 
 	setProjectNameForDevice(deviceIdentifier: string, projectName: string): void {

@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns proxy
+title: ns proxy
 position: 14
 ---<% } %>
 
-# tns proxy
+# ns proxy
 
 ### Description
 
@@ -13,7 +13,7 @@ Displays the current proxy settings of the NativeScript CLI.
 
 Usage | Synopsis
 ------|-------
-General | `$ tns proxy [<Command>]`
+General | `$ ns proxy [<Command>]`
 
 ### Arguments
 `<Command>` extends the `proxy` command. You can set the following values for this attribute:

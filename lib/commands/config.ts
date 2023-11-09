@@ -3,6 +3,7 @@ import { injector } from "../common/yok";
 import { IProjectConfigService } from "../definitions/project";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 import { IErrors } from "../common/declarations";
+import { color } from "../color";
 
 export class ConfigListCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -29,14 +30,14 @@ export class ConfigListCommand implements ICommand {
 				Object.keys(value)
 					.map((key) => {
 						return (
-							`${indent()}${key}: `.green +
+							color.green(`${indent()}${key}: `) +
 							this.getValueString(value[key], depth + 1)
 						);
 					})
 					.join("\n")
 			);
 		} else {
-			return `${value}`.yellow as string;
+			return color.yellow(value.toString());
 		}
 	}
 }
@@ -88,9 +89,9 @@ export class ConfigSetCommand implements ICommand {
 		}
 		const convertedValue = this.getConvertedValue(value);
 		const existingKey = current !== undefined;
-		const keyDisplay = `${key}`.green;
-		const currentDisplay = `${current}`.yellow;
-		const updatedDisplay = `${convertedValue}`.cyan;
+		const keyDisplay = color.green(key);
+		const currentDisplay = color.yellow(current);
+		const updatedDisplay = color.cyan(convertedValue);
 
 		this.$logger.info(
 			`${existingKey ? "Updating" : "Setting"} ${keyDisplay}${

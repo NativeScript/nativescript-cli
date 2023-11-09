@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns package-manager get
+title: ns package-manager get
 position: 19
 ---<% } %>
 
-# tns package-manager get
+# ns package-manager get
 
 ### Description
 
@@ -13,7 +13,7 @@ Prints the value of the current package manager.
 
 Usage | Synopsis
 ------|-------
-General | `$ tns package-manager get`
+General | `$ ns package-manager get`
 
 <% if(isHtml) { %>
 

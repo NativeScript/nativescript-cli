@@ -1,7 +1,7 @@
 import { TrackActionNames, HASHES_FILE_NAME } from "../../constants";
 import * as path from "path";
 import {
-	IBuildArtefactsService,
+	IBuildArtifactsService,
 	IBuildInfoFileService,
 	IBuildData,
 } from "../../definitions/build";
@@ -17,7 +17,7 @@ import { injector } from "../../common/yok";
 export class DeviceInstallAppService {
 	constructor(
 		private $analyticsService: IAnalyticsService,
-		private $buildArtefactsService: IBuildArtefactsService,
+		private $buildArtifactsService: IBuildArtifactsService,
 		private $buildInfoFileService: IBuildInfoFileService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
@@ -50,7 +50,7 @@ export class DeviceInstallAppService {
 		});
 		const buildOutputOptions = platformData.getValidBuildOutputData(buildData);
 		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
-		const packages = await this.$buildArtefactsService.getAllAppPackages(
+		const packages = await this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
 			buildOutputOptions
 		);

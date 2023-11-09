@@ -198,14 +198,16 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._changesInfo.configChanged = true;
 		}
 		if (this._changesInfo.hasChanges) {
-			this._prepareInfo.changesRequireBuild = this._changesInfo.changesRequireBuild;
+			this._prepareInfo.changesRequireBuild =
+				this._changesInfo.changesRequireBuild;
 			this._prepareInfo.time = new Date().toString();
 			if (this._prepareInfo.changesRequireBuild) {
 				this._prepareInfo.changesRequireBuildTime = this._prepareInfo.time;
 			}
 		}
 
-		this._changesInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus;
+		this._changesInfo.nativePlatformStatus =
+			this._prepareInfo.nativePlatformStatus;
 
 		this.$logger.trace("checkForChanges returns", this._changesInfo);
 		return this._changesInfo;
@@ -321,6 +323,14 @@ export class ProjectChangesService implements IProjectChangesService {
 	): string {
 		const projectFilePath = path.join(projectDir, PACKAGE_JSON_FILE_NAME);
 		const projectFileContents = this.$fs.readJson(projectFilePath);
+
+		const relevantProperties = ["dependencies"];
+
+		const projectFileStrippedContents = _.pick(
+			projectFileContents,
+			relevantProperties
+		);
+
 		// _(this.$devicePlatformsConstants)
 		// 	.keys()
 		// 	.map(k => k.toLowerCase())
@@ -329,7 +339,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		// 		delete projectFileContents.nativescript[`tns-${otherPlatform}`];
 		// 	});
 
-		return getHash(JSON.stringify(projectFileContents));
+		return getHash(JSON.stringify(projectFileStrippedContents));
 	}
 
 	private isProjectFileChanged(

@@ -11,7 +11,8 @@ interface IAdbAndroidDeviceInfo {
 
 export class AndroidDeviceDiscovery
 	extends DeviceDiscovery
-	implements Mobile.IAndroidDeviceDiscovery {
+	implements Mobile.IAndroidDeviceDiscovery
+{
 	private _devices: IAdbAndroidDeviceInfo[] = [];
 	private isStarted: boolean;
 
@@ -56,7 +57,6 @@ export class AndroidDeviceDiscovery
 
 	private async checkForDevices(): Promise<void> {
 		const devices = await this.$adb.getDevices();
-
 		await this.checkCurrentData(devices);
 	}
 

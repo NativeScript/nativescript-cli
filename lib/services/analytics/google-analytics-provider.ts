@@ -28,7 +28,6 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		private $logger: ILogger,
 		private $proxyService: IProxyService,
 		private $config: IConfiguration,
-		private $companyInsightsController: ICompanyInsightsController,
 		private analyticsLoggingService: IFileLogService
 	) {}
 
@@ -116,29 +115,6 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 			[GoogleAnalyticsCustomDimensions.sessionID]: sessionId,
 			[GoogleAnalyticsCustomDimensions.client]: AnalyticsClients.Unknown,
 		};
-
-		const playgrounInfo = await this.$analyticsSettingsService.getPlaygroundInfo();
-		if (playgrounInfo && playgrounInfo.id) {
-			defaultValues[GoogleAnalyticsCustomDimensions.playgroundId] =
-				playgrounInfo.id;
-			defaultValues[
-				GoogleAnalyticsCustomDimensions.usedTutorial
-			] = playgrounInfo.usedTutorial.toString();
-		}
-
-		const companyData = await this.$companyInsightsController.getCompanyData();
-		if (companyData) {
-			defaultValues[GoogleAnalyticsCustomDimensions.companyName] =
-				companyData.name;
-			defaultValues[GoogleAnalyticsCustomDimensions.companyCountry] =
-				companyData.country;
-			defaultValues[GoogleAnalyticsCustomDimensions.companyRevenue] =
-				companyData.revenue;
-			defaultValues[GoogleAnalyticsCustomDimensions.companyIndustries] =
-				companyData.industries;
-			defaultValues[GoogleAnalyticsCustomDimensions.companyEmployeeCount] =
-				companyData.employeeCount;
-		}
 
 		customDimensions = _.merge(defaultValues, customDimensions);
 

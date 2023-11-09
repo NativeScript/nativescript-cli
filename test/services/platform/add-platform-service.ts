@@ -4,7 +4,6 @@ import { assert } from "chai";
 import * as _ from "lodash";
 import { INativePrepare, IProjectData } from "../../../lib/definitions/project";
 import { IInjector } from "../../../lib/common/definitions/yok";
-// import { project } from "nativescript-dev-xcode";
 
 const nativePrepare: INativePrepare = null;
 

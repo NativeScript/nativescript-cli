@@ -11,7 +11,7 @@ buildscript {
     def getDepPlatformDir = { dep ->
         file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
     }
-    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.6.0" }
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.8.20" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
         google()
@@ -146,6 +146,7 @@ allprojects {
 
 
 def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 }
+def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 31 as int }
 def computeBuildToolsVersion = { ->
     project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
 }
@@ -166,7 +167,7 @@ android {
     buildToolsVersion computeBuildToolsVersion()
 
     defaultConfig {
-        targetSdkVersion 31
+        targetSdkVersion computeTargetSdkVersion()
         versionCode 1
         versionName "1.0"
     }

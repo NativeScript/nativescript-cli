@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns usage-reporting
+title: ns usage-reporting
 position: 17
 ---<% } %>
 
-# tns usage-reporting
+# ns usage-reporting
 
 ### Description
 
@@ -13,7 +13,7 @@ Configures anonymous usage reporting for the NativeScript CLI. All data gathered
 
 Usage | Synopsis
 ------|-------
-General | `$ tns usage-reporting [<Command>]`
+General | `$ ns usage-reporting [<Command>]`
 
 ### Arguments
 

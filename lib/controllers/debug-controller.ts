@@ -29,6 +29,7 @@ import {
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { color } from "../color";
 
 export class DebugController extends EventEmitter implements IDebugController {
 	private _platformDebugServices: IDictionary<IDeviceDebugService> = {};
@@ -259,8 +260,9 @@ export class DebugController extends EventEmitter implements IDebugController {
 			}
 
 			this.$logger.info(
-				`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`
-					.green
+				color.green(
+					`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`
+				)
 			);
 		}
 

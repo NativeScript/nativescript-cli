@@ -62,9 +62,9 @@ export class ConfigTransformer implements IConfigTransformer {
 			this.config.getStatements().find((statement: any) => {
 				try {
 					if (statement.getKind() === SyntaxKind.ExpressionStatement) {
-						const expression = (statement as ExpressionStatement).getExpressionIfKind(
-							SyntaxKind.BinaryExpression
-						);
+						const expression = (
+							statement as ExpressionStatement
+						).getExpressionIfKind(SyntaxKind.BinaryExpression);
 						const leftSide = expression.getLeft() as PropertyAccessExpression;
 						if (leftSide.getFullText().trim() === "module.exports") {
 							exportValue = expression.getRight();
@@ -190,7 +190,7 @@ export class ConfigTransformer implements IConfigTransformer {
 			);
 		}
 
-		if (Node.isBooleanLiteral(initializer)) {
+		if (Node.isBooleanKeyword(initializer)) {
 			return (initializer as BooleanLiteral).setLiteralValue(
 				newValue as boolean
 			);
@@ -212,7 +212,7 @@ export class ConfigTransformer implements IConfigTransformer {
 			return (initializer as NumericLiteral).getLiteralValue();
 		}
 
-		if (Node.isBooleanLiteral(initializer)) {
+		if (Node.isBooleanKeyword(initializer)) {
 			return (initializer as BooleanLiteral).getLiteralValue();
 		}
 
@@ -270,7 +270,7 @@ export class ConfigTransformer implements IConfigTransformer {
 			return (initializer as NumericLiteral).getLiteralValue();
 		}
 
-		if (Node.isBooleanLiteral(initializer)) {
+		if (Node.isBooleanKeyword(initializer)) {
 			return (initializer as BooleanLiteral).getLiteralValue();
 		}
 

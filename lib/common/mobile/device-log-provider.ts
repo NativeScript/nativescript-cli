@@ -2,15 +2,18 @@ import { DeviceLogProviderBase } from "./device-log-provider-base";
 import { DEVICE_LOG_EVENT_NAME } from "../constants";
 import { injector } from "../yok";
 
-import * as chalk from "chalk";
 import { LoggerConfigData } from "../../constants";
 import { IOptions } from "../../declarations";
+import { Color, color } from "../../color";
+
+import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(
 		protected $logFilter: Mobile.ILogFilter,
 		protected $logger: ILogger,
 		protected $logSourceMapService: Mobile.ILogSourceMapService,
+		protected $timelineProfilerService: ITimelineProfilerService,
 		protected $options: IOptions
 	) {
 		super($logFilter, $logger, $logSourceMapService);
@@ -29,7 +32,9 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			data,
 			loggingOptions
 		);
+
 		if (data) {
+			this.$timelineProfilerService.processLogData(data, deviceIdentifier);
 			this.logDataCore(data, deviceIdentifier);
 			this.emit(DEVICE_LOG_EVENT_NAME, lineText, deviceIdentifier, platform);
 		}
@@ -39,20 +44,21 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		this.$logFilter.loggingLevel = logLevel.toUpperCase();
 	}
 
-	private consoleLogLevelRegex: RegExp = /^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|INFO( .+)):\s/;
+	private consoleLogLevelRegex: RegExp =
+		/^CONSOLE (LOG|INFO|WARN|ERROR|TRACE|INFO( .+)|TIME):\s/;
 	private consoleLevelColor: Record<string, (line: string) => string> = {
 		log: (line) => line,
-		info: chalk.cyanBright,
-		warn: chalk.yellowBright,
-		error: chalk.redBright,
-		trace: chalk.grey,
-		time: chalk.greenBright,
+		info: color.cyanBright,
+		warn: color.yellowBright,
+		error: color.redBright,
+		trace: color.grey,
+		time: color.greenBright,
 	};
 
-	private deviceColorMap = new Map<string, typeof chalk.BackgroundColor>();
+	private deviceColorMap = new Map<string, Color>();
 
-	private colorPool: typeof chalk.BackgroundColor[] = [
-		"bgGray",
+	private colorPool: Color[] = [
+		"bgBlackBright",
 		"bgMagentaBright",
 		"bgBlueBright",
 		"bgWhiteBright",
@@ -132,17 +138,19 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			if (timeLabel) {
 				level = "time";
 				timeLabel = timeLabel.replace("INFO ", "").trim() + ": ";
+			} else if (!level && line.startsWith("Trace:")) {
+				level = "trace";
 			} else {
 				level = level?.toLowerCase() ?? "log";
 			}
 
 			const toLog = [timeLabel ?? "", match ? line.replace(match, "") : line]
 				.join("")
-				.trim();
+				.trimEnd();
 
 			toLog.split("\n").forEach((actualLine) => {
 				this.printLine(
-					chalk[this.getDeviceColor(deviceIdentifier)](" "),
+					color[this.getDeviceColor(deviceIdentifier)](" "),
 					this.consoleLevelColor[level](actualLine)
 				);
 			});

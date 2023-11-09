@@ -2,7 +2,7 @@ name: 'nativescript -> npm'
 
 on:
   push:
-    branches: [ 'master' ]
+    branches: [ 'main' ]
     paths-ignore:
       - 'packages/**'
   workflow_dispatch:

@@ -14,7 +14,7 @@ import * as FileSystemLib from "../../../file-system";
 import * as ChildProcessLib from "../../../child-process";
 import { IHooksService } from "../../../declarations";
 import { HooksService } from "../../../services/hooks-service";
-import temp = require("temp");
+import * as temp from "temp";
 
 temp.track();
 

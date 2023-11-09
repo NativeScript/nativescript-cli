@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns device
+title: ns device
 position: 6
 ---<% } %>
 
-# tns device
+# ns device
 
 ### Description
 
@@ -13,7 +13,7 @@ Lists all recognized connected Android <% if(isWindows || isMacOS) { %>or iOS de
 
 Usage | Synopsis
 ------|---------
-General | `$ tns device [<Command>]`
+General | `$ ns device [<Command>]`
 
 ### Arguments
 
@@ -28,11 +28,11 @@ General | `$ tns device [<Command>]`
 
 ### Command Limitations
 
-* You can run `$ tns device ios` on Windows and macOS systems.
+* You can run `$ ns device ios` on Windows and macOS systems.
 
 ### Aliases
 
-* You can use `$ tns devices` as an alias for `$ tns device`.
+* You can use `$ ns devices` as an alias for `$ ns device`.
 
 ### Related Commands
 

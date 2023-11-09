@@ -8,6 +8,7 @@ import { AddPlaformErrors } from "../../lib/constants";
 import { PackageManager } from "../../lib/package-manager";
 import { NodePackageManager } from "../../lib/node-package-manager";
 import { YarnPackageManager } from "../../lib/yarn-package-manager";
+import { Yarn2PackageManager } from "../../lib/yarn2-package-manager";
 import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 
@@ -29,6 +30,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("packageManager", PackageManager);
 	injector.register("npm", NodePackageManager);
 	injector.register("yarn", YarnPackageManager);
+	injector.register("yarn2", Yarn2PackageManager);
 	injector.register("pnpm", PnpmPackageManager);
 	injector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,

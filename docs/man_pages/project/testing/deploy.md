@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns deploy
+title: ns deploy
 position: 7
 ---<% } %>
 
-# tns deploy
+# ns deploy
 
 ### Description
 
@@ -16,17 +16,17 @@ Prepares, builds and deploys the project to a connected device or native emulato
 
 Usage | Synopsis
 ---|---
-Deploy on Android | `$ tns deploy android [--device <Device ID>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--aab]`
-<% if(isMacOS) { %>Deploy on iOS | `$ tns deploy ios [--device <Device ID>] [--release]`<% } %>
+Deploy on Android | `$ ns deploy android [--device <Device ID>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--aab]`
+<% if(isMacOS) { %>Deploy on iOS | `$ ns deploy ios [--device <Device ID>] [--release]`<% } %>
 
 ### Options for iOS
 
-* `--device` - Deploys the project on the specified connected physical or virtual device. `<Device ID>` is the index or name of the target device as listed by the `$ tns devices` command.
+* `--device` - Deploys the project on the specified connected physical or virtual device. `<Device ID>` is the index or name of the target device as listed by the `$ ns devices` command.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.<% } %>
 
 ### Options<% if(isMacOS) { %> for Android<% } %>
 
-* `--device` - Deploys the project on the specified connected physical or virtual device. `<Device ID>` is the index or name of the target device as listed by the `$ tns devices` command.
+* `--device` - Deploys the project on the specified connected physical or virtual device. `<Device ID>` is the index or name of the target device as listed by the `$ ns devices` command.
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--release` - If set, produces a release build. Otherwise, produces a debug build. When set, you must also specify the `--key-store-*` options.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
@@ -42,13 +42,13 @@ Deploy on Android | `$ tns deploy android [--device <Device ID>] [--key-store-pa
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>
 
 ### Command Limitations
 
-* You can run `$ tns deploy ios` only on macOS systems.
+* You can run `$ ns deploy ios` only on macOS systems.
 * When the `--release` flag is set for an Android build, you must also specify all `--key-store-*` options.
 
 ### Related Commands

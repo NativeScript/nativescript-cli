@@ -10,7 +10,8 @@ import { ITempService } from "../../definitions/temp-service";
 
 export class AppDebugSocketProxyFactory
 	extends EventEmitter
-	implements IAppDebugSocketProxyFactory {
+	implements IAppDebugSocketProxyFactory
+{
 	private deviceWebServers: IDictionary<ws.Server> = {};
 	private deviceTcpServers: IDictionary<net.Server> = {};
 
@@ -113,9 +114,8 @@ export class AppDebugSocketProxyFactory
 		projectName: string,
 		projectDir: string
 	): Promise<ws.Server> {
-		const existingWebProxy = this.deviceWebServers[
-			`${device.deviceInfo.identifier}-${appId}`
-		];
+		const existingWebProxy =
+			this.deviceWebServers[`${device.deviceInfo.identifier}-${appId}`];
 		const result =
 			existingWebProxy ||
 			(await this.addWebSocketProxy(device, appId, projectName, projectDir));
@@ -218,6 +218,11 @@ export class AppDebugSocketProxyFactory
 			packets.on("data", (buffer: Buffer) => {
 				const message = buffer.toString(encoding);
 				if (webSocket.readyState === webSocket.OPEN) {
+					if (process.env.DEBUG_DEVTOOLS_SOCKETS) {
+						console.log({
+							msgFromRuntime: JSON.parse(message),
+						});
+					}
 					webSocket.send(message);
 				} else {
 					this.$logger.trace(
@@ -234,23 +239,29 @@ export class AppDebugSocketProxyFactory
 				this.$logger.trace("Error on debugger deviceSocket", err);
 			});
 
-			webSocket.on("message", (message: string) => {
-				const length = Buffer.byteLength(message, encoding);
+			webSocket.on("message", (message) => {
+				const msg = message.toString();
+				if (process.env.DEBUG_DEVTOOLS_SOCKETS) {
+					console.log({
+						msgFromDevtools: JSON.parse(msg),
+					});
+				}
+				const length = Buffer.byteLength(msg, encoding);
 				const payload = Buffer.allocUnsafe(length + 4);
 				payload.writeInt32BE(length, 0);
-				payload.write(message, 4, length, encoding);
+				payload.write(msg, 4, length, encoding);
 				appDebugSocket.write(payload);
 			});
 
 			appDebugSocket.on("close", () => {
 				currentAppSocket = null;
-				this.$logger.info("Backend socket closed!");
+				this.$logger.trace("Backend socket closed!");
 				webSocket.close();
 			});
 
 			webSocket.on("close", async () => {
 				currentWebSocket = null;
-				this.$logger.info("Frontend socket closed!");
+				this.$logger.trace("Frontend socket closed!");
 				appDebugSocket.unpipe(packets);
 				packets.destroy();
 				await device.destroyDebugSocket(appId);

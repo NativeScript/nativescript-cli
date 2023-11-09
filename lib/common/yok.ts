@@ -6,6 +6,7 @@ import { CommandsDelimiters } from "./constants";
 import { IDictionary } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { ICommandArgument, ICommand } from "./definitions/commands";
+import { IKeyCommand, IValidKeyName } from "./definitions/key-commands";
 
 export let injector: IInjector;
 
@@ -58,6 +59,7 @@ export class Yok implements IInjector {
 	}
 
 	private COMMANDS_NAMESPACE: string = "commands";
+	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
 	private modules: {
 		[name: string]: IDependency;
 	} = {};
@@ -108,6 +110,10 @@ export class Yok implements IInjector {
 
 	public require(names: any, file: string): void {
 		forEachName(names, (name) => this.requireOne(name, file));
+	}
+
+	public requireKeyCommand(name: any, file: string): void {
+		this.requireOne(this.createKeyCommandName(name), file);
 	}
 
 	public publicApi: any = {
@@ -181,6 +187,10 @@ export class Yok implements IInjector {
 				this.createHierarchicalCommand(commands[0]);
 			}
 		});
+	}
+
+	public registerKeyCommand(name: IValidKeyName, resolver: IKeyCommand): void {
+		this.register(this.createKeyCommandName(name), resolver);
 	}
 
 	private getDefaultCommand(name: string, commandArguments: string[]) {
@@ -387,6 +397,18 @@ export class Yok implements IInjector {
 		return command;
 	}
 
+	public resolveKeyCommand(name: string): IKeyCommand {
+		let command: IKeyCommand;
+		const commandModuleName = this.createKeyCommandName(name);
+		if (!this.modules[commandModuleName]) {
+			return null;
+		}
+
+		command = this.resolve(commandModuleName);
+
+		return command;
+	}
+
 	public resolve(param: any, ctorArguments?: IDictionary<any>): any {
 		if (_.isFunction(param)) {
 			return this.resolveConstructor(<Function>param, ctorArguments);
@@ -519,12 +541,27 @@ export class Yok implements IInjector {
 		return commands;
 	}
 
+	public getRegisteredKeyCommandsNames(): string[] {
+		const modulesNames: string[] = _.keys(this.modules);
+		const commandsNames: string[] = _.filter(modulesNames, (moduleName) =>
+			_.startsWith(moduleName, `${this.KEY_COMMANDS_NAMESPACE}.`)
+		);
+		let commands = _.map(commandsNames, (commandName: string) =>
+			commandName.substr(this.KEY_COMMANDS_NAMESPACE.length + 1)
+		);
+		return commands;
+	}
+
 	public getChildrenCommandsNames(commandName: string): string[] {
 		return this.hierarchicalCommands[commandName];
 	}
 
 	private createCommandName(name: string) {
 		return `${this.COMMANDS_NAMESPACE}.${name}`;
+	}
+
+	private createKeyCommandName(name: string) {
+		return `${this.KEY_COMMANDS_NAMESPACE}.${name}`;
 	}
 
 	public dispose(): void {

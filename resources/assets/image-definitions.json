@@ -411,43 +411,162 @@
 			}
 		]
 	},
-	"android": {
+	"android_legacy": {
 		"icons": [
 			{
 				"width": 72,
 				"height": 72,
 				"directory": "drawable-hdpi",
-				"filename": "icon.png"
+				"filename": "icon.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
 			},
 			{
 				"width": 36,
 				"height": 36,
 				"directory": "drawable-ldpi",
-				"filename": "icon.png"
+				"filename": "icon.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
 			},
 			{
 				"width": 48,
 				"height": 48,
 				"directory": "drawable-mdpi",
-				"filename": "icon.png"
+				"filename": "icon.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
 			},
 			{
 				"width": 96,
 				"height": 96,
 				"directory": "drawable-xhdpi",
-				"filename": "icon.png"
+				"filename": "icon.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
 			},
 			{
 				"width": 144,
 				"height": 144,
 				"directory": "drawable-xxhdpi",
-				"filename": "icon.png"
+				"filename": "icon.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
 			},
 			{
 				"width": 345,
 				"height": 345,
 				"directory": "drawable-xxxhdpi",
-				"filename": "icon.png"
+				"filename": "icon.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			}
+		]
+	},
+	"android": {
+		"icons": [
+			{
+				"directory": "drawable",
+				"filename": "ic_launcher_foreground.xml",
+				"operation": "delete"
+			},
+			{
+				"directory": "values",
+				"filename": "ic_launcher_background.xml",
+				"operation": "writeXMLColor",
+				"data": {
+					"colorName": "ic_launcher_background",
+					"fromKey": "background",
+					"default": "#FFFFFF"
+				}
+			},
+			{
+				"width": 108,
+				"height": 108,
+				"directory": "drawable-hdpi",
+				"filename": "ic_launcher_foreground.png",
+				"resizeOperation": "outerScale",
+				"scale": "1.5x"
+			},
+			{
+				"width": 54,
+				"height": 54,
+				"directory": "drawable-ldpi",
+				"filename": "ic_launcher_foreground.png",
+				"resizeOperation": "outerScale",
+				"scale": "1.5x"
+			},
+			{
+				"width": 72,
+				"height": 72,
+				"directory": "drawable-mdpi",
+				"filename": "ic_launcher_foreground.png",
+				"resizeOperation": "outerScale",
+				"scale": "1.5x"
+			},
+			{
+				"width": 144,
+				"height": 144,
+				"directory": "drawable-xhdpi",
+				"filename": "ic_launcher_foreground.png",
+				"resizeOperation": "outerScale",
+				"scale": "1.5x"
+			},
+			{
+				"width": 216,
+				"height": 216,
+				"directory": "drawable-xxhdpi",
+				"filename": "ic_launcher_foreground.png",
+				"resizeOperation": "outerScale",
+				"scale": "1.5x"
+			},
+			{
+				"width": 288,
+				"height": 288,
+				"directory": "drawable-xxxhdpi",
+				"filename": "ic_launcher_foreground.png",
+				"resizeOperation": "outerScale",
+				"scale": "1.5x"
+			},
+			{
+				"width": 72,
+				"height": 72,
+				"directory": "mipmap-hdpi",
+				"filename": "ic_launcher.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 48,
+				"height": 48,
+				"directory": "mipmap-mdpi",
+				"filename": "ic_launcher.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 96,
+				"height": 96,
+				"directory": "mipmap-xhdpi",
+				"filename": "ic_launcher.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 144,
+				"height": 144,
+				"directory": "mipmap-xxhdpi",
+				"filename": "ic_launcher.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
+			},
+			{
+				"width": 192,
+				"height": 192,
+				"directory": "mipmap-xxxhdpi",
+				"filename": "ic_launcher.png",
+				"resizeOperation": "overlayWith",
+				"scale": "1x"
 			}
 		],
 		"splashBackgrounds": [

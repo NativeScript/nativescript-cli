@@ -1,12 +1,18 @@
-const ora = require("ora");
+import * as ora from "ora";
 import { injector } from "../common/yok";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerOptions,
+	ITerminalSpinnerService,
+} from "../definitions/terminal-spinner-service";
 
 export class TerminalSpinnerService implements ITerminalSpinnerService {
 	public createSpinner(
 		spinnerOptions: ITerminalSpinnerOptions = {}
 	): ITerminalSpinner {
+		// @ts-expect-error - options are readonly, however we still want to override them before passing them on...
 		spinnerOptions.stream = spinnerOptions.stream || process.stdout;
-		return new ora(spinnerOptions);
+		return ora(spinnerOptions);
 	}
 
 	public async execute<T>(

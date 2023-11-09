@@ -4,7 +4,8 @@ import { IDictionary } from "../declarations";
 
 export abstract class DeviceLogProviderBase
 	extends EventEmitter
-	implements Mobile.IDeviceLogProvider {
+	implements Mobile.IDeviceLogProvider
+{
 	protected devicesLogOptions: IDictionary<Mobile.IDeviceLogOptions> = {};
 
 	constructor(
@@ -50,6 +51,15 @@ export abstract class DeviceLogProviderBase
 		);
 	}
 
+	public setApplicationIdForDevice(deviceIdentifier: string, appId: string) {
+		this.setDeviceLogOptionsProperty(
+			deviceIdentifier,
+			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
+				deviceLogOptions.applicationId,
+			appId
+		);
+	}
+
 	public setProjectNameForDevice(
 		deviceIdentifier: string,
 		projectName: string
@@ -86,6 +96,13 @@ export abstract class DeviceLogProviderBase
 		return (
 			this.devicesLogOptions[deviceIdentifier] &&
 			this.devicesLogOptions[deviceIdentifier].applicationPid
+		);
+	}
+
+	getApplicationIdForDevice(deviceIdentifier: string) {
+		return (
+			this.devicesLogOptions[deviceIdentifier] &&
+			this.devicesLogOptions[deviceIdentifier].applicationId
 		);
 	}
 

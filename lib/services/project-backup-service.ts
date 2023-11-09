@@ -2,6 +2,7 @@ import { IBackup, IProjectBackupService } from "../definitions/project";
 import { IFileSystem, IProjectHelper } from "../common/declarations";
 import { injector } from "../common/yok";
 import * as path from "path";
+import { color } from "../color";
 
 export class ProjectBackupService implements IProjectBackupService {
 	constructor(
@@ -48,7 +49,7 @@ export class ProjectBackupService implements IProjectBackupService {
 				const targetPath = path.resolve(this.backupDir, pathToBackup);
 				if (this.$super.$fs.exists(sourcePath)) {
 					this.$super.$logger.trace(
-						`BACKING UP ${sourcePath.cyan} -> ${targetPath.green}`
+						`BACKING UP ${color.cyan(sourcePath)} -> ${color.green(targetPath)}`
 					);
 					this.$super.$fs.copyFile(sourcePath, targetPath);
 					backedUpPaths.push(pathToBackup);
@@ -75,7 +76,7 @@ export class ProjectBackupService implements IProjectBackupService {
 				const sourcePath = path.resolve(this.backupDir, pathToBackup);
 				const targetPath = path.resolve(this.basePath, pathToBackup);
 				this.$super.$logger.trace(
-					`RESTORING ${sourcePath.green} -> ${targetPath.cyan}`
+					`RESTORING ${color.green(sourcePath)} -> ${color.cyan(targetPath)}`
 				);
 				if (this.$super.$fs.exists(sourcePath)) {
 					this.$super.$fs.copyFile(sourcePath, targetPath);

@@ -1,25 +1,25 @@
 <% if (isJekyll) { %>---
-title: tns install
+title: ns install
 position: 1
 ---<% } %>
 
-# tns install
+# ns install
 
 ### Description
 
 Installs all dependencies described in a valid `package.json` or installs a selected NativeScript development module as a dev dependency.
 
 <% if(isHtml) { %>
-The `package.json` file must be a valid `package.json` describing the configuration of a NativeScript project. If missing or corrupted, you can recreate the file by running `$ tns init` in the directory of a NativeScript project.
+The `package.json` file must be a valid `package.json` describing the configuration of a NativeScript project. If missing or corrupted, you can recreate the file by running `$ ns init` in the directory of a NativeScript project.
 <% } %>
 
 ### Commands
 
 Usage | Synopsis
 ---|---
-Install all dependencies | `$ tns install [--path]`
-Install a selected npm module | `$ tns install <Module>`
-Enable TypeScript support | `$ tns install typescript`
+Install all dependencies | `$ ns install [--path]`
+Install a selected npm module | `$ ns install <Module>`
+Enable TypeScript support | `$ ns install typescript`
 
 ### Options
 

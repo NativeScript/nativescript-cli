@@ -13,7 +13,8 @@ import { injector } from "../common/yok";
 export class IOSNativeTargetService implements IIOSNativeTargetService {
 	constructor(
 		protected $fs: IFileSystem,
-		protected $pbxprojDomXcode: IPbxprojDomXcode
+		protected $pbxprojDomXcode: IPbxprojDomXcode,
+		protected $logger: ILogger
 	) {}
 
 	public addTargetToProject(
@@ -141,19 +142,51 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 					targetUuid
 				);
 			}
+			const properties: IXcodeTargetBuildConfigurationProperty[] = [];
 
+			// Set for both release and debug
 			if (configurationJson.targetBuildConfigurationProperties) {
-				const properties: IXcodeTargetBuildConfigurationProperty[] = [];
 				_.forEach(
 					configurationJson.targetBuildConfigurationProperties,
 					(value, name: string) => properties.push({ value, name })
 				);
-				this.setXcodeTargetBuildConfigurationProperties(
-					properties,
-					targetName,
-					project
+			}
+
+			if (configurationJson.targetNamedBuildConfigurationProperties) {
+				_.forEach(
+					configurationJson.targetNamedBuildConfigurationProperties,
+					(value, name: string) => {
+						var buildName: BuildNames = null;
+						switch (name) {
+							case "debug": {
+								buildName = BuildNames.debug;
+								break;
+							}
+							case "release": {
+								buildName = BuildNames.release;
+								break;
+							}
+							default: {
+								this.$logger.warn(
+									"Ignoring targetNamedBuildConfigurationProperties: %s. Only 'release', 'debug' are allowed.",
+									name
+								);
+							}
+						}
+						if (buildName) {
+							_.forEach(value, (value, name: string) =>
+								properties.push({ value, name, buildNames: [buildName] })
+							);
+						}
+					}
 				);
 			}
+
+			this.setXcodeTargetBuildConfigurationProperties(
+				properties,
+				targetName,
+				project
+			);
 		}
 	}
 }
