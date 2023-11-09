@@ -47,6 +47,9 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+import { IProjectChangesInfo } from "../definitions/project-changes";
+import { AndroidPrepareData } from "../data/prepare-data";
+import { AndroidBuildData } from "../data/build-data";
 
 interface NativeDependency {
 	name: string;
@@ -148,6 +151,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $androidPluginBuildService: IAndroidPluginBuildService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+		private $liveSyncProcessDataService: ILiveSyncProcessDataService,
+		private $devicesService: Mobile.IDevicesService,
 		private $filesHashService: IFilesHashService,
 		private $gradleCommandService: IGradleCommandService,
 		private $gradleBuildService: IGradleBuildService,
@@ -830,8 +835,39 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
-	public async checkForChanges(): Promise<void> {
-		// Nothing android specific to check yet.
+	public async checkForChanges(
+		changesInfo: IProjectChangesInfo,
+		prepareData: AndroidPrepareData,
+		projectData: IProjectData
+	): Promise<void> {
+		//we need to check for abi change in connected device vs last built
+		const deviceDescriptors = this.$liveSyncProcessDataService.getDeviceDescriptors(
+			projectData.projectDir
+		);
+		const platformData = this.getPlatformData(projectData);
+		deviceDescriptors.forEach(deviceDescriptor=>{
+			const buildData = deviceDescriptor.buildData as AndroidBuildData;
+			if (buildData.buildFilterDevicesArch) {
+				const outputPath = platformData.getBuildOutputPath(deviceDescriptor.buildData);
+				const apkOutputPath = path.join(outputPath, prepareData.release ? "release" : "debug");
+				if (!this.$fs.exists(outputPath)) {
+					return;
+				}
+				// check if we already build this arch
+				// if not we need to say native has changed
+				const device = this.$devicesService.getDevicesForPlatform(deviceDescriptor.buildData.platform).filter(d=>d.deviceInfo.identifier === deviceDescriptor.identifier)[0];
+				const abis = device.deviceInfo.abis.filter(a=>!!a && a.length)[0];
+				
+				const directoryContent = this.$fs.readDirectory(apkOutputPath);
+				const regexp = new RegExp(`${abis}.*\.apk`);
+				const files = _.filter(directoryContent, (entry: string) => {
+					return regexp.test(entry);
+				});
+				if (files.length === 0) {
+					changesInfo.nativeChanged = true;
+				}
+			}
+		})
 	}
 
 	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {
