@@ -333,7 +333,7 @@ task addDependenciesFromNativeScriptPlugins {
         jarFiles.each { jarFile ->
             def jarFileAbsolutePath = jarFile.getAbsolutePath()
             outLogger.withStyle(Style.SuccessHeader).println "\t + adding jar plugin dependency: $jarFileAbsolutePath"
-            pluginsJarLibraries.add(jarFile.getAbsolutePath())
+            // pluginsJarLibraries.add(jarFile.getAbsolutePath())
         }
 
         project.dependencies.add("implementation", jarFiles)
