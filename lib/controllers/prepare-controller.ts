@@ -357,7 +357,7 @@ export class PrepareController extends EventEmitter {
 					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
 					await this.writeRuntimePackageJson(projectData, platformData);
 					this.emitPrepareEvent({
-						files: [],
+						files: [filePath],
 						staleFiles: [],
 						hasOnlyHotUpdateFiles: false,
 						hmrData: null,

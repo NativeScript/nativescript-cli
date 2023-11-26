@@ -66,7 +66,10 @@ const expectedDebugBuildArgs = [
 	"-PtargetSdk=26",
 	"-PbuildToolsVersion=my-build-tools-version",
 	"-PgenerateTypings=true",
+	"-DprojectRoot=/path/to/projectDir",
+	"-PprojectRoot=/path/to/projectDir",
 	"-PappPath=/path/to/projectDir/app".replace(/\//g, path.sep),
+	"-PappBuildPath=platforms",
 	"-PappResourcesPath=/path/to/projectDir/app/App_Resources".replace(
 		/\//g,
 		path.sep

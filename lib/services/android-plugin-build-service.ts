@@ -775,7 +775,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PtempBuild=true`,
 			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
 			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
+			`-PprojectRoot=${this.$projectData.projectDir}`,
+			`-DprojectRoot=${this.$projectData.projectDir}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
+			`-PappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
+			`-DappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
 		if (pluginBuildSettings.gradleArgs) {

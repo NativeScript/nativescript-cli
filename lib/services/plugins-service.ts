@@ -489,7 +489,7 @@ export class PluginsService implements IPluginsService {
 	): IDependencyData[] {
 		const dependenciesWithFrameworks: any[] = [];
 		_.each(productionDependencies, (d) => {
-			const pathToPlatforms = path.join(d.directory, "platforms", platform);
+			const pathToPlatforms = path.join(d.directory, constants.PLATFORMS_DIR_NAME, platform);
 			if (this.$fs.exists(pathToPlatforms)) {
 				const contents = this.$fs.readDirectory(pathToPlatforms);
 				_.each(contents, (file) => {
@@ -629,7 +629,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			);
 		pluginData.isPlugin = !!cacheData.nativescript;
 		pluginData.pluginPlatformsFolderPath = (platform: string) =>
-			path.join(pluginData.fullPath, "platforms", platform.toLowerCase());
+			path.join(pluginData.fullPath, constants.PLATFORMS_DIR_NAME, platform.toLowerCase());
 		const data = cacheData.nativescript;
 
 		if (pluginData.isPlugin) {

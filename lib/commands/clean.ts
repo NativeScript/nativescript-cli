@@ -6,6 +6,7 @@ import {
 	IProjectCleanupResult,
 	IProjectCleanupService,
 	IProjectConfigService,
+	IProjectData,
 	IProjectService,
 } from "../definitions/project";
 
@@ -85,6 +86,7 @@ export class CleanCommand implements ICommand {
 	constructor(
 		private $projectCleanupService: IProjectCleanupService,
 		private $projectConfigService: IProjectConfigService,
+		private $projectData: IProjectData,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $projectService: IProjectService,
 		private $prompter: IPrompter,
@@ -109,7 +111,7 @@ export class CleanCommand implements ICommand {
 
 		let pathsToClean = [
 			constants.HOOKS_DIR_NAME,
-			constants.PLATFORMS_DIR_NAME,
+			this.$projectData.getBuildRelativeDirectoryPath(),
 			constants.NODE_MODULES_FOLDER_NAME,
 			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		];

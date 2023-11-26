@@ -61,6 +61,11 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
 			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
 			`-PgenerateTypings=${toolsInfo.generateTypings}`,
+			`-PprojectRoot=${this.$projectData.projectDir}`,
+			`-DprojectRoot=${this.$projectData.projectDir}`, // we need it as a -D to be able to read it from settings.gradle
+			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
+			`-PappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
+			`-DappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);

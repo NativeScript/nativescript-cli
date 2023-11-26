@@ -19,6 +19,7 @@ import {
 	IFileSystem,
 	IProjectDir,
 } from "../../lib/common/declarations";
+import { PLATFORMS_DIR_NAME } from "../../lib/constants";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -184,7 +185,7 @@ describe("androidProjectService", () => {
 		);
 		const pathToPlatformsAndroid = path.join(
 			projectDir,
-			"platforms",
+			PLATFORMS_DIR_NAME,
 			"android"
 		);
 		const pathToResDirInPlatforms = path.join(
@@ -272,7 +273,7 @@ describe("androidProjectService", () => {
 						sourceFileName: path.join(pathToSrcDirInAppResources, "*"),
 						destinationFileName: path.join(
 							projectData.projectDir,
-							"platforms",
+							PLATFORMS_DIR_NAME,
 							"android",
 							"app",
 							"src"

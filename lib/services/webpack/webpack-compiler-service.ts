@@ -357,11 +357,13 @@ export class WebpackCompilerService
 
 		const appPath = projectData.getAppDirectoryRelativePath();
 		const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+		const buildPath = projectData.getBuildRelativeDirectoryPath();
 
 		Object.assign(
 			envData,
 			appPath && { appPath },
 			appResourcesPath && { appResourcesPath },
+			buildPath && { buildPath },
 			{
 				nativescriptLibPath: path.resolve(
 					__dirname,

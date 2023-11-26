@@ -296,7 +296,7 @@ export class UpdateController
 	private async cleanUpProject(): Promise<void> {
 		await this.$projectCleanupService.clean([
 			constants.HOOKS_DIR_NAME,
-			constants.PLATFORMS_DIR_NAME,
+			this.$projectDataService.getProjectData().getBuildRelativeDirectoryPath(),
 			constants.NODE_MODULES_FOLDER_NAME,
 			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		]);
