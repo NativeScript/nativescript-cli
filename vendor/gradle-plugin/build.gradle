@@ -329,7 +329,7 @@ task addDependenciesFromNativeScriptPlugins {
             project.dependencies.add("implementation", [name: fileName, ext: "aar"])
         }
 
-        def jarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["**/*.jar"])
+        def jarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["*.jar"])
         jarFiles.each { jarFile ->
             def jarFileAbsolutePath = jarFile.getAbsolutePath()
             outLogger.withStyle(Style.SuccessHeader).println "\t + adding jar plugin dependency: $jarFileAbsolutePath"
