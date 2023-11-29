@@ -539,7 +539,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		shell.sed(
 			"-i",
 			/project.ext.USER_PROJECT_ROOT = \"\$rootDir\/..\/..\"/,
-			'project.ext.USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../../"',
+			'project.ext.USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../"',
 			buildGradlePath
 		);
 	}

@@ -155,7 +155,7 @@ buildscript {
         outLogger.withStyle(Style.SuccessHeader).println "\t ~initialize"
 
 
-        project.ext.USER_PROJECT_ROOT = "$rootDir/../../.."
+        project.ext.USER_PROJECT_ROOT = "$rootDir/../.."
         if (project.hasProperty('projectRoot')) {
             project.ext.USER_PROJECT_ROOT = projectRoot
         }

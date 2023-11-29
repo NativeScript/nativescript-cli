@@ -45,7 +45,7 @@ version of the {N} CLI install a previous version of the runtime package - 'tns 
 
         project.ext.nativescriptDependencies = new JsonSlurper().parseText(dependenciesJson.text)
         project.ext.PLATFORMS_ANDROID = "platforms/android"
-        project.ext.USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../../"
+        project.ext.USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../"
 
         project.ext.getAppPath = { ->
             def relativePathToApp = "app"
