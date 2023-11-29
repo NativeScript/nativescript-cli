@@ -15,7 +15,7 @@ import groovy.json.JsonSlurper
 import static org.gradle.internal.logging.text.StyledTextOutput.Style
 
 def getProjectRoot = { ->
-    def projectRoot = "$rootDir/../../../"
+    def projectRoot = "$rootDir/../../"
     if (System.getProperties().projectRoot != null) {
         projectRoot = System.getProperties().projectRoot
     }

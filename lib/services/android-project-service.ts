@@ -468,7 +468,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		shell.sed(
 			"-i",
 			/def USER_PROJECT_ROOT = \"\$rootDir\/..\/..\/\"/,
-			'def USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../../"',
+			'def USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../"',
 			gradleSettingsFilePath
 		);
 
