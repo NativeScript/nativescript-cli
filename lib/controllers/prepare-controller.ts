@@ -289,7 +289,7 @@ export class PrepareController extends EventEmitter {
 					data.platform.toLowerCase() === platformData.platformNameLowerCase
 				) {
 					if (this.isFileWatcherPaused()) return;
-					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
+					this.emitPrepareEvent({ ...data, files: data.files || [], hasNativeChanges: false });
 				}
 			};
 
