@@ -185,7 +185,10 @@ declare global {
 		interface ILogcatStartOptions {
 			deviceIdentifier: string;
 			pid?: string;
+			appId?: string;
 			keepSingleProcess?: boolean;
+
+			onAppRestarted?: () => void;
 		}
 
 		interface ILogcatHelper {
@@ -230,6 +233,13 @@ declare global {
 			setApplicationPidForDevice(deviceIdentifier: string, pid: string): void;
 
 			/**
+			 * Sets the application id of the application on the specified device.
+			 * @param {string} deviceIdentifier The unique identifier of the device.
+			 * @param {string} appId The Process ID of the currently running application for which we need the logs.
+			 */
+			setApplicationIdForDevice(deviceIdentifier: string, appId: string): void;
+
+			/**
 			 * Sets the project name of the application on the specified device.
 			 * @param {string} deviceIdentifier The unique identifier of the device.
 			 * @param {string} projectName The project name of the currently running application for which we need the logs.
@@ -270,6 +280,10 @@ declare global {
 			 * The project name.
 			 */
 			projectName?: string;
+			/**
+			 *	The application id of the current app.
+			 */
+			applicationId?: string;
 		}
 
 		/**

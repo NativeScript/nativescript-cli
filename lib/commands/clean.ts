@@ -11,7 +11,7 @@ import {
 } from "../definitions/project";
 
 import type { PromptObject } from "prompts";
-import { IOptions } from "../declarations";
+import { IOptions, IStaticConfig } from "../declarations";
 import {
 	ITerminalSpinner,
 	ITerminalSpinnerService,
@@ -22,8 +22,6 @@ import * as os from "os";
 import { resolve } from "path";
 import { readdir } from "fs/promises";
 import { isInteractive } from "../common/helpers";
-
-const CLIPath = resolve(__dirname, "..", "..", "bin", "nativescript.js");
 
 function bytesToHumanReadable(bytes: number): string {
 	const units = ["B", "KB", "MB", "GB", "TB"];
@@ -92,7 +90,8 @@ export class CleanCommand implements ICommand {
 		private $prompter: IPrompter,
 		private $logger: ILogger,
 		private $options: IOptions,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
+		private $staticConfig: IStaticConfig
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -200,9 +199,12 @@ export class CleanCommand implements ICommand {
 			paths,
 			(p) => {
 				return this.$childProcess
-					.exec(`node ${CLIPath} clean --dry-run --json --disable-analytics`, {
-						cwd: p,
-					})
+					.exec(
+						`node ${this.$staticConfig.cliBinPath} clean --dry-run --json --disable-analytics`,
+						{
+							cwd: p,
+						}
+					)
 					.then((res) => {
 						const paths: Record<string, number> = JSON.parse(res).stats;
 						return Object.values(paths).reduce((a, b) => a + b, 0);
@@ -292,7 +294,7 @@ export class CleanCommand implements ICommand {
 
 			const ok = await this.$childProcess
 				.exec(
-					`node ${CLIPath} clean ${
+					`node ${this.$staticConfig.cliBinPath} clean ${
 						this.$options.dryRun ? "--dry-run" : ""
 					} --json --disable-analytics`,
 					{

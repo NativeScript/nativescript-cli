@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns info
+title: ns info
 position: 11
 ---<% } %>
 
-# tns info
+# ns info
 
 ### Description
 
@@ -13,7 +13,7 @@ Displays version information about the NativeScript CLI, core modules, and runti
 
 Usage | Synopsis
 ------|-------
-General | `$ tns info`
+General | `$ ns info`
 
 <% if(isHtml) { %>
 

@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns autocomplete enable
+title: ns autocomplete enable
 position: 2
 ---<% } %>
 
-# tns autocomplete enable
+# ns autocomplete enable
 
 ### Description
 
@@ -15,7 +15,7 @@ Enables command-line completion for bash and zsh shells. You need to restart the
 
 Usage | Synopsis
 ------|-------
-General | `$ tns autocomplete enable`
+General | `$ ns autocomplete enable`
 
 <% if(isHtml) { %>
 

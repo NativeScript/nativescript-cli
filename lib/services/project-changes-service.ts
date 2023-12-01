@@ -199,14 +199,16 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._changesInfo.configChanged = true;
 		}
 		if (this._changesInfo.hasChanges) {
-			this._prepareInfo.changesRequireBuild = this._changesInfo.changesRequireBuild;
+			this._prepareInfo.changesRequireBuild =
+				this._changesInfo.changesRequireBuild;
 			this._prepareInfo.time = new Date().toString();
 			if (this._prepareInfo.changesRequireBuild) {
 				this._prepareInfo.changesRequireBuildTime = this._prepareInfo.time;
 			}
 		}
 
-		this._changesInfo.nativePlatformStatus = this._prepareInfo.nativePlatformStatus;
+		this._changesInfo.nativePlatformStatus =
+			this._prepareInfo.nativePlatformStatus;
 
 		this.$logger.trace("checkForChanges returns", this._changesInfo);
 		return this._changesInfo;

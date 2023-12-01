@@ -14,8 +14,7 @@ const androidApiLevel23TestData = [
 	{
 		input:
 			"12-28 10:14:31.303   779   790 I ActivityManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.telerik.app1/.TelerikCallbackActivity (has extras)} from uid 10008 on display 0",
-		output:
-			"ActivityManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.telerik.app1/.TelerikCallbackActivity (has extras)} from uid 10008 on display 0",
+		output: null,
 	},
 	{ input: "--------- beginning of main", output: null },
 	{
@@ -73,8 +72,7 @@ const androidApiLevel23TestData = [
 	{
 		input:
 			"12-28 10:16:49.267   779  1172 I ActivityManager: Start proc 3714:org.nativescript.appDebug1/u0a60 for activity org.nativescript.appDebug1/com.tns.NativeScriptActivity",
-		output:
-			"ActivityManager: Start proc 3714:org.nativescript.appDebug1/u0a60 for activity org.nativescript.appDebug1/com.tns.NativeScriptActivity",
+		output: null,
 	},
 	{
 		input:
@@ -83,7 +81,7 @@ const androidApiLevel23TestData = [
 	},
 	{
 		input: "12-28 10:16:49.710  3714  3714 V JS      : TAPPED: 42",
-		output: "JS: TAPPED: 42",
+		output: "TAPPED: 42",
 	},
 	{
 		input:
@@ -109,14 +107,12 @@ const androidApiLevel22TestData = [
 	{
 		input:
 			"I/ActivityManager( 1804): START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.telerik.hybridApp/.TelerikCallbackActivity (has extras)} from uid 10039 on display 0",
-		output:
-			"ActivityManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.telerik.hybridApp/.TelerikCallbackActivity (has extras)} from uid 10039 on display 0",
+		output: null,
 	},
 	{
 		input:
 			"I/ActivityManager( 1804): Start proc 2971:com.telerik.hybridApp/u0a60 for activity com.telerik.hybridApp/.TelerikCallbackActivity",
-		output:
-			"ActivityManager: Start proc 2971:com.telerik.hybridApp/u0a60 for activity com.telerik.hybridApp/.TelerikCallbackActivity",
+		output: null,
 	},
 	{ input: "I/art     ( 2971): Late-enabling -Xcheck:jni", output: null },
 	{
@@ -228,7 +224,7 @@ const androidApiLevel22TestData = [
 			"E/EGL_emulation( 1789): tid 1789: eglCreateSyncKHR(1209): error 0x3004 (EGL_BAD_ATTRIBUTE)",
 		output: null,
 	},
-	{ input: "V/JS      ( 3930): TAPPED: 42", output: "JS: TAPPED: 42" },
+	{ input: "V/JS      ( 3930): TAPPED: 42", output: "TAPPED: 42" },
 	{
 		input:
 			"I/Web Console(    4438): Received Event: deviceready at file:///storage/emulated/0/Icenium/com.telerik.TestApp/js/index.js:48",
@@ -398,7 +394,7 @@ const androidApiLevel23MapForPid8141 = [
 	{
 		input:
 			"07-25 06:36:27.877  8141  8141 V JS      : Set up an alarm for: 1500978987875",
-		output: "JS: Set up an alarm for: 1500978987875",
+		output: "Set up an alarm for: 1500978987875",
 	},
 	{
 		input:
@@ -1329,6 +1325,28 @@ describe("androidLogFilter", () => {
 		_logLevel?: string,
 		_pid?: string
 	) => {
+		if (_logLevel?.toLowerCase() !== "full") {
+			// pre-filter data since we use adb logcat filtering now - these should be filtered out by adb anyways.
+			const acceptedTags = [
+				/chromium\s*:/,
+				/Web Console\s*:/,
+				/JS\s*:/,
+				/System.err\s*:/,
+				/TNS.Native\s*:/,
+				/TNS.Java\s*:/,
+			];
+			inputData = inputData
+				.split(EOL)
+				.filter((line) => {
+					return acceptedTags.some((tag) => line.match(tag) ?? false);
+				})
+				.join(EOL);
+		}
+
+		if (!inputData.length) {
+			return;
+		}
+
 		const testInjector = new Yok();
 		testInjector.register("loggingLevels", LoggingLevels);
 		const androidLogFilter = <Mobile.IPlatformLogFilter>(
@@ -1339,6 +1357,7 @@ describe("androidLogFilter", () => {
 			applicationPid: _pid,
 			projectDir: null,
 		});
+
 		assert.deepStrictEqual(
 			filteredData,
 			expectedOutput,

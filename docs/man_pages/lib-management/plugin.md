@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns plugin
+title: ns plugin
 position: 10
 ---<% } %>
 
-# tns plugin
+# ns plugin
 
 ### Description
 
@@ -13,8 +13,8 @@ Lets you manage the plugins for your project.
 
 Usage | Synopsis
 ---|---
-List plugins | `$ tns plugin`
-Manage plugins | `$ tns plugin <Command>`
+List plugins | `$ ns plugin`
+Manage plugins | `$ ns plugin <Command>`
 
 ### Arguments
 

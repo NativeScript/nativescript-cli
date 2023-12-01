@@ -1,4 +1,4 @@
-import { IOptions } from "../declarations";
+import { IOptions, IStaticConfig } from "../declarations";
 import { IChildProcess, IFileSystem, IHostInfo } from "../common/declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
@@ -14,7 +14,8 @@ export class TypingsCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $childProcess: IChildProcess,
-		private $hostInfo: IHostInfo
+		private $hostInfo: IHostInfo,
+		private $staticConfig: IStaticConfig
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -122,11 +123,9 @@ export class TypingsCommand implements ICommand {
 			path.resolve(this.$projectData.projectDir, "typings", "ios")
 		);
 
-		const nsPath = path.resolve(__dirname, "../../bin/nativescript.js");
-
 		await this.$childProcess.spawnFromEvent(
 			"node",
-			[nsPath, "build", "ios"],
+			[this.$staticConfig.cliBinPath, "build", "ios"],
 			"exit",
 			{
 				env: {

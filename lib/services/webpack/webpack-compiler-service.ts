@@ -48,7 +48,8 @@ interface IWebpackCompilation {
 
 export class WebpackCompilerService
 	extends EventEmitter
-	implements IWebpackCompilerService {
+	implements IWebpackCompilerService
+{
 	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
 	private expectedHashes: IStringDictionary = {};
 
@@ -87,6 +88,14 @@ export class WebpackCompilerService
 					projectData,
 					prepareData
 				);
+
+				childProcess.stdout.on("data", function (data) {
+					process.stdout.write(data);
+				});
+
+				childProcess.stderr.on("data", function (data) {
+					process.stderr.write(data);
+				});
 
 				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
 					this.$logger.trace("Message from webpack", message);
@@ -129,16 +138,14 @@ export class WebpackCompilerService
 					if (message.emittedFiles) {
 						if (isFirstWebpackWatchCompilation) {
 							isFirstWebpackWatchCompilation = false;
-							this.expectedHashes[
-								platformData.platformNameLowerCase
-							] = prepareData.hmr ? message.hash : "";
+							this.expectedHashes[platformData.platformNameLowerCase] =
+								prepareData.hmr ? message.hash : "";
 							return;
 						}
 
 						// Persist the previousHash value before calling `this.getUpdatedEmittedFiles` as it will modify the expectedHashes object with the current hash
-						const previousHash = this.expectedHashes[
-							platformData.platformNameLowerCase
-						];
+						const previousHash =
+							this.expectedHashes[platformData.platformNameLowerCase];
 						let result;
 
 						if (prepareData.hmr) {
@@ -155,7 +162,6 @@ export class WebpackCompilerService
 								hash: "",
 							};
 						}
-
 						const files = result.emittedFiles.map((file: string) =>
 							path.join(platformData.appDestinationDirectoryPath, "app", file)
 						);
@@ -235,6 +241,7 @@ export class WebpackCompilerService
 					projectData,
 					prepareData
 				);
+
 				childProcess.on("error", (err) => {
 					this.$logger.trace(
 						`Unable to start webpack process in non-watch mode. Error is: ${err}`
@@ -282,7 +289,8 @@ export class WebpackCompilerService
 		// pnpm does not require symlink (https://github.com/nodejs/node-eps/issues/46#issuecomment-277373566)
 		// and it also does not work in some cases.
 		// Check https://github.com/NativeScript/nativescript-cli/issues/5259 for more information
-		const currentPackageManager = await this.$packageManager.getPackageManagerName();
+		const currentPackageManager =
+			await this.$packageManager.getPackageManagerName();
 		const res = currentPackageManager !== PackageManagers.pnpm;
 		return res;
 	}
@@ -333,9 +341,7 @@ export class WebpackCompilerService
 			args.push("--watch");
 		}
 
-		const stdio = prepareData.watch
-			? ["inherit", "inherit", "inherit", "ipc"]
-			: "inherit";
+		const stdio = prepareData.watch ? ["ipc"] : "inherit";
 		const childProcess = this.$childProcess.spawn(process.execPath, args, {
 			cwd: projectData.projectDir,
 			stdio,
@@ -429,16 +435,18 @@ export class WebpackCompilerService
 				envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
 			} else if (this.$hostInfo.isWindows) {
 				const minWebpackPluginWithWinSnapshotsVersion = "1.3.0";
-				const installedWebpackPluginVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
-					WEBPACK_PLUGIN_NAME,
-					projectData.projectDir
-				);
-				const hasWebpackPluginWithWinSnapshotsSupport = !!installedWebpackPluginVersion
-					? semver.gte(
-							semver.coerce(installedWebpackPluginVersion),
-							minWebpackPluginWithWinSnapshotsVersion
-					  )
-					: true;
+				const installedWebpackPluginVersion =
+					await this.$packageInstallationManager.getInstalledDependencyVersion(
+						WEBPACK_PLUGIN_NAME,
+						projectData.projectDir
+					);
+				const hasWebpackPluginWithWinSnapshotsSupport =
+					!!installedWebpackPluginVersion
+						? semver.gte(
+								semver.coerce(installedWebpackPluginVersion),
+								minWebpackPluginWithWinSnapshotsVersion
+						  )
+						: true;
 				if (!hasWebpackPluginWithWinSnapshotsSupport) {
 					this.$errors.fail(
 						`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i ${WEBPACK_PLUGIN_NAME}@latest).`
@@ -558,7 +566,7 @@ export class WebpackCompilerService
 			const absoluteFileNameWithLastHash = files.find((fileName: string) =>
 				fileName.endsWith("hot-update.js")
 			);
-			
+
 			if (!absoluteFileNameWithLastHash) {
 				return null;
 			}

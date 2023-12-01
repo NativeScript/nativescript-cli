@@ -55,7 +55,6 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 			childProcessOptions,
 			{ throwError: false }
 		);
-
 		const errors = this.$androidDebugBridgeResultHandler.checkForErrors(result);
 
 		if (errors && errors.length > 0) {

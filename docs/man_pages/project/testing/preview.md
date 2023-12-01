@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns preview
+title: ns preview
 position: 1
 ---<% } %>
 
-# tns preview
+# ns preview
 
 ### Description
 
@@ -19,12 +19,12 @@ After scanning the QR code with the scanner provided in the NativeScript Playgro
 
 Usage | Synopsis
 ---|---
-Generates a QR code that can be scanned by the NativeScript PlayGround app | `tns preview`
+Generates a QR code that can be scanned by the NativeScript PlayGround app | `ns preview`
 
 ### Options
 
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>
 

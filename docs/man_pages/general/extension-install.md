@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns extension install
+title: ns extension install
 position: 7
 ---<% } %>
 
-# tns extension install
+# ns extension install
 
 ### Description
 
@@ -13,7 +13,7 @@ Installs specified extension. Each extension adds additional functionality that'
 
 Usage | Synopsis
 ------|-------
-General | `$ tns extension install <Extension>`
+General | `$ ns extension install <Extension>`
 
 ### Arguments
 

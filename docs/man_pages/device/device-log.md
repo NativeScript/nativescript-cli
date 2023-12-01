@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns device log
+title: ns device log
 position: 4
 ---<% } %>
 
-# tns device log
+# ns device log
 
 ### Description
 
@@ -13,11 +13,11 @@ Opens the device log stream for a selected connected Android <% if(isWindows || 
 
 Usage | Synopsis
 ------|-------
-General | `$ tns device log [--device <Device ID>]`
+General | `$ ns device log [--device <Device ID>]`
 
 ### Options
 
-* `--device` - If multiple devices are connected, sets the device for which you want to stream the log in the console. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
+* `--device` - If multiple devices are connected, sets the device for which you want to stream the log in the console. `<Device ID>` is the device index or identifier as listed by the `$ ns device` command.
 
 <% if(isHtml) { %>
 

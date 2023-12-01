@@ -1,13 +1,13 @@
 <% if (isJekyll) { %>---
-title: tns test
+title: ns test
 position: 23
 ---<% } %>
 
-# tns test
+# ns test
 
 ### Description
 
-Runs unit tests on the selected mobile platform.<% if(isConsole) { %> Your project must already be configured for unit testing by running `$ tns test init`.<% } %>
+Runs unit tests on the selected mobile platform.<% if(isConsole) { %> Your project must already be configured for unit testing by running `$ ns test init`.<% } %>
 
 <% if(isHtml) { %>
 #### How file changes are handled
@@ -23,7 +23,7 @@ Runs unit tests on the selected mobile platform.<% if(isConsole) { %> Your proje
 
 Usage | Synopsis
 ------|-------
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns test <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns test android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ ns test <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ ns test android`<% } %>
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments
 `<Platform>` is the target mobile platform on which you want to run the tests. You can set the following target platforms.

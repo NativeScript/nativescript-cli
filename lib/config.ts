@@ -58,6 +58,8 @@ export class StaticConfig implements IStaticConfig {
 
 	public version = require("../package.json").version;
 
+	public cliBinPath = path.resolve(__dirname, "..", "bin", "nativescript.js");
+
 	public get HTML_CLI_HELPERS_DIR(): string {
 		return path.join(__dirname, "../docs/helpers");
 	}
@@ -73,9 +75,8 @@ export class StaticConfig implements IStaticConfig {
 	private _adbFilePath: string = null;
 	public async getAdbFilePath(): Promise<string> {
 		if (!this._adbFilePath) {
-			const androidToolsInfo: IAndroidToolsInfo = this.$injector.resolve(
-				"androidToolsInfo"
-			);
+			const androidToolsInfo: IAndroidToolsInfo =
+				this.$injector.resolve("androidToolsInfo");
 			this._adbFilePath =
 				(await androidToolsInfo.getPathToAdbFromAndroidHome()) ||
 				(await this.getAdbFilePathCore());
@@ -111,9 +112,8 @@ export class StaticConfig implements IStaticConfig {
 	}
 
 	private async getAdbFilePathCore(): Promise<string> {
-		const $childProcess: IChildProcess = this.$injector.resolve(
-			"$childProcess"
-		);
+		const $childProcess: IChildProcess =
+			this.$injector.resolve("$childProcess");
 
 		try {
 			// Do NOT use the adb wrapper because it will end blow up with Segmentation fault because the wrapper uses this method!!!

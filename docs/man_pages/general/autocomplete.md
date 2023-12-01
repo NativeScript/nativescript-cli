@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns autocomplete
+title: ns autocomplete
 position: 4
 ---<% } %>
 
-# tns autocomplete
+# ns autocomplete
 
 ### Description
 
@@ -15,10 +15,10 @@ Prints your current command-line completion settings. If disabled, prompts you t
 
 Usage | Synopsis
 ------|-------
-General | `$ tns autocomplete [<Command>]`
-Get settings | `$ tns autocomplete status`
-Enable | `$ tns autocomplete enable`
-Disable | `$ tns autocomplete disable`
+General | `$ ns autocomplete [<Command>]`
+Get settings | `$ ns autocomplete status`
+Enable | `$ ns autocomplete enable`
+Disable | `$ ns autocomplete disable`
 
 ### Arguments
 

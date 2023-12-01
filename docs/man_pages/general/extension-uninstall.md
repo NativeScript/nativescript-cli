@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns extension uninstall
+title: ns extension uninstall
 position: 8
 ---<% } %>
 
-# tns extension uninstall
+# ns extension uninstall
 
 ### Description
 
@@ -13,7 +13,7 @@ Uninstalls the specified extension, after which you will no longer be able to us
 
 Usage | Synopsis
 ------|-------
-General | `$ tns extension uninstall <Extension>`
+General | `$ ns extension uninstall <Extension>`
 
 ### Arguments
 
