@@ -12,7 +12,7 @@ import * as util from "util";
 import * as _ from "lodash";
 import { IProjectDataService, IProjectData } from "../definitions/project";
 import { IBuildController } from "../definitions/build";
-import { IPlatformsDataService } from "../definitions/platform";
+import { IPlatformData, IPlatformsDataService } from "../definitions/platform";
 import { IDebugController } from "../definitions/debug";
 import { IPluginsService } from "../definitions/plugins";
 import {
@@ -23,6 +23,7 @@ import {
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { hook } from "../common/helpers";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
@@ -99,17 +100,23 @@ export class RunController extends EventEmitter implements IRunController {
 					const changesInfo = await this.$projectChangesService.checkForChanges(
 						platformData,
 						projectData,
-						prepareData
+						prepareData,
+						data
 					);
 					if (changesInfo.hasChanges) {
 						await this.syncChangedDataOnDevices(
 							data,
 							projectData,
+							platformData,
 							liveSyncInfo
 						);
 					}
 				} else {
-					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+					const platformData = this.$platformsDataService.getPlatformData(
+						data.platform,
+						projectData
+					);
+					await this.syncChangedDataOnDevices(data, projectData, platformData, liveSyncInfo);
 				}
 			};
 
@@ -613,9 +620,11 @@ export class RunController extends EventEmitter implements IRunController {
 		);
 	}
 
+	@hook("syncChangedDataOnDevices")
 	private async syncChangedDataOnDevices(
 		data: IFilesChangeEventData,
 		projectData: IProjectData,
+		platformData: IPlatformData,
 		liveSyncInfo: ILiveSyncInfo
 	): Promise<void> {
 		const successfullySyncedMessageFormat = `Successfully synced application %s on device %s.`;

@@ -277,7 +277,7 @@ export class PrepareController extends EventEmitter {
 				if (
 					data.platform.toLowerCase() === platformData.platformNameLowerCase
 				) {
-					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
+					this.emitPrepareEvent({ ...data, files: data.files || [], hasNativeChanges: false });
 				}
 			};
 

@@ -74,7 +74,8 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async checkForChanges(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
+		filesChangedData?: IFilesChangeEventData
 	): Promise<IProjectChangesInfo> {
 		this._changesInfo = new ProjectChangesInfo();
 		const isNewPrepareInfo = await this.ensurePrepareInfo(
