@@ -10,6 +10,7 @@ declare global {
 		env: any;
 		watch?: boolean;
 		watchNative: boolean;
+		watchNodeModules?: boolean;
 	}
 
 	interface IiOSCodeSigningData {
@@ -31,6 +32,8 @@ declare global {
 	interface IPrepareController extends EventEmitter {
 		prepare(prepareData: IPrepareData): Promise<IPrepareResultData>;
 		stopWatchers(projectDir: string, platform: string): Promise<void>;
+		toggleFileWatcher: () => Promise<boolean>;
+		// toggleWatchNodeModules: () => Promise<boolean>;
 	}
 
 	interface IPrepareResultData {

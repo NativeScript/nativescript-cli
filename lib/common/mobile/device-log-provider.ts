@@ -86,9 +86,6 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	}
 
 	private logDataCore(data: string, deviceIdentifier: string): void {
-		// strip android JS: prefix
-		data = data.replace(/^JS:\s/, "");
-
 		// todo: use config to set logger - --env.classicLogs is temporary!
 		if ("classicLogs" in (this.$options.env ?? {})) {
 			// legacy logging

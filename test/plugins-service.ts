@@ -33,7 +33,7 @@ import * as StaticConfigLib from "../lib/config";
 import * as path from "path";
 import * as temp from "temp";
 import * as _ from "lodash";
-import { PLUGINS_BUILD_DATA_FILENAME, PlatformTypes } from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
+import { PLATFORMS_DIR_NAME, PLUGINS_BUILD_DATA_FILENAME, PlatformTypes } from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
 import { GradleCommandService } from "../lib/services/android/gradle-command-service";
 import { GradleBuildService } from "../lib/services/android/gradle-build-service";
 import { GradleBuildArgsService } from "../lib/services/android/gradle-build-args-service";
@@ -296,9 +296,8 @@ async function addPluginWhenExpectingToFail(
 ) {
 	createProjectFile(testInjector);
 
-	const pluginsService: IPluginsService = testInjector.resolve(
-		"pluginsService"
-	);
+	const pluginsService: IPluginsService =
+		testInjector.resolve("pluginsService");
 	pluginsService.getAllInstalledPlugins = async (projectData: IProjectData) => {
 		return <any[]>[{ name: "" }];
 	};
@@ -354,9 +353,8 @@ describe("Plugins service", () => {
 				projectData.dependencies[pluginName] = "^1.0.0";
 				fs.writeJson(projectFilePath, projectData);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projData: IProjectData
 				) => {
@@ -401,10 +399,10 @@ describe("Plugins service", () => {
 				);
 
 				// Adds android platform
-				fs.createDirectory(path.join(projectFolder, "platforms"));
-				fs.createDirectory(path.join(projectFolder, "platforms", "android"));
+				fs.createDirectory(path.join(projectFolder, PLATFORMS_DIR_NAME));
+				fs.createDirectory(path.join(projectFolder, PLATFORMS_DIR_NAME, "android"));
 				fs.createDirectory(
-					path.join(projectFolder, "platforms", "android", "app")
+					path.join(projectFolder, PLATFORMS_DIR_NAME, "android", "app")
 				);
 
 				// Mock logger.warn
@@ -415,9 +413,8 @@ describe("Plugins service", () => {
 				};
 
 				// Mock pluginsService
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				const projectData: IProjectData = testInjector.resolve("projectData");
 				projectData.initializeProjectData();
 				pluginsService.getAllInstalledPlugins = async (
@@ -434,7 +431,7 @@ describe("Plugins service", () => {
 					return {
 						appDestinationDirectoryPath: path.join(
 							projectFolder,
-							"platforms",
+							PLATFORMS_DIR_NAME,
 							"android"
 						),
 						frameworkPackageName: "tns-android",
@@ -460,9 +457,8 @@ describe("Plugins service", () => {
 				const pluginName = "plugin1";
 				const projectFolder = createProjectFile(testInjector);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -504,9 +500,8 @@ describe("Plugins service", () => {
 				const pluginName = "plugin1";
 				const projectFolder = createProjectFile(testInjector);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -562,9 +557,8 @@ describe("Plugins service", () => {
 					pluginJsonData
 				);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -612,9 +606,8 @@ describe("Plugins service", () => {
 					pluginJsonData
 				);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -666,9 +659,8 @@ describe("Plugins service", () => {
 					pluginJsonData
 				);
 
-				const pluginsService: IPluginsService = testInjector.resolve(
-					"pluginsService"
-				);
+				const pluginsService: IPluginsService =
+					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
 					projectData: IProjectData
 				) => {
@@ -693,6 +685,7 @@ describe("Plugins service", () => {
 			newPluginHashes?: IStringDictionary;
 			buildDataFileExists?: boolean;
 			hasPluginPlatformsDir?: boolean;
+			pluginHashesAfterPrepare?: IStringDictionary;
 		}): any => {
 			const testData: any = {
 				pluginsService: null,
@@ -721,7 +714,7 @@ describe("Plugins service", () => {
 				fullPath: "plugin_full_path",
 				name: "plugin_name",
 				pluginPlatformsFolderPath: (_platform: string) =>
-					path.join("plugin_dir", "platforms", _platform.toLowerCase()),
+					path.join("plugin_dir", PLATFORMS_DIR_NAME, _platform.toLowerCase()),
 			};
 
 			unitTestsInjector.register("filesHashService", {
@@ -730,7 +723,10 @@ describe("Plugins service", () => {
 					currentPluginNativeHashes: IStringDictionary
 				) => !!opts.hasChangesInShasums,
 				generateHashes: async (files: string[]): Promise<IStringDictionary> =>
-					pluginHashes,
+					testData.isPreparePluginNativeCodeCalled &&
+					opts.pluginHashesAfterPrepare
+						? opts.pluginHashesAfterPrepare
+						: pluginHashes,
 			});
 
 			unitTestsInjector.register("fs", {
@@ -739,7 +735,7 @@ describe("Plugins service", () => {
 						return !!opts.buildDataFileExists;
 					}
 
-					if (file.indexOf("platforms") !== -1) {
+					if (file.indexOf(PLATFORMS_DIR_NAME) !== -1) {
 						return !!opts.hasPluginPlatformsDir;
 					}
 
@@ -767,9 +763,8 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 			unitTestsInjector.register("tempService", stubs.TempServiceStub);
 
-			const pluginsService: PluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: PluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;
 			testData.pluginData = samplePluginData;
 			return testData;
@@ -802,6 +797,25 @@ describe("Plugins service", () => {
 			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
 			assert.deepStrictEqual(testData.dataPassedToWriteJson, {
 				[testData.pluginData.name]: newPluginHashes,
+			});
+		});
+
+		it("should hash the plugin files after prepare", async () => {
+			const newPluginHashes = { file: "hash" };
+			const pluginHashesAfterPrepare = { file: "hasedafterprepare" };
+			const testData = setupTest({
+				newPluginHashes,
+				hasPluginPlatformsDir: true,
+				pluginHashesAfterPrepare,
+			});
+			await testData.pluginsService.preparePluginNativeCode({
+				pluginData: testData.pluginData,
+				platform,
+				projectData,
+			});
+			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
+			assert.deepStrictEqual(testData.dataPassedToWriteJson, {
+				[testData.pluginData.name]: pluginHashesAfterPrepare,
 			});
 		});
 
@@ -860,9 +874,8 @@ describe("Plugins service", () => {
 
 		it("returns correct pluginData", () => {
 			const unitTestsInjector = createUnitTestsInjector();
-			const pluginsService: PluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: PluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			const pluginData = (<any>pluginsService).convertToPluginData(
 				dataFromPluginPackageJson,
 				"my project dir"
@@ -881,16 +894,15 @@ describe("Plugins service", () => {
 
 		it("always returns lowercased platform in the path to plugins dir", () => {
 			const unitTestsInjector = createUnitTestsInjector();
-			const pluginsService: PluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: PluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			const pluginData = (<any>pluginsService).convertToPluginData(
 				dataFromPluginPackageJson,
 				"my project dir"
 			);
 
-			const expectediOSPath = path.join(pluginDir, "platforms", "ios");
-			const expectedAndroidPath = path.join(pluginDir, "platforms", "android");
+			const expectediOSPath = path.join(pluginDir, PLATFORMS_DIR_NAME, "ios");
+			const expectedAndroidPath = path.join(pluginDir, PLATFORMS_DIR_NAME, "android");
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("iOS"),
 				expectediOSPath
@@ -1181,9 +1193,8 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 		for (const testCase of testCases) {
 			it(testCase.testName, () => {
 				const unitTestsInjector: IInjector = createUnitTestsInjector();
-				const pluginsService: IPluginsService = unitTestsInjector.resolve(
-					PluginsService
-				);
+				const pluginsService: IPluginsService =
+					unitTestsInjector.resolve(PluginsService);
 
 				if (testCase.expectedOutput instanceof Error) {
 					assert.throws(
@@ -1203,9 +1214,8 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 					);
 
 					if (testCase.expectedWarning) {
-						const logger = unitTestsInjector.resolve<stubs.LoggerStub>(
-							"logger"
-						);
+						const logger =
+							unitTestsInjector.resolve<stubs.LoggerStub>("logger");
 						assert.equal(testCase.expectedWarning + "\n", logger.warnOutput);
 					}
 
@@ -1223,9 +1233,8 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 
 		it(`caches result based on dependencies`, () => {
 			const unitTestsInjector: IInjector = createUnitTestsInjector();
-			const pluginsService: IPluginsService = unitTestsInjector.resolve(
-				PluginsService
-			);
+			const pluginsService: IPluginsService =
+				unitTestsInjector.resolve(PluginsService);
 			const inputDependencies = [
 				{
 					name: "nativescript-ui-core",

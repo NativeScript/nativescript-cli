@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns run
+title: ns run
 position: 12
 ---<% } %>
 
-# tns run
+# ns run
 
 ### Description
 
@@ -35,15 +35,15 @@ With **no** HMR:
 
 Usage | Synopsis
 ---|---
-Run on all connected devices | `$ tns run [--release] [--justlaunch]`
-Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ tns run --device <Device ID> [--release] [--justlaunch]`
-<% if((isConsole && isMacOS) || isHtml) { %>Run on all connected devices of the specified `Platform` | `$ tns run <Platform> [--release] [--justlaunch]`<% } %>
+Run on all connected devices | `$ ns run [--release] [--justlaunch]`
+Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ ns run --device <Device ID> [--release] [--justlaunch]`
+<% if((isConsole && isMacOS) || isHtml) { %>Run on all connected devices of the specified `Platform` | `$ ns run <Platform> [--release] [--justlaunch]`<% } %>
 
 ### Options
 
 * `--justlaunch` - If set, does not print the application output in the console.
 * `--release` - If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build.
-* `--device` - Specifies a connected device/emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ tns device <Platform> --available-devices` command.
+* `--device` - Specifies a connected device/emulator to start and run the app. `<Device ID>` is the index or `Device Identifier` of the target device as listed by the `$ ns device <Platform> --available-devices` command.
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
 * `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times. Supported additional flags:
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
@@ -54,7 +54,7 @@ Run on a selected connected device or running emulator. Will start emulator with
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments

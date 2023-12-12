@@ -52,7 +52,8 @@ import {
 
 export class MigrateController
 	extends UpdateControllerBase
-	implements IMigrateController {
+	implements IMigrateController
+{
 	constructor(
 		protected $fs: IFileSystem,
 		protected $platformCommandHelper: IPlatformCommandHelper,
@@ -66,6 +67,7 @@ export class MigrateController
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $projectConfigService: IProjectConfigService,
+		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $resources: IResourceLoader,
 		private $injector: IInjector,
@@ -189,7 +191,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "~15.2.0",
+			desiredVersion: "^16.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -582,10 +584,11 @@ export class MigrateController
 		projectData: IProjectData,
 		loose: boolean
 	): Promise<boolean> {
-		const installedVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
-			dependency.packageName,
-			projectData.projectDir
-		);
+		const installedVersion =
+			await this.$packageInstallationManager.getInstalledDependencyVersion(
+				dependency.packageName,
+				projectData.projectDir
+			);
 
 		const desiredVersion = dependency.desiredVersion ?? dependency.minVersion;
 		const minVersion = dependency.minVersion ?? dependency.desiredVersion;
@@ -719,17 +722,15 @@ export class MigrateController
 	private async cleanUpProject(projectData: IProjectData): Promise<void> {
 		await this.$projectCleanupService.clean([
 			constants.HOOKS_DIR_NAME,
-			constants.PLATFORMS_DIR_NAME,
+			this.$projectData.getBuildRelativeDirectoryPath(),
 			constants.NODE_MODULES_FOLDER_NAME,
 			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		]);
 
-		const {
-			dependencies,
-			devDependencies,
-		} = await this.$pluginsService.getDependenciesFromPackageJson(
-			projectData.projectDir
-		);
+		const { dependencies, devDependencies } =
+			await this.$pluginsService.getDependenciesFromPackageJson(
+				projectData.projectDir
+			);
 		const hasSchematics = [...dependencies, ...devDependencies].find(
 			(p) => p.name === "@nativescript/schematics"
 		);
@@ -1118,10 +1119,11 @@ export class MigrateController
 		// force the config service to use nativescript.config.ts
 		this.$projectConfigService.setForceUsingNewConfig(true);
 		// migrate data into nativescript.config.ts
-		const hasUpdatedConfigSuccessfully = await this.$projectConfigService.setValue(
-			"", // root
-			configData as { [key: string]: SupportedConfigValues }
-		);
+		const hasUpdatedConfigSuccessfully =
+			await this.$projectConfigService.setValue(
+				"", // root
+				configData as { [key: string]: SupportedConfigValues }
+			);
 
 		if (!hasUpdatedConfigSuccessfully) {
 			if (typeof newConfigPath === "string") {
@@ -1309,7 +1311,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~15.2.0";
+		const desiredVersion = "~16.2.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
@@ -1363,13 +1365,13 @@ export class MigrateController
 			{
 				packageName: "rxjs",
 				minVersion: "6.6.0",
-				desiredVersion: "~7.6.0",
+				desiredVersion: "~7.8.0",
 				shouldAddIfMissing: true,
 			},
 			{
 				packageName: "zone.js",
 				minVersion: "0.11.1",
-				desiredVersion: "~0.13.0",
+				desiredVersion: "~0.14.0",
 				shouldAddIfMissing: true,
 			},
 
@@ -1565,10 +1567,11 @@ export class MigrateController
 
 		try {
 			const scopedWebpackPackage = `@nativescript/webpack`;
-			const resolvedVersion = await this.$packageInstallationManager.getMaxSatisfyingVersion(
-				scopedWebpackPackage,
-				webpackVersion
-			);
+			const resolvedVersion =
+				await this.$packageInstallationManager.getMaxSatisfyingVersion(
+					scopedWebpackPackage,
+					webpackVersion
+				);
 			await this.runNPX([
 				"--package",
 				`${scopedWebpackPackage}@${resolvedVersion}`,

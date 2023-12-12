@@ -8,6 +8,7 @@ import { INpmConfigService, INodePackageManager } from "../declarations";
 import { IProxyService, IFileSystem } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { Arborist } from "@npmcli/arborist";
 
 export class PacoteService implements IPacoteService {
 	constructor(
@@ -32,7 +33,8 @@ export class PacoteService implements IPacoteService {
 			`Calling pacoteService.manifest for packageName: '${packageName}' and options: `,
 			options
 		);
-		const manifestOptions: IPacoteBaseOptions = await this.getPacoteBaseOptions();
+		const manifestOptions: IPacoteBaseOptions =
+			await this.getPacoteBaseOptions();
 
 		if (options) {
 			_.extend(manifestOptions, options);
@@ -117,7 +119,7 @@ export class PacoteService implements IPacoteService {
 
 		// Add NPM Configuration to our Manifest options
 		const npmConfig = this.$npmConfigService.getConfig();
-		const pacoteOptions = _.extend(npmConfig, { cache: cachePath });
+		const pacoteOptions = _.extend(npmConfig, { cache: cachePath, Arborist });
 		const proxySettings = await this.$proxyService.getCache();
 		if (proxySettings) {
 			_.extend(pacoteOptions, proxySettings);

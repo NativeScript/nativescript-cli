@@ -364,7 +364,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		);
 		const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
 
-		this.$fs.copyFile(allGradleTemplateFiles, path.join(this.getPlatformData(projectData).projectRoot, 'app'));
+		this.$fs.copyFile(allGradleTemplateFiles, path.join(this.getPlatformData(projectData).projectRoot));
 
 		// TODO: Check if we actually need this and if it should be targetSdk or compileSdk
 		this.cleanResValues(targetSdkVersion, projectData);
@@ -467,6 +467,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		);
 		shell.sed(
 			"-i",
+			/def USER_PROJECT_ROOT = \"\$rootDir\/..\/..\/\"/,
+			'def USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../"',
+			gradleSettingsFilePath
+		);
+
+		shell.sed(
+			"-i",
 			/__PROJECT_NAME__/,
 			this.getProjectNameFromId(projectData),
 			gradleSettingsFilePath
@@ -527,6 +534,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			"-i",
 			/__PACKAGE__/,
 			projectData.projectIdentifiers.android,
+			buildGradlePath
+		);
+		shell.sed(
+			"-i",
+			/project.ext.USER_PROJECT_ROOT = \"\$rootDir\/..\/..\"/,
+			'project.ext.USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../"',
 			buildGradlePath
 		);
 	}
@@ -899,7 +912,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			if (buildData.buildFilterDevicesArch) {
 				const outputPath = platformData.getBuildOutputPath(deviceDescriptor.buildData);
 				const apkOutputPath = path.join(outputPath, prepareData.release ? "release" : "debug");
-				if (!this.$fs.exists(outputPath)) {
+				if (!this.$fs.exists(apkOutputPath)) {
 					return;
 				}
 				// check if we already build this arch

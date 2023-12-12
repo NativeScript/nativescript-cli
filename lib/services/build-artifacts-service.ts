@@ -32,7 +32,7 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.fail(
-				`Unable to find built application. Try 'tns build ${platformData.platformNameLowerCase}'.`
+				`Unable to find built application. Try 'ns build ${platformData.platformNameLowerCase}'.`
 			);
 		}
 

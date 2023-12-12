@@ -75,44 +75,60 @@ buildscript {
     
 
     project.ext.getAppPath = { ->
+        // def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+        // def nsConfig
+
+        // if (nsConfigFile.exists()) {
+        //     nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+        // }
         def relativePathToApp = "app"
-        def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
-        def nsConfig
-
-        if (nsConfigFile.exists()) {
-            nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
-        }
-
         if (project.hasProperty("appPath")) {
             // when appPath is passed through -PappPath=/path/to/app
             // the path could be relative or absolute - either case will work
             relativePathToApp = appPath
-        } else if (nsConfig != null && nsConfig.appPath != null) {
-            relativePathToApp = nsConfig.appPath
+        // } else if (nsConfig != null && nsConfig.appPath != null) {
+        //     relativePathToApp = nsConfig.appPath
         }
 
         project.ext.appPath = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
 
         return project.ext.appPath
     }
+    project.ext.getBuildPath = { ->
+        // def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+        // def nsConfig
+
+        // if (nsConfigFile.exists()) {
+        //     nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+        // }
+        def relativeBuildToApp = "platforms"
+        if (project.getProperty("appBuildPath")) {
+            relativeBuildToApp = appBuildPath
+        // } else if (nsConfig != null && nsConfig.buildPath != null) {
+        //     relativeBuildToApp = nsConfig.buildPath
+        }
+        project.ext.relativeBuildPath = relativeBuildToApp
+        project.ext.buildPath = Paths.get(USER_PROJECT_ROOT).resolve(relativeBuildToApp).toAbsolutePath()
+        return project.ext.relativeBuildPath
+    }
     project.ext.getAppResourcesPath = { ->
+        // def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+        // def nsConfig
+
+        // if (nsConfigFile.exists()) {
+        //     nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+        // }
         def relativePathToAppResources
         def absolutePathToAppResources
-        def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
-        def nsConfig
-
-        if (nsConfigFile.exists()) {
-            nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
-        }
 
         if (project.hasProperty("appResourcesPath")) {
             // when appResourcesPath is passed through -PappResourcesPath=/path/to/App_Resources
             // the path could be relative or absolute - either case will work
             relativePathToAppResources = appResourcesPath
             absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
-        } else if (nsConfig != null && nsConfig.appResourcesPath != null) {
-            relativePathToAppResources = nsConfig.appResourcesPath
-            absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+        // } else if (nsConfig != null && nsConfig.appResourcesPath != null) {
+        //     relativePathToAppResources = nsConfig.appResourcesPath
+        //     absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
         } else {
             absolutePathToAppResources = "${project.ext.getAppPath()}/App_Resources"
         }
@@ -139,8 +155,11 @@ buildscript {
         outLogger.withStyle(Style.SuccessHeader).println "\t ~initialize"
 
 
-        project.ext.USER_PROJECT_ROOT = "$rootDir/../../.."
-        project.ext.PLATFORMS_ANDROID = "platforms/android"
+        project.ext.USER_PROJECT_ROOT = "$rootDir/../.."
+        if (project.hasProperty('projectRoot')) {
+            project.ext.USER_PROJECT_ROOT = projectRoot
+        }
+        project.ext.PLATFORMS_ANDROID = project.ext.getBuildPath() + "/android"
         project.ext.PLUGIN_NAME = "{{pluginName}}"
         
         def userDir = "$USER_PROJECT_ROOT"
@@ -158,7 +177,7 @@ buildscript {
         }
 
         def getDepPlatformDir = { dep ->
-            file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
+            file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/platforms/android")
         }
 
         // Set up styled logger
@@ -310,11 +329,11 @@ task addDependenciesFromNativeScriptPlugins {
             project.dependencies.add("implementation", [name: fileName, ext: "aar"])
         }
 
-        def jarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["**/*.jar"])
+        def jarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["*.jar"])
         jarFiles.each { jarFile ->
             def jarFileAbsolutePath = jarFile.getAbsolutePath()
             outLogger.withStyle(Style.SuccessHeader).println "\t + adding jar plugin dependency: $jarFileAbsolutePath"
-            pluginsJarLibraries.add(jarFile.getAbsolutePath())
+            // pluginsJarLibraries.add(jarFile.getAbsolutePath())
         }
 
         project.dependencies.add("implementation", jarFiles)

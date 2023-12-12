@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns appstore
+title: ns appstore
 position: 2
 ---<% } %>
 
-# tns appstore
+# ns appstore
 
 ### Description
 
@@ -13,8 +13,8 @@ Lists all application records in iTunes Connect. The list contains name, version
 
 Usage | Synopsis
 ---|---
-List applications | `$ tns appstore [<Apple ID> [<Password>]]`
-<% if((isConsole && isMacOS) || isHtml) { %>Upload | `$ tns appstore upload`<% } %>
+List applications | `$ ns appstore [<Apple ID> [<Password>]]`
+<% if((isConsole && isMacOS) || isHtml) { %>Upload | `$ ns appstore upload`<% } %>
 
 ### Arguments
 
@@ -27,7 +27,7 @@ List applications | `$ tns appstore [<Apple ID> [<Password>]]`
 
 ### Command Limitations
 
-* You can run `$ tns appstore upload` only on macOS systems.
+* You can run `$ ns appstore upload` only on macOS systems.
 
 ### Related Commands
 

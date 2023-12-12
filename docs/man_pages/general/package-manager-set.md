@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns package-manager set
+title: ns package-manager set
 position: 18
 ---<% } %>
 
-# tns package-manager set
+# ns package-manager set
 
 ### Description
 
@@ -13,7 +13,7 @@ Enables the specified package manager for the NativeScript CLI. Supported values
 
 Usage | Synopsis
 ------|-------
-General | `$ tns package-manager set <PackageManager>`
+General | `$ ns package-manager set <PackageManager>`
 
 ### Arguments
 

@@ -10,6 +10,7 @@ declare module Config {
 		TRACK_FEATURE_USAGE_SETTING_NAME: string;
 		ERROR_REPORT_SETTING_NAME: string;
 		version: string;
+		cliBinPath: string;
 		getAdbFilePath(): Promise<string>;
 		disableAnalytics?: boolean;
 		disableCommandHooks?: boolean;

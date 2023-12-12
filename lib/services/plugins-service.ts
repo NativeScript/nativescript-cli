@@ -240,9 +240,8 @@ export class PluginsService implements IPluginsService {
 			projectData
 		);
 
-		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
-			platform
-		);
+		const pluginPlatformsFolderPath =
+			pluginData.pluginPlatformsFolderPath(platform);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			const pathToPluginsBuildFile = path.join(
 				platformData.projectRoot,
@@ -268,10 +267,15 @@ export class PluginsService implements IPluginsService {
 					pluginData,
 					projectData
 				);
+
+				const updatedPluginNativeHashes = await this.getPluginNativeHashes(
+					pluginPlatformsFolderPath
+				);
+
 				this.setPluginNativeHashes({
 					pathToPluginsBuildFile,
 					pluginData,
-					currentPluginNativeHashes,
+					currentPluginNativeHashes: updatedPluginNativeHashes,
 					allPluginsNativeHashes,
 				});
 			}
@@ -330,10 +334,9 @@ export class PluginsService implements IPluginsService {
 	public async getAllInstalledPlugins(
 		projectData: IProjectData
 	): Promise<IPluginData[]> {
-		const nodeModules = (
-			await this.getAllInstalledModules(projectData)
-		).map((nodeModuleData) =>
-			this.convertToPluginData(nodeModuleData, projectData.projectDir)
+		const nodeModules = (await this.getAllInstalledModules(projectData)).map(
+			(nodeModuleData) =>
+				this.convertToPluginData(nodeModuleData, projectData.projectDir)
 		);
 		return _.filter(
 			nodeModules,
@@ -489,7 +492,7 @@ export class PluginsService implements IPluginsService {
 	): IDependencyData[] {
 		const dependenciesWithFrameworks: any[] = [];
 		_.each(productionDependencies, (d) => {
-			const pathToPlatforms = path.join(d.directory, "platforms", platform);
+			const pathToPlatforms = path.join(d.directory, constants.PLATFORMS_DIR_NAME, platform);
 			if (this.$fs.exists(pathToPlatforms)) {
 				const contents = this.$fs.readDirectory(pathToPlatforms);
 				_.each(contents, (file) => {
@@ -565,12 +568,13 @@ export class PluginsService implements IPluginsService {
 								}
 							});
 						} else {
-							const message = this.getFailureMessageForDifferentDependencyVersions(
-								dependencyName,
-								frameworkName,
-								dependencyOccurrencesGroupedByVersion,
-								projectDir
-							);
+							const message =
+								this.getFailureMessageForDifferentDependencyVersions(
+									dependencyName,
+									frameworkName,
+									dependencyOccurrencesGroupedByVersion,
+									projectDir
+								);
 							this.$errors.fail(message);
 						}
 					}
@@ -629,7 +633,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			);
 		pluginData.isPlugin = !!cacheData.nativescript;
 		pluginData.pluginPlatformsFolderPath = (platform: string) =>
-			path.join(pluginData.fullPath, "platforms", platform.toLowerCase());
+			path.join(pluginData.fullPath, constants.PLATFORMS_DIR_NAME, platform.toLowerCase());
 		const data = cacheData.nativescript;
 
 		if (pluginData.isPlugin) {
@@ -845,9 +849,8 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	): Promise<IStringDictionary> {
 		let data: IStringDictionary = {};
 		if (this.$fs.exists(pluginPlatformsDir)) {
-			const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(
-				pluginPlatformsDir
-			);
+			const pluginNativeDataFiles =
+				this.$fs.enumerateFilesInDirectorySync(pluginPlatformsDir);
 			data = await this.$filesHashService.generateHashes(pluginNativeDataFiles);
 		}
 

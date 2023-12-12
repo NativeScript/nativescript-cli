@@ -8,6 +8,9 @@ import { EventEmitter } from "events";
 import * as stream from "stream";
 import { IInjector } from "../../../../definitions/yok";
 
+// 1 for the logs, and 1 for START/pid discovery
+const PROCESS_COUNT_PER_DEVICE = 2;
+
 class ChildProcessMockInstance extends EventEmitter {
 	public stdout: stream.Readable;
 	public stderr: any;
@@ -28,6 +31,10 @@ class ChildProcessStub {
 	public processSpawnCallCount = 0;
 	public adbProcessArgs: string[] = [];
 	public lastSpawnedProcess: ChildProcessMockInstance = null;
+	public spawnedProcesses: {
+		args: string[];
+		childProcess: ChildProcessMockInstance;
+	}[] = [];
 
 	public spawn(
 		command: string,
@@ -39,6 +46,10 @@ class ChildProcessStub {
 		const pathToSample = path.join(__dirname, "valid-sample.txt");
 
 		this.lastSpawnedProcess = new ChildProcessMockInstance(pathToSample);
+		this.spawnedProcesses.push({
+			args,
+			childProcess: this.lastSpawnedProcess,
+		});
 
 		return <any>this.lastSpawnedProcess;
 	}
@@ -137,10 +148,12 @@ describe("logcat-helper", () => {
 				): void {
 					loggedData.push(line);
 					if (line === "end") {
-						assert.include(
-							childProcessStub.adbProcessArgs,
-							`--pid=${expectedPid}`
+						assert.equal(
+							childProcessStub.processSpawnCallCount,
+							PROCESS_COUNT_PER_DEVICE
 						);
+						const adbProcessArgs = childProcessStub.spawnedProcesses[0].args;
+						assert.include(adbProcessArgs, `--pid=${expectedPid}`);
 						done();
 					}
 				},
@@ -200,7 +213,10 @@ describe("logcat-helper", () => {
 				deviceIdentifier: validIdentifier,
 			});
 
-			assert.equal(childProcessStub.processSpawnCallCount, 1);
+			assert.equal(
+				childProcessStub.processSpawnCallCount,
+				PROCESS_COUNT_PER_DEVICE
+			);
 		});
 
 		it("should start multiple logcat processes when called multiple times with different identifiers", async () => {
@@ -216,7 +232,10 @@ describe("logcat-helper", () => {
 				deviceIdentifier: `${validIdentifier}3`,
 			});
 
-			assert.equal(childProcessStub.processSpawnCallCount, 3);
+			assert.equal(
+				childProcessStub.processSpawnCallCount,
+				3 * PROCESS_COUNT_PER_DEVICE
+			);
 		});
 	});
 	describe("stop", () => {
@@ -226,13 +245,19 @@ describe("logcat-helper", () => {
 			await logcatHelper.start({
 				deviceIdentifier: validIdentifier,
 			});
-			assert.equal(childProcessStub.processSpawnCallCount, 1);
+			assert.equal(
+				childProcessStub.processSpawnCallCount,
+				PROCESS_COUNT_PER_DEVICE
+			);
 			await logcatHelper.stop(validIdentifier);
 			await logcatHelper.start({
 				deviceIdentifier: validIdentifier,
 			});
 
-			assert.equal(childProcessStub.processSpawnCallCount, 2);
+			assert.equal(
+				childProcessStub.processSpawnCallCount,
+				2 * PROCESS_COUNT_PER_DEVICE
+			);
 		});
 
 		it("should kill the process just once if called multiple times", async () => {
@@ -277,15 +302,23 @@ describe("logcat-helper", () => {
 					keepSingleProcess,
 				});
 
-				assert.equal(childProcessStub.processSpawnCallCount, 1);
+				assert.equal(
+					childProcessStub.processSpawnCallCount,
+					PROCESS_COUNT_PER_DEVICE
+				);
 
-				childProcessStub.lastSpawnedProcess.emit("close");
+				childProcessStub.spawnedProcesses.forEach((spawnedProcess) => {
+					spawnedProcess.childProcess.emit("close");
+				});
 
 				await logcatHelper.start({
 					deviceIdentifier: validIdentifier,
 				});
 
-				assert.equal(childProcessStub.processSpawnCallCount, 2);
+				assert.equal(
+					childProcessStub.processSpawnCallCount,
+					2 * PROCESS_COUNT_PER_DEVICE
+				);
 			});
 		}
 	});

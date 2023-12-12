@@ -42,7 +42,8 @@ declare global {
 		checkForChanges(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			prepareData: IPrepareData
+			prepareData: IPrepareData,
+			filesChangedData?: IFilesChangeEventData
 		): Promise<IProjectChangesInfo>;
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;

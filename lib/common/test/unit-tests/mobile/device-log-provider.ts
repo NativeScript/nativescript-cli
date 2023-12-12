@@ -246,34 +246,35 @@ at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/butto
 
 					it("when an error is thrown, correct callstack is printed", async () => {
 						logDataForAndroid(
-							`08-22 15:32:03.171 25038 25038 D AndroidRuntime: Shutting down VM
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: Error: Error in onTap
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1242)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1122)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1109)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1089)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1081)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+							// commented out because we're filtering on the adb logcat level now...
+							// `08-22 15:32:03.171 25038 25038 D AndroidRuntime: Shutting down VM
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: Error: Error in onTap
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1242)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1122)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1109)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1089)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1081)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+							`
 08-22 15:32:03.210 25038 25038 W System.err: An uncaught Exception occurred on "main" thread.
 08-22 15:32:03.210 25038 25038 W System.err: Calling js method onClick failed
 08-22 15:32:03.210 25038 25038 W System.err: Error: Error in onTap
-08-22 15:32:03.210 25038 25038 W System.err: ` +
-								`
+08-22 15:32:03.210 25038 25038 W System.err: 
 08-22 15:32:03.210 25038 25038 W System.err: StackTrace:
 08-22 15:32:03.210 25038 25038 W System.err: 	Frame: function:'viewModel.onTap', file:'file:///data/data/org.nativescript.appTestLogs/files/app/bundle.js', line: 301, column: 15
 08-22 15:32:03.210 25038 25038 W System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify', file:'file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js', line: 3704, column: 32
@@ -425,34 +426,35 @@ at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/butt
 
 					it("when an error is thrown, correct callstack is printed", async () => {
 						logDataForAndroid(
-							`08-23 16:16:06.693 25038 25038 D AndroidRuntime: Shutting down VM
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: Error: Error in onTap
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1209)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1096)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1083)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1063)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1055)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+							// commented out because we're filtering on the adb logcat level now...
+							// `08-23 16:16:06.693 25038 25038 D AndroidRuntime: Shutting down VM
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: Error: Error in onTap
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1209)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1096)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1083)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1063)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1055)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+							`
 08-23 16:16:06.798 25038 25038 W System.err: An uncaught Exception occurred on "main" thread.
 08-23 16:16:06.798 25038 25038 W System.err: Calling js method onClick failed
 08-23 16:16:06.798 25038 25038 W System.err: Error: Error in onTap
-08-23 16:16:06.798 25038 25038 W System.err: ` +
-								`
+08-23 16:16:06.798 25038 25038 W System.err: 
 08-23 16:16:06.798 25038 25038 W System.err: StackTrace:
 08-23 16:16:06.798 25038 25038 W System.err: 	viewModel.onTap(file:///data/data/org.nativescript.appTestLogs/files/app/bundle.js:301:15)
 08-23 16:16:06.798 25038 25038 W System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify(file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3704:32)
@@ -1133,8 +1135,10 @@ level0_0: {
 level0_1: {
 	"level1_0": "value3"
 }
-==== object dump end ====`
-							logDataForiOS(`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`);
+==== object dump end ====`;
+							logDataForiOS(
+								`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+							);
 							assertData(
 								logger.output,
 								`CONSOLE LOG file: app/main-view-model.js:20:0:\n${dump}\n`

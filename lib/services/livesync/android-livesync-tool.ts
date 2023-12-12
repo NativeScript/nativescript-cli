@@ -179,8 +179,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		);
 		const { doRefresh, timeout, operationId } = options;
 		const id = operationId || this.generateOperationIdentifier();
-		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> = new Promise(
-			(resolve, reject) => {
+		const operationPromise: Promise<IAndroidLivesyncSyncOperationResult> =
+			new Promise((resolve, reject) => {
 				if (!this.verifyActiveConnection(reject)) {
 					return;
 				}
@@ -217,8 +217,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					socketId,
 					timeoutId,
 				};
-			}
-		);
+			});
 
 		return operationPromise;
 	}
@@ -411,10 +410,11 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 						clearTimeout(this.pendingConnectionData.socketTimer);
 					}
 
-					const applicationPid = await this.$androidProcessService.getAppProcessId(
-						configuration.deviceIdentifier,
-						configuration.appIdentifier
-					);
+					const applicationPid =
+						await this.$androidProcessService.getAppProcessId(
+							configuration.deviceIdentifier,
+							configuration.appIdentifier
+						);
 					if (!applicationPid) {
 						this.$logger.trace(
 							"In Android LiveSync tool, lastKnownError is: ",
@@ -428,7 +428,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 						this.$logger.info(
 							color.cyan(
 								`This issue may be caused by:
-	* crash at startup (try \`tns debug android --debug-brk\` to check why it crashes)
+	* crash at startup (try \`ns debug android --debug-brk\` to check why it crashes)
 	* different application identifier in your package.json and in your gradle files (check your identifier in \`package.json\` and in all *.gradle files in your App_Resources directory)
 	* device is locked
 	* manual closing of the application`
@@ -563,9 +563,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return error;
 	}
 
-	private getFilePathData(
-		filePath: string
-	): {
+	private getFilePathData(filePath: string): {
 		relativeFilePath: string;
 		filePathLengthBytes: number;
 		filePathLengthString: string;

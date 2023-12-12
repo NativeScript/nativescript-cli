@@ -141,6 +141,7 @@ declare global {
 		error?: Error;
 		notification?: string;
 		isFullSync?: boolean;
+		keepProcessAlive?: boolean;
 	}
 
 	interface IIsEmulator {
@@ -577,6 +578,8 @@ declare global {
 		): Promise<ILiveSyncDeviceDescriptor[]>;
 		getDeviceInstances(platform?: string): Promise<Mobile.IDevice[]>;
 		getLiveSyncData(projectDir: string): ILiveSyncInfo;
+
+		stop(): Promise<void>;
 	}
 
 	interface ILiveSyncServiceResolver {

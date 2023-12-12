@@ -409,7 +409,7 @@ Library that helps identifying if the environment can be used for development of
 		isCocoaPodsWorkingCorrectly: boolean;
 
 		/**
-		 * NativeScript CLI version string, as returned by `tns --version`.
+		 * NativeScript CLI version string, as returned by `ns --version`.
 		 * @type {string}
 		 */
 		nativeScriptCliVersion: string;

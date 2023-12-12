@@ -1,8 +1,16 @@
 import * as choki from "chokidar";
-import { hook } from "../common/helpers";
-import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
+import * as _ from "lodash";
 import * as path from "path";
+import {
+	IAnalyticsService,
+	IDictionary,
+	IFileSystem,
+	IHooksService,
+} from "../common/declarations";
+import { cache, performanceLog } from "../common/decorators";
+import { hook } from "../common/helpers";
+import { injector } from "../common/yok";
 import {
 	AnalyticsEventLabelDelimiter,
 	CONFIG_FILE_NAME_JS,
@@ -14,12 +22,7 @@ import {
 	TrackActionNames,
 	WEBPACK_COMPILATION_COMPLETE,
 } from "../constants";
-import {
-	IProjectConfigService,
-	IProjectData,
-	IProjectDataService,
-	IProjectService,
-} from "../definitions/project";
+import { IWatchIgnoreListService } from "../declarations";
 import {
 	INodeModulesDependenciesBuilder,
 	IPlatformController,
@@ -27,19 +30,21 @@ import {
 	IPlatformsDataService,
 } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
-import { IWatchIgnoreListService } from "../declarations";
 import {
-	IAnalyticsService,
-	IDictionary,
-	IFileSystem,
-	IHooksService,
-} from "../common/declarations";
-import { injector } from "../common/yok";
-import * as _ from "lodash";
+	IProjectConfigService,
+	IProjectData,
+	IProjectDataService,
+	IProjectService,
+} from "../definitions/project";
 
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
 	nativeFilesWatcher: choki.FSWatcher;
+	prepareArguments: {
+		prepareData: IPrepareData;
+		projectData: IProjectData;
+		platformData: IPlatformData;
+	};
 }
 
 export class PrepareController extends EventEmitter {
@@ -47,6 +52,7 @@ export class PrepareController extends EventEmitter {
 	private isInitialPrepareReady = false;
 	private persistedData: IFilesChangeEventData[] = [];
 	private webpackCompilerHandler: any = null;
+	private pausedFileWatch: boolean = false;
 
 	constructor(
 		private $platformController: IPlatformController,
@@ -100,9 +106,8 @@ export class PrepareController extends EventEmitter {
 			await this.watchersData[projectDir][
 				platformLowerCase
 			].nativeFilesWatcher.close();
-			this.watchersData[projectDir][
-				platformLowerCase
-			].nativeFilesWatcher = null;
+			this.watchersData[projectDir][platformLowerCase].nativeFilesWatcher =
+				null;
 		}
 
 		if (
@@ -175,11 +180,12 @@ export class PrepareController extends EventEmitter {
 				projectData,
 				prepareData
 			);
-			const hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(
-				platformData,
-				projectData,
-				prepareData
-			);
+			const hasNativeChanges =
+				await this.$prepareNativePlatformService.prepareNativePlatform(
+					platformData,
+					projectData,
+					prepareData
+				);
 			result = {
 				hasNativeChanges,
 				platform: prepareData.platform.toLowerCase(),
@@ -221,6 +227,11 @@ export class PrepareController extends EventEmitter {
 			] = {
 				nativeFilesWatcher: null,
 				hasWebpackCompilerProcess: false,
+				prepareArguments: {
+					platformData,
+					projectData,
+					prepareData,
+				},
 			};
 		}
 
@@ -277,7 +288,8 @@ export class PrepareController extends EventEmitter {
 				if (
 					data.platform.toLowerCase() === platformData.platformNameLowerCase
 				) {
-					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
+					if (this.isFileWatcherPaused()) return;
+					this.emitPrepareEvent({ ...data, files: data.files || [], hasNativeChanges: false });
 				}
 			};
 
@@ -314,11 +326,12 @@ export class PrepareController extends EventEmitter {
 		}
 
 		if (newNativeWatchStarted) {
-			hasNativeChanges = await this.$prepareNativePlatformService.prepareNativePlatform(
-				platformData,
-				projectData,
-				prepareData
-			);
+			hasNativeChanges =
+				await this.$prepareNativePlatformService.prepareNativePlatform(
+					platformData,
+					projectData,
+					prepareData
+				);
 		}
 
 		return hasNativeChanges;
@@ -350,6 +363,7 @@ export class PrepareController extends EventEmitter {
 		const watcher = choki
 			.watch(patterns, watcherOptions)
 			.on("all", async (event: string, filePath: string) => {
+				if (this.isFileWatcherPaused()) return;
 				filePath = path.join(projectData.projectDir, filePath);
 				if (this.$watchIgnoreListService.isFileInIgnoreList(filePath)) {
 					this.$watchIgnoreListService.removeFileFromIgnoreList(filePath);
@@ -357,7 +371,7 @@ export class PrepareController extends EventEmitter {
 					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
 					await this.writeRuntimePackageJson(projectData, platformData);
 					this.emitPrepareEvent({
-						files: [],
+						files: [filePath],
 						staleFiles: [],
 						hasOnlyHotUpdateFiles: false,
 						hmrData: null,
@@ -521,6 +535,58 @@ export class PrepareController extends EventEmitter {
 			additionalData: `${platform.toLowerCase()}${AnalyticsEventLabelDelimiter}${version}`,
 		});
 	}
+
+	private isFileWatcherPaused() {
+		return this.pausedFileWatch;
+	}
+
+	public async toggleFileWatcher() {
+		this.pausedFileWatch = !this.pausedFileWatch;
+
+		const watchers = Object.values(this.watchersData);
+		if (this.pausedFileWatch) {
+			for (const watcher of watchers) {
+				for (const platform in watcher) {
+					await this.$webpackCompilerService.stopWebpackCompiler(platform);
+					watcher[platform].hasWebpackCompilerProcess = false;
+				}
+			}
+		} else {
+			for (const watcher of watchers) {
+				for (const platform in watcher) {
+					const args = watcher[platform].prepareArguments;
+					watcher[platform].hasWebpackCompilerProcess = true;
+					await this.$webpackCompilerService.compileWithWatch(
+						args.platformData,
+						args.projectData,
+						args.prepareData
+					);
+				}
+			}
+		}
+		return this.pausedFileWatch;
+	}
+
+	// public async toggleWatchNodeModules() {
+	// 	const watchers = Object.values(this.watchersData);
+	// 	let state = false;
+	// 	for (const watcher of watchers) {
+	// 		for (const platform in watcher) {
+	// 			const args = watcher[platform].prepareArguments;
+	// 			state = !args.prepareData.watchNodeModules;
+	// 			args.prepareData.watchNodeModules = state;
+	// 			await this.$webpackCompilerService.stopWebpackCompiler(platform);
+	// 			await sleep(1000);
+	// 			await this.$webpackCompilerService.compileWithWatch(
+	// 				args.platformData,
+	// 				args.projectData,
+	// 				args.prepareData
+	// 			);
+	// 		}
+	// 	}
+
+	// 	return state;
+	// }
 }
 
 injector.register("prepareController", PrepareController);
