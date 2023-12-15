@@ -1012,7 +1012,10 @@ project.tasks.configureEach {
         name =~ /mergeBenchmarkNativeLibs/ ||
         name =~ /stripBenchmark(Debug|Release)Symbols/ ||
         name =~ /buildKotlinToolingMetadata/ ||
-        name =~ /validateSigning/
+        name =~ /validateSigning/ || 
+        // because of sentry plugin. There must be a better way
+        name =~ /collectExternal(Debug|Release)/ ||
+        name =~ /generateSentry(Debug|Release)/
         )) {
         it.finalizedBy(buildMetadata)
     }
