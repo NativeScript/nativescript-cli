@@ -1103,15 +1103,23 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private validateFramework(libraryPath: string): void {
-		const infoPlistPath = path.join(
+		let infoPlistPath = path.join(
 			libraryPath,
 			constants.INFO_PLIST_FILE_NAME
 		);
 		if (!this.$fs.exists(infoPlistPath)) {
-			this.$errors.fail(
-				"The bundle at %s does not contain an Info.plist file.",
-				libraryPath
+			infoPlistPath = path.join(
+				libraryPath,
+				"Resources",
+				constants.INFO_PLIST_FILE_NAME
 			);
+			if (!this.$fs.exists(infoPlistPath)) {
+				this.$errors.fail(
+					"The bundle at %s does not contain an Info.plist file.",
+					libraryPath
+				);
+			}
+			
 		}
 
 		const plistJson = this.$plistParser.parseFileSync(infoPlistPath);
