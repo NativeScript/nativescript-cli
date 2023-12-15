@@ -526,6 +526,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			projectData.projectIdentifiers.android,
 			manifestPath
 		);
+		const buildAppGradlePath = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			"app",
+			"build.gradle"
+		);
 		const buildGradlePath = path.join(
 			this.getPlatformData(projectData).projectRoot,
 			"build.gradle"
@@ -534,7 +539,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			"-i",
 			/__PACKAGE__/,
 			projectData.projectIdentifiers.android,
-			buildGradlePath
+			buildAppGradlePath
 		);
 		const relativePath =  path.relative(this.getPlatformData(projectData).projectRoot, projectData.projectDir)
 		shell.sed(
