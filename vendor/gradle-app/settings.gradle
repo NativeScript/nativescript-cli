@@ -14,14 +14,7 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory
 import groovy.json.JsonSlurper
 import static org.gradle.internal.logging.text.StyledTextOutput.Style
 
-def getProjectRoot = { ->
-    def projectRoot = "$rootDir/../../"
-    if (System.getProperties().projectRoot != null) {
-        projectRoot = System.getProperties().projectRoot
-    }
-    return projectRoot
-}
-def USER_PROJECT_ROOT = getProjectRoot()
+def USER_PROJECT_ROOT = "$rootDir/../../"
 def outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
 def ext  = {
     appResourcesPath = getProperty("appResourcesPath")

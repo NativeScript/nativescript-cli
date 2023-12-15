@@ -465,10 +465,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.getPlatformData(projectData).projectRoot,
 			"settings.gradle"
 		);
+		const relativePath =  path.relative(this.getPlatformData(projectData).projectRoot, projectData.projectDir)
 		shell.sed(
 			"-i",
 			/def USER_PROJECT_ROOT = \"\$rootDir\/..\/..\/\"/,
-			'def USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../"',
+			`def USER_PROJECT_ROOT = "$rootDir/${relativePath}"`,
 			gradleSettingsFilePath
 		);
 
@@ -527,7 +528,6 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		);
 		const buildGradlePath = path.join(
 			this.getPlatformData(projectData).projectRoot,
-			"app",
 			"build.gradle"
 		);
 		shell.sed(
@@ -536,10 +536,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			projectData.projectIdentifiers.android,
 			buildGradlePath
 		);
+		const relativePath =  path.relative(this.getPlatformData(projectData).projectRoot, projectData.projectDir)
 		shell.sed(
 			"-i",
 			/project.ext.USER_PROJECT_ROOT = \"\$rootDir\/..\/..\"/,
-			'project.ext.USER_PROJECT_ROOT = System.getProperties().projectRoot != null ? System.getProperties().projectRoot : "$rootDir/../../"',
+			`project.ext.USER_PROJECT_ROOT = "$rootDir/${relativePath}"`,
 			buildGradlePath
 		);
 	}
