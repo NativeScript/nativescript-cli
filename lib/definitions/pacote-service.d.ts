@@ -1,5 +1,6 @@
 import * as tar from "tar";
 import { IProxySettingsBase } from "../common/declarations";
+import { Arborist } from "@npmcli/arborist";
 
 declare global {
 	interface IPacoteService {
@@ -29,6 +30,11 @@ declare global {
 		 * The path to npm cache
 		 */
 		cache?: string;
+
+		/**
+		 * Arborist instance to use
+		 */
+		Arborist?: Arborist;
 	}
 
 	interface IPacoteManifestOptions extends IPacoteBaseOptions {

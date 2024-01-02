@@ -30,6 +30,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"android-31",
 			"android-32",
 			"android-33",
+			"android-34",
 		];
 
 		const isRuntimeVersionLessThan = (targetVersion: string) => {
@@ -75,9 +76,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		config: Partial<NativeScriptDoctor.IProjectDir> = {}
 	): NativeScriptDoctor.IAndroidToolsInfoData {
 		if (!this.toolsInfo) {
-			const infoData: NativeScriptDoctor.IAndroidToolsInfoData = Object.create(
-				null
-			);
+			const infoData: NativeScriptDoctor.IAndroidToolsInfoData =
+				Object.create(null);
 			infoData.androidHomeEnvVar = this.androidHome;
 			infoData.installedTargets = this.getInstalledTargets();
 			infoData.compileSdkVersion = this.getCompileSdk(
@@ -99,14 +99,18 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		const toolsInfoData = this.getToolsInfo(config);
 		const isAndroidHomeValid = this.isAndroidHomeValid();
 		if (!toolsInfoData.compileSdkVersion) {
-			const supportedTargetsForAndroidRuntime = this.getSupportedTargets(config.projectDir)
+			const supportedTargetsForAndroidRuntime = this.getSupportedTargets(
+				config.projectDir
+			);
 			errors.push({
 				warning: [
 					`Cannot find a compatible Android SDK for compilation.`,
 					`To be able to build for Android with your current android runtime, install one of the following supported Android SDK targets:`,
-					...supportedTargetsForAndroidRuntime.map(target => `  ${target}`),
-					`Supported targets vary based on what android runtime you have installed. Currently your app uses @nativescript/android ${this.getRuntimeVersion({ projectDir: config.projectDir })}`
-				].join('\n'),
+					...supportedTargetsForAndroidRuntime.map((target) => `  ${target}`),
+					`Supported targets vary based on what android runtime you have installed. Currently your app uses @nativescript/android ${this.getRuntimeVersion(
+						{ projectDir: config.projectDir }
+					)}`,
+				].join("\n"),
 				additionalInformation: `Run \`\$ ${this.getPathToSdkManagementTool()}\` to manage your Android SDK versions.`,
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
 			});
@@ -530,9 +534,10 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		return !errors && !errors.length;
 	}
 
-	private getAndroidRuntimePackageFromProjectDir(
-		projectDir: string
-	): { name: string; version: string } {
+	private getAndroidRuntimePackageFromProjectDir(projectDir: string): {
+		name: string;
+		version: string;
+	} {
 		if (!projectDir || !this.fs.exists(projectDir)) {
 			return null;
 		}
@@ -542,9 +547,8 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			return null;
 		}
 
-		const content = this.fs.readJson<INativeScriptProjectPackageJson>(
-			pathToPackageJson
-		);
+		const content =
+			this.fs.readJson<INativeScriptProjectPackageJson>(pathToPackageJson);
 
 		if (!content) {
 			return null;

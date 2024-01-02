@@ -8,8 +8,27 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
 
 buildscript {
+    // project.ext.USER_PROJECT_ROOT = "$rootDir/../../.."
+    project.ext.PLATFORMS_ANDROID = "platforms/android"
+    project.ext.PLUGIN_NAME = "{{pluginName}}"
+
+    def USER_PROJECT_ROOT_FROM_ENV = System.getenv('USER_PROJECT_ROOT');
+    if (USER_PROJECT_ROOT_FROM_ENV != null && !USER_PROJECT_ROOT_FROM_ENV.equals("")) {
+        project.ext.USER_PROJECT_ROOT = USER_PROJECT_ROOT_FROM_ENV;
+    } else {
+        project.ext.USER_PROJECT_ROOT = "$rootDir/../../../"
+    }
+
+    def USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV = System.getenv('USER_PROJECT_PLATFORMS_ANDROID');
+    if (USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV != null && !USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV.equals("")) {
+        project.ext.USER_PROJECT_PLATFORMS_ANDROID = USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV;
+    } else {
+        project.ext.USER_PROJECT_PLATFORMS_ANDROID = project.ext.USER_PROJECT_ROOT + PLATFORMS_ANDROID
+    }
+
+
     def getDepPlatformDir = { dep ->
-        file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
+        file("${project.ext.USER_PROJECT_PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
     }
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.8.20" }
     def kotlinVersion = computeKotlinVersion()
@@ -29,12 +48,8 @@ buildscript {
     project.ext.getDepPlatformDir = getDepPlatformDir
     project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
 
-    project.ext.USER_PROJECT_ROOT = "$rootDir/../../.."
-    project.ext.PLATFORMS_ANDROID = "platforms/android"
-    project.ext.PLUGIN_NAME = "{{pluginName}}"
-
     // the build script will not work with previous versions of the CLI (3.1 or earlier)
-    def dependenciesJson = file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/dependencies.json")
+    def dependenciesJson = file("${project.ext.USER_PROJECT_PLATFORMS_ANDROID}/dependencies.json")
     def appDependencies = new JsonSlurper().parseText(dependenciesJson.text)
     def pluginData = appDependencies.find { it.name == project.ext.PLUGIN_NAME }
     project.ext.nativescriptDependencies = appDependencies.findAll{pluginData.dependencies.contains(it.name)}

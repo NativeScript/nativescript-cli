@@ -13,13 +13,14 @@ import {
 import { IProjectData } from "../../definitions/project"; //IProjectDataService
 import { IAnalyticsService, IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
-import { IPackageManager } from "../../declarations";
+import { IOptions, IPackageManager } from "../../declarations";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 
 export class AddPlatformService implements IAddPlatformService {
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $options: IOptions,
 		// private $pacoteService: IPacoteService,
 		// private $projectDataService: IProjectDataService,
 		private $packageManager: IPackageManager,
@@ -182,10 +183,12 @@ export class AddPlatformService implements IAddPlatformService {
 		frameworkDirPath: string,
 		frameworkVersion: string
 	): Promise<void> {
-		const platformDir = path.join(
-			projectData.platformsDir,
-			platformData.normalizedPlatformName.toLowerCase()
-		);
+		const platformDir = this.$options.androidHost
+			? this.$options.androidHost
+			: path.join(
+					projectData.platformsDir,
+					platformData.normalizedPlatformName.toLowerCase()
+			  );
 		this.$fs.deleteDirectory(platformDir);
 
 		await platformData.platformProjectService.createProject(

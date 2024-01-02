@@ -1,3 +1,14 @@
+## [8.6.1](https://github.com/NativeScript/nativescript-cli/compare/v8.6.0...v8.6.1) (2023-10-23)
+
+
+### Bug Fixes
+
+* remove cli-table aliasing ([#5763](https://github.com/NativeScript/nativescript-cli/issues/5763)) ([dd1640c](https://github.com/NativeScript/nativescript-cli/commit/dd1640ca15235be82d945fe6401e3993a6a4442a))
+* resolve pacote regression with creating app from a template directory ([#5766](https://github.com/NativeScript/nativescript-cli/issues/5766)) ([2cd7a62](https://github.com/NativeScript/nativescript-cli/commit/2cd7a62ee8535f72c578e681806ca441c752c357))
+* setup docs links ([#5762](https://github.com/NativeScript/nativescript-cli/issues/5762)) ([b229fdf](https://github.com/NativeScript/nativescript-cli/commit/b229fdf4eb4d942fce5734166e02c1b4b193cdb7))
+
+
+
 # [8.6.0](https://github.com/NativeScript/nativescript-cli/compare/v8.5.3...v8.6.0) (2023-10-10)
 
 

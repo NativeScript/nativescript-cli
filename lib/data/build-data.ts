@@ -49,6 +49,7 @@ export class AndroidBuildData extends BuildData {
 	public androidBundle: boolean;
 	public gradlePath: string;
 	public gradleArgs: string;
+	public androidHost: string;
 
 	constructor(projectDir: string, platform: string, data: any) {
 		super(projectDir, platform, data);
@@ -60,5 +61,6 @@ export class AndroidBuildData extends BuildData {
 		this.androidBundle = data.androidBundle || data.aab;
 		this.gradlePath = data.gradlePath;
 		this.gradleArgs = data.gradleArgs;
+		this.androidHost = data.androidHost;
 	}
 }

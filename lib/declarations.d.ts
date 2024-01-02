@@ -581,6 +581,8 @@ interface IAndroidBundleOptions {
 interface IAndroidOptions {
 	gradlePath: string;
 	gradleArgs: string;
+	androidHost: string;
+	androidHostModule: string;
 }
 
 interface ITypingsOptions {

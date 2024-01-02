@@ -9,6 +9,7 @@ import { NpmConfigService } from "../../lib/services/npm-config-service";
 import { INpmConfigService } from "../../lib/declarations";
 import { IProxySettings } from "../../lib/common/declarations";
 import { IInjector } from "../../lib/common/definitions/yok";
+import { Arborist } from "@npmcli/arborist";
 
 import * as pacote from "pacote";
 import * as tar from "tar";
@@ -48,10 +49,9 @@ const createTestInjector = (opts?: ITestSetup): IInjector => {
 	testInjector.register("npmConfigService", NpmConfigService);
 
 	if (!isNpmConfigSet) {
-		const npmConfigService: INpmConfigService = testInjector.resolve(
-			"npmConfigService"
-		);
-		defaultPacoteOpts = npmConfigService.getConfig();
+		const npmConfigService: INpmConfigService =
+			testInjector.resolve("npmConfigService");
+		defaultPacoteOpts = { ...npmConfigService.getConfig(), Arborist };
 		isNpmConfigSet = true;
 	}
 
@@ -169,8 +169,7 @@ describe("pacoteService", () => {
 					expectedPackageName: packageName,
 				},
 				{
-					name:
-						"with 'cache', passed options and proxy settings when proxy is configured",
+					name: "with 'cache', passed options and proxy settings when proxy is configured",
 					manifestOptions,
 					useProxySettings: true,
 					expectedPackageName: packageName,
@@ -181,23 +180,20 @@ describe("pacoteService", () => {
 					expectedPackageName: fullPath,
 				},
 				{
-					name:
-						"with full path to file, 'cache' and passed options when local path is passed",
+					name: "with full path to file, 'cache' and passed options when local path is passed",
 					manifestOptions,
 					isLocalPackage: true,
 					expectedPackageName: fullPath,
 				},
 				{
-					name:
-						"with full path to file, 'cache' and proxy settings when proxy is configured",
+					name: "with full path to file, 'cache' and proxy settings when proxy is configured",
 					manifestOptions,
 					isLocalPackage: true,
 					useProxySettings: true,
 					expectedPackageName: fullPath,
 				},
 				{
-					name:
-						"with full path to file, 'cache', passed options and proxy settings when proxy is configured and local path is passed",
+					name: "with full path to file, 'cache', passed options and proxy settings when proxy is configured and local path is passed",
 					manifestOptions,
 					useProxySettings: true,
 					isLocalPackage: true,

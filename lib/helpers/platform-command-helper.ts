@@ -9,6 +9,7 @@ import {
 	IPlatformCommandHelper,
 	IPackageInstallationManager,
 	IUpdatePlatformOptions,
+	IOptions,
 } from "../declarations";
 import { IPlatformsDataService, IPlatformData } from "../definitions/platform";
 import { IFileSystem, IErrors } from "../common/declarations";
@@ -21,6 +22,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
@@ -36,6 +38,11 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		projectData: IProjectData,
 		frameworkPath: string
 	): Promise<void> {
+		if (this.$options.androidHost) {
+			this.$logger.info("Ignoring platform add becuase of --android-host flag");
+			return;
+		}
+
 		const platformsDir = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(platformsDir);
 
@@ -82,6 +89,13 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		platforms: string[],
 		projectData: IProjectData
 	): Promise<void> {
+		if (this.$options.androidHost) {
+			this.$logger.info(
+				"Ignoring platform remove becuase of --android-host flag"
+			);
+			return;
+		}
+
 		for (const platform of platforms) {
 			this.$platformValidationService.validatePlatformInstalled(
 				platform,
@@ -102,10 +116,9 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			}
 
 			try {
-				const platformDir = path.join(
-					projectData.platformsDir,
-					platform.toLowerCase()
-				);
+				const platformDir = this.$options.androidHost
+					? this.$options.androidHost
+					: path.join(projectData.platformsDir, platform.toLowerCase());
 				this.$fs.deleteDirectory(platformDir);
 				await this.$packageInstallationManager.uninstall(
 					platformData.frameworkPackageName,
@@ -210,9 +223,8 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			platform,
 			projectData
 		);
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		if (!prepareInfo) {
 			return true;
 		}

@@ -217,11 +217,10 @@ export class ProjectData implements IProjectData {
 			appResourcesDir,
 			this.$devicePlatformsConstants.Android
 		);
-		const androidManifestDir = this.$androidResourcesMigrationService.hasMigrated(
-			appResourcesDir
-		)
-			? path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR)
-			: androidDirPath;
+		const androidManifestDir =
+			this.$androidResourcesMigrationService.hasMigrated(appResourcesDir)
+				? path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR)
+				: androidDirPath;
 
 		return path.join(androidManifestDir, constants.MANIFEST_FILE_NAME);
 	}
@@ -244,7 +243,8 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getAppResourcesDirectoryPath(projectDir?: string): string {
-		const appResourcesRelativePath = this.getAppResourcesRelativeDirectoryPath();
+		const appResourcesRelativePath =
+			this.getAppResourcesRelativeDirectoryPath();
 
 		return this.resolveToProjectDir(appResourcesRelativePath, projectDir);
 	}
