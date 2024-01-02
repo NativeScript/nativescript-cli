@@ -1,16 +1,26 @@
 import groovy.json.JsonSlurper
 
-def USER_PROJECT_ROOT = "$rootDir/../../../"
+// def USER_PROJECT_ROOT = "$rootDir/../../../"
 def PLATFORMS_ANDROID = "platforms/android"
 def PLUGIN_NAME = "{{pluginName}}"
 
-def dependenciesJson = file("${USER_PROJECT_ROOT}/${PLATFORMS_ANDROID}/dependencies.json")
+def USER_PROJECT_PLATFORMS_ANDROID
+def USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV = System.getenv('USER_PROJECT_PLATFORMS_ANDROID');
+if (USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV != null && !USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV.equals("")) {
+    USER_PROJECT_PLATFORMS_ANDROID = USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV;
+} else {
+    USER_PROJECT_PLATFORMS_ANDROID = "$rootDir/../../../platforms/android"
+}
+
+System.out.println("!!!!! VM: USER_PROJECT_PLATFORMS_ANDROID: " + USER_PROJECT_PLATFORMS_ANDROID);
+
+def dependenciesJson = file("${USER_PROJECT_PLATFORMS_ANDROID}/dependencies.json")
 def appDependencies = new JsonSlurper().parseText(dependenciesJson.text)
 def pluginData = appDependencies.find { it.name == PLUGIN_NAME }
 def nativescriptDependencies = appDependencies.findAll{pluginData.name == it.name}
 
 def getDepPlatformDir = { dep ->
-        file("$USER_PROJECT_ROOT/$PLATFORMS_ANDROID/${dep.directory}/$PLATFORMS_ANDROID")
+        file("$USER_PROJECT_PLATFORMS_ANDROID/${dep.directory}/$PLATFORMS_ANDROID")
 }
 
 def applyIncludeSettingsGradlePlugin = {

@@ -1,5 +1,4 @@
 import { AndroidDeviceLiveSyncServiceBase } from "./android-device-livesync-service-base";
-import { APP_FOLDER_NAME } from "../../constants";
 import { LiveSyncPaths } from "../../common/constants";
 import { AndroidLivesyncTool } from "./android-livesync-tool";
 import * as path from "path";
@@ -19,7 +18,8 @@ export class AndroidDeviceSocketsLiveSyncService
 	extends AndroidDeviceLiveSyncServiceBase
 	implements
 		IAndroidNativeScriptDeviceLiveSyncService,
-		INativeScriptDeviceLiveSyncService {
+		INativeScriptDeviceLiveSyncService
+{
 	private livesyncTool: IAndroidLivesyncTool;
 	private static STATUS_UPDATE_INTERVAL = 10000;
 	private static MINIMAL_VERSION_LONG_LIVING_CONNECTION = "0.2.0";
@@ -279,7 +279,7 @@ export class AndroidDeviceSocketsLiveSyncService
 		);
 		const projectFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			APP_FOLDER_NAME
+			this.$options.androidHostModule
 		);
 		if (!this.livesyncTool.hasConnection()) {
 			await this.livesyncTool.connect({
