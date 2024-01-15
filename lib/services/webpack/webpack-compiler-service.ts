@@ -361,7 +361,7 @@ export class WebpackCompilerService
 		const { env } = prepareData;
 		const envData = Object.assign({}, env, { [platform.toLowerCase()]: true });
 
-		const appId = projectData.projectId;
+		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();
 		const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
 
