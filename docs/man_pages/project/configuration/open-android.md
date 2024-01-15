@@ -3,7 +3,7 @@ title: ns open android
 position: 10
 ---<% } %>
 
-# ns open ios
+# ns open android
 
 ### Description
 
