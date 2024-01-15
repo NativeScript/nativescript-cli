@@ -3,7 +3,7 @@ import { platform as currentPlatform } from "os";
 import * as path from "path";
 import { color } from "../color";
 import { PrepareCommand } from "../commands/prepare";
-import { IChildProcess } from "../common/declarations";
+import { IChildProcess, IXcodeSelectService } from "../common/declarations";
 import { ICommand } from "../common/definitions/commands";
 import {
 	IKeyCommand,
@@ -16,6 +16,8 @@ import {
 import { injector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
 import { IStartService } from "../definitions/start-service";
+import { IOSProjectService } from "../services/ios-project-service";
+import { IOptions } from "../declarations";
 
 export class A implements IKeyCommand {
 	key: IValidKeyName = "a";
@@ -38,7 +40,7 @@ export class ShiftA implements IKeyCommand {
 	platform: IKeyCommandPlatform = "Android";
 	description: string = "Open android project in Android Studio";
 	willBlockKeyCommandExecution: boolean = true;
-
+	protected isInteractive: boolean = true;
 	constructor(
 		private $logger: ILogger,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
@@ -56,7 +58,9 @@ export class ShiftA implements IKeyCommand {
 				"prepare"
 			) as PrepareCommand;
 			await prepareCommand.execute([this.platform]);
-			process.stdin.resume();
+			if (this.isInteractive) {
+				process.stdin.resume();
+			}
 		}
 
 		const os = currentPlatform();
@@ -93,7 +97,11 @@ export class ShiftA implements IKeyCommand {
 				return;
 			}
 
-			this.$childProcess.exec(`"${studioPath}" "${androidDir}"`);
+			const child = this.$childProcess.spawn(studioPath, [androidDir], {
+				detached: true,
+				stdio: "ignore",
+			});
+			child.unref();
 		} else if (os === "linux") {
 			if (!fs.existsSync(`/usr/local/android-studio/bin/studio.sh`)) {
 				this.$logger.error("Android Studio is not installed");
@@ -103,6 +111,22 @@ export class ShiftA implements IKeyCommand {
 				`/usr/local/android-studio/bin/studio.sh ${androidDir}`
 			);
 		}
+	}
+}
+export class OpenAndroidCommand extends ShiftA {
+	constructor(
+		$logger: ILogger,
+		$liveSyncCommandHelper: ILiveSyncCommandHelper,
+		$childProcess: IChildProcess,
+		$projectData: IProjectData,
+		private $options: IOptions
+	) {
+		super($logger, $liveSyncCommandHelper, $childProcess, $projectData);
+		this.isInteractive = false;
+	}
+	async execute(): Promise<void> {
+		this.$options.watch = false;
+		super.execute();
 	}
 }
 
@@ -127,37 +151,80 @@ export class ShiftI implements IKeyCommand {
 	platform: IKeyCommandPlatform = "iOS";
 	description: string = "Open iOS project in Xcode";
 	willBlockKeyCommandExecution: boolean = true;
+	protected isInteractive: boolean = true;
 
 	constructor(
+		private $iOSProjectService: IOSProjectService,
 		private $logger: ILogger,
 		private $childProcess: IChildProcess,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
+		private $xcodeSelectService: IXcodeSelectService,
+		private $xcodebuildArgsService: IXcodebuildArgsService
 	) {}
 
 	async execute(): Promise<void> {
-		this.$projectData.initializeProjectData();
-		const iosDir = path.resolve(this.$projectData.platformsDir, "ios");
-
-		// TODO: reuse logic for resolving the xcode project file.
-		const xcprojectFile = path.resolve(iosDir);
-
-		if (!fs.existsSync(iosDir)) {
-			const prepareCommand = injector.resolveCommand(
-				"prepare"
-			) as PrepareCommand;
-			await prepareCommand.execute(["ios"]);
-			process.stdin.resume();
-		}
-
 		const os = currentPlatform();
 		if (os === "darwin") {
-			// TODO: remove this, and just use "open path/to/ios/xcworkspace or xcproject".
-			if (!fs.existsSync("/Applications/Xcode.app")) {
-				this.$logger.error("Xcode is not installed");
-				return;
+			this.$projectData.initializeProjectData();
+			const iosDir = path.resolve(this.$projectData.platformsDir, "ios");
+
+			if (!fs.existsSync(iosDir)) {
+				const prepareCommand = injector.resolveCommand(
+					"prepare"
+				) as PrepareCommand;
+
+				await prepareCommand.execute(["ios"]);
+				if (this.isInteractive) {
+					process.stdin.resume();
+				}
 			}
-			this.$childProcess.exec(`open ${xcprojectFile}`);
+			const platformData = this.$iOSProjectService.getPlatformData(
+				this.$projectData
+			);
+			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
+				platformData.projectRoot,
+				this.$projectData
+			)[1];
+
+			if (fs.existsSync(xcprojectFile)) {
+				this.$xcodeSelectService
+					.getDeveloperDirectoryPath()
+					.then(() => this.$childProcess.exec(`open ${xcprojectFile}`, {}))
+					.catch((e) => {
+						this.$logger.error(e.message);
+					});
+			} else {
+				this.$logger.error(`Unable to open project file: ${xcprojectFile}`);
+			}
+		} else {
+			this.$logger.error("Opening a project in XCode requires macOS.");
 		}
+	}
+}
+
+export class OpenIOSCommand extends ShiftI {
+	constructor(
+		$iOSProjectService: IOSProjectService,
+		$logger: ILogger,
+		$childProcess: IChildProcess,
+		$projectData: IProjectData,
+		$xcodeSelectService: IXcodeSelectService,
+		$xcodebuildArgsService: IXcodebuildArgsService,
+		private $options: IOptions
+	) {
+		super(
+			$iOSProjectService,
+			$logger,
+			$childProcess,
+			$projectData,
+			$xcodeSelectService,
+			$xcodebuildArgsService
+		);
+		this.isInteractive = false;
+	}
+	async execute(): Promise<void> {
+		this.$options.watch = false;
+		super.execute();
 	}
 }
 
@@ -317,3 +384,6 @@ injector.registerKeyCommand("A", ShiftA);
 injector.registerKeyCommand("n", N);
 injector.registerKeyCommand(SpecialKeys.QuestionMark, QuestionMark);
 injector.registerKeyCommand(SpecialKeys.CtrlC, CtrlC);
+
+injector.registerCommand("open|ios", OpenIOSCommand);
+injector.registerCommand("open|android", OpenAndroidCommand);
