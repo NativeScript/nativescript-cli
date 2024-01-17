@@ -14,7 +14,7 @@
 
 ---
 
-[![nativescript -> npm](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release.yml/badge.svg)](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release.yml)
+[![nativescript -> npm](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release_cli.yml/badge.svg)](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release_cli.yml)
 
 Get it using: `npm install -g nativescript`
 
@@ -96,7 +96,7 @@ The NativeScript CLI is available for installing as an npm package.
 
 In the command prompt, run the following command.
 
-OS | Node.js installed from http://nodejs.org/ | Node.js installed via package manager
+OS | Node.js installed from https://nodejs.org/ | Node.js installed via package manager
 ---|---------------------|----
 Windows | `npm install nativescript -g` | `npm install nativescript -g`
 macOS | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
@@ -265,7 +265,7 @@ The NativeScript CLI calls the SDK for the selected target platform and uses it 
 
 When you build for iOS, the NativeScript CLI will either build for a device, if there's a device attached, or for the native emulator if there are no devices attached. To trigger a native emulator build when a device is attached, set the `--emulator` flag.
 
-> **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
+> **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](https://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
 [Back to Top][1]
 
@@ -355,10 +355,10 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Back to Top][1]
 
 [1]: #nativescript-command-line-interface
-[2]: https://www.progress.com/nativescript
+[2]: https://nativescript.org
 [3]: https://github.com/nativescript/docs
 [4]: https://docs.nativescript.org/
 [5]: https://docs.nativescript.org/api-reference
 [6]: https://www.nativescript.org/faq
 [7]: https://docs.nativescript.org/core-concepts/technical-overview
-[8]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
+[8]: https://www.telerik.com/blogs/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
