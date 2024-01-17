@@ -71,7 +71,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				let sourceMapRaw;
 
 				// Skip files bigger than 50MB
-				if (this.$fs.getSize(filePath) > 50 * 1000 * 1000) {
+				if (this.$fs.getFileSize(filePath) > 50 * 1000 * 1000) {
 					this.$logger.trace(
 						`Skipping source map for file ${filePath} because it is too big (> 50MB).`
 					);
