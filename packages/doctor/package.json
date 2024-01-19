@@ -63,10 +63,10 @@
   "dependencies": {
     "lodash": "4.17.21",
     "osenv": "0.1.5",
-    "semver": "7.3.5",
-    "shelljs": "~0.8.4",
+    "semver": "7.5.4",
+    "shelljs": "0.8.5",
     "temp": "0.9.4",
-    "winreg": "1.2.4",
+    "winreg": "1.2.5",
     "yauzl": "2.10.0"
   }
 }
