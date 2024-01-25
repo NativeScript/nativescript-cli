@@ -1013,6 +1013,18 @@ project.tasks.configureEach {
         name =~ /stripBenchmark(Debug|Release)Symbols/ ||
         name =~ /buildKotlinToolingMetadata/ ||
         name =~ /validateSigning/ || 
+        name =~ /mergeExtDexNonMinified(Debug|Release)/ || 
+        name =~ /mergeDexNonMinified(Debug|Release)/ || 
+        name =~ /mergeNonMinified(Debug|Release)Shaders/ || 
+        name =~ /processNonMinified(Debug|Release)JavaRes/ || 
+        name =~ /mergeNonMinified(Debug|Release)JavaResource/ || 
+        name =~ /optimizeNonMinified(Debug|Release)Resources/ || 
+        name =~ /mergeNonMinified(Debug|Release)JniLibFolders/ || 
+        name =~ /mergeNonMinified(Debug|Release)NativeLibs/ || 
+        name =~ /stripNonMinified(Debug|Release)DebugSymbols/ || 
+        name =~ /checkBenchmark(Debug|Release)DuplicateClasses/ || 
+        name =~ /processBenchmark(Debug|Release)JavaRes/ || 
+        name =~ /mergeBenchmark(Debug|Release)JavaResource/ || 
         // because of sentry plugin. There must be a better way
         name =~ /collectExternal(Debug|Release)/ ||
         name =~ /generateSentry(Debug|Release)/
