@@ -119,6 +119,9 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
 		const skipPackageValidation = "-skipPackagePluginValidation";
 
+		// TODO:
+		// 1. make sure file exists
+		// 2. use ios/visionos based on platform target
 		const BUILD_SETTINGS_FILE_PATH = path.join(
 			projectData.appResourcesDirectoryPath,
 			"iOS",
