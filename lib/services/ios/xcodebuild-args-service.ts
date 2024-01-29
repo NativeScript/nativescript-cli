@@ -119,6 +119,12 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
 		const skipPackageValidation = "-skipPackagePluginValidation";
 
+		const BUILD_SETTINGS_FILE_PATH = path.join(
+			projectData.appResourcesDirectoryPath,
+			"iOS",
+			constants.BUILD_XCCONFIG_FILE_NAME
+		);
+
 		if (this.$fs.exists(xcworkspacePath)) {
 			return [
 				"-workspace",
@@ -126,6 +132,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				"-scheme",
 				projectData.projectName,
 				skipPackageValidation,
+				"-xcconfig",
+				BUILD_SETTINGS_FILE_PATH,
 			];
 		}
 
@@ -139,6 +147,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			"-scheme",
 			projectData.projectName,
 			skipPackageValidation,
+			"-xcconfig",
+			BUILD_SETTINGS_FILE_PATH,
 		];
 	}
 
