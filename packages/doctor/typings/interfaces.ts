@@ -209,7 +209,11 @@ declare module NativeScriptDoctor {
 		 * @param {string} runtimeVersion @optional The runtime version against which the validation is executed. In case this parameter is passed, it takes precedence over the projectDir argument.
 		 * @return {Promise<boolean>} true if local build can be executed for the provided platform.
 		 */
-		canExecuteLocalBuild(platform: string, projectDir?: string, runtimeVersion?: string): Promise<boolean>;
+		canExecuteLocalBuild(
+			platform: string,
+			projectDir?: string,
+			runtimeVersion?: string
+		): Promise<boolean>;
 
 		/**
 		 * Executes all checks for the current environment and returns the warnings from each check.
@@ -363,7 +367,10 @@ declare module NativeScriptDoctor {
 		dotNetVer?: string;
 	}
 
-	interface ISysInfoData extends ICommonSysInfoData, IiOSSysInfoData, IAndroidSysInfoData { }
+	interface ISysInfoData
+		extends ICommonSysInfoData,
+			IiOSSysInfoData,
+			IAndroidSysInfoData {}
 
 	/**
 	 * Describes warning returned from @nativescript/doctor check.
@@ -439,11 +446,6 @@ declare module NativeScriptDoctor {
 		isInstalled: boolean;
 
 		/**
-		 * Determines whether python six package is installed
-		 */
-		isSixPackageInstalled: boolean;
-
-		/**
 		 * Error message from installation check
 		 */
 		installationErrorMessage?: string;
@@ -487,7 +489,11 @@ declare module NativeScriptDoctor {
 		 * @param {string} runtimeVersion @optional The runtime version against which the validation is executed. In case this parameter is passed, it takes precedence over the projectDir argument.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateJavacVersion(installedJavaVersion: string, projectDir?: string, runtimeVersion?: string): NativeScriptDoctor.IWarning[];
+		validateJavacVersion(
+			installedJavaVersion: string,
+			projectDir?: string,
+			runtimeVersion?: string
+		): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Returns the path to the adb which is located in ANDROID_HOME.
@@ -506,14 +512,18 @@ declare module NativeScriptDoctor {
 		 * @param {ITargetValidationOptions} options The targetSdk to be validated and the project directory - used to determine the Android Runtime version.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validateMinSupportedTargetSdk(options: ITargetValidationOptions): NativeScriptDoctor.IWarning[];
+		validateMinSupportedTargetSdk(
+			options: ITargetValidationOptions
+		): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Validates if the provided targetSdk is lower that the maximum supported target SDK.
 		 * @param {ITargetValidationOptions} options The targetSdk to be validated and the project directory - used to determine the Android Runtime version.
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
-		validataMaxSupportedTargetSdk(options: ITargetValidationOptions): NativeScriptDoctor.IWarning[];
+		validataMaxSupportedTargetSdk(
+			options: ITargetValidationOptions
+		): NativeScriptDoctor.IWarning[];
 
 		/**
 		 * Returns the path to the emulator executable.
