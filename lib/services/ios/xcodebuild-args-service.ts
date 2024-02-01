@@ -53,7 +53,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				)
 			)
 			.concat(this.getBuildLoggingArgs())
-			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData));
+			.concat(this.getXcodeProjectArgs(platformData, projectData));
 
 		return args;
 	}
@@ -78,7 +78,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			buildConfig.release ? Configurations.Release : Configurations.Debug,
 			"-allowProvisioningUpdates",
 		]
-			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData))
+			.concat(this.getXcodeProjectArgs(platformData, projectData))
 			.concat(architectures)
 			.concat(
 				this.getBuildCommonArgs(
@@ -108,51 +108,43 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	}
 
 	public getXcodeProjectArgs(
-		projectRoot: string,
+		platformData: IPlatformData,
 		projectData: IProjectData
 	): string[] {
 		const xcworkspacePath = path.join(
-			projectRoot,
+			platformData.projectRoot,
 			`${projectData.projectName}.xcworkspace`
 		);
 		// Introduced in Xcode 14+
 		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
 		const skipPackageValidation = "-skipPackagePluginValidation";
 
-		// TODO:
-		// 1. make sure file exists
-		// 2. use ios/visionos based on platform target
-		const BUILD_SETTINGS_FILE_PATH = path.join(
-			projectData.appResourcesDirectoryPath,
-			"iOS",
-			constants.BUILD_XCCONFIG_FILE_NAME
-		);
-
-		if (this.$fs.exists(xcworkspacePath)) {
-			return [
-				"-workspace",
-				xcworkspacePath,
-				"-scheme",
-				projectData.projectName,
-				skipPackageValidation,
-				"-xcconfig",
-				BUILD_SETTINGS_FILE_PATH,
-			];
-		}
-
-		const xcodeprojPath = path.join(
-			projectRoot,
-			`${projectData.projectName}.xcodeproj`
-		);
-		return [
-			"-project",
-			xcodeprojPath,
+		const extraArgs: string[] = [
 			"-scheme",
 			projectData.projectName,
 			skipPackageValidation,
-			"-xcconfig",
-			BUILD_SETTINGS_FILE_PATH,
 		];
+
+		const BUILD_SETTINGS_FILE_PATH = path.join(
+			projectData.appResourcesDirectoryPath,
+			platformData.normalizedPlatformName,
+			constants.BUILD_XCCONFIG_FILE_NAME
+		);
+
+		if (this.$fs.exists(BUILD_SETTINGS_FILE_PATH)) {
+			extraArgs.push("-xcconfig");
+			extraArgs.push(BUILD_SETTINGS_FILE_PATH);
+		}
+
+		if (this.$fs.exists(xcworkspacePath)) {
+			return ["-workspace", xcworkspacePath, ...extraArgs];
+		}
+
+		const xcodeprojPath = path.join(
+			platformData.projectRoot,
+			`${projectData.projectName}.xcodeproj`
+		);
+		return ["-project", xcodeprojPath, ...extraArgs];
 	}
 
 	private getBuildLoggingArgs(): string[] {

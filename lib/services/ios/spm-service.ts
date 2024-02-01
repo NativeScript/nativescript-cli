@@ -78,7 +78,7 @@ export class SPMService implements ISPMService {
 	) {
 		await this.$xcodebuildCommandService.executeCommand(
 			this.$xcodebuildArgsService
-				.getXcodeProjectArgs(platformData.projectRoot, projectData)
+				.getXcodeProjectArgs(platformData, projectData)
 				.concat([
 					"-destination",
 					"generic/platform=iOS",
