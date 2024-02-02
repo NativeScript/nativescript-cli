@@ -182,7 +182,7 @@ export class ShiftI implements IKeyCommand {
 				this.$projectData
 			);
 			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
-				platformData.projectRoot,
+				platformData,
 				this.$projectData
 			)[1];
 

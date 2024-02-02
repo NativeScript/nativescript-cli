@@ -641,6 +641,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 				pluginData.platformsData = data.platforms;
 				pluginData.pluginVariables = data.variables;
 			}
+			return pluginData;
 		} catch (err) {
 			this.$logger.trace(
 				"NOTE: There appears to be a problem with this dependency:",
