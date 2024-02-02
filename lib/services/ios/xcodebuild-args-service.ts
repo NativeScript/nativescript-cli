@@ -115,6 +115,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.projectRoot,
 			`${projectData.projectName}.xcworkspace`
 		);
+
 		// Introduced in Xcode 14+
 		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
 		const skipPackageValidation = "-skipPackagePluginValidation";
