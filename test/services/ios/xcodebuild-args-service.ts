@@ -138,30 +138,19 @@ describe("xcodebuildArgsService", () => {
 					{ deviceInfo: { activeArchitecture: "arm64" } },
 					{ deviceInfo: { activeArchitecture: "armv7" } },
 				],
-				expectedArgs: [
-					"-skipPackagePluginValidation",
-					"ONLY_ACTIVE_ARCH=NO",
-					"-sdk",
-					"iphoneos",
-				].concat(getCommonArgs()),
+				expectedArgs: ["ONLY_ACTIVE_ARCH=NO", "-sdk", "iphoneos"].concat(
+					getCommonArgs()
+				),
 			},
 			{
 				name: "should return correct args when there is only one connected device",
 				connectedDevices: [{ deviceInfo: { activeArchitecture: "arm64" } }],
-				expectedArgs: [
-					"-skipPackagePluginValidation",
-					"-sdk",
-					"iphoneos",
-				].concat(getCommonArgs()),
+				expectedArgs: ["-sdk", "iphoneos"].concat(getCommonArgs()),
 			},
 			{
 				name: "should return correct args when no connected devices",
 				connectedDevices: [],
-				expectedArgs: [
-					"-skipPackagePluginValidation",
-					"-sdk",
-					"iphoneos",
-				].concat(getCommonArgs()),
+				expectedArgs: ["-sdk", "iphoneos"].concat(getCommonArgs()),
 			},
 		];
 
