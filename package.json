@@ -34,7 +34,7 @@
     "build.all": "grunt test",
     "dev": "tsc --watch",
     "setup": "npm i --ignore-scripts && npx husky install",
-    "test": "mocha --config=test/.mocharc.yml",
+    "test": "npm run tsc && mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
     "prepack": "grunt prepare",
