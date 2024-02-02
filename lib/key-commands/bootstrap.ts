@@ -15,3 +15,5 @@ injector.requireKeyCommand("n", path);
 
 injector.requireKeyCommand(SpecialKeys.QuestionMark, path);
 injector.requireKeyCommand(SpecialKeys.CtrlC, path);
+injector.requireCommand("open|ios", path);
+injector.requireCommand("open|android", path);
