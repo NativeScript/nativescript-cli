@@ -5,7 +5,7 @@ import * as path from "path";
 import * as _ from "lodash";
 import { assert } from "chai";
 import { IInjector } from "../../../lib/common/definitions/yok";
-import { BUILD_XCCONFIG_FILE_NAME } from "../../../lib/constants";
+import { XcconfigService } from "../../../lib/services/xcconfig-service";
 
 function createTestInjector(data: {
 	logLevel: string;
@@ -19,18 +19,15 @@ function createTestInjector(data: {
 		getDevicesForPlatform: () => data.connectedDevices || [],
 	});
 	injector.register("fs", {
-		exists: (filepath: string) => {
-			if (filepath.includes(BUILD_XCCONFIG_FILE_NAME)) {
-				return true;
-			} else {
-				return data.hasProjectWorkspace;
-			}
-		},
+		exists: () => data.hasProjectWorkspace,
+		readText: () => "",
 	});
 	injector.register("logger", {
 		getLevel: () => data.logLevel,
 	});
 	injector.register("xcodebuildArgsService", XcodebuildArgsService);
+	injector.register("childProcess", {});
+	injector.register("xcconfigService", XcconfigService);
 	injector.register("iOSWatchAppService", {
 		hasWatchApp: () => false,
 	});
@@ -52,17 +49,7 @@ function getCommonArgs() {
 }
 
 function getXcodeProjectArgs(data?: { hasProjectWorkspace: boolean }) {
-	const extraArgs = [
-		"-scheme",
-		projectName,
-		"-skipPackagePluginValidation",
-		"-xcconfig",
-		path.join(
-			appResourcesDirectoryPath,
-			normalizedPlatformName,
-			BUILD_XCCONFIG_FILE_NAME
-		),
-	];
+	const extraArgs = ["-scheme", projectName, "-skipPackagePluginValidation"];
 	return data && data.hasProjectWorkspace
 		? [
 				"-workspace",

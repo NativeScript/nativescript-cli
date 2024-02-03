@@ -7,6 +7,7 @@ import {
 	IBuildConfig,
 	IiOSBuildConfig,
 } from "../../definitions/project";
+import { IXcconfigService } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
@@ -21,7 +22,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		private $devicesService: Mobile.IDevicesService,
 		private $fs: IFileSystem,
 		private $iOSWatchAppService: IIOSWatchAppService,
-		private $logger: ILogger
+		private $logger: ILogger,
+		private $xcconfigService: IXcconfigService
 	) {}
 
 	public async getBuildForSimulatorArgs(
@@ -131,10 +133,19 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.normalizedPlatformName,
 			constants.BUILD_XCCONFIG_FILE_NAME
 		);
-
-		if (this.$fs.exists(BUILD_SETTINGS_FILE_PATH)) {
-			extraArgs.push("-xcconfig");
-			extraArgs.push(BUILD_SETTINGS_FILE_PATH);
+		// Only include explit deploy target if one is defined
+		// Note: we could include entire file via -xcconfig flag
+		// however doing so introduces unwanted side effects
+		// like cocoapods issues related to ASSETCATALOG_COMPILER_APPICON_NAME
+		// references: https://medium.com/@iostechset/why-cocoapods-eats-app-icons-79fe729808d4
+		// https://github.com/CocoaPods/CocoaPods/issues/7003
+		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
+		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
+			BUILD_SETTINGS_FILE_PATH,
+			deployTargetProperty
+		);
+		if (deployTargetVersion) {
+			extraArgs.push(`${deployTargetProperty}=${deployTargetVersion}`);
 		}
 
 		if (this.$fs.exists(xcworkspacePath)) {
