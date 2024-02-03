@@ -50,9 +50,6 @@ export class SPMService implements ISPMService {
 				ios: {
 					path: ".",
 				},
-				visionos: {
-					path: ".",
-				},
 				enableAndroid: false,
 			});
 			await project.load();
