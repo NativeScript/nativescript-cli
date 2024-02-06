@@ -49,6 +49,7 @@ Command | Description
 [test `<Platform>`](project/testing/test.html) | Runs the unit tests in your project on a connected physical or virtual device.
 [install](project/configuration/install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 [plugin](lib-management/plugin.html) | Lets you manage the plugins for your project.
+[open](project/configuration/open.md) | Opens the native project in Xcode/Android Studio.
 
 ## Publishing Commands
 Command | Description
