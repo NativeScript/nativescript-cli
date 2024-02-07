@@ -156,6 +156,8 @@ export class IOSDevice extends IOSDeviceBase {
 				isArm64Architecture = majorVersion >= 4;
 			} else if (_.startsWith(productType, "ipod")) {
 				isArm64Architecture = majorVersion >= 7;
+			} else if (_.startsWith(productType, "vision")) {
+				isArm64Architecture = true;
 			}
 
 			activeArchitecture = isArm64Architecture ? "arm64" : "armv7";
