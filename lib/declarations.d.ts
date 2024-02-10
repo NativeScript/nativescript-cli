@@ -506,11 +506,6 @@ interface IStaticConfig extends Config.IStaticConfig {}
 interface IConfiguration extends Config.IConfig {
 	ANDROID_DEBUG_UI: string;
 	USE_POD_SANDBOX: boolean;
-	UPLOAD_PLAYGROUND_FILES_ENDPOINT: string;
-	SHORTEN_URL_ENDPOINT: string;
-	INSIGHTS_URL_ENDPOINT: string;
-	WHOAMI_URL_ENDPOINT: string;
-	PREVIEW_APP_ENVIRONMENT: string;
 	GA_TRACKING_ID: string;
 }
 
@@ -533,6 +528,10 @@ interface IClean {
 
 interface IProvision {
 	provision: string;
+}
+
+interface IProvisioningJSON {
+	[identifier: string]: string;
 }
 
 interface ITeamIdentifier {
@@ -642,6 +641,8 @@ interface IOptions
 	skipRefresh: boolean;
 	file: string;
 	analyticsClient: string;
+	analyticsLogFile: string;
+	disableAnalytics: boolean;
 	force: boolean;
 	sdk: string;
 	template: string;
@@ -663,6 +664,7 @@ interface IOptions
 	frameworkName: string;
 	frameworkVersion: string;
 	yarn: string;
+	yarn2: string;
 	pnpm: string;
 	ipa: string;
 	tsc: boolean;
@@ -683,13 +685,13 @@ interface IOptions
 	background: string;
 	hmr: boolean;
 	link: boolean;
-	analyticsLogFile: string;
 	performance: Object;
 	cleanupLogFile: string;
 	appleApplicationSpecificPassword: string;
 	appleSessionBase64: string;
 	markingMode: boolean;
 	git: boolean;
+	dryRun: boolean;
 }
 
 interface IEnvOptions {
@@ -765,13 +767,18 @@ interface IITMSData {
 	 * @type {string}
 	 */
 	verboseLogging?: boolean;
+	/**
+	 * Specifies the team id
+	 * @type {string}
+	 */
+	teamId?: string;
 }
 
 /**
  * Used for communicating with Xcode iTMS Transporter tool.
  */
 interface IITMSTransporterService {
-	validate(): Promise<void>;
+	validate(appSpecificPassword?: string): Promise<void>;
 	/**
 	 * Uploads an .ipa package to iTunes Connect.
 	 * @param  {IITMSData}     data Data needed to upload the package
@@ -919,25 +926,6 @@ interface IiOSSocketRequestExecutor {
 		timeout: number,
 		appId: string
 	): Promise<boolean>;
-}
-
-/**
- * Describes validation methods for XMLs.
- */
-interface IXmlValidator {
-	/**
-	 * Checks the passed xml files for errors and if such exists, print them on the stdout.
-	 * @param {string[]} sourceFiles Files to be checked. Only the ones that ends with .xml are filtered.
-	 * @return {boolean} true in case there are no errors in specified files and false in case there's at least one error.
-	 */
-	validateXmlFiles(sourceFiles: string[]): boolean;
-
-	/**
-	 * Checks the passed xml file for errors and returns them as a result.
-	 * @param {string} sourceFile File to be checked.
-	 * @return {string} The errors detected (as a single string) or null in case there are no errors.
-	 */
-	getXmlFileErrors(sourceFile: string): string;
 }
 
 /**
@@ -1138,12 +1126,7 @@ interface IResourceGenerationData extends IProjectDir {
 	 * @param {string} platform Specify for which platform to generate assets. If not defined will generate for all platforms
 	 */
 	platform?: string;
-}
 
-/**
- * Describes the data needed for splash screens generation
- */
-interface ISplashesGenerationData extends IResourceGenerationData {
 	/**
 	 * @param {string} background Background color that will be used for background. Defaults to #FFFFFF
 	 */
@@ -1163,11 +1146,11 @@ interface IAssetsGenerationService {
 
 	/**
 	 * Generate splash screens for iOS and Android
-	 * @param {ISplashesGenerationData} splashesGenerationData Provides the data needed for splash screens generation
+	 * @param {IResourceGenerationData} splashesGenerationData Provides the data needed for splash screens generation
 	 * @returns {Promise<void>}
 	 */
 	generateSplashScreens(
-		splashesGenerationData: ISplashesGenerationData
+		splashesGenerationData: IResourceGenerationData
 	): Promise<void>;
 }
 

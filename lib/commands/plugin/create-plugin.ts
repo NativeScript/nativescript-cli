@@ -4,6 +4,7 @@ import { IOptions, INodePackageManager } from "../../declarations";
 import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors, IFileSystem, IChildProcess } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 
 export class CreatePluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];

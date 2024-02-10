@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns plugin create
+title: ns plugin create
 position: 1
 ---<% } %>
 
-# tns plugin create
+# ns plugin create
 
 ### Description
 
@@ -23,8 +23,8 @@ The project is setup for easy commit in Github, which is why the command will as
 
 Usage | Synopsis
 ---|---
-Create from the default plugin seed | `$ tns plugin create <Plugin Repository Name> [--path <Directory>]`
-Create from a custom plugin seed | `$ tns plugin create <Plugin Repository Name> [--path <Directory>] --template <Template>`
+Create from the default plugin seed | `$ ns plugin create <Plugin Repository Name> [--path <Directory>]`
+Create from a custom plugin seed | `$ ns plugin create <Plugin Repository Name> [--path <Directory>] --template <Template>`
 
 ### Options
 
@@ -33,15 +33,15 @@ Create from a custom plugin seed | `$ tns plugin create <Plugin Repository Name>
 * `--pluginName` - Used to set the default file and class names in the plugin source.
 * `--includeTypeScriptDemo` - Specifies if TypeScript demo should be created. Default value is `y` (i.e. `demo` will be created), in case you do not want to create this demo, pass `--includeTypeScriptDemo=n`
 * `--includeAngularDemo` - Specifies if Angular demo should be created. Default value is `y` (i.e. `demo-angular` will be created), in case you do not want to create this demo, pass `--includeAngularDemo=n`
-* `--template` - Specifies the custom seed archive, which you want to use to create your plugin. If `--template` is not set, the NativeScript CLI creates the plugin from the default NativeScript Plugin Seed. `<Template>` can be a URL or a local path to a `.tar.gz` file with the contents of a seed repository.<% if(isHtml) { %> This must be a clone of the [NativeScript Plugin Seed](https://github.com/NativeScript/nativescript-plugin-seed) and must contain a `src` directory with a package.json file and a script at `src/scripts/postclone.js`. After the archive is extracted, the postclone script will be executed with the username (`gitHubUsername`) and plugin name (`pluginName`) parameters given to the `tns plugin create` command prompts. For more information, visit the default plugin seed repository and [examine the source script](https://github.com/NativeScript/nativescript-plugin-seed/blob/master/src/scripts/postclone.js) there. Examples:
+* `--template` - Specifies the custom seed archive, which you want to use to create your plugin. If `--template` is not set, the NativeScript CLI creates the plugin from the default NativeScript Plugin Seed. `<Template>` can be a URL or a local path to a `.tar.gz` file with the contents of a seed repository.<% if(isHtml) { %> This must be a clone of the [NativeScript Plugin Seed](https://github.com/NativeScript/nativescript-plugin-seed) and must contain a `src` directory with a package.json file and a script at `src/scripts/postclone.js`. After the archive is extracted, the postclone script will be executed with the username (`gitHubUsername`) and plugin name (`pluginName`) parameters given to the `ns plugin create` command prompts. For more information, visit the default plugin seed repository and [examine the source script](https://github.com/NativeScript/nativescript-plugin-seed/blob/master/src/scripts/postclone.js) there. Examples:
 
   * Using a local file:
 
-    `tns plugin create nativescript-testplugin --template ../seeds/seed1.tar.gz`
+    `ns plugin create nativescript-testplugin --template ../seeds/seed1.tar.gz`
 
   * Using a `.tar.gz` file from a tag called `v4.0` in a Github repository:
 
-    `tns plugin create nativescript-testplugin --template https://github.com/NativeScript/nativescript-plugin-seed/archive/v.4.0.tar.gz`<% } %>
+    `ns plugin create nativescript-testplugin --template https://github.com/NativeScript/nativescript-plugin-seed/archive/v.4.0.tar.gz`<% } %>
 
 ### Arguments
 

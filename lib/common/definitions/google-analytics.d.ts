@@ -15,11 +15,6 @@ interface IGoogleAnalyticsData {
 	customDimensions?: IStringDictionary;
 }
 
-interface IPreviewAppGoogleAnalyticsData {
-	platform: string;
-	additionalData?: string;
-}
-
 /**
  * Describes information about event that should be tracked.
  */

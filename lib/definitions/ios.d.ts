@@ -41,6 +41,10 @@ declare global {
 		): Promise<string>;
 	}
 
+	interface ISPMService {
+		applySPMPackages(platformData: IPlatformData, projectData: IProjectData);
+	}
+
 	interface IXcodebuildArgsService {
 		getBuildForSimulatorArgs(
 			platformData: IPlatformData,
@@ -52,6 +56,10 @@ declare global {
 			projectData: IProjectData,
 			buildConfig: IBuildConfig
 		): Promise<string[]>;
+		getXcodeProjectArgs(
+			platformData: IPlatformData,
+			projectData: IProjectData
+		): string[];
 	}
 
 	interface IXcodebuildCommandService {

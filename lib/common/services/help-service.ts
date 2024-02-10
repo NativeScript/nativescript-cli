@@ -1,6 +1,6 @@
 import * as path from "path";
 import { EOL } from "os";
-import marked = require("marked");
+import { marked } from "marked";
 import { CommandsDelimiters } from "../constants";
 import {
 	IHelpService,

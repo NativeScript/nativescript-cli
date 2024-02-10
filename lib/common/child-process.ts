@@ -1,4 +1,5 @@
 import * as child_process from "child_process";
+import { resolve } from "path";
 import { EventEmitter } from "events";
 import {
 	IChildProcess,
@@ -50,7 +51,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 	}
 
 	public async execFile(command: string, args: string[]): Promise<any> {
-		this.$logger.debug(
+		this.$logger.trace(
 			"execFile: %s %s",
 			command,
 			this.getArgumentsAsQuotedString(args)
@@ -76,7 +77,12 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		args?: string[],
 		options?: any
 	): child_process.ChildProcess {
-		this.$logger.debug(
+		if (command.charAt(0) === ".") {
+			// resolve relative paths to full paths to avoid node Spawn ENOENT errors on some setups.
+			const cwd = options?.cwd ?? process.cwd();
+			command = resolve(cwd, command);
+		}
+		this.$logger.trace(
 			"spawn: %s %s",
 			command,
 			this.getArgumentsAsQuotedString(args)
@@ -89,7 +95,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		args?: string[],
 		options?: any
 	): child_process.ChildProcess {
-		this.$logger.debug(
+		this.$logger.trace(
 			"fork: %s %s",
 			modulePath,
 			this.getArgumentsAsQuotedString(args)

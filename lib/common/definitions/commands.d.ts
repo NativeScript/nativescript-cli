@@ -30,7 +30,6 @@ interface ICanExecuteCommandOptions {
 }
 
 interface INotConfiguredEnvOptions {
-	hideSyncToPreviewAppOption?: boolean;
 	hideCloudBuildOption?: boolean;
 }
 

@@ -1,4 +1,4 @@
-import minimatch = require("minimatch");
+import { minimatch } from "minimatch";
 import * as constants from "../constants";
 import * as path from "path";
 import * as _ from "lodash";

@@ -1,5 +1,6 @@
 // This function must be separate to avoid dependencies on C++ modules - it must execute precisely when other functions cannot
 
+import { color } from "../color";
 import { ISystemWarning } from "./declarations";
 
 // Use only ES5 code here - pure JavaScript can be executed with any Node.js version (even 0.10, 0.12).
@@ -39,23 +40,22 @@ export function verifyNodeVersion(): void {
 	var supportedVersionsRange = verificationOpts.supportedVersionsRange;
 	var nodeVer = verificationOpts.nodeVer;
 
-	// The colors module should not be assigned to variable because the lint task will fail for not used variable.
-	require("colors");
-
 	if (
 		versionsCausingFailure.indexOf(nodeVer) !== -1 ||
 		!semver.valid(nodeVer) ||
 		semver.lt(nodeVer, minimumRequiredVersion)
 	) {
 		console.error(
-			util.format(
-				"%sNode.js '%s' is not supported. To be able to work with %s CLI, install any Node.js version in the following range: %s.%s",
-				os.EOL,
-				nodeVer,
-				cliName,
-				supportedVersionsRange,
-				os.EOL
-			).red.bold
+			color.red.bold(
+				util.format(
+					"%sNode.js '%s' is not supported. To be able to work with %s CLI, install any Node.js version in the following range: %s.%s",
+					os.EOL,
+					nodeVer,
+					cliName,
+					supportedVersionsRange,
+					os.EOL
+				)
+			)
 		);
 		process.exit(1);
 	}

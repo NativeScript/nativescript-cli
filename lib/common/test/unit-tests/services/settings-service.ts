@@ -8,10 +8,10 @@ import {
 } from "../../../declarations";
 import { IInjector } from "../../../definitions/yok";
 import * as _ from "lodash";
+import * as os from "os";
 
-const osenv = require("osenv");
 const path = require("path");
-const originalOsenvHome = osenv.home;
+const originalOsHomedir = os.homedir;
 const originalPathResolve = path.resolve;
 const originalProcessEnvAppData = process.env.AppData;
 
@@ -23,18 +23,20 @@ interface ITestCase {
 }
 
 describe("settingsService", () => {
-	const osenvHome = "homeDir";
+	const osHomedir = "homeDir";
 	const appDataEnv = "appData";
 	const profileDirName = "profileDir";
 
 	before(() => {
-		osenv.home = () => osenvHome;
+		// @ts-expect-error
+		os.homedir = () => osHomedir;
 		path.resolve = (p: string) => p;
 		process.env.AppData = appDataEnv;
 	});
 
 	after(() => {
-		osenv.home = originalOsenvHome;
+		// @ts-expect-error
+		os.homedir = originalOsHomedir;
 		path.resolve = originalPathResolve;
 		process.env.AppData = originalProcessEnvAppData;
 	});
@@ -61,7 +63,7 @@ describe("settingsService", () => {
 	) => {
 		const defaultProfileDirLocation = opts.isWindows
 			? appDataEnv
-			: path.join(osenvHome, ".local", "share");
+			: path.join(osHomedir, ".local", "share");
 		return path.join(defaultProfileDirLocation, profileDirName);
 	};
 

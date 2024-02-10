@@ -7,7 +7,7 @@ import { settlePromises } from "../../../helpers";
 import { EOL } from "os";
 import * as path from "path";
 import * as _ from "lodash";
-import * as osenv from "osenv";
+import { homedir } from "os";
 import { cache } from "../../../decorators";
 import { DeviceConnectionType } from "../../../../constants";
 import { IChildProcess, IFileSystem, IDictionary } from "../../../declarations";
@@ -152,7 +152,7 @@ export class AndroidGenymotionService
 				"/Applications/Genymotion.app/Contents/MacOS/player.app/Contents/MacOS/player",
 				"/Applications/Genymotion.app/Contents/MacOS/player",
 			],
-			linux: [path.join(osenv.home(), "genymotion", "player")],
+			linux: [path.join(homedir(), "genymotion", "player")],
 			win32: [
 				`${process.env["PROGRAMFILES"]}\\Genymobile\\Genymotion\\player.exe`,
 				`${process.env["PROGRAMFILES(X86)"]}\\Genymobile\\Genymotion\\player.exe`,

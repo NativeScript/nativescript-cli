@@ -113,7 +113,7 @@ function createChildProcessResults(
 		"tns --version": childProcessResult.nativeScriptCliVersion,
 		emulator: { shouldThrowError: false },
 		"which git": childProcessResult.git,
-		'python -c "import six"': childProcessResult.pythonInfo,
+		"python3 --version": childProcessResult.pythonInfo,
 	};
 }
 
@@ -164,9 +164,8 @@ function mockSysInfo(
 		isLinux: !hostInfoOptions.isDarwin && !hostInfoOptions.isWindows,
 		winreg,
 	};
-	const childProcessResultDictionary = createChildProcessResults(
-		childProcessResult
-	);
+	const childProcessResultDictionary =
+		createChildProcessResults(childProcessResult);
 	const childProcess = {
 		exec: async (command: string) => {
 			return getResultFromChildProcess(
@@ -558,7 +557,8 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 					null
 				);
 				const adbVersion = await sysInfo.getAdbVersion();
-				const isAndroidSdkConfiguredCorrectly = await sysInfo.isAndroidSdkConfiguredCorrectly();
+				const isAndroidSdkConfiguredCorrectly =
+					await sysInfo.isAndroidSdkConfiguredCorrectly();
 				assert.deepEqual(adbVersion, null);
 				assert.deepEqual(isAndroidSdkConfiguredCorrectly, undefined);
 			});
@@ -583,7 +583,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 				const pythonInfo = await sysInfo.getPythonInfo();
 				assert.deepEqual(pythonInfo, null);
 			});
-			it("should return {isInstalled: true, isSixPackageInstalled: true} when python is correctly installed on Mac", async () => {
+			it("should return {isInstalled: true} when python is correctly installed on Mac", async () => {
 				childProcessResult.pythonInfo = { result: "" };
 				sysInfo = mockSysInfo(
 					childProcessResult,
@@ -593,10 +593,9 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 				const pythonInfo = await sysInfo.getPythonInfo();
 				assert.deepEqual(pythonInfo, {
 					isInstalled: true,
-					isSixPackageInstalled: true,
 				});
 			});
-			it("should return {isInstalled: false, isSixPackageInstalled: false} when python check throws an error", async () => {
+			it("should return {isInstalled: false} when python check throws an error", async () => {
 				childProcessResult.pythonInfo = { shouldThrowError: true };
 				sysInfo = mockSysInfo(
 					childProcessResult,
@@ -606,27 +605,25 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 				const pythonInfo = await sysInfo.getPythonInfo();
 				assert.deepEqual(pythonInfo, {
 					isInstalled: false,
-					isSixPackageInstalled: false,
 					installationErrorMessage:
-						'This one throws error. (python -c "import six")',
+						"This one throws error. (python3 --version)",
 				});
 			});
-			it("should return {isInstalled: true, isSixPackageInstalled: false} when python is installed but six package is not", async () => {
-				childProcessResult.pythonInfo = {
-					shouldThrowError: true,
-					errorCode: 1,
-				};
-				sysInfo = mockSysInfo(
-					childProcessResult,
-					{ isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" },
-					null
-				);
-				const pythonInfo = await sysInfo.getPythonInfo();
-				assert.deepEqual(pythonInfo, {
-					isInstalled: true,
-					isSixPackageInstalled: false,
-				});
-			});
+			// it("should return {isInstalled: true} when python is installed but six package is not", async () => {
+			// 	childProcessResult.pythonInfo = {
+			// 		shouldThrowError: true,
+			// 		errorCode: 1,
+			// 	};
+			// 	sysInfo = mockSysInfo(
+			// 		childProcessResult,
+			// 		{ isWindows: false, isDarwin: true, dotNetVersion: "4.5.1" },
+			// 		null
+			// 	);
+			// 	const pythonInfo = await sysInfo.getPythonInfo();
+			// 	assert.deepEqual(pythonInfo, {
+			// 		isInstalled: true,
+			// 	});
+			// });
 		});
 
 		const testData: ICLIOutputVersionTestCase[] = [
@@ -823,7 +820,6 @@ ${expectedCliVersion}`;
 				assert.deepEqual(result.isCocoaPodsUpdateRequired, false);
 				assert.deepEqual(result.pythonInfo, {
 					isInstalled: false,
-					isSixPackageInstalled: false,
 					installationErrorMessage:
 						"Cannot read properties of undefined (reading 'shouldThrowError')",
 				});

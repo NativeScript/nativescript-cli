@@ -2,7 +2,7 @@ import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreateProjectCommand } from "../lib/commands/create-project";
 import { StringCommandParameter } from "../lib/common/command-params";
-import helpers = require("../lib/common/helpers");
+import * as helpers from "../lib/common/helpers";
 import * as constants from "../lib/constants";
 import { assert } from "chai";
 import { PrompterStub } from "./stubs";
@@ -96,6 +96,10 @@ class ProjectServiceMock implements IProjectService {
 	isValidNativeScriptProject(pathToProject?: string): boolean {
 		return true;
 	}
+
+	ensureAppResourcesExist(projectDir: string): Promise<void> {
+		return;
+	}
 }
 
 class ProjectNameValidatorMock implements IProjectNameValidator {
@@ -167,6 +171,7 @@ describe("Project commands tests", () => {
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
+		// @ts-expect-error
 		helpers.isInteractive = () => true;
 		isProjectCreated = false;
 		validateProjectCallsCount = 0;

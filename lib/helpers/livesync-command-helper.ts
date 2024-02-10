@@ -1,19 +1,19 @@
+import * as _ from "lodash";
+import {
+	ErrorCodes,
+	IAnalyticsService,
+	IDictionary,
+	IErrors,
+} from "../common/declarations";
+import { IInjector } from "../common/definitions/yok";
+import { injector } from "../common/yok";
 import { RunOnDeviceEvents } from "../constants";
 import { DeployController } from "../controllers/deploy-controller";
 import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
-import { IBuildDataService, IBuildController } from "../definitions/build";
-import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
-import { IPlatformsDataService } from "../definitions/platform";
-import { IInjector } from "../common/definitions/yok";
-import { injector } from "../common/yok";
-import {
-	IAnalyticsService,
-	IErrors,
-	ErrorCodes,
-	IDictionary,
-} from "../common/declarations";
+import { IBuildController, IBuildDataService } from "../definitions/build";
 import { ICleanupService } from "../definitions/cleanup-service";
-import * as _ from "lodash";
+import { IPlatformsDataService } from "../definitions/platform";
+import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(
@@ -101,6 +101,9 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					outputPath,
 					buildForDevice: !d.isEmulator,
 					watch: !this.$options.release && this.$options.watch,
+					nativePrepare: {
+						forceRebuildNativeApp: additionalOptions.forceRebuildNativeApp,
+					},
 				}
 			);
 			this.$androidBundleValidatorHelper.validateDeviceApiLevel(d, buildData);
@@ -156,32 +159,55 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		platform: string,
 		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
 	): Promise<void> {
-		const {
-			liveSyncInfo,
-			deviceDescriptors,
-		} = await this.executeLiveSyncOperationCore(
-			devices,
-			platform,
-			additionalOptions
-		);
+		const { liveSyncInfo, deviceDescriptors } =
+			await this.executeLiveSyncOperationCore(
+				devices,
+				platform,
+				additionalOptions
+			);
 
 		if (this.$options.release) {
 			await this.runInRelease(platform, deviceDescriptors);
 			return;
 		}
 
-		await this.$runController.run({
-			liveSyncInfo,
-			deviceDescriptors,
-		});
+		if (additionalOptions.restartLiveSync) {
+			await this.$runController.stop({
+				projectDir: this.$projectData.projectDir,
+				deviceIdentifiers: deviceDescriptors.map((device) => device.identifier),
+				stopOptions: {
+					shouldAwaitAllActions: true,
+					keepProcessAlive: true,
+				},
+			});
 
-		const remainingDevicesToSync = devices.map((d) => d.deviceInfo.identifier);
+			const devices = await this.getDeviceInstances(platform);
+			await this.executeLiveSyncOperation(devices, platform, {
+				...additionalOptions,
+				restartLiveSync: false,
+			});
+			return;
+		} else {
+			await this.$runController.run({
+				liveSyncInfo,
+				deviceDescriptors,
+			});
+		}
+
 		this.$runController.on(
 			RunOnDeviceEvents.runOnDeviceStopped,
-			(data: { projectDir: string; deviceIdentifier: string }) => {
-				_.remove(remainingDevicesToSync, (d) => d === data.deviceIdentifier);
+			async (data: {
+				projectDir: string;
+				deviceIdentifier: string;
+				keepProcessAlive: boolean;
+			}) => {
+				const devices = await this.getDeviceInstances(platform);
+				const remainingDevicesToSync = devices.map(
+					(d) => d.deviceInfo.identifier
+				);
 
-				if (remainingDevicesToSync.length === 0) {
+				_.remove(remainingDevicesToSync, (d) => d === data.deviceIdentifier);
+				if (remainingDevicesToSync.length === 0 && !data.keepProcessAlive) {
 					process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
 				}
 			}
@@ -243,7 +269,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				this.$iOSSimulatorLogProvider.setShouldDispose(false);
 			}
 		}
-
 		const deviceDescriptors = await this.createDeviceDescriptors(
 			devices,
 			platform,
@@ -273,13 +298,26 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				deviceDescriptor.identifier
 			);
 			await device.applicationManager.startApplication({
-				appId: this.$projectData.projectIdentifiers[
-					device.deviceInfo.platform.toLowerCase()
-				],
+				appId:
+					this.$projectData.projectIdentifiers[
+						device.deviceInfo.platform.toLowerCase()
+					],
 				projectName: this.$projectData.projectName,
 				projectDir: this.$projectData.projectDir,
 			});
 		}
+	}
+
+	public async stop() {
+		const devices = await this.getDeviceInstances();
+		return this.$runController.stop({
+			projectDir: this.$projectData.projectDir,
+			deviceIdentifiers: devices.map((d) => d.deviceInfo.identifier),
+			stopOptions: {
+				shouldAwaitAllActions: true,
+				keepProcessAlive: true,
+			},
+		});
 	}
 }
 

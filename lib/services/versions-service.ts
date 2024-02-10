@@ -10,6 +10,7 @@ import { IInjector } from "../common/definitions/yok";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 import { PlatformTypes } from "../constants";
+import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service";
 
 export enum VersionInformationType {
 	UpToDate = "UpToDate",

@@ -55,6 +55,8 @@ describe("androidToolsInfo", () => {
 						"30.0.0",
 						"31.0.0",
 						"32.0.0",
+						"33.0.0",
+						"34.0.0",
 					];
 				} else {
 					return [
@@ -65,6 +67,8 @@ describe("androidToolsInfo", () => {
 						"android-30",
 						"android-31",
 						"android-32",
+						"android-33",
+						"android-34",
 					];
 				}
 			},
@@ -89,18 +93,18 @@ describe("androidToolsInfo", () => {
 			assert.equal(toolsInfo.compileSdkVersion, 30);
 		});
 
-		it("runtime 8.1.1 - 30", () => {
+		it("runtime < 8.2.0 - 30", () => {
 			const androidToolsInfo = getAndroidToolsInfo("8.1.1");
 			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
 			assert.equal(toolsInfo.compileSdkVersion, 30);
 		});
 
-		it("runtime 8.2.0 - 32", () => {
+		it("runtime >8.2.0 - latest", () => {
 			const androidToolsInfo = getAndroidToolsInfo("8.2.0");
 			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
-			assert.equal(toolsInfo.compileSdkVersion, 32);
+			assert.equal(toolsInfo.compileSdkVersion, 34);
 		});
 	});
 
@@ -132,10 +136,11 @@ describe("androidToolsInfo", () => {
 			assertSupportedRange("8.1.0", min, max);
 		});
 
-		it("runtime 8.2.0 should support android-17 - android-32", () => {
+		it("runtime 8.2.0 should support android-17 - android-34", () => {
 			const min = 17;
-			const max = 32;
+			const max = 34;
 			assertSupportedRange("8.2.0", min, max);
+			assertSupportedRange("8.3.0", min, max);
 		});
 	});
 

@@ -26,6 +26,7 @@ export class PackageManager implements IPackageManager {
 		private $npm: INodePackageManager,
 		private $options: IOptions,
 		private $yarn: INodePackageManager,
+		private $yarn2: INodePackageManager,
 		private $pnpm: INodePackageManager,
 		private $logger: ILogger,
 		private $userSettingsService: IUserSettingsService,
@@ -164,6 +165,10 @@ export class PackageManager implements IPackageManager {
 		if (pm === PackageManagers.yarn || this.$options.yarn) {
 			this._packageManagerName = PackageManagers.yarn;
 			return this.$yarn;
+		}
+		if (pm === PackageManagers.yarn2 || this.$options.yarn2) {
+			this._packageManagerName = PackageManagers.yarn2;
+			return this.$yarn2;
 		} else if (pm === PackageManagers.pnpm || this.$options.pnpm) {
 			this._packageManagerName = PackageManagers.pnpm;
 			return this.$pnpm;

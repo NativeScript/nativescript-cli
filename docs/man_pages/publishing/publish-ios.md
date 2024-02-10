@@ -1,23 +1,23 @@
 <% if (isJekyll) { %>---
-title: tns publish ios
+title: ns publish ios
 position: 3
 ---<% } %>
 
-# tns publish ios
+# ns publish ios
 
 ### Description
 
 Uploads project to iTunes Connect. The command either issues a production build and uploads it to iTunes Connect, or uses an already built package to upload.
-The user will be prompted interactively for verification code when two-factor authentication enabled account is used. As on non-interactive console (CI), you will not be prompt for verification code. In this case, you need to generate a login session for your apple's account in advance using `tns apple-login` command. The generated value must be provided via the `--appleSessionBase64` option and is only valid for up to a month. Meaning you'll need to create a new session every month.
+The user will be prompted interactively for verification code when two-factor authentication enabled account is used. As on non-interactive console (CI), you will not be prompt for verification code. In this case, you need to generate a login session for your apple's account in advance using `ns apple-login` command. The generated value must be provided via the `--appleSessionBase64` option and is only valid for up to a month. Meaning you'll need to create a new session every month.
 
-<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ tns help publish ios`<% } %>
+<% if(isConsole && (isLinux || isWindows)) { %>WARNING: You can run this command only on macOS systems. To view the complete help for this command, run `$ ns help publish ios`<% } %>
 
 ### Commands
 
 Usage | Synopsis
 ---|---
-Build and upload package | `$ tns publish ios [<Apple ID> [<Password> [<Mobile Provisioning Profile Identifier> [<Code Sign Identity>]]]]]`
-Upload package | `$ tns publish ios [<Apple ID> [<Password>]] --ipa <Ipa File Path>`
+Build and upload package | `$ ns publish ios [<Apple ID> [<Password> [<Mobile Provisioning Profile Identifier> [<Code Sign Identity>]]]]]`
+Upload package | `$ ns publish ios [<Apple ID> [<Password>]] --ipa <Ipa File Path>`
 
 <% if((isConsole && isMacOS) || isHtml) { %>
 
@@ -38,7 +38,7 @@ Upload package | `$ tns publish ios [<Apple ID> [<Password>]] --ipa <Ipa File Pa
 
 ### Command Limitations
 
-* You can run `$ tns publish ios` only on macOS systems.
+* You can run `$ ns publish ios` only on macOS systems.
 
 ### Related Commands
 

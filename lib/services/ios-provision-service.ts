@@ -37,10 +37,10 @@ export class IOSProvisionService {
 		const match = (await this.queryProvisioningProfilesAndDevices(projectId))
 			.match;
 		return (
-			match.eligable.find((prov) => prov.UUID === uuidOrName) ||
-			match.eligable.find((prov) => prov.Name === uuidOrName) ||
-			match.nonEligable.find((prov) => prov.UUID === uuidOrName) ||
-			match.nonEligable.find((prov) => prov.Name === uuidOrName)
+			match.eligible.find((prov) => prov.UUID === uuidOrName) ||
+			match.eligible.find((prov) => prov.Name === uuidOrName) ||
+			match.nonEligible.find((prov) => prov.UUID === uuidOrName) ||
+			match.nonEligible.find((prov) => prov.Name === uuidOrName)
 		);
 	}
 
@@ -106,14 +106,14 @@ export class IOSProvisionService {
 			]);
 			table.push([prov.Entitlements["application-identifier"], "", "", ""]);
 		}
-		match.eligable.forEach((prov) => pushProvision(prov));
+		match.eligible.forEach((prov) => pushProvision(prov));
 
 		this.$logger.info(table.toString());
 		this.$logger.info();
 		this.$logger.info(
 			"There are also " +
-				match.nonEligable.length +
-				" non-eligable provisioning profiles."
+				match.nonEligible.length +
+				" non-eligible provisioning profiles."
 		);
 		this.$logger.info();
 	}

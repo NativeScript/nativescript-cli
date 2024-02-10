@@ -8,6 +8,7 @@ import { INpmConfigService, INodePackageManager } from "../declarations";
 import { IProxyService, IFileSystem } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { Arborist } from "@npmcli/arborist";
 
 export class PacoteService implements IPacoteService {
 	constructor(
@@ -29,9 +30,11 @@ export class PacoteService implements IPacoteService {
 		options?: IPacoteManifestOptions
 	): Promise<any> {
 		this.$logger.trace(
-			`Calling pacoteService.manifest for packageName: '${packageName}' and options: ${options}`
+			`Calling pacoteService.manifest for packageName: '${packageName}' and options: `,
+			options
 		);
-		const manifestOptions: IPacoteBaseOptions = await this.getPacoteBaseOptions();
+		const manifestOptions: IPacoteBaseOptions =
+			await this.getPacoteBaseOptions();
 
 		if (options) {
 			_.extend(manifestOptions, options);
@@ -39,13 +42,12 @@ export class PacoteService implements IPacoteService {
 
 		packageName = this.getRealPackageName(packageName);
 		this.$logger.trace(
-			`Calling pacote.manifest for packageName: ${packageName} and options: ${JSON.stringify(
-				manifestOptions,
-				null,
-				2
-			)}`
+			`Calling pacote.manifest for packageName: ${packageName} and manifestOptions:`,
+			manifestOptions
 		);
-		const result = pacote.manifest(packageName, manifestOptions);
+		const result = await pacote.manifest(packageName, manifestOptions);
+
+		this.$logger.trace("pacote.manifest result:", result);
 
 		return result;
 	}
@@ -117,7 +119,7 @@ export class PacoteService implements IPacoteService {
 
 		// Add NPM Configuration to our Manifest options
 		const npmConfig = this.$npmConfigService.getConfig();
-		const pacoteOptions = _.extend(npmConfig, { cache: cachePath });
+		const pacoteOptions = _.extend(npmConfig, { cache: cachePath, Arborist });
 		const proxySettings = await this.$proxyService.getCache();
 		if (proxySettings) {
 			_.extend(pacoteOptions, proxySettings);

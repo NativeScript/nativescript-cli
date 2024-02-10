@@ -38,6 +38,13 @@ function createTestInjector(): IInjector {
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("config", {});
 	testInjector.register("xcconfigService", XcconfigService);
+	testInjector.register("xcodeSelectService", {
+		getXcodeVersion() {
+			return {
+				major: 14,
+			};
+		},
+	});
 	testInjector.register("projectData", {});
 	testInjector.register("cocoaPodsPlatformManager", CocoaPodsPlatformManager);
 
@@ -812,7 +819,17 @@ end`,
 				command: string,
 				options?: any,
 				execOptions?: IExecOptions
-			): Promise<any> => null;
+			): Promise<any> => {
+				if (command === "arch -x86_64 pod --version") {
+					// This is the command that is used to check if cocoapods is installed under Rosetta 2
+					return {
+						stdout: "Bad CPU type in executable",
+						stderr: "",
+						exitCode: 0,
+					};
+				}
+				return null;
+			};
 			childProcess.spawnFromEvent = async (
 				command: string,
 				args: string[],
@@ -832,9 +849,8 @@ end`,
 			}`, async () => {
 				const config = testInjector.resolve<IConfiguration>("config");
 				config.USE_POD_SANDBOX = podExecutable === "sandbox-pod";
-				const childProcess = testInjector.resolve<IChildProcess>(
-					"childProcess"
-				);
+				const childProcess =
+					testInjector.resolve<IChildProcess>("childProcess");
 				let commandCalled = "";
 				childProcess.spawnFromEvent = async (
 					command: string,
@@ -942,9 +958,10 @@ end`,
 			projectPodfileContent = "";
 		});
 
-		function setupMocks(
-			pods: any[]
-		): { projectData: IProjectData; platformData: any } {
+		function setupMocks(pods: any[]): {
+			projectData: IProjectData;
+			platformData: any;
+		} {
 			const podsPaths = pods.map((p) => p.path);
 			const projectData = testInjector.resolve("projectData");
 			projectData.getAppResourcesDirectoryPath = () =>
@@ -983,13 +1000,11 @@ end`,
 
 		const testCasesWithApplyAndRemove = [
 			{
-				name:
-					"should select the podfile with highest platform after Podfile from App_Resources has been deleted",
+				name: "should select the podfile with highest platform after Podfile from App_Resources has been deleted",
 				pods: [
 					{
 						name: "mySecondPluginWithPlatform",
-						path:
-							"node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile",
+						path: "node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile",
 						content: `platform :ios, '10.0'`,
 					},
 					{
@@ -1173,8 +1188,7 @@ pod 'myPod' ~> 0.3.4
 end`,
 			},
 			{
-				name:
-					"should select the platform with highest version from plugins when no Podfile in App_Resources",
+				name: "should select the platform with highest version from plugins when no Podfile in App_Resources",
 				pods: [
 					{
 						name: "pluginWithPlatform",
@@ -1213,8 +1227,7 @@ pod 'myPod' ~> 0.3.4
 end`,
 			},
 			{
-				name:
-					"should select the platform without version when no Podfile in App_Resources",
+				name: "should select the platform without version when no Podfile in App_Resources",
 				pods: [
 					{
 						name: "myPluginWithoutPlatform",
@@ -1253,8 +1266,7 @@ platform :ios
 end`,
 			},
 			{
-				name:
-					"shouldn't replace the platform without version when no Podfile in App_Resources",
+				name: "shouldn't replace the platform without version when no Podfile in App_Resources",
 				pods: [
 					{
 						name: "myPluginWithoutPlatform",
@@ -1293,13 +1305,11 @@ platform :ios
 end`,
 			},
 			{
-				name:
-					"should select platform from plugins when the podfile in App_Resources/iOS/Podfile has no platform",
+				name: "should select platform from plugins when the podfile in App_Resources/iOS/Podfile has no platform",
 				pods: [
 					{
 						name: "mySecondPluginWithPlatform",
-						path:
-							"node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile",
+						path: "node_modules/  mypath  with spaces/mySecondPluginWithPlatform/Podfile",
 						content: `platform :ios, '10.0'`,
 					},
 					{

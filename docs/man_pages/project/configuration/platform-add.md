@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns platform add
+title: ns platform add
 position: 2
 ---<% } %>
 
-# tns platform add
+# ns platform add
 
 ### Description
 
@@ -13,10 +13,10 @@ Configures the current project to target the selected platform. <% if(isHtml) { 
 
 Usage | Synopsis
 ------|-------
-Android latest runtime | `$ tns platform add android [--framework-path <File Path>]`
-Android selected runtime | `$ tns platform add android[@<Version>] [--framework-path <File Path>] `
-<% if (isMacOS) { %>iOS latest runtime | `$ tns platform add ios [--framework-path <File Path>]`
-iOS selected runtime | `$ tns platform add ios[@<Version>] [--framework-path <File Path>] `<% } %>
+Android latest runtime | `$ ns platform add android [--framework-path <File Path>]`
+Android selected runtime | `$ ns platform add android[@<Version>] [--framework-path <File Path>] `
+<% if (isMacOS) { %>iOS latest runtime | `$ ns platform add ios [--framework-path <File Path>]`
+iOS selected runtime | `$ ns platform add ios[@<Version>] [--framework-path <File Path>] `<% } %>
 
 ### Options
 
@@ -25,14 +25,14 @@ iOS selected runtime | `$ tns platform add ios[@<Version>] [--framework-path <Fi
 ### Arguments
 
 * `<Version>` is any available version of the respective platform runtime published in npm. <% if(isHtml) { %>If `@<Version>` is not specified, the NativeScript CLI installs the latest stable runtime for the selected platform.
-To list all available versions for Android, run `$ npm view tns-android versions`
-To list only experimental versions for Android, run `$ npm view tns-android dist-tags`
-To list all available versions for iOS, run `$ npm view tns-ios versions`
-To list only experimental versions for iOS, run `$ npm view tns-ios dist-tags`
+To list all available versions for Android, run `$ npm view @nativescript/android versions`
+To list only experimental versions for Android, run `$ npm view @nativescript/android dist-tags`
+To list all available versions for iOS, run `$ npm view @nativescript/ios versions`
+To list only experimental versions for iOS, run `$ npm view @nativescript/ios dist-tags`
 
 ### Command Limitations
 
-* You can run `$ tns platform add ios` only on macOS systems.
+* You can run `$ ns platform add ios` only on macOS systems.
 
 ### Related Commands
 

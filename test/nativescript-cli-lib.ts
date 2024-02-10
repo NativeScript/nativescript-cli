@@ -46,7 +46,6 @@ describe("nativescript-cli-lib", () => {
 		],
 		runController: ["run", "stop"],
 		debugController: ["enableDebugging", "disableDebugging", "attachDebugger"],
-		previewAppController: ["startPreview", "stopPreview"],
 		analyticsSettingsService: ["getClientId"],
 		devicesService: [
 			"addDeviceDiscovery",
@@ -72,7 +71,6 @@ describe("nativescript-cli-lib", () => {
 		cleanupService: ["setCleanupLogFile"],
 		logger: ["initialize", "getLevel", "info"],
 		initializeService: ["initialize"],
-		companyInsightsController: ["getCompanyData"],
 	};
 
 	const pathToEntryPoint = path

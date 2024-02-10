@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns resources update
+title: ns resources update
 position: 10
 ---<% } %>
 
-# tns resources update
+# ns resources update
 
 ### Description
 
@@ -17,12 +17,12 @@ Updates the App_Resources/<platform>'s internal folder structure to conform to t
 
 Usage | Synopsis
 ------|-------
-`$ tns resources update` | Defaults to executing `$ tns resources update android`. Updates the App_Resources/Android's folder structure.
-`$ tns resources update android` | Updates the App_Resources/Android's folder structure.
+`$ ns resources update` | Defaults to executing `$ ns resources update android`. Updates the App_Resources/Android's folder structure.
+`$ ns resources update android` | Updates the App_Resources/Android's folder structure.
 
 ### Command Limitations
 
-* The command works only for the directory structure under `App_Resources/Android`. Running `$ tns resources-update ios` will have no effect.
+* The command works only for the directory structure under `App_Resources/Android`. Running `$ ns resources-update ios` will have no effect.
 
 ### Related Commands
 

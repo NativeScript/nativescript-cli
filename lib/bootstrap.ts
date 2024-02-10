@@ -1,6 +1,7 @@
 import { injector } from "./common/yok";
 
 require("./common/bootstrap");
+
 injector.requirePublicClass("logger", "./common/logger/logger");
 injector.require("config", "./config");
 injector.require("options", "./options");
@@ -58,6 +59,7 @@ injector.require("iOSProjectService", "./services/ios-project-service");
 injector.require("iOSProvisionService", "./services/ios-provision-service");
 injector.require("xcconfigService", "./services/xcconfig-service");
 injector.require("iOSSigningService", "./services/ios/ios-signing-service");
+injector.require("spmService", "./services/ios/spm-service");
 injector.require(
 	"xcodebuildArgsService",
 	"./services/ios/xcodebuild-args-service"
@@ -100,7 +102,7 @@ injector.require(
 	"./services/platform/platform-validation-service"
 );
 
-injector.require("buildArtefactsService", "./services/build-artefacts-service");
+injector.require("buildArtifactsService", "./services/build-artifacts-service");
 
 injector.require(
 	"deviceInstallAppService",
@@ -118,10 +120,6 @@ injector.requirePublicClass("runController", "./controllers/run-controller");
 injector.requirePublicClass(
 	"debugController",
 	"./controllers/debug-controller"
-);
-injector.requirePublicClass(
-	"previewAppController",
-	"./controllers/preview-app-controller"
 );
 injector.requirePublicClass(
 	"updateController",
@@ -154,6 +152,10 @@ injector.require(
 	"./services/android-device-debug-service"
 );
 
+injector.require(
+	"timelineProfilerService",
+	"./services/timeline-profiler-service"
+);
 injector.require("userSettingsService", "./services/user-settings-service");
 injector.requirePublic(
 	"analyticsSettingsService",
@@ -164,11 +166,6 @@ injector.require(
 	"googleAnalyticsProvider",
 	"./services/analytics/google-analytics-provider"
 );
-injector.requirePublicClass(
-	"companyInsightsController",
-	"./controllers/company-insights-controller"
-);
-
 injector.require("platformCommandParameter", "./platform-command-param");
 injector.requireCommand("create", "./commands/create-project");
 injector.requireCommand("clean", "./commands/clean");
@@ -218,6 +215,7 @@ injector.requireCommand("setup|*", "./commands/setup");
 injector.requirePublic("packageManager", "./package-manager");
 injector.requirePublic("npm", "./node-package-manager");
 injector.requirePublic("yarn", "./yarn-package-manager");
+injector.requirePublic("yarn2", "./yarn2-package-manager");
 injector.requirePublic("pnpm", "./pnpm-package-manager");
 injector.requireCommand(
 	"package-manager|*get",
@@ -281,6 +279,7 @@ injector.require(
 	"./helpers/android-bundle-validator-helper"
 );
 injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
+
 injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
 injector.require("platformCommandHelper", "./helpers/platform-command-helper");
 injector.require("optionsTracker", "./helpers/options-track-helper");
@@ -303,34 +302,6 @@ injector.require(
 	"./services/livesync/ios-livesync-service"
 );
 injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
-injector.require(
-	"previewAppFilesService",
-	"./services/livesync/playground/preview-app-files-service"
-);
-injector.require(
-	"previewAppLogProvider",
-	"./services/livesync/playground/preview-app-log-provider"
-);
-injector.require(
-	"previewAppPluginsService",
-	"./services/livesync/playground/preview-app-plugins-service"
-);
-injector.require(
-	"previewSdkService",
-	"./services/livesync/playground/preview-sdk-service"
-);
-injector.require(
-	"previewSchemaService",
-	"./services/livesync/playground/preview-schema-service"
-);
-injector.requirePublicClass(
-	"previewDevicesService",
-	"./services/livesync/playground/devices/preview-devices-service"
-);
-injector.requirePublic(
-	"previewQrCodeService",
-	"./services/livesync/playground/preview-qr-code-service"
-);
 injector.requirePublic("sysInfo", "./sys-info");
 
 injector.require(
@@ -347,7 +318,6 @@ injector.require(
 	"./device-sockets/ios/socket-request-executor"
 );
 injector.require("messages", "./common/messages/messages");
-injector.require("xmlValidator", "./xml-validator");
 
 injector.requireCommand("post-install-cli", "./commands/post-install");
 injector.requireCommand("migrate", "./commands/migrate");
@@ -390,7 +360,6 @@ injector.require(
 	"./services/terminal-spinner-service"
 );
 
-injector.require("playgroundService", "./services/playground-service");
 injector.require(
 	"platformEnvironmentRequirements",
 	"./services/platform-environment-requirements"
@@ -475,3 +444,10 @@ injector.require(
 injector.require("tempService", "./services/temp-service");
 
 injector.require("sharedEventBus", "./shared-event-bus");
+
+injector.require("keyCommandHelper", "./helpers/key-command-helper");
+
+injector.requireCommand("start", "./commands/start");
+injector.require("startService", "./services/start-service");
+
+require("./key-commands/bootstrap");

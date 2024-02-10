@@ -2,7 +2,7 @@ import * as net from "net";
 import * as path from "path";
 import { EOL } from "os";
 import * as _ from "lodash";
-import * as osenv from "osenv";
+import { homedir } from "os";
 import {
 	AndroidVirtualDevice,
 	DeviceTypes,
@@ -319,7 +319,7 @@ export class AndroidVirtualDeviceService
 		const searchPaths = [
 			process.env.ANDROID_AVD_HOME,
 			path.join(
-				osenv.home(),
+				homedir(),
 				AndroidVirtualDevice.ANDROID_DIR_NAME,
 				AndroidVirtualDevice.AVD_DIR_NAME
 			),
@@ -331,7 +331,7 @@ export class AndroidVirtualDeviceService
 	private getConfigurationError(): string {
 		const pathToEmulatorExecutable = this.$hostInfo.isWindows
 			? `${this.pathToEmulatorExecutable}.exe`
-			: this.pathToAndroidExecutable;
+			: this.pathToEmulatorExecutable;
 		if (!this.$fs.exists(pathToEmulatorExecutable)) {
 			return "Unable to find the path to emulator executable and will not be able to start the emulator. Searched paths: [$ANDROID_HOME/tools/emulator, $ANDROID_HOME/emulator/emulator]";
 		}

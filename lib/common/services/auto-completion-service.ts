@@ -1,4 +1,4 @@
-import * as osenv from "osenv";
+import { homedir } from "os";
 import * as path from "path";
 import * as util from "util";
 import * as _ from "lodash";
@@ -332,7 +332,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 	}
 
 	private getHomePath(fileName: string): string {
-		return path.join(osenv.home(), fileName);
+		return path.join(homedir(), fileName);
 	}
 }
 injector.register("autoCompletionService", AutoCompletionService);

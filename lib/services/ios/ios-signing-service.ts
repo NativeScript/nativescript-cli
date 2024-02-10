@@ -8,11 +8,16 @@ import {
 import * as helpers from "../../common/helpers";
 import { IOSProvisionService } from "../ios-provision-service";
 import { IOSBuildData } from "../../data/build-data";
-import { IXcconfigService, IXcprojService } from "../../declarations";
+import {
+	IProvisioningJSON,
+	IXcconfigService,
+	IXcprojService,
+} from "../../declarations";
 import { IProjectData } from "../../definitions/project";
 import { IErrors, IFileSystem } from "../../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../../common/yok";
+import * as constants from "../../constants";
 
 export class IOSSigningService implements IiOSSigningService {
 	constructor(
@@ -47,6 +52,9 @@ export class IOSSigningService implements IiOSSigningService {
 			(!signing || signing.style !== "Manual")
 		) {
 			xcode.setManualSigningStyle(projectData.projectName);
+			this.getExtensionNames(projectData).forEach((name) => {
+				xcode.setManualSigningStyle(name);
+			});
 			xcode.save();
 		} else if (
 			!iOSBuildData.provision &&
@@ -75,9 +83,8 @@ export class IOSSigningService implements IiOSSigningService {
 		if (signing && signing.style === "Automatic") {
 			if (signing.team !== teamId) {
 				// Maybe the provided team is name such as "Telerik AD" and we need to convert it to CH******37
-				const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(
-					teamId
-				);
+				const teamIdsForName =
+					await this.$iOSProvisionService.getTeamIdsWithName(teamId);
 				if (!teamIdsForName.some((id) => id === signing.team)) {
 					shouldUpdateXcode = true;
 				}
@@ -106,6 +113,10 @@ export class IOSSigningService implements IiOSSigningService {
 				],
 				teamId
 			);
+			this.getExtensionNames(projectData).forEach((name) => {
+				xcode.setAutomaticSigningStyle(name, teamId);
+			});
+
 			xcode.save();
 
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
@@ -146,59 +157,141 @@ export class IOSSigningService implements IiOSSigningService {
 		}
 
 		if (shouldUpdateXcode) {
-			const pickStart = Date.now();
-			const mobileprovision =
-				mobileProvisionData ||
-				(await this.$iOSProvisionService.pick(
-					provision,
-					projectData.projectIdentifiers.ios
-				));
-			const pickEnd = Date.now();
-			this.$logger.trace(
-				"Searched and " +
-					(mobileprovision ? "found" : "failed to find ") +
-					" matching provisioning profile. (" +
-					(pickEnd - pickStart) +
-					"ms.)"
+			const projectSigningConfig = await this.getManualSigningConfiguration(
+				projectData,
+				provision,
+				mobileProvisionData
 			);
-			if (!mobileprovision) {
-				this.$errors.fail(
-					"Failed to find mobile provision with UUID or Name: " + provision
-				);
-			}
-			const configuration = {
-				team:
-					mobileprovision.TeamIdentifier &&
-					mobileprovision.TeamIdentifier.length > 0
-						? mobileprovision.TeamIdentifier[0]
-						: undefined,
-				uuid: mobileprovision.UUID,
-				name: mobileprovision.Name,
-				identity:
-					mobileprovision.Type === "Development"
-						? "iPhone Developer"
-						: "iPhone Distribution",
-			};
-			xcode.setManualSigningStyle(projectData.projectName, configuration);
+			xcode.setManualSigningStyle(
+				projectData.projectName,
+				projectSigningConfig
+			);
 			xcode.setManualSigningStyleByTargetProductTypesList(
 				[
 					IOSNativeTargetProductTypes.appExtension,
 					IOSNativeTargetProductTypes.watchApp,
 					IOSNativeTargetProductTypes.watchExtension,
 				],
-				configuration
+				projectSigningConfig
 			);
-			xcode.save();
 
-			// this.cache(uuid);
 			this.$logger.trace(
-				`Set Manual signing style and provisioning profile: ${mobileprovision.Name} (${mobileprovision.UUID})`
+				`Set Manual signing style and provisioning profile: ${projectSigningConfig.name} (${projectSigningConfig.uuid})`
 			);
+
+			const extensionSigningConfig = await Promise.all(
+				this.getExtensionsManualSigningConfiguration(projectData)
+			);
+			extensionSigningConfig.forEach(({ name, configuration }) => {
+				xcode.setManualSigningStyle(name, configuration);
+				this.$logger.trace(
+					`Set Manual signing style and provisioning profile: ${configuration.name} (${configuration.uuid})`
+				);
+			});
+
+			xcode.save();
+			// this.cache(uuid);
 		} else {
 			this.$logger.trace(
 				`The specified provisioning profile is already set in the Xcode: ${provision}`
 			);
 		}
+	}
+
+	private getExtensionNames(projectData: IProjectData) {
+		const extensionFolderPath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			constants.iOSAppResourcesFolderName,
+			constants.NATIVE_EXTENSION_FOLDER
+		);
+
+		if (this.$fs.exists(extensionFolderPath)) {
+			const extensionNames = this.$fs
+				.readDirectory(extensionFolderPath)
+				.filter((fileName) => {
+					const extensionPath = path.join(extensionFolderPath, fileName);
+					const stats = this.$fs.getFsStats(extensionPath);
+					return stats.isDirectory() && !fileName.startsWith(".");
+				});
+			return extensionNames;
+		}
+		return [];
+	}
+
+	private getExtensionsManualSigningConfiguration(projectData: IProjectData) {
+		const provisioningJSONPath = path.join(
+			projectData.getAppResourcesDirectoryPath(),
+			constants.iOSAppResourcesFolderName,
+			constants.NATIVE_EXTENSION_FOLDER,
+			constants.EXTENSION_PROVISIONING_FILENAME
+		);
+
+		if (this.$fs.exists(provisioningJSONPath)) {
+			const provisioningJSON = this.$fs.readJson(
+				provisioningJSONPath
+			) as IProvisioningJSON;
+
+			const extensionNames = this.getExtensionNames(projectData);
+
+			const provisioning = Object.entries(provisioningJSON).map(
+				async ([id, provision]) => {
+					const name = id.split(".").at(-1);
+					if (extensionNames.includes(name)) {
+						const configuration = await this.getManualSigningConfiguration(
+							projectData,
+							provision
+						);
+						return { name, configuration };
+					}
+					return null;
+				}
+			);
+
+			return provisioning;
+		}
+
+		return [];
+	}
+
+	private async getManualSigningConfiguration(
+		projectData: IProjectData,
+		provision: string,
+		mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision
+	) {
+		const pickStart = Date.now();
+		const mobileprovision =
+			mobileProvisionData ||
+			(await this.$iOSProvisionService.pick(
+				provision,
+				projectData.projectIdentifiers.ios
+			));
+		const pickEnd = Date.now();
+		this.$logger.trace(
+			"Searched and " +
+				(mobileprovision ? "found" : "failed to find ") +
+				" matching provisioning profile. (" +
+				(pickEnd - pickStart) +
+				"ms.)"
+		);
+		if (!mobileprovision) {
+			this.$errors.fail(
+				"Failed to find mobile provision with UUID or Name: " + provision
+			);
+		}
+		const configuration = {
+			team:
+				mobileprovision.TeamIdentifier &&
+				mobileprovision.TeamIdentifier.length > 0
+					? mobileprovision.TeamIdentifier[0]
+					: undefined,
+			uuid: mobileprovision.UUID,
+			name: mobileprovision.Name,
+			identity:
+				mobileprovision.Type === "Development"
+					? "iPhone Developer"
+					: "iPhone Distribution",
+		};
+		return configuration;
 	}
 
 	private getBuildXCConfigFilePath(projectData: IProjectData): string {

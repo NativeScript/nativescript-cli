@@ -1,7 +1,7 @@
 import { ICredentials } from "../../common/declarations";
 
 interface IApplePortalSessionService {
-	createWebSession(contentProviderId: string): Promise<string>;
+	createWebSession(contentProviderId: number): Promise<string>;
 	createUserSession(
 		credentials: ICredentials,
 		opts?: IAppleCreateUserSessionOptions
@@ -19,7 +19,7 @@ interface IApplePortalApplicationService {
 		user: IApplePortalUserDetail
 	): Promise<IApplePortalApplicationSummary[]>;
 	getApplicationsByProvider(
-		contentProviderId: string
+		contentProviderId: number
 	): Promise<IApplePortalApplication>;
 	getApplicationByBundleId(
 		user: IApplePortalUserDetail,
@@ -39,6 +39,7 @@ interface IAppleLoginResult {
 	xAppleIdSessionId: string;
 	isTwoFactorAuthenticationEnabled: boolean;
 	areCredentialsValid: boolean;
+	hashcash: string;
 }
 
 interface IApplePortalUserDetail extends IAppleLoginResult {
@@ -74,27 +75,13 @@ interface IApplePortalAssociatedAccountData {
 
 interface IApplePortalApplication {
 	summaries: IApplePortalApplicationSummary[];
-	showSharedSecret: boolean;
-	macBundlesEnabled: boolean;
-	canCreateMacApps: boolean;
-	cloudStorageEnabled: boolean;
-	sharedSecretLink: string;
-	gameCenterGroupLink: string;
-	enabledPlatforms: string[];
-	cloudStorageLink: string;
-	catalogReportsLink: string;
-	canCreateIOSApps: boolean;
 }
 
 interface IApplePortalApplicationSummary {
 	name: string;
 	adamId: string;
-	vendorId: string;
+
 	bundleId: string;
-	appType: any;
+
 	versionSets: any[];
-	lastModifiedDate: number;
-	iconUrl: string;
-	issuesCount: number;
-	priceTier: string;
 }

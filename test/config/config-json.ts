@@ -6,13 +6,6 @@ describe("config.json", () => {
 		ANDROID_DEBUG_UI_MAC: "Google Chrome",
 		USE_POD_SANDBOX: false,
 		DISABLE_HOOKS: false,
-		UPLOAD_PLAYGROUND_FILES_ENDPOINT: "https://play.nativescript.org/api/files",
-		SHORTEN_URL_ENDPOINT:
-			"https://play.nativescript.org/api/shortenurl?longUrl=%s",
-		INSIGHTS_URL_ENDPOINT:
-			"https://play-server.nativescript.org/api/insights?ipAddress=%s",
-		WHOAMI_URL_ENDPOINT: "https://play.nativescript.org/api/whoami",
-		PREVIEW_APP_ENVIRONMENT: "live",
 		GA_TRACKING_ID: "UA-111455-51",
 	};
 

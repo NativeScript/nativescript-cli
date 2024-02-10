@@ -7,8 +7,10 @@
 		"removeComments": false,
 		"noImplicitAny": true,
 		"experimentalDecorators": true,
+		"skipLibCheck": true,
 		"alwaysStrict": true,
-		"noUnusedLocals": true
+		"noUnusedLocals": true,
+		"lib": ["ESNext"]
 	},
 	"include": ["lib/", "test/"]
 }

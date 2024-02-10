@@ -38,7 +38,7 @@ import {
 	ProjectConfigServiceStub,
 } from "./stubs";
 import { xcode } from "../lib/node/xcode";
-import temp = require("temp");
+import * as temp from "temp";
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
 import { XcodebuildService } from "../lib/services/ios/xcodebuild-service";
 import { XcodebuildCommandService } from "../lib/services/ios/xcodebuild-command-service";
@@ -110,7 +110,13 @@ function createTestInjector(
 	);
 	testInjector.register("projectData", projectData);
 	testInjector.register("projectHelper", {});
-	testInjector.register("xcodeSelectService", {});
+	testInjector.register("xcodeSelectService", {
+		getXcodeVersion() {
+			return {
+				major: 14,
+			};
+		},
+	});
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
 	testInjector.register("projectDataService", ProjectDataServiceStub);
 	testInjector.register("prompter", {});
@@ -123,6 +129,7 @@ function createTestInjector(
 	testInjector.register("messages", Messages);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("deviceLogProvider", DeviceLogProvider);
+	testInjector.register("timelineProfilerService", {});
 	testInjector.register("logFilter", LogFilter);
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("utils", Utils);
@@ -230,6 +237,9 @@ function createTestInjector(
 		},
 	});
 	testInjector.register("tempService", TempServiceStub);
+	testInjector.register("spmService", {
+		applySPMPackages: () => Promise.resolve(),
+	});
 
 	return testInjector;
 }
@@ -259,24 +269,24 @@ describe("Cocoapods support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
-		const expectedArchExclusions = (projectPath: string) =>
-			[
-				``,
-				`post_install do |installer|`,
-				`  post_installNativeScript_CLI_Architecture_Exclusions_0 installer`,
-				`end`,
-				``,
-				`# Begin Podfile - ${projectPath}/platforms/ios/Podfile-exclusions`,
-				`def post_installNativeScript_CLI_Architecture_Exclusions_0 (installer)`,
-				`  installer.pods_project.build_configurations.each do |config|`,
-				`    config.build_settings.delete "VALID_ARCHS"`,
-				`    config.build_settings["EXCLUDED_ARCHS_x86_64"] = "arm64 arm64e"`,
-				`    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "i386 armv6 armv7 armv7s armv8 $(EXCLUDED_ARCHS_$(NATIVE_ARCH_64_BIT))"`,
-				`    config.build_settings["EXCLUDED_ARCHS[sdk=iphoneos*]"] = "i386 armv6 armv7 armv7s armv8 x86_64"`,
-				`  end`,
-				`end`,
-				`# End Podfile`,
-			].join("\n");
+		// const expectedArchExclusions = (projectPath: string) =>
+		// 	[
+		// 		``,
+		// 		`post_install do |installer|`,
+		// 		`  post_installNativeScript_CLI_Architecture_Exclusions_0 installer`,
+		// 		`end`,
+		// 		``,
+		// 		`# Begin Podfile - ${projectPath}/platforms/ios/Podfile-exclusions`,
+		// 		`def post_installNativeScript_CLI_Architecture_Exclusions_0 (installer)`,
+		// 		`  installer.pods_project.build_configurations.each do |config|`,
+		// 		`    config.build_settings.delete "VALID_ARCHS"`,
+		// 		`    config.build_settings["EXCLUDED_ARCHS_x86_64"] = "arm64 arm64e"`,
+		// 		`    config.build_settings["EXCLUDED_ARCHS[sdk=iphonesimulator*]"] = "i386 armv6 armv7 armv7s armv8 $(EXCLUDED_ARCHS_$(NATIVE_ARCH_64_BIT))"`,
+		// 		`    config.build_settings["EXCLUDED_ARCHS[sdk=iphoneos*]"] = "i386 armv6 armv7 armv7s armv8 x86_64"`,
+		// 		`  end`,
+		// 		`end`,
+		// 		`# End Podfile`,
+		// 	].join("\n");
 
 		it("adds а base Podfile", async () => {
 			const projectName = "projectDirectory";
@@ -486,7 +496,8 @@ describe("Cocoapods support", () => {
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
 				"# End Podfile",
-				expectedArchExclusions(projectPath),
+				// only on xcode 12
+				// expectedArchExclusions(projectPath),
 				"end",
 			].join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -613,7 +624,8 @@ describe("Cocoapods support", () => {
 				`# Begin Podfile - ${pluginPodfilePath}`,
 				expectedPluginPodfileContent,
 				"# End Podfile",
-				expectedArchExclusions(projectPath),
+				// only on XCode 12
+				// expectedArchExclusions(projectPath),
 				"end",
 			].join("\n");
 			assert.equal(actualProjectPodfileContent, expectedProjectPodfileContent);
@@ -623,18 +635,21 @@ describe("Cocoapods support", () => {
 				projectData
 			);
 
-			const expectedProjectPodfileContentAfter = [
-				"use_frameworks!\n",
-				`target "${projectName}" do`,
-				"",
-				expectedArchExclusions(projectPath),
-				"end",
-			].join("\n");
-			actualProjectPodfileContent = fs.readText(projectPodfilePath);
-			assert.equal(
-				actualProjectPodfileContent,
-				expectedProjectPodfileContentAfter
-			);
+			assert.isFalse(fs.exists(projectPodfilePath));
+
+			// only on xcode12
+			// const expectedProjectPodfileContentAfter = [
+			// 	"use_frameworks!\n",
+			// 	`target "${projectName}" do`,
+			// 	"",
+			//  expectedArchExclusions(projectPath),
+			// 	"end",
+			// ].join("\n");
+			// actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			// assert.equal(
+			// 	actualProjectPodfileContent,
+			// 	expectedProjectPodfileContentAfter
+			// );
 		});
 	}
 });
@@ -1277,5 +1292,11 @@ describe("handleNativeDependenciesChange", () => {
 			"podInstall",
 			"podMerge",
 		]);
+	});
+});
+
+describe("SPM Packages", () => {
+	it("should add SPM packages to the project", async () => {
+		// todo: add tests for SPM packages
 	});
 });

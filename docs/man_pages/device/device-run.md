@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns device run
+title: ns device run
 position: 5
 ---<% } %>
 
-# tns device run
+# ns device run
 
 ### Description
 
@@ -15,15 +15,15 @@ Runs the selected application on a connected Android <% if(isMacOS) { %>or iOS <
 
 Usage | Synopsis
 ------|-------
-General | `$ tns device run <Application ID> [--device <Device ID>]`
+General | `$ ns device run <Application ID> [--device <Device ID>]`
 
 ### Options
 
-* `--device` - If multiple devices are connected, sets the device on which you want to run the app. `<Device ID>` is the device index or identifier as listed by the `$ tns device` command.
+* `--device` - If multiple devices are connected, sets the device on which you want to run the app. `<Device ID>` is the device index or identifier as listed by the `$ ns device` command.
 
 ### Arguments
 
-* `<Application ID>` is the application identifier as listed by `$ tns device list-applications`.
+* `<Application ID>` is the application identifier as listed by `$ ns device list-applications`.
 
 <% if(isHtml) { %>
 

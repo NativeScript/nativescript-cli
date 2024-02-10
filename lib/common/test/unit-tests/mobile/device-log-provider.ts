@@ -19,6 +19,7 @@ import { IProjectData } from "../../../../definitions/project";
 import { IInjector } from "../../../definitions/yok";
 import * as _ from "lodash";
 import { IFileSystem } from "../../../declarations";
+import { color } from "../../../../color";
 
 const deviceIdentifier = "deviceIdentifier";
 let runtimeVersion = "6.1.0";
@@ -31,6 +32,11 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("iOSLogFilter", IOSLogFilter);
 	testInjector.register("logger", CommonLoggerStub);
 	testInjector.register("logSourceMapService", LogSourceMapService);
+	testInjector.register("options", {
+		env: {
+			classicLogs: true,
+		},
+	});
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("fs", FileSystem);
@@ -71,6 +77,10 @@ const createTestInjector = (): IInjector => {
 		},
 	});
 
+	testInjector.register("timelineProfilerService", {
+		processLogData() {},
+	});
+
 	const logger = testInjector.resolve<CommonLoggerStub>("logger");
 	logger.info = (...args: any[]): void => {
 		args = args.filter((arg) => Object.keys(arg).indexOf("skipNewLine") === -1);
@@ -85,8 +95,18 @@ describe("deviceLogProvider", () => {
 	let deviceLogProvider: Mobile.IDeviceLogProvider;
 
 	const assertData = (actual: string, expected: string) => {
-		const actualFixed = actual.replace(/\r\n/g, "\n").replace(/\\/g, "/");
-		const expectedFixed = expected.replace(/\r\n/g, "\n").replace(/\\/g, "/");
+		const actualFixed = actual
+			.replaceAll(/\r\n/g, "\n")
+			.replaceAll(/\\/g, "/")
+			.replaceAll(/\t/g, color.dim("→"))
+			.replaceAll(/ /g, color.dim("⋅"))
+			.replaceAll("\n", color.dim("↵") + "\n");
+		const expectedFixed = expected
+			.replaceAll(/\r\n/g, "\n")
+			.replaceAll(/\\/g, "/")
+			.replaceAll(/\t/g, color.dim("→"))
+			.replaceAll(/ /g, color.dim("⋅"))
+			.replaceAll("\n", color.dim("↵") + "\n");
 
 		assert.equal(actualFixed, expectedFixed);
 	};
@@ -108,9 +128,8 @@ describe("deviceLogProvider", () => {
 		}
 
 		logger = testInjector.resolve<CommonLoggerStub>("logger");
-		deviceLogProvider = testInjector.resolve<Mobile.IDeviceLogProvider>(
-			"deviceLogProvider"
-		);
+		deviceLogProvider =
+			testInjector.resolve<Mobile.IDeviceLogProvider>("deviceLogProvider");
 		deviceLogProvider.setProjectDirForDevice(
 			"deviceIdentifier",
 			"dir_with_runtime_6.1.0"
@@ -152,7 +171,7 @@ describe("deviceLogProvider", () => {
 						);
 						assertData(
 							logger.output,
-							"JS: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							"HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
 						);
 					});
 
@@ -172,19 +191,19 @@ describe("deviceLogProvider", () => {
 08-22 15:32:03.145 25038 25038 I JS      : ==== object dump end ====`);
 						assertData(
 							logger.output,
-							`JS: ==== object dump start ====
-JS: level0_0: {
-JS:   "level1_0": {
-JS:     "level2": "value"
-JS:   },
-JS:   "level1_1": {
-JS:     "level2": "value2"
-JS:   }
-JS: }
-JS: level0_1: {
-JS:   "level1_0": "value3"
-JS: }
-JS: ==== object dump end ====\n`
+							`==== object dump start ====
+level0_0: {
+  "level1_0": {
+    "level2": "value"
+  },
+  "level1_1": {
+    "level2": "value2"
+  }
+}
+level0_1: {
+  "level1_0": "value3"
+}
+==== object dump end ====\n`
 						);
 					});
 
@@ -195,10 +214,10 @@ JS: ==== object dump end ====\n`
 08-22 15:32:03.145 25038 25038 I JS      :         console.log`);
 						assertData(
 							logger.output,
-							`JS: multiline
-JS:         message
-JS:         from
-JS:         console.log\n`
+							`multiline
+        message
+        from
+        console.log\n`
 						);
 					});
 
@@ -210,11 +229,11 @@ JS:         console.log\n`
 08-22 15:32:03.145 25038 25038 E JS      : at ClickListenerImpl.onClick (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:14608:23)`);
 						assertData(
 							logger.output,
-							`JS: Trace: console.trace onTap
-JS: at viewModel.onTap file: app/main-view-model.js:39:0
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify file: node_modules/tns-core-modules/data/observable/observable.js:107:0
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit file: node_modules/tns-core-modules/data/observable/observable.js:127:0
-JS: at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/button.js:29:0\n`
+							`Trace: console.trace onTap
+at viewModel.onTap file: app/main-view-model.js:39:0
+at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/button.js:29:0\n`
 						);
 					});
 
@@ -222,39 +241,40 @@ JS: at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/b
 						logDataForAndroid(
 							"08-22 15:32:03.145 25038 25038 I JS      : console.time: 9603.00ms"
 						);
-						assertData(logger.output, "JS: console.time: 9603.00ms\n");
+						assertData(logger.output, "console.time: 9603.00ms\n");
 					});
 
 					it("when an error is thrown, correct callstack is printed", async () => {
 						logDataForAndroid(
-							`08-22 15:32:03.171 25038 25038 D AndroidRuntime: Shutting down VM
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: Error: Error in onTap
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1242)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1122)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1109)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1089)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1081)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+							// commented out because we're filtering on the adb logcat level now...
+							// `08-22 15:32:03.171 25038 25038 D AndroidRuntime: Shutting down VM
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: Error: Error in onTap
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1242)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1122)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1109)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1089)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1081)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+							// 08-22 15:32:03.184 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+							`
 08-22 15:32:03.210 25038 25038 W System.err: An uncaught Exception occurred on "main" thread.
 08-22 15:32:03.210 25038 25038 W System.err: Calling js method onClick failed
 08-22 15:32:03.210 25038 25038 W System.err: Error: Error in onTap
-08-22 15:32:03.210 25038 25038 W System.err: ` +
-								`
+08-22 15:32:03.210 25038 25038 W System.err: 
 08-22 15:32:03.210 25038 25038 W System.err: StackTrace:
 08-22 15:32:03.210 25038 25038 W System.err: 	Frame: function:'viewModel.onTap', file:'file:///data/data/org.nativescript.appTestLogs/files/app/bundle.js', line: 301, column: 15
 08-22 15:32:03.210 25038 25038 W System.err: 	Frame: function:'push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify', file:'file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js', line: 3704, column: 32
@@ -331,7 +351,7 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
 						);
 						assertData(
 							logger.output,
-							"JS: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							"HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
 						);
 					});
 
@@ -351,19 +371,19 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
 08-23 16:16:06.570 25038 25038 I JS      : ==== object dump end ====`);
 						assertData(
 							logger.output,
-							`JS: ==== object dump start ====
-JS: level0_0: {
-JS:   "level1_0": {
-JS:     "level2": "value"
-JS:   },
-JS:   "level1_1": {
-JS:     "level2": "value2"
-JS:   }
-JS: }
-JS: level0_1: {
-JS:   "level1_0": "value3"
-JS: }
-JS: ==== object dump end ====\n`
+							`==== object dump start ====
+level0_0: {
+  "level1_0": {
+    "level2": "value"
+  },
+  "level1_1": {
+    "level2": "value2"
+  }
+}
+level0_1: {
+  "level1_0": "value3"
+}
+==== object dump end ====\n`
 						);
 					});
 
@@ -374,10 +394,10 @@ JS: ==== object dump end ====\n`
 08-23 16:16:06.570 25038 25038 I JS      :         console.log`);
 						assertData(
 							logger.output,
-							`JS: multiline
-JS:         message
-JS:         from
-JS:         console.log\n`
+							`multiline
+        message
+        from
+        console.log\n`
 						);
 					});
 
@@ -389,11 +409,11 @@ JS:         console.log\n`
 08-23 16:16:06.571 25038 25038 E JS      : at ClickListenerImpl.onClick (file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:14608:23)`);
 						assertData(
 							logger.output,
-							`JS: Trace: console.trace onTap
-JS: at viewModel.onTap (file: app/main-view-model.js:39:0)
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
-JS: at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
-JS: at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/button.js:29:0)\n`
+							`Trace: console.trace onTap
+at viewModel.onTap (file: app/main-view-model.js:39:0)
+at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/button.js:29:0)\n`
 						);
 					});
 
@@ -401,39 +421,40 @@ JS: at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/
 						logDataForAndroid(
 							"08-23 16:16:06.571 25038 25038 I JS      : console.time: 9510.00ms"
 						);
-						assertData(logger.output, "JS: console.time: 9510.00ms\n");
+						assertData(logger.output, "console.time: 9510.00ms\n");
 					});
 
 					it("when an error is thrown, correct callstack is printed", async () => {
 						logDataForAndroid(
-							`08-23 16:16:06.693 25038 25038 D AndroidRuntime: Shutting down VM
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: Error: Error in onTap
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1209)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1096)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1083)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1063)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1055)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+							// commented out because we're filtering on the adb logcat level now...
+							// `08-23 16:16:06.693 25038 25038 D AndroidRuntime: Shutting down VM
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: FATAL EXCEPTION: main
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: Process: org.nativescript.appTestLogs, PID: 25038
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: com.tns.NativeScriptException: Calling js method onClick failed
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: Error: Error in onTap
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodNative(Native Method)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1209)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:1096)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1083)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1063)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.Runtime.callJSMethod(Runtime.java:1055)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.tns.gen.java.lang.Object_vendor_14601_32_ClickListenerImpl.onClick(Object_vendor_14601_32_ClickListenerImpl.java:18)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClick(View.java:6597)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.performClickInternal(View.java:6574)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View.access$3100(View.java:778)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.view.View$PerformClick.run(View.java:25885)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.handleCallback(Handler.java:873)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:99)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:193)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+							// 08-23 16:16:06.695 25038 25038 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+							`
 08-23 16:16:06.798 25038 25038 W System.err: An uncaught Exception occurred on "main" thread.
 08-23 16:16:06.798 25038 25038 W System.err: Calling js method onClick failed
 08-23 16:16:06.798 25038 25038 W System.err: Error: Error in onTap
-08-23 16:16:06.798 25038 25038 W System.err: ` +
-								`
+08-23 16:16:06.798 25038 25038 W System.err: 
 08-23 16:16:06.798 25038 25038 W System.err: StackTrace:
 08-23 16:16:06.798 25038 25038 W System.err: 	viewModel.onTap(file:///data/data/org.nativescript.appTestLogs/files/app/bundle.js:301:15)
 08-23 16:16:06.798 25038 25038 W System.err: 	at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify(file:///data/data/org.nativescript.appTestLogs/files/app/vendor.js:3704:32)
@@ -531,71 +552,66 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
 						});
 
 						it("console.dir", () => {
-							logDataForiOS(`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE LOG file:///app/bundle.js:270:20:
-	==== object dump start ====
-	level0_0: {
-	  "level1_0": {
-	    "level2": "value"
-	  },
-	  "level1_1": {
-	    "level2": "value2"
-	  }
-	}
-	level0_1: {
-	  "level1_0": "value3"
-	}
-	==== object dump end ====`);
-							assertData(
-								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0
-==== object dump start ====
+							const dump = `==== object dump start ====
 level0_0: {
-"level1_0": {
-"level2": "value"
-},
-"level1_1": {
-"level2": "value2"
-}
+\t"level1_0": {
+\t  "level2": "value"
+\t},
+\t"level1_1": {
+\t\t"level2": "value2"
+\t}
 }
 level0_1: {
-"level1_0": "value3"
+\t"level1_0": "value3"
 }
-==== object dump end ====\n`
+==== object dump end ====`;
+							logDataForiOS(
+								`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+							);
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:20:0\n${dump}\n`
 							);
 						});
 
 						it("multiline console.log statement", () => {
-							logDataForiOS(`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE LOG file:///app/bundle.js:284:20: multiline
-	        message
-	        from
-	        console.log`);
+							logDataForiOS(
+								[
+									`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE LOG file:///app/bundle.js:284:20: multiline`,
+									`\tmessage`,
+									`\sfrom`,
+									`\t\sconsole.log`,
+								].join("\n")
+							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:34:0 multiline
-message
-from
-console.log\n`
+								[
+									`CONSOLE LOG file: app/main-view-model.js:34:0 multiline`,
+									`\tmessage`,
+									`\sfrom`,
+									`\t\sconsole.log\n`,
+								].join("\n")
 							);
 						});
 
 						it("console.trace", async () => {
 							logDataForiOS(`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE TRACE file:///app/bundle.js:289:22: console.trace onTap
-	1   onTap@file:///app/bundle.js:289:22
-	2   notify@file:///app/vendor.js:3756:37
-	3   _emit@file:///app/vendor.js:3776:24
-	4   tap@file:///app/vendor.js:15438:24
-	5   UIApplicationMain@[native code]
-	6   _start@file:///app/vendor.js:789:26
-	7   run@file:///app/vendor.js:817:11
-	8   @file:///app/bundle.js:155:16
-	9   ./app.js@file:///app/bundle.js:172:34
-	10  __webpack_require__@file:///app/runtime.js:751:34
-	11  checkDeferredModules@file:///app/runtime.js:44:42
-	12  webpackJsonpCallback@file:///app/runtime.js:31:39
-	13  anonymous@file:///app/bundle.js:2:61
-	14  evaluate@[native code]
-	15  moduleEvaluation@:1:11
-	16  promiseReactionJob@:1:11`);
+1   onTap@file:///app/bundle.js:289:22
+2   notify@file:///app/vendor.js:3756:37
+3   _emit@file:///app/vendor.js:3776:24
+4   tap@file:///app/vendor.js:15438:24
+5   UIApplicationMain@[native code]
+6   _start@file:///app/vendor.js:789:26
+7   run@file:///app/vendor.js:817:11
+8   @file:///app/bundle.js:155:16
+9   ./app.js@file:///app/bundle.js:172:34
+10  __webpack_require__@file:///app/runtime.js:751:34
+11  checkDeferredModules@file:///app/runtime.js:44:42
+12  webpackJsonpCallback@file:///app/runtime.js:31:39
+13  anonymous@file:///app/bundle.js:2:61
+14  evaluate@[native code]
+15  moduleEvaluation@:1:11
+16  promiseReactionJob@:1:11`);
 							assertData(
 								logger.output,
 								`CONSOLE TRACE file: app/main-view-model.js:39:0 console.trace onTap
@@ -736,21 +752,21 @@ Native stack trace:
 19  0x10fc91100
 JavaScript stack trace:
 1   onTap@file: app/main-view-model.js:43:0
-2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
-3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
-4   tap@file: node_modules/tns-core-modules/ui/button/button.js:216:0
-5   UIApplicationMain@[native code]
-6   _start@file: node_modules/tns-core-modules/application/application.js:277:0
-7   run@file: node_modules/tns-core-modules/application/application.js:305:0
-8   @file: app/app.js:46:0
-9   ./app.js@file:///app/bundle.js:172:34
-10  __webpack_require__@file: app/webpack/bootstrap:750:0
-11  checkDeferredModules@file: app/webpack/bootstrap:43:0
-12  webpackJsonpCallback@file: app/webpack/bootstrap:30:0
-13  anonymous@file:///app/bundle.js:2:61
-14  evaluate@[native code]
-15  moduleEvaluation@[native code]
-16  promiseReactionJob@[native code]
+	2   notify@file: node_modules/tns-core-modules/data/observable/observable.js:107:0
+	3   _emit@file: node_modules/tns-core-modules/data/observable/observable.js:127:0
+	4   tap@file: node_modules/tns-core-modules/ui/button/button.js:216:0
+	5   UIApplicationMain@[native code]
+	6   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+	7   run@file: node_modules/tns-core-modules/application/application.js:305:0
+	8   @file: app/app.js:46:0
+	9   ./app.js@file:///app/bundle.js:172:34
+	10  __webpack_require__@file: app/webpack/bootstrap:750:0
+	11  checkDeferredModules@file: app/webpack/bootstrap:43:0
+	12  webpackJsonpCallback@file: app/webpack/bootstrap:30:0
+	13  anonymous@file:///app/bundle.js:2:61
+	14  evaluate@[native code]
+	15  moduleEvaluation@[native code]
+	16  promiseReactionJob@[native code]
 JavaScript error:
 file: app/main-view-model.js:43:0 JS ERROR Error: Error in onTap
 NativeScript caught signal 11.
@@ -783,17 +799,17 @@ Native Stack:
 26  0x10fc91100
 JS Stack:
 1   UIApplicationMain@[native code]
-2   _start@file: node_modules/tns-core-modules/application/application.js:277:0
-3   run@file: node_modules/tns-core-modules/application/application.js:305:0
-4   @file: app/app.js:46:0
-5   ./app.js@file:///app/bundle.js:172:34
-6   __webpack_require__@file: app/webpack/bootstrap:750:0
-7   checkDeferredModules@file: app/webpack/bootstrap:43:0
-8   webpackJsonpCallback@file: app/webpack/bootstrap:30:0
-9   anonymous@file:///app/bundle.js:2:61
-10  evaluate@[native code]
-11  moduleEvaluation@:1:11
-12  promiseReactionJob@:1:11\n`
+	2   _start@file: node_modules/tns-core-modules/application/application.js:277:0
+	3   run@file: node_modules/tns-core-modules/application/application.js:305:0
+	4   @file: app/app.js:46:0
+	5   ./app.js@file:///app/bundle.js:172:34
+	6   __webpack_require__@file: app/webpack/bootstrap:750:0
+	7   checkDeferredModules@file: app/webpack/bootstrap:43:0
+	8   webpackJsonpCallback@file: app/webpack/bootstrap:30:0
+	9   anonymous@file:///app/bundle.js:2:61
+	10  evaluate@[native code]
+	11  moduleEvaluation@:1:11
+	12  promiseReactionJob@:1:11\n`
 							);
 						});
 					});
@@ -813,50 +829,45 @@ JS Stack:
 						});
 
 						it("console.dir", () => {
-							logDataForiOS(`2019-08-22 18:21:26.133151+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:
-==== object dump start ====
+							const dump = `==== object dump start ====
 level0_0: {
-  "level1_0": {
-    "level2": "value"
-  },
-  "level1_1": {
-    "level2": "value2"
-  }
+	"level1_0": {
+		"level2": "value"
+	},
+	"level1_1": {
+		"level2": "value2"
+	}
 }
 level0_1: {
-  "level1_0": "value3"
+	"level1_0": "value3"
 }
-==== object dump end ====`);
+==== object dump end ====`;
+							logDataForiOS(
+								`2019-08-22 18:21:26.133151+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0
-==== object dump start ====
-level0_0: {
-"level1_0": {
-"level2": "value"
-},
-"level1_1": {
-"level2": "value2"
-}
-}
-level0_1: {
-"level1_0": "value3"
-}
-==== object dump end ====\n`
+								`CONSOLE LOG file: app/main-view-model.js:20:0\n${dump}\n`
 							);
 						});
 
 						it("multiline console.log statement", () => {
-							logDataForiOS(`2019-08-22 18:21:26.133260+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE LOG file:///app/bundle.js:284:20: multiline
-        message
-        from
-        console.log`);
+							logDataForiOS(
+								[
+									`2019-08-22 18:21:26.133260+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE LOG file:///app/bundle.js:284:20: multiline`,
+									`message`,
+									`  from`,
+									`console.log`,
+								].join("\n")
+							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:34:0 multiline
-message
-from
-console.log\n`
+								[
+									`CONSOLE LOG file: app/main-view-model.js:34:0 multiline`,
+									`message`,
+									`  from`,
+									`console.log\n`,
+								].join("\n")
 							);
 						});
 
@@ -1112,71 +1123,66 @@ JS Stack:
 						});
 
 						it("console.dir", () => {
-							logDataForiOS(`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:270:20:
-	==== object dump start ====
-	level0_0: {
-	  "level1_0": {
-	    "level2": "value"
-	  },
-	  "level1_1": {
-	    "level2": "value2"
-	  }
-	}
-	level0_1: {
-	  "level1_0": "value3"
-	}
-	==== object dump end ====`);
-							assertData(
-								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0:
-==== object dump start ====
+							const dump = `==== object dump start ====
 level0_0: {
-"level1_0": {
-"level2": "value"
-},
-"level1_1": {
-"level2": "value2"
-}
+	"level1_0": {
+		"level2": "value"
+	},
+	"level1_1": {
+		"level2": "value2"
+	}
 }
 level0_1: {
-"level1_0": "value3"
+	"level1_0": "value3"
 }
-==== object dump end ====\n`
+==== object dump end ====`;
+							logDataForiOS(
+								`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+							);
+							assertData(
+								logger.output,
+								`CONSOLE LOG file: app/main-view-model.js:20:0:\n${dump}\n`
 							);
 						});
 
 						it("multiline console.log statement", () => {
-							logDataForiOS(`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:284:20: multiline
-	        message
-	        from
-	        console.log`);
+							logDataForiOS(
+								[
+									`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:284:20: multiline`,
+									`message`,
+									`  from`,
+									`console.log`,
+								].join("\n")
+							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:34:0: multiline
-message
-from
-console.log\n`
+								[
+									`CONSOLE LOG file: app/main-view-model.js:34:0: multiline`,
+									`message`,
+									`  from`,
+									`console.log\n`,
+								].join("\n")
 							);
 						});
 
 						it("console.trace", async () => {
 							logDataForiOS(`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE TRACE file:///app/bundle.js:289:22: console.trace onTap
-	onTap(file:///app/bundle.js:289:22)
-	at notify(file:///app/vendor.js:3756:37)
-	at _emit(file:///app/vendor.js:3776:24)
-	at tap(file:///app/vendor.js:15438:24)
-	at UIApplicationMain([native code])
-	at _start(file:///app/vendor.js:789:26)
-	at run(file:///app/vendor.js:817:11)
-	at file:///app/bundle.js:155:16
-	at ./app.js(file:///app/bundle.js:172:34)
-	at __webpack_require__(file:///app/runtime.js:751:34)
-	at checkDeferredModules(file:///app/runtime.js:44:42)
-	at webpackJsonpCallback(file:///app/runtime.js:31:39)
-	at anonymous(file:///app/bundle.js:2:61)
-	at evaluate([native code])
-	at moduleEvaluation
-	at promiseReactionJob`);
+onTap(file:///app/bundle.js:289:22)
+at notify(file:///app/vendor.js:3756:37)
+at _emit(file:///app/vendor.js:3776:24)
+at tap(file:///app/vendor.js:15438:24)
+at UIApplicationMain([native code])
+at _start(file:///app/vendor.js:789:26)
+at run(file:///app/vendor.js:817:11)
+at file:///app/bundle.js:155:16
+at ./app.js(file:///app/bundle.js:172:34)
+at __webpack_require__(file:///app/runtime.js:751:34)
+at checkDeferredModules(file:///app/runtime.js:44:42)
+at webpackJsonpCallback(file:///app/runtime.js:31:39)
+at anonymous(file:///app/bundle.js:2:61)
+at evaluate([native code])
+at moduleEvaluation
+at promiseReactionJob`);
 							assertData(
 								logger.output,
 								`CONSOLE TRACE file: app/main-view-model.js:39:0: console.trace onTap
@@ -1317,21 +1323,21 @@ Native stack trace:
 19  0x11085f1e0
 JavaScript stack trace:
 onTap(file: app/main-view-model.js:43:0)
-at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
-at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
-at tap(file: node_modules/tns-core-modules/ui/button/button.js:216:0)
-at UIApplicationMain([native code])
-at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
-at run(file: node_modules/tns-core-modules/application/application.js:305:0)
-at file: app/app.js:46:0
-at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file: app/webpack/bootstrap:750:0)
-at checkDeferredModules(file: app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
-at anonymous(file:///app/bundle.js:2:61)
-at evaluate([native code])
-at moduleEvaluation([native code])
-at promiseReactionJob([native code])
+	at notify(file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
+	at _emit(file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
+	at tap(file: node_modules/tns-core-modules/ui/button/button.js:216:0)
+	at UIApplicationMain([native code])
+	at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+	at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+	at file: app/app.js:46:0
+	at ./app.js(file:///app/bundle.js:172:34)
+	at __webpack_require__(file: app/webpack/bootstrap:750:0)
+	at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+	at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
+	at anonymous(file:///app/bundle.js:2:61)
+	at evaluate([native code])
+	at moduleEvaluation([native code])
+	at promiseReactionJob([native code])
 JavaScript error:
 file: app/main-view-model.js:43:0: JS ERROR Error: Error in onTap
 NativeScript caught signal 11.
@@ -1364,17 +1370,17 @@ Native Stack:
 26  0x11085f1e0
 JS Stack:
 UIApplicationMain([native code])
-at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
-at run(file: node_modules/tns-core-modules/application/application.js:305:0)
-at file: app/app.js:46:0
-at ./app.js(file:///app/bundle.js:172:34)
-at __webpack_require__(file: app/webpack/bootstrap:750:0)
-at checkDeferredModules(file: app/webpack/bootstrap:43:0)
-at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
-at anonymous(file:///app/bundle.js:2:61)
-at evaluate([native code])
-at moduleEvaluation
-at promiseReactionJob\n`
+	at _start(file: node_modules/tns-core-modules/application/application.js:277:0)
+	at run(file: node_modules/tns-core-modules/application/application.js:305:0)
+	at file: app/app.js:46:0
+	at ./app.js(file:///app/bundle.js:172:34)
+	at __webpack_require__(file: app/webpack/bootstrap:750:0)
+	at checkDeferredModules(file: app/webpack/bootstrap:43:0)
+	at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
+	at anonymous(file:///app/bundle.js:2:61)
+	at evaluate([native code])
+	at moduleEvaluation
+	at promiseReactionJob\n`
 							);
 						});
 					});
@@ -1394,50 +1400,45 @@ at promiseReactionJob\n`
 						});
 
 						it("console.dir", () => {
-							logDataForiOS(`2019-08-23 17:08:45.217971+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:
-==== object dump start ====
+							const dump = `==== object dump start ====
 level0_0: {
-  "level1_0": {
-    "level2": "value"
-  },
-  "level1_1": {
-    "level2": "value2"
-  }
+	"level1_0": {
+		"level2": "value"
+	},
+	"level1_1": {
+		"level2": "value2"
+	}
 }
 level0_1: {
-  "level1_0": "value3"
+	"level1_0": "value3"
 }
-==== object dump end ====`);
+==== object dump end ====`;
+							logDataForiOS(
+								`2019-08-23 17:08:45.217971+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0:
-==== object dump start ====
-level0_0: {
-"level1_0": {
-"level2": "value"
-},
-"level1_1": {
-"level2": "value2"
-}
-}
-level0_1: {
-"level1_0": "value3"
-}
-==== object dump end ====\n`
+								`CONSOLE LOG file: app/main-view-model.js:20:0:\n${dump}\n`
 							);
 						});
 
 						it("multiline console.log statement", () => {
-							logDataForiOS(`2019-08-23 17:08:45.218519+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE LOG file:///app/bundle.js:284:20: multiline
-        message
-        from
-        console.log`);
+							logDataForiOS(
+								[
+									`2019-08-23 17:08:45.218519+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE LOG file:///app/bundle.js:284:20: multiline`,
+									`message`,
+									`  from`,
+									`console.log`,
+								].join("\n")
+							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:34:0: multiline
-message
-from
-console.log\n`
+								[
+									`CONSOLE LOG file: app/main-view-model.js:34:0: multiline`,
+									`message`,
+									`  from`,
+									`console.log\n`,
+								].join("\n")
 							);
 						});
 

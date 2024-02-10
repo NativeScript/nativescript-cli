@@ -1,9 +1,9 @@
 <% if (isJekyll) { %>---
-title: tns prepare
+title: ns prepare
 position: 7
 ---<% } %>
 
-# tns prepare
+# ns prepare
 
 ### Description
 
@@ -19,7 +19,7 @@ When running this command the HMR (Hot Module Replacement) is not enabled by def
 
 Usage | Synopsis
 ------|-------
-<% if((isConsole && isMacOS) || isHtml) { %>General | `$ tns prepare <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ tns prepare android`<% } %>
+<% if((isConsole && isMacOS) || isHtml) { %>General | `$ ns prepare <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ ns prepare android`<% } %>
 
 <% if(isMacOS) { %>### Arguments
 `<Platform>` is the target mobile platform for which you want to prepare your project. You can set the following target platforms.
@@ -29,13 +29,13 @@ Usage | Synopsis
 ### Options
 
 * `--hmr` - Enables the hot module replacement (HMR) feature.
-* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `tns migrate`.
+* `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>
 
 ### Command Limitations
 
-* You can run `$ tns prepare ios` only on macOS systems.
+* You can run `$ ns prepare ios` only on macOS systems.
 
 ### Related Commands
 

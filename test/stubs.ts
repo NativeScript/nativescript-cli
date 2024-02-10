@@ -49,9 +49,7 @@ import {
 	IDeviceDebugService,
 	IDebugResultInfo,
 } from "../lib/definitions/debug";
-import {
-	IDependencyData,
-} from "../lib/declarations";
+import { IDependencyData } from "../lib/declarations";
 import { IBuildData } from "../lib/definitions/build";
 import {
 	IFileSystem,
@@ -66,7 +64,6 @@ import {
 	IHooksService,
 	IAllowEmpty,
 	IPrompterOptions,
-	IQrCodeImageData,
 	ISpawnFromEventOptions,
 	IAnalyticsService,
 	IProxySettings,
@@ -91,6 +88,11 @@ import * as _ from "lodash";
 import { SupportedConfigValues } from "../lib/tools/config-manipulation/config-transformer";
 import { AffixOptions } from "temp";
 import { ITempService } from "../lib/definitions/temp-service";
+import {
+	ITerminalSpinner,
+	ITerminalSpinnerOptions,
+	ITerminalSpinnerService,
+} from "../lib/definitions/terminal-spinner-service";
 
 temp.track();
 
@@ -182,6 +184,10 @@ export class FileSystemStub implements IFileSystem {
 
 	getFileSize(path: string): number {
 		return undefined;
+	}
+
+	getSize(path: string): number {
+		return 0;
 	}
 
 	async futureFromEvent(eventEmitter: any, event: string): Promise<any> {
@@ -684,7 +690,6 @@ export class ProjectDataStub implements IProjectData {
 	public buildXcconfigPath: string;
 	public podfilePath: string;
 	public isShared: boolean;
-	public previewAppSchema: string;
 
 	public initializeProjectData(projectDir?: string): void {
 		this.projectDir = this.projectDir || projectDir;
@@ -1136,12 +1141,6 @@ export class DebugServiceStub
 export class LiveSyncServiceStub
 	extends EventEmitter
 	implements ILiveSyncService {
-	public async liveSyncToPreviewApp(
-		data: IPreviewAppLiveSyncData
-	): Promise<IQrCodeImageData> {
-		return;
-	}
-
 	public async liveSync(
 		deviceDescriptors: ILiveSyncDeviceDescriptor[],
 		liveSyncData: ILiveSyncInfo
@@ -1362,31 +1361,31 @@ export class PacoteServiceStub implements IPacoteService {
 class TerminalSpinnerStub {
 	public text: string;
 	public start(text?: string): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public stop(): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public succeed(text?: string): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public fail(text?: string): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public warn(text?: string): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public info(text?: string): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public clear(): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public render(): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 	public frame(): ITerminalSpinner {
-		return this;
+		return this as any;
 	}
 }
 
@@ -1394,7 +1393,7 @@ export class TerminalSpinnerServiceStub implements ITerminalSpinnerService {
 	public createSpinner(
 		spinnerOptions?: ITerminalSpinnerOptions
 	): ITerminalSpinner {
-		return new TerminalSpinnerStub();
+		return new TerminalSpinnerStub() as any;
 	}
 	public async execute<T>(
 		spinnerOptions: ITerminalSpinnerOptions,
@@ -1447,9 +1446,6 @@ export class AnalyticsService implements IAnalyticsService {
 	async trackAcceptFeatureUsage(settings: {
 		acceptTrackFeatureUsage: boolean;
 	}) {
-		return Promise.resolve();
-	}
-	async trackPreviewAppData() {
 		return Promise.resolve();
 	}
 	async finishTracking() {

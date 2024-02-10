@@ -36,6 +36,7 @@ import {
 	resolvePackagePath,
 	resolvePackageJSONPath,
 } from "../helpers/package-path-helper";
+import { color } from "../color";
 
 export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
@@ -239,9 +240,8 @@ export class PluginsService implements IPluginsService {
 			projectData
 		);
 
-		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
-			platform
-		);
+		const pluginPlatformsFolderPath =
+			pluginData.pluginPlatformsFolderPath(platform);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			const pathToPluginsBuildFile = path.join(
 				platformData.projectRoot,
@@ -267,10 +267,15 @@ export class PluginsService implements IPluginsService {
 					pluginData,
 					projectData
 				);
+
+				const updatedPluginNativeHashes = await this.getPluginNativeHashes(
+					pluginPlatformsFolderPath
+				);
+
 				this.setPluginNativeHashes({
 					pathToPluginsBuildFile,
 					pluginData,
-					currentPluginNativeHashes,
+					currentPluginNativeHashes: updatedPluginNativeHashes,
 					allPluginsNativeHashes,
 				});
 			}
@@ -329,10 +334,9 @@ export class PluginsService implements IPluginsService {
 	public async getAllInstalledPlugins(
 		projectData: IProjectData
 	): Promise<IPluginData[]> {
-		const nodeModules = (
-			await this.getAllInstalledModules(projectData)
-		).map((nodeModuleData) =>
-			this.convertToPluginData(nodeModuleData, projectData.projectDir)
+		const nodeModules = (await this.getAllInstalledModules(projectData)).map(
+			(nodeModuleData) =>
+				this.convertToPluginData(nodeModuleData, projectData.projectDir)
 		);
 		return _.filter(
 			nodeModules,
@@ -460,7 +464,7 @@ export class PluginsService implements IPluginsService {
 					const versions = _.keys(dependencyOccurrencesGroupedByVersion);
 					if (versions.length === 1) {
 						// all dependencies with this name have the same version
-						this.$logger.debug(
+						this.$logger.trace(
 							`Detected same versions (${_.first(
 								versions
 							)}) of the ${dependencyName} installed at locations: ${_.map(
@@ -469,7 +473,7 @@ export class PluginsService implements IPluginsService {
 							).join(", ")}`
 						);
 					} else {
-						this.$logger.debug(
+						this.$logger.trace(
 							`Detected different versions of the ${dependencyName} installed at locations: ${_.map(
 								dependencyOccurrences,
 								(d) => d.directory
@@ -551,8 +555,9 @@ export class PluginsService implements IPluginsService {
 								(d) => d.depth
 							);
 							this.$logger.info(
-								`CLI will use only the native code from '${selectedPackage.directory}'.`
-									.green
+								color.green(
+									`CLI will use only the native code from '${selectedPackage.directory}'.`
+								)
 							);
 							_.each(dependencyOccurrences, (dependency) => {
 								if (dependency !== selectedPackage) {
@@ -563,12 +568,13 @@ export class PluginsService implements IPluginsService {
 								}
 							});
 						} else {
-							const message = this.getFailureMessageForDifferentDependencyVersions(
-								dependencyName,
-								frameworkName,
-								dependencyOccurrencesGroupedByVersion,
-								projectDir
-							);
+							const message =
+								this.getFailureMessageForDifferentDependencyVersions(
+									dependencyName,
+									frameworkName,
+									dependencyOccurrencesGroupedByVersion,
+									projectDir
+								);
 							this.$errors.fail(message);
 						}
 					}
@@ -617,25 +623,33 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		cacheData: IDependencyData | INodeModuleData,
 		projectDir: string
 	): IPluginData {
-		const pluginData: any = {};
-		pluginData.name = cacheData.name;
-		pluginData.version = cacheData.version;
-		pluginData.fullPath =
-			(<IDependencyData>cacheData).directory ||
-			path.dirname(
-				this.getPackageJsonFilePathForModule(cacheData.name, projectDir)
+		try {
+			const pluginData: any = {};
+			pluginData.name = cacheData.name;
+			pluginData.version = cacheData.version;
+			pluginData.fullPath =
+				(<IDependencyData>cacheData).directory ||
+				path.dirname(
+					this.getPackageJsonFilePathForModule(cacheData.name, projectDir)
+				);
+			pluginData.isPlugin = !!cacheData.nativescript;
+			pluginData.pluginPlatformsFolderPath = (platform: string) =>
+				path.join(pluginData.fullPath, "platforms", platform.toLowerCase());
+			const data = cacheData.nativescript;
+
+			if (pluginData.isPlugin) {
+				pluginData.platformsData = data.platforms;
+				pluginData.pluginVariables = data.variables;
+			}
+			return pluginData;
+		} catch (err) {
+			this.$logger.trace(
+				"NOTE: There appears to be a problem with this dependency:",
+				cacheData.name
 			);
-		pluginData.isPlugin = !!cacheData.nativescript;
-		pluginData.pluginPlatformsFolderPath = (platform: string) =>
-			path.join(pluginData.fullPath, "platforms", platform.toLowerCase());
-		const data = cacheData.nativescript;
-
-		if (pluginData.isPlugin) {
-			pluginData.platformsData = data.platforms;
-			pluginData.pluginVariables = data.variables;
+			this.$logger.trace(err);
+			return null;
 		}
-
-		return pluginData;
 	}
 
 	private removeDependencyFromPackageJsonContent(
@@ -843,9 +857,8 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	): Promise<IStringDictionary> {
 		let data: IStringDictionary = {};
 		if (this.$fs.exists(pluginPlatformsDir)) {
-			const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(
-				pluginPlatformsDir
-			);
+			const pluginNativeDataFiles =
+				this.$fs.enumerateFilesInDirectorySync(pluginPlatformsDir);
 			data = await this.$filesHashService.generateHashes(pluginNativeDataFiles);
 		}
 

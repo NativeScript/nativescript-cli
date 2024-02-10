@@ -164,9 +164,11 @@ export class TestExecutionService implements ITestExecutionService {
 		const ips = Object.keys(nics)
 			.map(
 				(nicName) =>
-					nics[nicName].filter((binding: any) => binding.family === "IPv4")[0]
+					nics[nicName].filter(
+						(binding: any) => binding.family === "IPv4" || binding.family === 4
+					)[0]
 			)
-			.filter((binding) => binding)
+			.filter((binding) => !!binding)
 			.map((binding) => binding.address);
 
 		const config = {
@@ -219,7 +221,7 @@ export class TestExecutionService implements ITestExecutionService {
 		karmaConfig.debugBrk = this.$options.debugBrk;
 		karmaConfig.appPath = projectData.getAppDirectoryRelativePath();
 		karmaConfig.platform = platform.toLowerCase();
-		this.$logger.debug(JSON.stringify(karmaConfig, null, 4));
+		this.$logger.trace(JSON.stringify(karmaConfig, null, 4));
 
 		return karmaConfig;
 	}

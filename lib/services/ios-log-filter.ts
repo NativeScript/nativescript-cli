@@ -3,15 +3,23 @@ import { injector } from "../common/yok";
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
 	// This looks for artifacts like: AppName[22432] or AppName(SomeTextHere)[23123]
-	private appOutputRegex: RegExp = /([^\s\(\)]+)(?:\([^\s]+\))?\[[0-9]+\]/;
+	private appOutputRegex: RegExp = /([^\s\(\)]+)(?:\(([^\s]+)\))?\[[0-9]+\]/;
 
 	// Used to trim the passed messages to a simpler output
 	// Example:
 	// This: "May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:"
 	// Becomes: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:
 	protected infoFilterRegex = new RegExp(
-		`^.*(?:<Notice>:|<Error>:|<Warning>:|\\(NativeScript\\)|${this.appOutputRegex.source}:){1}`
+		`^.*(?:<Notice>:[ \t]?|<Error>:[ \t]?|<Warning>:[ \t]?|\\(NativeScript\\)[ \t]?|${this.appOutputRegex.source}:[ \t]?){1}`
 	);
+
+	// Used to post filter messages that slip through but are not coming from NativeScript itself.
+	// Looks for text in parenthesis at the beginning
+	// Example:
+	// (RunningBoardServices) [com.apple.runningboard:connection] Identity resolved as application<...>
+	// ^(~~capture group~~~)^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+	// we then use this to filter out non-NativeScript lines
+	protected postFilterRegex: RegExp = /^\((.+)\) \[com\.apple.+\]/;
 
 	private filterActive: boolean = true;
 
@@ -59,6 +67,10 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 				// of this filter may be used accross multiple projects.
 				const projectName = loggingOptions && loggingOptions.projectName;
 				this.filterActive = matchResult[1] !== projectName;
+
+				if (matchResult?.[2]) {
+					this.filterActive ||= matchResult[2] !== "NativeScript";
+				}
 			}
 
 			if (this.filterActive) {
@@ -70,7 +82,18 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 				currentLine = currentLine.replace(filteredLineInfo[0], "");
 			}
 
-			currentLine = currentLine.trim();
+			currentLine = currentLine
+				// remove lading space before CONSOLE
+				.replace(/^\s*CONSOLE/, "CONSOLE")
+				// trim trailing spaces only to preserve indentation
+				.trimEnd();
+
+			// post filtering: (<anything>) check if <anything> is not "NativeScript"
+			const postFilterMatch = this.postFilterRegex.exec(currentLine);
+			if (postFilterMatch && postFilterMatch?.[1] !== "NativeScript") {
+				continue;
+			}
+
 			output += currentLine + "\n";
 		}
 
