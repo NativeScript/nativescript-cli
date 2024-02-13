@@ -228,6 +228,111 @@ export class OpenIOSCommand extends ShiftI {
 	}
 }
 
+export class V implements IKeyCommand {
+	key: IValidKeyName = "V";
+	platform: IKeyCommandPlatform = "visionOS";
+	description: string = "Run visionOS app";
+
+	constructor(private $startService: IStartService) {}
+
+	async execute(): Promise<void> {
+		this.$startService.runVisionOS();
+	}
+
+	canExecute(processType: SupportedProcessType) {
+		return processType === "start";
+	}
+}
+
+export class ShiftV implements IKeyCommand {
+	key: IValidKeyName = "V";
+	platform: IKeyCommandPlatform = "visionOS";
+	description: string = "Open visionOS project in Xcode";
+	willBlockKeyCommandExecution: boolean = true;
+	protected isInteractive: boolean = true;
+
+	constructor(
+		private $iOSProjectService: IOSProjectService,
+		private $logger: ILogger,
+		private $childProcess: IChildProcess,
+		private $projectData: IProjectData,
+		private $xcodeSelectService: IXcodeSelectService,
+		private $xcodebuildArgsService: IXcodebuildArgsService,
+		protected $options: IOptions
+	) {}
+
+	async execute(): Promise<void> {
+		this.$options.platformOverride = "visionOS";
+		const os = currentPlatform();
+		if (os === "darwin") {
+			this.$projectData.initializeProjectData();
+			const visionOSDir = path.resolve(
+				this.$projectData.platformsDir,
+				"visionos"
+			);
+
+			if (!fs.existsSync(visionOSDir)) {
+				const prepareCommand = injector.resolveCommand(
+					"prepare"
+				) as PrepareCommand;
+
+				await prepareCommand.execute(["visionos"]);
+				if (this.isInteractive) {
+					process.stdin.resume();
+				}
+			}
+			const platformData = this.$iOSProjectService.getPlatformData(
+				this.$projectData
+			);
+			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
+				platformData,
+				this.$projectData
+			)[1];
+
+			if (fs.existsSync(xcprojectFile)) {
+				this.$xcodeSelectService
+					.getDeveloperDirectoryPath()
+					.then(() => this.$childProcess.exec(`open ${xcprojectFile}`, {}))
+					.catch((e) => {
+						this.$logger.error(e.message);
+					});
+			} else {
+				this.$logger.error(`Unable to open project file: ${xcprojectFile}`);
+			}
+		} else {
+			this.$logger.error("Opening a project in XCode requires macOS.");
+		}
+		this.$options.platformOverride = null;
+	}
+}
+
+export class OpenVisionOSCommand extends ShiftV {
+	constructor(
+		$iOSProjectService: IOSProjectService,
+		$logger: ILogger,
+		$childProcess: IChildProcess,
+		$projectData: IProjectData,
+		$xcodeSelectService: IXcodeSelectService,
+		$xcodebuildArgsService: IXcodebuildArgsService,
+		protected $options: IOptions
+	) {
+		super(
+			$iOSProjectService,
+			$logger,
+			$childProcess,
+			$projectData,
+			$xcodeSelectService,
+			$xcodebuildArgsService,
+			$options
+		);
+		this.isInteractive = false;
+	}
+	async execute(): Promise<void> {
+		this.$options.watch = false;
+		super.execute();
+	}
+}
+
 export class R implements IKeyCommand {
 	key: IValidKeyName = "r";
 	platform: IKeyCommandPlatform = "all";
@@ -363,6 +468,10 @@ export class QuestionMark implements IKeyCommand {
 			case "ios":
 				platform = "iOS";
 				break;
+			case "visionOS":
+			case "vision":
+				platform = "visionOS";
+				break;
 			default:
 				platform = "all";
 				break;
@@ -376,6 +485,7 @@ injector.registerKeyCommand("a", A);
 injector.registerKeyCommand("i", I);
 injector.registerKeyCommand("A", ShiftA);
 injector.registerKeyCommand("I", ShiftI);
+injector.registerKeyCommand("V", ShiftV);
 injector.registerKeyCommand("r", R);
 injector.registerKeyCommand("R", ShiftR);
 injector.registerKeyCommand("w", W);
@@ -386,4 +496,6 @@ injector.registerKeyCommand(SpecialKeys.QuestionMark, QuestionMark);
 injector.registerKeyCommand(SpecialKeys.CtrlC, CtrlC);
 
 injector.registerCommand("open|ios", OpenIOSCommand);
+injector.registerCommand("open|visionos", OpenVisionOSCommand);
+injector.registerCommand("open|vision", OpenVisionOSCommand);
 injector.registerCommand("open|android", OpenAndroidCommand);

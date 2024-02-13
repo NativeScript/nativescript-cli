@@ -1,4 +1,4 @@
-export type IKeyCommandPlatform = "Android" | "iOS" | "all";
+export type IKeyCommandPlatform = "Android" | "iOS" | "visionOS" | "all";
 export type IKeysLowerCase =
 	| "a"
 	| "b"
