@@ -86,9 +86,20 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.getBuildOutputPath(buildConfig),
 			projectData.projectName + ".xcarchive"
 		);
+		let destination = "generic/platform=iOS";
+		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
+			buildConfig.platform
+		);
+
+		if (isvisionOS) {
+			destination = "platform=visionOS";
+			if (buildConfig._device) {
+				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
+			}
+		}
 		const args = [
 			"-destination",
-			"generic/platform=iOS",
+			destination,
 			"archive",
 			"-archivePath",
 			archivePath,
