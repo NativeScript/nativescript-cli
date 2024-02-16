@@ -1025,6 +1025,7 @@ project.tasks.configureEach {
         name =~ /checkBenchmark(Debug|Release)DuplicateClasses/ || 
         name =~ /processBenchmark(Debug|Release)JavaRes/ || 
         name =~ /mergeBenchmark(Debug|Release)JavaResource/ || 
+        name =~ /transform(Debug|Release)ClassesWithAsm/ || 
         // because of sentry plugin. There must be a better way
         name =~ /collectExternal(Debug|Release)/ ||
         name =~ /generateSentry(Debug|Release)/
