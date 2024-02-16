@@ -363,7 +363,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 	private extractNamespaceFromManifest(manifestPath:string): string {
 		const fileContent = this.$fs.readText(manifestPath);
-		const contentRegex = new RegExp('package="(.*)"');
+		const contentRegex = new RegExp('package="(.*?)"');
 		const match = fileContent.match(contentRegex);
 		let namespace: string;
 		if (match) {
