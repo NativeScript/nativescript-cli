@@ -7,6 +7,7 @@ import {
 	IBuildConfig,
 	IiOSBuildConfig,
 } from "../../definitions/project";
+import { IXcconfigService } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
@@ -21,7 +22,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		private $devicesService: Mobile.IDevicesService,
 		private $fs: IFileSystem,
 		private $iOSWatchAppService: IIOSWatchAppService,
-		private $logger: ILogger
+		private $logger: ILogger,
+		private $xcconfigService: IXcconfigService
 	) {}
 
 	public async getBuildForSimulatorArgs(
@@ -53,7 +55,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				)
 			)
 			.concat(this.getBuildLoggingArgs())
-			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData));
+			.concat(this.getXcodeProjectArgs(platformData, projectData));
 
 		return args;
 	}
@@ -78,7 +80,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			buildConfig.release ? Configurations.Release : Configurations.Debug,
 			"-allowProvisioningUpdates",
 		]
-			.concat(this.getXcodeProjectArgs(platformData.projectRoot, projectData))
+			.concat(this.getXcodeProjectArgs(platformData, projectData))
 			.concat(architectures)
 			.concat(
 				this.getBuildCommonArgs(
@@ -108,27 +110,53 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	}
 
 	public getXcodeProjectArgs(
-		projectRoot: string,
+		platformData: IPlatformData,
 		projectData: IProjectData
 	): string[] {
 		const xcworkspacePath = path.join(
-			projectRoot,
+			platformData.projectRoot,
 			`${projectData.projectName}.xcworkspace`
 		);
+
+		// Introduced in Xcode 14+
+		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
+		const skipPackageValidation = "-skipPackagePluginValidation";
+
+		const extraArgs: string[] = [
+			"-scheme",
+			projectData.projectName,
+			skipPackageValidation,
+		];
+
+		const BUILD_SETTINGS_FILE_PATH = path.join(
+			projectData.appResourcesDirectoryPath,
+			platformData.normalizedPlatformName,
+			constants.BUILD_XCCONFIG_FILE_NAME
+		);
+		// Only include explit deploy target if one is defined
+		// Note: we could include entire file via -xcconfig flag
+		// however doing so introduces unwanted side effects
+		// like cocoapods issues related to ASSETCATALOG_COMPILER_APPICON_NAME
+		// references: https://medium.com/@iostechset/why-cocoapods-eats-app-icons-79fe729808d4
+		// https://github.com/CocoaPods/CocoaPods/issues/7003
+		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
+		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
+			BUILD_SETTINGS_FILE_PATH,
+			deployTargetProperty
+		);
+		if (deployTargetVersion) {
+			extraArgs.push(`${deployTargetProperty}=${deployTargetVersion}`);
+		}
+
 		if (this.$fs.exists(xcworkspacePath)) {
-			return [
-				"-workspace",
-				xcworkspacePath,
-				"-scheme",
-				projectData.projectName,
-			];
+			return ["-workspace", xcworkspacePath, ...extraArgs];
 		}
 
 		const xcodeprojPath = path.join(
-			projectRoot,
+			platformData.projectRoot,
 			`${projectData.projectName}.xcodeproj`
 		);
-		return ["-project", xcodeprojPath, "-scheme", projectData.projectName];
+		return ["-project", xcodeprojPath, ...extraArgs];
 	}
 
 	private getBuildLoggingArgs(): string[] {

@@ -623,25 +623,33 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		cacheData: IDependencyData | INodeModuleData,
 		projectDir: string
 	): IPluginData {
-		const pluginData: any = {};
-		pluginData.name = cacheData.name;
-		pluginData.version = cacheData.version;
-		pluginData.fullPath =
-			(<IDependencyData>cacheData).directory ||
-			path.dirname(
-				this.getPackageJsonFilePathForModule(cacheData.name, projectDir)
+		try {
+			const pluginData: any = {};
+			pluginData.name = cacheData.name;
+			pluginData.version = cacheData.version;
+			pluginData.fullPath =
+				(<IDependencyData>cacheData).directory ||
+				path.dirname(
+					this.getPackageJsonFilePathForModule(cacheData.name, projectDir)
+				);
+			pluginData.isPlugin = !!cacheData.nativescript;
+			pluginData.pluginPlatformsFolderPath = (platform: string) =>
+				path.join(pluginData.fullPath, constants.PLATFORMS_DIR_NAME, platform.toLowerCase());
+			const data = cacheData.nativescript;
+
+			if (pluginData.isPlugin) {
+				pluginData.platformsData = data.platforms;
+				pluginData.pluginVariables = data.variables;
+			}
+			return pluginData;
+		} catch (err) {
+			this.$logger.trace(
+				"NOTE: There appears to be a problem with this dependency:",
+				cacheData.name
 			);
-		pluginData.isPlugin = !!cacheData.nativescript;
-		pluginData.pluginPlatformsFolderPath = (platform: string) =>
-			path.join(pluginData.fullPath, constants.PLATFORMS_DIR_NAME, platform.toLowerCase());
-		const data = cacheData.nativescript;
-
-		if (pluginData.isPlugin) {
-			pluginData.platformsData = data.platforms;
-			pluginData.pluginVariables = data.variables;
+			this.$logger.trace(err);
+			return null;
 		}
-
-		return pluginData;
 	}
 
 	private removeDependencyFromPackageJsonContent(

@@ -57,7 +57,7 @@ declare global {
 			buildConfig: IBuildConfig
 		): Promise<string[]>;
 		getXcodeProjectArgs(
-			projectRoot: string,
+			platformData: IPlatformData,
 			projectData: IProjectData
 		): string[];
 	}
