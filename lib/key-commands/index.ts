@@ -22,7 +22,8 @@ import { IOptions } from "../declarations";
 export class A implements IKeyCommand {
 	key: IValidKeyName = "a";
 	platform: IKeyCommandPlatform = "Android";
-	description: string = "Run android app";
+	description: string = "Run Android app";
+	group = "Android";
 
 	constructor(private $startService: IStartService) {}
 
@@ -38,7 +39,8 @@ export class A implements IKeyCommand {
 export class ShiftA implements IKeyCommand {
 	key: IValidKeyName = "A";
 	platform: IKeyCommandPlatform = "Android";
-	description: string = "Open android project in Android Studio";
+	description: string = "Open project in Android Studio";
+	group = "Android";
 	willBlockKeyCommandExecution: boolean = true;
 	protected isInteractive: boolean = true;
 	constructor(
@@ -134,6 +136,7 @@ export class I implements IKeyCommand {
 	key: IValidKeyName = "i";
 	platform: IKeyCommandPlatform = "iOS";
 	description: string = "Run iOS app";
+	group = "iOS";
 
 	constructor(private $startService: IStartService) {}
 
@@ -149,7 +152,8 @@ export class I implements IKeyCommand {
 export class ShiftI implements IKeyCommand {
 	key: IValidKeyName = "I";
 	platform: IKeyCommandPlatform = "iOS";
-	description: string = "Open iOS project in Xcode";
+	description: string = "Open project in Xcode";
+	group = "iOS";
 	willBlockKeyCommandExecution: boolean = true;
 	protected isInteractive: boolean = true;
 
@@ -229,9 +233,10 @@ export class OpenIOSCommand extends ShiftI {
 }
 
 export class V implements IKeyCommand {
-	key: IValidKeyName = "V";
+	key: IValidKeyName = "v";
 	platform: IKeyCommandPlatform = "visionOS";
 	description: string = "Run visionOS app";
+	group = "visionOS";
 
 	constructor(private $startService: IStartService) {}
 
@@ -247,7 +252,8 @@ export class V implements IKeyCommand {
 export class ShiftV implements IKeyCommand {
 	key: IValidKeyName = "V";
 	platform: IKeyCommandPlatform = "visionOS";
-	description: string = "Open visionOS project in Xcode";
+	description: string = "Open project in Xcode";
+	group = "visionOS";
 	willBlockKeyCommandExecution: boolean = true;
 	protected isInteractive: boolean = true;
 
@@ -337,6 +343,7 @@ export class R implements IKeyCommand {
 	key: IValidKeyName = "r";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Rebuild native app if needed and restart";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
@@ -360,6 +367,7 @@ export class ShiftR implements IKeyCommand {
 	key: IValidKeyName = "R";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Force rebuild native app and restart";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
@@ -384,6 +392,7 @@ export class CtrlC implements IKeyCommand {
 	key: IValidKeyName = SpecialKeys.CtrlC;
 	platform: IKeyCommandPlatform = "all";
 	description: string;
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = false;
 
 	async execute(): Promise<void> {
@@ -395,6 +404,7 @@ export class W implements IKeyCommand {
 	key: IValidKeyName = "w";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Toggle file watcher";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $prepareController: IPrepareController) {}
@@ -415,6 +425,7 @@ export class C implements IKeyCommand {
 	key: IValidKeyName = "c";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Clean project";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(
@@ -442,6 +453,7 @@ export class N implements IKeyCommand {
 	key: IValidKeyName = "n";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Install dependencies";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	async execute(platform: string): Promise<void> {
@@ -455,6 +467,7 @@ export class QuestionMark implements IKeyCommand {
 	key: IValidKeyName = SpecialKeys.QuestionMark;
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Show this help";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $keyCommandHelper: IKeyCommandHelper) {}
@@ -482,9 +495,10 @@ export class QuestionMark implements IKeyCommand {
 }
 
 injector.registerKeyCommand("a", A);
-injector.registerKeyCommand("i", I);
 injector.registerKeyCommand("A", ShiftA);
+injector.registerKeyCommand("i", I);
 injector.registerKeyCommand("I", ShiftI);
+injector.registerKeyCommand("v", V);
 injector.registerKeyCommand("V", ShiftV);
 injector.registerKeyCommand("r", R);
 injector.registerKeyCommand("R", ShiftR);

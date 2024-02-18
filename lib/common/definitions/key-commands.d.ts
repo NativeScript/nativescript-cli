@@ -55,6 +55,7 @@ export interface IKeyCommand {
 	key: IValidKeyName;
 	platform: IKeyCommandPlatform;
 	description: string;
+	group: string;
 	willBlockKeyCommandExecution?: boolean;
 	execute(platform: string): Promise<void>;
 	canExecute?: (processType: SupportedProcessType) => boolean;
