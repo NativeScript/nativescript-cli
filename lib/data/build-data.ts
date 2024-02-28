@@ -3,6 +3,7 @@ import { IiOSBuildData, IBuildData } from "../definitions/build";
 
 export class BuildData extends PrepareData implements IBuildData {
 	public device?: string;
+	public _device?: Mobile.IDevice;
 	public emulator?: boolean;
 	public clean: boolean;
 	public buildForDevice?: boolean;
@@ -14,6 +15,7 @@ export class BuildData extends PrepareData implements IBuildData {
 		super(projectDir, platform, data);
 
 		this.device = data.device;
+		this._device = data?._device;
 		this.emulator = data.emulator;
 		this.clean = data.clean;
 		this.buildForDevice = data.buildForDevice || data.forDevice;

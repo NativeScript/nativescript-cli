@@ -54,7 +54,8 @@ export class DevicesService
 		private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
 		private $androidEmulatorDiscovery: Mobile.IDeviceDiscovery,
 		private $emulatorHelper: Mobile.IEmulatorHelper,
-		private $prompter: IPrompter
+		private $prompter: IPrompter,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
 	) {
 		super();
 		this.attachToKnownDeviceDiscoveryEvents();
@@ -296,7 +297,11 @@ export class DevicesService
 	}
 
 	public getDeviceInstances(): Mobile.IDevice[] {
-		return _.values(this._devices);
+		return _.values(this._devices).map((device: Mobile.IDevice) => {
+			const simPlatform = (device as any).simulator?.platform;
+			device.deviceInfo.platform = simPlatform ?? device.deviceInfo.platform;
+			return device;
+		});
 	}
 
 	@exported("devicesService")
@@ -516,7 +521,7 @@ export class DevicesService
 			this.getDeviceInstances(),
 			(device: Mobile.IDevice) => {
 				if (
-					this.$mobileHelper.isiOSPlatform(device.deviceInfo.platform) &&
+					this.$mobileHelper.isApplePlatfrom(device.deviceInfo.platform) &&
 					device.isEmulator
 				) {
 					return (
@@ -783,7 +788,7 @@ export class DevicesService
 			if (!deviceInitOpts.deviceId && _.isEmpty(deviceInstances)) {
 				if (
 					!this.$hostInfo.isDarwin &&
-					this.$mobileHelper.isiOSPlatform(deviceInitOpts.platform)
+					this.$mobileHelper.isApplePlatfrom(deviceInitOpts.platform)
 				) {
 					this.$errors.fail(constants.ERROR_NO_DEVICES_CANT_USE_IOS_SIMULATOR);
 				}
@@ -823,6 +828,20 @@ export class DevicesService
 				if (!activeDeviceInstance) {
 					return this.startEmulatorCore(data);
 				}
+			}
+		}
+
+		// make sure if the target platform is visionOS we don't try to run it on an already running iOS simulator...
+		if (
+			data.platform === this.$devicePlatformsConstants.visionOS &&
+			deviceInstances.length
+		) {
+			const runningDeviceInstance = deviceInstances.find(
+				(device) =>
+					device.deviceInfo.platform === this.$devicePlatformsConstants.visionOS
+			);
+			if (!runningDeviceInstance) {
+				return this.startEmulatorCore(data);
 			}
 		}
 
@@ -1079,7 +1098,7 @@ export class DevicesService
 		platform?: string
 	): Mobile.IEmulatorPlatformService {
 		platform = platform || this._platform;
-		if (this.$mobileHelper.isiOSPlatform(platform)) {
+		if (this.$mobileHelper.isApplePlatfrom(platform)) {
 			return this.$injector.resolve("iOSEmulatorServices");
 		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			return this.$injector.resolve("androidEmulatorServices");

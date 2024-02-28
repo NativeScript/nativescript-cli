@@ -3,10 +3,12 @@ import { PlistSession } from "plist-merge-patch";
 import { IPluginsService, IPluginData } from "../definitions/plugins";
 import { IProjectData } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
+import { IOptions } from "../declarations";
 import { injector } from "../common/yok";
 
 export class IOSEntitlementsService {
 	constructor(
+		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
@@ -21,7 +23,7 @@ export class IOSEntitlementsService {
 		const entitlementsPath = path.join(
 			projectData.appResourcesDirectoryPath,
 			this.$mobileHelper.normalizePlatformName(
-				this.$devicePlatformsConstants.iOS
+				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS
 			),
 			entitlementsName
 		);
@@ -31,7 +33,8 @@ export class IOSEntitlementsService {
 	public getPlatformsEntitlementsPath(projectData: IProjectData): string {
 		return path.join(
 			projectData.platformsDir,
-			this.$devicePlatformsConstants.iOS.toLowerCase(),
+			this.$options.platformOverride ??
+				this.$devicePlatformsConstants.iOS.toLowerCase(),
 			projectData.projectName,
 			projectData.projectName + ".entitlements"
 		);

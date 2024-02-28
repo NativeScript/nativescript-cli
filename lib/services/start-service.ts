@@ -11,6 +11,7 @@ import { IStaticConfig } from "../declarations";
 
 export default class StartService implements IStartService {
 	ios: ChildProcess;
+	visionos: ChildProcess;
 	android: ChildProcess;
 	verbose: boolean = false;
 
@@ -64,12 +65,21 @@ export default class StartService implements IStartService {
 		this.runForPlatform(this.$devicePlatformsConstants.iOS);
 	}
 
+	async runVisionOS(): Promise<void> {
+		this.runForPlatform(this.$devicePlatformsConstants.visionOS);
+	}
+
 	async runAndroid(): Promise<void> {
 		this.runForPlatform(this.$devicePlatformsConstants.Android);
 	}
 	async stopIOS(): Promise<void> {
 		if (this.ios) {
 			this.ios.kill("SIGINT");
+		}
+	}
+	async stopVisionOS(): Promise<void> {
+		if (this.visionos) {
+			this.visionos.kill("SIGINT");
 		}
 	}
 	async stopAndroid(): Promise<void> {

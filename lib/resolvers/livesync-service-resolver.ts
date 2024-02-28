@@ -10,7 +10,7 @@ export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
 	) {}
 
 	public resolveLiveSyncService(platform: string): IPlatformLiveSyncService {
-		if (this.$mobileHelper.isiOSPlatform(platform)) {
+		if (this.$mobileHelper.isApplePlatfrom(platform)) {
 			return this.$injector.resolve("iOSLiveSyncService");
 		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			return this.$injector.resolve("androidLiveSyncService");

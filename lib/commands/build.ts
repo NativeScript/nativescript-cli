@@ -108,7 +108,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$platformValidationService: IPlatformValidationService,
 		$logger: ILogger,
 		$buildDataService: IBuildDataService,
-		private $migrateController: IMigrateController
+		protected $migrateController: IMigrateController
 	) {
 		super(
 			$options,
@@ -221,3 +221,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 }
 
 injector.registerCommand("build|android", BuildAndroidCommand);
+
+// export class BuildVisionOsCommand extends BuildIosCommand implements ICommand {}
+// injector.registerCommand("build|vision", BuildVisionOsCommand);
+// injector.registerCommand("build|visionos", BuildVisionOsCommand);

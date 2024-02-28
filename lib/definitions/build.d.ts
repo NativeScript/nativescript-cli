@@ -9,6 +9,7 @@ import {
 
 interface IBuildData extends IPrepareData {
 	device?: string;
+	_device?: Mobile.IDevice;
 	emulator?: boolean;
 	clean: boolean;
 	buildForDevice?: boolean;

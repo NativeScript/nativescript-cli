@@ -105,6 +105,8 @@ interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
 }
 
+interface INSConfigVisionOS extends INsConfigIOS {}
+
 interface INsConfigAndroid extends INsConfigPlaform {
 	v8Flags?: string;
 
@@ -156,6 +158,7 @@ interface INsConfig {
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
+	visionos?: INSConfigVisionOS;
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
 }
@@ -558,6 +561,8 @@ interface IBuildConfig
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;
+	platform?: string;
+	_device?: Mobile.IDevice;
 }
 
 /**
