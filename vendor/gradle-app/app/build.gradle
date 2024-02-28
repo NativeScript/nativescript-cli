@@ -1028,7 +1028,8 @@ project.tasks.configureEach {
         name =~ /transform(Debug|Release)ClassesWithAsm/ || 
         // because of sentry plugin. There must be a better way
         name =~ /collectExternal(Debug|Release)/ ||
-        name =~ /generateSentry(Debug|Release)/
+        name =~ /generateSentryProguardUuid(Debug|Release)/ || 
+        name =~ /generateSentryDebugMetaProperties(Debug|Release)/
         )) {
         it.finalizedBy(buildMetadata)
     }
