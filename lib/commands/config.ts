@@ -4,19 +4,25 @@ import { IProjectConfigService } from "../definitions/project";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 import { IErrors } from "../common/declarations";
 import { color } from "../color";
+import { IOptions } from "../declarations";
 
 export class ConfigListCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(
 		private $projectConfigService: IProjectConfigService,
+		private $options: IOptions,
 		private $logger: ILogger
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
 		try {
 			const config = this.$projectConfigService.readConfig();
-			this.$logger.info(this.getValueString(config as SupportedConfigValues));
+			if (this.$options.json) {
+				console.log(JSON.stringify(config))
+			} else {
+				this.$logger.info(this.getValueString(config as SupportedConfigValues));
+			}
 		} catch (error) {
 			this.$logger.info("Failed to read config. Error is: ", error);
 		}
