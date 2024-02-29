@@ -139,6 +139,8 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableLineBreakpoints?: boolean;
 
 	enableMultithreadedJavascript?: boolean;
+
+	gradleVersion?: string;
 }
 
 interface INsConfigHooks {

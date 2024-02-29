@@ -13,12 +13,16 @@ buildscript {
     }
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.8.20" }
     def kotlinVersion = computeKotlinVersion()
+    def computeBuildToolsVersion = { ->
+        project.hasProperty("androiBuildToolsVersion") ? buildToolsVersion : "{{runtimeAndroidPluginVersion}}"
+    }
+    def androiBuildToolsVersion = computeBuildToolsVersion()
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:{{runtimeAndroidPluginVersion}}'
+        classpath "com.android.tools.build:gradle:$androiBuildToolsVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -152,6 +156,7 @@ def computeBuildToolsVersion = { ->
 }
 
 android {
+    namespace "{{pluginNamespace}}"
     def applyPluginGradleConfigurations = { ->
         nativescriptDependencies.each { dep ->
             def includeGradlePath = "${getDepPlatformDir(dep)}/include.gradle"
@@ -165,6 +170,11 @@ android {
 
     compileSdkVersion computeCompileSdkVersion()
     buildToolsVersion computeBuildToolsVersion()
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
 
     defaultConfig {
         targetSdkVersion computeTargetSdkVersion()
@@ -205,24 +215,24 @@ task addDependenciesFromNativeScriptPlugins {
     }
 }
 
-afterEvaluate {
-    def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
-    def generateR =  project.hasProperty("generateR") ? project.generateR : false
-    generateReleaseBuildConfig.enabled = generateBuildConfig
-    generateDebugBuildConfig.enabled = generateBuildConfig
-    generateReleaseResValues.enabled = generateR
-    generateDebugResValues.enabled = generateR
-}
-
-tasks.whenTaskAdded({ DefaultTask currentTask ->
-    if (currentTask.name == 'bundleRelease' || currentTask.name == 'bundleDebug') {
+// This wont work with gradle 8 + should be the same as the code  just after
+// afterEvaluate {
+//     def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
+//     def generateR =  project.hasProperty("generateR") ? project.generateR : false
+//     generateReleaseBuildConfig.enabled = generateBuildConfig
+//     generateDebugBuildConfig.enabled = generateBuildConfig
+//     generateReleaseResValues.enabled = generateR
+//     generateDebugResValues.enabled = generateR
+// }
+project.tasks.configureEach {
+    if (name == 'bundleRelease') {
         def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
         def generateR =  project.hasProperty("generateR") ? project.generateR : false
         if (!generateBuildConfig) {
-            currentTask.exclude '**/BuildConfig.class'
+            it.exclude '**/BuildConfig.class'
         }
         if (!generateR) {
-            currentTask.exclude '**/R.class', '**/R$*.class'
+            it.exclude '**/R.class', '**/R$*.class'
         }
     }
-})
+}
