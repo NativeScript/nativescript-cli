@@ -10,8 +10,8 @@ interface IAndroidBuildOptions {
 	pluginName: string;
 	aarOutputDir: string;
 	tempPluginDirPath: string;
-	gradlePath?: string;
 	gradleArgs?: string;
+	gradlePath?: string;
 }
 
 interface IAndroidPluginBuildService {

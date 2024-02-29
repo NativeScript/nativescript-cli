@@ -30,7 +30,6 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		) {
 			args.push("-PgatherAnalyticsData=true");
 		}
-
 		// allow modifying gradle args from a `before-build-task-args` hook
 		await this.$hooksService.executeBeforeHooks("build-task-args", {
 			hookArgs: { args },

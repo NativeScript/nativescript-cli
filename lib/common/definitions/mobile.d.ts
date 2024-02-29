@@ -99,6 +99,12 @@ declare global {
 			 * For iOS simulators - same as the identifier.
 			 */
 			imageIdentifier?: string;
+
+			/**
+			 *  Optional property describing the architecture of the device
+			 *  Available for Android only
+			 */
+			 abis?: string[];
 		}
 
 		interface IDeviceError extends Error, IDeviceIdentifier {}
