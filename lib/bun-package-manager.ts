@@ -122,8 +122,7 @@ export class BunPackageManager extends BasePackageManager {
 		//    https://github.com/npms-io/npms-api/issues/112. Better to switch to
 		//    https://registry.npmjs.org/<query>
 		const httpRequestResult = await this.$httpClient.httpRequest(
-			// `https://api.npms.io/v2/search?q=keywords:${keyword}`
-			`https://registry.npmjs.org/${keyword}`
+			`https://api.npms.io/v2/search?q=keywords:${keyword}`
 		);
 		const result: INpmsResult = JSON.parse(httpRequestResult.body);
 		return result;
