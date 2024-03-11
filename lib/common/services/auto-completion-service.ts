@@ -21,6 +21,9 @@ export class AutoCompletionService implements IAutoCompletionService {
 		"###-begin-%s-completion-###";
 	private static TABTAB_COMPLETION_END_REGEX_PATTERN =
 		"###-end-%s-completion-###";
+	private static GENERATED_TABTAB_COMPLETION_END =
+		"###-end-nativescript.js-completions-###";
+	private static GENERATED_TABTAB_COMPLETION_START = "#compdef nativescript.js";
 
 	constructor(
 		private $fs: IFileSystem,
@@ -70,6 +73,16 @@ export class AutoCompletionService implements IAutoCompletionService {
 		return tabTabRegex;
 	}
 
+	private getTabTabCompletionsRegex(): RegExp {
+		return new RegExp(
+			util.format(
+				"%s[\\s\\S]*%s",
+				AutoCompletionService.GENERATED_TABTAB_COMPLETION_START,
+				AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
+			)
+		);
+	}
+
 	private removeObsoleteAutoCompletion(): void {
 		// In previous releases we were writing directly in .bash_profile, .bashrc, .zshrc and .profile - remove this old code
 		const shellProfilesToBeCleared = this.shellProfiles;
@@ -105,6 +118,18 @@ export class AutoCompletionService implements IAutoCompletionService {
 				}
 			}
 		});
+	}
+	@cache()
+	private get completionAliasDefinition() {
+		const pattern = "compdef _nativescript.js_yargs_completions %s";
+		const ns = util.format(pattern, "ns");
+		const tns = util.format(pattern, "tns");
+		return util.format(
+			"\n%s\n%s\n%s\n",
+			ns,
+			tns,
+			AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
+		);
 	}
 
 	@cache()
@@ -316,9 +341,37 @@ export class AutoCompletionService implements IAutoCompletionService {
 					__dirname,
 					`../../../bin/${clientExecutableFileName}.js`
 				);
+
+				if (this.$fs.exists(filePath)) {
+					const existingText = this.$fs.readText(filePath);
+					let newText = existingText.replace(
+						this.getTabTabCompletionsRegex(),
+						""
+					);
+					if (newText !== existingText) {
+						this.$logger.trace(
+							"Remove existing AutoCompletion from file %s.",
+							filePath
+						);
+						this.$fs.writeFile(filePath, newText);
+					}
+				}
+
 				await this.$childProcess.exec(
-					`"${process.argv[0]}" "${pathToExecutableFile}" completion >> "${filePath}"`
+					`"${process.argv[0]}" "${pathToExecutableFile}" completion_generate_script >> "${filePath}"`
 				);
+
+				const contents = this.$fs.readText(filePath);
+				const endComment = contents.lastIndexOf(
+					AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
+				);
+
+				this.$fs.writeFile(
+					filePath,
+					`${contents.substring(0, endComment)}${
+						this.completionAliasDefinition
+					}`
+				); // Add aliases
 				this.$fs.chmod(filePath, "0644");
 			}
 		} catch (err) {
