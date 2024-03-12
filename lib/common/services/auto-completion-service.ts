@@ -21,6 +21,10 @@ export class AutoCompletionService implements IAutoCompletionService {
 		"###-begin-%s-completion-###";
 	private static TABTAB_COMPLETION_END_REGEX_PATTERN =
 		"###-end-%s-completion-###";
+	private static GENERATED_TABTAB_COMPLETION_END =
+		"###-end-ns-completions-section-###";
+	private static GENERATED_TABTAB_COMPLETION_START =
+		"###-begin-ns-completions-section-###";
 
 	constructor(
 		private $fs: IFileSystem,
@@ -70,6 +74,16 @@ export class AutoCompletionService implements IAutoCompletionService {
 		return tabTabRegex;
 	}
 
+	private getTabTabCompletionsRegex(): RegExp {
+		return new RegExp(
+			util.format(
+				"%s[\\s\\S]*%s",
+				AutoCompletionService.GENERATED_TABTAB_COMPLETION_START,
+				AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
+			)
+		);
+	}
+
 	private removeObsoleteAutoCompletion(): void {
 		// In previous releases we were writing directly in .bash_profile, .bashrc, .zshrc and .profile - remove this old code
 		const shellProfilesToBeCleared = this.shellProfiles;
@@ -105,6 +119,43 @@ export class AutoCompletionService implements IAutoCompletionService {
 				}
 			}
 		});
+	}
+
+	private removeOboleteTabTabCompletion(text: string) {
+		try {
+			let newText = text.replace(this.getTabTabObsoleteRegex("ns"), "");
+
+			newText = newText.replace(this.getTabTabObsoleteRegex("nsc"), "");
+
+			newText = newText.replace(
+				this.getTabTabObsoleteRegex("nativescript"),
+				""
+			);
+
+			newText = newText.replace(this.getTabTabObsoleteRegex("tns"), "");
+
+			return newText;
+		} catch (error) {
+			this.$logger.trace(
+				"Error while trying to disable autocompletion for '%s' file. Error is:\n%s",
+				error.toString()
+			);
+
+			return text;
+		}
+	}
+
+	@cache()
+	private get completionAliasDefinition() {
+		const pattern = "compdef _nativescript.js_yargs_completions %s";
+		const ns = util.format(pattern, "ns");
+		const tns = util.format(pattern, "tns");
+		return util.format(
+			"\n%s\n%s\n%s\n",
+			ns,
+			tns,
+			AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
+		);
 	}
 
 	@cache()
@@ -284,24 +335,9 @@ export class AutoCompletionService implements IAutoCompletionService {
 			if (this.$fs.exists(filePath)) {
 				const contents = this.$fs.readText(filePath);
 				const regExp = new RegExp(
-					util.format(
-						"%s\\s+completion\\s+--\\s+",
-						this.$staticConfig.CLIENT_NAME.toLowerCase()
-					)
+					AutoCompletionService.GENERATED_TABTAB_COMPLETION_START
 				);
 				let matchCondition = contents.match(regExp);
-				if (this.$staticConfig.CLIENT_NAME_ALIAS) {
-					matchCondition =
-						matchCondition ||
-						contents.match(
-							new RegExp(
-								util.format(
-									"%s\\s+completion\\s+--\\s+",
-									this.$staticConfig.CLIENT_NAME_ALIAS.toLowerCase()
-								)
-							)
-						);
-				}
 
 				if (matchCondition) {
 					doUpdate = false;
@@ -316,9 +352,33 @@ export class AutoCompletionService implements IAutoCompletionService {
 					__dirname,
 					`../../../bin/${clientExecutableFileName}.js`
 				);
-				await this.$childProcess.exec(
-					`"${process.argv[0]}" "${pathToExecutableFile}" completion >> "${filePath}"`
+
+				if (this.$fs.exists(filePath)) {
+					const existingText = this.$fs.readText(filePath);
+					let newText = existingText.replace(
+						this.getTabTabCompletionsRegex(),
+						""
+					);
+					newText = this.removeOboleteTabTabCompletion(newText);
+					if (newText !== existingText) {
+						this.$logger.trace(
+							"Remove existing AutoCompletion from file %s.",
+							filePath
+						);
+						this.$fs.writeFile(filePath, newText);
+					}
+				}
+				// The generated seems to be inconsistent in it's start/end markers so adding our own.
+
+				this.$fs.appendFile(
+					filePath,
+					`\n${AutoCompletionService.GENERATED_TABTAB_COMPLETION_START}\n`
 				);
+				await this.$childProcess.exec(
+					`"${process.argv[0]}" "${pathToExecutableFile}" completion_generate_script >> "${filePath}"`
+				);
+				this.$fs.appendFile(filePath, this.completionAliasDefinition);
+
 				this.$fs.chmod(filePath, "0644");
 			}
 		} catch (err) {
