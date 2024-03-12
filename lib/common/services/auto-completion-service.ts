@@ -22,8 +22,9 @@ export class AutoCompletionService implements IAutoCompletionService {
 	private static TABTAB_COMPLETION_END_REGEX_PATTERN =
 		"###-end-%s-completion-###";
 	private static GENERATED_TABTAB_COMPLETION_END =
-		"###-end-nativescript.js-completions-###";
-	private static GENERATED_TABTAB_COMPLETION_START = "#compdef nativescript.js";
+		"###-end-ns-completions-section-###";
+	private static GENERATED_TABTAB_COMPLETION_START =
+		"###-begin-ns-completions-section-###";
 
 	constructor(
 		private $fs: IFileSystem,
@@ -119,6 +120,31 @@ export class AutoCompletionService implements IAutoCompletionService {
 			}
 		});
 	}
+
+	private removeOboleteTabTabCompletion(text: string) {
+		try {
+			let newText = text.replace(this.getTabTabObsoleteRegex("ns"), "");
+
+			newText = newText.replace(this.getTabTabObsoleteRegex("nsc"), "");
+
+			newText = newText.replace(
+				this.getTabTabObsoleteRegex("nativescript"),
+				""
+			);
+
+			newText = newText.replace(this.getTabTabObsoleteRegex("tns"), "");
+
+			return newText;
+		} catch (error) {
+			this.$logger.trace(
+				"Error while trying to disable autocompletion for '%s' file. Error is:\n%s",
+				error.toString()
+			);
+
+			return text;
+		}
+	}
+
 	@cache()
 	private get completionAliasDefinition() {
 		const pattern = "compdef _nativescript.js_yargs_completions %s";
@@ -309,24 +335,9 @@ export class AutoCompletionService implements IAutoCompletionService {
 			if (this.$fs.exists(filePath)) {
 				const contents = this.$fs.readText(filePath);
 				const regExp = new RegExp(
-					util.format(
-						"%s\\s+completion\\s+--\\s+",
-						this.$staticConfig.CLIENT_NAME.toLowerCase()
-					)
+					AutoCompletionService.GENERATED_TABTAB_COMPLETION_START
 				);
 				let matchCondition = contents.match(regExp);
-				if (this.$staticConfig.CLIENT_NAME_ALIAS) {
-					matchCondition =
-						matchCondition ||
-						contents.match(
-							new RegExp(
-								util.format(
-									"%s\\s+completion\\s+--\\s+",
-									this.$staticConfig.CLIENT_NAME_ALIAS.toLowerCase()
-								)
-							)
-						);
-				}
 
 				if (matchCondition) {
 					doUpdate = false;
@@ -348,6 +359,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 						this.getTabTabCompletionsRegex(),
 						""
 					);
+					newText = this.removeOboleteTabTabCompletion(newText);
 					if (newText !== existingText) {
 						this.$logger.trace(
 							"Remove existing AutoCompletion from file %s.",
@@ -356,22 +368,17 @@ export class AutoCompletionService implements IAutoCompletionService {
 						this.$fs.writeFile(filePath, newText);
 					}
 				}
+				// The generated seems to be inconsistent in it's start/end markers so adding our own.
 
+				this.$fs.appendFile(
+					filePath,
+					`\n${AutoCompletionService.GENERATED_TABTAB_COMPLETION_START}\n`
+				);
 				await this.$childProcess.exec(
 					`"${process.argv[0]}" "${pathToExecutableFile}" completion_generate_script >> "${filePath}"`
 				);
+				this.$fs.appendFile(filePath, this.completionAliasDefinition);
 
-				const contents = this.$fs.readText(filePath);
-				const endComment = contents.lastIndexOf(
-					AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
-				);
-
-				this.$fs.writeFile(
-					filePath,
-					`${contents.substring(0, endComment)}${
-						this.completionAliasDefinition
-					}`
-				); // Add aliases
 				this.$fs.chmod(filePath, "0644");
 			}
 		} catch (err) {
