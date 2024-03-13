@@ -1,3 +1,12 @@
+## [8.6.4](https://github.com/NativeScript/nativescript-cli/compare/v8.6.3...v8.6.4) (2024-01-17)
+
+
+### Bug Fixes
+
+* skip log-source-maps for large files ([#5780](https://github.com/NativeScript/nativescript-cli/issues/5780)) ([c53b4e9](https://github.com/NativeScript/nativescript-cli/commit/c53b4e9111f3da98547ec273c92a73ead89aca13))
+
+
+
 ## [8.6.1](https://github.com/NativeScript/nativescript-cli/compare/v8.6.0...v8.6.1) (2023-10-23)
 
 

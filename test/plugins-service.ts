@@ -710,6 +710,7 @@ describe("Plugins service", () => {
 							testData.isPreparePluginNativeCodeCalled = true;
 						},
 					},
+					platformsData: {},
 					normalizedPlatformName: "iOS",
 				}),
 			});
