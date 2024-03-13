@@ -95,7 +95,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 
 		const logLevel = this.$logger.getLevel();
 		if (logLevel === "TRACE") {
-			args.push("--stacktrace", "--debug");
+			args.push("--debug");
 		} else if (logLevel === "INFO") {
 			args.push("--quiet");
 		}
