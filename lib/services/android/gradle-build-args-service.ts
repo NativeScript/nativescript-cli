@@ -71,8 +71,8 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		);
 		if (buildData.gradleArgs) {
 			const additionalArgs: string[] = []
-			buildData.gradleArgs.forEach(arg=>{
-				additionalArgs.push(...arg.split(' -P').map((a,i) => i === 0 ? a : `-P${a}`));
+			buildData.gradleArgs.forEach(arg => {
+				additionalArgs.push(...arg.split(' ').map(a=>a.trim()));
 			});
 			args.push(...additionalArgs);
 		}
