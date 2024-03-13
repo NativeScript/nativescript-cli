@@ -219,7 +219,7 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
-			flavor: { type: OptionType.String, hasSensitiveValue: false },
+			gradleFlavor: { type: OptionType.String, hasSensitiveValue: false },
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			gradleArgs: { type: OptionType.String, hasSensitiveValue: false, array: true },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
