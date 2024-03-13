@@ -20,6 +20,7 @@ import {
 	IProjectDir,
 } from "../../lib/common/declarations";
 import { PLATFORMS_DIR_NAME } from "../../lib/constants";
+import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -61,6 +62,8 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("staticConfig", {
 		TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage",
 	});
+
+	testInjector.register("liveSyncProcessDataService", LiveSyncProcessDataService);
 	return testInjector;
 };
 

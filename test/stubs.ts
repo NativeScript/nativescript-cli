@@ -698,6 +698,9 @@ export class ProjectDataStub implements IProjectData {
 		this.projectIdentifiers = { android: "", ios: "" };
 		this.projectId = "";
 		this.projectName = "";
+		this.nsConfig =  {
+			android: {}
+		};
 	}
 
 	public initializeProjectDataFromContent(): void {

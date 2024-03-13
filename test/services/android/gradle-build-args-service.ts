@@ -60,16 +60,19 @@ async function executeTests(
 }
 const ksPath = temp.path({ prefix: "ksPath" });
 const expectedInfoLoggingArgs = ["--quiet"];
-const expectedTraceLoggingArgs = ["--stacktrace", "--debug"];
+const expectedTraceLoggingArgs = ["--debug"];
 const expectedDebugBuildArgs = [
+	"--stacktrace",
 	"-PcompileSdk=android-28",
 	"-PtargetSdk=26",
 	"-PbuildToolsVersion=my-build-tools-version",
 	"-PgenerateTypings=true",
-	"-DprojectRoot=/path/to/projectDir",
 	"-PprojectRoot=/path/to/projectDir",
+	"-DprojectRoot=/path/to/projectDir",
 	"-PappPath=/path/to/projectDir/app".replace(/\//g, path.sep),
 	"-PappBuildPath=platforms",
+	"-DappBuildPath=platforms",
+	"-PappPath=/path/to/projectDir/app",
 	"-PappResourcesPath=/path/to/projectDir/app/App_Resources".replace(
 		/\//g,
 		path.sep

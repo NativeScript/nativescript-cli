@@ -49,6 +49,7 @@ import {
 // import { ProjectConfigService } from "../lib/services/project-config-service";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectHelper } from "../lib/common/project-helper";
+import { LiveSyncProcessDataService } from "../lib/services/livesync-process-data-service";
 // import { basename } from 'path';
 temp.track();
 
@@ -235,6 +236,10 @@ function createTestInjector() {
 		stubs.ProjectConfigServiceStub.initWithConfig({
 			id: "org.nativescript.Test",
 		})
+	);
+	testInjector.register(
+		"liveSyncProcessDataService",
+		LiveSyncProcessDataService
 	);
 
 	return testInjector;
@@ -855,6 +860,10 @@ describe("Plugins service", () => {
 		);
 		unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 		unitTestsInjector.register("tempService", stubs.TempServiceStub);
+		unitTestsInjector.register(
+			"liveSyncProcessDataService",
+			LiveSyncProcessDataService
+		);
 		return unitTestsInjector;
 	};
 
