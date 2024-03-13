@@ -1027,8 +1027,7 @@ project.tasks.configureEach {
         name =~ /mergeBenchmark(Debug|Release)JavaResource/ || 
         name =~ /transform(Debug|Release)ClassesWithAsm/ || 
         // because of sentry plugin. There must be a better way
-        name =~ /collectExternal(Debug|Release)/ ||
-        name =~ /generateSentry(Debug|Release)/
+        name =~ /collectExternal(Debug|Release)/
         )) {
         it.finalizedBy(buildMetadata)
     }
