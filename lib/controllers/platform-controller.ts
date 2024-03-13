@@ -69,7 +69,6 @@ export class PlatformController implements IPlatformController {
 			addPlatformData
 		);
 		const buildPath = projectData.platformsDir;
-		console.log('buildPath', buildPath, projectData.getBuildRelativeDirectoryPath())
 		this.$fs.ensureDirectoryExists(
 			path.join(projectData.platformsDir, platform)
 		);
