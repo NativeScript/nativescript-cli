@@ -59,13 +59,11 @@ export class DeviceInstallAppService {
 			// will always be the case on iOS
 			packageFile = packages[0].packageName;
 		} else if (device.deviceInfo.abis) {
-			device.deviceInfo.abis.every(abi=>{
-				const index = packages.findIndex(p => p.packageName.indexOf(abi) !== -1);
-				if (index !== -1) {
-					packageFile = packages[index].packageName;
-					return false;
+			packages.find(({ packageName })=> {
+				if(device.deviceInfo.abis.some(abi => packageName.includes(abi))) {
+					packageFile = packageName;
+					return true;
 				}
-				return true;
 			})
 		} else {
 			//we did not find corresponding abi let's try universal
