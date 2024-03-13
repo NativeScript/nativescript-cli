@@ -69,9 +69,9 @@ export class DeviceInstallAppService {
 			})
 		} else {
 			//we did not find corresponding abi let's try universal
-			const index = packages.findIndex(p => p.packageName.indexOf('universal') !== -1);
-			if (index !== -1) {
-				packageFile = packages[index].packageName;
+			const universalPackage = packages.find(p => p.packageName.includes('universal'));
+			if (universalPackage) {
+				packageFile = universalPackage.packageName;
 			}
 		}
 
