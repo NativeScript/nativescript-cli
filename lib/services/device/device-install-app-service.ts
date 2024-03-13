@@ -57,7 +57,7 @@ export class DeviceInstallAppService {
 		let packageFile;
 		if (packages.length === 1) {
 			// will always be the case on iOS
-			packageFile = packages[0].packageName;
+			packageFile = packages.at(0).packageName;
 		} else if (device.deviceInfo.abis) {
 			packages.find(({ packageName })=> {
 				if(device.deviceInfo.abis.some(abi => packageName.includes(abi))) {
