@@ -64,6 +64,7 @@ const createTestInjector = (): IInjector => {
 	});
 
 	testInjector.register("liveSyncProcessDataService", LiveSyncProcessDataService);
+	testInjector.register("devicesService", {});
 	return testInjector;
 };
 
