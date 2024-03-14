@@ -68,7 +68,7 @@ export class PlatformController implements IPlatformController {
 			packageToInstall,
 			addPlatformData
 		);
-
+		const buildPath = projectData.platformsDir;
 		this.$fs.ensureDirectoryExists(
 			path.join(projectData.platformsDir, platform)
 		);
@@ -96,6 +96,7 @@ export class PlatformController implements IPlatformController {
 					commentHeader,
 					`appPath = ${appPath}`,
 					`appResourcesPath = ${appResourcesPath}`,
+					`buildPath = ${buildPath}`,
 					"",
 				].join("\n");
 

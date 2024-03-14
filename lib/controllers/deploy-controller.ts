@@ -23,11 +23,10 @@ export class DeployController {
 				},
 			};
 			await this.$prepareController.prepare(prepareData);
-			const packageFilePath = await deviceDescriptor.buildAction();
+			await deviceDescriptor.buildAction();
 			await this.$deviceInstallAppService.installOnDevice(
 				device,
-				{ ...deviceDescriptor.buildData, buildForDevice: !device.isEmulator },
-				packageFilePath
+				{ ...deviceDescriptor.buildData, buildForDevice: !device.isEmulator }
 			);
 		};
 

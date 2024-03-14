@@ -52,7 +52,11 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		const buildData = this.$buildDataService.getBuildData(
 			this.$projectData.projectDir,
 			platform,
-			this.$options
+			{
+				...this.$options.argv,
+				// we disable buildFilterDevicesArch for build only to ensure we dont use it in production builds
+				buildFilterDevicesArch: false
+			}
 		);
 		const outputPath = await this.$buildController.prepareAndBuild(buildData);
 

@@ -70,7 +70,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		return <any>{
 			projectRoot: path.join(
 				this.projectDir,
-				"platforms",
+				Constants.PLATFORMS_DIR_NAME,
 				platform.toLowerCase()
 			),
 			platformProjectService: {

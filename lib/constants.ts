@@ -58,6 +58,7 @@ export const BUNDLE_DIR = "bundle";
 export const RESOURCES_DIR = "res";
 export const CONFIG_NS_FILE_NAME = "nsconfig.json";
 export const CONFIG_NS_APP_RESOURCES_ENTRY = "appResourcesPath";
+export const CONFIG_NS_BUILD_ENTRY = "buildPath";
 export const CONFIG_NS_APP_ENTRY = "appPath";
 export const CONFIG_FILE_NAME_DISPLAY = "nativescript.config.(js|ts)";
 export const CONFIG_FILE_NAME_JS = "nativescript.config.js";

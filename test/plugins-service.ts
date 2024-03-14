@@ -33,7 +33,7 @@ import * as StaticConfigLib from "../lib/config";
 import * as path from "path";
 import * as temp from "temp";
 import * as _ from "lodash";
-import { PLUGINS_BUILD_DATA_FILENAME, PlatformTypes } from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
+import { PLATFORMS_DIR_NAME, PLUGINS_BUILD_DATA_FILENAME, PlatformTypes } from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
 import { GradleCommandService } from "../lib/services/android/gradle-command-service";
 import { GradleBuildService } from "../lib/services/android/gradle-build-service";
 import { GradleBuildArgsService } from "../lib/services/android/gradle-build-args-service";
@@ -49,6 +49,7 @@ import {
 // import { ProjectConfigService } from "../lib/services/project-config-service";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectHelper } from "../lib/common/project-helper";
+import { LiveSyncProcessDataService } from "../lib/services/livesync-process-data-service";
 // import { basename } from 'path';
 temp.track();
 
@@ -236,6 +237,10 @@ function createTestInjector() {
 			id: "org.nativescript.Test",
 		})
 	);
+	testInjector.register(
+		"liveSyncProcessDataService",
+		LiveSyncProcessDataService
+	);
 
 	return testInjector;
 }
@@ -399,10 +404,10 @@ describe("Plugins service", () => {
 				);
 
 				// Adds android platform
-				fs.createDirectory(path.join(projectFolder, "platforms"));
-				fs.createDirectory(path.join(projectFolder, "platforms", "android"));
+				fs.createDirectory(path.join(projectFolder, PLATFORMS_DIR_NAME));
+				fs.createDirectory(path.join(projectFolder, PLATFORMS_DIR_NAME, "android"));
 				fs.createDirectory(
-					path.join(projectFolder, "platforms", "android", "app")
+					path.join(projectFolder, PLATFORMS_DIR_NAME, "android", "app")
 				);
 
 				// Mock logger.warn
@@ -431,7 +436,7 @@ describe("Plugins service", () => {
 					return {
 						appDestinationDirectoryPath: path.join(
 							projectFolder,
-							"platforms",
+							PLATFORMS_DIR_NAME,
 							"android"
 						),
 						frameworkPackageName: "tns-android",
@@ -715,7 +720,7 @@ describe("Plugins service", () => {
 				fullPath: "plugin_full_path",
 				name: "plugin_name",
 				pluginPlatformsFolderPath: (_platform: string) =>
-					path.join("plugin_dir", "platforms", _platform.toLowerCase()),
+					path.join("plugin_dir", PLATFORMS_DIR_NAME, _platform.toLowerCase()),
 			};
 
 			unitTestsInjector.register("filesHashService", {
@@ -736,7 +741,7 @@ describe("Plugins service", () => {
 						return !!opts.buildDataFileExists;
 					}
 
-					if (file.indexOf("platforms") !== -1) {
+					if (file.indexOf(PLATFORMS_DIR_NAME) !== -1) {
 						return !!opts.hasPluginPlatformsDir;
 					}
 
@@ -856,6 +861,10 @@ describe("Plugins service", () => {
 		);
 		unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 		unitTestsInjector.register("tempService", stubs.TempServiceStub);
+		unitTestsInjector.register(
+			"liveSyncProcessDataService",
+			LiveSyncProcessDataService
+		);
 		return unitTestsInjector;
 	};
 
@@ -902,8 +911,8 @@ describe("Plugins service", () => {
 				"my project dir"
 			);
 
-			const expectediOSPath = path.join(pluginDir, "platforms", "ios");
-			const expectedAndroidPath = path.join(pluginDir, "platforms", "android");
+			const expectediOSPath = path.join(pluginDir, PLATFORMS_DIR_NAME, "ios");
+			const expectedAndroidPath = path.join(pluginDir, PLATFORMS_DIR_NAME, "android");
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("iOS"),
 				expectediOSPath

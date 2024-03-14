@@ -30,8 +30,10 @@ interface IAndroidBuildData
 	extends IBuildData,
 		IAndroidSigningData,
 		IHasAndroidBundle {
+	buildFilterDevicesArch?: boolean;
 	gradlePath?: string;
-	gradleArgs?: string;
+	gradleFlavor?: string;
+	gradleArgs?: string[];
 }
 
 interface IAndroidSigningData {
@@ -61,7 +63,7 @@ interface IBuildArtifactsService {
 		platformData: IPlatformData,
 		buildOutputOptions: IBuildOutputOptions
 	): Promise<string>;
-	copyLatestAppPackage(
+	copyAppPackages(
 		targetPath: string,
 		platformData: IPlatformData,
 		buildOutputOptions: IBuildOutputOptions

@@ -1,0 +1,170 @@
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+
+import java.nio.file.Paths
+
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import groovy.json.JsonSlurper
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
+
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+
+    def initialize = { ->
+        // set up our logger
+        project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
+        def userDir = "${rootProject.projectDir}/../.."
+        apply from: "$rootDir/gradle-helpers/user_properties_reader.gradle"
+        apply from: "$rootDir/gradle-helpers/paths.gradle"
+        rootProject.ext.userDefinedGradleProperties = getUserProperties("${getAppResourcesPath(userDir)}/Android")
+
+        loadPropertyFile("$rootDir/additional_gradle.properties")
+        
+        if (rootProject.hasProperty("userDefinedGradleProperties")) {
+            rootProject.ext.userDefinedGradleProperties.each { entry ->
+                def propertyName = entry.getKey()
+                def propertyValue = entry.getValue()
+                project.ext.set(propertyName, propertyValue)
+            }
+        }
+
+        // the build script will not work with previous versions of the CLI (3.1 or earlier)
+        def dependenciesJson = file("$rootDir/dependencies.json")
+        if (!dependenciesJson.exists()) {
+            throw new BuildCancelledException("""
+'dependencies.json' file not found. Check whether the NativeScript CLI has prepared the project beforehand,
+and that your NativeScript version is 3.3, or a more recent one. To build an android project with the current
+version of the {N} CLI install a previous version of the runtime package - 'tns platform add android@3.2'.
+""")
+        }
+
+        project.ext.extractedDependenciesDir = "${project.buildDir}/exploded-dependencies"
+        project.ext.cleanupAllJarsTimestamp = "${project.buildDir}/cleanupAllJars.timestamp"
+        project.ext.extractAllJarsTimestamp = "${project.buildDir}/extractAllJars.timestamp"
+
+
+        project.ext.nativescriptDependencies = new JsonSlurper().parseText(dependenciesJson.text)
+        project.ext.PLATFORMS_ANDROID = "platforms/android"
+        project.ext.USER_PROJECT_ROOT = "$rootDir/../.."
+
+        project.ext.getAppPath = { ->
+            def relativePathToApp = "app"
+            def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+            def nsConfig
+
+            if (nsConfigFile.exists()) {
+                nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+            }
+
+            if (project.hasProperty("appPath")) {
+                // when appPath is passed through -PappPath=/path/to/app
+                // the path could be relative or absolute - either case will work
+                relativePathToApp = appPath
+            } else if (nsConfig != null && nsConfig.appPath != null) {
+                relativePathToApp = nsConfig.appPath
+            }
+
+            project.ext.appPath = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
+
+            return project.ext.appPath
+        }
+
+        project.ext.getAppResourcesPath = { ->
+            def relativePathToAppResources
+            def absolutePathToAppResources
+            def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+            def nsConfig
+
+            if (nsConfigFile.exists()) {
+                nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+            }
+
+            if (project.hasProperty("appResourcesPath")) {
+                // when appResourcesPath is passed through -PappResourcesPath=/path/to/App_Resources
+                // the path could be relative or absolute - either case will work
+                relativePathToAppResources = appResourcesPath
+                absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+            } else if (nsConfig != null && nsConfig.appResourcesPath != null) {
+                relativePathToAppResources = nsConfig.appResourcesPath
+                absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+            } else {
+                absolutePathToAppResources = "${getAppPath()}/App_Resources"
+            }
+
+            project.ext.appResourcesPath = absolutePathToAppResources
+
+            return absolutePathToAppResources
+        }
+
+
+    }
+
+    def applyBeforePluginGradleConfiguration = { ->
+        def appResourcesPath = getAppResourcesPath()
+        def pathToBeforePluginGradle = "$appResourcesPath/Android/before-plugins.gradle"
+        def beforePluginGradle = file(pathToBeforePluginGradle)
+        if (beforePluginGradle.exists()) {
+            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined configuration from ${beforePluginGradle}"
+            apply from: pathToBeforePluginGradle
+        }
+    }
+    
+    def applyBuildScriptConfigurations = { ->
+        def absolutePathToAppResources = getAppResourcesPath()
+        def pathToBuildScriptGradle = "$absolutePathToAppResources/Android/rootbuildscript.gradle"
+        def buildScriptGradle = file(pathToBuildScriptGradle)
+        if (buildScriptGradle.exists()) {
+            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined root buildscript from ${buildScriptGradle}"
+            apply from: pathToBuildScriptGradle, to: buildscript
+        }
+
+        nativescriptDependencies.each { dep ->
+            def pathToPluginBuildScriptGradle = "$rootDir/${dep.directory}/$PLATFORMS_ANDROID/rootbuildscript.gradle"
+            def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
+            if (pluginBuildScriptGradle.exists()) {
+                outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined rootbuildscript from dependency ${pluginBuildScriptGradle}"
+                apply from: pathToPluginBuildScriptGradle, to: buildscript
+            }
+        }
+    }
+
+    initialize()
+    applyBuildScriptConfigurations()
+    applyBeforePluginGradleConfiguration()
+
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
+    def computeBuildToolsVersion = { -> project.hasProperty("androidBuildToolsVersion") ? androidBuildToolsVersion : "${NS_DEFAULT_ANDROID_BUILD_TOOLS_VERSION}" }
+    def kotlinVersion = computeKotlinVersion()
+    def androidBuildToolsVersion = computeBuildToolsVersion()
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$androidBuildToolsVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.codehaus.groovy:groovy-all:3.0.8"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    beforeEvaluate { project ->
+        if (rootProject.hasProperty("userDefinedGradleProperties")) {
+            rootProject.ext.userDefinedGradleProperties.each { entry ->
+                def propertyName = entry.getKey()
+                def propertyValue = entry.getValue()
+                project.ext.set(propertyName, propertyValue)
+            }
+        }
+
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

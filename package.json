@@ -5,10 +5,10 @@
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
-    "tns": "./bin/tns",
     "nativescript": "./bin/tns",
+    "ns": "./bin/tns",
     "nsc": "./bin/tns",
-    "ns": "./bin/tns"
+    "tns": "./bin/tns"
   },
   "main": "./lib/nativescript-cli-lib.js",
   "files": [

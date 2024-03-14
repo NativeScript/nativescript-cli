@@ -139,6 +139,8 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableLineBreakpoints?: boolean;
 
 	enableMultithreadedJavascript?: boolean;
+
+	gradleVersion?: string;
 }
 
 interface INsConfigHooks {
@@ -151,6 +153,7 @@ interface INsConfig {
 	main?: string;
 	appPath?: string;
 	appResourcesPath?: string;
+	buildPath?: string;
 	shared?: boolean;
 	overridePods?: string;
 	webpackConfigPath?: string;
@@ -207,6 +210,7 @@ interface IProjectData extends ICreateProjectData {
 	getAppDirectoryRelativePath(): string;
 	getAppResourcesDirectoryPath(projectDir?: string): string;
 	getAppResourcesRelativeDirectoryPath(): string;
+	getBuildRelativeDirectoryPath(): string;
 }
 
 interface IProjectDataService {

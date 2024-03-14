@@ -3,7 +3,7 @@ import { Yok } from "../../lib/common/yok";
 import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
-import { MetadataFilteringConstants } from "../../lib/constants";
+import { MetadataFilteringConstants, PLATFORMS_DIR_NAME } from "../../lib/constants";
 import { EOL } from "os";
 import { IProjectData } from "../../lib/definitions/project";
 import { IDependencyData } from "../../lib/declarations";
@@ -16,7 +16,7 @@ import { IDictionary } from "../../lib/common/declarations";
 describe("metadataFilteringService", () => {
 	const platform = "platform";
 	const projectDir = "projectDir";
-	const projectRoot = path.join(projectDir, "platforms", platform);
+	const projectRoot = path.join(projectDir, PLATFORMS_DIR_NAME, platform);
 	const projectData: any = {
 		appResourcesDirectoryPath: path.join(projectDir, "App_Resources"),
 	};

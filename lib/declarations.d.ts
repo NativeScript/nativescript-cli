@@ -579,8 +579,9 @@ interface IAndroidBundleOptions {
 }
 
 interface IAndroidOptions {
+	gradleFlavor: string;
 	gradlePath: string;
-	gradleArgs: string;
+	gradleArgs: string[];
 }
 
 interface ITypingsOptions {
