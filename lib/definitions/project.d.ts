@@ -103,6 +103,7 @@ interface INsConfigPlaform {
 
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
+	runtimePackageName?: string
 }
 
 interface INsConfigAndroid extends INsConfigPlaform {
@@ -141,6 +142,8 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableMultithreadedJavascript?: boolean;
 
 	gradleVersion?: string;
+
+	runtimePackageName?: string
 }
 
 interface INsConfigHooks {

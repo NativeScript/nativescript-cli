@@ -50,6 +50,7 @@ export class ProjectDataService implements IProjectDataService {
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
 		private $logger: ILogger,
+		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $injector: IInjector
@@ -629,13 +630,15 @@ export class ProjectDataService implements IProjectDataService {
 			.getDependenciesFromPackageJson(projectDir)
 			.devDependencies.find((d) => {
 				if (platform === constants.PlatformTypes.ios) {
+					const packageName = this.$projectData.nsConfig.ios.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME;
 					return [
-						constants.SCOPED_IOS_RUNTIME_NAME,
+						packageName,
 						constants.TNS_IOS_RUNTIME_NAME,
 					].includes(d.name);
 				} else if (platform === constants.PlatformTypes.android) {
+					const packageName = this.$projectData.nsConfig.android.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
 					return [
-						constants.SCOPED_ANDROID_RUNTIME_NAME,
+						packageName,
 						constants.TNS_ANDROID_RUNTIME_NAME,
 					].includes(d.name);
 				}
@@ -686,12 +689,12 @@ export class ProjectDataService implements IProjectDataService {
 		);
 		if (platform === constants.PlatformTypes.ios) {
 			return {
-				name: constants.SCOPED_IOS_RUNTIME_NAME,
+				name: this.$projectData.nsConfig.ios.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME,
 				version: null,
 			};
 		} else if (platform === constants.PlatformTypes.android) {
 			return {
-				name: constants.SCOPED_ANDROID_RUNTIME_NAME,
+				name: this.$projectData.nsConfig.android.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME,
 				version: null,
 			};
 		}
