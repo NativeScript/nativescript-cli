@@ -457,7 +457,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	private async getLatestRuntimeVersion(): Promise<string> {
 		let runtimeVersion: string = null;
-		const packageName = this.$projectData.nsConfig.android.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		try {
 			let result = await this.$packageManager.view(
 				packageName,
@@ -496,7 +496,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			};
 		}
 
-		const packageName = this.$projectData.nsConfig.android.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		// try reading from installed runtime first before reading from the npm registry...
 		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
 			packageName,
@@ -552,7 +552,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			return localVersionInfo;
 		}
 
-		const packageName = this.$projectData.nsConfig.android.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		// fallback to reading from npm...
 		try {
 			let output = await this.$packageManager.view(

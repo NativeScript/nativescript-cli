@@ -630,13 +630,13 @@ export class ProjectDataService implements IProjectDataService {
 			.getDependenciesFromPackageJson(projectDir)
 			.devDependencies.find((d) => {
 				if (platform === constants.PlatformTypes.ios) {
-					const packageName = this.$projectData.nsConfig.ios.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME;
+					const packageName = this.$projectData.nsConfig.ios?.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME;
 					return [
 						packageName,
 						constants.TNS_IOS_RUNTIME_NAME,
 					].includes(d.name);
 				} else if (platform === constants.PlatformTypes.android) {
-					const packageName = this.$projectData.nsConfig.android.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
+					const packageName = this.$projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
 					return [
 						packageName,
 						constants.TNS_ANDROID_RUNTIME_NAME,
@@ -689,12 +689,12 @@ export class ProjectDataService implements IProjectDataService {
 		);
 		if (platform === constants.PlatformTypes.ios) {
 			return {
-				name: this.$projectData.nsConfig.ios.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME,
+				name: this.$projectData.nsConfig.ios?.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME,
 				version: null,
 			};
 		} else if (platform === constants.PlatformTypes.android) {
 			return {
-				name: this.$projectData.nsConfig.android.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME,
+				name: this.$projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME,
 				version: null,
 			};
 		}
