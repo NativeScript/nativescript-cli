@@ -164,12 +164,15 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.normalizedPlatformName,
 			constants.BUILD_XCCONFIG_FILE_NAME
 		);
-		// Only include explit deploy target if one is defined
+
+		// Only include explicit properties from build.xcconfig
 		// Note: we could include entire file via -xcconfig flag
 		// however doing so introduces unwanted side effects
 		// like cocoapods issues related to ASSETCATALOG_COMPILER_APPICON_NAME
 		// references: https://medium.com/@iostechset/why-cocoapods-eats-app-icons-79fe729808d4
 		// https://github.com/CocoaPods/CocoaPods/issues/7003
+
+		// deploy target
 		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
 		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
@@ -177,6 +180,18 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		);
 		if (deployTargetVersion) {
 			extraArgs.push(`${deployTargetProperty}=${deployTargetVersion}`);
+		}
+
+		// macros
+		const macrosProperty = "MACROS";
+		const macrosValue = this.$xcconfigService.readPropertyValue(
+			BUILD_SETTINGS_FILE_PATH,
+			macrosProperty
+		);
+		if (macrosValue) {
+			extraArgs.push(
+				`GCC_PREPROCESSOR_DEFINITIONS=$(inherited) ${macrosValue}`
+			);
 		}
 
 		if (this.$fs.exists(xcworkspacePath)) {
