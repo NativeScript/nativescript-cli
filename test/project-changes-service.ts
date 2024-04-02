@@ -124,9 +124,10 @@ describe("Project Changes Service Tests", () => {
 	describe("Get Prepare Info File Path", () => {
 		it("Gets the correct Prepare Info path for ios/android", () => {
 			for (const platform of ["ios", "android"]) {
-				const actualPrepareInfoPath = serviceTest.projectChangesService.getPrepareInfoFilePath(
-					serviceTest.getPlatformData(platform)
-				);
+				const actualPrepareInfoPath =
+					serviceTest.projectChangesService.getPrepareInfoFilePath(
+						serviceTest.getPlatformData(platform)
+					);
 
 				const expectedPrepareInfoPath = path.join(
 					serviceTest.projectDir,
@@ -175,9 +176,10 @@ describe("Project Changes Service Tests", () => {
 				fs.writeJson(prepareInfoPath, expectedPrepareInfo);
 
 				// act
-				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(
-					serviceTest.getPlatformData(platform)
-				);
+				const actualPrepareInfo =
+					serviceTest.projectChangesService.getPrepareInfo(
+						serviceTest.getPlatformData(platform)
+					);
 
 				// assert
 				assert.deepStrictEqual(actualPrepareInfo, expectedPrepareInfo);
@@ -187,14 +189,15 @@ describe("Project Changes Service Tests", () => {
 
 	describe("Accumulates Changes From Project Services", () => {
 		it("accumulates changes from the project service", async () => {
-			const iOSChanges = await serviceTest.projectChangesService.checkForChanges(
-				serviceTest.getPlatformData("ios"),
-				serviceTest.projectData,
-				<any>{
-					provision: undefined,
-					teamId: undefined,
-				}
-			);
+			const iOSChanges =
+				await serviceTest.projectChangesService.checkForChanges(
+					serviceTest.getPlatformData("ios"),
+					serviceTest.projectData,
+					<any>{
+						provision: undefined,
+						teamId: undefined,
+					}
+				);
 			assert.isTrue(
 				!!iOSChanges.signingChanged,
 				"iOS signingChanged expected to be true"
@@ -214,9 +217,10 @@ describe("Project Changes Service Tests", () => {
 					}
 				);
 
-				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(
-					serviceTest.getPlatformData(platform)
-				);
+				const actualPrepareInfo =
+					serviceTest.projectChangesService.getPrepareInfo(
+						serviceTest.getPlatformData(platform)
+					);
 
 				assert.deepStrictEqual(actualPrepareInfo, {
 					nativePlatformStatus: Constants.NativePlatformStatus.requiresPrepare,
@@ -249,9 +253,10 @@ describe("Project Changes Service Tests", () => {
 					}
 				);
 
-				const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(
-					serviceTest.getPlatformData(platform)
-				);
+				const actualPrepareInfo =
+					serviceTest.projectChangesService.getPrepareInfo(
+						serviceTest.getPlatformData(platform)
+					);
 				prepareInfo.nativePlatformStatus =
 					Constants.NativePlatformStatus.alreadyPrepared;
 				assert.deepStrictEqual(actualPrepareInfo, prepareInfo);
@@ -277,9 +282,10 @@ describe("Project Changes Service Tests", () => {
 							{ nativePlatformStatus: nativePlatformStatus }
 						);
 
-						const actualPrepareInfo = serviceTest.projectChangesService.getPrepareInfo(
-							serviceTest.getPlatformData(platform)
-						);
+						const actualPrepareInfo =
+							serviceTest.projectChangesService.getPrepareInfo(
+								serviceTest.getPlatformData(platform)
+							);
 						assert.deepStrictEqual(actualPrepareInfo, {
 							nativePlatformStatus: nativePlatformStatus,
 						});

@@ -168,7 +168,7 @@ export class PluginsService implements IPluginsService {
 			pluginName,
 			projectData
 		);
-			
+
 		let showMessage = true;
 		const action = async (
 			modulesDestinationPath: string,
@@ -492,7 +492,11 @@ export class PluginsService implements IPluginsService {
 	): IDependencyData[] {
 		const dependenciesWithFrameworks: any[] = [];
 		_.each(productionDependencies, (d) => {
-			const pathToPlatforms = path.join(d.directory, constants.PLATFORMS_DIR_NAME, platform);
+			const pathToPlatforms = path.join(
+				d.directory,
+				constants.PLATFORMS_DIR_NAME,
+				platform
+			);
 			if (this.$fs.exists(pathToPlatforms)) {
 				const contents = this.$fs.readDirectory(pathToPlatforms);
 				_.each(contents, (file) => {

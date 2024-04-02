@@ -165,7 +165,10 @@ export class ProjectData implements IProjectData {
 				path.basename(projectDir)
 			);
 			this.nsConfig = nsConfig;
-			this.platformsDir = path.join(projectDir, this.getBuildRelativeDirectoryPath());
+			this.platformsDir = path.join(
+				projectDir,
+				this.getBuildRelativeDirectoryPath()
+			);
 			this.projectFilePath = projectFilePath;
 			this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
 			this.packageJsonData = packageJsonData;
@@ -217,11 +220,10 @@ export class ProjectData implements IProjectData {
 			appResourcesDir,
 			this.$devicePlatformsConstants.Android
 		);
-		const androidManifestDir = this.$androidResourcesMigrationService.hasMigrated(
-			appResourcesDir
-		)
-			? path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR)
-			: androidDirPath;
+		const androidManifestDir =
+			this.$androidResourcesMigrationService.hasMigrated(appResourcesDir)
+				? path.join(androidDirPath, constants.SRC_DIR, constants.MAIN_DIR)
+				: androidDirPath;
 
 		return path.join(androidManifestDir, constants.MANIFEST_FILE_NAME);
 	}
@@ -244,7 +246,8 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getAppResourcesDirectoryPath(projectDir?: string): string {
-		const appResourcesRelativePath = this.getAppResourcesRelativeDirectoryPath();
+		const appResourcesRelativePath =
+			this.getAppResourcesRelativeDirectoryPath();
 
 		return this.resolveToProjectDir(appResourcesRelativePath, projectDir);
 	}
@@ -271,10 +274,7 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getBuildRelativeDirectoryPath(): string {
-		if (
-			this.nsConfig &&
-			this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]
-		) {
+		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]) {
 			return this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY];
 		}
 

@@ -49,7 +49,8 @@ export class DeviceInstallAppService {
 			projectDir: projectData.projectDir,
 		});
 		const buildOutputOptions = platformData.getValidBuildOutputData(buildData);
-		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
+		const outputPath =
+			buildData.outputPath || platformData.getBuildOutputPath(buildData);
 		const packages = await this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
 			buildOutputOptions
@@ -59,15 +60,17 @@ export class DeviceInstallAppService {
 			// will always be the case on iOS
 			packageFile = packages.at(0).packageName;
 		} else if (device.deviceInfo.abis) {
-			packages.find(({ packageName })=> {
-				if(device.deviceInfo.abis.some(abi => packageName.includes(abi))) {
+			packages.find(({ packageName }) => {
+				if (device.deviceInfo.abis.some((abi) => packageName.includes(abi))) {
 					packageFile = packageName;
 					return true;
 				}
-			})
+			});
 		} else {
 			//we did not find corresponding abi let's try universal
-			const universalPackage = packages.find(p => p.packageName.includes('universal'));
+			const universalPackage = packages.find((p) =>
+				p.packageName.includes("universal")
+			);
 			if (universalPackage) {
 				packageFile = universalPackage.packageName;
 			}
@@ -145,10 +148,8 @@ export class DeviceInstallAppService {
 			return true;
 		}
 
-		const deviceBuildInfo: IBuildInfo = await this.$buildInfoFileService.getDeviceBuildInfo(
-			device,
-			projectData
-		);
+		const deviceBuildInfo: IBuildInfo =
+			await this.$buildInfoFileService.getDeviceBuildInfo(device, projectData);
 		const localBuildInfo = this.$buildInfoFileService.getLocalBuildInfo(
 			platformData,
 			{ ...buildData, buildForDevice: !device.isEmulator }

@@ -99,9 +99,9 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 			this.$fs.getFsStats(targetPath).isDirectory()
 		) {
 			targetIsDirectory = true;
-		} else if (targetPath.match(/\.(ipa|aab|apk)/)){
-			if (applicationPackages.length > 1){
-				filterRegex = new RegExp('universal');
+		} else if (targetPath.match(/\.(ipa|aab|apk)/)) {
+			if (applicationPackages.length > 1) {
+				filterRegex = new RegExp("universal");
 				this.$logger.trace(
 					`Multiple packages were built but only the universal one will be copied if existing'.`
 				);
@@ -109,11 +109,15 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		} else {
 			targetIsDirectory = true;
 		}
-		applicationPackages.forEach(pack => {
-			const targetFilePath = targetIsDirectory ? path.join(targetPath, path.basename(pack.packageName)) : targetPath;
+		applicationPackages.forEach((pack) => {
+			const targetFilePath = targetIsDirectory
+				? path.join(targetPath, path.basename(pack.packageName))
+				: targetPath;
 			if (!filterRegex || filterRegex.test(pack.packageName)) {
 				this.$fs.copyFile(pack.packageName, targetFilePath);
-				this.$logger.info(`Copied file '${pack.packageName}' to '${targetFilePath}'.`);
+				this.$logger.info(
+					`Copied file '${pack.packageName}' to '${targetFilePath}'.`
+				);
 			}
 		});
 	}

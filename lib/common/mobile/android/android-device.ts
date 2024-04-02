@@ -13,9 +13,9 @@ interface IAndroidDeviceDetails {
 	name: string;
 	release: string;
 	brand: string;
-	'cpu.abi': string;
-	'cpu.abilist64': string;
-	'cpu.abilist32': string;
+	"cpu.abi": string;
+	"cpu.abilist64": string;
+	"cpu.abilist32": string;
 }
 
 interface IAdbDeviceStatusInfo {
@@ -99,7 +99,10 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 			identifier: this.identifier,
 			displayName: details.name,
 			model: details.model,
-			abis: details['cpu.abilist64'].split(',').concat(details['cpu.abilist32'].split(',')),
+			abis: [
+				...details["cpu.abilist64"].split(","),
+				...details["cpu.abilist32"].split(","),
+			],
 			version,
 			vendor: details.brand,
 			platform: this.$devicePlatformsConstants.Android,
@@ -115,12 +118,14 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 			: [DeviceConnectionType.USB];
 
 		if (this.isEmulator) {
-			this.deviceInfo.displayName = await this.$androidEmulatorServices.getRunningEmulatorName(
-				this.identifier
-			);
-			this.deviceInfo.imageIdentifier = await this.$androidEmulatorServices.getRunningEmulatorImageIdentifier(
-				this.identifier
-			);
+			this.deviceInfo.displayName =
+				await this.$androidEmulatorServices.getRunningEmulatorName(
+					this.identifier
+				);
+			this.deviceInfo.imageIdentifier =
+				await this.$androidEmulatorServices.getRunningEmulatorImageIdentifier(
+					this.identifier
+				);
 		}
 
 		this.$logger.trace(this.deviceInfo);
@@ -165,9 +170,10 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 				// sample line is "ro.build.version.release=4.4" in /system/build.prop
 				// sample line from getprop is:  [ro.build.version.release]: [6.0]
 				// NOTE: some props do not have value: [ro.build.version.base_os]: []
-				const match = /(?:\[?ro\.build\.version|ro\.product|ro\.build)\.(.+?)]?(?:\:|=)(?:\s*?\[)?(.*?)]?$/.exec(
-					value
-				);
+				const match =
+					/(?:\[?ro\.build\.version|ro\.product|ro\.build)\.(.+?)]?(?:\:|=)(?:\s*?\[)?(.*?)]?$/.exec(
+						value
+					);
 				if (match) {
 					parsedDetails[match[1]] = match[2];
 				}
@@ -193,7 +199,8 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 	}
 
 	private async getType(): Promise<string> {
-		const runningEmulatorIds = await this.$androidEmulatorServices.getRunningEmulatorIds();
+		const runningEmulatorIds =
+			await this.$androidEmulatorServices.getRunningEmulatorIds();
 		if (
 			_.find(runningEmulatorIds, (emulatorId) => emulatorId === this.identifier)
 		) {

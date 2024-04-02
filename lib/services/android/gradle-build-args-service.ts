@@ -70,9 +70,9 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
 		if (buildData.gradleArgs) {
-			const additionalArgs: string[] = []
-			buildData.gradleArgs.forEach(arg => {
-				additionalArgs.push(...arg.split(' ').map(a=>a.trim()));
+			const additionalArgs: string[] = [];
+			buildData.gradleArgs.forEach((arg) => {
+				additionalArgs.push(...arg.split(" ").map((a) => a.trim()));
 			});
 			args.push(...additionalArgs);
 		}
@@ -106,7 +106,9 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 	private getBuildTaskName(buildData: IAndroidBuildData): string {
 		let baseTaskName = buildData.androidBundle ? "bundle" : "assemble";
 		if (buildData.gradleFlavor) {
-			baseTaskName += buildData.gradleFlavor[0].toUpperCase() + buildData.gradleFlavor.slice(1);
+			baseTaskName +=
+				buildData.gradleFlavor[0].toUpperCase() +
+				buildData.gradleFlavor.slice(1);
 		}
 		const buildTaskName = buildData.release
 			? `${baseTaskName}${Configurations.Release}`

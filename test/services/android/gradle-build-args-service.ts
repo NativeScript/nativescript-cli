@@ -130,8 +130,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedReleaseBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for debug build with info log and android bundle",
+				name: "should return correct args for debug build with info log and android bundle",
 				buildConfig: { release: false, androidBundle: true },
 				logLevel: "INFO",
 				expectedResult: ["bundleDebug"]
@@ -139,8 +138,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedDebugBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for debug build with trace log and android bundle",
+				name: "should return correct args for debug build with trace log and android bundle",
 				buildConfig: { release: false, androidBundle: true },
 				logLevel: "TRACE",
 				expectedResult: ["bundleDebug"]
@@ -148,8 +146,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedDebugBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for release build with info log and android bundle",
+				name: "should return correct args for release build with info log and android bundle",
 				buildConfig: { ...releaseBuildConfig, androidBundle: true },
 				logLevel: "INFO",
 				expectedResult: ["bundleRelease"]
@@ -157,8 +154,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedReleaseBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for release build with trace log and android bundle",
+				name: "should return correct args for release build with trace log and android bundle",
 				buildConfig: { ...releaseBuildConfig, androidBundle: true },
 				logLevel: "TRACE",
 				expectedResult: ["bundleRelease"]
@@ -195,8 +191,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedDebugBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for release clean build with info log",
+				name: "should return correct args for release clean build with info log",
 				buildConfig: releaseBuildConfig,
 				logLevel: "INFO",
 				expectedResult: ["clean"]
@@ -204,8 +199,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedReleaseBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for release clean build with trace log",
+				name: "should return correct args for release clean build with trace log",
 				buildConfig: releaseBuildConfig,
 				logLevel: "TRACE",
 				expectedResult: ["clean"]
@@ -213,8 +207,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedReleaseBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for debug clean build with info log and android bundle",
+				name: "should return correct args for debug clean build with info log and android bundle",
 				buildConfig: { release: false, androidBundle: true },
 				logLevel: "INFO",
 				expectedResult: ["clean"]
@@ -222,8 +215,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedDebugBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for debug clean build with trace log and android bundle",
+				name: "should return correct args for debug clean build with trace log and android bundle",
 				buildConfig: { release: false, androidBundle: true },
 				logLevel: "TRACE",
 				expectedResult: ["clean"]
@@ -231,8 +223,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedDebugBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for release clean build with info log and android bundle",
+				name: "should return correct args for release clean build with info log and android bundle",
 				buildConfig: { ...releaseBuildConfig, androidBundle: true },
 				logLevel: "INFO",
 				expectedResult: ["clean"]
@@ -240,8 +231,7 @@ describe("GradleBuildArgsService", () => {
 					.concat(expectedReleaseBuildArgs),
 			},
 			{
-				name:
-					"should return correct args for release clean build with trace log and android bundle",
+				name: "should return correct args for release clean build with trace log and android bundle",
 				buildConfig: { ...releaseBuildConfig, androidBundle: true },
 				logLevel: "TRACE",
 				expectedResult: ["clean"]

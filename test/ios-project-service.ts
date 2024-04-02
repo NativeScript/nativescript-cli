@@ -1159,9 +1159,8 @@ describe("Merge Project XCConfig files", () => {
 		for (const release in [true, false]) {
 			await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
-				projectRoot
-			);
+			const destinationFilePaths =
+				xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
 			_.each(destinationFilePaths, (destinationFilePath) => {
 				assert.isTrue(
@@ -1197,9 +1196,8 @@ describe("Merge Project XCConfig files", () => {
 				release,
 			});
 
-			const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
-				projectRoot
-			);
+			const destinationFilePaths =
+				xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
 			_.each(destinationFilePaths, (destinationFilePath) => {
 				assert.isTrue(
@@ -1207,9 +1205,10 @@ describe("Merge Project XCConfig files", () => {
 					"Target build xcconfig is missing for release: " + release
 				);
 				const expected = {
-					CODE_SIGN_ENTITLEMENTS: iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
-						projectData
-					),
+					CODE_SIGN_ENTITLEMENTS:
+						iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
+							projectData
+						),
 				};
 				assertPropertyValues(expected, destinationFilePath, testInjector);
 			});
@@ -1226,9 +1225,8 @@ describe("Merge Project XCConfig files", () => {
 
 		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
-			projectRoot
-		);
+		const destinationFilePaths =
+			xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
 		_.each(destinationFilePaths, (destinationFilePath) => {
 			assert.isTrue(
@@ -1248,9 +1246,8 @@ describe("Merge Project XCConfig files", () => {
 	it("creates empty plugins-<config>.xcconfig in case there are no build.xcconfig in App_Resources and in plugins", async () => {
 		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
-		const destinationFilePaths = xcconfigService.getPluginsXcconfigFilePaths(
-			projectRoot
-		);
+		const destinationFilePaths =
+			xcconfigService.getPluginsXcconfigFilePaths(projectRoot);
 
 		_.each(destinationFilePaths, (destinationFilePath) => {
 			assert.isTrue(
@@ -1279,7 +1276,8 @@ describe("handleNativeDependenciesChange", () => {
 		cocoapodsService.mergePodXcconfigFile = async () =>
 			executedCocoapodsMethods.push("podMerge");
 		cocoapodsService.applyPodfileFromAppResources = async () => ({});
-		cocoapodsService.removeDuplicatedPlatfomsFromProjectPodFile = async () => ({});
+		cocoapodsService.removeDuplicatedPlatfomsFromProjectPodFile =
+			async () => ({});
 		cocoapodsService.getProjectPodfilePath = () => projectPodfilePath;
 
 		const fs = testInjector.resolve("fs");

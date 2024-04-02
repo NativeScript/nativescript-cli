@@ -62,16 +62,15 @@ export class PlatformController implements IPlatformController {
 
 		this.$logger.trace("Determined package to install is", packageToInstall);
 
-		const installedPlatformVersion = await this.$addPlatformService.addPlatformSafe(
-			projectData,
-			platformData,
-			packageToInstall,
-			addPlatformData
-		);
+		const installedPlatformVersion =
+			await this.$addPlatformService.addPlatformSafe(
+				projectData,
+				platformData,
+				packageToInstall,
+				addPlatformData
+			);
 		const buildPath = projectData.platformsDir;
-		this.$fs.ensureDirectoryExists(
-			path.join(projectData.platformsDir, platform)
-		);
+		this.$fs.ensureDirectoryExists(path.join(buildPath, platform));
 
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			const gradlePropertiesPath = path.resolve(
@@ -80,7 +79,8 @@ export class PlatformController implements IPlatformController {
 			);
 			const commentHeader = "# App configuration";
 			const appPath = projectData.getAppDirectoryRelativePath();
-			const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+			const appResourcesPath =
+				projectData.getAppResourcesRelativeDirectoryPath();
 
 			let gradlePropertiesContents = "";
 			if (this.$fs.exists(gradlePropertiesPath)) {
@@ -162,9 +162,10 @@ export class PlatformController implements IPlatformController {
 
 			if (!desiredRuntimePackage.version) {
 				// if no version is explicitly added, then we use the latest
-				desiredRuntimePackage.version = await this.$packageInstallationManager.getLatestCompatibleVersion(
-					desiredRuntimePackage.name
-				);
+				desiredRuntimePackage.version =
+					await this.$packageInstallationManager.getLatestCompatibleVersion(
+						desiredRuntimePackage.name
+					);
 			}
 			// const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 			// version = (currentPlatformData && currentPlatformData.version) ||
@@ -187,9 +188,8 @@ export class PlatformController implements IPlatformController {
 
 		const shouldAddNativePlatform =
 			!nativePrepare || !nativePrepare.skipNativePrepare;
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		const requiresNativePlatformAdd =
 			prepareInfo &&
 			prepareInfo.nativePlatformStatus ===

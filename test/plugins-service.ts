@@ -33,7 +33,11 @@ import * as StaticConfigLib from "../lib/config";
 import * as path from "path";
 import * as temp from "temp";
 import * as _ from "lodash";
-import { PLATFORMS_DIR_NAME, PLUGINS_BUILD_DATA_FILENAME, PlatformTypes } from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
+import {
+	PLATFORMS_DIR_NAME,
+	PLUGINS_BUILD_DATA_FILENAME,
+	PlatformTypes,
+} from "../lib/constants"; // PACKAGE_JSON_FILE_NAME, CONFIG_FILE_NAME_JS, CONFIG_FILE_NAME_TS
 import { GradleCommandService } from "../lib/services/android/gradle-command-service";
 import { GradleBuildService } from "../lib/services/android/gradle-build-service";
 import { GradleBuildArgsService } from "../lib/services/android/gradle-build-args-service";
@@ -405,7 +409,9 @@ describe("Plugins service", () => {
 
 				// Adds android platform
 				fs.createDirectory(path.join(projectFolder, PLATFORMS_DIR_NAME));
-				fs.createDirectory(path.join(projectFolder, PLATFORMS_DIR_NAME, "android"));
+				fs.createDirectory(
+					path.join(projectFolder, PLATFORMS_DIR_NAME, "android")
+				);
 				fs.createDirectory(
 					path.join(projectFolder, PLATFORMS_DIR_NAME, "android", "app")
 				);
@@ -912,7 +918,11 @@ describe("Plugins service", () => {
 			);
 
 			const expectediOSPath = path.join(pluginDir, PLATFORMS_DIR_NAME, "ios");
-			const expectedAndroidPath = path.join(pluginDir, PLATFORMS_DIR_NAME, "android");
+			const expectedAndroidPath = path.join(
+				pluginDir,
+				PLATFORMS_DIR_NAME,
+				"android"
+			);
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("iOS"),
 				expectediOSPath

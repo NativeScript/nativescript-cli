@@ -31,9 +31,9 @@ interface IAndroidBuildData
 		IAndroidSigningData,
 		IHasAndroidBundle {
 	buildFilterDevicesArch?: boolean;
-	gradlePath?: string;
-	gradleFlavor?: string;
 	gradleArgs?: string[];
+	gradleFlavor?: string;
+	gradlePath?: string;
 }
 
 interface IAndroidSigningData {
