@@ -183,15 +183,13 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		}
 
 		// macros
-		const macrosProperty = "MACROS";
-		const macrosValue = this.$xcconfigService.readPropertyValue(
+		const bootProperty = "NS_SWIFTUI_BOOT";
+		const bootValue = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
-			macrosProperty
+			bootProperty
 		);
-		if (macrosValue) {
-			extraArgs.push(
-				`GCC_PREPROCESSOR_DEFINITIONS=$(inherited) ${macrosValue}`
-			);
+		if (bootValue) {
+			extraArgs.push(`${bootProperty}=${bootValue}`);
 		}
 
 		if (this.$fs.exists(xcworkspacePath)) {
