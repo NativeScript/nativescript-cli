@@ -258,7 +258,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		}
 
 		const workingWithAppleDevices =
-			!platform || this.$mobileHelper.isApplePlatfrom(platform);
+			!platform || this.$mobileHelper.isApplePlatform(platform);
 		const shouldKeepProcessAlive =
 			this.$options.watch || !this.$options.justlaunch;
 		if (shouldKeepProcessAlive) {

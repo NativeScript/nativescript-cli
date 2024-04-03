@@ -17,7 +17,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 		options: IDeviceProjectRootOptions
 	): Promise<string> {
 		let projectRoot = "";
-		if (this.$mobileHelper.isApplePlatfrom(device.deviceInfo.platform)) {
+		if (this.$mobileHelper.isApplePlatform(device.deviceInfo.platform)) {
 			projectRoot = device.isEmulator
 				? await this.$iOSSimResolver.iOSSim.getApplicationPath(
 						device.deviceInfo.identifier,
@@ -53,7 +53,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 	}
 
 	public getDeviceSyncZipPath(device: Mobile.IDevice): string {
-		return this.$mobileHelper.isApplePlatfrom(device.deviceInfo.platform) &&
+		return this.$mobileHelper.isApplePlatform(device.deviceInfo.platform) &&
 			!device.isEmulator
 			? LiveSyncPaths.IOS_DEVICE_SYNC_ZIP_PATH
 			: undefined;

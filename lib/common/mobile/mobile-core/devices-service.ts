@@ -521,7 +521,7 @@ export class DevicesService
 			this.getDeviceInstances(),
 			(device: Mobile.IDevice) => {
 				if (
-					this.$mobileHelper.isApplePlatfrom(device.deviceInfo.platform) &&
+					this.$mobileHelper.isApplePlatform(device.deviceInfo.platform) &&
 					device.isEmulator
 				) {
 					return (
@@ -788,7 +788,7 @@ export class DevicesService
 			if (!deviceInitOpts.deviceId && _.isEmpty(deviceInstances)) {
 				if (
 					!this.$hostInfo.isDarwin &&
-					this.$mobileHelper.isApplePlatfrom(deviceInitOpts.platform)
+					this.$mobileHelper.isApplePlatform(deviceInitOpts.platform)
 				) {
 					this.$errors.fail(constants.ERROR_NO_DEVICES_CANT_USE_IOS_SIMULATOR);
 				}
@@ -1098,7 +1098,7 @@ export class DevicesService
 		platform?: string
 	): Mobile.IEmulatorPlatformService {
 		platform = platform || this._platform;
-		if (this.$mobileHelper.isApplePlatfrom(platform)) {
+		if (this.$mobileHelper.isApplePlatform(platform)) {
 			return this.$injector.resolve("iOSEmulatorServices");
 		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			return this.$injector.resolve("androidEmulatorServices");

@@ -467,7 +467,7 @@ export class PrepareController extends EventEmitter {
 		}
 		let packagePath: string;
 		if (
-			this.$mobileHelper.isApplePlatfrom(platformData.platformNameLowerCase)
+			this.$mobileHelper.isApplePlatform(platformData.platformNameLowerCase)
 		) {
 			packagePath = path.join(
 				platformData.projectRoot,

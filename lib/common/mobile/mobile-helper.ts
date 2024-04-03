@@ -48,7 +48,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		);
 	}
 
-	public isApplePlatfrom(platform: string): boolean {
+	public isApplePlatform(platform: string): boolean {
 		return this.isiOSPlatform(platform) || this.isvisionOSPlatform(platform);
 	}
 

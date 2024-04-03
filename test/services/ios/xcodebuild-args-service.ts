@@ -76,42 +76,47 @@ describe("xcodebuildArgsService", () => {
 		_.each([true, false], (hasProjectWorkspace) => {
 			_.each(["INFO", "TRACE"], (logLevel) => {
 				_.each(["Debug", "Release"], (configuration) => {
-					it(`should return correct args when workspace is ${hasProjectWorkspace} with ${logLevel} log level and ${configuration} configuration`, async () => {
-						const injector = createTestInjector({
-							logLevel,
-							hasProjectWorkspace,
-						});
+					_.each(["iOS", "visionOS"], (platform) => {
+						it(`should return correct args when workspace is ${hasProjectWorkspace} with ${logLevel} log level and ${configuration} configuration (platform = ${platform})`, async () => {
+							const injector = createTestInjector({
+								logLevel,
+								hasProjectWorkspace,
+							});
 
-						const buildConfig = {
-							buildForDevice: false,
-							release: configuration === "Release",
-						};
-						const xcodebuildArgsService = injector.resolve(
-							"xcodebuildArgsService"
-						);
-						const actualArgs =
-							await xcodebuildArgsService.getBuildForSimulatorArgs(
-								{ projectRoot, normalizedPlatformName },
-								{ projectName, appResourcesDirectoryPath },
-								buildConfig
+							const buildConfig = {
+								buildForDevice: false,
+								release: configuration === "Release",
+								platform,
+							};
+							const xcodebuildArgsService = injector.resolve(
+								"xcodebuildArgsService"
 							);
+							const actualArgs =
+								await xcodebuildArgsService.getBuildForSimulatorArgs(
+									{ projectRoot, normalizedPlatformName },
+									{ projectName, appResourcesDirectoryPath },
+									buildConfig
+								);
 
-						const expectedArgs = [
-							"ONLY_ACTIVE_ARCH=NO",
-							"CODE_SIGN_IDENTITY=",
-							"-destination",
-							"generic/platform=iOS Simulator",
-							"build",
-							"-configuration",
-							configuration,
-							"-sdk",
-							"iphonesimulator",
-						]
-							.concat(getCommonArgs())
-							.concat(getBuildLoggingArgs(logLevel))
-							.concat(getXcodeProjectArgs({ hasProjectWorkspace }));
+							const expectedArgs = [
+								`ONLY_ACTIVE_ARCH=${platform === "visionOS" ? "YES" : "NO"}`,
+								"CODE_SIGN_IDENTITY=",
+								"-destination",
+								platform === "visionOS"
+									? "platform=visionOS Simulator"
+									: "generic/platform=iOS Simulator",
+								"build",
+								"-configuration",
+								configuration,
+								"-sdk",
+								platform === "visionOS" ? "xrsimulator" : "iphonesimulator",
+							]
+								.concat(getCommonArgs())
+								.concat(getBuildLoggingArgs(logLevel))
+								.concat(getXcodeProjectArgs({ hasProjectWorkspace }));
 
-						assert.deepStrictEqual(actualArgs, expectedArgs);
+							assert.deepStrictEqual(actualArgs, expectedArgs);
+						});
 					});
 				});
 			});
@@ -164,6 +169,7 @@ describe("xcodebuildArgsService", () => {
 							const buildConfig = {
 								buildForDevice: true,
 								release: configuration === "Release",
+								platform: "ios",
 							};
 							const xcodebuildArgsService: IXcodebuildArgsService =
 								injector.resolve("xcodebuildArgsService");

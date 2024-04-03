@@ -50,6 +50,7 @@ import { IPluginData } from "../lib/definitions/plugins";
 import { IXcconfigService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IStringDictionary, IFileSystem } from "../lib/common/declarations";
+import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 temp.track();
 
 class IOSSimulatorDiscoveryMock extends DeviceDiscovery {
@@ -120,10 +121,7 @@ function createTestInjector(
 	testInjector.register("staticConfig", ConfigLib.StaticConfig);
 	testInjector.register("projectDataService", ProjectDataServiceStub);
 	testInjector.register("prompter", {});
-	testInjector.register("devicePlatformsConstants", {
-		iOS: "iOS",
-		visionOS: "visionOS",
-	});
+	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("devicesService", DevicesService);
 	testInjector.register("iOSDeviceDiscovery", IOSDeviceDiscovery);
 	testInjector.register("iOSSimulatorDiscovery", IOSSimulatorDiscoveryMock);

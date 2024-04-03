@@ -1197,7 +1197,7 @@ declare global {
 			isAndroidPlatform(platform: string): boolean;
 			isiOSPlatform(platform: string): boolean;
 			isvisionOSPlatform(platform: string): boolean;
-			isApplePlatfrom(platform: string): boolean;
+			isApplePlatform(platform: string): boolean;
 			normalizePlatformName(platform: string): string;
 			validatePlatformName(platform: string): string;
 			buildDevicePath(...args: string[]): string;

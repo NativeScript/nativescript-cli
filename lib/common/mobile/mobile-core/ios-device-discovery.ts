@@ -22,7 +22,7 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 		if (
 			options &&
 			options.platform &&
-			(!this.$mobileHelper.isApplePlatfrom(options.platform) ||
+			(!this.$mobileHelper.isApplePlatform(options.platform) ||
 				options.emulator)
 		) {
 			return;

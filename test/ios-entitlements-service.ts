@@ -39,6 +39,8 @@ describe("IOSEntitlements Service Tests", () => {
 
 		testInjector.register("tempService", stubs.TempServiceStub);
 
+		testInjector.register("options", {});
+
 		return testInjector;
 	};
 
@@ -57,22 +59,23 @@ describe("IOSEntitlements Service Tests", () => {
 		projectData.platformsDir = temp.mkdirSync("platformsDir");
 		projectData.projectDir = temp.mkdirSync("projectDir");
 		projectData.appDirectoryPath = projectData.getAppDirectoryPath();
-		projectData.appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
+		projectData.appResourcesDirectoryPath =
+			projectData.getAppResourcesDirectoryPath();
 
 		fs = injector.resolve("$fs");
 
 		iOSEntitlementsService = injector.resolve("iOSEntitlementsService");
-		destinationFilePath = iOSEntitlementsService.getPlatformsEntitlementsPath(
-			projectData
-		);
+		destinationFilePath =
+			iOSEntitlementsService.getPlatformsEntitlementsPath(projectData);
 	});
 
 	describe("Ensure paths constructed are correct", () => {
 		it("Ensure destination entitlements relative path is calculated correctly.", () => {
 			const expected = path.join("testApp", "testApp.entitlements");
-			const actual = iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
-				projectData
-			);
+			const actual =
+				iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
+					projectData
+				);
 			assert.equal(actual, expected);
 		});
 
@@ -83,9 +86,8 @@ describe("IOSEntitlements Service Tests", () => {
 				"testApp",
 				"testApp.entitlements"
 			);
-			const actual = iOSEntitlementsService.getPlatformsEntitlementsPath(
-				projectData
-			);
+			const actual =
+				iOSEntitlementsService.getPlatformsEntitlementsPath(projectData);
 			assert.equal(actual, expected);
 		});
 	});
