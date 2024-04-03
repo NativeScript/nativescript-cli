@@ -160,7 +160,8 @@ export class ITMSConstants {
 }
 
 class ItunesConnectApplicationTypesClass
-	implements IiTunesConnectApplicationType {
+	implements IiTunesConnectApplicationType
+{
 	public iOS = "iOS App";
 	public Mac = "Mac OS X App";
 }
@@ -168,7 +169,8 @@ class ItunesConnectApplicationTypesClass
 export const iOSAppResourcesFolderName = "iOS";
 export const androidAppResourcesFolderName = "Android";
 
-export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
+export const ItunesConnectApplicationTypes =
+	new ItunesConnectApplicationTypesClass();
 export const VUE_NAME = "vue";
 export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
@@ -478,4 +480,5 @@ export enum PackageManagers {
 	pnpm = "pnpm",
 	yarn = "yarn",
 	yarn2 = "yarn2",
+	bun = "bun",
 }

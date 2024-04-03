@@ -28,6 +28,7 @@ export class PackageManager implements IPackageManager {
 		private $yarn: INodePackageManager,
 		private $yarn2: INodePackageManager,
 		private $pnpm: INodePackageManager,
+		private $bun: INodePackageManager,
 		private $logger: ILogger,
 		private $userSettingsService: IUserSettingsService,
 		private $projectConfigService: IProjectConfigService
@@ -144,9 +145,8 @@ export class PackageManager implements IPackageManager {
 		}
 
 		try {
-			const configPm = this.$projectConfigService.getValue(
-				"cli.packageManager"
-			);
+			const configPm =
+				this.$projectConfigService.getValue("cli.packageManager");
 
 			if (configPm) {
 				this.$logger.trace(
@@ -172,6 +172,9 @@ export class PackageManager implements IPackageManager {
 		} else if (pm === PackageManagers.pnpm || this.$options.pnpm) {
 			this._packageManagerName = PackageManagers.pnpm;
 			return this.$pnpm;
+		} else if (pm === PackageManagers.bun) {
+			this._packageManagerName = PackageManagers.bun;
+			return this.$bun;
 		} else {
 			this._packageManagerName = PackageManagers.npm;
 			return this.$npm;

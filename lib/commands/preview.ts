@@ -44,19 +44,23 @@ export class PreviewCommand implements ICommand {
 		const previewCLIPath = this.getPreviewCLIPath();
 
 		if (!previewCLIPath) {
-			const packageManagerName = await this.$packageManager.getPackageManagerName();
+			const packageManagerName =
+				await this.$packageManager.getPackageManagerName();
 			let installCommand = "";
 
 			switch (packageManagerName) {
-				case PackageManagers.npm:
-					installCommand = "npm install --save-dev @nativescript/preview-cli";
-					break;
 				case PackageManagers.yarn:
 				case PackageManagers.yarn2:
 					installCommand = "yarn add -D @nativescript/preview-cli";
 					break;
 				case PackageManagers.pnpm:
 					installCommand = "pnpm install --save-dev @nativescript/preview-cli";
+					break;
+				case PackageManagers.bun:
+					installCommand = "bun add --dev @nativescript/preview-cli";
+				case PackageManagers.npm:
+				default:
+					installCommand = "npm install --save-dev @nativescript/preview-cli";
 					break;
 			}
 			this.$logger.info(
