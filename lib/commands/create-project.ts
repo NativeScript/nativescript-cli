@@ -74,6 +74,8 @@ export class CreateProjectCommand implements ICommand {
 			selectedTemplate = constants.REACT_NAME;
 		} else if (this.$options.svelte) {
 			selectedTemplate = constants.SVELTE_NAME;
+		} else if (this.$options["vision"]) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision"];
 		} else if (this.$options["vision-ng"]) {
 			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-ng"];
 		} else if (this.$options["vision-react"]) {
