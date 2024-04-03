@@ -60,32 +60,48 @@ export class CreateProjectCommand implements ICommand {
 
 		let projectName = args[0];
 		let selectedTemplate: string;
-		if (this.$options.js) {
-			selectedTemplate = constants.JAVASCRIPT_NAME;
-		} else if (this.$options.vue && this.$options.tsc) {
+		if (
+			this.$options["vision-ng"] ||
+			(this.$options.vision && this.$options.ng)
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-ng"];
+		} else if (
+			this.$options["vision-react"] ||
+			(this.$options.vision && this.$options.react)
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-react"];
+		} else if (this.$options["vision-solid"]) {
+			// note: we don't have solid templates or --solid
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-solid"];
+		} else if (
+			this.$options["vision-svelte"] ||
+			(this.$options.vision && this.$options.svelte)
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-svelte"];
+		} else if (
+			this.$options["vision-vue"] ||
+			(this.$options.vision && (this.$options.vue || this.$options.vuejs))
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-vue"];
+		} else if (
+			(this.$options.vue || this.$options.vuejs) &&
+			this.$options.tsc
+		) {
 			selectedTemplate = "@nativescript/template-blank-vue-ts";
+		} else if (this.$options.vision) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision"];
+		} else if (this.$options.js) {
+			selectedTemplate = constants.JAVASCRIPT_NAME;
 		} else if (this.$options.tsc) {
 			selectedTemplate = constants.TYPESCRIPT_NAME;
 		} else if (this.$options.ng) {
 			selectedTemplate = constants.ANGULAR_NAME;
-		} else if (this.$options.vue) {
+		} else if (this.$options.vue || this.$options.vuejs) {
 			selectedTemplate = constants.VUE_NAME;
 		} else if (this.$options.react) {
 			selectedTemplate = constants.REACT_NAME;
 		} else if (this.$options.svelte) {
 			selectedTemplate = constants.SVELTE_NAME;
-		} else if (this.$options["vision"]) {
-			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision"];
-		} else if (this.$options["vision-ng"]) {
-			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-ng"];
-		} else if (this.$options["vision-react"]) {
-			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-react"];
-		} else if (this.$options["vision-solid"]) {
-			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-solid"];
-		} else if (this.$options["vision-svelte"]) {
-			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-svelte"];
-		} else if (this.$options["vision-vue"]) {
-			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-vue"];
 		} else {
 			selectedTemplate = this.$options.template;
 		}

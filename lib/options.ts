@@ -132,6 +132,7 @@ export class Options {
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			svelte: { type: OptionType.Boolean, hasSensitiveValue: false },
+			vision: { type: OptionType.Boolean, hasSensitiveValue: false },
 			"vision-ng": { type: OptionType.Boolean, hasSensitiveValue: false },
 			"vision-react": { type: OptionType.Boolean, hasSensitiveValue: false },
 			"vision-solid": { type: OptionType.Boolean, hasSensitiveValue: false },
