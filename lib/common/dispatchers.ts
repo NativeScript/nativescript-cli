@@ -120,15 +120,19 @@ export class CommandDispatcher implements ICommandDispatcher {
 		let updateCommand = "";
 
 		switch (packageManagerName) {
-			case PackageManagers.npm:
-				updateCommand = "npm i -g nativescript";
-				break;
 			case PackageManagers.yarn:
 			case PackageManagers.yarn2:
 				updateCommand = "yarn global add nativescript";
 				break;
 			case PackageManagers.pnpm:
 				updateCommand = "pnpm i -g nativescript";
+				break;
+			case PackageManagers.bun:
+				updateCommand = "bun add --global nativescript";
+				break;
+			case PackageManagers.npm:
+			default:
+				updateCommand = "npm i -g nativescript";
 				break;
 		}
 

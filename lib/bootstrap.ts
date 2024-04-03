@@ -225,6 +225,7 @@ injector.requirePublic("npm", "./node-package-manager");
 injector.requirePublic("yarn", "./yarn-package-manager");
 injector.requirePublic("yarn2", "./yarn2-package-manager");
 injector.requirePublic("pnpm", "./pnpm-package-manager");
+injector.requirePublic("bun", "./bun-package-manager");
 injector.requireCommand(
 	"package-manager|*get",
 	"./commands/package-manager-get"

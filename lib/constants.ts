@@ -492,4 +492,5 @@ export enum PackageManagers {
 	pnpm = "pnpm",
 	yarn = "yarn",
 	yarn2 = "yarn2",
+	bun = "bun",
 }

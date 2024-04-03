@@ -7,6 +7,7 @@ import { PackageManager } from "../../lib/package-manager";
 import { YarnPackageManager } from "../../lib/yarn-package-manager";
 import { Yarn2PackageManager } from "../../lib/yarn2-package-manager";
 import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
+import { BunPackageManager } from "../../lib/bun-package-manager";
 import * as constants from "../../lib/constants";
 import { ChildProcess } from "../../lib/common/child-process";
 import { CommandsDelimiters } from "../../lib/common/constants";
@@ -78,6 +79,7 @@ describe("extensibilityService", () => {
 		testInjector.register("yarn", YarnPackageManager);
 		testInjector.register("yarn2", Yarn2PackageManager);
 		testInjector.register("pnpm", PnpmPackageManager);
+		testInjector.register("bun", BunPackageManager);
 		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined,
@@ -89,9 +91,8 @@ describe("extensibilityService", () => {
 		testInjector: IInjector,
 		extensionName: string
 	): string => {
-		const settingsService = testInjector.resolve<ISettingsService>(
-			"settingsService"
-		);
+		const settingsService =
+			testInjector.resolve<ISettingsService>("settingsService");
 		const profileDir = settingsService.getProfileDir();
 
 		return path.join(profileDir, "extensions", "node_modules", extensionName);
@@ -134,9 +135,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await assert.isRejected(
 					extensibilityService.installExtension("extensionToInstall"),
 					expectedErrorMessage
@@ -153,9 +153,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await assert.isRejected(
 					extensibilityService.installExtension("extensionToInstall"),
 					expectedErrorMessage
@@ -176,9 +175,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await assert.isRejected(
 					extensibilityService.installExtension("extensionToInstall"),
 					expectedErrorMessage
@@ -210,9 +208,8 @@ describe("extensibilityService", () => {
 					return { name: userSpecifiedValue };
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await extensibilityService.installExtension(userSpecifiedValue);
 
 				return argsPassedToNpmInstall;
@@ -222,9 +219,10 @@ describe("extensibilityService", () => {
 				userSpecifiedValue: string,
 				expectedValue: string
 			): Promise<void> => {
-				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(
-					userSpecifiedValue
-				);
+				const argsPassedToNpmInstall =
+					await getArgsPassedToNpmInstallDuringInstallExtensionCall(
+						userSpecifiedValue
+					);
 				assert.deepStrictEqual(
 					argsPassedToNpmInstall.packageName,
 					expectedValue
@@ -249,9 +247,10 @@ describe("extensibilityService", () => {
 
 			it("passes save and save-exact options to npm install", async () => {
 				const extensionName = "extension1";
-				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(
-					extensionName
-				);
+				const argsPassedToNpmInstall =
+					await getArgsPassedToNpmInstallDuringInstallExtensionCall(
+						extensionName
+					);
 				const expectedNpmConfg: any = { save: true };
 				expectedNpmConfg["save-exact"] = true;
 				assert.deepStrictEqual(argsPassedToNpmInstall.config, expectedNpmConfg);
@@ -260,17 +259,17 @@ describe("extensibilityService", () => {
 			it("passes full path to extensions dir for installation", async () => {
 				const extensionName = "extension1";
 				const testInjector = getTestInjector();
-				const settingsService: ISettingsService = testInjector.resolve(
-					"settingsService"
-				);
+				const settingsService: ISettingsService =
+					testInjector.resolve("settingsService");
 				const profileDir = "my-profile-dir";
 				settingsService.getProfileDir = () => profileDir;
 
 				const expectedDirForInstallation = path.join(profileDir, "extensions");
-				const argsPassedToNpmInstall = await getArgsPassedToNpmInstallDuringInstallExtensionCall(
-					extensionName,
-					testInjector
-				);
+				const argsPassedToNpmInstall =
+					await getArgsPassedToNpmInstallDuringInstallExtensionCall(
+						extensionName,
+						testInjector
+					);
 				assert.deepStrictEqual(
 					argsPassedToNpmInstall.pathToSave,
 					expectedDirForInstallation
@@ -297,9 +296,8 @@ describe("extensibilityService", () => {
 				config?: any
 			): Promise<any> => ({ name: extensionName, version: "1.0.0" });
 
-			const extensibilityService: IExtensibilityService = testInjector.resolve(
-				ExtensibilityService
-			);
+			const extensibilityService: IExtensibilityService =
+				testInjector.resolve(ExtensibilityService);
 			const actualResult = await extensibilityService.installExtension(
 				extensionName
 			);
@@ -346,9 +344,8 @@ describe("extensibilityService", () => {
 					})
 				);
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(
 					extensibilityService.loadExtensions()
 				);
@@ -404,9 +401,8 @@ describe("extensibilityService", () => {
 					})
 				);
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(
 					extensibilityService.loadExtensions()
 				);
@@ -430,9 +426,8 @@ describe("extensibilityService", () => {
 
 				mockFsReadJson(testInjector, extensionNames);
 
-				const requireService: IRequireService = testInjector.resolve(
-					"requireService"
-				);
+				const requireService: IRequireService =
+					testInjector.resolve("requireService");
 				requireService.require = (module: string) => {
 					if (path.basename(module) === extensionNames[0]) {
 						throw new Error("Unable to load module.");
@@ -454,9 +449,8 @@ describe("extensibilityService", () => {
 				expectedResults[0] = new Error(
 					"Unable to load extension extension1. You will not be able to use the functionality that it adds. Error: Unable to load module."
 				);
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 				assert.deepStrictEqual(promises.length, extensionNames.length);
 
@@ -495,9 +489,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 
 				for (let index = 0; index < promises.length; index++) {
@@ -561,9 +554,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 
 				for (let index = 0; index < promises.length; index++) {
@@ -604,9 +596,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 
 				assert.deepStrictEqual(promises.length, 0);
@@ -621,9 +612,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const promises = extensibilityService.loadExtensions();
 
 				assert.deepStrictEqual(promises.length, 0);
@@ -642,9 +632,8 @@ describe("extensibilityService", () => {
 				};
 
 				const expectedResults: IExtensionData[] = [];
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(
 					extensibilityService.loadExtensions()
 				);
@@ -672,9 +661,8 @@ describe("extensibilityService", () => {
 				};
 
 				const expectedResults: IExtensionData[] = [];
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				const actualResult = await Promise.all(
 					extensibilityService.loadExtensions()
 				);
@@ -698,9 +686,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await assert.isRejected(
 					extensibilityService.uninstallExtension("extensionToInstall"),
 					expectedErrorMessage
@@ -717,9 +704,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await assert.isRejected(
 					extensibilityService.uninstallExtension("extensionToInstall"),
 					expectedErrorMessage
@@ -740,9 +726,8 @@ describe("extensibilityService", () => {
 					throw new Error(expectedErrorMessage);
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await assert.isRejected(
 					extensibilityService.uninstallExtension("extensionToInstall"),
 					expectedErrorMessage
@@ -774,9 +759,8 @@ describe("extensibilityService", () => {
 					return [userSpecifiedValue];
 				};
 
-				const extensibilityService: IExtensibilityService = testInjector.resolve(
-					ExtensibilityService
-				);
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
 				await extensibilityService.uninstallExtension(userSpecifiedValue);
 
 				return argsPassedToNpmInstall;
@@ -786,9 +770,10 @@ describe("extensibilityService", () => {
 				userSpecifiedValue: string,
 				expectedValue: string
 			): Promise<void> => {
-				const argsPassedToNpmInstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(
-					userSpecifiedValue
-				);
+				const argsPassedToNpmInstall =
+					await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(
+						userSpecifiedValue
+					);
 				assert.deepStrictEqual(
 					argsPassedToNpmInstall.packageName,
 					expectedValue
@@ -811,9 +796,10 @@ describe("extensibilityService", () => {
 
 			it("passes save option to npm uninstall", async () => {
 				const extensionName = "extension1";
-				const argsPassedToNpmUninstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(
-					extensionName
-				);
+				const argsPassedToNpmUninstall =
+					await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(
+						extensionName
+					);
 				const expectedNpmConfg: any = { save: true };
 				assert.deepStrictEqual(
 					argsPassedToNpmUninstall.config,
@@ -824,17 +810,17 @@ describe("extensibilityService", () => {
 			it("passes full path to extensions dir for uninstallation", async () => {
 				const extensionName = "extension1";
 				const testInjector = getTestInjector();
-				const settingsService: ISettingsService = testInjector.resolve(
-					"settingsService"
-				);
+				const settingsService: ISettingsService =
+					testInjector.resolve("settingsService");
 				const profileDir = "my-profile-dir";
 				settingsService.getProfileDir = () => profileDir;
 
 				const expectedDirForUninstall = path.join(profileDir, "extensions");
-				const argsPassedToNpmUninstall = await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(
-					extensionName,
-					testInjector
-				);
+				const argsPassedToNpmUninstall =
+					await getArgsPassedToNpmUninstallDuringUninstallExtensionCall(
+						extensionName,
+						testInjector
+					);
 				assert.deepStrictEqual(
 					argsPassedToNpmUninstall.pathToSave,
 					expectedDirForUninstall
@@ -858,9 +844,8 @@ describe("extensibilityService", () => {
 				p?: string
 			): Promise<any> => [extensionName];
 
-			const extensibilityService: IExtensibilityService = testInjector.resolve(
-				ExtensibilityService
-			);
+			const extensibilityService: IExtensibilityService =
+				testInjector.resolve(ExtensibilityService);
 			await extensibilityService.uninstallExtension(extensionName);
 		});
 	});
@@ -875,9 +860,8 @@ describe("extensibilityService", () => {
 				throw new Error(expectedErrorMessage);
 			};
 
-			const extensibilityService: IExtensibilityService = testInjector.resolve(
-				ExtensibilityService
-			);
+			const extensibilityService: IExtensibilityService =
+				testInjector.resolve(ExtensibilityService);
 			assert.throws(
 				() => extensibilityService.getInstalledExtensions(),
 				expectedErrorMessage
@@ -889,9 +873,8 @@ describe("extensibilityService", () => {
 			const fs: IFileSystem = testInjector.resolve("fs");
 			fs.exists = (pathToCheck: string) => false;
 
-			const extensibilityService: IExtensibilityService = testInjector.resolve(
-				ExtensibilityService
-			);
+			const extensibilityService: IExtensibilityService =
+				testInjector.resolve(ExtensibilityService);
 			assert.isNull(extensibilityService.getInstalledExtensions());
 		});
 
@@ -903,9 +886,8 @@ describe("extensibilityService", () => {
 				return {};
 			};
 
-			const extensibilityService: IExtensibilityService = testInjector.resolve(
-				ExtensibilityService
-			);
+			const extensibilityService: IExtensibilityService =
+				testInjector.resolve(ExtensibilityService);
 			assert.isUndefined(extensibilityService.getInstalledExtensions());
 		});
 
@@ -923,9 +905,8 @@ describe("extensibilityService", () => {
 				return { dependencies };
 			};
 
-			const extensibilityService: IExtensibilityService = testInjector.resolve(
-				ExtensibilityService
-			);
+			const extensibilityService: IExtensibilityService =
+				testInjector.resolve(ExtensibilityService);
 			assert.deepStrictEqual(
 				extensibilityService.getInstalledExtensions(),
 				dependencies
@@ -952,16 +933,14 @@ describe("extensibilityService", () => {
 				config?: any
 			): Promise<any> => ({ name: extensionName });
 
-			const requireService: IRequireService = testInjector.resolve(
-				"requireService"
-			);
+			const requireService: IRequireService =
+				testInjector.resolve("requireService");
 			requireService.require = (pathToRequire: string) => {
 				throw new Error(expectedErrorMessage);
 			};
 
-			const extensibilityService: IExtensibilityService = testInjector.resolve(
-				ExtensibilityService
-			);
+			const extensibilityService: IExtensibilityService =
+				testInjector.resolve(ExtensibilityService);
 			let isErrorRaised = false;
 			try {
 				await extensibilityService.loadExtension(extensionName);
@@ -1015,8 +994,7 @@ describe("extensibilityService", () => {
 				},
 			},
 			{
-				name:
-					"returns correct data when user enters exact hierarchical command name",
+				name: "returns correct data when user enters exact hierarchical command name",
 				inputStrings: ["hierarchical", "command"],
 				extensionsDefinitions: [
 					{
@@ -1059,8 +1037,7 @@ describe("extensibilityService", () => {
 				expectedResult: null,
 			},
 			{
-				name:
-					"returns correct data when user enters hierarchical command and args for this command",
+				name: "returns correct data when user enters hierarchical command and args for this command",
 				inputStrings: ["valid", "command", "with", "lots", "of", "params"],
 				extensionsDefinitions: [
 					{
@@ -1089,8 +1066,7 @@ describe("extensibilityService", () => {
 				},
 			},
 			{
-				name:
-					"returns correct data when user enters the default value of hierarchical command",
+				name: "returns correct data when user enters the default value of hierarchical command",
 				inputStrings: ["valid", "and", "lots", "of", "params"],
 				extensionsDefinitions: [
 					{
@@ -1105,8 +1081,7 @@ describe("extensibilityService", () => {
 				},
 			},
 			{
-				name:
-					"returns correct data when user enters the full default value of hierarchical command",
+				name: "returns correct data when user enters the full default value of hierarchical command",
 				inputStrings: ["valid", "command", "and", "lots", "of", "params"],
 				extensionsDefinitions: [
 					{
@@ -1121,8 +1096,7 @@ describe("extensibilityService", () => {
 				},
 			},
 			{
-				name:
-					"returns correct data when user enters the default value of multilevel hierarchical command",
+				name: "returns correct data when user enters the default value of multilevel hierarchical command",
 				inputStrings: [
 					"valid",
 					"multilevel",
@@ -1151,8 +1125,7 @@ describe("extensibilityService", () => {
 				},
 			},
 			{
-				name:
-					"returns correct data when user enters the full default value of multilevel hierarchical command",
+				name: "returns correct data when user enters the full default value of multilevel hierarchical command",
 				inputStrings: [
 					"valid",
 					"multilevel",
@@ -1259,9 +1232,8 @@ describe("extensibilityService", () => {
 					return result;
 				};
 
-				const extensibilityService = testInjector.resolve<
-					IExtensibilityService
-				>(ExtensibilityService);
+				const extensibilityService =
+					testInjector.resolve<IExtensibilityService>(ExtensibilityService);
 				const inputData = {
 					inputStrings: testCase.inputStrings,
 					commandDelimiter: CommandsDelimiters.HierarchicalCommand,
@@ -1269,9 +1241,10 @@ describe("extensibilityService", () => {
 						CommandsDelimiters.DefaultHierarchicalCommand,
 				};
 
-				const actualExtensionName = await extensibilityService.getExtensionNameWhereCommandIsRegistered(
-					inputData
-				);
+				const actualExtensionName =
+					await extensibilityService.getExtensionNameWhereCommandIsRegistered(
+						inputData
+					);
 				assert.deepStrictEqual(actualExtensionName, testCase.expectedResult);
 			});
 		});
@@ -1292,12 +1265,12 @@ describe("extensibilityService", () => {
 				isGetRegistryPackageDataCalled = true;
 			};
 
-			const extensibilityService = testInjector.resolve<IExtensibilityService>(
-				ExtensibilityService
-			);
-			const actualExtensionName = await extensibilityService.getExtensionNameWhereCommandIsRegistered(
-				null
-			);
+			const extensibilityService =
+				testInjector.resolve<IExtensibilityService>(ExtensibilityService);
+			const actualExtensionName =
+				await extensibilityService.getExtensionNameWhereCommandIsRegistered(
+					null
+				);
 			assert.deepStrictEqual(actualExtensionName, null);
 			assert.isFalse(
 				isGetRegistryPackageDataCalled,
