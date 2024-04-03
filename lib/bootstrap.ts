@@ -195,8 +195,8 @@ injector.requireCommand("fonts", "./commands/fonts");
 injector.requireCommand("prepare", "./commands/prepare");
 injector.requireCommand("build|ios", "./commands/build");
 injector.requireCommand("build|android", "./commands/build");
-// injector.requireCommand("build|vision", "./commands/build");
-// injector.requireCommand("build|visionos", "./commands/build");
+injector.requireCommand("build|vision", "./commands/build");
+injector.requireCommand("build|visionos", "./commands/build");
 injector.requireCommand("deploy", "./commands/deploy");
 
 injector.require("testExecutionService", "./services/test-execution-service");
