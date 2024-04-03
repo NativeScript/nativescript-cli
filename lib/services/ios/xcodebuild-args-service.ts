@@ -172,7 +172,6 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		// references: https://medium.com/@iostechset/why-cocoapods-eats-app-icons-79fe729808d4
 		// https://github.com/CocoaPods/CocoaPods/issues/7003
 
-		// deploy target
 		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
 		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
@@ -182,14 +181,13 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			extraArgs.push(`${deployTargetProperty}=${deployTargetVersion}`);
 		}
 
-		// macros
-		const bootProperty = "NS_SWIFTUI_BOOT";
-		const bootValue = this.$xcconfigService.readPropertyValue(
+		const swiftUIBootProperty = "NS_SWIFTUI_BOOT";
+		const swiftUIBootValue = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
-			bootProperty
+			swiftUIBootProperty
 		);
-		if (bootValue) {
-			extraArgs.push(`${bootProperty}=${bootValue}`);
+		if (swiftUIBootValue) {
+			extraArgs.push(`${swiftUIBootProperty}=${swiftUIBootValue}`);
 		}
 
 		if (this.$fs.exists(xcworkspacePath)) {

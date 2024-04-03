@@ -65,6 +65,7 @@ interface INativeSourceCodeGroup {
 
 export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
+export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
@@ -76,14 +77,13 @@ const getPlatformSdkName = (buildData: IBuildData): string => {
 		.resolve("devicePlatformsConstants")
 		.isvisionOS(buildData.platform);
 
-	if (forDevice) {
-		// todo: check on this once Vision Pro is released - we might need to change the sdk name
-		return DevicePlatformSdkName;
-	}
 	if (isvisionOS) {
-		return VisionSimulatorPlatformSdkName;
+		return forDevice
+			? VisionDevicePlatformSdkName
+			: VisionSimulatorPlatformSdkName;
 	}
-	return SimulatorPlatformSdkName;
+
+	return forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
 };
 
 const getConfigurationName = (release: boolean): string => {

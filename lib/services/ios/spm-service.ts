@@ -27,6 +27,7 @@ export class SPMService implements ISPMService {
 		return spmPackages;
 	}
 
+	// note: this is not used anywhere at the moment.
 	// public hasSPMPackages(projectData: IProjectData): boolean {
 	// 	return this.getSPMPackages(projectData).length > 0;
 	// }
@@ -54,7 +55,8 @@ export class SPMService implements ISPMService {
 			});
 			await project.load();
 
-			if (platformData.platformNameLowerCase === "ios" && !project.ios) {
+			// note: in trapeze both visionOS and iOS are handled by the ios project.
+			if (!project.ios) {
 				this.$logger.trace("SPM: no iOS project found via trapeze.");
 				return;
 			}
