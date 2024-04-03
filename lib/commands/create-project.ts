@@ -15,6 +15,8 @@ export class CreateProjectCommand implements ICommand {
 	private static BlankTemplateDescription = "A blank app";
 	private static BlankTsTemplateKey = "Blank Typescript";
 	private static BlankTsTemplateDescription = "A blank typescript app";
+	private static BlankVisionTemplateKey = "visionOS";
+	private static BlankVisionTemplateDescription = "A visionOS app";
 	private static HelloWorldTemplateKey = "Hello World";
 	private static HelloWorldTemplateDescription = "A Hello World app";
 	private static DrawerTemplateKey = "SideDrawer";
@@ -58,15 +60,43 @@ export class CreateProjectCommand implements ICommand {
 
 		let projectName = args[0];
 		let selectedTemplate: string;
-		if (this.$options.js) {
-			selectedTemplate = constants.JAVASCRIPT_NAME;
-		} else if (this.$options.vue && this.$options.tsc) {
+		if (
+			this.$options["vision-ng"] ||
+			(this.$options.vision && this.$options.ng)
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-ng"];
+		} else if (
+			this.$options["vision-react"] ||
+			(this.$options.vision && this.$options.react)
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-react"];
+		} else if (this.$options["vision-solid"]) {
+			// note: we don't have solid templates or --solid
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-solid"];
+		} else if (
+			this.$options["vision-svelte"] ||
+			(this.$options.vision && this.$options.svelte)
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-svelte"];
+		} else if (
+			this.$options["vision-vue"] ||
+			(this.$options.vision && (this.$options.vue || this.$options.vuejs))
+		) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-vue"];
+		} else if (
+			(this.$options.vue || this.$options.vuejs) &&
+			this.$options.tsc
+		) {
 			selectedTemplate = "@nativescript/template-blank-vue-ts";
+		} else if (this.$options.vision) {
+			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision"];
+		} else if (this.$options.js) {
+			selectedTemplate = constants.JAVASCRIPT_NAME;
 		} else if (this.$options.tsc) {
 			selectedTemplate = constants.TYPESCRIPT_NAME;
 		} else if (this.$options.ng) {
 			selectedTemplate = constants.ANGULAR_NAME;
-		} else if (this.$options.vue) {
+		} else if (this.$options.vue || this.$options.vuejs) {
 			selectedTemplate = constants.VUE_NAME;
 		} else if (this.$options.react) {
 			selectedTemplate = constants.REACT_NAME;
@@ -262,6 +292,11 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				value: "@nativescript/template-tab-navigation-ts",
 				description: CreateProjectCommand.TabsTemplateDescription,
 			},
+			{
+				key: CreateProjectCommand.BlankVisionTemplateKey,
+				value: "@nativescript/template-hello-world-ts-vision",
+				description: CreateProjectCommand.BlankVisionTemplateDescription,
+			},
 		];
 
 		return templates;
@@ -284,6 +319,11 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				value: "@nativescript/template-tab-navigation-ng",
 				description: CreateProjectCommand.TabsTemplateDescription,
 			},
+			{
+				key: CreateProjectCommand.BlankVisionTemplateKey,
+				value: "@nativescript/template-hello-world-ng-vision",
+				description: CreateProjectCommand.BlankVisionTemplateDescription,
+			},
 		];
 
 		return templates;
@@ -296,6 +336,11 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				value: constants.RESERVED_TEMPLATE_NAMES.react,
 				description: CreateProjectCommand.HelloWorldTemplateDescription,
 			},
+			{
+				key: CreateProjectCommand.BlankVisionTemplateKey,
+				value: "@nativescript/template-blank-react-vision",
+				description: CreateProjectCommand.BlankVisionTemplateDescription,
+			},
 		];
 
 		return templates;
@@ -307,6 +352,11 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.svelte,
 				description: CreateProjectCommand.HelloWorldTemplateDescription,
+			},
+			{
+				key: CreateProjectCommand.BlankVisionTemplateKey,
+				value: "@nativescript/template-blank-svelte-vision",
+				description: CreateProjectCommand.BlankVisionTemplateDescription,
 			},
 		];
 
@@ -335,6 +385,11 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				value: "@nativescript/template-tab-navigation-vue",
 				description: CreateProjectCommand.TabsTemplateDescription,
 			},
+			{
+				key: CreateProjectCommand.BlankVisionTemplateKey,
+				value: "@nativescript/template-blank-vue-vision",
+				description: CreateProjectCommand.BlankVisionTemplateDescription,
+			},
 		];
 
 		return templates;
@@ -346,6 +401,33 @@ can skip this prompt next time using the --template option, or the --ng, --react
 
 		const greyDollarSign = color.grey("$");
 		this.$logger.clearScreen();
+		let runDebugNotes: Array<string> = [];
+		if (
+			this.$options.vision ||
+			this.$options["vision-ng"] ||
+			this.$options["vision-react"] ||
+			this.$options["vision-solid"] ||
+			this.$options["vision-svelte"] ||
+			this.$options["vision-vue"]
+		) {
+			runDebugNotes = [
+				`Run the project on Vision Pro with:`,
+				"",
+				`  ${greyDollarSign} ${color.green("ns run visionos --no-hmr")}`,
+			];
+		} else {
+			runDebugNotes = [
+				`Run the project on multiple devices:`,
+				"",
+				`  ${greyDollarSign} ${color.green("ns run ios")}`,
+				`  ${greyDollarSign} ${color.green("ns run android")}`,
+				"",
+				"Debug the project with Chrome DevTools:",
+				"",
+				`  ${greyDollarSign} ${color.green("ns debug ios")}`,
+				`  ${greyDollarSign} ${color.green("ns debug android")}`,
+			];
+		}
 		this.$logger.info(
 			[
 				[
@@ -358,15 +440,7 @@ can skip this prompt next time using the --template option, or the --ng, --react
 					`cd ${relativePath}`
 				)} and then:`,
 				"",
-				`Run the project on multiple devices:`,
-				"",
-				`  ${greyDollarSign} ${color.green("ns run ios")}`,
-				`  ${greyDollarSign} ${color.green("ns run android")}`,
-				"",
-				"Debug the project with Chrome DevTools:",
-				"",
-				`  ${greyDollarSign} ${color.green("ns debug ios")}`,
-				`  ${greyDollarSign} ${color.green("ns debug android")}`,
+				...runDebugNotes,
 				``,
 				`For more options consult the docs or run ${color.green("ns --help")}`,
 				"",

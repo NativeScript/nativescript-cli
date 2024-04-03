@@ -15,25 +15,32 @@ export class SPMService implements ISPMService {
 		private $xcodebuildArgsService: IXcodebuildArgsService
 	) {}
 
-	public getSPMPackages(projectData: IProjectData): IosSPMPackageDefinition[] {
+	public getSPMPackages(
+		projectData: IProjectData,
+		platform: string
+	): IosSPMPackageDefinition[] {
 		const spmPackages = this.$projectConfigService.getValue(
-			"ios.SPMPackages",
+			`${platform}.SPMPackages`,
 			[]
 		);
 
 		return spmPackages;
 	}
 
-	public hasSPMPackages(projectData: IProjectData): boolean {
-		return this.getSPMPackages(projectData).length > 0;
-	}
+	// note: this is not used anywhere at the moment.
+	// public hasSPMPackages(projectData: IProjectData): boolean {
+	// 	return this.getSPMPackages(projectData).length > 0;
+	// }
 
 	public async applySPMPackages(
 		platformData: IPlatformData,
 		projectData: IProjectData
 	) {
 		try {
-			const spmPackages = this.getSPMPackages(projectData);
+			const spmPackages = this.getSPMPackages(
+				projectData,
+				platformData.platformNameLowerCase
+			);
 
 			if (!spmPackages.length) {
 				this.$logger.trace("SPM: no SPM packages to apply.");
@@ -48,6 +55,7 @@ export class SPMService implements ISPMService {
 			});
 			await project.load();
 
+			// note: in trapeze both visionOS and iOS are handled by the ios project.
 			if (!project.ios) {
 				this.$logger.trace("SPM: no iOS project found via trapeze.");
 				return;

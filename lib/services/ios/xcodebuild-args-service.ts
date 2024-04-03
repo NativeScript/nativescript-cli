@@ -13,8 +13,11 @@ import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import * as _ from "lodash";
 
-const DevicePlatformSdkName = "iphoneos";
-const SimulatorPlatformSdkName = "iphonesimulator";
+import {
+	DevicePlatformSdkName,
+	SimulatorPlatformSdkName,
+	VisionSimulatorPlatformSdkName,
+} from "../ios-project-service";
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
 	constructor(
@@ -39,10 +42,23 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			args = args.concat(["CODE_SIGN_IDENTITY="]);
 		}
 
+		let destination = "generic/platform=iOS Simulator";
+
+		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
+			buildConfig.platform
+		);
+
+		if (isvisionOS) {
+			destination = "platform=visionOS Simulator";
+			if (buildConfig._device) {
+				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
+			}
+		}
+
 		args = args
 			.concat([
 				"-destination",
-				"generic/platform=iOS Simulator",
+				destination,
 				"build",
 				"-configuration",
 				buildConfig.release ? Configurations.Release : Configurations.Debug,
@@ -51,7 +67,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				this.getBuildCommonArgs(
 					platformData,
 					projectData,
-					SimulatorPlatformSdkName
+					isvisionOS ? VisionSimulatorPlatformSdkName : SimulatorPlatformSdkName
 				)
 			)
 			.concat(this.getBuildLoggingArgs())
@@ -70,9 +86,20 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.getBuildOutputPath(buildConfig),
 			projectData.projectName + ".xcarchive"
 		);
+		let destination = "generic/platform=iOS";
+		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
+			buildConfig.platform
+		);
+
+		if (isvisionOS) {
+			destination = "platform=visionOS";
+			if (buildConfig._device) {
+				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
+			}
+		}
 		const args = [
 			"-destination",
-			"generic/platform=iOS",
+			destination,
 			"archive",
 			"-archivePath",
 			archivePath,
@@ -99,6 +126,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	): Promise<string[]> {
 		const args = [];
 
+		if (this.$devicePlatformsConstants.isvisionOS(buildConfig.platform)) {
+			args.push("ONLY_ACTIVE_ARCH=YES");
+			return args;
+		}
+
 		const devicesArchitectures = buildConfig.buildForDevice
 			? await this.getArchitecturesFromConnectedDevices(buildConfig)
 			: [];
@@ -117,7 +149,6 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.projectRoot,
 			`${projectData.projectName}.xcworkspace`
 		);
-
 		// Introduced in Xcode 14+
 		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
 		const skipPackageValidation = "-skipPackagePluginValidation";
@@ -133,12 +164,14 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.normalizedPlatformName,
 			constants.BUILD_XCCONFIG_FILE_NAME
 		);
-		// Only include explit deploy target if one is defined
+
+		// Only include explicit properties from build.xcconfig
 		// Note: we could include entire file via -xcconfig flag
 		// however doing so introduces unwanted side effects
 		// like cocoapods issues related to ASSETCATALOG_COMPILER_APPICON_NAME
 		// references: https://medium.com/@iostechset/why-cocoapods-eats-app-icons-79fe729808d4
 		// https://github.com/CocoaPods/CocoaPods/issues/7003
+
 		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
 		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
@@ -146,6 +179,15 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		);
 		if (deployTargetVersion) {
 			extraArgs.push(`${deployTargetProperty}=${deployTargetVersion}`);
+		}
+
+		const swiftUIBootProperty = "NS_SWIFTUI_BOOT";
+		const swiftUIBootValue = this.$xcconfigService.readPropertyValue(
+			BUILD_SETTINGS_FILE_PATH,
+			swiftUIBootProperty
+		);
+		if (swiftUIBootValue) {
+			extraArgs.push(`${swiftUIBootProperty}=${swiftUIBootValue}`);
 		}
 
 		if (this.$fs.exists(xcworkspacePath)) {

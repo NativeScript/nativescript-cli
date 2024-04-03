@@ -180,17 +180,23 @@ injector.requireCommand("platform|update", "./commands/update-platform");
 injector.requireCommand("run|*all", "./commands/run");
 injector.requireCommand("run|ios", "./commands/run");
 injector.requireCommand("run|android", "./commands/run");
+injector.requireCommand("run|vision", "./commands/run");
+injector.requireCommand("run|visionos", "./commands/run");
 injector.requireCommand("typings", "./commands/typings");
 
 injector.requireCommand("preview", "./commands/preview");
 
 injector.requireCommand("debug|ios", "./commands/debug");
 injector.requireCommand("debug|android", "./commands/debug");
+injector.requireCommand("debug|vision", "./commands/debug");
+injector.requireCommand("debug|visionos", "./commands/debug");
 injector.requireCommand("fonts", "./commands/fonts");
 
 injector.requireCommand("prepare", "./commands/prepare");
 injector.requireCommand("build|ios", "./commands/build");
 injector.requireCommand("build|android", "./commands/build");
+injector.requireCommand("build|vision", "./commands/build");
+injector.requireCommand("build|visionos", "./commands/build");
 injector.requireCommand("deploy", "./commands/deploy");
 
 injector.require("testExecutionService", "./services/test-execution-service");
@@ -198,6 +204,8 @@ injector.requireCommand("dev-test|android", "./commands/test");
 injector.requireCommand("dev-test|ios", "./commands/test");
 injector.requireCommand("test|android", "./commands/test");
 injector.requireCommand("test|ios", "./commands/test");
+// injector.requireCommand("test|vision", "./commands/test");
+// injector.requireCommand("test|visionos", "./commands/test");
 injector.requireCommand("test|init", "./commands/test-init");
 injector.requireCommand("dev-generate-help", "./commands/generate-help");
 

@@ -70,9 +70,21 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			versions: true,
 		});
 
-		return semver
-			.maxSatisfying(data?.versions ?? data, versionRange)
-			?.toString();
+		let versions;
+
+		if (typeof data === "string") {
+			versions = [data];
+		} else if (data?.versions) {
+			versions = data.versions;
+		} else {
+			versions = data;
+		}
+
+		if (!versions || !Array.isArray(versions)) {
+			return null;
+		}
+
+		return semver.maxSatisfying(versions, versionRange)?.toString();
 	}
 
 	public async getMaxSatisfyingVersionSafe(

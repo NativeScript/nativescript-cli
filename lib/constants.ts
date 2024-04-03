@@ -22,6 +22,7 @@ export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
 export const TNS_IOS_RUNTIME_NAME = "tns-ios";
 export const SCOPED_ANDROID_RUNTIME_NAME = "@nativescript/android";
 export const SCOPED_IOS_RUNTIME_NAME = "@nativescript/ios";
+export const SCOPED_VISIONOS_RUNTIME_NAME = "@nativescript/visionos";
 export const PACKAGE_JSON_FILE_NAME = "package.json";
 export const PACKAGE_LOCK_JSON_FILE_NAME = "package-lock.json";
 export const ANDROID_DEVICE_APP_ROOT_TEMPLATE = `/data/data/%s/files`;
@@ -67,7 +68,7 @@ export const APK_EXTENSION_NAME = ".apk";
 export const AAB_EXTENSION_NAME = ".aab";
 export const APKS_EXTENSION_NAME = ".apks";
 export const HASHES_FILE_NAME = ".nshashes";
-export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
+export const TNS_NATIVE_SOURCE_GROUP_NAME = "NSNativeSources";
 export const NATIVE_SOURCE_FOLDER = "src";
 export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 export const NATIVE_EXTENSION_FOLDER = "extensions";
@@ -144,6 +145,13 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	react: "@nativescript/template-blank-react",
 	reactjs: "@nativescript/template-blank-react",
 	svelte: "@nativescript/template-blank-svelte",
+	// vision templates
+	vision: "@nativescript/template-hello-world-ts-vision",
+	"vision-vue": "@nativescript/template-blank-vue-vision",
+	"vision-ng": "@nativescript/template-hello-world-ng-vision",
+	"vision-react": "@nativescript/template-blank-react-vision",
+	"vision-solid": "@nativescript/template-blank-solid-vision",
+	"vision-svelte": "@nativescript/template-blank-svelte-vision",
 };
 
 export const ANALYTICS_LOCAL_TEMPLATE_PREFIX = "localTemplate_";
@@ -160,7 +168,8 @@ export class ITMSConstants {
 }
 
 class ItunesConnectApplicationTypesClass
-	implements IiTunesConnectApplicationType {
+	implements IiTunesConnectApplicationType
+{
 	public iOS = "iOS App";
 	public Mac = "Mac OS X App";
 }
@@ -168,7 +177,8 @@ class ItunesConnectApplicationTypesClass
 export const iOSAppResourcesFolderName = "iOS";
 export const androidAppResourcesFolderName = "Android";
 
-export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
+export const ItunesConnectApplicationTypes =
+	new ItunesConnectApplicationTypesClass();
 export const VUE_NAME = "vue";
 export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
@@ -329,9 +339,13 @@ export const PLUGINS_BUILD_DATA_FILENAME = ".ns-plugins-build-data.json";
 export const enum PlatformTypes {
 	ios = "ios",
 	android = "android",
+	visionos = "visionos",
 }
 
-export type SupportedPlatform = PlatformTypes.ios | PlatformTypes.android;
+export type SupportedPlatform =
+	| PlatformTypes.ios
+	| PlatformTypes.android
+	| PlatformTypes.visionos;
 
 export const PODFILE_NAME = "Podfile";
 
