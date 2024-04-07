@@ -144,6 +144,8 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	angular: "@nativescript/template-hello-world-ng",
 	react: "@nativescript/template-blank-react",
 	reactjs: "@nativescript/template-blank-react",
+	solid: "@nativescript/template-blank-solid",
+	solidjs: "@nativescript/template-blank-solid",
 	svelte: "@nativescript/template-blank-svelte",
 	// vision templates
 	vision: "@nativescript/template-hello-world-ts-vision",
@@ -184,10 +186,12 @@ export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
 export const TYPESCRIPT_NAME = "typescript";
 export const REACT_NAME = "react";
+export const SOLID_NAME = "solid";
 export const SVELTE_NAME = "svelte";
 export const NgFlavorName = "Angular";
 export const VueFlavorName = "Vue.js";
 export const ReactFlavorName = "React";
+export const SolidFlavorName = "Solid";
 export const SvelteFlavorName = "Svelte";
 export const TsFlavorName = "Plain TypeScript";
 export const JsFlavorName = "Plain JavaScript";
@@ -197,6 +201,7 @@ export class ProjectTypes {
 	public static TsFlavorName = "Pure TypeScript";
 	public static JsFlavorName = "Pure JavaScript";
 	public static ReactFlavorName = "React";
+	public static SolidFlavorName = "Solid";
 	public static SvelteFlavorName = "Svelte";
 }
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
