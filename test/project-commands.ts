@@ -33,6 +33,10 @@ const expectedFlavorChoices = [
 	},
 	{ key: "Vue.js", description: "Learn more at https://nativescript.org/vue" },
 	{
+		key: "Solid",
+		description: "Learn more at https://www.solidjs.com",
+	},
+	{
 		key: "Svelte",
 		description: "Learn more at https://svelte-native.technology",
 	},
@@ -111,6 +115,10 @@ const expectedTemplateChoices: Record<string, any[]> = {
 		templateChoices.helloWorld,
 		templateChoices.vision,
 	],
+	// [constants.SolidFlavorName]: [
+	// 	templateChoices.helloWorld,
+	// 	templateChoices.vision,
+	// ],
 };
 
 class ProjectServiceMock implements IProjectService {
