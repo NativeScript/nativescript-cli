@@ -673,6 +673,7 @@ interface IOptions
 	ng: boolean;
 	angular: boolean;
 	react: boolean;
+	solid: boolean;
 	svelte: boolean;
 	vue: boolean;
 	vuejs: boolean;

@@ -49,12 +49,13 @@ export class CreateProjectCommand implements ICommand {
 				this.$options.ng ||
 				this.$options.vue ||
 				this.$options.react ||
+				this.$options.solid ||
 				this.$options.svelte ||
 				this.$options.js) &&
 			this.$options.template
 		) {
 			this.$errors.failWithHelp(
-				"You cannot use a flavor option like --ng, --vue, --react, --svelte, --tsc and --js together with --template."
+				"You cannot use a flavor option like --ng, --vue, --react, --solid, --svelte, --tsc and --js together with --template."
 			);
 		}
 
@@ -70,8 +71,10 @@ export class CreateProjectCommand implements ICommand {
 			(this.$options.vision && this.$options.react)
 		) {
 			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-react"];
-		} else if (this.$options["vision-solid"]) {
-			// note: we don't have solid templates or --solid
+		} else if (
+			this.$options["vision-solid"] ||
+			(this.$options.vision && this.$options.solid)
+		) {
 			selectedTemplate = constants.RESERVED_TEMPLATE_NAMES["vision-solid"];
 		} else if (
 			this.$options["vision-svelte"] ||
@@ -98,6 +101,8 @@ export class CreateProjectCommand implements ICommand {
 			selectedTemplate = constants.ANGULAR_NAME;
 		} else if (this.$options.vue || this.$options.vuejs) {
 			selectedTemplate = constants.VUE_NAME;
+		} else if (this.$options.solid) {
+			selectedTemplate = constants.SOLID_NAME;
 		} else if (this.$options.react) {
 			selectedTemplate = constants.REACT_NAME;
 		} else if (this.$options.svelte) {
@@ -171,6 +176,10 @@ export class CreateProjectCommand implements ICommand {
 					description: "Learn more at https://nativescript.org/vue",
 				},
 				{
+					key: constants.SolidFlavorName,
+					description: "Learn more at https://www.solidjs.com",
+				},
+				{
 					key: constants.SvelteFlavorName,
 					description: "Learn more at https://svelte-native.technology",
 				},
@@ -220,6 +229,10 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			}
 			case constants.VueFlavorName: {
 				selectedFlavorTemplates.push(...this.getVueTemplates());
+				break;
+			}
+			case constants.SolidFlavorName: {
+				selectedFlavorTemplates.push(...this.getSolidTemplates());
 				break;
 			}
 			case constants.SvelteFlavorName: {
@@ -339,6 +352,23 @@ can skip this prompt next time using the --template option, or the --ng, --react
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
 				value: "@nativescript/template-blank-react-vision",
+				description: CreateProjectCommand.BlankVisionTemplateDescription,
+			},
+		];
+
+		return templates;
+	}
+
+	private getSolidTemplates() {
+		const templates = [
+			{
+				key: CreateProjectCommand.HelloWorldTemplateKey,
+				value: constants.RESERVED_TEMPLATE_NAMES.solid,
+				description: CreateProjectCommand.HelloWorldTemplateDescription,
+			},
+			{
+				key: CreateProjectCommand.BlankVisionTemplateKey,
+				value: "@nativescript/template-blank-solid-vision",
 				description: CreateProjectCommand.BlankVisionTemplateDescription,
 			},
 		];
