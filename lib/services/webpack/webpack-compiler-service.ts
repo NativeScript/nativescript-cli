@@ -599,9 +599,14 @@ export class WebpackCompilerService
 
 	private getWebpackExecutablePath(projectData: IProjectData): string {
 		if (this.isWebpack5(projectData)) {
-			const packagePath = resolvePackagePath("@nativescript/webpack", {
+			let packagePath = resolvePackagePath("@akylas/nativescript-webpack", {
 				paths: [projectData.projectDir],
 			});
+			if (!packagePath) {
+				packagePath = resolvePackagePath(WEBPACK_PLUGIN_NAME, {
+					paths: [projectData.projectDir],
+				});
+			}
 
 			if (packagePath) {
 				return path.resolve(packagePath, "dist", "bin", "index.js");
@@ -620,9 +625,14 @@ export class WebpackCompilerService
 	}
 
 	private isWebpack5(projectData: IProjectData): boolean {
-		const packageJSONPath = resolvePackageJSONPath("@nativescript/webpack", {
+		let packageJSONPath = resolvePackageJSONPath("@akylas/nativescript-webpack", {
 			paths: [projectData.projectDir],
 		});
+		if (!packageJSONPath) {
+			packageJSONPath = resolvePackageJSONPath(WEBPACK_PLUGIN_NAME, {
+				paths: [projectData.projectDir],
+			});
+		}
 
 		if (packageJSONPath) {
 			const packageData = this.$fs.readJson(packageJSONPath);

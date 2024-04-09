@@ -147,7 +147,7 @@ export class MigrateController
 		},
 		{
 			packageName: "nativescript-dev-webpack",
-			replaceWith: "@nativescript/webpack",
+			replaceWith: constants.WEBPACK_PLUGIN_NAME,
 			shouldRemove: true,
 			isDev: true,
 			async shouldMigrateAction() {
@@ -156,7 +156,7 @@ export class MigrateController
 			migrateAction: this.migrateWebpack.bind(this),
 		},
 		{
-			packageName: "@nativescript/webpack",
+			packageName: constants.WEBPACK_PLUGIN_NAME,
 			minVersion: "3.0.0",
 			desiredVersion: "~5.0.0",
 			shouldAddIfMissing: true,
@@ -1566,7 +1566,7 @@ export class MigrateController
 		);
 
 		try {
-			const scopedWebpackPackage = `@nativescript/webpack`;
+			const scopedWebpackPackage = constants.WEBPACK_PLUGIN_NAME;
 			const resolvedVersion =
 				await this.$packageInstallationManager.getMaxSatisfyingVersion(
 					scopedWebpackPackage,
