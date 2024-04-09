@@ -599,7 +599,8 @@ export class WebpackCompilerService
 
 	private getWebpackExecutablePath(projectData: IProjectData): string {
 		if (this.isWebpack5(projectData)) {
-			const packagePath = resolvePackagePath("@nativescript/webpack", {
+			const packageName = projectData.nsConfig.webpackPackageName || WEBPACK_PLUGIN_NAME;
+			let packagePath = resolvePackagePath(packageName, {
 				paths: [projectData.projectDir],
 			});
 
@@ -620,7 +621,8 @@ export class WebpackCompilerService
 	}
 
 	private isWebpack5(projectData: IProjectData): boolean {
-		const packageJSONPath = resolvePackageJSONPath("@nativescript/webpack", {
+		const packageName = projectData.nsConfig.webpackPackageName || WEBPACK_PLUGIN_NAME;
+		const packageJSONPath = resolvePackageJSONPath(packageName, {
 			paths: [projectData.projectDir],
 		});
 

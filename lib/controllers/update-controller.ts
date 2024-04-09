@@ -36,7 +36,7 @@ export class UpdateController
 
 		// devDependencies
 		{
-			packageName: "@nativescript/webpack",
+			packageName: constants.WEBPACK_PLUGIN_NAME,
 			isDev: true,
 		},
 		{

@@ -103,6 +103,7 @@ interface INsConfigPlaform {
 
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
+	runtimePackageName?: string
 }
 
 interface INSConfigVisionOS extends INsConfigIOS {}
@@ -143,6 +144,8 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableMultithreadedJavascript?: boolean;
 
 	gradleVersion?: string;
+
+	runtimePackageName?: string
 }
 
 interface INsConfigHooks {
@@ -158,6 +161,7 @@ interface INsConfig {
 	buildPath?: string;
 	shared?: boolean;
 	overridePods?: string;
+	webpackPackageName?: string;
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;

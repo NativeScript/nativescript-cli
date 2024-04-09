@@ -457,10 +457,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	private async getLatestRuntimeVersion(): Promise<string> {
 		let runtimeVersion: string = null;
-
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		try {
 			let result = await this.$packageManager.view(
-				SCOPED_ANDROID_RUNTIME_NAME,
+				packageName,
 				{
 					"dist-tags": true,
 				}
@@ -472,7 +472,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				`Error while getting latest android runtime version from view command: ${err}`
 			);
 			const registryData = await this.$packageManager.getRegistryPackageData(
-				SCOPED_ANDROID_RUNTIME_NAME
+				packageName
 			);
 			runtimeVersion = registryData["dist-tags"].latest;
 		}
@@ -496,9 +496,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			};
 		}
 
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		// try reading from installed runtime first before reading from the npm registry...
 		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
-			SCOPED_ANDROID_RUNTIME_NAME,
+			packageName,
 			{
 				paths: [this.$projectData.projectDir],
 			}
@@ -551,10 +552,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			return localVersionInfo;
 		}
 
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		// fallback to reading from npm...
 		try {
 			let output = await this.$packageManager.view(
-				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
+				`${packageName}@${runtimeVersion}`,
 				{ version_info: true }
 			);
 			output = output?.["version_info"] ?? output;
@@ -569,7 +571,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				 *
 				 */
 				output = await this.$packageManager.view(
-					`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
+					`${packageName}@${runtimeVersion}`,
 					{ gradle: true }
 				);
 				output = output?.["gradle"] ?? output;
@@ -589,7 +591,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				`Error while getting gradle data for android runtime from view command: ${err}`
 			);
 			const registryData = await this.$packageManager.getRegistryPackageData(
-				SCOPED_ANDROID_RUNTIME_NAME
+				packageName
 			);
 			runtimeGradleVersions = registryData.versions[runtimeVersion];
 		}
