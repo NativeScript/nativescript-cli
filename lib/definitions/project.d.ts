@@ -159,6 +159,7 @@ interface INsConfig {
 	buildPath?: string;
 	shared?: boolean;
 	overridePods?: string;
+	webpackPackageName?: string;
 	webpackConfigPath?: string;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
