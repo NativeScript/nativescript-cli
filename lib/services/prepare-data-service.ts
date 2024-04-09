@@ -7,7 +7,7 @@ export class PrepareDataService implements IPrepareDataService {
 	public getPrepareData(projectDir: string, platform: string, data: any) {
 		const platformLowerCase = platform.toLowerCase();
 
-		if (this.$mobileHelper.isiOSPlatform(platform)) {
+		if (this.$mobileHelper.isApplePlatform(platform)) {
 			return new IOSPrepareData(projectDir, platformLowerCase, data);
 		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			return new AndroidPrepareData(projectDir, platformLowerCase, data);

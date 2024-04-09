@@ -387,7 +387,8 @@ export class ErrorsStub implements IErrors {
 }
 
 export class PackageInstallationManagerStub
-	implements IPackageInstallationManager {
+	implements IPackageInstallationManager
+{
 	clearInspectorCache(): void {
 		return undefined;
 	}
@@ -739,7 +740,8 @@ export class ProjectDataStub implements IProjectData {
 }
 
 export class AndroidPluginBuildServiceStub
-	implements IAndroidPluginBuildService {
+	implements IAndroidPluginBuildService
+{
 	buildAar(options: IPluginBuildOptions): Promise<boolean> {
 		return Promise.resolve(true);
 	}
@@ -751,7 +753,8 @@ export class AndroidPluginBuildServiceStub
 
 export class PlatformProjectServiceStub
 	extends EventEmitter
-	implements IPlatformProjectService {
+	implements IPlatformProjectService
+{
 	constructor(private platform: string) {
 		super();
 	}
@@ -894,7 +897,8 @@ export class PlatformProjectServiceStub
 
 export class NativeProjectDataStub
 	extends EventEmitter
-	implements IPlatformsDataService {
+	implements IPlatformsDataService
+{
 	public platformNames: string[];
 
 	public getPlatformData(
@@ -1132,7 +1136,8 @@ function unexpected(msg: string): Error {
 
 export class DebugServiceStub
 	extends EventEmitter
-	implements IDeviceDebugService {
+	implements IDeviceDebugService
+{
 	public async debug(): Promise<IDebugResultInfo> {
 		return;
 	}
@@ -1146,7 +1151,8 @@ export class DebugServiceStub
 
 export class LiveSyncServiceStub
 	extends EventEmitter
-	implements ILiveSyncService {
+	implements ILiveSyncService
+{
 	public async liveSync(
 		deviceDescriptors: ILiveSyncDeviceDescriptor[],
 		liveSyncData: ILiveSyncInfo
@@ -1314,7 +1320,8 @@ export class CommandsService implements ICommandsService {
 }
 
 export class AndroidResourcesMigrationServiceStub
-	implements IAndroidResourcesMigrationService {
+	implements IAndroidResourcesMigrationService
+{
 	canMigrate(platformString: string): boolean {
 		return true;
 	}
@@ -1329,7 +1336,8 @@ export class AndroidResourcesMigrationServiceStub
 }
 
 export class AndroidBundleValidatorHelper
-	implements IAndroidBundleValidatorHelper {
+	implements IAndroidBundleValidatorHelper
+{
 	validateDeviceApiLevel(device: Mobile.IDevice, buildData: IBuildData): void {
 		return;
 	}

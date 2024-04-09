@@ -674,10 +674,17 @@ interface IOptions
 	ng: boolean;
 	angular: boolean;
 	react: boolean;
+	solid: boolean;
 	svelte: boolean;
 	vue: boolean;
 	vuejs: boolean;
 	js: boolean;
+	vision: boolean;
+	"vision-ng": boolean;
+	"vision-react": boolean;
+	"vision-solid": boolean;
+	"vision-svelte": boolean;
+	"vision-vue": boolean;
 	javascript: boolean;
 	androidTypings: boolean;
 	production: boolean; //npm flag
@@ -693,6 +700,8 @@ interface IOptions
 	markingMode: boolean;
 	git: boolean;
 	dryRun: boolean;
+
+	platformOverride: string;
 }
 
 interface IEnvOptions {

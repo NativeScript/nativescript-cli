@@ -633,8 +633,16 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 					this.getPackageJsonFilePathForModule(cacheData.name, projectDir)
 				);
 			pluginData.isPlugin = !!cacheData.nativescript;
-			pluginData.pluginPlatformsFolderPath = (platform: string) =>
-				path.join(pluginData.fullPath, constants.PLATFORMS_DIR_NAME, platform.toLowerCase());
+			pluginData.pluginPlatformsFolderPath = (platform: string) => {
+				if (this.$mobileHelper.isvisionOSPlatform(platform)) {
+					platform = constants.PlatformTypes.ios;
+				}
+				return path.join(
+					pluginData.fullPath,
+					constants.PLATFORMS_DIR_NAME,
+					platform.toLowerCase()
+				);
+			};
 			const data = cacheData.nativescript;
 
 			if (pluginData.isPlugin) {

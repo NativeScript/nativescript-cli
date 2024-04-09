@@ -208,12 +208,20 @@ function createTestInjector(): IInjector {
 	testInjector.register("prompter", {});
 
 	testInjector.register("mobileHelper", {
-		platformNames: ["ios", "android"],
+		platformNames: ["ios", "android", "visionos"],
 		validatePlatformName: (platform: string) => platform.toLowerCase(),
 		isiOSPlatform: (platform: string) =>
 			!!(platform && platform.toLowerCase() === "ios"),
 		isAndroidPlatform: (platform: string) =>
 			!!(platform && platform.toLowerCase() === "android"),
+		isvisionOSPlatform: (platform: string) =>
+			!!(platform && platform.toLowerCase() === "visionos"),
+		isApplePlatform: (platform: string) =>
+			!!(
+				platform &&
+				(platform.toLowerCase() === "ios" ||
+					platform.toLowerCase() === "visionos")
+			),
 	});
 
 	testInjector.register("deviceLogProvider", {
@@ -452,9 +460,10 @@ describe("devicesService", () => {
 		};
 
 		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND} event when new Android Emulator image is found`, (done: mocha.Done) => {
-			const androidEmulatorDiscovery = testInjector.resolve<
-				AndroidEmulatorDiscoveryStub
-			>("androidEmulatorDiscovery");
+			const androidEmulatorDiscovery =
+				testInjector.resolve<AndroidEmulatorDiscoveryStub>(
+					"androidEmulatorDiscovery"
+				);
 			devicesService.on(
 				EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND,
 				(emulatorImage: Mobile.IDeviceInfo) => {
@@ -485,9 +494,10 @@ describe("devicesService", () => {
 		});
 
 		it(`emits ${EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST} event when new Android Emulator image is deleted`, (done: mocha.Done) => {
-			const androidEmulatorDiscovery = testInjector.resolve<
-				AndroidEmulatorDiscoveryStub
-			>("androidEmulatorDiscovery");
+			const androidEmulatorDiscovery =
+				testInjector.resolve<AndroidEmulatorDiscoveryStub>(
+					"androidEmulatorDiscovery"
+				);
 			devicesService.on(
 				EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST,
 				(emulatorImage: Mobile.IDeviceInfo) => {
@@ -1098,21 +1108,19 @@ describe("devicesService", () => {
 			});
 
 			it("does not fail when iOSDeviceDiscovery startLookingForDevices fails", async () => {
-				(<any>iOSDeviceDiscovery).startLookingForDevices = (): Promise<
-					void
-				> => {
-					throw new Error("my error");
-				};
+				(<any>iOSDeviceDiscovery).startLookingForDevices =
+					(): Promise<void> => {
+						throw new Error("my error");
+					};
 				await assertAllMethodsResults("1");
 				assert.isTrue(logger.traceOutput.indexOf("my error") !== -1);
 			});
 
 			it("does not fail when androidDeviceDiscovery startLookingForDevices fails", async () => {
-				(<any>androidDeviceDiscovery).startLookingForDevices = (): Promise<
-					void
-				> => {
-					throw new Error("my error");
-				};
+				(<any>androidDeviceDiscovery).startLookingForDevices =
+					(): Promise<void> => {
+						throw new Error("my error");
+					};
 				iOSDeviceDiscovery.emit(
 					DeviceDiscoveryEventNames.DEVICE_FOUND,
 					iOSDevice
@@ -1129,11 +1137,10 @@ describe("devicesService", () => {
 			it("does not fail when iosSimulatorDiscovery startLookingForDevices fails", async () => {
 				const hostInfo = testInjector.resolve("hostInfo");
 				hostInfo.isDarwin = true;
-				(<any>iOSSimulatorDiscovery).startLookingForDevices = (): Promise<
-					void
-				> => {
-					throw new Error("my error");
-				};
+				(<any>iOSSimulatorDiscovery).startLookingForDevices =
+					(): Promise<void> => {
+						throw new Error("my error");
+					};
 				iOSDeviceDiscovery.emit(
 					DeviceDiscoveryEventNames.DEVICE_FOUND,
 					iOSDevice
@@ -1350,21 +1357,19 @@ describe("devicesService", () => {
 			});
 
 			it("does not fail when iOSDeviceDiscovery startLookingForDevices fails", async () => {
-				(<any>iOSDeviceDiscovery).startLookingForDevices = (): Promise<
-					void
-				> => {
-					throw new Error("my error");
-				};
+				(<any>iOSDeviceDiscovery).startLookingForDevices =
+					(): Promise<void> => {
+						throw new Error("my error");
+					};
 				await assertAllMethodsResults("1");
 				assert.isTrue(logger.traceOutput.indexOf("my error") !== -1);
 			});
 
 			it("does not fail when androidDeviceDiscovery startLookingForDevices fails", async () => {
-				(<any>androidDeviceDiscovery).startLookingForDevices = (): Promise<
-					void
-				> => {
-					throw new Error("my error");
-				};
+				(<any>androidDeviceDiscovery).startLookingForDevices =
+					(): Promise<void> => {
+						throw new Error("my error");
+					};
 				iOSDeviceDiscovery.emit(
 					DeviceDiscoveryEventNames.DEVICE_FOUND,
 					iOSDevice
@@ -2425,11 +2430,10 @@ describe("devicesService", () => {
 			it("should check for ios devices.", async () => {
 				let hasCheckedForIosDevices = false;
 
-				$iOSDeviceDiscovery.startLookingForDevices = async (): Promise<
-					void
-				> => {
-					hasCheckedForIosDevices = true;
-				};
+				$iOSDeviceDiscovery.startLookingForDevices =
+					async (): Promise<void> => {
+						hasCheckedForIosDevices = true;
+					};
 
 				devicesService.startDeviceDetectionInterval();
 
@@ -2465,11 +2469,10 @@ describe("devicesService", () => {
 			it("should start interval that will check for android devices.", async () => {
 				let hasCheckedForAndroidDevices = false;
 
-				$androidDeviceDiscovery.startLookingForDevices = async (): Promise<
-					void
-				> => {
-					hasCheckedForAndroidDevices = true;
-				};
+				$androidDeviceDiscovery.startLookingForDevices =
+					async (): Promise<void> => {
+						hasCheckedForAndroidDevices = true;
+					};
 
 				mockSetInterval();
 				devicesService.startDeviceDetectionInterval();
@@ -2500,11 +2503,10 @@ describe("devicesService", () => {
 
 			beforeEach(() => {
 				$iOSSimulatorDiscovery = testInjector.resolve("iOSSimulatorDiscovery");
-				(<any>$iOSSimulatorDiscovery).checkForDevices = async (): Promise<
-					void
-				> => {
-					/** */
-				};
+				(<any>$iOSSimulatorDiscovery).checkForDevices =
+					async (): Promise<void> => {
+						/** */
+					};
 
 				$hostInfo = testInjector.resolve("hostInfo");
 				$hostInfo.isDarwin = true;
@@ -2538,11 +2540,10 @@ describe("devicesService", () => {
 			it("should check for devices in interval", async () => {
 				let hasCheckedForDevices = false;
 
-				customDeviceDiscovery.startLookingForDevices = async (): Promise<
-					void
-				> => {
-					hasCheckedForDevices = true;
-				};
+				customDeviceDiscovery.startLookingForDevices =
+					async (): Promise<void> => {
+						hasCheckedForDevices = true;
+					};
 
 				mockSetInterval();
 				devicesService.startDeviceDetectionInterval();
@@ -2581,17 +2582,15 @@ describe("devicesService", () => {
 					"androidDeviceDiscovery"
 				);
 
-				androidDevice.applicationManager.checkForApplicationUpdates = async (): Promise<
-					void
-				> => {
-					hasCheckedForAndroidAppUpdates = true;
-				};
+				androidDevice.applicationManager.checkForApplicationUpdates =
+					async (): Promise<void> => {
+						hasCheckedForAndroidAppUpdates = true;
+					};
 
-				iOSDevice.applicationManager.checkForApplicationUpdates = async (): Promise<
-					void
-				> => {
-					hasCheckedForIosAppUpdates = true;
-				};
+				iOSDevice.applicationManager.checkForApplicationUpdates =
+					async (): Promise<void> => {
+						hasCheckedForIosAppUpdates = true;
+					};
 
 				$androidDeviceDiscovery.emit(
 					DeviceDiscoveryEventNames.DEVICE_FOUND,
@@ -2613,7 +2612,8 @@ describe("devicesService", () => {
 			});
 
 			it("should check for application updates if the check on one device throws an exception.", async () => {
-				iOSDevice.applicationManager.checkForApplicationUpdates = throwErrorFunction;
+				iOSDevice.applicationManager.checkForApplicationUpdates =
+					throwErrorFunction;
 
 				devicesService.startDeviceDetectionInterval();
 
@@ -2633,8 +2633,10 @@ describe("devicesService", () => {
 			});
 
 			it("should not throw if all checks for application updates on all devices throw exceptions.", () => {
-				iOSDevice.applicationManager.checkForApplicationUpdates = throwErrorFunction;
-				androidDevice.applicationManager.checkForApplicationUpdates = throwErrorFunction;
+				iOSDevice.applicationManager.checkForApplicationUpdates =
+					throwErrorFunction;
+				androidDevice.applicationManager.checkForApplicationUpdates =
+					throwErrorFunction;
 
 				const callback = () => {
 					devicesService.startDeviceDetectionInterval.call(devicesService);
@@ -2661,11 +2663,10 @@ describe("devicesService", () => {
 		it("should start looking for android devices.", async () => {
 			let hasStartedLookingForAndroidDevices = false;
 
-			$androidDeviceDiscovery.startLookingForDevices = async (): Promise<
-				void
-			> => {
-				hasStartedLookingForAndroidDevices = true;
-			};
+			$androidDeviceDiscovery.startLookingForDevices =
+				async (): Promise<void> => {
+					hasStartedLookingForAndroidDevices = true;
+				};
 
 			await devicesService.detectCurrentlyAttachedDevices();
 
@@ -2767,9 +2768,8 @@ describe("devicesService", () => {
 		let actualDeviceIdentifier: string;
 		let actualAppIdentifier: string;
 		let actualFramework: string;
-		const $androidProcessService: Mobile.IAndroidProcessService = testInjector.resolve(
-			"androidProcessService"
-		);
+		const $androidProcessService: Mobile.IAndroidProcessService =
+			testInjector.resolve("androidProcessService");
 		$androidProcessService.mapAbstractToTcpPort = async (
 			deviceIdentifier: string,
 			appIdentifier: string,
@@ -2793,12 +2793,10 @@ describe("devicesService", () => {
 	});
 
 	it("should get debuggable apps correctly for multiple devices.", async () => {
-		const $iOSDeviceDiscovery: Mobile.IDeviceDiscovery = testInjector.resolve(
-			"iOSDeviceDiscovery"
-		);
-		const $androidDeviceDiscovery: Mobile.IAndroidDeviceDiscovery = testInjector.resolve(
-			"androidDeviceDiscovery"
-		);
+		const $iOSDeviceDiscovery: Mobile.IDeviceDiscovery =
+			testInjector.resolve("iOSDeviceDiscovery");
+		const $androidDeviceDiscovery: Mobile.IAndroidDeviceDiscovery =
+			testInjector.resolve("androidDeviceDiscovery");
 
 		$androidDeviceDiscovery.emit(
 			DeviceDiscoveryEventNames.DEVICE_FOUND,
@@ -2849,9 +2847,8 @@ describe("devicesService", () => {
 			iOSDevice.deviceInfo.identifier,
 		]);
 		const debuggableAppsResult = await Promise.all(futures);
-		const debuggableApps = _.flatten<Mobile.IDeviceApplicationInformation>(
-			debuggableAppsResult
-		);
+		const debuggableApps =
+			_.flatten<Mobile.IDeviceApplicationInformation>(debuggableAppsResult);
 
 		assert.deepStrictEqual(
 			debuggableApps,

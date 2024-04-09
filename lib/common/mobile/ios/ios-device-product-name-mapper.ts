@@ -55,6 +55,7 @@ class IosDeviceProductNameMapper implements Mobile.IiOSDeviceProductNameMapper {
 		"iPod4,1": "iPod touch (4th gen)",
 		"iPod5,1": "iPod touch (5th gen)",
 		"iPod7,1": "iPod touch (6th gen)",
+		"RealityDevice14,1": "Vision Pro (1st gen)",
 	};
 
 	public resolveProductName(deviceType: string): string {

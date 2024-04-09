@@ -122,7 +122,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~8.5.0",
+			desiredVersion: "~8.7.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -132,7 +132,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.5.0",
+			desiredVersion: "~8.7.0",
 			isDev: true,
 		},
 		{
@@ -191,7 +191,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "^16.0.0",
+			desiredVersion: "^17.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -263,7 +263,7 @@ export class MigrateController
 			packageName: "typescript",
 			isDev: true,
 			minVersion: "3.7.0",
-			desiredVersion: "~4.8.4",
+			desiredVersion: "~5.4.0",
 		},
 		{
 			packageName: "node-sass",
@@ -275,7 +275,7 @@ export class MigrateController
 		{
 			packageName: "sass",
 			minVersion: "0.0.0", // ignore
-			desiredVersion: "~1.49.9",
+			desiredVersion: "^1.49.9",
 			isDev: true,
 			// shouldRemove: true,
 		},
@@ -296,13 +296,13 @@ export class MigrateController
 		{
 			packageName: "@nativescript/ios",
 			minVersion: "6.5.3",
-			desiredVersion: "~8.5.0",
+			desiredVersion: "~8.7.0",
 			isDev: true,
 		},
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.5.0",
+			desiredVersion: "~8.7.0",
 			isDev: true,
 		},
 	];
@@ -1236,14 +1236,14 @@ export class MigrateController
 
 			// update
 			configContents.compilerOptions = configContents.compilerOptions || {};
-			configContents.compilerOptions.target = "es2017";
+			configContents.compilerOptions.target = "es2020";
 			configContents.compilerOptions.module = "esnext";
 			configContents.compilerOptions.moduleResolution = "node";
 			configContents.compilerOptions.experimentalDecorators = true;
 			configContents.compilerOptions.removeComments = false;
 
 			configContents.compilerOptions.lib = [
-				...new Set([...(configContents.compilerOptions.lib || []), "es2017"]),
+				...new Set([...(configContents.compilerOptions.lib || []), "ESNext"]),
 			];
 
 			if (isAngular) {
@@ -1311,7 +1311,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~16.2.0";
+		const desiredVersion = "~17.3.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
