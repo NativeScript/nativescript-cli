@@ -423,6 +423,31 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
+
+		// gets the package from the AndroidManifest to use as the namespace or fallback to the `org.nativescript.${shortPluginName}`
+		const shortPluginName = getShortPluginName(pluginName);
+
+		const manifestPath = path.join(
+			pluginTempDir,
+			"src",
+			"main",
+			"AndroidManifest.xml"
+		);
+		const manifestContent = this.$fs.readText(manifestPath);
+
+		let packageName = `org.nativescript.${shortPluginName}`;
+		const xml = await this.getXml(manifestContent);
+		if (xml["manifest"]) {
+			if (xml["manifest"]["$"]["package"]) {
+				packageName = xml["manifest"]["$"]["package"];
+			}
+		}
+
+		this.replaceFileContent(
+			buildGradlePath,
+			"{{pluginNamespace}}",
+			packageName
+		);
 	}
 
 	private async getRuntimeGradleVersions(
