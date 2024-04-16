@@ -13,7 +13,6 @@ import { Builder, parseString } from "xml2js";
 import {
 	IRuntimeGradleVersions,
 	INodePackageManager,
-	IAndroidToolsInfo,
 	IWatchIgnoreListService,
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
@@ -47,7 +46,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
-		private $androidToolsInfo: IAndroidToolsInfo,
 		private $logger: ILogger,
 		private $packageManager: INodePackageManager,
 		private $projectData: IProjectData,
@@ -802,18 +800,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private async buildPlugin(
 		pluginBuildSettings: IBuildAndroidPluginData
 	): Promise<void> {
-		if (!pluginBuildSettings.androidToolsInfo) {
-			this.$androidToolsInfo.validateInfo({
-				showWarningsAsErrors: true,
-				validateTargetSdk: true,
-				projectDir: pluginBuildSettings.projectDir,
-			});
-			pluginBuildSettings.androidToolsInfo =
-				this.$androidToolsInfo.getToolsInfo({
-					projectDir: pluginBuildSettings.projectDir,
-				});
-		}
-
 		const gradlew =
 			pluginBuildSettings.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
@@ -823,8 +809,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
 			`-PtempBuild=true`,
-			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
-			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
