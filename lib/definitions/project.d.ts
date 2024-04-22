@@ -161,6 +161,7 @@ interface INsConfig {
 	visionos?: INSConfigVisionOS;
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
+	projectName?: string;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -195,6 +196,7 @@ interface IProjectData extends ICreateProjectData {
 	 * The value can be changed by setting `webpackConfigPath` in nativescript.config.
 	 */
 	webpackConfigPath: string;
+	projectName: string;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
