@@ -993,12 +993,12 @@ tasks.configureEach { DefaultTask currentTask ->
     // because buildMetadata uses the output of those
     // TODO: there must be a way to make it simpler
     if (!(currentTask =~ /AndroidTest/) &&
-        currentTask =~ /process.+Resources/ || 
+        (currentTask =~ /process.+Resources/ || 
         currentTask =~ /desugar.+FileDependencies/ || 
         currentTask =~ /desugarBenchmarkFileDependencies/ ||
         currentTask =~ /dexBuilder.+/ || 
         currentTask =~ /check.*DuplicateClasses/ || 
-       (currentTask =~ /merge.+Shaders/ ||
+        currentTask =~ /merge.+Shaders/ ||
         currentTask =~ /merge.*JavaResource/ || 
         currentTask =~ /merge.+GlobalSynthetics/ || 
         currentTask =~ /merge.+JniLibFolders/ || 
@@ -1028,7 +1028,7 @@ tasks.configureEach { DefaultTask currentTask ->
         currentTask =~ /checkBenchmarkDuplicateClasses/ ||
         currentTask =~ /checkBenchmark.+DuplicateClasses/ || 
         currentTask =~ /bundle.*Resources/ ||
-        currentTask =~ /compile.*ArtProfile/ ||
+        // currentTask =~ /compile.*ArtProfile/ ||
         currentTask =~ /extractBenchmarkNativeSymbolTables/ ||
         currentTask =~ /buildKotlinToolingMetadata/ ||
         currentTask =~ /validateSigning.*/ || 
@@ -1038,12 +1038,13 @@ tasks.configureEach { DefaultTask currentTask ->
         currentTask =~ /sync.+LibJars/ || 
         currentTask =~ /processNonMinified.+JavaRes/ || 
         currentTask =~ /process.*JavaRes/ || 
-        currentTask =~ /optimize.+Resources/ || 
-        currentTask =~ /generate.*UnitTestLintModel/ || 
+        // currentTask =~ /optimize.+Resources/ || 
         currentTask =~ /lintAnalyze.*UnitTest/ || 
         currentTask =~ /buildCMake.*/ || 
         currentTask =~ /configureCMake.*/ || 
         currentTask =~ /transform.+ClassesWithAsm/ || 
+        currentTask =~ /generate.*AndroidTestLintModel/ || 
+        currentTask =~ /generate.*UnitTestLintModel/ || 
         // because of sentry plugin. There must be a better way
         currentTask =~ /transformDebugClassesWithAsm/ || 
         currentTask =~ /generateSentryDebugMetaPropertiesDebug/ || 
@@ -1052,20 +1053,21 @@ tasks.configureEach { DefaultTask currentTask ->
         currentTask.finalizedBy(buildMetadata)
     }
     if (
-        currentTask =~ /generate.*AndroidTestResValues/ || 
-        currentTask =~ /generate.*AndroidTestLintModel/ || 
-        currentTask =~ /generate.*UnitTestLintModel/ || 
-        currentTask =~ /generate.*UnitTestLintModel/ || 
-        currentTask =~ /compile.+Kotlin/
+        currentTask =~ /generate.*AndroidTestResValues/
         ) {
         buildMetadata.dependsOn(currentTask)
+    }
+    if (
+        currentTask =~ /generate.*UnitTestLintModel/ || 
+        currentTask =~ /compile.*ArtProfile/
+        ) {
+        currentTask.mustRunAfter(buildMetadata)
     }
     // added because of a error with gradle 8 telling us to add this
     // because buildMetadata uses the output of those
     // TODO: there must be a way to make it simpler
     if (!(currentTask =~ /AndroidTest/) && (
-        currentTask =~ /process.+Resources/ || 
-        currentTask =~ /compile.+Kotlin/
+        currentTask =~ /process.+Resources/
         )) {
         cleanupAllJars.dependsOn(currentTask)
     }
