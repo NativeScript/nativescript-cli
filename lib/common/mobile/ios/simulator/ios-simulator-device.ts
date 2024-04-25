@@ -46,7 +46,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 			model: _.last(this.simulator.fullId.split(".")),
 			version: this.simulator.runtimeVersion,
 			vendor: "Apple",
-			platform: this.$devicePlatformsConstants.iOS,
+			platform: this.simulator.platform ?? this.$devicePlatformsConstants.iOS,
 			status: constants.CONNECTED_STATUS,
 			errorHelp: null,
 			isTablet: this.simulator.fullId.toLowerCase().indexOf("ipad") !== -1,
@@ -99,7 +99,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 				.catch((e) => this.$logger.error(e));
 		}, 5e3);
 
-		// the internal retry-mechanism of getDebuggerPort will ensure the above 
+		// the internal retry-mechanism of getDebuggerPort will ensure the above
 		// interval has a chance to execute multiple times
 		const port = await super.getDebuggerPort(appId).finally(() => {
 			clearInterval(postNotificationRetryInterval);

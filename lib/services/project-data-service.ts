@@ -247,9 +247,8 @@ export class ProjectDataService implements IProjectDataService {
 			// ignore
 		}
 
-		const content = this.getImageDefinitions()[
-			useLegacy ? "android_legacy" : "android"
-		];
+		const content =
+			this.getImageDefinitions()[useLegacy ? "android_legacy" : "android"];
 
 		return {
 			icons: this.getAndroidAssetSubGroup(content.icons, basePath),
@@ -641,6 +640,8 @@ export class ProjectDataService implements IProjectDataService {
 						packageName,
 						constants.TNS_ANDROID_RUNTIME_NAME,
 					].includes(d.name);
+				} else if (platform === constants.PlatformTypes.visionos) {
+					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
 				}
 			});
 
@@ -695,6 +696,11 @@ export class ProjectDataService implements IProjectDataService {
 		} else if (platform === constants.PlatformTypes.android) {
 			return {
 				name: this.$projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME,
+				version: null,
+			};
+		} else if (platform === constants.PlatformTypes.visionos) {
+			return {
+				name: constants.SCOPED_VISIONOS_RUNTIME_NAME,
 				version: null,
 			};
 		}
