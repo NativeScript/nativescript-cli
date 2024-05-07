@@ -1048,9 +1048,16 @@ tasks.configureEach { DefaultTask currentTask ->
         // because of sentry plugin. There must be a better way
         currentTask =~ /transformDebugClassesWithAsm/ || 
         currentTask =~ /generateSentryDebugMetaPropertiesDebug/ || 
+        currentTask =~ /generateSentryBundleId.*/ || 
         currentTask =~ /collectExternal.+/
         )) {
         currentTask.finalizedBy(buildMetadata)
+    }
+    if (
+        currentTask =~ /generateSentryBundleId.*/ || 
+        currentTask =~ /sentryCollectSources.*/
+        ) {
+        currentTask.mustRunAfter(runSbg)
     }
     if (
         currentTask =~ /generate.*AndroidTestResValues/
