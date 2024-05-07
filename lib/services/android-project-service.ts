@@ -357,15 +357,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			"*",
 			"-R"
 		);
-
-		// override app build.gradle from cli vendor to allow updates faster than the runtime
-		const gradleTemplatePath = path.resolve(
-			path.join(__dirname, "../../vendor/gradle-app")
-		);
-		const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
-
-		this.$fs.copyFile(allGradleTemplateFiles, path.join(this.getPlatformData(projectData).projectRoot));
-
+		if (this.$options.overrideRuntimeGradleFiles !== false) {
+			// override app build.gradle from cli vendor to allow updates faster than the runtime
+			const gradleTemplatePath = path.resolve(
+				path.join(__dirname, "../../vendor/gradle-app")
+			);
+			const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
+	
+			this.$fs.copyFile(allGradleTemplateFiles, path.join(this.getPlatformData(projectData).projectRoot));
+		}
 		// TODO: Check if we actually need this and if it should be targetSdk or compileSdk
 		this.cleanResValues(targetSdkVersion, projectData);
 	}

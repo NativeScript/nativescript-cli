@@ -582,6 +582,7 @@ interface IAndroidOptions {
 	gradleFlavor: string;
 	gradlePath: string;
 	gradleArgs: string[];
+	overrideRuntimeGradleFiles: boolean;
 }
 
 interface ITypingsOptions {
