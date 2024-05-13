@@ -815,6 +815,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", {
 				cwd: pluginBuildSettings.pluginDir,
 				stdio: "inherit",
+				shell: this.$hostInfo.isWindows,
 			});
 		} catch (err) {
 			this.$errors.fail(
