@@ -183,7 +183,8 @@
   "bundleDependencies_comment3": "note: @npmcli/move-file is a transient dep of pacote - we dont use it directly.",
   "bundleDependencies": [
     "@npmcli/move-file",
-    "stringify-package"
+    "stringify-package",
+    "fsevents"
   ],
   "overrides": {
     "jimp": {
