@@ -74,7 +74,6 @@ def SBG_BINDINGS_NAME = "sbg-bindings.txt"
 def SBG_INTERFACE_NAMES = "sbg-interface-names.txt"
 def INPUT_JS_DIR = "$projectDir/src/main/assets/app"
 def OUTPUT_JAVA_DIR = "$projectDir/src/main/java"
-def APP_DIR = "$projectDir/src/main/assets/app"
 
 //metadata generator
 def MDG_OUTPUT_DIR = "mdg-output-dir.txt"
@@ -94,7 +93,6 @@ def computeBuildToolsVersion = { ->
 }
 
 def enableVerboseMDG = project.gradle.startParameter.logLevel.name() == 'DEBUG'
-def analyticsFilePath = "$rootDir/analytics/build-statistics.json"
 
 project.ext.selectedBuildType = project.hasProperty("release") ? "release" : "debug"
 
@@ -184,32 +182,7 @@ def setAppIdentifier = { ->
     }
 }
 
-def computeNamespace = { ->
-    def appPackageJsonFile = file("${APP_DIR}/$PACKAGE_JSON")
-
-    if (appPackageJsonFile.exists()) {
-        def content = appPackageJsonFile.getText("UTF-8")
-
-        def jsonSlurper = new JsonSlurper()
-        def packageJsonMap = jsonSlurper.parseText(content)
-
-        def appIdentifier = ""
-
-        if (packageJsonMap && packageJsonMap.id) {
-            appIdentifier = packageJsonMap.id
-        }
-
-
-        if (appIdentifier) {
-            return appIdentifier
-        }
-    }
-    return "com.tns.testapplication"
-}
-
 android {
-    namespace computeNamespace()
-
     applyBeforePluginGradleConfiguration()
     namespace "__PACKAGE__"
 
