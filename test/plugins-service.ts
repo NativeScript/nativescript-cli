@@ -6,6 +6,7 @@ import { NodePackageManager } from "../lib/node-package-manager";
 import { YarnPackageManager } from "../lib/yarn-package-manager";
 import { Yarn2PackageManager } from "../lib/yarn2-package-manager";
 import { PnpmPackageManager } from "../lib/pnpm-package-manager";
+import { BunPackageManager } from "../lib/bun-package-manager";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
 import { Options } from "../lib/options";
@@ -76,6 +77,7 @@ function createTestInjector() {
 	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("yarn2", Yarn2PackageManager);
 	testInjector.register("pnpm", PnpmPackageManager);
+	testInjector.register("bun", BunPackageManager);
 	testInjector.register("fs", FileSystem);
 	// const fileSystemStub = new stubs.FileSystemStub();
 	// fileSystemStub.exists = (fileName: string) => {
@@ -705,6 +707,7 @@ describe("Plugins service", () => {
 							testData.isPreparePluginNativeCodeCalled = true;
 						},
 					},
+					platformsData: {},
 					normalizedPlatformName: "iOS",
 				}),
 			});

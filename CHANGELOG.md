@@ -1,3 +1,51 @@
+## [8.7.1](https://github.com/NativeScript/nativescript-cli/compare/v8.7.0...v8.7.1) (2024-05-16)
+
+
+### Bug Fixes
+
+* **windows:** make compatible with latest node patch levels ([#5802](https://github.com/NativeScript/nativescript-cli/issues/5802)) ([8795e98](https://github.com/NativeScript/nativescript-cli/commit/8795e98e7876d11ac0032135607fb13bf00d246d))
+
+
+### Features
+
+* interactive typings generation for android ([#5798](https://github.com/NativeScript/nativescript-cli/issues/5798)) ([d3f2e70](https://github.com/NativeScript/nativescript-cli/commit/d3f2e70101d44a9bc8450c5d0b90419945c2604f))
+
+
+
+# [8.7.0](https://github.com/NativeScript/nativescript-cli/compare/v8.6.5...v8.7.0) (2024-04-08)
+
+
+### Bug Fixes
+
+* **autocomplete:** fix the generation of the autocomplete script and prevent duplication on enable/disable ([#5794](https://github.com/NativeScript/nativescript-cli/issues/5794)) ([7c87b49](https://github.com/NativeScript/nativescript-cli/commit/7c87b49bd3779ad4a43ebae044595e2bdac8b373))
+* **debug-ios:** don't explicitly bind ws to `localhost` ([#5788](https://github.com/NativeScript/nativescript-cli/issues/5788)) ([280b10d](https://github.com/NativeScript/nativescript-cli/commit/280b10d3410d9b5340e7dd7e532a11e4cdd7bca5))
+* **ios:** only allow IPHONEOS_DEPLOYMENT_TARGET to be explicitly set vs entire xcconfig ([ac8afcc](https://github.com/NativeScript/nativescript-cli/commit/ac8afcc70c68c8c8476278ec508265483635f105))
+* **ios:** skip package validation on xcodebuild ([#5782](https://github.com/NativeScript/nativescript-cli/issues/5782)) ([e47cff4](https://github.com/NativeScript/nativescript-cli/commit/e47cff471ab25f7608360c8c0c94463a83116788))
+* **plugins:** parse name issue with invalid plugins ([#5770](https://github.com/NativeScript/nativescript-cli/issues/5770)) ([f826248](https://github.com/NativeScript/nativescript-cli/commit/f82624892c1433ea1aefdbeb06b5bd53e954b8a1))
+* remove python six requirement ([#5785](https://github.com/NativeScript/nativescript-cli/issues/5785)) ([25ae1f0](https://github.com/NativeScript/nativescript-cli/commit/25ae1f0842469697826c0061b499f55b54f0987d))
+* tests ([13b0bdb](https://github.com/NativeScript/nativescript-cli/commit/13b0bdb808a4796ea0c68575fd41308db5ef840c))
+
+
+### Features
+
+* add experimental bun package manager support ([#5791](https://github.com/NativeScript/nativescript-cli/issues/5791)) ([f758f6c](https://github.com/NativeScript/nativescript-cli/commit/f758f6cac3ed5e1ba6adeb9b68a683a21fdd0e07))
+* add open ios/android ([#5779](https://github.com/NativeScript/nativescript-cli/issues/5779)) ([81b32bc](https://github.com/NativeScript/nativescript-cli/commit/81b32bcaa125d2914c4e3ad41068d7da9671635d))
+* **ios:** ensure user defined xcconfig always takes priority ([#5784](https://github.com/NativeScript/nativescript-cli/issues/5784)) ([500d751](https://github.com/NativeScript/nativescript-cli/commit/500d75176cee0f5c5a5551ffcc1d4c00c7543b5a))
+* provide appId to webpack config ([#5778](https://github.com/NativeScript/nativescript-cli/issues/5778)) ([e3ef37d](https://github.com/NativeScript/nativescript-cli/commit/e3ef37dc648e99ff09844e22e11c917f7d727cdf))
+* support for solid/solidjs templates and migrations for 8.7 ([#5796](https://github.com/NativeScript/nativescript-cli/issues/5796)) ([cf788f0](https://github.com/NativeScript/nativescript-cli/commit/cf788f053fd976ee7dd62af2ac61bb1590498be0))
+* visionOS support ([#5783](https://github.com/NativeScript/nativescript-cli/issues/5783)) ([6a6a832](https://github.com/NativeScript/nativescript-cli/commit/6a6a8322655b1dedadda912d712cf26ee6d51f56))
+
+
+
+## [8.6.4](https://github.com/NativeScript/nativescript-cli/compare/v8.6.3...v8.6.4) (2024-01-17)
+
+
+### Bug Fixes
+
+* skip log-source-maps for large files ([#5780](https://github.com/NativeScript/nativescript-cli/issues/5780)) ([c53b4e9](https://github.com/NativeScript/nativescript-cli/commit/c53b4e9111f3da98547ec273c92a73ead89aca13))
+
+
+
 ## [8.6.1](https://github.com/NativeScript/nativescript-cli/compare/v8.6.0...v8.6.1) (2023-10-23)
 
 

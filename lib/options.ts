@@ -133,6 +133,12 @@ export class Options {
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			svelte: { type: OptionType.Boolean, hasSensitiveValue: false },
+			vision: { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-ng": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-react": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-solid": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-svelte": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-vue": { type: OptionType.Boolean, hasSensitiveValue: false },
 			tsc: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -222,8 +228,8 @@ export class Options {
 			},
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
-			androidHost: { type: OptionType.String, hasSensitiveValue: false },
-			androidHostModule: {
+			nativeHost: { type: OptionType.String, hasSensitiveValue: false },
+			nativeHostModule: {
 				type: OptionType.String,
 				hasSensitiveValue: false,
 				default: APP_FOLDER_NAME,

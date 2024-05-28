@@ -22,7 +22,8 @@ import {
 import { injector } from "../../yok";
 
 export class AndroidVirtualDeviceService
-	implements Mobile.IAndroidVirtualDeviceService {
+	implements Mobile.IAndroidVirtualDeviceService
+{
 	private androidHome: string;
 	private mapEmulatorIdToImageIdentifier: IStringDictionary = {};
 
@@ -211,7 +212,8 @@ export class AndroidVirtualDeviceService
 		let result: ISpawnResult = null;
 		let devices: Mobile.IDeviceInfo[] = [];
 		let errors: string[] = [];
-		const canExecuteAvdManagerCommand = await this.canExecuteAvdManagerCommand();
+		const canExecuteAvdManagerCommand =
+			await this.canExecuteAvdManagerCommand();
 		if (!canExecuteAvdManagerCommand) {
 			errors = [
 				"Unable to execute avdmanager, ensure JAVA_HOME is set and points to correct directory",
@@ -221,7 +223,8 @@ export class AndroidVirtualDeviceService
 		if (canExecuteAvdManagerCommand) {
 			result = await this.$childProcess.trySpawnFromCloseEvent(
 				this.pathToAvdManagerExecutable,
-				["list", "avds"]
+				["list", "avds"],
+				{ shell: this.$hostInfo.isWindows }
 			);
 		} else if (
 			this.pathToAndroidExecutable &&
@@ -403,9 +406,8 @@ export class AndroidVirtualDeviceService
 	private getAvdManagerDeviceInfo(
 		output: string
 	): Mobile.IAvdManagerDeviceInfo {
-		const avdManagerDeviceInfo: Mobile.IAvdManagerDeviceInfo = Object.create(
-			null
-		);
+		const avdManagerDeviceInfo: Mobile.IAvdManagerDeviceInfo =
+			Object.create(null);
 
 		// Split by `\n`, not EOL as the avdmanager and android executables print results with `\n` only even on Windows
 		_.reduce(
@@ -437,9 +439,8 @@ export class AndroidVirtualDeviceService
 			avdFilePath,
 			AndroidVirtualDevice.CONFIG_INI_FILE_NAME
 		);
-		const configIniFileInfo = this.$androidIniFileParser.parseIniFile(
-			configIniFilePath
-		);
+		const configIniFileInfo =
+			this.$androidIniFileParser.parseIniFile(configIniFilePath);
 
 		const iniFilePath = this.getIniFilePath(configIniFileInfo, avdFilePath);
 		const iniFileInfo = this.$androidIniFileParser.parseIniFile(iniFilePath);

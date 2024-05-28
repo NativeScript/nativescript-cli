@@ -12,7 +12,8 @@ import { injector } from "../common/yok";
 
 export class AddPlatformCommand
 	extends ValidatePlatformCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(
@@ -36,7 +37,8 @@ export class AddPlatformCommand
 		await this.$platformCommandHelper.addPlatforms(
 			args,
 			this.$projectData,
-			this.$options.frameworkPath
+			this.$options.frameworkPath,
+			this.$options.nativeHost
 		);
 	}
 

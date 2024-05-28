@@ -493,21 +493,15 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			async (): Promise<NativeScriptDoctor.IPythonInfo> => {
 				if (this.hostInfo.isDarwin) {
 					try {
-						await this.childProcess.exec(`python3 -c "import six"`);
+						await this.childProcess.exec(`python3 --version`);
 					} catch (error) {
-						// error.code = 1 so the Python is present, but we don't have six.
-						if (error.code === 1) {
-							return { isInstalled: true, isSixPackageInstalled: false };
-						}
-
 						return {
 							isInstalled: false,
-							isSixPackageInstalled: false,
 							installationErrorMessage: error.message,
 						};
 					}
 
-					return { isInstalled: true, isSixPackageInstalled: true };
+					return { isInstalled: true };
 				}
 
 				return null;
@@ -678,9 +672,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		return this.getValueForProperty(
 			() => this.commonSysInfoCache,
 			async (): Promise<NativeScriptDoctor.ICommonSysInfoData> => {
-				const result: NativeScriptDoctor.ICommonSysInfoData = Object.create(
-					null
-				);
+				const result: NativeScriptDoctor.ICommonSysInfoData =
+					Object.create(null);
 
 				// os stuff
 				result.platform = platform();
@@ -708,8 +701,10 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				result.xcodeprojLocation = await this.getXcodeprojLocation();
 				result.itunesInstalled = await this.isITunesInstalled();
 				result.cocoaPodsVer = await this.getCocoaPodsVersion();
-				result.isCocoaPodsWorkingCorrectly = await this.isCocoaPodsWorkingCorrectly();
-				result.isCocoaPodsUpdateRequired = await this.isCocoaPodsUpdateRequired();
+				result.isCocoaPodsWorkingCorrectly =
+					await this.isCocoaPodsWorkingCorrectly();
+				result.isCocoaPodsUpdateRequired =
+					await this.isCocoaPodsUpdateRequired();
 				result.pythonInfo = await this.getPythonInfo();
 
 				return result;
@@ -723,9 +718,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		return this.getValueForProperty(
 			() => this.androidSysInfoCache,
 			async (): Promise<NativeScriptDoctor.IAndroidSysInfoData> => {
-				const result: NativeScriptDoctor.IAndroidSysInfoData = Object.create(
-					null
-				);
+				const result: NativeScriptDoctor.IAndroidSysInfoData =
+					Object.create(null);
 
 				result.dotNetVer = await this.hostInfo.dotNetVersion();
 				result.javacVersion = await this.getJavaCompilerVersion();
@@ -737,7 +731,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				result.androidInstalled = await this.isAndroidInstalled();
 				result.monoVer = await this.getMonoVersion();
 				result.gradleVer = await this.getGradleVersion();
-				result.isAndroidSdkConfiguredCorrectly = await this.isAndroidSdkConfiguredCorrectly();
+				result.isAndroidSdkConfiguredCorrectly =
+					await this.isAndroidSdkConfiguredCorrectly();
 
 				return result;
 			}
@@ -749,9 +744,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		regExp: RegExp
 	): Promise<string> {
 		let javaExecutableVersion: string = null;
-		const javaExecutablePath = this.getJavaExecutablePathFromJavaHome(
-			javaExecutableName
-		);
+		const javaExecutablePath =
+			this.getJavaExecutablePathFromJavaHome(javaExecutableName);
 		if (javaExecutablePath) {
 			javaExecutableVersion = await this.getVersionOfJavaExecutable(
 				javaExecutablePath,

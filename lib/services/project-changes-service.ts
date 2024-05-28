@@ -85,10 +85,22 @@ export class ProjectChangesService implements IProjectChangesService {
 			prepareData
 		);
 		if (!isNewPrepareInfo) {
-			const platformResourcesDir = path.join(
+			let platformResourcesDir = path.join(
 				projectData.appResourcesDirectoryPath,
 				platformData.normalizedPlatformName
 			);
+
+			if (
+				!this.$fs.exists(platformResourcesDir) &&
+				platformData.platformNameLowerCase ===
+					this.$devicePlatformsConstants.visionOS.toLowerCase()
+			) {
+				platformResourcesDir = path.join(
+					projectData.appResourcesDirectoryPath,
+					this.$devicePlatformsConstants.iOS
+				);
+			}
+
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(
 				platformResourcesDir,
 				projectData

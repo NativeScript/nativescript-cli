@@ -578,12 +578,17 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
-interface IAndroidOptions {
+interface IEmbedOptions {
+	nativeHost: string;
+	nativeHostModule: string;
+}
+
+interface IAndroidOptions extends IEmbedOptions {
 	gradlePath: string;
 	gradleArgs: string;
-	androidHost: string;
-	androidHostModule: string;
 }
+
+interface IIOSOptions extends IEmbedOptions {}
 
 interface ITypingsOptions {
 	jar: string;
@@ -605,6 +610,7 @@ interface IOptions
 		IProvision,
 		ITeamIdentifier,
 		IAndroidOptions,
+		IIOSOptions,
 		IAndroidReleaseOptions,
 		IAndroidBundleOptions,
 		INpmInstallConfigurationOptions,
@@ -675,10 +681,17 @@ interface IOptions
 	ng: boolean;
 	angular: boolean;
 	react: boolean;
+	solid: boolean;
 	svelte: boolean;
 	vue: boolean;
 	vuejs: boolean;
 	js: boolean;
+	vision: boolean;
+	"vision-ng": boolean;
+	"vision-react": boolean;
+	"vision-solid": boolean;
+	"vision-svelte": boolean;
+	"vision-vue": boolean;
 	javascript: boolean;
 	androidTypings: boolean;
 	production: boolean; //npm flag
@@ -694,6 +707,8 @@ interface IOptions
 	markingMode: boolean;
 	git: boolean;
 	dryRun: boolean;
+
+	platformOverride: string;
 }
 
 interface IEnvOptions {
@@ -1002,6 +1017,7 @@ interface IXcprojService {
 	 * @return {string} The full path to the xcodeproj
 	 */
 	getXcodeprojPath(projectData: IProjectData, projectRoot: string): string;
+	findXcodeProject(dir: string): string;
 }
 
 /**
@@ -1209,7 +1225,8 @@ interface IPlatformCommandHelper {
 	addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath?: string
+		frameworkPath?: string,
+		nativeHost?: string
 	): Promise<void>;
 	cleanPlatforms(
 		platforms: string[],

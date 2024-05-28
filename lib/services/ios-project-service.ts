@@ -63,14 +63,32 @@ interface INativeSourceCodeGroup {
 	files: string[];
 }
 
-const DevicePlatformSdkName = "iphoneos";
-const SimulatorPlatformSdkName = "iphonesimulator";
+export const DevicePlatformSdkName = "iphoneos";
+export const SimulatorPlatformSdkName = "iphonesimulator";
+export const VisionDevicePlatformSdkName = "xros";
+export const VisionSimulatorPlatformSdkName = "xrsimulator";
+
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
-const getPlatformSdkName = (forDevice: boolean): string =>
-	forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
-const getConfigurationName = (release: boolean): string =>
-	release ? Configurations.Release : Configurations.Debug;
+const getPlatformSdkName = (buildData: IBuildData): string => {
+	const forDevice =
+		!buildData || buildData.buildForDevice || buildData.buildForAppStore;
+	const isvisionOS = injector
+		.resolve("devicePlatformsConstants")
+		.isvisionOS(buildData.platform);
+
+	if (isvisionOS) {
+		return forDevice
+			? VisionDevicePlatformSdkName
+			: VisionSimulatorPlatformSdkName;
+	}
+
+	return forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
+};
+
+const getConfigurationName = (release: boolean): string => {
+	return release ? Configurations.Release : Configurations.Debug;
+};
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
@@ -78,6 +96,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	constructor(
 		$fs: IFileSystem,
+		private $options: IOptions,
 		private $childProcess: IChildProcess,
 		private $cocoapodsService: ICocoaPodsService,
 		private $errors: IErrors,
@@ -101,7 +120,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $iOSNativeTargetService: IIOSNativeTargetService,
 		private $sysInfo: ISysInfo,
 		private $tempService: ITempService,
-		private $spmService: ISPMService
+		private $spmService: ISPMService,
+		private $mobileHelper: Mobile.IMobileHelper
 	) {
 		super($fs, $projectDataService);
 	}
@@ -120,19 +140,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			projectData.platformsDir &&
 			this._platformsDirCache !== projectData.platformsDir
 		) {
-			const projectRoot = path.join(
-				projectData.platformsDir,
-				this.$devicePlatformsConstants.iOS.toLowerCase()
+			const platform = this.$mobileHelper.normalizePlatformName(
+				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS
 			);
+			const projectRoot = this.$options.nativeHost
+				? this.$options.nativeHost
+				: path.join(projectData.platformsDir, platform.toLowerCase());
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				constants.PlatformTypes.ios
+				platform.toLowerCase() as constants.SupportedPlatform
 			);
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
-				normalizedPlatformName: "iOS",
-				platformNameLowerCase: "ios",
+				normalizedPlatformName: platform,
+				platformNameLowerCase: platform.toLowerCase(),
 				appDestinationDirectoryPath: path.join(
 					projectRoot,
 					projectData.projectName
@@ -144,9 +166,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					return path.join(
 						projectRoot,
 						constants.BUILD_DIR,
-						`${config}-${getPlatformSdkName(
-							!options || options.buildForDevice || options.buildForAppStore
-						)}`
+						`${config}-${getPlatformSdkName(options)}`
 					);
 				},
 				getValidBuildOutputData: (
@@ -573,11 +593,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 		prepareData: IOSPrepareData
 	): Promise<void> {
-		const projectRoot = path.join(projectData.platformsDir, "ios");
+		const projectRoot = this.$options.nativeHost
+			? this.$options.nativeHost
+			: path.join(
+					projectData.platformsDir,
+					this.$devicePlatformsConstants.iOS.toLowerCase()
+			  );
 		const platformData = this.getPlatformData(projectData);
 
 		const pluginsData = this.getAllProductionPlugins(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
+
 		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
 		await this.addExtensions(projectData, pluginsData);
 
@@ -605,7 +631,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const resources = project.pbxGroupByName("Resources");
 
-		if (resources) {
+		if (this.$options.nativeHost) {
+			try {
+				project.addResourceFile(
+					path.join(this.$options.nativeHost, projectData.projectName)
+				);
+				this.savePbxProj(project, projectData);
+			} catch (err) {
+				console.log(err);
+			}
+		}
+
+		if (resources && !this.$options.nativeHost) {
 			const references = project.pbxFileReferenceSection();
 
 			const xcodeProjectImages = _.map(<any[]>resources.children, (resource) =>
@@ -654,11 +691,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 			this.savePbxProj(project, projectData);
 
-			const resourcesNativeCodePath = path.join(
+			let resourcesNativeCodePath = path.join(
 				resourcesDirectoryPath,
 				platformData.normalizedPlatformName,
 				constants.NATIVE_SOURCE_FOLDER
 			);
+
+			if (!this.$fs.exists(resourcesNativeCodePath)) {
+				resourcesNativeCodePath = path.join(
+					resourcesDirectoryPath,
+					this.$devicePlatformsConstants.iOS,
+					constants.NATIVE_SOURCE_FOLDER
+				);
+			}
 
 			await this.prepareNativeSourceCode(
 				constants.TNS_NATIVE_SOURCE_GROUP_NAME,
@@ -696,14 +741,28 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.deleteDirectory(platformsAppResourcesPath);
 		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
 
-		this.$fs.copyFile(
-			path.join(
-				projectAppResourcesPath,
-				platformData.normalizedPlatformName,
-				"*"
-			),
-			platformsAppResourcesPath
+		const platformAppResourcesPath = path.join(
+			projectAppResourcesPath,
+			platformData.normalizedPlatformName
 		);
+
+		// this allows App_Resources/visionOS
+		if (this.$fs.exists(platformAppResourcesPath)) {
+			this.$fs.copyFile(
+				path.join(platformAppResourcesPath, "*"),
+				platformsAppResourcesPath
+			);
+		} else {
+			// otherwise falls back to App_Resources/iOS
+			this.$fs.copyFile(
+				path.join(
+					projectAppResourcesPath,
+					this.$devicePlatformsConstants.iOS,
+					"*"
+				),
+				platformsAppResourcesPath
+			);
+		}
 
 		this.$fs.deleteFile(
 			path.join(platformsAppResourcesPath, platformData.configurationFileName)
@@ -869,6 +928,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
+		if (this.$options.nativeHost) {
+			let xcodeProjectPath = this.$xcprojService.findXcodeProject(
+				this.$options.nativeHost
+			);
+			if (!xcodeProjectPath) {
+				this.$errors.fail("Xcode project not found at the specified directory");
+			}
+			return path.join(xcodeProjectPath, "project.pbxproj");
+		}
 		return path.join(
 			this.$xcprojService.getXcodeprojPath(
 				projectData,

@@ -71,6 +71,15 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			if (!this.$fs.getFsStats(filePath).isDirectory()) {
 				const mapFile = filePath + ".map";
 				let sourceMapRaw;
+
+				// Skip files bigger than 50MB
+				if (this.$fs.getFileSize(filePath) > 50 * 1000 * 1000) {
+					this.$logger.trace(
+						`Skipping source map for file ${filePath} because it is too big (> 50MB).`
+					);
+					return;
+				}
+
 				const source = this.$fs.readText(filePath);
 				if (this.$fs.exists(mapFile)) {
 					sourceMapRaw = sourceMapConverter.fromMapFileSource(

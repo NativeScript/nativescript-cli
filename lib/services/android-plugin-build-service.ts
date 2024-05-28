@@ -818,14 +818,15 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const opts: any = {
 			cwd: pluginBuildSettings.pluginDir,
 			stdio: "inherit",
+			shell: this.$hostInfo.isWindows,
 		};
 
-		if (this.$options.androidHost) {
+		if (this.$options.nativeHost) {
 			opts.env = {
 				USER_PROJECT_PLATFORMS_ANDROID: path.resolve(
 					cwd(),
-					this.$options.androidHost
-				), // TODO: couldn't `androidHost` have an absolute path already?
+					this.$options.nativeHost
+				), // TODO: couldn't `nativeHost` have an absolute path already?
 				...process.env, // TODO: any other way to pass automatically the current process.env?
 			};
 		}

@@ -1,3 +1,11 @@
 {
-  "useTabs": true
+  "useTabs": true,
+  "overrides": [
+    {
+      "files": "*.json",
+      "options": {
+        "useTabs": false
+      }
+    }
+  ]
 }

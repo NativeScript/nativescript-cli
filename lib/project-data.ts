@@ -79,6 +79,7 @@ export class ProjectData implements IProjectData {
 		this.warnProjectId();
 		this.projectIdentifiers.ios = identifier;
 		this.projectIdentifiers.android = identifier;
+		this.projectIdentifiers.visionos = identifier;
 	}
 
 	public projectName: string;
@@ -313,12 +314,14 @@ export class ProjectData implements IProjectData {
 			return {
 				ios: "",
 				android: "",
+				visionos: "",
 			};
 		}
 
 		const identifier: Mobile.IProjectIdentifier = {
 			ios: config.id,
 			android: config.id,
+			visionos: config.id,
 		};
 
 		if (config.ios && config.ios.id) {
@@ -326,6 +329,9 @@ export class ProjectData implements IProjectData {
 		}
 		if (config.android && config.android.id) {
 			identifier.android = config.android.id;
+		}
+		if (config.visionos && config.visionos.id) {
+			identifier.visionos = config.visionos.id;
 		}
 
 		return identifier;

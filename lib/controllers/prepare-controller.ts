@@ -470,7 +470,9 @@ export class PrepareController extends EventEmitter {
 				packageData.android.discardUncaughtJsExceptions;
 		}
 		let packagePath: string;
-		if (platformData.platformNameLowerCase === "ios") {
+		if (
+			this.$mobileHelper.isApplePlatform(platformData.platformNameLowerCase)
+		) {
 			packagePath = path.join(
 				platformData.projectRoot,
 				projectData.projectName,
@@ -478,6 +480,7 @@ export class PrepareController extends EventEmitter {
 				"package.json"
 			);
 		} else {
+			console.log("!!!!! VM: proj root: " + platformData.projectRoot);
 			packagePath = path.join(
 				platformData.projectRoot,
 				this.$options.androidHostModule,

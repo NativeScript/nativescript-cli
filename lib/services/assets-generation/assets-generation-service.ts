@@ -43,7 +43,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	public async generateIcons(
 		resourceGenerationData: IResourceGenerationData
 	): Promise<void> {
-		if (this.$options.androidHost) {
+		if (this.$options.nativeHost) {
 			return;
 		}
 
@@ -59,7 +59,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	public async generateSplashScreens(
 		splashesGenerationData: IResourceGenerationData
 	): Promise<void> {
-		if (this.$options.androidHost) {
+		if (this.$options.nativeHost) {
 			return;
 		}
 

@@ -165,14 +165,14 @@ export class WebpackCompilerService
 						const files = result.emittedFiles.map((file: string) =>
 							path.join(
 								platformData.appDestinationDirectoryPath,
-								this.$options.androidHostModule,
+								this.$options.nativeHostModule,
 								file
 							)
 						);
 						const fallbackFiles = result.fallbackFiles.map((file: string) =>
 							path.join(
 								platformData.appDestinationDirectoryPath,
-								this.$options.androidHostModule,
+								this.$options.nativeHostModule,
 								file
 							)
 						);
@@ -354,12 +354,15 @@ export class WebpackCompilerService
 			cwd: projectData.projectDir,
 			stdio,
 		};
-		if (this.$options.androidHost) {
+
+		if (this.$options.nativeHost) {
 			options.env = {
-				USER_PROJECT_PLATFORMS_ANDROID: this.$options.androidHost,
-				USER_PROJECT_PLATFORMS_ANDROID_MODULE: this.$options.androidHostModule,
+				USER_PROJECT_PLATFORMS_ANDROID: this.$options.nativeHost,
+				USER_PROJECT_PLATFORMS_ANDROID_MODULE: this.$options.nativeHostModule,
+				USER_PROJECT_PLATFORMS_IOS: this.$options.nativeHost,
 			};
 		}
+
 		const childProcess = this.$childProcess.spawn(
 			process.execPath,
 			args,
@@ -380,11 +383,13 @@ export class WebpackCompilerService
 		const { env } = prepareData;
 		const envData = Object.assign({}, env, { [platform.toLowerCase()]: true });
 
+		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();
 		const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
 
 		Object.assign(
 			envData,
+			appId && { appId },
 			appPath && { appPath },
 			appResourcesPath && { appResourcesPath },
 			{
@@ -574,14 +579,14 @@ export class WebpackCompilerService
 		const files = message.data.emittedAssets.map((asset: string) =>
 			path.join(
 				platformData.appDestinationDirectoryPath,
-				this.$options.androidHostModule,
+				this.$options.nativeHostModule,
 				asset
 			)
 		);
 		const staleFiles = message.data.staleAssets.map((asset: string) =>
 			path.join(
 				platformData.appDestinationDirectoryPath,
-				this.$options.androidHostModule,
+				this.$options.nativeHostModule,
 				asset
 			)
 		);

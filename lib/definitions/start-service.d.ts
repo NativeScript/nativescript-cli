@@ -7,7 +7,9 @@ export interface IStartService {
 	toggleVerbose(): void;
 
 	runIOS(): Promise<void>;
+	runVisionOS(): Promise<void>;
 	runAndroid(): Promise<void>;
 	stopIOS(): Promise<void>;
+	stopVisionOS(): Promise<void>;
 	stopAndroid(): Promise<void>;
 }
