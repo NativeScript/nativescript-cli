@@ -10,6 +10,7 @@ import { NodePackageManager } from "../../lib/node-package-manager";
 import { YarnPackageManager } from "../../lib/yarn-package-manager";
 import { Yarn2PackageManager } from "../../lib/yarn2-package-manager";
 import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
+import { BunPackageManager } from "../../lib/bun-package-manager";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 
 let actualMessage: string = null;
@@ -32,6 +33,8 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("yarn", YarnPackageManager);
 	injector.register("yarn2", Yarn2PackageManager);
 	injector.register("pnpm", PnpmPackageManager);
+	injector.register("bun", BunPackageManager);
+
 	injector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
@@ -69,8 +72,7 @@ describe("PlatformController", () => {
 			latestFrameworkVersion: "7.0.0",
 		},
 		{
-			name:
-				"should add the latest compatible version (tns platform add <platform>)",
+			name: "should add the latest compatible version (tns platform add <platform>)",
 			latestFrameworkVersion,
 			getPlatformParam: (platform: string) =>
 				`${platform}@${latestFrameworkVersion}`,
@@ -96,9 +98,8 @@ describe("PlatformController", () => {
 				const platformParam = testCase.getPlatformParam
 					? testCase.getPlatformParam(platform)
 					: platform;
-				const platformController: PlatformController = injector.resolve(
-					"platformController"
-				);
+				const platformController: PlatformController =
+					injector.resolve("platformController");
 				await platformController.addPlatform({
 					projectDir,
 					platform: platformParam,
@@ -123,9 +124,8 @@ describe("PlatformController", () => {
 			const fs = injector.resolve("fs");
 			fs.exists = (filePath: string) => filePath !== frameworkPath;
 
-			const platformController: PlatformController = injector.resolve(
-				"platformController"
-			);
+			const platformController: PlatformController =
+				injector.resolve("platformController");
 
 			await assert.isRejected(
 				platformController.addPlatform({ projectDir, platform, frameworkPath }),
@@ -175,9 +175,8 @@ describe("PlatformController", () => {
 			}
 		};
 
-		const platformController: PlatformController = injector.resolve(
-			"platformController"
-		);
+		const platformController: PlatformController =
+			injector.resolve("platformController");
 		await platformController.addPlatform({
 			projectDir,
 			platform: "android",

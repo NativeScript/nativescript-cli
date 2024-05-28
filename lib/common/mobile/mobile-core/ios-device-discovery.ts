@@ -8,7 +8,8 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $iosDeviceOperations: IIOSDeviceOperations
+		private $iosDeviceOperations: IIOSDeviceOperations,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
 	) {
 		super();
 	}
@@ -21,9 +22,15 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 		if (
 			options &&
 			options.platform &&
-			(!this.$mobileHelper.isiOSPlatform(options.platform) || options.emulator)
+			(!this.$mobileHelper.isApplePlatform(options.platform) ||
+				options.emulator)
 		) {
 			return;
+		}
+
+		if (this.$mobileHelper.isvisionOSPlatform(options.platform)) {
+			// look for ios devices - same logic.
+			options.platform = this.$devicePlatformsConstants.iOS;
 		}
 
 		await this.$iosDeviceOperations.startLookingForDevices(

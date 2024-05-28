@@ -111,6 +111,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 		await this.$childProcess.spawnFromEvent(npmExecutable, params, "close", {
 			cwd: opts.cwd,
 			stdio: stdioValue,
+			shell: this.$hostInfo.isWindows,
 		});
 
 		// Whenever calling "npm install" or "yarn add" without any arguments (hence installing all dependencies) no output is emitted on stdout

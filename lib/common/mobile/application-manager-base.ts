@@ -6,7 +6,8 @@ import * as _ from "lodash";
 
 export abstract class ApplicationManagerBase
 	extends EventEmitter
-	implements Mobile.IDeviceApplicationManager {
+	implements Mobile.IDeviceApplicationManager
+{
 	private lastInstalledAppIdentifiers: string[];
 	private lastAvailableDebuggableApps: Mobile.IDeviceApplicationInformation[];
 	private lastAvailableDebuggableAppViews: IDictionary<
@@ -36,7 +37,7 @@ export abstract class ApplicationManagerBase
 			appIdentifier
 		);
 
-		if (isApplicationInstalled) {
+		if (isApplicationInstalled && buildData?.clean) {
 			await this.uninstallApplication(appIdentifier);
 		}
 
@@ -65,7 +66,8 @@ export abstract class ApplicationManagerBase
 					// use locking, so the next executions will not get into the body, while the first one is still working.
 					// In case we do not break the next executions, we'll report each app as newly installed several times.
 					try {
-						const currentlyInstalledAppIdentifiers = await this.getInstalledApplications();
+						const currentlyInstalledAppIdentifiers =
+							await this.getInstalledApplications();
 						const previouslyInstalledAppIdentifiers =
 							this.lastInstalledAppIdentifiers || [];
 
@@ -122,9 +124,7 @@ export abstract class ApplicationManagerBase
 		appIdentifier?: string,
 		buildData?: IBuildData
 	): Promise<void>;
-	public abstract uninstallApplication(
-		appIdentifier: string
-	): Promise<void>;
+	public abstract uninstallApplication(appIdentifier: string): Promise<void>;
 	public abstract startApplication(
 		appData: Mobile.IApplicationData
 	): Promise<void>;
@@ -190,9 +190,8 @@ export abstract class ApplicationManagerBase
 		_.each(
 			currentlyAvailableAppViews,
 			(currentlyAvailableViews, appIdentifier) => {
-				const previouslyAvailableViews = this.lastAvailableDebuggableAppViews[
-					appIdentifier
-				];
+				const previouslyAvailableViews =
+					this.lastAvailableDebuggableAppViews[appIdentifier];
 
 				const newAvailableViews = _.differenceBy(
 					currentlyAvailableViews,
@@ -229,9 +228,8 @@ export abstract class ApplicationManagerBase
 					}
 				});
 
-				this.lastAvailableDebuggableAppViews[
-					appIdentifier
-				] = currentlyAvailableViews;
+				this.lastAvailableDebuggableAppViews[appIdentifier] =
+					currentlyAvailableViews;
 			}
 		);
 	}

@@ -8,40 +8,61 @@
   <br>
 </h1>
 
-<h4 align="center">The NativeScript CLI lets you create, build, and deploy <a href="https://docs.nativescript.org/" target="_blank">NativeScript</a>-based apps on iOS and Android devices.</h4>
+<h4 align="center">The NativeScript CLI lets you create, build, and deploy <a href="https://docs.nativescript.org/" target="_blank">NativeScript</a> apps.</h4>
   </a>
 </h4>
 
 ---
 
-[![nativescript -> npm](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release.yml/badge.svg)](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release.yml)
+[![nativescript -> npm](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release_cli.yml/badge.svg)](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release_cli.yml)
 
 Get it using: `npm install -g nativescript`
 
-* [What is NativeScript](#what-is-nativescript "Quick overview of NativeScript, the JavaScript framework for cross-platform development of native iOS and Android apps")
-* [How the NativeScript CLI works](#how-the-nativescript-cli-works "How the CLI works in more detail")
-* [Supported Platforms](#supported-platforms "The mobile platforms you can target with NativeScript")
-* [System Requirements](#system-requirements "The hardware and software requirements for setting up and working with the NativeScript CLI")
-* [Installation](#installation "How to configure and install the NativeScript CLI")
-    * [Install the NativeScript CLI](#install-the-nativescript-cli)
-    * [Configure Proxy Usage](#configure-proxy-settings)
-* [Quick Start](#quick-start "Get started with the NativeScript CLI")
-    * [The Commands](#the-commands)
-    * [Create Project](#create-project)
-    * [Develop Your Project](#develop-your-project)
-    * [Build Your Project](#build-your-project)
-    * [Run Your Project](#run-your-project)
-* [Extending the CLI](#extending-the-cli)
-* [Troubleshooting](#troubleshooting)
-* [How to Contribute](#how-to-contribute)
-* [How to Build](#how-to-build)
-* [Get Help](#get-help)
-* [License](#license)
+- [What is NativeScript](#what-is-nativescript)
+- [How the NativeScript CLI works](#how-the-nativescript-cli-works)
+- [Supported Platforms](#supported-platforms)
+- [System Requirements](#system-requirements)
+- [Installation](#installation)
+  - [Install the NativeScript CLI](#install-the-nativescript-cli)
+  - [Configure Proxy Settings](#configure-proxy-settings)
+    - [Set Proxy Settings](#set-proxy-settings)
+      - [Attributes](#attributes)
+      - [Options](#options)
+      - [Limitations](#limitations)
+    - [Display Current Proxy Settings](#display-current-proxy-settings)
+    - [Clear Proxy Settings](#clear-proxy-settings)
+- [Quick Start](#quick-start)
+  - [The Commands](#the-commands)
+  - [Create Project](#create-project)
+  - [Develop Your Project](#develop-your-project)
+    - [Development with NativeScript](#development-with-nativescript)
+    - [Development in `app`](#development-in-app)
+    - [Development in `platforms`](#development-in-platforms)
+    - [Modifying Configuration Files](#modifying-configuration-files)
+    - [Modifying Entitlements File (iOS only)](#modifying-entitlements-file-ios-only)
+  - [Build Your Project](#build-your-project)
+  - [Run Your Project](#run-your-project)
+- [Extending the CLI](#extending-the-cli)
+- [Troubleshooting](#troubleshooting)
+- [How to Contribute](#how-to-contribute)
+- [How to Build](#how-to-build)
+- [Get Help](#get-help)
+- [License](#license)
 
 What is NativeScript
 ===
 
-NativeScript is a cross-platform JavaScript framework that lets you develop native iOS and Android apps from a single code base. The framework provides JavaScript access to the native APIs, user interface, and rendering engines of iOS and Android. By using JavaScript or TypeScript, you can create one project that builds into an iOS or Android app with completely native user experience.
+NativeScript provides platform APIs directly to the JavaScript runtime (_with strong types_) for a rich TypeScript development experience. 
+
+Some popular use cases:
+
+- Building Web, iOS, Android and Vision Pro apps with a shared codebase (aka, cross platform apps)
+- Building native platform apps with portable JavaScript skills
+- Augmenting JavaScript projects with platform API capabilities
+- AndroidTV and Watch development
+- watchOS development
+- Learning native platforms through JavaScript understanding
+- Exploring platform API documentation by trying APIs [directly from a web browser](https://preview.nativescript.org/) without requiring a platform development machine setup.
 
 To learn more about NativeScript, you can check the following resources:
 
@@ -96,7 +117,7 @@ The NativeScript CLI is available for installing as an npm package.
 
 In the command prompt, run the following command.
 
-OS | Node.js installed from http://nodejs.org/ | Node.js installed via package manager
+OS | Node.js installed from https://nodejs.org/ | Node.js installed via package manager
 ---|---------------------|----
 Windows | `npm install nativescript -g` | `npm install nativescript -g`
 macOS | `sudo npm install nativescript -g --unsafe-perm` | `npm install nativescript -g`
@@ -265,7 +286,7 @@ The NativeScript CLI calls the SDK for the selected target platform and uses it 
 
 When you build for iOS, the NativeScript CLI will either build for a device, if there's a device attached, or for the native emulator if there are no devices attached. To trigger a native emulator build when a device is attached, set the `--emulator` flag.
 
-> **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](http://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
+> **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](https://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
 [Back to Top][1]
 
@@ -355,10 +376,10 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [Back to Top][1]
 
 [1]: #nativescript-command-line-interface
-[2]: https://www.progress.com/nativescript
+[2]: https://nativescript.org
 [3]: https://github.com/nativescript/docs
 [4]: https://docs.nativescript.org/
 [5]: https://docs.nativescript.org/api-reference
 [6]: https://www.nativescript.org/faq
 [7]: https://docs.nativescript.org/core-concepts/technical-overview
-[8]: http://blogs.telerik.com/valentinstoychev/posts.aspx/14-06-12/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
+[8]: https://www.telerik.com/blogs/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications

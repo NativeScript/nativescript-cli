@@ -23,6 +23,18 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		let error = null;
 
 		try {
+			if (
+				options.platform === this.$devicePlatformsConstants.visionOS &&
+				!options.emulatorIdOrName
+			) {
+				// find first available visionOS simulator (for now).
+				const { devices } = await this.tryGetiOSSimDevices();
+				options.emulatorIdOrName = devices.find(
+					(device) =>
+						device.platform === this.$devicePlatformsConstants.visionOS
+				)?.id;
+			}
+
 			await this.$iOSSimResolver.iOSSim.startSimulator({
 				device: options.imageIdentifier || options.emulatorIdOrName,
 				state: "None",
@@ -132,7 +144,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 			isTablet: this.$mobileHelper.isiOSTablet(simDevice.name),
 			type: DeviceTypes.Emulator,
 			connectionTypes: [DeviceConnectionType.Local],
-			platform: this.$devicePlatformsConstants.iOS,
+			platform: simDevice.platform ?? this.$devicePlatformsConstants.iOS,
 		};
 	}
 }

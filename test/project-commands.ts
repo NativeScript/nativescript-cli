@@ -33,6 +33,10 @@ const expectedFlavorChoices = [
 	},
 	{ key: "Vue.js", description: "Learn more at https://nativescript.org/vue" },
 	{
+		key: "Solid",
+		description: "Learn more at https://www.solidjs.com",
+	},
+	{
 		key: "Svelte",
 		description: "Learn more at https://svelte-native.technology",
 	},
@@ -61,18 +65,61 @@ const templateChoices = {
 		key: "Tabs",
 		description: "An app with pre-built pages that uses tabs for navigation",
 	},
+	vision: {
+		description: "A visionOS app",
+		key: "visionOS",
+	},
 };
-const expectedTemplateChoices = [
-	templateChoices.helloWorld,
-	templateChoices.sideDrawer,
-	templateChoices.tabs,
-];
-const expectedTemplateChoicesVue = [
-	templateChoices.blank,
-	templateChoices.blankTypeScript,
-	templateChoices.sideDrawer,
-	templateChoices.tabs,
-];
+// const expectedTemplateChoices = [
+// 	templateChoices.helloWorld,
+// 	templateChoices.sideDrawer,
+// 	templateChoices.tabs,
+// ];
+// const expectedTemplateChoicesVue = [
+// 	templateChoices.blank,
+// 	templateChoices.blankTypeScript,
+// 	templateChoices.sideDrawer,
+// 	templateChoices.tabs,
+// ];
+
+const expectedTemplateChoices: Record<string, any[]> = {
+	[constants.JsFlavorName]: [
+		templateChoices.helloWorld,
+		templateChoices.sideDrawer,
+		templateChoices.tabs,
+	],
+	[constants.TsFlavorName]: [
+		templateChoices.helloWorld,
+		templateChoices.sideDrawer,
+		templateChoices.tabs,
+		templateChoices.vision,
+	],
+	[constants.NgFlavorName]: [
+		templateChoices.helloWorld,
+		templateChoices.sideDrawer,
+		templateChoices.tabs,
+		templateChoices.vision,
+	],
+	[constants.VueFlavorName]: [
+		templateChoices.blank,
+		templateChoices.blankTypeScript,
+		templateChoices.sideDrawer,
+		templateChoices.tabs,
+		templateChoices.vision,
+	],
+	[constants.ReactFlavorName]: [
+		templateChoices.helloWorld,
+		templateChoices.vision,
+	],
+	[constants.SvelteFlavorName]: [
+		templateChoices.helloWorld,
+		templateChoices.vision,
+	],
+	// [constants.SolidFlavorName]: [
+	// 	templateChoices.helloWorld,
+	// 	templateChoices.vision,
+	// ],
+};
 
 class ProjectServiceMock implements IProjectService {
 	async validateProjectName(opts: {
@@ -157,10 +204,12 @@ describe("Project commands tests", () => {
 				? "Finally"
 				: "Next, which template would you like to start from:";
 			answers[templateQuestion] = opts.templateAnswer;
+
+			if (opts.flavorAnswer in expectedTemplateChoices === false) {
+				throw new Error(`Unexpected flavorAnswer: ${opts.flavorAnswer}`);
+			}
 			questionChoices[templateQuestion] =
-				opts.flavorAnswer === constants.VueFlavorName
-					? expectedTemplateChoicesVue
-					: expectedTemplateChoices;
+				expectedTemplateChoices[opts.flavorAnswer];
 		}
 
 		prompterStub.expect({

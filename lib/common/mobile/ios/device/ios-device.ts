@@ -48,7 +48,7 @@ export class IOSDevice extends IOSDeviceBase {
 		this.deviceInfo = {
 			identifier: deviceActionInfo.deviceId,
 			vendor: "Apple",
-			platform: this.$devicePlatformsConstants.iOS,
+			platform: this.getPlatform(productType),
 			status: deviceStatus,
 			errorHelp:
 				deviceStatus === commonConstants.UNREACHABLE_STATUS
@@ -156,12 +156,24 @@ export class IOSDevice extends IOSDeviceBase {
 				isArm64Architecture = majorVersion >= 4;
 			} else if (_.startsWith(productType, "ipod")) {
 				isArm64Architecture = majorVersion >= 7;
+			} else if (_.startsWith(productType, "realitydevice")) {
+				// visionos
+				isArm64Architecture = true;
 			}
 
 			activeArchitecture = isArm64Architecture ? "arm64" : "armv7";
 		}
 
 		return activeArchitecture;
+	}
+
+	private getPlatform(productType: string): string {
+		productType = productType.toLowerCase().trim();
+		if (_.startsWith(productType, "realitydevice")) {
+			// visionos
+			return this.$devicePlatformsConstants.visionOS;
+		}
+		return this.$devicePlatformsConstants.iOS;
 	}
 }
 
