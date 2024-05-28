@@ -342,10 +342,23 @@ export class WebpackCompilerService
 		}
 
 		const stdio = prepareData.watch ? ["ipc"] : "inherit";
-		const childProcess = this.$childProcess.spawn(process.execPath, args, {
+		const options: { [key: string]: any } = {
 			cwd: projectData.projectDir,
 			stdio,
-		});
+		};
+
+		if (this.$options.nativeHost) {
+			options.env = {
+				USER_PROJECT_PLATFORMS_ANDROID: this.$options.nativeHost,
+				USER_PROJECT_PLATFORMS_IOS: this.$options.nativeHost,
+			};
+		}
+
+		const childProcess = this.$childProcess.spawn(
+			process.execPath,
+			args,
+			options
+		);
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
 		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
