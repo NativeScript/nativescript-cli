@@ -40,7 +40,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		nativeHost?: string
 	): Promise<void> {
 		if (this.$options.nativeHost) {
-			this.$logger.info("Ignoring platform add becuase of --android-host flag");
+			this.$logger.info("Ignoring platform add becuase of --native-host flag");
 			return;
 		}
 
@@ -93,7 +93,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	): Promise<void> {
 		if (this.$options.nativeHost) {
 			this.$logger.info(
-				"Ignoring platform remove becuase of --android-host flag"
+				"Ignoring platform remove becuase of --native-host flag"
 			);
 			return;
 		}

@@ -480,7 +480,6 @@ export class PrepareController extends EventEmitter {
 				"package.json"
 			);
 		} else {
-			console.log("!!!!! VM: proj root: " + platformData.projectRoot);
 			packagePath = path.join(
 				platformData.projectRoot,
 				this.$options.nativeHostModule,
