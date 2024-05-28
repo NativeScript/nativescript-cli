@@ -42,7 +42,7 @@ export class FilesHashService implements IFilesHashService {
 	): Promise<IStringDictionary> {
 		const appFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			this.$options.androidHostModule
+			this.$options.nativeHostModule
 		);
 		const files = this.$fs.enumerateFilesInDirectorySync(appFilesPath);
 		const hashes = await this.generateHashes(files);

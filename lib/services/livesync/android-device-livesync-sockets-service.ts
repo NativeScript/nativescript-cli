@@ -279,7 +279,7 @@ export class AndroidDeviceSocketsLiveSyncService
 		);
 		const projectFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			this.$options.androidHostModule
+			this.$options.nativeHostModule
 		);
 		if (!this.livesyncTool.hasConnection()) {
 			await this.livesyncTool.connect({

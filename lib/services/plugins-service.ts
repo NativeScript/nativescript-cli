@@ -803,7 +803,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 				);
 				const pluginDestinationPath = path.join(
 					platformData.appDestinationDirectoryPath,
-					this.$options.androidHostModule,
+					this.$options.nativeHostModule,
 					"tns_modules"
 				);
 				await action(
@@ -876,7 +876,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	private getAllPluginsNativeHashes(
 		pathToPluginsBuildFile: string
 	): IDictionary<IStringDictionary> {
-		if (this.$options.androidHost) {
+		if (this.$options.nativeHost) {
 			return {}; // TODO: force rebuild plugins for now until we decide where to put .ns-plugins-build-data.json when embedding
 		}
 		let data: IDictionary<IStringDictionary> = {};
@@ -893,7 +893,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		currentPluginNativeHashes: IStringDictionary;
 		allPluginsNativeHashes: IDictionary<IStringDictionary>;
 	}): void {
-		if (this.$options.androidHost) {
+		if (this.$options.nativeHost) {
 			return; // TODO: force rebuild plugins for now until we decide where to put .ns-plugins-build-data.json when embedding
 		}
 

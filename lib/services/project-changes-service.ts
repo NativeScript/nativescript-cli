@@ -237,7 +237,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	public getPrepareInfo(platformData: IPlatformData): IPrepareInfo {
-		if (this.$options.androidHost) {
+		if (this.$options.nativeHost) {
 			return null; // TODO: always prepare for now until we decide where to keep the .nsprepareinfo file when embedding
 		}
 
@@ -263,7 +263,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			await this.ensurePrepareInfo(platformData, projectData, prepareData);
 		}
 
-		if (this.$options.androidHost) {
+		if (this.$options.nativeHost) {
 			return null; // TODO: do not save for now until we decide where to keep the .nsprepareinfo file when embedding
 		}
 

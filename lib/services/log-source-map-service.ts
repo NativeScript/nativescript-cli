@@ -202,7 +202,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	): IFileLocation {
 		const fileLocation = path.join(
 			this.getFilesLocation(platform, projectData),
-			this.$options.androidHostModule
+			this.$options.nativeHostModule
 		);
 
 		if (parsedLine && parsedLine.filePath) {

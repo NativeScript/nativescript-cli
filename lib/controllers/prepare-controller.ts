@@ -135,7 +135,7 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData
 	): Promise<IPrepareResultData> {
 		await this.$projectService.ensureAppResourcesExist(projectData.projectDir);
-		if (!this.$options.androidHost) {
+		if (!this.$options.nativeHost) {
 			await this.$platformController.addPlatformIfNeeded(
 				prepareData,
 				projectData
@@ -483,9 +483,9 @@ export class PrepareController extends EventEmitter {
 			console.log("!!!!! VM: proj root: " + platformData.projectRoot);
 			packagePath = path.join(
 				platformData.projectRoot,
-				this.$options.androidHostModule,
+				this.$options.nativeHostModule,
 				"src",
-				this.$options.androidHost ? "nativescript" : "main",
+				this.$options.nativeHost ? "nativescript" : "main",
 				"assets",
 				"app",
 				"package.json"
