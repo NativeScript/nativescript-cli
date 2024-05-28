@@ -15,6 +15,7 @@ import {
 	INodePackageManager,
 	IAndroidToolsInfo,
 	IWatchIgnoreListService,
+	IOptions,
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectData, IProjectDataService } from "../definitions/project";
@@ -37,6 +38,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
 import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
+import { cwd } from "process";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -47,6 +49,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
+		private $options: IOptions,
 		private $androidToolsInfo: IAndroidToolsInfo,
 		private $logger: ILogger,
 		private $packageManager: INodePackageManager,
@@ -803,6 +806,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
+
 		if (pluginBuildSettings.gradleArgs) {
 			localArgs.push(pluginBuildSettings.gradleArgs);
 		}
@@ -811,12 +815,29 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			localArgs.push("--quiet");
 		}
 
+		const opts: any = {
+			cwd: pluginBuildSettings.pluginDir,
+			stdio: "inherit",
+			shell: this.$hostInfo.isWindows,
+		};
+
+		if (this.$options.nativeHost) {
+			opts.env = {
+				USER_PROJECT_PLATFORMS_ANDROID: path.resolve(
+					cwd(),
+					this.$options.nativeHost
+				), // TODO: couldn't `nativeHost` have an absolute path already?
+				...process.env, // TODO: any other way to pass automatically the current process.env?
+			};
+		}
+
 		try {
-			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", {
-				cwd: pluginBuildSettings.pluginDir,
-				stdio: "inherit",
-				shell: this.$hostInfo.isWindows,
-			});
+			await this.$childProcess.spawnFromEvent(
+				gradlew,
+				localArgs,
+				"close",
+				opts
+			);
 		} catch (err) {
 			this.$errors.fail(
 				`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`

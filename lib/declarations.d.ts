@@ -578,15 +578,17 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
-interface IAndroidOptions {
-	gradlePath: string;
-	gradleArgs: string;
+interface IEmbedOptions {
 	nativeHost: string;
+	nativeHostModule: string;
 }
 
-interface IIOSOptions {
-	nativeHost: string;
+interface IAndroidOptions extends IEmbedOptions {
+	gradlePath: string;
+	gradleArgs: string;
 }
+
+interface IIOSOptions extends IEmbedOptions {}
 
 interface ITypingsOptions {
 	jar: string;

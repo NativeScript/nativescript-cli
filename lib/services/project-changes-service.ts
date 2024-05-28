@@ -23,6 +23,7 @@ import {
 } from "../definitions/project-changes";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { IOptions } from "../declarations";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -62,6 +63,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $options: IOptions,
 		public $hooksService: IHooksService,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) {}
@@ -235,6 +237,10 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	public getPrepareInfo(platformData: IPlatformData): IPrepareInfo {
+		if (this.$options.nativeHost) {
+			return null; // TODO: always prepare for now until we decide where to keep the .nsprepareinfo file when embedding
+		}
+
 		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);
 		let prepareInfo: IPrepareInfo = null;
 		if (this.$fs.exists(prepareInfoFilePath)) {
@@ -255,6 +261,10 @@ export class ProjectChangesService implements IProjectChangesService {
 	): Promise<void> {
 		if (!this._prepareInfo) {
 			await this.ensurePrepareInfo(platformData, projectData, prepareData);
+		}
+
+		if (this.$options.nativeHost) {
+			return null; // TODO: do not save for now until we decide where to keep the .nsprepareinfo file when embedding
 		}
 
 		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);

@@ -173,21 +173,21 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			const appDestinationDirectoryArr = [
 				projectRoot,
-				constants.APP_FOLDER_NAME,
+				this.$options.nativeHostModule,
 				constants.SRC_DIR,
 				constants.MAIN_DIR,
 				constants.ASSETS_DIR,
 			];
 			const configurationsDirectoryArr = [
 				projectRoot,
-				constants.APP_FOLDER_NAME,
+				this.$options.nativeHostModule,
 				constants.SRC_DIR,
 				constants.MAIN_DIR,
 				constants.MANIFEST_FILE_NAME,
 			];
 			const deviceBuildOutputArr = [
 				projectRoot,
-				constants.APP_FOLDER_NAME,
+				this.$options.nativeHostModule,
 				constants.BUILD_DIR,
 				constants.OUTPUTS_DIR,
 				constants.APK_DIR,
@@ -210,7 +210,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					if (buildOptions.androidBundle) {
 						return path.join(
 							projectRoot,
-							constants.APP_FOLDER_NAME,
+							this.$options.nativeHostModule,
 							constants.BUILD_DIR,
 							constants.OUTPUTS_DIR,
 							constants.BUNDLE_DIR
@@ -229,8 +229,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					if (buildOptions.androidBundle) {
 						return {
 							packageNames: [
-								`${constants.APP_FOLDER_NAME}${constants.AAB_EXTENSION_NAME}`,
-								`${constants.APP_FOLDER_NAME}-${buildMode}${constants.AAB_EXTENSION_NAME}`,
+								`${this.$options.nativeHostModule}${constants.AAB_EXTENSION_NAME}`,
+								`${this.$options.nativeHostModule}-${buildMode}${constants.AAB_EXTENSION_NAME}`,
 							],
 						};
 					}
@@ -240,11 +240,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							`${packageName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}${constants.APK_EXTENSION_NAME}`,
-							`${constants.APP_FOLDER_NAME}-${buildMode}${constants.APK_EXTENSION_NAME}`,
+							`${this.$options.nativeHostModule}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 						],
 						regexes: [
 							new RegExp(
-								`(${packageName}|${constants.APP_FOLDER_NAME})-.*-(${Configurations.Debug}|${Configurations.Release})(-unsigned)?${constants.APK_EXTENSION_NAME}`,
+								`(${packageName}|${this.$options.nativeHostModule})-.*-(${Configurations.Debug}|${Configurations.Release})(-unsigned)?${constants.APK_EXTENSION_NAME}`,
 								"i"
 							),
 						],
@@ -570,7 +570,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$fs.exists(
 			path.join(
 				this.getPlatformData(projectData).appDestinationDirectoryPath,
-				constants.APP_FOLDER_NAME
+				this.$options.nativeHostModule
 			)
 		);
 	}
@@ -879,7 +879,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData
 	): string {
 		const resourcePath: string[] = [
-			constants.APP_FOLDER_NAME,
+			this.$options.nativeHostModule,
 			constants.SRC_DIR,
 			constants.MAIN_DIR,
 			constants.RESOURCES_DIR,
@@ -895,7 +895,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData
 	): string {
 		const resourcePath: string[] = [
-			constants.APP_FOLDER_NAME,
+			this.$options.nativeHostModule,
 			constants.SRC_DIR,
 		];
 

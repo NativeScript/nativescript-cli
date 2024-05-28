@@ -54,7 +54,7 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 			);
 			mappedFilePath = path.join(
 				platformData.appDestinationDirectoryPath,
-				constants.APP_FOLDER_NAME,
+				this.$options.nativeHostModule,
 				relativePath
 			);
 		}
