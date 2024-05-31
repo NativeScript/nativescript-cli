@@ -10,6 +10,7 @@ import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors, IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { ITempService } from "../../definitions/temp-service";
+import { IProjectData } from "../../definitions/project";
 
 export class BuildPluginCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -21,7 +22,8 @@ export class BuildPluginCommand implements ICommand {
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $options: IOptions,
-		private $tempService: ITempService
+		private $tempService: ITempService,
+		private $projectData: IProjectData
 	) {
 		this.pluginProjectPath = path.resolve(this.$options.path || ".");
 	}
@@ -50,10 +52,10 @@ export class BuildPluginCommand implements ICommand {
 		const tempAndroidProject = await this.$tempService.mkdirSync(
 			"android-project"
 		);
-
+		const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || [].concat(this.$options.gradleArgs || []));
 		const options: IPluginBuildOptions = {
 			gradlePath: this.$options.gradlePath,
-			gradleArgs: this.$options.gradleArgs,
+			gradleArgs,
 			aarOutputDir: platformsAndroidPath,
 			platformsAndroidDirPath: platformsAndroidPath,
 			pluginName: pluginName,

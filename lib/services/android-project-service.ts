@@ -758,9 +758,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			AndroidProjectService.ANDROID_PLATFORM_NAME
 		);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+			const gradleArgs = (projectData.nsConfig.android.gradleArgs || [].concat(this.$options.gradleArgs || []));
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
-				gradleArgs: this.$options.gradleArgs,
+				gradleArgs,
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,

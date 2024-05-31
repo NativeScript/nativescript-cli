@@ -228,9 +228,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.projectDir,
 				options.pluginName
 			);
+			const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || [].concat(options.gradleArgs || []));
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
-				gradleArgs: options.gradleArgs,
+				gradleArgs,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
