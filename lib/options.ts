@@ -225,9 +225,15 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
+			gradleArgs: {
+				type: OptionType.String,
+				hasSensitiveValue: false,
+				array: true,
+			},
+			gradleFlavor: { type: OptionType.String, hasSensitiveValue: false },
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
-			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
+			filterDevicesArch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
 			appleApplicationSpecificPassword: {
 				type: OptionType.String,

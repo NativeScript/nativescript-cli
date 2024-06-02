@@ -12,7 +12,7 @@ import * as util from "util";
 import * as _ from "lodash";
 import { IProjectDataService, IProjectData } from "../definitions/project";
 import { IBuildController } from "../definitions/build";
-import { IPlatformsDataService } from "../definitions/platform";
+import { IPlatformData, IPlatformsDataService } from "../definitions/platform";
 import { IDebugController } from "../definitions/debug";
 import { IPluginsService } from "../definitions/plugins";
 import {
@@ -23,6 +23,7 @@ import {
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { hook } from "../common/helpers";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
@@ -95,17 +96,28 @@ export class RunController extends EventEmitter implements IRunController {
 					const changesInfo = await this.$projectChangesService.checkForChanges(
 						platformData,
 						projectData,
-						prepareData
+						prepareData,
+						data
 					);
 					if (changesInfo.hasChanges) {
 						await this.syncChangedDataOnDevices(
 							data,
 							projectData,
+							platformData,
 							liveSyncInfo
 						);
 					}
 				} else {
-					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+					const platformData = this.$platformsDataService.getPlatformData(
+						data.platform,
+						projectData
+					);
+					await this.syncChangedDataOnDevices(
+						data,
+						projectData,
+						platformData,
+						liveSyncInfo
+					);
 				}
 			};
 
@@ -471,7 +483,6 @@ export class RunController extends EventEmitter implements IRunController {
 		deviceDescriptors: ILiveSyncDeviceDescriptor[]
 	): Promise<void> {
 		const rebuiltInformation: IDictionary<{
-			packageFilePath: string;
 			platform: string;
 			isEmulator: boolean;
 		}> = {};
@@ -508,8 +519,6 @@ export class RunController extends EventEmitter implements IRunController {
 			);
 
 			try {
-				let packageFilePath: string = null;
-
 				// Case where we have three devices attached, a change that requires build is found,
 				// we'll rebuild the app only for the first device, but we should install new package on all three devices.
 				if (
@@ -520,13 +529,9 @@ export class RunController extends EventEmitter implements IRunController {
 						rebuiltInformation[platformData.platformNameLowerCase]
 							.isEmulator === device.isEmulator)
 				) {
-					packageFilePath =
-						rebuiltInformation[platformData.platformNameLowerCase]
-							.packageFilePath;
 					await this.$deviceInstallAppService.installOnDevice(
 						device,
-						buildData,
-						packageFilePath
+						buildData
 					);
 				} else {
 					const shouldBuild =
@@ -534,11 +539,10 @@ export class RunController extends EventEmitter implements IRunController {
 						buildData.nativePrepare.forceRebuildNativeApp ||
 						(await this.$buildController.shouldBuild(buildData));
 					if (shouldBuild) {
-						packageFilePath = await deviceDescriptor.buildAction();
+						await deviceDescriptor.buildAction();
 						rebuiltInformation[platformData.platformNameLowerCase] = {
 							isEmulator: device.isEmulator,
 							platform: platformData.platformNameLowerCase,
-							packageFilePath,
 						};
 					} else {
 						await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -550,8 +554,7 @@ export class RunController extends EventEmitter implements IRunController {
 
 					await this.$deviceInstallAppService.installOnDeviceIfNeeded(
 						device,
-						buildData,
-						packageFilePath
+						buildData
 					);
 				}
 
@@ -623,9 +626,11 @@ export class RunController extends EventEmitter implements IRunController {
 		);
 	}
 
+	@hook("syncChangedDataOnDevices")
 	private async syncChangedDataOnDevices(
 		data: IFilesChangeEventData,
 		projectData: IProjectData,
+		platformData: IPlatformData,
 		liveSyncInfo: ILiveSyncInfo
 	): Promise<void> {
 		const successfullySyncedMessageFormat = `Successfully synced application %s on device %s.`;
@@ -713,9 +718,7 @@ export class RunController extends EventEmitter implements IRunController {
 
 					await this.$deviceInstallAppService.installOnDevice(
 						device,
-						deviceDescriptor.buildData,
-						rebuiltInformation[platformData.platformNameLowerCase]
-							.packageFilePath
+						deviceDescriptor.buildData
 					);
 					await platformLiveSyncService.syncAfterInstall(device, watchInfo);
 					await this.refreshApplication(

@@ -19,6 +19,8 @@ import {
 	IFileSystem,
 	IProjectDir,
 } from "../../lib/common/declarations";
+import { PLATFORMS_DIR_NAME } from "../../lib/constants";
+import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -60,6 +62,12 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("staticConfig", {
 		TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage",
 	});
+
+	testInjector.register(
+		"liveSyncProcessDataService",
+		LiveSyncProcessDataService
+	);
+	testInjector.register("devicesService", {});
 	return testInjector;
 };
 
@@ -184,7 +192,7 @@ describe("androidProjectService", () => {
 		);
 		const pathToPlatformsAndroid = path.join(
 			projectDir,
-			"platforms",
+			PLATFORMS_DIR_NAME,
 			"android"
 		);
 		const pathToResDirInPlatforms = path.join(
@@ -240,9 +248,8 @@ describe("androidProjectService", () => {
 
 			compileSdkVersion = 29;
 
-			const androidToolsInfo = injector.resolve<IAndroidToolsInfo>(
-				"androidToolsInfo"
-			);
+			const androidToolsInfo =
+				injector.resolve<IAndroidToolsInfo>("androidToolsInfo");
 			androidToolsInfo.getToolsInfo = (
 				config?: IProjectDir
 			): IAndroidToolsInfoData => {
@@ -258,9 +265,10 @@ describe("androidProjectService", () => {
 				"src"
 			);
 			beforeEach(() => {
-				const androidResourcesMigrationService = injector.resolve<
-					IAndroidResourcesMigrationService
-				>("androidResourcesMigrationService");
+				const androidResourcesMigrationService =
+					injector.resolve<IAndroidResourcesMigrationService>(
+						"androidResourcesMigrationService"
+					);
 				androidResourcesMigrationService.hasMigrated = () => true;
 			});
 
@@ -272,7 +280,7 @@ describe("androidProjectService", () => {
 						sourceFileName: path.join(pathToSrcDirInAppResources, "*"),
 						destinationFileName: path.join(
 							projectData.projectDir,
-							"platforms",
+							PLATFORMS_DIR_NAME,
 							"android",
 							"app",
 							"src"
@@ -329,9 +337,10 @@ describe("androidProjectService", () => {
 
 		describe("when old Android App_Resources structure is detected (post {N} 4.0 structure)", () => {
 			beforeEach(() => {
-				const androidResourcesMigrationService = injector.resolve<
-					IAndroidResourcesMigrationService
-				>("androidResourcesMigrationService");
+				const androidResourcesMigrationService =
+					injector.resolve<IAndroidResourcesMigrationService>(
+						"androidResourcesMigrationService"
+					);
 				androidResourcesMigrationService.hasMigrated = () => false;
 			});
 

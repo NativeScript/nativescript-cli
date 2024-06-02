@@ -289,7 +289,11 @@ export class PrepareController extends EventEmitter {
 					data.platform.toLowerCase() === platformData.platformNameLowerCase
 				) {
 					if (this.isFileWatcherPaused()) return;
-					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
+					this.emitPrepareEvent({
+						...data,
+						files: data.files ?? [],
+						hasNativeChanges: false,
+					});
 				}
 			};
 
@@ -371,7 +375,7 @@ export class PrepareController extends EventEmitter {
 					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
 					await this.writeRuntimePackageJson(projectData, platformData);
 					this.emitPrepareEvent({
-						files: [],
+						files: [filePath],
 						staleFiles: [],
 						hasOnlyHotUpdateFiles: false,
 						hmrData: null,
