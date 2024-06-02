@@ -112,7 +112,12 @@ export class RunController extends EventEmitter implements IRunController {
 						data.platform,
 						projectData
 					);
-					await this.syncChangedDataOnDevices(data, projectData, platformData, liveSyncInfo);
+					await this.syncChangedDataOnDevices(
+						data,
+						projectData,
+						platformData,
+						liveSyncInfo
+					);
 				}
 			};
 
@@ -537,7 +542,7 @@ export class RunController extends EventEmitter implements IRunController {
 						await deviceDescriptor.buildAction();
 						rebuiltInformation[platformData.platformNameLowerCase] = {
 							isEmulator: device.isEmulator,
-							platform: platformData.platformNameLowerCase
+							platform: platformData.platformNameLowerCase,
 						};
 					} else {
 						await this.$analyticsService.trackEventActionInGoogleAnalytics({

@@ -70,9 +70,9 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
 		if (buildData.gradleArgs) {
-			const additionalArgs: string[] = []
-			buildData.gradleArgs.forEach(arg=>{
-				additionalArgs.push(...arg.split(' -P').map((a,i) => i === 0 ? a : `-P${a}`));
+			const additionalArgs: string[] = [];
+			buildData.gradleArgs.forEach((arg) => {
+				additionalArgs.push(...arg.split(" ").map((a) => a.trim()));
 			});
 			args.push(...additionalArgs);
 		}
@@ -95,7 +95,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 
 		const logLevel = this.$logger.getLevel();
 		if (logLevel === "TRACE") {
-			args.push("--stacktrace", "--debug");
+			args.push("--debug");
 		} else if (logLevel === "INFO") {
 			args.push("--quiet");
 		}
@@ -106,7 +106,9 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 	private getBuildTaskName(buildData: IAndroidBuildData): string {
 		let baseTaskName = buildData.androidBundle ? "bundle" : "assemble";
 		if (buildData.gradleFlavor) {
-			baseTaskName += buildData.gradleFlavor[0].toUpperCase() + buildData.gradleFlavor.slice(1);
+			baseTaskName +=
+				buildData.gradleFlavor[0].toUpperCase() +
+				buildData.gradleFlavor.slice(1);
 		}
 		const buildTaskName = buildData.release
 			? `${baseTaskName}${Configurations.Release}`

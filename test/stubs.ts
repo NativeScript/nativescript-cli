@@ -664,7 +664,8 @@ export class ProjectDataStub implements IProjectData {
 	get platformsDir(): string {
 		return (
 			this.platformsDirCache ||
-			(this.projectDir && join(this.projectDir, constants.PLATFORMS_DIR_NAME)) ||
+			(this.projectDir &&
+				join(this.projectDir, constants.PLATFORMS_DIR_NAME)) ||
 			""
 		);
 	}
@@ -699,6 +700,9 @@ export class ProjectDataStub implements IProjectData {
 		this.projectIdentifiers = { android: "", ios: "" };
 		this.projectId = "";
 		this.projectName = "";
+		this.nsConfig = {
+			android: {},
+		};
 	}
 
 	public initializeProjectDataFromContent(): void {

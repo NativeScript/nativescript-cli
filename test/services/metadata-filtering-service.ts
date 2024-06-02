@@ -3,7 +3,10 @@ import { Yok } from "../../lib/common/yok";
 import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
-import { MetadataFilteringConstants, PLATFORMS_DIR_NAME } from "../../lib/constants";
+import {
+	MetadataFilteringConstants,
+	PLATFORMS_DIR_NAME,
+} from "../../lib/constants";
 import { EOL } from "os";
 import { IProjectData } from "../../lib/definitions/project";
 import { IDependencyData } from "../../lib/declarations";
@@ -96,9 +99,8 @@ describe("metadataFilteringService", () => {
 
 		it("deletes previously generated files for metadata filtering", () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { fs } = mockFs({
 				testInjector,
 				writeFileAction: (filePath: string, data: string) => {
@@ -119,9 +121,8 @@ describe("metadataFilteringService", () => {
 
 		it(`generates ${MetadataFilteringConstants.BLACKLIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [appResourcesNativeApiUsageFilePath],
@@ -168,9 +169,8 @@ describe("metadataFilteringService", () => {
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [appResourcesNativeApiUsageFilePath],
@@ -194,9 +194,8 @@ describe("metadataFilteringService", () => {
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} with content from plugins when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform> and whitelist-plugins-usages is true`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
@@ -222,9 +221,8 @@ describe("metadataFilteringService", () => {
 
 		it(`generates all files when both plugins and applications filters are included`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
@@ -261,9 +259,8 @@ describe("metadataFilteringService", () => {
 
 		it(`skips plugins ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} files when whitelist-plugins-usages in App_Resources is false`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [

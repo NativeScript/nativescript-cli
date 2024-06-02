@@ -12,7 +12,8 @@ import { injector } from "../../common/yok";
 
 export class GradleBuildService
 	extends EventEmitter
-	implements IGradleBuildService {
+	implements IGradleBuildService
+{
 	constructor(
 		private $childProcess: IChildProcess,
 		private $gradleBuildArgsService: IGradleBuildArgsService,
@@ -30,16 +31,22 @@ export class GradleBuildService
 			buildData
 		);
 		if (buildData.buildFilterDevicesArch) {
-			let devices = this.$devicesService.getDevicesForPlatform(buildData.platform);
-			if(buildData.emulator) {
-				devices = devices.filter(d=>d.isEmulator);
+			let devices = this.$devicesService.getDevicesForPlatform(
+				buildData.platform
+			);
+			if (buildData.emulator) {
+				devices = devices.filter((d) => d.isEmulator);
 			}
-			const abis = devices.map(d=>d.deviceInfo.abis.filter(a=>!!a && a.length)[0]).filter(a=>!!a);
-			if (abis.length > 0 && buildTaskArgs.findIndex(b=>b.startsWith('-PabiFilters')) === -1) {
-				buildTaskArgs.push(`-PabiFilters=${abis.join(',')}`);
+			const abis = devices
+				.map((d) => d.deviceInfo.abis.filter((a) => !!a && a.length)[0])
+				.filter((a) => !!a);
+			if (
+				abis.length > 0 &&
+				buildTaskArgs.findIndex((b) => b.startsWith("-PabiFilters")) === -1
+			) {
+				buildTaskArgs.push(`-PabiFilters=${abis.join(",")}`);
 			}
 		}
-		console.log('buildTaskArgs', buildTaskArgs);
 		const spawnOptions = {
 			emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME },
 			throwError: true,
@@ -67,9 +74,8 @@ export class GradleBuildService
 		projectRoot: string,
 		buildData: IAndroidBuildData
 	): Promise<void> {
-		const cleanTaskArgs = this.$gradleBuildArgsService.getCleanTaskArgs(
-			buildData
-		);
+		const cleanTaskArgs =
+			this.$gradleBuildArgsService.getCleanTaskArgs(buildData);
 		const gradleCommandOptions = {
 			cwd: projectRoot,
 			message: "Gradle clean...",
