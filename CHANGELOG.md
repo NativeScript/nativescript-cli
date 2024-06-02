@@ -1,3 +1,29 @@
+## [8.7.2](https://github.com/NativeScript/nativescript-cli/compare/v8.7.1...v8.7.2) (2024-05-28)
+
+### Bug Fixes
+
+* fix `npm i -g nativescript` on npm 10.4.0+ ([9d2ec7c](https://github.com/NativeScript/nativescript-cli/commit/9d2ec7cb6a12ea10439ea287991812645a156473))
+
+### Features
+
+* don't uninstall app by default ([bac14c0](https://github.com/NativeScript/nativescript-cli/commit/bac14c06568c7a0538618d9ca1e369a56dd272b5))
+
+
+
+## [8.7.1](https://github.com/NativeScript/nativescript-cli/compare/v8.7.0...v8.7.1) (2024-05-16)
+
+
+### Bug Fixes
+
+* **windows:** make compatible with latest node patch levels ([#5802](https://github.com/NativeScript/nativescript-cli/issues/5802)) ([8795e98](https://github.com/NativeScript/nativescript-cli/commit/8795e98e7876d11ac0032135607fb13bf00d246d))
+
+
+### Features
+
+* interactive typings generation for android ([#5798](https://github.com/NativeScript/nativescript-cli/issues/5798)) ([d3f2e70](https://github.com/NativeScript/nativescript-cli/commit/d3f2e70101d44a9bc8450c5d0b90419945c2604f))
+
+
+
 # [8.7.0](https://github.com/NativeScript/nativescript-cli/compare/v8.6.5...v8.7.0) (2024-04-08)
 
 

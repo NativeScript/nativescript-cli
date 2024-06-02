@@ -321,9 +321,8 @@ describe("ApplicationManagerBase", () => {
 					currentlyAvailableAppsForDebugging,
 					numberOfViewsPerApp
 				);
-				const currentDebuggableViews: IDictionary<
-					Mobile.IDebugWebViewInfo[]
-				> = {};
+				const currentDebuggableViews: IDictionary<Mobile.IDebugWebViewInfo[]> =
+					{};
 				applicationManager.on(
 					"debuggableViewFound",
 					(appIdentifier: string, d: Mobile.IDebugWebViewInfo) => {
@@ -368,9 +367,8 @@ describe("ApplicationManagerBase", () => {
 				const expectedResults = _.cloneDeep(
 					currentlyAvailableAppWebViewsForDebugging
 				);
-				const currentDebuggableViews: IDictionary<
-					Mobile.IDebugWebViewInfo[]
-				> = {};
+				const currentDebuggableViews: IDictionary<Mobile.IDebugWebViewInfo[]> =
+					{};
 
 				applicationManager
 					.checkForApplicationUpdates()
@@ -819,9 +817,8 @@ describe("ApplicationManagerBase", () => {
 					removedApps = removedApps.concat(currentlyRemovedApps);
 
 					const currentlyAddedApps = [`app${index}`];
-					currentlyInstalledApps = currentlyInstalledApps.concat(
-						currentlyAddedApps
-					);
+					currentlyInstalledApps =
+						currentlyInstalledApps.concat(currentlyAddedApps);
 					installedApps = installedApps.concat(currentlyAddedApps);
 
 					await testInstalledAppsResults();
@@ -1004,7 +1001,11 @@ describe("ApplicationManagerBase", () => {
 			applicationManager.isApplicationInstalled = (appIdentifier: string) =>
 				Promise.resolve(true);
 
-			await applicationManager.reinstallApplication("appId", "packageFilePath");
+			await applicationManager.reinstallApplication(
+				"appId",
+				"packageFilePath",
+				{ clean: true } as any
+			);
 			assert.deepStrictEqual(uninstallApplicationAppIdParam, "appId");
 		});
 
@@ -1047,7 +1048,11 @@ describe("ApplicationManagerBase", () => {
 				return Promise.resolve();
 			};
 
-			await applicationManager.reinstallApplication("appId", "packageFilePath");
+			await applicationManager.reinstallApplication(
+				"appId",
+				"packageFilePath",
+				{ clean: true } as any
+			);
 
 			assert.isTrue(
 				isUninstallApplicationCalled,
