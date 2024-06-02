@@ -70,7 +70,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 				isInteractive()
 			) {
 				const message = `Do you want to help us improve ${this.$analyticsSettingsService.getClientName()} by automatically sending anonymous usage statistics? We will not use this information to identify or contact you.`;
-				trackFeatureUsage = await this.$prompter.confirm(message, () => true);
+				trackFeatureUsage = await this.$prompter.confirm(message, () => false);
 				await this.setStatus(
 					this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 					trackFeatureUsage

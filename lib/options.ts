@@ -213,7 +213,7 @@ export class Options {
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
 			count: { type: OptionType.Number, hasSensitiveValue: false },
 			analyticsLogFile: { type: OptionType.String, hasSensitiveValue: true },
-			disableAnalytics: { type: OptionType.Boolean, hasSensitiveValue: false },
+			disableAnalytics: { type: OptionType.Boolean, hasSensitiveValue: false, default: true },
 			cleanupLogFile: { type: OptionType.String, hasSensitiveValue: true },
 			hooks: {
 				type: OptionType.Boolean,
