@@ -21,6 +21,7 @@
     "!lib/**/*.js.map",
     "!lib/common/test",
     "!lib/common/docs/fonts",
+    "!node_modules",
     "resources",
     "setup",
     "vendor",
@@ -37,7 +38,7 @@
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
     "prepack": "grunt prepare",
-    "postpack": "grunt set_dev_ga_id",
+    "pack": "grunt pack",
     "mocha": "mocha",
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
@@ -169,13 +170,6 @@
     "sinon": "15.0.3",
     "source-map-support": "0.5.21"
   },
-  "bundleDependencies_comment1": "These dependencies are bundled in the CLI and are not installed from npm to avoid deprecation warnings.",
-  "bundleDependencies_comment2": "Eventually we'll remove them as we replaced their functionality.",
-  "bundleDependencies_comment3": "note: @npmcli/move-file is a transient dep of pacote - we dont use it directly.",
-  "bundleDependencies": [
-    "@npmcli/move-file",
-    "stringify-package"
-  ],
   "optionalDependencies": {
     "fsevents": "*"
   },
