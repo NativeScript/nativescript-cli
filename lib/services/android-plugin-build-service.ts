@@ -193,7 +193,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(
 			options.platformsAndroidDirPath
 		);
-		const shortPluginName = getShortPluginName(options.pluginName);
+		const shortPluginName = getShortPluginName(options.pluginName + (options.aarSuffix || ''));
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
 		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(
 			options.platformsAndroidDirPath,
@@ -228,7 +228,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.projectDir,
 				options.pluginName
 			);
-			const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || [].concat(options.gradleArgs || []));
+			const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || []).concat(options.gradleArgs || []);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
 				gradleArgs,

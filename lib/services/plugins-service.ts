@@ -255,7 +255,6 @@ export class PluginsService implements IPluginsService {
 			const currentPluginNativeHashes = await this.getPluginNativeHashes(
 				pluginPlatformsFolderPath
 			);
-
 			if (
 				!oldPluginNativeHashes ||
 				this.$filesHashService.hasChangesInShasums(

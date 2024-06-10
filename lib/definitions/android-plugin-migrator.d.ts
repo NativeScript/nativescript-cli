@@ -12,6 +12,7 @@ interface IAndroidBuildOptions {
 	tempPluginDirPath: string;
 	gradleArgs?: string[];
 	gradlePath?: string;
+	aarSuffix?: string;
 }
 
 interface IAndroidPluginBuildService {

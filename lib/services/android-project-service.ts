@@ -758,7 +758,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			AndroidProjectService.ANDROID_PLATFORM_NAME
 		);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
-			const gradleArgs = (projectData.nsConfig.android.gradleArgs || [].concat(this.$options.gradleArgs || []));
+			const gradleArgs = (projectData.nsConfig.android.gradleArgs || []).concat(this.$options.gradleArgs || []);
+			const pluginOptions = (projectData.nsConfig.android.plugins || {})[pluginData.name] || {};
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
 				gradleArgs,
@@ -767,6 +768,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
 				aarOutputDir: pluginPlatformsFolderPath,
 				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+				...pluginOptions
 			};
 
 			if (await this.$androidPluginBuildService.buildAar(options)) {

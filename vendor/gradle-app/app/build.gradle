@@ -401,7 +401,11 @@ dependencies {
 
 task addDependenciesFromNativeScriptPlugins {
     nativescriptDependencies.each { dep ->
-        def aarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID"), include: ["**/*.aar"])
+        def aarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID")).matching {
+            include "**/*.aar"
+            exclude "cpp/**"
+            exclude project.hasProperty("aarIgnoreFilter") ? project.findProperty('aarIgnoreFilter').split(',').collect{it as String} : []
+        }
         aarFiles.each { aarFile ->
             def length = aarFile.name.length() - 4
             def fileName = aarFile.name[0..<length]
@@ -409,7 +413,11 @@ task addDependenciesFromNativeScriptPlugins {
             project.dependencies.add("implementation", [name: fileName, ext: "aar"])
         }
 
-        def jarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID"), include: ["**/*.jar"])
+        def jarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID")).matching {
+            include "**/*.jar"
+            exclude "cpp/**"
+            exclude project.hasProperty("jarIgnoreFilter") ? project.findProperty('jarIgnoreFilter').split(',').collect{it as String} : []
+        }
         jarFiles.each { jarFile ->
             def jarFileAbsolutePath = jarFile.getAbsolutePath()
             outLogger.withStyle(Style.SuccessHeader).println "\t + adding jar plugin dependency: $jarFileAbsolutePath"

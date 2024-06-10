@@ -69,9 +69,10 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
-		if (buildData.gradleArgs) {
+		const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || []).concat(buildData.gradleArgs || []);
+		if (gradleArgs) {
 			const additionalArgs: string[] = [];
-			buildData.gradleArgs.forEach((arg) => {
+			gradleArgs.forEach((arg) => {
 				additionalArgs.push(...arg.split(" ").map((a) => a.trim()));
 			});
 			args.push(...additionalArgs);

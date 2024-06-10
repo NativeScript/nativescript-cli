@@ -52,7 +52,8 @@ export class BuildPluginCommand implements ICommand {
 		const tempAndroidProject = await this.$tempService.mkdirSync(
 			"android-project"
 		);
-		const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || [].concat(this.$options.gradleArgs || []));
+		const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || []).concat(this.$options.gradleArgs || []);
+		const pluginOptions = (this.$projectData.nsConfig.android.plugins || {})[pluginName] || {};
 		const options: IPluginBuildOptions = {
 			gradlePath: this.$options.gradlePath,
 			gradleArgs,
@@ -60,6 +61,7 @@ export class BuildPluginCommand implements ICommand {
 			platformsAndroidDirPath: platformsAndroidPath,
 			pluginName: pluginName,
 			tempPluginDirPath: tempAndroidProject,
+			...pluginOptions
 		};
 
 		const androidPluginBuildResult = await this.$androidPluginBuildService.buildAar(
