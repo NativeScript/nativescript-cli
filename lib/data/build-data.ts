@@ -7,6 +7,7 @@ export class BuildData extends PrepareData implements IBuildData {
 	public emulator?: boolean;
 	public clean: boolean;
 	public buildForDevice?: boolean;
+	public buildFilterDevicesArch?: boolean;
 	public buildOutputStdio?: string;
 	public outputPath?: string;
 	public copyTo?: string;
@@ -60,6 +61,7 @@ export class AndroidBuildData extends BuildData {
 		this.keyStoreAliasPassword = data.keyStoreAliasPassword;
 		this.keyStorePassword = data.keyStorePassword;
 		this.androidBundle = data.androidBundle || data.aab;
+		this.buildFilterDevicesArch = !this.androidBundle && data.filterDevicesArch !== false ;
 		this.gradlePath = data.gradlePath;
 		this.gradleArgs = data.gradleArgs;
 	}
