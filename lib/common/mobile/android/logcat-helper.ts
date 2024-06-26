@@ -93,17 +93,16 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 					return;
 				const lines = (lineBuffer.toString() || "").split("\n");
 				for (let line of lines) {
-					// 09-11 17:50:26.311   598  1979 I ActivityTaskManager: START u0 {flg=0x10000000 cmp=org.nativescript.myApp/com.tns.NativeScriptActivity} from uid 2000
-					//                                                       ^^^^^                          ^^^^^^^^^^^^^^^^^^^^^^                                        ^^^^
-					// 																										   action                         appId                                                         pid
+					// 2024-06-26 16:43:22.286   630-659   ActivityManager system_server I  Start proc 8854:org.nativescript.uitestsapp/u0a190 for next-top-activity {org.nativescript.uitestsapp/com.tns.NativeScriptActivity}
+
+					const startProc = /Start proc (?<pid>[0-9]+):(?<appId>.+?)\//.exec(
+						line
+					);
 
 					if (
-						// action
-						line.includes("START") &&
-						// appId
-						line.includes(options.appId) &&
-						// pid - only if it's not the current pid...
-						!line.includes(options.pid)
+						startProc &&
+						startProc.groups?.appId === options.appId &&
+						startProc.groups?.pid !== options.pid
 					) {
 						this.forceStop(deviceIdentifier);
 						options.onAppRestarted?.();
@@ -221,7 +220,15 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 
 		// -b system  - shows the system buffer/logs only
 		// -T 1 			- shows only new logs after starting adb logcat
-		const logcatCommand = [`logcat`, `-b`, `system`, `-T`, `1`];
+		const logcatCommand = [
+			`logcat`,
+			`-b`,
+			`system`,
+			`-T`,
+			`1`,
+			"-s",
+			"ActivityManager",
+		];
 
 		if (appId) {
 			logcatCommand.push(`--regex=START.*${appId}`);
