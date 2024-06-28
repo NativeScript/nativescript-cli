@@ -289,6 +289,9 @@ export default {
 				prettierFormat(newContent, {
 					...prettierOptions,
 					parser: "typescript",
+					// note: we don't use plugins here, since we are only formatting ts files, and they are supported by default
+					// and this also causes issues with certain plugins, like prettier-plugin-tailwindcss.
+					plugins: [],
 				})
 			);
 		} catch (error) {
