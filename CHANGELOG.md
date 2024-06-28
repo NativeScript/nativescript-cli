@@ -1,3 +1,15 @@
+## [8.7.2](https://github.com/NativeScript/nativescript-cli/compare/v8.7.1...v8.7.2) (2024-05-28)
+
+### Bug Fixes
+
+* fix `npm i -g nativescript` on npm 10.4.0+ ([9d2ec7c](https://github.com/NativeScript/nativescript-cli/commit/9d2ec7cb6a12ea10439ea287991812645a156473))
+
+### Features
+
+* don't uninstall app by default ([bac14c0](https://github.com/NativeScript/nativescript-cli/commit/bac14c06568c7a0538618d9ca1e369a56dd272b5))
+
+
+
 ## [8.7.1](https://github.com/NativeScript/nativescript-cli/compare/v8.7.0...v8.7.1) (2024-05-16)
 
 
