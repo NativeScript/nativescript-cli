@@ -1,7 +1,6 @@
 import * as path from "path";
 import { Configurations } from "../../common/constants";
 import { IGradleBuildArgsService } from "../../definitions/gradle";
-import { IAndroidToolsInfo } from "../../declarations";
 import { IAndroidBuildData } from "../../definitions/build";
 import { IHooksService, IAnalyticsService } from "../../common/declarations";
 import { injector } from "../../common/yok";
@@ -9,7 +8,6 @@ import { IProjectData } from "../../definitions/project";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(
-		private $androidToolsInfo: IAndroidToolsInfo,
 		private $hooksService: IHooksService,
 		private $analyticsService: IAnalyticsService,
 		private $staticConfig: Config.IStaticConfig,
@@ -49,18 +47,10 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 	private getBaseTaskArgs(buildData: IAndroidBuildData): string[] {
 		const args = this.getBuildLoggingArgs();
 
-		const toolsInfo = this.$androidToolsInfo.getToolsInfo({
-			projectDir: buildData.projectDir,
-		});
-
 		// ensure we initialize project data
 		this.$projectData.initializeProjectData(buildData.projectDir);
 
 		args.push(
-			`-PcompileSdk=android-${toolsInfo.compileSdkVersion}`,
-			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
-			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
-			`-PgenerateTypings=${toolsInfo.generateTypings}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);

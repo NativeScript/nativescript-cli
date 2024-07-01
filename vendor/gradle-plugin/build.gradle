@@ -11,11 +11,11 @@ buildscript {
     def getDepPlatformDir = { dep ->
         file("${project.ext.USER_PROJECT_ROOT}/${project.ext.PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
     }
-    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "1.8.20" }
+    def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "2.0.0" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:{{runtimeAndroidPluginVersion}}'
@@ -135,7 +135,6 @@ allprojects {
             url 'https://maven.google.com/'
             name 'Google'
         }
-        jcenter()
         if (pluginDependencies.size() > 0) {
             flatDir {
                 dirs pluginDependencies
@@ -145,13 +144,29 @@ allprojects {
 }
 
 
-def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 31 }
-def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 31 as int }
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 34 }
+def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 34 as int }
 def computeBuildToolsVersion = { ->
-    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "31.0.0"
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "34.0.0"
 }
 
 android {
+    namespace "{{pluginNamespace}}"
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+
+    if (project.hasProperty("ndkVersion")) {
+        ndkVersion project.ndkVersion
+    }
+
     def applyPluginGradleConfigurations = { ->
         nativescriptDependencies.each { dep ->
             def includeGradlePath = "${getDepPlatformDir(dep)}/include.gradle"
@@ -203,15 +218,6 @@ task addDependenciesFromNativeScriptPlugins {
 
         project.dependencies.add("implementation", jarFiles)
     }
-}
-
-afterEvaluate {
-    def generateBuildConfig =  project.hasProperty("generateBuildConfig") ? project.generateBuildConfig : false
-    def generateR =  project.hasProperty("generateR") ? project.generateR : false
-    generateReleaseBuildConfig.enabled = generateBuildConfig
-    generateDebugBuildConfig.enabled = generateBuildConfig
-    generateReleaseResValues.enabled = generateR
-    generateDebugResValues.enabled = generateR
 }
 
 tasks.whenTaskAdded({ DefaultTask currentTask ->
