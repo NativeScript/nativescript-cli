@@ -13,7 +13,6 @@ import { Builder, parseString } from "xml2js";
 import {
 	IRuntimeGradleVersions,
 	INodePackageManager,
-	IAndroidToolsInfo,
 	IWatchIgnoreListService,
 	IOptions,
 } from "../declarations";
@@ -50,7 +49,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
 		private $options: IOptions,
-		private $androidToolsInfo: IAndroidToolsInfo,
 		private $logger: ILogger,
 		private $packageManager: INodePackageManager,
 		private $projectData: IProjectData,
@@ -426,6 +424,31 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
+
+		// gets the package from the AndroidManifest to use as the namespace or fallback to the `org.nativescript.${shortPluginName}`
+		const shortPluginName = getShortPluginName(pluginName);
+
+		const manifestPath = path.join(
+			pluginTempDir,
+			"src",
+			"main",
+			"AndroidManifest.xml"
+		);
+		const manifestContent = this.$fs.readText(manifestPath);
+
+		let packageName = `org.nativescript.${shortPluginName}`;
+		const xml = await this.getXml(manifestContent);
+		if (xml["manifest"]) {
+			if (xml["manifest"]["$"]["package"]) {
+				packageName = xml["manifest"]["$"]["package"];
+			}
+		}
+
+		this.replaceFileContent(
+			buildGradlePath,
+			"{{pluginNamespace}}",
+			packageName
+		);
 	}
 
 	private async getRuntimeGradleVersions(
@@ -780,18 +803,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private async buildPlugin(
 		pluginBuildSettings: IBuildAndroidPluginData
 	): Promise<void> {
-		if (!pluginBuildSettings.androidToolsInfo) {
-			this.$androidToolsInfo.validateInfo({
-				showWarningsAsErrors: true,
-				validateTargetSdk: true,
-				projectDir: pluginBuildSettings.projectDir,
-			});
-			pluginBuildSettings.androidToolsInfo =
-				this.$androidToolsInfo.getToolsInfo({
-					projectDir: pluginBuildSettings.projectDir,
-				});
-		}
-
 		const gradlew =
 			pluginBuildSettings.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
@@ -801,8 +812,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
 			`-PtempBuild=true`,
-			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
-			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
