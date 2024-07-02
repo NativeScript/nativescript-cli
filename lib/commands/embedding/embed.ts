@@ -72,11 +72,13 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		// args[1] is the path to the host project
 		// args[2] is the host project module name
 
+		const platform = args[0].toLowerCase();
+
 		// also allow these to be set in the nativescript.config.ts
 		if (!args[1]) {
-			const hostProjectPath = this.$projectConfigService.getValue(
-				"embed.hostProjectPath",
-				args[1]
+			const hostProjectPath = this.getEmbedConfigForKey(
+				"hostProjectPath",
+				platform
 			);
 			if (hostProjectPath) {
 				args[1] = hostProjectPath;
@@ -84,8 +86,9 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		}
 
 		if (!args[2]) {
-			const hostProjectModuleName = this.$projectConfigService.getValue(
-				"embed.hostProjectModuleName"
+			const hostProjectModuleName = this.getEmbedConfigForKey(
+				"hostProjectModuleName",
+				platform
 			);
 			if (hostProjectModuleName) {
 				args[2] = hostProjectModuleName;
@@ -99,6 +102,14 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		}
 
 		return true;
+	}
+
+	private getEmbedConfigForKey(key: string, platform: string) {
+		// get the embed.<platform>.<key> value, or fallback to embed.<key> value
+		return this.$projectConfigService.getValue(
+			`embed.${platform}.${key}`,
+			this.$projectConfigService.getValue(`embed.${key}`)
+		);
 	}
 }
 
