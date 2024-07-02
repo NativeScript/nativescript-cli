@@ -165,14 +165,14 @@ export class WebpackCompilerService
 						const files = result.emittedFiles.map((file: string) =>
 							path.join(
 								platformData.appDestinationDirectoryPath,
-								this.$options.nativeHostModule,
+								this.$options.hostProjectModuleName,
 								file
 							)
 						);
 						const fallbackFiles = result.fallbackFiles.map((file: string) =>
 							path.join(
 								platformData.appDestinationDirectoryPath,
-								this.$options.nativeHostModule,
+								this.$options.hostProjectModuleName,
 								file
 							)
 						);
@@ -355,11 +355,12 @@ export class WebpackCompilerService
 			stdio,
 		};
 
-		if (this.$options.nativeHost) {
+		if (this.$options.hostProjectPath) {
 			options.env = {
-				USER_PROJECT_PLATFORMS_ANDROID: this.$options.nativeHost,
-				USER_PROJECT_PLATFORMS_ANDROID_MODULE: this.$options.nativeHostModule,
-				USER_PROJECT_PLATFORMS_IOS: this.$options.nativeHost,
+				USER_PROJECT_PLATFORMS_ANDROID: this.$options.hostProjectPath,
+				USER_PROJECT_PLATFORMS_ANDROID_MODULE:
+					this.$options.hostProjectModuleName,
+				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
 			};
 		}
 
@@ -579,14 +580,14 @@ export class WebpackCompilerService
 		const files = message.data.emittedAssets.map((asset: string) =>
 			path.join(
 				platformData.appDestinationDirectoryPath,
-				this.$options.nativeHostModule,
+				this.$options.hostProjectModuleName,
 				asset
 			)
 		);
 		const staleFiles = message.data.staleAssets.map((asset: string) =>
 			path.join(
 				platformData.appDestinationDirectoryPath,
-				this.$options.nativeHostModule,
+				this.$options.hostProjectModuleName,
 				asset
 			)
 		);

@@ -37,8 +37,7 @@ export class AddPlatformCommand
 		await this.$platformCommandHelper.addPlatforms(
 			args,
 			this.$projectData,
-			this.$options.frameworkPath,
-			this.$options.nativeHost
+			this.$options.frameworkPath
 		);
 	}
 

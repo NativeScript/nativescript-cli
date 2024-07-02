@@ -36,11 +36,12 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	public async addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath: string,
-		nativeHost?: string
+		frameworkPath: string
 	): Promise<void> {
-		if (this.$options.nativeHost) {
-			this.$logger.info("Ignoring platform add becuase of --native-host flag");
+		if (this.$options.hostProjectPath) {
+			this.$logger.info(
+				"Ignoring platform add becuase of --hostProjectPath flag"
+			);
 			return;
 		}
 
@@ -64,7 +65,6 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				projectDir: projectData.projectDir,
 				platform,
 				frameworkPath,
-				nativeHost,
 			});
 		}
 	}
@@ -91,7 +91,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		platforms: string[],
 		projectData: IProjectData
 	): Promise<void> {
-		if (this.$options.nativeHost) {
+		if (this.$options.hostProjectPath) {
 			this.$logger.info(
 				"Ignoring platform remove becuase of --native-host flag"
 			);
@@ -118,9 +118,10 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			}
 
 			try {
-				const platformDir = this.$options.nativeHost
-					? this.$options.nativeHost
-					: path.join(projectData.platformsDir, platform.toLowerCase());
+				const platformDir = path.join(
+					projectData.platformsDir,
+					platform.toLowerCase()
+				);
 				this.$fs.deleteDirectory(platformDir);
 				await this.$packageInstallationManager.uninstall(
 					platformData.frameworkPackageName,

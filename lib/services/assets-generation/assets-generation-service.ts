@@ -43,7 +43,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	public async generateIcons(
 		resourceGenerationData: IResourceGenerationData
 	): Promise<void> {
-		if (this.$options.nativeHost) {
+		if (this.$options.hostProjectPath) {
 			return;
 		}
 
@@ -59,10 +59,6 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	public async generateSplashScreens(
 		splashesGenerationData: IResourceGenerationData
 	): Promise<void> {
-		if (this.$options.nativeHost) {
-			return;
-		}
-
 		this.$logger.info("Generating splash screens ...");
 		await this.generateImagesForDefinitions(
 			splashesGenerationData,

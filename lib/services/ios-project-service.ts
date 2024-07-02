@@ -143,8 +143,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			const platform = this.$mobileHelper.normalizePlatformName(
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS
 			);
-			const projectRoot = this.$options.nativeHost
-				? this.$options.nativeHost
+			const projectRoot = this.$options.hostProjectPath
+				? this.$options.hostProjectPath
 				: path.join(projectData.platformsDir, platform.toLowerCase());
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
@@ -593,8 +593,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 		prepareData: IOSPrepareData
 	): Promise<void> {
-		const projectRoot = this.$options.nativeHost
-			? this.$options.nativeHost
+		const projectRoot = this.$options.hostProjectPath
+			? this.$options.hostProjectPath
 			: path.join(
 					projectData.platformsDir,
 					this.$devicePlatformsConstants.iOS.toLowerCase()
@@ -631,10 +631,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const resources = project.pbxGroupByName("Resources");
 
-		if (this.$options.nativeHost) {
+		if (this.$options.hostProjectPath) {
 			try {
 				project.addResourceFile(
-					path.join(this.$options.nativeHost, projectData.projectName)
+					path.join(this.$options.hostProjectPath, projectData.projectName)
 				);
 				this.savePbxProj(project, projectData);
 			} catch (err) {
@@ -642,7 +642,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 		}
 
-		if (resources && !this.$options.nativeHost) {
+		if (resources && !this.$options.hostProjectPath) {
 			const references = project.pbxFileReferenceSection();
 
 			const xcodeProjectImages = _.map(<any[]>resources.children, (resource) =>
@@ -928,9 +928,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
-		if (this.$options.nativeHost) {
+		if (this.$options.hostProjectPath) {
 			let xcodeProjectPath = this.$xcprojService.findXcodeProject(
-				this.$options.nativeHost
+				this.$options.hostProjectPath
 			);
 			if (!xcodeProjectPath) {
 				this.$errors.fail("Xcode project not found at the specified directory");

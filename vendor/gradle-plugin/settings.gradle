@@ -12,8 +12,6 @@ if (USER_PROJECT_PLATFORMS_ANDROID_FROM_ENV != null && !USER_PROJECT_PLATFORMS_A
     USER_PROJECT_PLATFORMS_ANDROID = "$rootDir/../../../platforms/android"
 }
 
-System.out.println("!!!!! VM: USER_PROJECT_PLATFORMS_ANDROID: " + USER_PROJECT_PLATFORMS_ANDROID);
-
 def dependenciesJson = file("${USER_PROJECT_PLATFORMS_ANDROID}/dependencies.json")
 def appDependencies = new JsonSlurper().parseText(dependenciesJson.text)
 def pluginData = appDependencies.find { it.name == PLUGIN_NAME }

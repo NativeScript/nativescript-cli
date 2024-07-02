@@ -579,8 +579,8 @@ interface IAndroidBundleOptions {
 }
 
 interface IEmbedOptions {
-	nativeHost: string;
-	nativeHostModule: string;
+	hostProjectPath: string;
+	hostProjectModuleName: string;
 }
 
 interface IAndroidOptions extends IEmbedOptions {
@@ -709,6 +709,9 @@ interface IOptions
 	dryRun: boolean;
 
 	platformOverride: string;
+
+	// allow arbitrary options
+	[optionName: string]: any;
 }
 
 interface IEnvOptions {
@@ -1225,8 +1228,7 @@ interface IPlatformCommandHelper {
 	addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath?: string,
-		nativeHost?: string
+		frameworkPath?: string
 	): Promise<void>;
 	cleanPlatforms(
 		platforms: string[],

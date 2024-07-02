@@ -237,8 +237,9 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	public getPrepareInfo(platformData: IPlatformData): IPrepareInfo {
-		if (this.$options.nativeHost) {
-			return null; // TODO: always prepare for now until we decide where to keep the .nsprepareinfo file when embedding
+		if (this.$options.hostProjectPath) {
+			// TODO: always prepare for now until we decide where to keep the .nsprepareinfo file when embedding
+			return null;
 		}
 
 		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);
@@ -263,8 +264,9 @@ export class ProjectChangesService implements IProjectChangesService {
 			await this.ensurePrepareInfo(platformData, projectData, prepareData);
 		}
 
-		if (this.$options.nativeHost) {
-			return null; // TODO: do not save for now until we decide where to keep the .nsprepareinfo file when embedding
+		if (this.$options.hostProjectPath) {
+			// TODO: do not save for now until we decide where to keep the .nsprepareinfo file when embedding
+			return null;
 		}
 
 		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);

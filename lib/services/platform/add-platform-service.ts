@@ -185,13 +185,14 @@ export class AddPlatformService implements IAddPlatformService {
 		frameworkDirPath: string,
 		frameworkVersion: string
 	): Promise<void> {
-		//here we should use ios OR android
-		const platformDir = this.$options.nativeHost
-			? this.$options.nativeHost
-			: path.join(
-					projectData.platformsDir,
-					platformData.normalizedPlatformName.toLowerCase()
-			  );
+		// here we should use ios OR android
+		const platformDir =
+			this.$options.hostProjectPath ??
+			path.join(
+				projectData.platformsDir,
+				platformData.normalizedPlatformName.toLowerCase()
+			);
+
 		this.$fs.deleteDirectory(platformDir);
 		//if iosHost - dont create project
 		await platformData.platformProjectService.createProject(

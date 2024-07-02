@@ -1,3 +1,4 @@
+import { IOptions } from "../declarations";
 import { ControllerDataBase } from "./controller-data-base";
 import * as _ from "lodash";
 
@@ -7,9 +8,13 @@ export class PrepareData extends ControllerDataBase {
 	public env: any;
 	public watch?: boolean;
 	public watchNative: boolean = true;
-	public nativeHost?: string;
+	public hostProjectPath?: string;
 
-	constructor(public projectDir: string, public platform: string, data: any) {
+	constructor(
+		public projectDir: string,
+		public platform: string,
+		data: IOptions
+	) {
 		super(projectDir, platform, data);
 
 		const env: any = {};
@@ -37,7 +42,7 @@ export class PrepareData extends ControllerDataBase {
 		if (_.isBoolean(data.watchNative)) {
 			this.watchNative = data.watchNative;
 		}
-		this.nativeHost = data.nativeHost;
+		this.hostProjectPath = data.hostProjectPath;
 	}
 }
 
@@ -46,7 +51,7 @@ export class IOSPrepareData extends PrepareData {
 	public provision: string;
 	public mobileProvisionData: any;
 
-	constructor(projectDir: string, platform: string, data: any) {
+	constructor(projectDir: string, platform: string, data: IOptions) {
 		super(projectDir, platform, data);
 
 		this.teamId = data.teamId;

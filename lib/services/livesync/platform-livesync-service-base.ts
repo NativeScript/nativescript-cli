@@ -135,7 +135,7 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		const projectFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			this.$options.nativeHostModule
+			this.$options.hostProjectModuleName
 		);
 		const localToDevicePaths =
 			await this.$projectFilesManager.createLocalToDevicePaths(
@@ -201,7 +201,7 @@ export abstract class PlatformLiveSyncServiceBase {
 				);
 				const projectFilesPath = path.join(
 					platformData.appDestinationDirectoryPath,
-					this.$options.nativeHostModule
+					this.$options.hostProjectModuleName
 				);
 				const localToDevicePaths =
 					await this.$projectFilesManager.createLocalToDevicePaths(

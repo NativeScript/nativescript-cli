@@ -118,7 +118,7 @@ interface ICheckEnvironmentRequirementsOutput {
 
 interface IAddPlatformData extends IControllerDataBase {
 	frameworkPath?: string;
-	nativeHost?: string;
+	hostProjectPath?: string;
 }
 
 interface IPlatformController {

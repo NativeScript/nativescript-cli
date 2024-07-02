@@ -228,8 +228,8 @@ export class Options {
 			},
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
-			nativeHost: { type: OptionType.String, hasSensitiveValue: false },
-			nativeHostModule: {
+			hostProjectPath: { type: OptionType.String, hasSensitiveValue: false },
+			hostProjectModuleName: {
 				type: OptionType.String,
 				hasSensitiveValue: false,
 				default: APP_FOLDER_NAME,

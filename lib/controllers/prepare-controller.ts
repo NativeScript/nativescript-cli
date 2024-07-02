@@ -135,12 +135,10 @@ export class PrepareController extends EventEmitter {
 		projectData: IProjectData
 	): Promise<IPrepareResultData> {
 		await this.$projectService.ensureAppResourcesExist(projectData.projectDir);
-		if (!this.$options.nativeHost) {
-			await this.$platformController.addPlatformIfNeeded(
-				prepareData,
-				projectData
-			);
-		}
+		await this.$platformController.addPlatformIfNeeded(
+			prepareData,
+			projectData
+		);
 
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
 
@@ -430,6 +428,9 @@ export class PrepareController extends EventEmitter {
 		return patterns;
 	}
 
+	/**
+	 * TODO: move this logic to the webpack side of things - WIP and deprecate here with a webpack version check...
+	 */
 	public async writeRuntimePackageJson(
 		projectData: IProjectData,
 		platformData: IPlatformData
@@ -482,9 +483,9 @@ export class PrepareController extends EventEmitter {
 		} else {
 			packagePath = path.join(
 				platformData.projectRoot,
-				this.$options.nativeHostModule,
+				this.$options.hostProjectModuleName,
 				"src",
-				this.$options.nativeHost ? "nativescript" : "main",
+				this.$options.hostProjectPath ? "nativescript" : "main",
 				"assets",
 				"app",
 				"package.json"

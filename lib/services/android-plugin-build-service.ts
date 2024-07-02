@@ -830,12 +830,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			shell: this.$hostInfo.isWindows,
 		};
 
-		if (this.$options.nativeHost) {
+		if (this.$options.hostProjectPath) {
 			opts.env = {
 				USER_PROJECT_PLATFORMS_ANDROID: path.resolve(
 					cwd(),
-					this.$options.nativeHost
-				), // TODO: couldn't `nativeHost` have an absolute path already?
+					this.$options.hostProjectPath
+				), // TODO: couldn't `hostProjectPath` have an absolute path already?
 				...process.env, // TODO: any other way to pass automatically the current process.env?
 			};
 		}
