@@ -199,6 +199,8 @@ injector.requireCommand("build|vision", "./commands/build");
 injector.requireCommand("build|visionos", "./commands/build");
 injector.requireCommand("deploy", "./commands/deploy");
 
+injector.requireCommand("embed", "./commands/embedding/embed");
+
 injector.require("testExecutionService", "./services/test-execution-service");
 injector.requireCommand("dev-test|android", "./commands/test");
 injector.requireCommand("dev-test|ios", "./commands/test");

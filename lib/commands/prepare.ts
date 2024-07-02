@@ -11,7 +11,8 @@ import { injector } from "../common/yok";
 
 export class PrepareCommand
 	extends ValidatePlatformCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	public allowedParameters = [this.$platformCommandParameter];
 
 	public dashedOptions = {
@@ -21,17 +22,23 @@ export class PrepareCommand
 			hasSensitiveValue: false,
 		},
 		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+
+		whatever: {
+			type: OptionType.Boolean,
+			default: false,
+			hasSensitiveValue: false,
+		},
 	};
 
 	constructor(
-		$options: IOptions,
-		private $prepareController: PrepareController,
-		$platformValidationService: IPlatformValidationService,
-		$projectData: IProjectData,
-		private $platformCommandParameter: ICommandParameter,
-		$platformsDataService: IPlatformsDataService,
-		private $prepareDataService: PrepareDataService,
-		private $migrateController: IMigrateController
+		public $options: IOptions,
+		public $prepareController: PrepareController,
+		public $platformValidationService: IPlatformValidationService,
+		public $projectData: IProjectData,
+		public $platformCommandParameter: ICommandParameter,
+		public $platformsDataService: IPlatformsDataService,
+		public $prepareDataService: PrepareDataService,
+		public $migrateController: IMigrateController
 	) {
 		super(
 			$options,

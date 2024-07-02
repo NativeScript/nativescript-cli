@@ -12,18 +12,19 @@ import {
 	IProjectFilesManager,
 } from "../../common/declarations";
 import { color } from "../../color";
+import { IOptions } from "../../declarations";
 
 export abstract class PlatformLiveSyncServiceBase {
-	private _deviceLiveSyncServicesCache: IDictionary<
-		INativeScriptDeviceLiveSyncService
-	> = {};
+	private _deviceLiveSyncServicesCache: IDictionary<INativeScriptDeviceLiveSyncService> =
+		{};
 
 	constructor(
 		protected $fs: IFileSystem,
 		protected $logger: ILogger,
 		protected $platformsDataService: IPlatformsDataService,
 		protected $projectFilesManager: IProjectFilesManager,
-		private $devicePathProvider: IDevicePathProvider
+		private $devicePathProvider: IDevicePathProvider,
+		private $options: IOptions
 	) {}
 
 	public getDeviceLiveSyncService(
@@ -35,9 +36,8 @@ export abstract class PlatformLiveSyncServiceBase {
 			device.deviceInfo.platform,
 			projectData
 		);
-		const frameworkVersion = platformData.platformProjectService.getFrameworkVersion(
-			projectData
-		);
+		const frameworkVersion =
+			platformData.platformProjectService.getFrameworkVersion(projectData);
 		const key = getHash(
 			`${device.deviceInfo.identifier}${projectData.projectIdentifiers[platform]}${projectData.projectDir}${frameworkVersion}`
 		);
@@ -135,14 +135,15 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		const projectFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			APP_FOLDER_NAME
+			this.$options.hostProjectModuleName
 		);
-		const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(
-			deviceAppData,
-			projectFilesPath,
-			null,
-			[]
-		);
+		const localToDevicePaths =
+			await this.$projectFilesManager.createLocalToDevicePaths(
+				deviceAppData,
+				projectFilesPath,
+				null,
+				[]
+			);
 		const modifiedFilesData = await this.transferFiles(
 			deviceAppData,
 			localToDevicePaths,
@@ -200,14 +201,15 @@ export abstract class PlatformLiveSyncServiceBase {
 				);
 				const projectFilesPath = path.join(
 					platformData.appDestinationDirectoryPath,
-					APP_FOLDER_NAME
+					this.$options.hostProjectModuleName
 				);
-				const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(
-					deviceAppData,
-					projectFilesPath,
-					existingFiles,
-					[]
-				);
+				const localToDevicePaths =
+					await this.$projectFilesManager.createLocalToDevicePaths(
+						deviceAppData,
+						projectFilesPath,
+						existingFiles,
+						[]
+					);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
 				modifiedLocalToDevicePaths = await this.transferFiles(
 					deviceAppData,
@@ -235,12 +237,13 @@ export abstract class PlatformLiveSyncServiceBase {
 				platformData.appDestinationDirectoryPath,
 				APP_FOLDER_NAME
 			);
-			const localToDevicePaths = await this.$projectFilesManager.createLocalToDevicePaths(
-				deviceAppData,
-				projectFilesPath,
-				mappedFiles,
-				[]
-			);
+			const localToDevicePaths =
+				await this.$projectFilesManager.createLocalToDevicePaths(
+					deviceAppData,
+					projectFilesPath,
+					mappedFiles,
+					[]
+				);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
 			await deviceLiveSyncService.removeFiles(

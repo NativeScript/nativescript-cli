@@ -13,10 +13,12 @@ import {
 import { IInjector } from "../../common/definitions/yok";
 import { injector } from "../../common/yok";
 import { ITempService } from "../../definitions/temp-service";
+import { IOptions } from "../../declarations";
 
 export class IOSLiveSyncService
 	extends PlatformLiveSyncServiceBase
-	implements IPlatformLiveSyncService {
+	implements IPlatformLiveSyncService
+{
 	constructor(
 		protected $fs: IFileSystem,
 		protected $platformsDataService: IPlatformsDataService,
@@ -24,14 +26,16 @@ export class IOSLiveSyncService
 		private $injector: IInjector,
 		private $tempService: ITempService,
 		$devicePathProvider: IDevicePathProvider,
-		$logger: ILogger
+		$logger: ILogger,
+		$options: IOptions
 	) {
 		super(
 			$fs,
 			$logger,
 			$platformsDataService,
 			$projectFilesManager,
-			$devicePathProvider
+			$devicePathProvider,
+			$options
 		);
 	}
 
@@ -59,9 +63,8 @@ export class IOSLiveSyncService
 		});
 		this.$logger.trace("Creating zip file: " + tempZip);
 
-		const filesToTransfer = this.$fs.enumerateFilesInDirectorySync(
-			projectFilesPath
-		);
+		const filesToTransfer =
+			this.$fs.enumerateFilesInDirectorySync(projectFilesPath);
 
 		await this.$fs.zipFiles(tempZip, filesToTransfer, (res) => {
 			return path.join(APP_FOLDER_NAME, path.relative(projectFilesPath, res));

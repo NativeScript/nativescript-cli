@@ -578,10 +578,17 @@ interface IAndroidBundleOptions {
 	aab: boolean;
 }
 
-interface IAndroidOptions {
+interface IEmbedOptions {
+	hostProjectPath: string;
+	hostProjectModuleName: string;
+}
+
+interface IAndroidOptions extends IEmbedOptions {
 	gradlePath: string;
 	gradleArgs: string;
 }
+
+interface IIOSOptions extends IEmbedOptions {}
 
 interface ITypingsOptions {
 	jar: string;
@@ -603,6 +610,7 @@ interface IOptions
 		IProvision,
 		ITeamIdentifier,
 		IAndroidOptions,
+		IIOSOptions,
 		IAndroidReleaseOptions,
 		IAndroidBundleOptions,
 		INpmInstallConfigurationOptions,
@@ -701,6 +709,9 @@ interface IOptions
 	dryRun: boolean;
 
 	platformOverride: string;
+
+	// allow arbitrary options
+	[optionName: string]: any;
 }
 
 interface IEnvOptions {
@@ -1009,6 +1020,7 @@ interface IXcprojService {
 	 * @return {string} The full path to the xcodeproj
 	 */
 	getXcodeprojPath(projectData: IProjectData, projectRoot: string): string;
+	findXcodeProject(dir: string): string;
 }
 
 /**

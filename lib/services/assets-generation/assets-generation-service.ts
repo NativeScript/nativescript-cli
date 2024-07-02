@@ -4,6 +4,7 @@ import { exported } from "../../common/decorators";
 import { AssetConstants } from "../../constants";
 import {
 	IAssetsGenerationService,
+	IOptions,
 	IResourceGenerationData,
 } from "../../declarations";
 import {
@@ -34,13 +35,18 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 	constructor(
 		private $logger: ILogger,
 		private $projectDataService: IProjectDataService,
-		private $fs: IFileSystem
+		private $fs: IFileSystem,
+		private $options: IOptions
 	) {}
 
 	@exported("assetsGenerationService")
 	public async generateIcons(
 		resourceGenerationData: IResourceGenerationData
 	): Promise<void> {
+		if (this.$options.hostProjectPath) {
+			return;
+		}
+
 		this.$logger.info("Generating icons ...");
 		await this.generateImagesForDefinitions(
 			resourceGenerationData,
