@@ -6,5 +6,6 @@
 		"**/*.js": { "when": "$(basename).ts"},
 		"**/*.js.map": true,
 		"**/.husky/_": true
-	}
+	},
+	"cSpell.enabled": true
 }
