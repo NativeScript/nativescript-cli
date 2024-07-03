@@ -460,5 +460,14 @@ injector.require("keyCommandHelper", "./helpers/key-command-helper");
 
 injector.requireCommand("start", "./commands/start");
 injector.require("startService", "./services/start-service");
-
+injector.requireCommand(
+	[
+		"native|add",
+		"native|add|java",
+		"native|add|kotlin",
+		"native|add|swift",
+		"native|add|objective-c",
+	],
+	"./commands/native-add"
+);
 require("./key-commands/bootstrap");
