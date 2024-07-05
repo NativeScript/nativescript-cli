@@ -633,6 +633,24 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (this.$options.hostProjectPath) {
 			try {
+				// const nativescriptGroup = project.pbxGroupByName("NativeScript");
+				// if (!nativescriptGroup) {
+				// 	project.addPbxGroup(
+				// 		[path.join(this.$options.hostProjectPath, projectData.projectName)],
+				// 		"NativeScript",
+				// 		"NativeScript",
+				// 		null,
+				// 		{
+				// 			isMain: true,
+				// 		}
+				// 	);
+				// } else {
+				// 	project.addResourceFile(
+				// 		path.join(this.$options.hostProjectPath, projectData.projectName),
+				// 		{},
+				// 		"NativeScript"
+				// 	);
+				// }
 				project.addResourceFile(
 					path.join(this.$options.hostProjectPath, projectData.projectName)
 				);
@@ -920,10 +938,13 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		targetPath: string,
 		projectData: IProjectData
 	): string {
-		const frameworkPath = path.relative(
-			this.getPlatformData(projectData).projectRoot,
-			targetPath
-		);
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		const frameworkPath = path.relative(projectRoot, targetPath);
+		// console.log({
+		// 	targetPath,
+		// 	projectRoot,
+		// 	frameworkPath,
+		// });
 		return frameworkPath;
 	}
 
