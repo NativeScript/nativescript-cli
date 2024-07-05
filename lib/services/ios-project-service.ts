@@ -633,27 +633,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (this.$options.hostProjectPath) {
 			try {
-				// const nativescriptGroup = project.pbxGroupByName("NativeScript");
-				// if (!nativescriptGroup) {
-				// 	project.addPbxGroup(
-				// 		[path.join(this.$options.hostProjectPath, projectData.projectName)],
-				// 		"NativeScript",
-				// 		"NativeScript",
-				// 		null,
-				// 		{
-				// 			isMain: true,
-				// 		}
-				// 	);
-				// } else {
-				// 	project.addResourceFile(
-				// 		path.join(this.$options.hostProjectPath, projectData.projectName),
-				// 		{},
-				// 		"NativeScript"
-				// 	);
-				// }
-				project.addResourceFile(
-					path.join(this.$options.hostProjectPath, projectData.projectName)
+				const buildFolderPath = path.join(
+					this.$options.hostProjectPath,
+					projectData.projectName
 				);
+				const group = this.getRootGroup("NativeScript", buildFolderPath);
+				project.addPbxGroup(group.files, group.name, group.path, null, {
+					isMain: true,
+					filesRelativeToProject: true,
+				});
+
 				this.savePbxProj(project, projectData);
 			} catch (err) {
 				console.log(err);
@@ -940,12 +929,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	): string {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		const frameworkPath = path.relative(projectRoot, targetPath);
-		// console.log({
-		// 	targetPath,
-		// 	projectRoot,
-		// 	frameworkPath,
-		// });
-		return frameworkPath;
+		console.log({
+			targetPath,
+			projectRoot,
+			frameworkPath,
+		});
+		return (this.$options.hostProjectPath ? "../" : "") + frameworkPath;
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
