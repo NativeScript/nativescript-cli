@@ -4,6 +4,7 @@ import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
 import * as path from "path";
 import { injector } from "../common/yok";
+import { capitalizeFirstLetter } from "../common/utils";
 import { EOL } from "os";
 
 export class NativeAddCommand implements ICommand {
@@ -142,7 +143,9 @@ class ${classSimpleName} {
 		fs.mkdirSync(packagePath, { recursive: true });
 		fs.writeFileSync(filePath, fileContent);
 		this.$logger.info(
-			`${extension} file '${filePath}' generated successfully.`
+			`${capitalizeFirstLetter(
+				extension
+			)} file '${filePath}' generated successfully.`
 		);
 	}
 
@@ -161,15 +164,12 @@ class ${classSimpleName} {
 
 				if (useKotlin === "false") {
 					this.$errors.failWithHelp(
-						"The useKotlin property is set to false. Stopping processing."
+						"The useKotlin property is set to false. Stopping processing. Kotlin must be enabled in gradle.properties to use."
 					);
 					return false;
 				}
 
 				if (useKotlin === "true") {
-					this.$logger.warn(
-						'gradle.properties already contains "useKotlin=true".'
-					);
 					return true;
 				}
 			} else {
@@ -367,6 +367,7 @@ export class NativeAddSwiftCommand extends NativeAddSingleCommand {
 
 		const content = `import Foundation;
 import os;		
+
 @objc class ${className}: NSObject {
 	@objc func logMessage() {
 		os_log("Hello from ${className} class!")
