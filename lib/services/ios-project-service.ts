@@ -633,15 +633,40 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (this.$options.hostProjectPath) {
 			try {
+				/**
+				 * 1. Add platforms/ios/{projectname}/app build to the host app
+				 */
+				// Note: allow customization of this targetFolderName
+				const targetFolderName = "app";
 				const buildFolderPath = path.join(
 					this.$options.hostProjectPath,
-					projectData.projectName
+					projectData.projectName,
+					targetFolderName
 				);
-				const group = this.getRootGroup("NativeScript", buildFolderPath);
-				project.addPbxGroup(group.files, group.name, group.path, null, {
-					isMain: true,
-					filesRelativeToProject: true,
-				});
+
+				// no shorthand way to get UUID of build phase that i can tell
+				// methods return the phase as an object but ommitted the actual key (uuid we need)
+				// this does it same way nativescript-dev-xcode does but gets the uuid we need
+				const resourcesBuildPhaseKeys = Object.keys(
+					project.hash.project.objects["PBXResourcesBuildPhase"]
+				);
+				// console.log('resourcesBuildPhaseKeys:', resourcesBuildPhaseKeys);
+				const buildPhaseUUID = resourcesBuildPhaseKeys[0];
+
+				project.addResourceFile(buildFolderPath, {}, buildPhaseUUID);
+
+				/**
+				 * 2. Ensure TNSWidgets.xcframework is added as a framework build phase step
+				 * 		Should be added to 'Frameworks' folder inside the built .app file.
+				 * 		Right now, it's included in project but not to the output build
+				 */
+				// TODO
+
+				/**
+				 * 3. Ensure metadata is copied as a file
+				 * 		The apps metadata-{arch}.bin should be added as a file reference.
+				 */
+				// TODO
 
 				this.savePbxProj(project, projectData);
 			} catch (err) {
@@ -928,13 +953,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData
 	): string {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		const frameworkPath = path.relative(projectRoot, targetPath);
+		const frameworkPath =
+			(this.$options.hostProjectPath ? "../" : "") +
+			path.relative(projectRoot, targetPath);
 		console.log({
 			targetPath,
 			projectRoot,
 			frameworkPath,
 		});
-		return (this.$options.hostProjectPath ? "../" : "") + frameworkPath;
+		return frameworkPath;
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
