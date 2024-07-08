@@ -128,6 +128,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private _platformsDirCache: string = null;
 	private _platformData: IPlatformData = null;
+
 	public getPlatformData(projectData: IProjectData): IPlatformData {
 		if (!projectData && !this._platformData) {
 			throw new Error(
@@ -552,11 +553,22 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				frameworkAddOptions["sign"] = true;
 			}
 
+			if (this.$options.hostProjectPath) {
+				// always mark xcframeworks to embed when using embedding
+				frameworkAddOptions["embed"] = true;
+
+				// ensure copy files phase exists to ensure project.addFramework adds embed frameworks section
+				const copyFilePhase =
+					project.hash.project.objects["PBXCopyFilesBuildPhase"];
+				if (!copyFilePhase) {
+					project.addBuildPhase([], "PBXCopyFilesBuildPhase", "Copy Files");
+				}
+			}
+
 			const frameworkRelativePath =
 				"$(SRCROOT)/" +
 				this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
 			project.addFramework(frameworkRelativePath, frameworkAddOptions);
-			this.savePbxProj(project, projectData);
 		}
 	}
 
@@ -653,17 +665,22 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				// console.log('resourcesBuildPhaseKeys:', resourcesBuildPhaseKeys);
 				const buildPhaseUUID = resourcesBuildPhaseKeys[0];
 
-				project.addResourceFile(buildFolderPath, {}, buildPhaseUUID);
+				const comment = `${targetFolderName} in Resources`;
+				project.hash.project.objects["PBXResourcesBuildPhase"][
+					buildPhaseUUID
+				].files.forEach((f: any) => {
+					console.log(f);
+				});
+				if (
+					!project.hash.project.objects["PBXResourcesBuildPhase"][
+						buildPhaseUUID
+					].files.find((f: any) => f.comment === comment)
+				) {
+					project.addResourceFile(buildFolderPath, {}, buildPhaseUUID);
+				}
 
 				/**
-				 * 2. Ensure TNSWidgets.xcframework is added as a framework build phase step
-				 * 		Should be added to 'Frameworks' folder inside the built .app file.
-				 * 		Right now, it's included in project but not to the output build
-				 */
-				// TODO
-
-				/**
-				 * 3. Ensure metadata is copied as a file
+				 * 2. Ensure metadata is copied as a file
 				 * 		The apps metadata-{arch}.bin should be added as a file reference.
 				 */
 				// TODO
