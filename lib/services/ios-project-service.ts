@@ -554,21 +554,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 
 			if (this.$options.hostProjectPath) {
-				// always mark xcframeworks to embed when using embedding
+				// always mark xcframeworks for embedding
 				frameworkAddOptions["embed"] = true;
-
-				// ensure copy files phase exists to ensure project.addFramework adds embed frameworks section
-				const copyFilePhase =
-					project.hash.project.objects["PBXCopyFilesBuildPhase"];
-				if (!copyFilePhase) {
-					project.addBuildPhase([], "PBXCopyFilesBuildPhase", "Copy Files");
-				}
+				frameworkAddOptions["sign"] = false;
 			}
 
 			const frameworkRelativePath =
 				"$(SRCROOT)/" +
 				this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
 			project.addFramework(frameworkRelativePath, frameworkAddOptions);
+			this.savePbxProj(project, projectData);
 		}
 	}
 
