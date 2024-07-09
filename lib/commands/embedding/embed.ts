@@ -38,9 +38,20 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		);
 	}
 
+	private resolveHostProjectPath(hostProjectPath: string): string {
+		if (hostProjectPath.charAt(0) === ".") {
+			// resolve relative to the project dir
+			const projectDir = this.$projectData.projectDir;
+			return resolve(projectDir, hostProjectPath);
+		}
+
+		return resolve(hostProjectPath);
+	}
+
 	public async execute(args: string[]): Promise<void> {
 		const hostProjectPath = args[1];
-		const resolvedHostProjectPath = resolve(hostProjectPath);
+		const resolvedHostProjectPath =
+			this.resolveHostProjectPath(hostProjectPath);
 
 		if (!this.$fs.exists(resolvedHostProjectPath)) {
 			this.$logger.error(
