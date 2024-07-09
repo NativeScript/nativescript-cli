@@ -698,12 +698,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				// 	}
 				// );
 
-				// // -sectcreate __DATA __TNSMetadata "$(CONFIGURATION_BUILD_DIR)/metadata-$(CURRENT_ARCH).bin"
-				// project.addToOtherLinkerFlags(
-				// 	JSON.stringify(
-				// 		`-sectcreate __DATA __TNSMetadata "$(CONFIGURATION_BUILD_DIR)/metadata-arm64.bin"`
-				// 	)
-				// );
+				const metadataPath = path.relative(
+					this.$options.hostProjectPath,
+					buildFolderPath
+				);
+				project.addToOtherLinkerFlags(
+					JSON.stringify(
+						`-sectcreate __DATA __TNSMetadata "${metadataPath}/metadata-arm64.bin"`
+					)
+				);
 
 				// // no shorthand way to get UUID of build phase that i can tell
 				// // methods return the phase as an object but ommitted the actual key (uuid we need)
