@@ -542,29 +542,47 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		frameworkPath: string,
 		projectData: IProjectData
 	): Promise<void> {
-		if (!this.$hostInfo.isWindows) {
-			this.validateFramework(frameworkPath);
-
-			const project = this.createPbxProj(projectData);
-			const frameworkAddOptions: IXcode.Options = { customFramework: true };
-			const dynamic = await this.isDynamicFramework(frameworkPath);
-			if (dynamic) {
-				frameworkAddOptions["embed"] = true;
-				frameworkAddOptions["sign"] = true;
-			}
-
-			if (this.$options.hostProjectPath) {
-				// always mark xcframeworks for embedding
-				frameworkAddOptions["embed"] = true;
-				frameworkAddOptions["sign"] = false;
-			}
-
-			const frameworkRelativePath =
-				"$(SRCROOT)/" +
-				this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
-			project.addFramework(frameworkRelativePath, frameworkAddOptions);
-			this.savePbxProj(project, projectData);
+		if (this.$hostInfo.isWindows) {
+			return;
 		}
+
+		this.validateFramework(frameworkPath);
+
+		const project = this.createPbxProj(projectData);
+		const frameworkAddOptions: IXcode.Options = { customFramework: true };
+		const dynamic = await this.isDynamicFramework(frameworkPath);
+		if (dynamic) {
+			frameworkAddOptions["embed"] = true;
+			frameworkAddOptions["sign"] = true;
+		}
+
+		if (this.$options.hostProjectPath) {
+			// always mark xcframeworks for embedding
+			frameworkAddOptions["embed"] = true;
+			frameworkAddOptions["sign"] = false;
+		}
+
+		// Note: we used to prepend "$(SRCROOT)/" to the framework path, but seems like it's not needed anymore
+		// "$(SRCROOT)/" +
+		const frameworkRelativePath = this.getLibSubpathRelativeToProjectPath(
+			frameworkPath,
+			projectData
+		);
+		project.addFramework(frameworkRelativePath, frameworkAddOptions);
+
+		// filePathsArray, buildPhaseType, comment, target, optionsOrFolderType, subfolderPath
+		// project.addBuildPhase(
+		// 	[],
+		// 	"PBXShellScriptBuildPhase",
+		// 	"Debug SRCROOT",
+		// 	undefined,
+		// 	{
+		// 		shellPath: "/bin/sh",
+		// 		shellScript: `echo "SRCROOT: $SRCROOT"`,
+		// 	}
+		// );
+
+		this.savePbxProj(project, projectData);
 	}
 
 	private async addStaticLibrary(
@@ -636,43 +654,79 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const project = this.createPbxProj(projectData);
 
-		const resources = project.pbxGroupByName("Resources");
-
 		if (this.$options.hostProjectPath) {
 			try {
+				project.addPbxGroup([], "NativeScript", "NativeScript", null, {
+					isMain: true,
+					filesRelativeToProject: true,
+					uuid: "NATIVESCRIPTNATIVESCRIPT",
+				});
+
 				/**
 				 * 1. Add platforms/ios/{projectname}/app build to the host app
 				 */
 				// Note: allow customization of this targetFolderName
-				const targetFolderName = "app";
+				// const targetFolderName = "app";
+
 				const buildFolderPath = path.join(
 					this.$options.hostProjectPath,
-					projectData.projectName,
-					targetFolderName
+					projectData.projectName
+					// targetFolderName
 				);
 
-				// no shorthand way to get UUID of build phase that i can tell
-				// methods return the phase as an object but ommitted the actual key (uuid we need)
-				// this does it same way nativescript-dev-xcode does but gets the uuid we need
-				const resourcesBuildPhaseKeys = Object.keys(
-					project.hash.project.objects["PBXResourcesBuildPhase"]
+				project.addResourceFile(
+					buildFolderPath,
+					{},
+					"NATIVESCRIPTNATIVESCRIPT"
 				);
-				// console.log('resourcesBuildPhaseKeys:', resourcesBuildPhaseKeys);
-				const buildPhaseUUID = resourcesBuildPhaseKeys[0];
 
-				const comment = `${targetFolderName} in Resources`;
-				project.hash.project.objects["PBXResourcesBuildPhase"][
-					buildPhaseUUID
-				].files.forEach((f: any) => {
-					console.log(f);
-				});
-				if (
-					!project.hash.project.objects["PBXResourcesBuildPhase"][
-						buildPhaseUUID
-					].files.find((f: any) => f.comment === comment)
-				) {
-					project.addResourceFile(buildFolderPath, {}, buildPhaseUUID);
-				}
+				// filePathsArray, buildPhaseType, comment, target, optionsOrFolderType, subfolderPath
+				// project.addBuildPhase(
+				// 	[],
+				// 	"PBXShellScriptBuildPhase",
+				// 	"Copy Metadata (DEBUG)",
+				// 	undefined,
+				// 	{
+				// 		shellPath: "/bin/sh",
+				// 		shellScript: `cp /Users/rigor789/Code/ns-embed-example/nativescript-project-ng/platforms/ios/build/Debug-iphonesimulator/metadata-arm64.bin $CONFIGURATION_BUILD_DIR`,
+				// 		outputPaths: [
+				// 			JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-arm64.bin"),
+				// 			// JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-arm64e.bin"),
+				// 			// JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-i386.bin"),
+				// 			// JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-x86_64.bin"),
+				// 		],
+				// 	}
+				// );
+
+				// // -sectcreate __DATA __TNSMetadata "$(CONFIGURATION_BUILD_DIR)/metadata-$(CURRENT_ARCH).bin"
+				// project.addToOtherLinkerFlags(
+				// 	JSON.stringify(
+				// 		`-sectcreate __DATA __TNSMetadata "$(CONFIGURATION_BUILD_DIR)/metadata-arm64.bin"`
+				// 	)
+				// );
+
+				// // no shorthand way to get UUID of build phase that i can tell
+				// // methods return the phase as an object but ommitted the actual key (uuid we need)
+				// // this does it same way nativescript-dev-xcode does but gets the uuid we need
+				// const resourcesBuildPhaseKeys = Object.keys(
+				// 	project.hash.project.objects["PBXResourcesBuildPhase"]
+				// );
+				// // console.log('resourcesBuildPhaseKeys:', resourcesBuildPhaseKeys);
+				// const buildPhaseUUID = resourcesBuildPhaseKeys[0];
+
+				// const comment = `${targetFolderName} in Resources`;
+				// project.hash.project.objects["PBXResourcesBuildPhase"][
+				// 	buildPhaseUUID
+				// ].files.forEach((f: any) => {
+				// 	console.log(f);
+				// });
+				// if (
+				// 	!project.hash.project.objects["PBXResourcesBuildPhase"][
+				// 		buildPhaseUUID
+				// 	].files.find((f: any) => f.comment === comment)
+				// ) {
+				// 	project.addResourceFile(buildFolderPath, {}, buildPhaseUUID);
+				// }
 
 				/**
 				 * 2. Ensure metadata is copied as a file
@@ -686,6 +740,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 		}
 
+		const resources = project.pbxGroupByName("Resources");
 		if (resources && !this.$options.hostProjectPath) {
 			const references = project.pbxFileReferenceSection();
 
@@ -965,13 +1020,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData
 	): string {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
-		const frameworkPath =
-			(this.$options.hostProjectPath ? "../" : "") +
-			path.relative(projectRoot, targetPath);
+		const frameworkPath = path.relative(projectRoot, targetPath);
 		console.log({
 			targetPath,
 			projectRoot,
 			frameworkPath,
+			resolved: path.resolve(projectRoot, frameworkPath),
 		});
 		return frameworkPath;
 	}
