@@ -688,7 +688,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				// 	undefined,
 				// 	{
 				// 		shellPath: "/bin/sh",
-				// 		shellScript: `cp /Users/rigor789/Code/ns-embed-example/nativescript-project-ng/platforms/ios/build/Debug-iphonesimulator/metadata-arm64.bin $CONFIGURATION_BUILD_DIR`,
+				// 		shellScript: `cp ./platforms/ios/build/Debug-iphonesimulator/metadata-arm64.bin $CONFIGURATION_BUILD_DIR`,
 				// 		outputPaths: [
 				// 			JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-arm64.bin"),
 				// 			// JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-arm64e.bin"),
@@ -739,7 +739,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 				this.savePbxProj(project, projectData);
 			} catch (err) {
-				console.log(err);
+				this.$logger.trace(
+					"Error adding NativeScript group to host project",
+					err
+				);
 			}
 		}
 
@@ -1024,12 +1027,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	): string {
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		const frameworkPath = path.relative(projectRoot, targetPath);
-		console.log({
-			targetPath,
-			projectRoot,
-			frameworkPath,
-			resolved: path.resolve(projectRoot, frameworkPath),
-		});
+		// console.log({
+		// 	targetPath,
+		// 	projectRoot,
+		// 	frameworkPath,
+		// 	resolved: path.resolve(projectRoot, frameworkPath),
+		// });
 		return frameworkPath;
 	}
 
