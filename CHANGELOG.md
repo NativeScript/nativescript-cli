@@ -1,3 +1,22 @@
+# [8.8.0](https://github.com/NativeScript/nativescript-cli/compare/v8.7.2...v8.8.0) (2024-07-11)
+
+
+### Bug Fixes
+
+* `ns config set` failure with prettier plugins ([67e68c6](https://github.com/NativeScript/nativescript-cli/commit/67e68c64aec9fcf180cbb91bcc1bfb1ee897094b))
+* **android:** use more accurate PID detection on restart ([#5804](https://github.com/NativeScript/nativescript-cli/issues/5804)) ([6509773](https://github.com/NativeScript/nativescript-cli/commit/650977342c67056a1ac3138d3810739cab95d5d5))
+
+
+### Features
+
+* ability to embed NativeScript into host Swift and Kotlin projects ([#5803](https://github.com/NativeScript/nativescript-cli/issues/5803)) ([42177c3](https://github.com/NativeScript/nativescript-cli/commit/42177c31bd034b6106500259b264db6347c5e21e))
+* add support for custom platform 'projectName' from nativescript.config ([#2107](https://github.com/NativeScript/nativescript-cli/issues/2107)) ([#5801](https://github.com/NativeScript/nativescript-cli/issues/5801)) ([32f8fc5](https://github.com/NativeScript/nativescript-cli/commit/32f8fc5332cfe8deda9606346906a4fa179fe78d))
+* gradle 8, kotlin 2 & updated bundletool ([#5799](https://github.com/NativeScript/nativescript-cli/issues/5799)) ([29acc76](https://github.com/NativeScript/nativescript-cli/commit/29acc76479646c1150440f9a4d0defa19faa74f0))
+* migrate 8.8 and associated depedencies ([#5807](https://github.com/NativeScript/nativescript-cli/issues/5807)) ([9e9773f](https://github.com/NativeScript/nativescript-cli/commit/9e9773f481991e30ac9c0aaf7a3a5dcc947fc801))
+* native add command to add native source files to the project ([#5806](https://github.com/NativeScript/nativescript-cli/issues/5806)) ([2f2d1e0](https://github.com/NativeScript/nativescript-cli/commit/2f2d1e0bfa5e3e41bba653de2393e9a2c169bd38))
+
+
+
 ## [8.7.2](https://github.com/NativeScript/nativescript-cli/compare/v8.7.1...v8.7.2) (2024-05-28)
 
 ### Bug Fixes
