@@ -164,28 +164,30 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			);
 		}
 		if (projectData && projectData.platformsDir) {
-			const projectRoot = path.join(
-				projectData.platformsDir,
-				AndroidProjectService.ANDROID_PLATFORM_NAME
-			);
+			const projectRoot = this.$options.hostProjectPath
+				? this.$options.hostProjectPath
+				: path.join(
+						projectData.platformsDir,
+						AndroidProjectService.ANDROID_PLATFORM_NAME
+				  );
 
 			const appDestinationDirectoryArr = [
 				projectRoot,
-				constants.APP_FOLDER_NAME,
+				this.$options.hostProjectModuleName,
 				constants.SRC_DIR,
 				constants.MAIN_DIR,
 				constants.ASSETS_DIR,
 			];
 			const configurationsDirectoryArr = [
 				projectRoot,
-				constants.APP_FOLDER_NAME,
+				this.$options.hostProjectModuleName,
 				constants.SRC_DIR,
 				constants.MAIN_DIR,
 				constants.MANIFEST_FILE_NAME,
 			];
 			const deviceBuildOutputArr = [
 				projectRoot,
-				constants.APP_FOLDER_NAME,
+				this.$options.hostProjectModuleName,
 				constants.BUILD_DIR,
 				constants.OUTPUTS_DIR,
 				constants.APK_DIR,
@@ -208,7 +210,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					if (buildOptions.androidBundle) {
 						return path.join(
 							projectRoot,
-							constants.APP_FOLDER_NAME,
+							this.$options.hostProjectModuleName,
 							constants.BUILD_DIR,
 							constants.OUTPUTS_DIR,
 							constants.BUNDLE_DIR
@@ -227,8 +229,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					if (buildOptions.androidBundle) {
 						return {
 							packageNames: [
-								`${constants.APP_FOLDER_NAME}${constants.AAB_EXTENSION_NAME}`,
-								`${constants.APP_FOLDER_NAME}-${buildMode}${constants.AAB_EXTENSION_NAME}`,
+								`${this.$options.hostProjectModuleName}${constants.AAB_EXTENSION_NAME}`,
+								`${this.$options.hostProjectModuleName}-${buildMode}${constants.AAB_EXTENSION_NAME}`,
 							],
 						};
 					}
@@ -238,11 +240,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							`${packageName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}${constants.APK_EXTENSION_NAME}`,
-							`${constants.APP_FOLDER_NAME}-${buildMode}${constants.APK_EXTENSION_NAME}`,
+							`${this.$options.hostProjectModuleName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 						],
 						regexes: [
 							new RegExp(
-								`(${packageName}|${constants.APP_FOLDER_NAME})-.*-(${Configurations.Debug}|${Configurations.Release})(-unsigned)?${constants.APK_EXTENSION_NAME}`,
+								`(${packageName}|${this.$options.hostProjectModuleName})-.*-(${Configurations.Debug}|${Configurations.Release})(-unsigned)?${constants.APK_EXTENSION_NAME}`,
 								"i"
 							),
 						],
@@ -266,10 +268,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		platformData: IPlatformData,
 		projectData: IProjectData
 	): string {
-		const currentPlatformData: IDictionary<any> = this.$projectDataService.getRuntimePackage(
-			projectData.projectDir,
-			<constants.PlatformTypes>platformData.platformNameLowerCase
-		);
+		const currentPlatformData: IDictionary<any> =
+			this.$projectDataService.getRuntimePackage(
+				projectData.projectDir,
+				<constants.PlatformTypes>platformData.platformNameLowerCase
+			);
 
 		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
 	}
@@ -281,9 +284,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public getAppResourcesDestinationDirectoryPath(
 		projectData: IProjectData
 	): string {
-		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(
-			projectData.getAppResourcesDirectoryPath()
-		);
+		const appResourcesDirStructureHasMigrated =
+			this.$androidResourcesMigrationService.hasMigrated(
+				projectData.getAppResourcesDirectoryPath()
+			);
 
 		if (appResourcesDirStructureHasMigrated) {
 			return this.getUpdatedAppResourcesDestinationDirPath(projectData);
@@ -300,14 +304,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		this.validatePackageName(projectData.projectIdentifiers.android);
 		this.validateProjectName(projectData.projectName);
 
-		const checkEnvironmentRequirementsOutput = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(
-			{
+		const checkEnvironmentRequirementsOutput =
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform: this.getPlatformData(projectData).normalizedPlatformName,
 				projectDir: projectData.projectDir,
 				options,
 				notConfiguredEnvOptions,
-			}
-		);
+			});
 
 		this.$androidToolsInfo.validateInfo({
 			showWarningsAsErrors: true,
@@ -358,14 +361,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private getResDestinationDir(projectData: IProjectData): string {
-		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(
-			projectData.getAppResourcesDirectoryPath()
-		);
+		const appResourcesDirStructureHasMigrated =
+			this.$androidResourcesMigrationService.hasMigrated(
+				projectData.getAppResourcesDirectoryPath()
+			);
 
 		if (appResourcesDirStructureHasMigrated) {
-			const appResourcesDestinationPath = this.getUpdatedAppResourcesDestinationDirPath(
-				projectData
-			);
+			const appResourcesDestinationPath =
+				this.getUpdatedAppResourcesDestinationDirPath(projectData);
 			return path.join(
 				appResourcesDestinationPath,
 				constants.MAIN_DIR,
@@ -413,13 +416,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async interpolateData(projectData: IProjectData): Promise<void> {
 		// Interpolate the apilevel and package
 		this.interpolateConfigurationFile(projectData);
-		const appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
+		const appResourcesDirectoryPath =
+			projectData.getAppResourcesDirectoryPath();
 
 		let stringsFilePath: string;
 
-		const appResourcesDestinationDirectoryPath = this.getAppResourcesDestinationDirectoryPath(
-			projectData
-		);
+		const appResourcesDestinationDirectoryPath =
+			this.getAppResourcesDestinationDirectoryPath(projectData);
 		if (
 			this.$androidResourcesMigrationService.hasMigrated(
 				appResourcesDirectoryPath
@@ -479,8 +482,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public interpolateConfigurationFile(projectData: IProjectData): void {
-		const manifestPath = this.getPlatformData(projectData)
-			.configurationFilePath;
+		const manifestPath =
+			this.getPlatformData(projectData).configurationFilePath;
 		shell.sed(
 			"-i",
 			/__PACKAGE__/,
@@ -521,9 +524,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE
 			)
 		) {
-			const platformLowercase = this.getPlatformData(
-				projectData
-			).normalizedPlatformName.toLowerCase();
+			const platformLowercase =
+				this.getPlatformData(projectData).normalizedPlatformName.toLowerCase();
 			await removePlatforms([platformLowercase.split("@")[0]]);
 			await addPlatform(platformLowercase);
 			return false;
@@ -568,7 +570,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		return this.$fs.exists(
 			path.join(
 				this.getPlatformData(projectData).appDestinationDirectoryPath,
-				constants.APP_FOLDER_NAME
+				this.$options.hostProjectModuleName
 			)
 		);
 	}
@@ -585,9 +587,10 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData
 	): void {
 		const appResourcesDirectoryPath = projectData.appResourcesDirectoryPath;
-		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(
-			appResourcesDirectoryPath
-		);
+		const appResourcesDirStructureHasMigrated =
+			this.$androidResourcesMigrationService.hasMigrated(
+				appResourcesDirectoryPath
+			);
 		let originalAndroidManifestFilePath;
 
 		if (appResourcesDirStructureHasMigrated) {
@@ -628,17 +631,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const projectAppResourcesPath = projectData.getAppResourcesDirectoryPath(
 			projectData.projectDir
 		);
-		const platformsAppResourcesPath = this.getAppResourcesDestinationDirectoryPath(
-			projectData
-		);
+		const platformsAppResourcesPath =
+			this.getAppResourcesDestinationDirectoryPath(projectData);
 
 		this.cleanUpPreparedResources(projectData);
 
 		this.$fs.ensureDirectoryExists(platformsAppResourcesPath);
 
-		const appResourcesDirStructureHasMigrated = this.$androidResourcesMigrationService.hasMigrated(
-			projectAppResourcesPath
-		);
+		const appResourcesDirStructureHasMigrated =
+			this.$androidResourcesMigrationService.hasMigrated(
+				projectAppResourcesPath
+			);
 		if (appResourcesDirStructureHasMigrated) {
 			this.$fs.copyFile(
 				path.join(
@@ -745,10 +748,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData,
 		dependencies: IDependencyData[]
 	): IDependencyData[] {
-		const platformDir = path.join(
-			projectData.platformsDir,
-			AndroidProjectService.ANDROID_PLATFORM_NAME
-		);
+		const platformDir = this.$options.hostProjectPath
+			? this.$options.hostProjectPath
+			: path.join(
+					projectData.platformsDir,
+					AndroidProjectService.ANDROID_PLATFORM_NAME
+			  );
 		const dependenciesJsonPath = path.join(
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME
@@ -874,7 +879,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData
 	): string {
 		const resourcePath: string[] = [
-			constants.APP_FOLDER_NAME,
+			this.$options.hostProjectModuleName,
 			constants.SRC_DIR,
 			constants.MAIN_DIR,
 			constants.RESOURCES_DIR,
@@ -890,7 +895,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData
 	): string {
 		const resourcePath: string[] = [
-			constants.APP_FOLDER_NAME,
+			this.$options.hostProjectModuleName,
 			constants.SRC_DIR,
 		];
 

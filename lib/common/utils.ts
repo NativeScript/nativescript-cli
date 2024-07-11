@@ -28,4 +28,12 @@ export class Utils implements IUtils {
 		return timeout * 1000;
 	}
 }
+
+export function capitalizeFirstLetter(value: string) {
+	if (!value) {
+		return "";
+	}
+	return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
 injector.register("utils", Utils);

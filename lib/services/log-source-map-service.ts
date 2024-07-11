@@ -20,6 +20,7 @@ import {
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { IOptions } from "../declarations";
 
 interface IParsedMessage {
 	filePath?: string;
@@ -53,6 +54,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		private $fs: IFileSystem,
 		private $projectDataService: IProjectDataService,
 		private $injector: IInjector,
+		private $options: IOptions,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger
 	) {
@@ -200,7 +202,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	): IFileLocation {
 		const fileLocation = path.join(
 			this.getFilesLocation(platform, projectData),
-			APP_FOLDER_NAME
+			this.$options.hostProjectModuleName
 		);
 
 		if (parsedLine && parsedLine.filePath) {

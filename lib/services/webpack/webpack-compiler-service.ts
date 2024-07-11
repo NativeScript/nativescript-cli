@@ -163,10 +163,18 @@ export class WebpackCompilerService
 							};
 						}
 						const files = result.emittedFiles.map((file: string) =>
-							path.join(platformData.appDestinationDirectoryPath, "app", file)
+							path.join(
+								platformData.appDestinationDirectoryPath,
+								this.$options.hostProjectModuleName,
+								file
+							)
 						);
 						const fallbackFiles = result.fallbackFiles.map((file: string) =>
-							path.join(platformData.appDestinationDirectoryPath, "app", file)
+							path.join(
+								platformData.appDestinationDirectoryPath,
+								this.$options.hostProjectModuleName,
+								file
+							)
 						);
 
 						const data = {
@@ -342,10 +350,25 @@ export class WebpackCompilerService
 		}
 
 		const stdio = prepareData.watch ? ["ipc"] : "inherit";
-		const childProcess = this.$childProcess.spawn(process.execPath, args, {
+		const options: { [key: string]: any } = {
 			cwd: projectData.projectDir,
 			stdio,
-		});
+		};
+
+		if (this.$options.hostProjectPath) {
+			options.env = {
+				USER_PROJECT_PLATFORMS_ANDROID: this.$options.hostProjectPath,
+				USER_PROJECT_PLATFORMS_ANDROID_MODULE:
+					this.$options.hostProjectModuleName,
+				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
+			};
+		}
+
+		const childProcess = this.$childProcess.spawn(
+			process.execPath,
+			args,
+			options
+		);
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
 		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
@@ -555,10 +578,18 @@ export class WebpackCompilerService
 		this.$logger.trace("Webpack build done!");
 
 		const files = message.data.emittedAssets.map((asset: string) =>
-			path.join(platformData.appDestinationDirectoryPath, "app", asset)
+			path.join(
+				platformData.appDestinationDirectoryPath,
+				this.$options.hostProjectModuleName,
+				asset
+			)
 		);
 		const staleFiles = message.data.staleAssets.map((asset: string) =>
-			path.join(platformData.appDestinationDirectoryPath, "app", asset)
+			path.join(
+				platformData.appDestinationDirectoryPath,
+				this.$options.hostProjectModuleName,
+				asset
+			)
 		);
 
 		// extract last hash from emitted filenames

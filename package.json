@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "8.8.0-pre",
+  "version": "8.8.0-embed.2",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -85,7 +85,7 @@
     "minimatch": "7.4.2",
     "mkdirp": "2.1.6",
     "mute-stream": "1.0.0",
-    "nativescript-dev-xcode": "0.7.0",
+    "nativescript-dev-xcode": "0.8.0",
     "open": "8.4.2",
     "ora": "5.4.1",
     "pacote": "15.1.1",

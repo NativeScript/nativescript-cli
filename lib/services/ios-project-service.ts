@@ -128,6 +128,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 	private _platformsDirCache: string = null;
 	private _platformData: IPlatformData = null;
+
 	public getPlatformData(projectData: IProjectData): IPlatformData {
 		if (!projectData && !this._platformData) {
 			throw new Error(
@@ -143,10 +144,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			const platform = this.$mobileHelper.normalizePlatformName(
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS
 			);
-			const projectRoot = path.join(
-				projectData.platformsDir,
-				platform.toLowerCase()
-			);
+			const projectRoot = this.$options.hostProjectPath
+				? this.$options.hostProjectPath
+				: path.join(projectData.platformsDir, platform.toLowerCase());
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
 				platform.toLowerCase() as constants.SupportedPlatform
@@ -542,23 +542,47 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		frameworkPath: string,
 		projectData: IProjectData
 	): Promise<void> {
-		if (!this.$hostInfo.isWindows) {
-			this.validateFramework(frameworkPath);
-
-			const project = this.createPbxProj(projectData);
-			const frameworkAddOptions: IXcode.Options = { customFramework: true };
-			const dynamic = await this.isDynamicFramework(frameworkPath);
-			if (dynamic) {
-				frameworkAddOptions["embed"] = true;
-				frameworkAddOptions["sign"] = true;
-			}
-
-			const frameworkRelativePath =
-				"$(SRCROOT)/" +
-				this.getLibSubpathRelativeToProjectPath(frameworkPath, projectData);
-			project.addFramework(frameworkRelativePath, frameworkAddOptions);
-			this.savePbxProj(project, projectData);
+		if (this.$hostInfo.isWindows) {
+			return;
 		}
+
+		this.validateFramework(frameworkPath);
+
+		const project = this.createPbxProj(projectData);
+		const frameworkAddOptions: IXcode.Options = { customFramework: true };
+		const dynamic = await this.isDynamicFramework(frameworkPath);
+		if (dynamic) {
+			frameworkAddOptions["embed"] = true;
+			frameworkAddOptions["sign"] = true;
+		}
+
+		if (this.$options.hostProjectPath) {
+			// always mark xcframeworks for embedding
+			frameworkAddOptions["embed"] = true;
+			frameworkAddOptions["sign"] = false;
+		}
+
+		// Note: we used to prepend "$(SRCROOT)/" to the framework path, but seems like it's not needed anymore
+		// "$(SRCROOT)/" +
+		const frameworkRelativePath = this.getLibSubpathRelativeToProjectPath(
+			frameworkPath,
+			projectData
+		);
+		project.addFramework(frameworkRelativePath, frameworkAddOptions);
+
+		// filePathsArray, buildPhaseType, comment, target, optionsOrFolderType, subfolderPath
+		// project.addBuildPhase(
+		// 	[],
+		// 	"PBXShellScriptBuildPhase",
+		// 	"Debug SRCROOT",
+		// 	undefined,
+		// 	{
+		// 		shellPath: "/bin/sh",
+		// 		shellScript: `echo "SRCROOT: $SRCROOT"`,
+		// 	}
+		// );
+
+		this.savePbxProj(project, projectData);
 	}
 
 	private async addStaticLibrary(
@@ -594,11 +618,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 		prepareData: IOSPrepareData
 	): Promise<void> {
-		const projectRoot = path.join(projectData.platformsDir, "ios");
+		const projectRoot = this.$options.hostProjectPath
+			? this.$options.hostProjectPath
+			: path.join(
+					projectData.platformsDir,
+					this.$devicePlatformsConstants.iOS.toLowerCase()
+			  );
 		const platformData = this.getPlatformData(projectData);
 
 		const pluginsData = this.getAllProductionPlugins(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
+
 		this.$iOSExtensionsService.removeExtensions({ pbxProjPath });
 		await this.addExtensions(projectData, pluginsData);
 
@@ -624,9 +654,100 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const project = this.createPbxProj(projectData);
 
-		const resources = project.pbxGroupByName("Resources");
+		if (this.$options.hostProjectPath) {
+			try {
+				project.addPbxGroup([], "NativeScript", "NativeScript", null, {
+					isMain: true,
+					filesRelativeToProject: true,
+					uuid: "NATIVESCRIPTNATIVESCRIPT",
+				});
 
-		if (resources) {
+				/**
+				 * 1. Add platforms/ios/{projectname}/app build to the host app
+				 */
+				// Note: allow customization of this targetFolderName
+				// const targetFolderName = "app";
+
+				const buildFolderPath = path.join(
+					this.$options.hostProjectPath,
+					projectData.projectName
+					// targetFolderName
+				);
+
+				project.addResourceFile(
+					buildFolderPath,
+					{},
+					"NATIVESCRIPTNATIVESCRIPT"
+				);
+
+				// filePathsArray, buildPhaseType, comment, target, optionsOrFolderType, subfolderPath
+				// project.addBuildPhase(
+				// 	[],
+				// 	"PBXShellScriptBuildPhase",
+				// 	"Copy Metadata (DEBUG)",
+				// 	undefined,
+				// 	{
+				// 		shellPath: "/bin/sh",
+				// 		shellScript: `cp ./platforms/ios/build/Debug-iphonesimulator/metadata-arm64.bin $CONFIGURATION_BUILD_DIR`,
+				// 		outputPaths: [
+				// 			JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-arm64.bin"),
+				// 			// JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-arm64e.bin"),
+				// 			// JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-i386.bin"),
+				// 			// JSON.stringify("$(CONFIGURATION_BUILD_DIR)/metadata-x86_64.bin"),
+				// 		],
+				// 	}
+				// );
+
+				const metadataPath = path.relative(
+					this.$options.hostProjectPath,
+					buildFolderPath
+				);
+				project.addToOtherLinkerFlags(
+					JSON.stringify(
+						`-sectcreate __DATA __TNSMetadata "${metadataPath}/metadata-arm64.bin"`
+					)
+				);
+
+				// // no shorthand way to get UUID of build phase that i can tell
+				// // methods return the phase as an object but ommitted the actual key (uuid we need)
+				// // this does it same way nativescript-dev-xcode does but gets the uuid we need
+				// const resourcesBuildPhaseKeys = Object.keys(
+				// 	project.hash.project.objects["PBXResourcesBuildPhase"]
+				// );
+				// // console.log('resourcesBuildPhaseKeys:', resourcesBuildPhaseKeys);
+				// const buildPhaseUUID = resourcesBuildPhaseKeys[0];
+
+				// const comment = `${targetFolderName} in Resources`;
+				// project.hash.project.objects["PBXResourcesBuildPhase"][
+				// 	buildPhaseUUID
+				// ].files.forEach((f: any) => {
+				// 	console.log(f);
+				// });
+				// if (
+				// 	!project.hash.project.objects["PBXResourcesBuildPhase"][
+				// 		buildPhaseUUID
+				// 	].files.find((f: any) => f.comment === comment)
+				// ) {
+				// 	project.addResourceFile(buildFolderPath, {}, buildPhaseUUID);
+				// }
+
+				/**
+				 * 2. Ensure metadata is copied as a file
+				 * 		The apps metadata-{arch}.bin should be added as a file reference.
+				 */
+				// TODO
+
+				this.savePbxProj(project, projectData);
+			} catch (err) {
+				this.$logger.trace(
+					"Error adding NativeScript group to host project",
+					err
+				);
+			}
+		}
+
+		const resources = project.pbxGroupByName("Resources");
+		if (resources && !this.$options.hostProjectPath) {
 			const references = project.pbxFileReferenceSection();
 
 			const xcodeProjectImages = _.map(<any[]>resources.children, (resource) =>
@@ -904,14 +1025,27 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		targetPath: string,
 		projectData: IProjectData
 	): string {
-		const frameworkPath = path.relative(
-			this.getPlatformData(projectData).projectRoot,
-			targetPath
-		);
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		const frameworkPath = path.relative(projectRoot, targetPath);
+		// console.log({
+		// 	targetPath,
+		// 	projectRoot,
+		// 	frameworkPath,
+		// 	resolved: path.resolve(projectRoot, frameworkPath),
+		// });
 		return frameworkPath;
 	}
 
 	private getPbxProjPath(projectData: IProjectData): string {
+		if (this.$options.hostProjectPath) {
+			let xcodeProjectPath = this.$xcprojService.findXcodeProject(
+				this.$options.hostProjectPath
+			);
+			if (!xcodeProjectPath) {
+				this.$errors.fail("Xcode project not found at the specified directory");
+			}
+			return path.join(xcodeProjectPath, "project.pbxproj");
+		}
 		return path.join(
 			this.$xcprojService.getXcodeprojPath(
 				projectData,

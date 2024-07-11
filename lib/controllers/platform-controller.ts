@@ -62,12 +62,13 @@ export class PlatformController implements IPlatformController {
 
 		this.$logger.trace("Determined package to install is", packageToInstall);
 
-		const installedPlatformVersion = await this.$addPlatformService.addPlatformSafe(
-			projectData,
-			platformData,
-			packageToInstall,
-			addPlatformData
-		);
+		const installedPlatformVersion =
+			await this.$addPlatformService.addPlatformSafe(
+				projectData,
+				platformData,
+				packageToInstall,
+				addPlatformData
+			);
 
 		this.$fs.ensureDirectoryExists(
 			path.join(projectData.platformsDir, platform)
@@ -80,7 +81,8 @@ export class PlatformController implements IPlatformController {
 			);
 			const commentHeader = "# App configuration";
 			const appPath = projectData.getAppDirectoryRelativePath();
-			const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+			const appResourcesPath =
+				projectData.getAppResourcesRelativeDirectoryPath();
 
 			let gradlePropertiesContents = "";
 			if (this.$fs.exists(gradlePropertiesPath)) {
@@ -114,6 +116,12 @@ export class PlatformController implements IPlatformController {
 		addPlatformData: IAddPlatformData,
 		projectData?: IProjectData
 	): Promise<void> {
+		if (addPlatformData.hostProjectPath) {
+			this.$logger.trace(
+				"Not adding platform because --hostProjectPath is provided."
+			);
+			return;
+		}
 		const [platform] = addPlatformData.platform.toLowerCase().split("@");
 
 		projectData ??= this.$projectDataService.getProjectData(
@@ -161,9 +169,10 @@ export class PlatformController implements IPlatformController {
 
 			if (!desiredRuntimePackage.version) {
 				// if no version is explicitly added, then we use the latest
-				desiredRuntimePackage.version = await this.$packageInstallationManager.getLatestCompatibleVersion(
-					desiredRuntimePackage.name
-				);
+				desiredRuntimePackage.version =
+					await this.$packageInstallationManager.getLatestCompatibleVersion(
+						desiredRuntimePackage.name
+					);
 			}
 			// const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
 			// version = (currentPlatformData && currentPlatformData.version) ||
@@ -186,9 +195,8 @@ export class PlatformController implements IPlatformController {
 
 		const shouldAddNativePlatform =
 			!nativePrepare || !nativePrepare.skipNativePrepare;
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		const requiresNativePlatformAdd =
 			prepareInfo &&
 			prepareInfo.nativePlatformStatus ===

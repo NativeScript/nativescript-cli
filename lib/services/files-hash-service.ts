@@ -1,15 +1,20 @@
 import { executeActionByChunks } from "../common/helpers";
 import { DEFAULT_CHUNK_SIZE } from "../common/constants";
-import { APP_FOLDER_NAME, HASHES_FILE_NAME } from "../constants";
+import { HASHES_FILE_NAME } from "../constants";
 import * as path from "path";
 import * as _ from "lodash";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem, IStringDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
+import { IOptions } from "../declarations";
 
 export class FilesHashService implements IFilesHashService {
-	constructor(private $fs: IFileSystem, private $logger: ILogger) {}
+	constructor(
+		private $fs: IFileSystem,
+		private $logger: ILogger,
+		private $options: IOptions
+	) {}
 
 	public async generateHashes(files: string[]): Promise<IStringDictionary> {
 		const result: IStringDictionary = {};
@@ -37,7 +42,7 @@ export class FilesHashService implements IFilesHashService {
 	): Promise<IStringDictionary> {
 		const appFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			APP_FOLDER_NAME
+			this.$options.hostProjectModuleName
 		);
 		const files = this.$fs.enumerateFilesInDirectorySync(appFilesPath);
 		const hashes = await this.generateHashes(files);

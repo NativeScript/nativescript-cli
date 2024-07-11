@@ -22,7 +22,7 @@ import {
 	TrackActionNames,
 	WEBPACK_COMPILATION_COMPLETE,
 } from "../constants";
-import { IWatchIgnoreListService } from "../declarations";
+import { IOptions, IWatchIgnoreListService } from "../declarations";
 import {
 	INodeModulesDependenciesBuilder,
 	IPlatformController,
@@ -59,6 +59,7 @@ export class PrepareController extends EventEmitter {
 		public $hooksService: IHooksService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $platformsDataService: IPlatformsDataService,
@@ -138,6 +139,7 @@ export class PrepareController extends EventEmitter {
 			prepareData,
 			projectData
 		);
+
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
 
 		this.$logger.info("Preparing project...");
@@ -426,6 +428,9 @@ export class PrepareController extends EventEmitter {
 		return patterns;
 	}
 
+	/**
+	 * TODO: move this logic to the webpack side of things - WIP and deprecate here with a webpack version check...
+	 */
 	public async writeRuntimePackageJson(
 		projectData: IProjectData,
 		platformData: IPlatformData
@@ -478,9 +483,9 @@ export class PrepareController extends EventEmitter {
 		} else {
 			packagePath = path.join(
 				platformData.projectRoot,
-				"app",
+				this.$options.hostProjectModuleName,
 				"src",
-				"main",
+				this.$options.hostProjectPath ? "nativescript" : "main",
 				"assets",
 				"app",
 				"package.json"

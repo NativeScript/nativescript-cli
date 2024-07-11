@@ -13,10 +13,12 @@ import {
 } from "../../common/declarations";
 import { IInjector } from "../../common/definitions/yok";
 import { injector } from "../../common/yok";
+import { IOptions } from "../../declarations";
 
 export class AndroidLiveSyncService
 	extends PlatformLiveSyncServiceBase
-	implements IPlatformLiveSyncService {
+	implements IPlatformLiveSyncService
+{
 	private static MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION = "4.2.0-2018-07-20-02";
 	constructor(
 		protected $platformsDataService: IPlatformsDataService,
@@ -24,14 +26,16 @@ export class AndroidLiveSyncService
 		private $injector: IInjector,
 		$devicePathProvider: IDevicePathProvider,
 		$fs: IFileSystem,
-		$logger: ILogger
+		$logger: ILogger,
+		$options: IOptions
 	) {
 		super(
 			$fs,
 			$logger,
 			$platformsDataService,
 			$projectFilesManager,
-			$devicePathProvider
+			$devicePathProvider,
+			$options
 		);
 	}
 
