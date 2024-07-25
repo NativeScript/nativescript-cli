@@ -35,7 +35,8 @@ export class CocoaPodsService implements ICocoaPodsService {
 		private $logger: ILogger,
 		private $config: IConfiguration,
 		private $xcconfigService: IXcconfigService,
-		private $xcodeSelectService: XcodeSelectService
+		private $xcodeSelectService: XcodeSelectService,
+		private $projectData: IProjectData,
 	) {
 		this.getCocoaPodsFromPodfile = _.memoize(
 			this._getCocoaPodsFromPodfile,
@@ -59,8 +60,12 @@ export class CocoaPodsService implements ICocoaPodsService {
 		projectRoot: string,
 		xcodeProjPath: string
 	): Promise<ISpawnResult> {
-		this.$logger.info("Installing pods...");
+		const cocoapodUseBundleExec = this.$projectData.nsConfig.ios?.cocoapodUseBundleExec;
 		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
+		if (cocoapodUseBundleExec === true) {
+			podTool = `bundle exec ${podTool}`
+		}
+		this.$logger.info(`Installing pods using "${podTool}"...`);
 		const args = ["install"];
 
 		if (process.platform === "darwin" && process.arch === "arm64") {
@@ -71,7 +76,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 			// arch: posix_spawnp: pod: Bad CPU type in executable
 			// in which case, we should run it natively.
 			const res: string = await this.$childProcess
-				.exec("arch -x86_64 pod --version", null, {
+				.exec(`arch -x86_64 ${podTool} --version`, null, {
 					showStderr: true,
 				})
 				.then((res) => res.stdout + " " + res.stderr)
