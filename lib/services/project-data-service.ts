@@ -625,24 +625,21 @@ export class ProjectDataService implements IProjectDataService {
 		projectDir: string,
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
+		console.log('getInstalledRuntimePackage');
+		let packageName: string[] = [];
+		if (platform === constants.PlatformTypes.ios) {
+			packageName.push(this.$projectData.nsConfig.ios?.runtimePackageName, constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME);
+			
+		} else if (platform === constants.PlatformTypes.android) {
+			packageName.push(this.$projectData.nsConfig.android?.runtimePackageName, constants.SCOPED_ANDROID_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME);
+		} else if (platform === constants.PlatformTypes.visionos) {
+			packageName.push(constants.SCOPED_VISIONOS_RUNTIME_NAME);
+		}
 		const runtimePackage = this.$pluginsService
 			.getDependenciesFromPackageJson(projectDir)
 			.devDependencies.find((d) => {
-				if (platform === constants.PlatformTypes.ios) {
-					const packageName = this.$projectData.nsConfig.ios?.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME;
-					return [
-						packageName,
-						constants.TNS_IOS_RUNTIME_NAME,
-					].includes(d.name);
-				} else if (platform === constants.PlatformTypes.android) {
-					const packageName = this.$projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
-					return [
-						packageName,
-						constants.TNS_ANDROID_RUNTIME_NAME,
-					].includes(d.name);
-				} else if (platform === constants.PlatformTypes.visionos) {
-					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
-				}
+				return packageName.includes(d.name);
+				
 			});
 
 		if (runtimePackage) {
