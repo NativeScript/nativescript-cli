@@ -44,13 +44,11 @@ apply from: "gradle-helpers/BuildToolTask.gradle"
 apply from: "gradle-helpers/CustomExecutionLogger.gradle"
 apply from: "gradle-helpers/AnalyticsCollector.gradle"
 
-def enableKotlin = (project.hasProperty("useKotlin") && project.useKotlin == "true")
 
-if (enableKotlin) {
-    apply plugin: 'kotlin-android'
-    apply plugin: 'kotlin-parcelize'
-    apply plugin: "org.jetbrains.kotlin.android"
-}
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-parcelize'
+// apply plugin: "org.jetbrains.kotlin.android"
+
 
 def onlyX86 = project.hasProperty("onlyX86")
 if (onlyX86) {
@@ -94,14 +92,7 @@ def computeBuildToolsVersion = { ->
     project.hasProperty("buildToolsVersion") ? buildToolsVersion : NS_DEFAULT_BUILD_TOOLS_VERSION as String
 }
 
-def enableAnalytics = (project.hasProperty("gatherAnalyticsData") && project.gatherAnalyticsData == "true")
 def enableVerboseMDG = project.gradle.startParameter.logLevel.name() == 'DEBUG'
-def analyticsFilePath = "$rootDir/analytics/build-statistics.json"
-def analyticsCollector = project.ext.AnalyticsCollector.withOutputPath(analyticsFilePath)
-if (enableAnalytics) {
-    analyticsCollector.markUseKotlinPropertyInApp(enableKotlin)
-    analyticsCollector.writeAnalyticsFile()
-}
 
 project.ext.selectedBuildType = project.hasProperty("release") ? "release" : "debug"
 
@@ -186,22 +177,20 @@ def setAppIdentifier = { ->
         if (appIdentifier) {
             project.ext.nsApplicationIdentifier = appIdentifier
             android.defaultConfig.applicationId = appIdentifier
+            android.namespace = appIdentifier
         }
     }
 }
 
 android {
-
     applyBeforePluginGradleConfiguration()
     namespace "__PACKAGE__"
 
-    if (enableKotlin) {
-        kotlin {
-            jvmToolchain(17)
-        }
+    kotlin {
+        jvmToolchain(17)
     }
 
-    compileSdkVersion computeCompileSdkVersion()
+    compileSdk computeCompileSdkVersion()
     buildToolsVersion computeBuildToolsVersion()
 
     defaultConfig {
@@ -258,12 +247,12 @@ android {
     applyAppGradleConfiguration()
 
     def initializeMergedAssetsOutputPath = { ->
-      android.applicationVariants.all { variant ->
+      android.applicationVariants.configureEach { variant ->
           if (variant.buildType.name == project.selectedBuildType) {
               def task
               if (variant.metaClass.respondsTo(variant, "getMergeAssetsProvider")) {
                   def provider = variant.getMergeAssetsProvider()
-                  task = provider.get();
+                  task = provider.get()
               } else {
                   // fallback for older android gradle plugin versions
                   task = variant.getMergeAssets()
@@ -271,7 +260,7 @@ android {
               for (File file : task.getOutputs().getFiles()) {
                   if (!file.getPath().contains("${File.separator}incremental${File.separator}")) {
                       project.ext.mergedAssetsOutputPath = file.getPath()
-                      break;
+                      break
                   }
               }
           }
@@ -401,10 +390,8 @@ dependencies {
         implementation project(':runtime')
     }
 
-    def kotlinVersion = computeKotlinVersion()
-    if (enableKotlin) {
-        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-    }
+    // def kotlinVersion = computeKotlinVersion()
+    // implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
 
 }
 
@@ -414,7 +401,11 @@ dependencies {
 
 task addDependenciesFromNativeScriptPlugins {
     nativescriptDependencies.each { dep ->
-        def aarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID"), include: ["**/*.aar"])
+        def aarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID")).matching {
+            include "**/*.aar"
+            exclude "cpp/**"
+            exclude project.hasProperty("aarIgnoreFilter") ? project.findProperty('aarIgnoreFilter').split(',').collect{it as String} : []
+        }
         aarFiles.each { aarFile ->
             def length = aarFile.name.length() - 4
             def fileName = aarFile.name[0..<length]
@@ -422,7 +413,11 @@ task addDependenciesFromNativeScriptPlugins {
             project.dependencies.add("implementation", [name: fileName, ext: "aar"])
         }
 
-        def jarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID"), include: ["**/*.jar"])
+        def jarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID")).matching {
+            include "**/*.jar"
+            exclude "cpp/**"
+            exclude project.hasProperty("jarIgnoreFilter") ? project.findProperty('jarIgnoreFilter').split(',').collect{it as String} : []
+        }
         jarFiles.each { jarFile ->
             def jarFileAbsolutePath = jarFile.getAbsolutePath()
             outLogger.withStyle(Style.SuccessHeader).println "\t + adding jar plugin dependency: $jarFileAbsolutePath"
@@ -457,19 +452,19 @@ task addDependenciesFromAppResourcesLibraries {
 }
 
 if (failOnCompilationWarningsEnabled()) {
-    tasks.withType(JavaCompile) {
+    tasks.withType(JavaCompile).configureEach {
         options.compilerArgs << '-Xlint:all' << "-Werror"
         options.deprecation = true
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////// EXECUTUION PHASE /////////////////////////////////////
+///////////////////////////// EXECUTION PHASE /////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
 task runSbg(type: BuildToolTask) {
     dependsOn "collectAllJars"
-    def rootPath = "";
+    def rootPath = ""
     if (!findProject(':static-binding-generator').is(null)) {
         rootPath = Paths.get(project(':static-binding-generator').projectDir.path, "build/libs").toString()
         dependsOn ':static-binding-generator:jar'
@@ -483,7 +478,7 @@ task runSbg(type: BuildToolTask) {
     mainClass = "-jar"
 
     def paramz = new ArrayList<String>()
-    paramz.add(Paths.get(rootPath,"static-binding-generator.jar"))
+    paramz.add(Paths.get(rootPath, "static-binding-generator.jar"))
 
     if (failOnCompilationWarningsEnabled()) {
         paramz.add("-show-deprecation-warnings")
@@ -529,7 +524,7 @@ def explodeAar(File compileDependency, File outputDir) {
     }
 }
 
-def md5(String string) {
+static def md5(String string) {
     MessageDigest digest = MessageDigest.getInstance("MD5")
     digest.update(string.bytes)
     return new BigInteger(1, digest.digest()).toString(16).padLeft(32, '0')
@@ -562,9 +557,9 @@ allprojects {
         def buildType = project.selectedBuildType
         def jars = []
         def artifactType = Attribute.of('artifactType', String)
-        android.applicationVariants.all { variant ->
+        android.applicationVariants.configureEach { variant ->
             if (variant.buildType.name == buildType) {
-                variant.getCompileClasspath().each { fileDependency -> 
+                variant.getCompileClasspath(null).each { fileDependency -> 
                     processJar(fileDependency, jars)
                 }
             }
@@ -582,7 +577,7 @@ def processJar(File jar, jars) {
         logger.debug("Creating dynamic task ${taskName}")
 
         // Add discovered jars as dependencies of cleanupAllJars.
-        // This is cruicial for cloud builds because they are different
+        // This is crucial for cloud builds because they are different
         // on each incremental build (as each time the gradle user home
         // directory is a randomly generated string)
         cleanupAllJars.inputs.files jar
@@ -612,7 +607,7 @@ def processJar(File jar, jars) {
     }
 }
 
-task cleanupAllJars {
+task 'cleanupAllJars' {
     // We depend on the list of libs directories that might contain aar or jar files
     // and on the list of all discovered jars
     inputs.files(pluginDependencies)
@@ -637,7 +632,7 @@ task cleanupAllJars {
 
 
 // Placeholder task which depends on all dynamically generated extraction tasks
-task extractAllJars {
+task 'extractAllJars' {
     dependsOn cleanupAllJars
     outputs.files extractAllJarsTimestamp
 
@@ -646,7 +641,7 @@ task extractAllJars {
     }
 }
 
-task collectAllJars {
+task 'collectAllJars' {
     dependsOn extractAllJars
     description "gathers all paths to jar dependencies before building metadata with them"
 
@@ -689,22 +684,22 @@ task copyMetadataFilters(type: Copy) {
     into "$BUILD_TOOLS_PATH"
 }
 
-task copyMetadata {
+task 'copyMetadata' {
     doLast {
         copy {
-          from "$projectDir/src/main/assets/metadata"
-          into getMergedAssetsOutputPath() + "/metadata"
+            from "$projectDir/src/main/assets/metadata"
+            into getMergedAssetsOutputPath() + "/metadata"
         }
     }
 }
 
 def listf(String directoryName, ArrayList<File> store) {
-    def directory = new File(directoryName);
+    def directory = new File(directoryName)
 
-    def resultList = new ArrayList<File>();
+    def resultList = new ArrayList<File>()
 
-    def fList = directory.listFiles();
-    resultList.addAll(Arrays.asList(fList));
+    def fList = directory.listFiles()
+    resultList.addAll(Arrays.asList(fList))
     for (File file : fList) {
         if (file.isFile()) {
             store.add(file)
@@ -716,7 +711,7 @@ def listf(String directoryName, ArrayList<File> store) {
 }
 
 task buildMetadata(type: BuildToolTask) {
-    def rootPath = "";
+    def rootPath = ""
     if (!findProject(':android-metadata-generator').is(null)) {
         rootPath = Paths.get(project(':android-metadata-generator').projectDir.path, "build/libs").toString()
         dependsOn ':android-metadata-generator:jar'
@@ -740,13 +735,13 @@ task buildMetadata(type: BuildToolTask) {
     // make MDG aware of whitelist.mdg and blacklist.mdg files
     inputs.files(project.fileTree(dir: "$rootDir", include: "**/*.mdg"))
 
-    def classesDir = "$buildDir/intermediates/javac"
-    if (file(classesDir).exists()) {
+    def classesDir = layout.buildDirectory.dir("intermediates/javac").get().asFile
+    if (classesDir.exists()) {
         inputs.dir(classesDir)
     }
 
-    def kotlinClassesDir = "$buildDir/tmp/kotlin-classes"
-    if (file(kotlinClassesDir).exists()) {
+    def kotlinClassesDir = layout.buildDirectory.dir("tmp/kotlin-classes").get().asFile
+    if (kotlinClassesDir.exists()) {
         inputs.dir(kotlinClassesDir)
     }
 
@@ -766,8 +761,8 @@ task buildMetadata(type: BuildToolTask) {
 
         rootProject.subprojects {
 
-          def projectClassesDir = new File("$it.buildDir/intermediates/javac")
-          def projectKotlinClassesDir = new File("$it.buildDir/tmp/kotlin-classes")
+            def projectClassesDir = it.layout.buildDirectory.dir("intermediates/javac").get().asFile
+            def projectKotlinClassesDir = it.layout.buildDirectory.dir("tmp/kotlin-classes").get().asFile
 
             if (projectClassesDir.exists()) {
                 def projectClassesSubDirs = projectClassesDir.listFiles()
@@ -778,14 +773,14 @@ task buildMetadata(type: BuildToolTask) {
                 }
             }
 
-          if (projectKotlinClassesDir.exists()) {
-            def projectKotlinClassesSubDirs = projectKotlinClassesDir.listFiles();
-            for (File subDir : projectKotlinClassesSubDirs) {
-              if (!kotlinClassesSubDirs.contains(subDir)) {
-                kotlinClassesSubDirs.add(subDir)
-              }
+            if (projectKotlinClassesDir.exists()) {
+                def projectKotlinClassesSubDirs = projectKotlinClassesDir.listFiles()
+                for (File subDir : projectKotlinClassesSubDirs) {
+                    if (!kotlinClassesSubDirs.contains(subDir)) {
+                        kotlinClassesSubDirs.add(subDir)
+                    }
+                }
             }
-          }
         }
 
         def generatedClasses = new LinkedList<String>()
@@ -802,7 +797,7 @@ task buildMetadata(type: BuildToolTask) {
         }
 
         def store = new ArrayList<File>()
-        for (String dir: generatedClasses){
+        for (String dir : generatedClasses){
             listf(dir, store)
         }
 
@@ -827,11 +822,7 @@ task buildMetadata(type: BuildToolTask) {
         def paramz = new ArrayList<String>()
         paramz.add(Paths.get(rootPath, "android-metadata-generator.jar"))
 
-        if(enableAnalytics){
-            paramz.add("analyticsFilePath=$analyticsFilePath")
-        }
-
-        if(enableVerboseMDG){
+        if (enableVerboseMDG) {
             paramz.add("verbose")
         }
 
@@ -893,7 +884,7 @@ static def shouldIncludeDirForTypings(path, includeDirs) {
     return false
 }
 
-task copyTypings {
+task 'copyTypings' {
     doLast {
         outLogger.withStyle(Style.Info).println "Copied generated typings to application root level. Make sure to import android.d.ts in reference.d.ts"
 
@@ -907,12 +898,12 @@ task copyTypings {
 copyTypings.onlyIf { generateTypescriptDefinitions.didWork }
 generateTypescriptDefinitions.finalizedBy(copyTypings)
 
-task validateAppIdMatch {
+task 'validateAppIdMatch' {
     doLast {
         def lineSeparator = System.getProperty("line.separator")
 
         if (project.hasProperty("nsApplicationIdentifier") && !project.hasProperty("release")) {
-            if (project.nsApplicationIdentifier != android.defaultConfig.applicationId) {
+            if (project.nsApplicationIdentifier != android.defaultConfig.applicationId && android.namespace != appIdentifier) {
                 def errorMessage = "${lineSeparator}WARNING: The Application identifier is different from the one inside \"package.json\" file.$lineSeparator" +
                         "NativeScript CLI might not work properly.$lineSeparator" +
                         "Remove applicationId from app.gradle and update the \"nativescript.id\" in package.json.$lineSeparator" +
@@ -953,91 +944,119 @@ cleanSbg.dependsOn(cleanMdg)
 clean.dependsOn(cleanSbg)
 
 
-project.tasks.configureEach {
-    if (name =~ /generate.+BuildConfig/) {
-        it.finalizedBy(extractAllJars)
+tasks.configureEach { DefaultTask currentTask ->
+    if (currentTask =~ /generate.+BuildConfig/) {
+        currentTask.finalizedBy(extractAllJars)
         extractAllJars.finalizedBy(collectAllJars)
     }
-    if (name =~ /compile.+JavaWithJavac/) {
-        it.dependsOn(runSbg)
-        it.finalizedBy(buildMetadata)
+    if (currentTask =~ /compile.+JavaWithJavac/) {
+        currentTask.dependsOn(runSbg)
+        currentTask.finalizedBy(buildMetadata)
     }
 
-
-    if (name =~ /compile.+Kotlin.+/) {
-        it.dependsOn(runSbg)
-        it.finalizedBy(buildMetadata)
+    if (currentTask =~ /compile.+Kotlin.+/) {
+        currentTask.dependsOn(runSbg)
+        currentTask.finalizedBy(buildMetadata)
     }
 
-    if (name =~ /merge.*Assets/) {
-        it.dependsOn(buildMetadata)
+    if (currentTask =~ /merge.*Assets/) {
+        currentTask.dependsOn(buildMetadata)
     }
     // ensure buildMetadata is done before R8 to allow custom proguard from metadata
-    if (name =~ /minify.*WithR8/) {
-        it.dependsOn(buildMetadata)
+    if (currentTask =~ /minify.*WithR8/) {
+        currentTask.dependsOn(buildMetadata)
     }
-    if (name =~ /assemble.*Debug/ || name =~ /assemble.*Release/) {
-        it.finalizedBy("validateAppIdMatch")
+    if (currentTask =~ /assemble.*Debug/ || currentTask =~ /assemble.*Release/) {
+        currentTask.finalizedBy("validateAppIdMatch")
     }
 
     // added because of a error with gradle 8 telling us to add this
     // because buildMetadata uses the output of those
     // TODO: there must be a way to make it simpler
-    if (!(name =~ /AndroidTest/) &&
-       (name =~ /merge(Debug|Release)Shaders/ ||
-        name =~ /desugar(Debug|Release)FileDependencies/ || 
-        name =~ /merge(Debug|Release)JavaResource/ || 
-        name =~ /dexBuilder(Debug|Release)/ || 
-        name =~ /check(Debug|Release)DuplicateClasses/ || 
-        name =~ /merge(Debug|Release)GlobalSynthetics/ || 
-        name =~ /mergeLibDex(Debug|Release)/ || 
-        name =~ /mergeExtDex(Debug|Release)/ || 
-        name =~ /mergeProjectDex(Debug|Release)/ || 
-        name =~ /merge(Debug|Release)JniLibFolders/ || 
-        name =~ /merge(Debug|Release)NativeLibs/ || 
-        name =~ /strip(Debug|Release)DebugSymbols/ || 
-        name =~ /bundle(Debug|Release)Resources/ ||
-        name =~ /extract(Debug|Release)NativeSymbolTables/ ||
-        name =~ /extractProguardFiles/ || 
-        name =~ /desugarBenchmarkFileDependencies/ ||
-        name =~ /mergeExtDexBenchmark/ ||
-        name =~ /mergeDexBenchmark/ ||
-        name =~ /mergeBenchmarkShaders/ ||
-        name =~ /mergeBenchmarkJavaResource/ ||
-        name =~ /mergeBenchmarkJniLibFolders/ ||
-        name =~ /checkBenchmarkDuplicateClasses/ ||
-        name =~ /bundleBenchmarkResources/ ||
-        name =~ /extractBenchmarkNativeSymbolTables/ ||
-        // name =~ /compressBenchmarkAssets/ ||
-        name =~ /mergeBenchmarkNativeLibs/ ||
-        name =~ /stripBenchmark(Debug|Release)Symbols/ ||
-        name =~ /buildKotlinToolingMetadata/ ||
-        name =~ /validateSigning/ || 
-        name =~ /mergeExtDexNonMinified(Debug|Release)/ || 
-        name =~ /mergeDexNonMinified(Debug|Release)/ || 
-        name =~ /mergeNonMinified(Debug|Release)Shaders/ || 
-        name =~ /processNonMinified(Debug|Release)JavaRes/ || 
-        name =~ /mergeNonMinified(Debug|Release)JavaResource/ || 
-        name =~ /optimizeNonMinified(Debug|Release)Resources/ || 
-        name =~ /mergeNonMinified(Debug|Release)JniLibFolders/ || 
-        name =~ /mergeNonMinified(Debug|Release)NativeLibs/ || 
-        name =~ /stripNonMinified(Debug|Release)DebugSymbols/ || 
-        name =~ /checkBenchmark(Debug|Release)DuplicateClasses/ || 
-        name =~ /processBenchmark(Debug|Release)JavaRes/ || 
-        name =~ /mergeBenchmark(Debug|Release)JavaResource/ || 
-        name =~ /transform(Debug|Release)ClassesWithAsm/ || 
+    if (!(currentTask =~ /AndroidTest/) &&
+        (currentTask =~ /process.+Resources/ || 
+        currentTask =~ /desugar.+FileDependencies/ || 
+        currentTask =~ /desugarBenchmarkFileDependencies/ ||
+        currentTask =~ /dexBuilder.+/ || 
+        currentTask =~ /check.*DuplicateClasses/ || 
+        currentTask =~ /merge.+Shaders/ ||
+        currentTask =~ /merge.*JavaResource/ || 
+        currentTask =~ /merge.+GlobalSynthetics/ || 
+        currentTask =~ /merge.+JniLibFolders/ || 
+        currentTask =~ /merge.+NativeLibs/ || 
+        currentTask =~ /mergeDex.+/ || 
+        currentTask =~ /mergeLibDex.+/ || 
+        currentTask =~ /mergeProjectDex.+/ || 
+        currentTask =~ /mergeExtDex.+/ || 
+        currentTask =~ /mergeExtDexBenchmark/ ||
+        currentTask =~ /mergeExtDexNonMinified.+/ || 
+        currentTask =~ /mergeDexBenchmark/ ||
+        currentTask =~ /mergeDexNonMinified.+/ || 
+        currentTask =~ /mergeBenchmark.+JavaResource/ ||  
+        currentTask =~ /mergeBenchmarkShaders/ ||
+        currentTask =~ /mergeBenchmarkJavaResource/ ||
+        currentTask =~ /mergeBenchmarkJniLibFolders/ ||
+        currentTask =~ /mergeBenchmarkNativeLibs/ ||
+        currentTask =~ /mergeNonMinified.+Shaders/ || 
+        currentTask =~ /mergeNonMinified.+JavaResource/ ||
+        currentTask =~ /mergeNonMinified.+JniLibFolders/ || 
+        currentTask =~ /mergeNonMinified.+NativeLibs/ || 
+        currentTask =~ /strip.*DebugSymbols/ || 
+        currentTask =~ /stripBenchmark.+Symbols/ ||
+        currentTask =~ /stripNonMinified.+DebugSymbols/ || 
+        currentTask =~ /extract.+NativeSymbolTables/ ||
+        currentTask =~ /extractProguardFiles/ || 
+        currentTask =~ /checkBenchmarkDuplicateClasses/ ||
+        currentTask =~ /checkBenchmark.+DuplicateClasses/ || 
+        currentTask =~ /bundle.*Resources/ ||
+        // currentTask =~ /compile.*ArtProfile/ ||
+        currentTask =~ /extractBenchmarkNativeSymbolTables/ ||
+        currentTask =~ /buildKotlinToolingMetadata/ ||
+        currentTask =~ /validateSigning.*/ || 
+        currentTask =~ /generate.+LintVitalReportMode/ || 
+        currentTask =~ /lintVitalAnalyze.+/ || 
+        currentTask =~ /lintAnalyze.*/ || 
+        currentTask =~ /sync.+LibJars/ || 
+        currentTask =~ /processNonMinified.+JavaRes/ || 
+        currentTask =~ /process.*JavaRes/ || 
+        // currentTask =~ /optimize.+Resources/ || 
+        currentTask =~ /lintAnalyze.*UnitTest/ || 
+        currentTask =~ /buildCMake.*/ || 
+        currentTask =~ /configureCMake.*/ || 
+        currentTask =~ /transform.+ClassesWithAsm/ || 
+        currentTask =~ /generate.*AndroidTestLintModel/ || 
+        currentTask =~ /generate.*UnitTestLintModel/ || 
         // because of sentry plugin. There must be a better way
-        name =~ /collectExternal(Debug|Release)/
+        currentTask =~ /transformDebugClassesWithAsm/ || 
+        currentTask =~ /generateSentryDebugMetaPropertiesDebug/ || 
+        currentTask =~ /generateSentryBundleId.*/ || 
+        currentTask =~ /collectExternal.+/
         )) {
-        it.finalizedBy(buildMetadata)
+        currentTask.finalizedBy(buildMetadata)
+    }
+    if (
+        currentTask =~ /generateSentryBundleId.*/ || 
+        currentTask =~ /sentryCollectSources.*/
+        ) {
+        currentTask.mustRunAfter(runSbg)
+    }
+    if (
+        currentTask =~ /generate.*AndroidTestResValues/
+        ) {
+        buildMetadata.dependsOn(currentTask)
+    }
+    if (
+        currentTask =~ /generate.*UnitTestLintModel/ || 
+        currentTask =~ /compile.*ArtProfile/
+        ) {
+        currentTask.mustRunAfter(buildMetadata)
     }
     // added because of a error with gradle 8 telling us to add this
     // because buildMetadata uses the output of those
     // TODO: there must be a way to make it simpler
-    if (!(name =~ /AndroidTest/) && (
-        name =~ /process(Debug|Release)Resources/ || 
-        name =~ /compile(Debug|Release)Kotlin/
+    if (!(currentTask =~ /AndroidTest/) && (
+        currentTask =~ /process.+Resources/
         )) {
-        cleanupAllJars.dependsOn(it)
+        cleanupAllJars.dependsOn(currentTask)
     }
 }

@@ -193,7 +193,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(
 			options.platformsAndroidDirPath
 		);
-		const shortPluginName = getShortPluginName(options.pluginName);
+		const shortPluginName = getShortPluginName(options.pluginName + (options.aarSuffix || ''));
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
 		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(
 			options.platformsAndroidDirPath,
@@ -228,9 +228,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.projectDir,
 				options.pluginName
 			);
+			const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || []).concat(options.gradleArgs || []);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
-				gradleArgs: options.gradleArgs,
+				gradleArgs,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -361,7 +362,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$fs.copyFile(path.join(dir, "*"), destination);
 		}
 	}
-	private extractNamespaceFromManifest(manifestPath:string): string {
+	private extractNamespaceFromManifest(manifestPath: string): string {
 		const fileContent = this.$fs.readText(manifestPath);
 		const contentRegex = new RegExp('package="(.*?)"');
 		const match = fileContent.match(contentRegex);
@@ -394,10 +395,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		if (this.$projectData.nsConfig.android.gradleVersion) {
 			gradleVersion = this.$projectData.nsConfig.android.gradleVersion;
 		}
-		this.replaceGradleVersion(
-			pluginTempDir,
-			gradleVersion
-		);
+		this.replaceGradleVersion(pluginTempDir, gradleVersion);
 
 		this.replaceGradleAndroidPluginVersion(
 			buildGradlePath,
@@ -407,13 +405,19 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		// In gradle 8 every android project must have a namespace in "android"
 		// and the package property in manifest is now forbidden
 		// let s replace it
-		const manifestFilePath = this.getManifest(path.join(pluginTempDir, 'src', 'main'));
+		const manifestFilePath = this.getManifest(
+			path.join(pluginTempDir, "src", "main")
+		);
 		let pluginNamespace = this.extractNamespaceFromManifest(manifestFilePath);
 		if (!pluginNamespace) {
-			pluginNamespace = pluginName.replace(/@/g, '').replace(/[/-]/g, '.')
+			pluginNamespace = pluginName.replace(/@/g, "").replace(/[/-]/g, ".");
 		}
 
-		this.replaceFileContent(buildGradlePath, "{{pluginNamespace}}", pluginNamespace);
+		this.replaceFileContent(
+			buildGradlePath,
+			"{{pluginNamespace}}",
+			pluginNamespace
+		);
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
 	}
@@ -781,9 +785,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
 		if (pluginBuildSettings.gradleArgs) {
-			const additionalArgs: string[] = []
-			pluginBuildSettings.gradleArgs.forEach(arg=>{
-				additionalArgs.push(...arg.split(' -P').map((a,i) => i === 0 ? a : `-P${a}`));
+			const additionalArgs: string[] = [];
+			pluginBuildSettings.gradleArgs.forEach((arg) => {
+				additionalArgs.push(
+					...arg.split(" -P").map((a, i) => (i === 0 ? a : `-P${a}`))
+				);
 			});
 			localArgs.push(...additionalArgs);
 		}
@@ -796,6 +802,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", {
 				cwd: pluginBuildSettings.pluginDir,
 				stdio: "inherit",
+				shell: this.$hostInfo.isWindows,
 			});
 		} catch (err) {
 			this.$errors.fail(

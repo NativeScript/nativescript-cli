@@ -49,7 +49,8 @@ export class DeviceInstallAppService {
 			projectDir: projectData.projectDir,
 		});
 		const buildOutputOptions = platformData.getValidBuildOutputData(buildData);
-		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
+		const outputPath =
+			buildData.outputPath || platformData.getBuildOutputPath(buildData);
 		const packages = await this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
 			buildOutputOptions
@@ -57,21 +58,21 @@ export class DeviceInstallAppService {
 		let packageFile;
 		if (packages.length === 1) {
 			// will always be the case on iOS
-			packageFile = packages[0].packageName;
+			packageFile = packages.at(0).packageName;
 		} else if (device.deviceInfo.abis) {
-			device.deviceInfo.abis.every(abi=>{
-				const index = packages.findIndex(p => p.packageName.indexOf(abi) !== -1);
-				if (index !== -1) {
-					packageFile = packages[index].packageName;
-					return false;
+			packages.find(({ packageName }) => {
+				if (device.deviceInfo.abis.some((abi) => packageName.includes(abi))) {
+					packageFile = packageName;
+					return true;
 				}
-				return true;
-			})
+			});
 		} else {
 			//we did not find corresponding abi let's try universal
-			const index = packages.findIndex(p => p.packageName.indexOf('universal') !== -1);
-			if (index !== -1) {
-				packageFile = packages[index].packageName;
+			const universalPackage = packages.find((p) =>
+				p.packageName.includes("universal")
+			);
+			if (universalPackage) {
+				packageFile = universalPackage.packageName;
 			}
 		}
 
@@ -147,10 +148,8 @@ export class DeviceInstallAppService {
 			return true;
 		}
 
-		const deviceBuildInfo: IBuildInfo = await this.$buildInfoFileService.getDeviceBuildInfo(
-			device,
-			projectData
-		);
+		const deviceBuildInfo: IBuildInfo =
+			await this.$buildInfoFileService.getDeviceBuildInfo(device, projectData);
 		const localBuildInfo = this.$buildInfoFileService.getLocalBuildInfo(
 			platformData,
 			{ ...buildData, buildForDevice: !device.isEmulator }

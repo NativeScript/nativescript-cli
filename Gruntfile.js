@@ -191,21 +191,21 @@ module.exports = function (grunt) {
 		grunt.file.write(CONFIG_DATA.filePath, stringConfigContent);
 	}
 
-	grunt.registerTask("set_live_ga_id", function () {
-		setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.live]);
-	});
+	// grunt.registerTask("set_live_ga_id", function () {
+	// 	setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.live]);
+	// });
 
-	grunt.registerTask("set_dev_ga_id", function () {
-		setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.dev]);
-	});
+	// grunt.registerTask("set_dev_ga_id", function () {
+	// 	setConfig(CONFIG_DATA.gaKey, GA_TRACKING_IDS[ENVIRONMENTS.dev]);
+	// });
 
-	grunt.registerTask("verify_live_ga_id", function () {
-		var configJson = grunt.file.readJSON(CONFIG_DATA.filePath);
+	// grunt.registerTask("verify_live_ga_id", function () {
+	// 	var configJson = grunt.file.readJSON(CONFIG_DATA.filePath);
 
-		if (configJson[CONFIG_DATA.gaKey] !== GA_TRACKING_IDS[ENVIRONMENTS.live]) {
-			throw new Error("Google Analytics id is not configured correctly.");
-		}
-	});
+	// 	if (configJson[CONFIG_DATA.gaKey] !== GA_TRACKING_IDS[ENVIRONMENTS.live]) {
+	// 		throw new Error("Google Analytics id is not configured correctly.");
+	// 	}
+	// });
 
 	grunt.registerTask("test", ["ts:devall", "shell:npm_test"]);
 
@@ -214,15 +214,15 @@ module.exports = function (grunt) {
 	grunt.registerTask("prepare", [
 		"clean",
 		"ts:release_build",
-		"generate_unit_testing_dependencies",
-		"verify_unit_testing_dependencies",
-		"shell:npm_test",
+		// "generate_unit_testing_dependencies",
+		// "verify_unit_testing_dependencies",
+		// "shell:npm_test",
 
-		"set_live_ga_id",
-		"verify_live_ga_id"
+		// "set_live_ga_id",
+		// "verify_live_ga_id"
 	]);
 	grunt.registerTask("pack", [
-		"set_package_version",
+		// "set_package_version",
 		"shell:build_package"
 	]);
 

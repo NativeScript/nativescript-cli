@@ -1,7 +1,7 @@
 {
-  "name": "nativescript",
-  "preferGlobal": true,
-  "version": "8.7.0",
+  "name": "@akylas/nativescript-cli",
+  "main": "./lib/nativescript-cli-lib.js",
+  "version": "8.7.2",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -10,7 +10,6 @@
     "nsc": "./bin/tns",
     "tns": "./bin/tns"
   },
-  "main": "./lib/nativescript-cli-lib.js",
   "files": [
     "bin/*",
     "config",
@@ -22,6 +21,7 @@
     "!lib/**/*.js.map",
     "!lib/common/test",
     "!lib/common/docs/fonts",
+    "!node_modules",
     "resources",
     "setup",
     "vendor",
@@ -38,7 +38,7 @@
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
     "prepack": "grunt prepare",
-    "postpack": "grunt set_dev_ga_id",
+    "pack": "grunt pack",
     "mocha": "mocha",
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
@@ -103,7 +103,7 @@
     "shelljs": "0.8.5",
     "simple-git": "3.17.0",
     "simple-plist": "1.4.0",
-    "source-map": "0.8.0-beta.0",
+    "source-map": "0.7.4",
     "stringify-package": "1.0.1",
     "tar": "6.1.13",
     "temp": "0.9.4",
@@ -117,7 +117,6 @@
     "xml2js": "0.6.2",
     "yargs": "17.7.1"
   },
-  "analyze": true,
   "devDependencies": {
     "@types/archiver": "^5.3.2",
     "@types/byline": "^4.2.33",
@@ -171,20 +170,9 @@
     "sinon": "15.0.3",
     "source-map-support": "0.5.21"
   },
-  "license": "Apache-2.0",
-  "engines": {
-    "node": ">=10.0.0"
+  "optionalDependencies": {
+    "fsevents": "*"
   },
-  "lint-staged": {
-    "*.ts": "prettier --write"
-  },
-  "bundleDependencies_comment1": "These dependencies are bundled in the CLI and are not installed from npm to avoid deprecation warnings.",
-  "bundleDependencies_comment2": "Eventually we'll remove them as we replaced their functionality.",
-  "bundleDependencies_comment3": "note: @npmcli/move-file is a transient dep of pacote - we dont use it directly.",
-  "bundleDependencies": [
-    "@npmcli/move-file",
-    "stringify-package"
-  ],
   "overrides": {
     "jimp": {
       "xml2js": "0.6.2"
@@ -192,5 +180,13 @@
     "npm-watch": {
       "nodemon": "3.0.3"
     }
+  },
+  "analyze": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "lint-staged": {
+    "*.ts": "prettier --write"
   }
 }

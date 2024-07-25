@@ -24,10 +24,10 @@ export class DeployController {
 			};
 			await this.$prepareController.prepare(prepareData);
 			await deviceDescriptor.buildAction();
-			await this.$deviceInstallAppService.installOnDevice(
-				device,
-				{ ...deviceDescriptor.buildData, buildForDevice: !device.isEmulator }
-			);
+			await this.$deviceInstallAppService.installOnDevice(device, {
+				...deviceDescriptor.buildData,
+				buildForDevice: !device.isEmulator,
+			});
 		};
 
 		await this.$devicesService.execute(

@@ -166,7 +166,10 @@ export class ProjectData implements IProjectData {
 				path.basename(projectDir)
 			);
 			this.nsConfig = nsConfig;
-			this.platformsDir = path.join(projectDir, this.getBuildRelativeDirectoryPath());
+			this.platformsDir = path.join(
+				projectDir,
+				this.getBuildRelativeDirectoryPath()
+			);
 			this.projectFilePath = projectFilePath;
 			this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
 			this.packageJsonData = packageJsonData;
@@ -272,10 +275,7 @@ export class ProjectData implements IProjectData {
 	}
 
 	public getBuildRelativeDirectoryPath(): string {
-		if (
-			this.nsConfig &&
-			this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]
-		) {
+		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]) {
 			return this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY];
 		}
 

@@ -173,7 +173,7 @@ export class TypingsCommand implements ICommand {
 				this.$hostInfo.isWindows ? "ns.cmd" : "ns",
 				["prepare", "android"],
 				"exit",
-				{ stdio: "inherit" }
+				{ stdio: "inherit", shell: this.$hostInfo.isWindows }
 			);
 		}
 

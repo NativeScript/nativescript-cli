@@ -146,6 +146,10 @@ interface INsConfigAndroid extends INsConfigPlaform {
 
 	gradleVersion?: string;
 
+	gradleArgs?: string[];
+
+	plugins?:{ [k:string]: { aarSuffix?: string } }
+
 	runtimePackageName?: string
 }
 
