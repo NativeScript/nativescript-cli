@@ -104,6 +104,7 @@ interface INsConfigPlaform {
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
 	runtimePackageName?: string
+	cocoapodUseBundleExec?: boolean
 }
 
 interface INSConfigVisionOS extends INsConfigIOS {}
