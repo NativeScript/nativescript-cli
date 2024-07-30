@@ -8,7 +8,7 @@ import {
 	PLUGIN_BUILD_DATA_FILENAME,
 	SCOPED_ANDROID_RUNTIME_NAME,
 } from "../constants";
-import { getShortPluginName, hook } from "../common/helpers";
+import { getShortPluginName, hook, quoteString } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 import {
 	IRuntimeGradleVersions,
@@ -841,9 +841,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		try {
+			const sanitizedArgs = this.$hostInfo.isWindows
+				? localArgs.map((arg) => quoteString(arg))
+				: localArgs;
 			await this.$childProcess.spawnFromEvent(
 				gradlew,
-				localArgs,
+				sanitizedArgs,
 				"close",
 				opts
 			);

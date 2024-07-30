@@ -10,6 +10,7 @@ import {
 	IGradleCommandOptions,
 } from "../../definitions/gradle";
 import { injector } from "../../common/yok";
+import { quoteString } from "../../common/helpers";
 
 export class GradleCommandService implements IGradleCommandService {
 	constructor(
@@ -35,9 +36,12 @@ export class GradleCommandService implements IGradleCommandService {
 			options.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
+		const sanitizedGradleArgs = this.$hostInfo.isWindows
+			? gradleArgs.map((arg) => quoteString(arg))
+			: gradleArgs;
 		const result = await this.executeCommandSafe(
 			gradleExecutable,
-			gradleArgs,
+			sanitizedGradleArgs,
 			childProcessOptions,
 			spawnOptions
 		);

@@ -9,7 +9,7 @@ import {
 	NOT_RUNNING_EMULATOR_STATUS,
 } from "../../constants";
 import { cache } from "../../decorators";
-import { settlePromises } from "../../helpers";
+import { quoteString, settlePromises } from "../../helpers";
 import { DeviceConnectionType } from "../../../constants";
 import {
 	IStringDictionary,
@@ -221,8 +221,11 @@ export class AndroidVirtualDeviceService
 		}
 
 		if (canExecuteAvdManagerCommand) {
+			const sanitizedPathToAvdManagerExecutable = this.$hostInfo.isWindows
+				? quoteString(this.pathToAvdManagerExecutable)
+				: this.pathToAvdManagerExecutable;
 			result = await this.$childProcess.trySpawnFromCloseEvent(
-				this.pathToAvdManagerExecutable,
+				sanitizedPathToAvdManagerExecutable,
 				["list", "avds"],
 				{ shell: this.$hostInfo.isWindows }
 			);
