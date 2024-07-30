@@ -1470,7 +1470,9 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("androidToolsInfo", AndroidToolsInfoStub);
 		this.register("logger", LoggerStub);
 		this.register("errors", ErrorsStub);
-		this.register("options", {});
+		this.register("options", {
+			hostProjectModuleName: "app",
+		});
 		this.register("config", {});
 		this.register("staticConfig", {});
 		this.register("hooksService", HooksServiceStub);
