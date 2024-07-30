@@ -33,7 +33,10 @@ function createTestInjector(): IInjector {
 		},
 	});
 
-	testInjector.register("options", { release: false });
+	testInjector.register("options", {
+		release: false,
+		hostProjectModuleName: "app",
+	});
 
 	return testInjector;
 }
@@ -48,7 +51,8 @@ describe("project-files-provider", () => {
 		projectData = testInjector.resolve("projectData");
 		projectData.projectDir = projectDir;
 		projectData.appDirectoryPath = projectData.getAppDirectoryPath();
-		projectData.appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
+		projectData.appResourcesDirectoryPath =
+			projectData.getAppResourcesDirectoryPath();
 		projectFilesProvider = testInjector.resolve(ProjectFilesProvider);
 	});
 

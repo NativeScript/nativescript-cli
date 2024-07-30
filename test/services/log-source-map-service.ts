@@ -50,6 +50,9 @@ function createTestInjector(): IInjector {
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("logSourceMapService", LogSourceMapService);
+	testInjector.register("options", {
+		hostProjectModuleName: "app",
+	});
 
 	return testInjector;
 }
@@ -58,12 +61,14 @@ function toPlatformSep(filePath: string) {
 	return stringReplaceAll(filePath, "/", path.sep);
 }
 
-const testCases: IDictionary<Array<{
-	caseName: string;
-	message: string;
-	expected: string;
-	runtimeVersion?: string;
-}>> = {
+const testCases: IDictionary<
+	Array<{
+		caseName: string;
+		message: string;
+		expected: string;
+		runtimeVersion?: string;
+	}>
+> = {
 	android: [
 		{
 			caseName: "trace message",

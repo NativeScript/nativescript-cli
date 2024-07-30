@@ -36,6 +36,7 @@ const createTestInjector = (): IInjector => {
 		env: {
 			classicLogs: true,
 		},
+		hostProjectModuleName: "app",
 	});
 	testInjector.register("loggingLevels", LoggingLevels);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);

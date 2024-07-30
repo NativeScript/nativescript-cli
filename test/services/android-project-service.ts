@@ -41,7 +41,9 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("logger", stubs.LoggerStub);
-	testInjector.register("options", {});
+	testInjector.register("options", {
+		hostProjectModuleName: "app",
+	});
 	testInjector.register("projectData", stubs.ProjectDataStub);
 	testInjector.register("androidToolsInfo", {
 		getToolsInfo: () => {
@@ -240,9 +242,8 @@ describe("androidProjectService", () => {
 
 			compileSdkVersion = 29;
 
-			const androidToolsInfo = injector.resolve<IAndroidToolsInfo>(
-				"androidToolsInfo"
-			);
+			const androidToolsInfo =
+				injector.resolve<IAndroidToolsInfo>("androidToolsInfo");
 			androidToolsInfo.getToolsInfo = (
 				config?: IProjectDir
 			): IAndroidToolsInfoData => {
@@ -258,9 +259,10 @@ describe("androidProjectService", () => {
 				"src"
 			);
 			beforeEach(() => {
-				const androidResourcesMigrationService = injector.resolve<
-					IAndroidResourcesMigrationService
-				>("androidResourcesMigrationService");
+				const androidResourcesMigrationService =
+					injector.resolve<IAndroidResourcesMigrationService>(
+						"androidResourcesMigrationService"
+					);
 				androidResourcesMigrationService.hasMigrated = () => true;
 			});
 
@@ -329,9 +331,10 @@ describe("androidProjectService", () => {
 
 		describe("when old Android App_Resources structure is detected (post {N} 4.0 structure)", () => {
 			beforeEach(() => {
-				const androidResourcesMigrationService = injector.resolve<
-					IAndroidResourcesMigrationService
-				>("androidResourcesMigrationService");
+				const androidResourcesMigrationService =
+					injector.resolve<IAndroidResourcesMigrationService>(
+						"androidResourcesMigrationService"
+					);
 				androidResourcesMigrationService.hasMigrated = () => false;
 			});
 
