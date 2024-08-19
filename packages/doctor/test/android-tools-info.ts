@@ -105,7 +105,7 @@ describe("androidToolsInfo", () => {
 			const androidToolsInfo = getAndroidToolsInfo("8.2.0");
 			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
-			assert.equal(toolsInfo.compileSdkVersion, 34);
+			assert.equal(toolsInfo.compileSdkVersion, 35);
 		});
 	});
 
