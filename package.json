@@ -54,7 +54,7 @@
     "mobile"
   ],
   "dependencies": {
-    "@nativescript/doctor": "2.0.14",
+    "@nativescript/doctor": "2.0.15",
     "@nativescript/schematics-executor": "0.0.2",
     "@npmcli/arborist": "^7.2.0",
     "@npmcli/move-file": "^2.0.0",
