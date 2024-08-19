@@ -1,3 +1,17 @@
+## [8.8.1](https://github.com/NativeScript/nativescript-cli/compare/v8.8.0...v8.8.1) (2024-08-19)
+
+
+### Bug Fixes
+
+* quote windows command line arguments ([#5808](https://github.com/NativeScript/nativescript-cli/issues/5808)) ([bf9a6cd](https://github.com/NativeScript/nativescript-cli/commit/bf9a6cdbed227c876b8a94a13e3517e684dad924))
+
+
+### Features
+
+* add android 35 support ([#5811](https://github.com/NativeScript/nativescript-cli/issues/5811)) ([abc7ab4](https://github.com/NativeScript/nativescript-cli/commit/abc7ab474024bda566374271e0497f4c73d78b4d))
+
+
+
 # [8.8.0](https://github.com/NativeScript/nativescript-cli/compare/v8.7.2...v8.8.0) (2024-07-11)
 
 
