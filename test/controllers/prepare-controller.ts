@@ -14,6 +14,7 @@ const prepareData = {
 	env: {},
 	watch: true,
 	watchNative: true,
+	uniqueBundle: 0,
 };
 
 let isCompileWithWatchCalled = false;
@@ -72,9 +73,8 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		},
 	});
 
-	const prepareController: PrepareController = injector.resolve(
-		"prepareController"
-	);
+	const prepareController: PrepareController =
+		injector.resolve("prepareController");
 	prepareController.emit = (eventName: string, eventData: any) => {
 		emittedEventNames.push(eventName);
 		emittedEventData.push(eventData);
@@ -103,9 +103,8 @@ describe("prepareController", () => {
 				it(`should execute native prepare and webpack's compilation for ${platform} platform when hasNativeChanges is ${hasNativeChanges}`, async () => {
 					const injector = createTestInjector({ hasNativeChanges });
 
-					const prepareController: PrepareController = injector.resolve(
-						"prepareController"
-					);
+					const prepareController: PrepareController =
+						injector.resolve("prepareController");
 					await prepareController.prepare({ ...prepareData, platform });
 
 					assert.isTrue(isCompileWithWatchCalled);
@@ -116,9 +115,8 @@ describe("prepareController", () => {
 			it(`should respect native changes that are made before the initial preparation of the project had been done for ${platform}`, async () => {
 				const injector = createTestInjector({ hasNativeChanges: false });
 
-				const prepareController: PrepareController = injector.resolve(
-					"prepareController"
-				);
+				const prepareController: PrepareController =
+					injector.resolve("prepareController");
 
 				const prepareNativePlatformService = injector.resolve(
 					"prepareNativePlatformService"
@@ -158,9 +156,8 @@ describe("prepareController", () => {
 			it("shouldn't start the watcher when watch is false", async () => {
 				const injector = createTestInjector({ hasNativeChanges: false });
 
-				const prepareController: PrepareController = injector.resolve(
-					"prepareController"
-				);
+				const prepareController: PrepareController =
+					injector.resolve("prepareController");
 				await prepareController.prepare({
 					...prepareData,
 					watch: false,

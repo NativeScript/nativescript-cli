@@ -709,7 +709,7 @@ interface IOptions
 	dryRun: boolean;
 
 	platformOverride: string;
-
+	uniqueBundle: boolean;
 	// allow arbitrary options
 	[optionName: string]: any;
 }

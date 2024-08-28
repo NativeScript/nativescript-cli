@@ -250,6 +250,7 @@ export class Options {
 				default: true,
 			},
 			dryRun: { type: OptionType.Boolean, hasSensitiveValue: false },
+			uniqueBundle: { type: OptionType.Boolean, hasSensitiveValue: false },
 		};
 	}
 
