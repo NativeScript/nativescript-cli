@@ -1,3 +1,13 @@
+## [8.8.2](https://github.com/NativeScript/nativescript-cli/compare/v8.8.1...v8.8.2) (2024-08-28)
+
+
+### Bug Fixes
+
+* don't quote executable in windows ([823565e](https://github.com/NativeScript/nativescript-cli/commit/823565e95102343449bc687387d43a5f223390b1))
+* typings  path separator on windows ([#5812](https://github.com/NativeScript/nativescript-cli/issues/5812)) ([25c3d67](https://github.com/NativeScript/nativescript-cli/commit/25c3d67ff92980b45326a4cc5043561bba393598))
+
+
+
 ## [8.8.1](https://github.com/NativeScript/nativescript-cli/compare/v8.8.0...v8.8.1) (2024-08-19)
 
 
