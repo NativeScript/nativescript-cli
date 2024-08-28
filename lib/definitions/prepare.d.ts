@@ -14,6 +14,8 @@ declare global {
 
 		// embedding
 		hostProjectPath?: string;
+
+		uniqueBundle: number;
 	}
 
 	interface IiOSCodeSigningData {
