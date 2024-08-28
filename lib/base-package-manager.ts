@@ -1,4 +1,4 @@
-import { isInteractive, quoteString } from "./common/helpers";
+import { isInteractive } from "./common/helpers";
 import {
 	INodePackageManager,
 	INodePackageManagerInstallOptions,
@@ -108,19 +108,11 @@ export abstract class BasePackageManager implements INodePackageManager {
 	): Promise<INpmInstallResultInfo> {
 		const npmExecutable = this.getPackageManagerExecutableName();
 		const stdioValue = isInteractive() ? "inherit" : "pipe";
-		const sanitizedNpmExecutable = this.$hostInfo.isWindows
-			? quoteString(npmExecutable)
-			: npmExecutable;
-		await this.$childProcess.spawnFromEvent(
-			sanitizedNpmExecutable,
-			params,
-			"close",
-			{
-				cwd: opts.cwd,
-				stdio: stdioValue,
-				shell: this.$hostInfo.isWindows,
-			}
-		);
+		await this.$childProcess.spawnFromEvent(npmExecutable, params, "close", {
+			cwd: opts.cwd,
+			stdio: stdioValue,
+			shell: this.$hostInfo.isWindows,
+		});
 
 		// Whenever calling "npm install" or "yarn add" without any arguments (hence installing all dependencies) no output is emitted on stdout
 		// Luckily, whenever you call "npm install" or "yarn add" to install all dependencies chances are you won't need the name/version of the package you're installing because there is none.
