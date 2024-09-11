@@ -34,6 +34,7 @@ import {
 } from "../common/declarations";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import { IInjector } from "../common/definitions/yok";
+import { IAndroidToolsInfo } from "../declarations";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
 import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
@@ -47,6 +48,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	constructor(
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
+		private $androidToolsInfo: IAndroidToolsInfo,
 		private $hostInfo: IHostInfo,
 		private $options: IOptions,
 		private $logger: ILogger,
@@ -783,14 +785,16 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const gradlew =
 			pluginBuildSettings.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
-
+			const toolsInfo = this.$androidToolsInfo.getToolsInfo({
+				projectDir: this.$projectData.projectDir,
+			});
 		const localArgs = [
 			"-p",
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
 			`-PtempBuild=true`,
-			`-PcompileSdk=android-${pluginBuildSettings.androidToolsInfo.compileSdkVersion}`,
-			`-PbuildToolsVersion=${pluginBuildSettings.androidToolsInfo.buildToolsVersion}`,
+			`-PcompileSdk=${toolsInfo.compileSdkVersion}`,
+			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
 			`-PprojectRoot=${this.$projectData.projectDir}`,
 			`-DprojectRoot=${this.$projectData.projectDir}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
