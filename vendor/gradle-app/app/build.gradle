@@ -86,8 +86,8 @@ def pluginsJarLibraries = new LinkedList<String>()
 def allJarLibraries = new LinkedList<String>()
 
 def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
-def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : NS_DEFAULT_COMPILE_SDK_VERSION as int }
-def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : NS_DEFAULT_COMPILE_SDK_VERSION as int }
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk as int : NS_DEFAULT_COMPILE_SDK_VERSION as int }
+def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk as int : NS_DEFAULT_COMPILE_SDK_VERSION as int }
 def computeBuildToolsVersion = { ->
     project.hasProperty("buildToolsVersion") ? buildToolsVersion : NS_DEFAULT_BUILD_TOOLS_VERSION as String
 }

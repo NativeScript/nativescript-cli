@@ -63,7 +63,7 @@ const expectedInfoLoggingArgs = ["--quiet"];
 const expectedTraceLoggingArgs = ["--debug"];
 const expectedDebugBuildArgs = [
 	"--stacktrace",
-	"-PcompileSdk=android-28",
+	"-PcompileSdk=28",
 	"-PtargetSdk=26",
 	"-PbuildToolsVersion=my-build-tools-version",
 	"-PgenerateTypings=true",

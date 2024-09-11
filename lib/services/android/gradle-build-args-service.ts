@@ -57,7 +57,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 
 		args.push(
 			`--stacktrace`,
-			`-PcompileSdk=android-${toolsInfo.compileSdkVersion}`,
+			`-PcompileSdk=${toolsInfo.compileSdkVersion}`,
 			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
 			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
 			`-PgenerateTypings=${toolsInfo.generateTypings}`,
