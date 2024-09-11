@@ -8,13 +8,13 @@ import {
 	PLUGIN_BUILD_DATA_FILENAME,
 	SCOPED_ANDROID_RUNTIME_NAME,
 } from "../constants";
-import { getShortPluginName, hook } from "../common/helpers";
+import { getShortPluginName, hook, quoteString } from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 import {
 	IRuntimeGradleVersions,
 	INodePackageManager,
-	IAndroidToolsInfo,
 	IWatchIgnoreListService,
+	IOptions,
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectData, IProjectDataService } from "../definitions/project";
@@ -37,6 +37,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
 import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
+import { cwd } from "process";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -47,7 +48,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
-		private $androidToolsInfo: IAndroidToolsInfo,
+		private $options: IOptions,
 		private $logger: ILogger,
 		private $packageManager: INodePackageManager,
 		private $projectData: IProjectData,
@@ -420,6 +421,31 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
+
+		// gets the package from the AndroidManifest to use as the namespace or fallback to the `org.nativescript.${shortPluginName}`
+		const shortPluginName = getShortPluginName(pluginName);
+
+		const manifestPath = path.join(
+			pluginTempDir,
+			"src",
+			"main",
+			"AndroidManifest.xml"
+		);
+		const manifestContent = this.$fs.readText(manifestPath);
+
+		let packageName = `org.nativescript.${shortPluginName}`;
+		const xml = await this.getXml(manifestContent);
+		if (xml["manifest"]) {
+			if (xml["manifest"]["$"]["package"]) {
+				packageName = xml["manifest"]["$"]["package"];
+			}
+		}
+
+		this.replaceFileContent(
+			buildGradlePath,
+			"{{pluginNamespace}}",
+			packageName
+		);
 	}
 
 	private async getRuntimeGradleVersions(
@@ -754,18 +780,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private async buildPlugin(
 		pluginBuildSettings: IBuildAndroidPluginData
 	): Promise<void> {
-		if (!pluginBuildSettings.androidToolsInfo) {
-			this.$androidToolsInfo.validateInfo({
-				showWarningsAsErrors: true,
-				validateTargetSdk: true,
-				projectDir: pluginBuildSettings.projectDir,
-			});
-			pluginBuildSettings.androidToolsInfo =
-				this.$androidToolsInfo.getToolsInfo({
-					projectDir: pluginBuildSettings.projectDir,
-				});
-		}
-
 		const gradlew =
 			pluginBuildSettings.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
@@ -784,6 +798,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			`-DappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
+
 		if (pluginBuildSettings.gradleArgs) {
 			const additionalArgs: string[] = [];
 			pluginBuildSettings.gradleArgs.forEach((arg) => {
@@ -798,12 +813,32 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			localArgs.push("--quiet");
 		}
 
+		const opts: any = {
+			cwd: pluginBuildSettings.pluginDir,
+			stdio: "inherit",
+			shell: this.$hostInfo.isWindows,
+		};
+
+		if (this.$options.hostProjectPath) {
+			opts.env = {
+				USER_PROJECT_PLATFORMS_ANDROID: path.resolve(
+					cwd(),
+					this.$options.hostProjectPath
+				), // TODO: couldn't `hostProjectPath` have an absolute path already?
+				...process.env, // TODO: any other way to pass automatically the current process.env?
+			};
+		}
+
 		try {
-			await this.$childProcess.spawnFromEvent(gradlew, localArgs, "close", {
-				cwd: pluginBuildSettings.pluginDir,
-				stdio: "inherit",
-				shell: this.$hostInfo.isWindows,
-			});
+			const sanitizedArgs = this.$hostInfo.isWindows
+				? localArgs.map((arg) => quoteString(arg))
+				: localArgs;
+			await this.$childProcess.spawnFromEvent(
+				gradlew,
+				sanitizedArgs,
+				"close",
+				opts
+			);
 		} catch (err) {
 			this.$errors.fail(
 				`Failed to build plugin ${pluginBuildSettings.pluginName} : \n${err}`

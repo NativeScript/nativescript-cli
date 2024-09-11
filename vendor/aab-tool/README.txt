@@ -1,1 +1,1 @@
-Downloaded from https://github.com/google/bundletool/releases/tag/1.8.2
+Downloaded from https://github.com/google/bundletool/releases/tag/1.15.6

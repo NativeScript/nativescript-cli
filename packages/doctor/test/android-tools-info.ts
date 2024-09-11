@@ -69,6 +69,7 @@ describe("androidToolsInfo", () => {
 						"android-32",
 						"android-33",
 						"android-34",
+						"android-35",
 					];
 				}
 			},
@@ -104,7 +105,7 @@ describe("androidToolsInfo", () => {
 			const androidToolsInfo = getAndroidToolsInfo("8.2.0");
 			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
-			assert.equal(toolsInfo.compileSdkVersion, 34);
+			assert.equal(toolsInfo.compileSdkVersion, 35);
 		});
 	});
 
@@ -138,7 +139,7 @@ describe("androidToolsInfo", () => {
 
 		it("runtime 8.2.0 should support android-17 - android-34", () => {
 			const min = 17;
-			const max = 34;
+			const max = 35;
 			assertSupportedRange("8.2.0", min, max);
 			assertSupportedRange("8.3.0", min, max);
 		});

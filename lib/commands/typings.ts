@@ -77,7 +77,7 @@ export class TypingsCommand implements ICommand {
 		}
 
 		const items = res.map((item) => {
-			const [group, artifact, version, sha1, file] = item.split("/");
+			const [group, artifact, version, sha1, file] = item.split(path.sep);
 			return {
 				id: sha1 + version,
 				group,

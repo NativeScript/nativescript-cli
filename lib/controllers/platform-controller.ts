@@ -115,6 +115,12 @@ export class PlatformController implements IPlatformController {
 		addPlatformData: IAddPlatformData,
 		projectData?: IProjectData
 	): Promise<void> {
+		if (addPlatformData.hostProjectPath) {
+			this.$logger.trace(
+				"Not adding platform because --hostProjectPath is provided."
+			);
+			return;
+		}
 		const [platform] = addPlatformData.platform.toLowerCase().split("@");
 
 		projectData ??= this.$projectDataService.getProjectData(

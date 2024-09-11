@@ -199,6 +199,8 @@ injector.requireCommand("build|vision", "./commands/build");
 injector.requireCommand("build|visionos", "./commands/build");
 injector.requireCommand("deploy", "./commands/deploy");
 
+injector.requireCommand("embed", "./commands/embedding/embed");
+
 injector.require("testExecutionService", "./services/test-execution-service");
 injector.requireCommand("dev-test|android", "./commands/test");
 injector.requireCommand("dev-test|ios", "./commands/test");
@@ -458,5 +460,14 @@ injector.require("keyCommandHelper", "./helpers/key-command-helper");
 
 injector.requireCommand("start", "./commands/start");
 injector.require("startService", "./services/start-service");
-
+injector.requireCommand(
+	[
+		"native|add",
+		"native|add|java",
+		"native|add|kotlin",
+		"native|add|swift",
+		"native|add|objective-c",
+	],
+	"./commands/native-add"
+);
 require("./key-commands/bootstrap");

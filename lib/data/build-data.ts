@@ -32,6 +32,7 @@ export class IOSBuildData extends BuildData implements IiOSBuildData {
 	public mobileProvisionData: any;
 	public buildForAppStore: boolean;
 	public iCloudContainerEnvironment: string;
+	public hostProjectPath: string;
 
 	constructor(projectDir: string, platform: string, data: any) {
 		super(projectDir, platform, data);
@@ -41,6 +42,7 @@ export class IOSBuildData extends BuildData implements IiOSBuildData {
 		this.mobileProvisionData = data.mobileProvisionData;
 		this.buildForAppStore = data.buildForAppStore;
 		this.iCloudContainerEnvironment = data.iCloudContainerEnvironment;
+		this.hostProjectPath = data.hostProjectPath;
 	}
 }
 
@@ -53,6 +55,7 @@ export class AndroidBuildData extends BuildData {
 	public gradleFlavor: string;
 	public gradlePath: string;
 	public gradleArgs: string;
+	public hostProjectPath: string;
 
 	constructor(projectDir: string, platform: string, data: any) {
 		super(projectDir, platform, data);
@@ -66,5 +69,6 @@ export class AndroidBuildData extends BuildData {
 		this.gradleFlavor = data.gradleFlavor;
 		this.gradlePath = data.gradlePath;
 		this.gradleArgs = data.gradleArgs;
+		this.hostProjectPath = data.hostProjectPath;
 	}
 }

@@ -11,6 +11,9 @@ declare global {
 		watch?: boolean;
 		watchNative: boolean;
 		watchNodeModules?: boolean;
+
+		// embedding
+		hostProjectPath?: string;
 	}
 
 	interface IiOSCodeSigningData {

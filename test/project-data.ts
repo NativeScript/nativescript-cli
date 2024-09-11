@@ -53,7 +53,11 @@ describe("projectData", () => {
 			dependencies?: IStringDictionary;
 			devDependencies: IStringDictionary;
 		};
-		configData?: { shared?: boolean; webpackConfigPath?: string };
+		configData?: {
+			shared?: boolean;
+			webpackConfigPath?: string;
+			projectName?: string;
+		};
 	}): IProjectData => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
@@ -169,6 +173,20 @@ describe("projectData", () => {
 		it("is true when nsconfig.json exists and shared value is true", () => {
 			const projectData = prepareTest({ configData: { shared: true } });
 			assert.isTrue(projectData.isShared);
+		});
+	});
+
+	describe("projectName", () => {
+		it("has correct name when no value is set in nativescript.conf", () => {
+			const projectData = prepareTest();
+			assert.isString("projectDir", projectData.projectName);
+		});
+
+		it("has correct name when a project name is set in nativescript.conf", () => {
+			const projectData = prepareTest({
+				configData: { projectName: "specifiedProjectName" },
+			});
+			assert.isString("specifiedProjectName", projectData.projectName);
 		});
 	});
 
