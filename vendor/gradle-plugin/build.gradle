@@ -284,8 +284,8 @@ android {
         }
     }
 
-    def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? project.compileSdk : 31 }
-    def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? project.targetSdk : 31 as int }
+    def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? project.compileSdk as int : 31 }
+    def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? project.targetSdk as int : 31 as int }
     def computeBuildToolsVersion = { ->
         project.hasProperty("buildToolsVersion") ? project.buildToolsVersion : "31.0.0"
     }
