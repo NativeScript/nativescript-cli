@@ -15,7 +15,7 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-import * as detectNewline from "detect-newline";
+import { detectNewline } from "detect-newline";
 import { IFileSystem, IReadFileOptions, IFsStats } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { create as createArchiver } from "archiver";

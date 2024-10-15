@@ -231,7 +231,7 @@ export class HelpService implements IHelpService {
 		const outputText = await this.$microTemplateService.parseContent(helpText, {
 			isHtml: true,
 		});
-		const htmlText = marked(outputText);
+		const htmlText = await marked(outputText);
 
 		const filePath = pathToMdFile
 			.replace(path.basename(pathToMdPages), path.basename(pathToHtmlPages))

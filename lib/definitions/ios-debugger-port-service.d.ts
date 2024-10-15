@@ -11,7 +11,7 @@ interface IIOSDebuggerPortData {
 
 interface IIOSDebuggerPortStoredData {
 	port: number;
-	timer?: NodeJS.Timer;
+	timer?: NodeJS.Timeout;
 	error?: Error;
 }
 

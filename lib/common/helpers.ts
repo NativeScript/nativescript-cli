@@ -743,7 +743,7 @@ export function getValueFromNestedObject(obj: any, key: string): any {
 		}
 
 		const res: any[] = [];
-		_.forEach(_obj, (v, k) => {
+		_.forEach(_obj as any, (v, k) => {
 			if (
 				typeof v === "object" &&
 				typeof k === "string" &&

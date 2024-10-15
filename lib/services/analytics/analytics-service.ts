@@ -199,7 +199,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	public async finishTracking(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (this.brokerProcess && this.brokerProcess.connected) {
-				let timer: NodeJS.Timer;
+				let timer: NodeJS.Timeout;
 
 				const handler = (data: string) => {
 					if (data === DetachedProcessMessages.ProcessFinishedTasks) {

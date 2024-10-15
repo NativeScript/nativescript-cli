@@ -511,7 +511,7 @@ export class AndroidVirtualDeviceService
 		return result;
 	}
 
-	private clearNetConnection(client: net.Socket, timer: NodeJS.Timer) {
+	private clearNetConnection(client: net.Socket, timer: NodeJS.Timeout) {
 		if (client) {
 			client.removeAllListeners();
 			client.destroy();

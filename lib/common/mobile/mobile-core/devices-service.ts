@@ -33,8 +33,8 @@ export class DevicesService
 	private _data: Mobile.IDevicesServicesInitializationOptions;
 	private _otherDeviceDiscoveries: Mobile.IDeviceDiscovery[] = [];
 	private _allDeviceDiscoveries: Mobile.IDeviceDiscovery[] = [];
-	private deviceDetectionInterval: NodeJS.Timer;
-	private emulatorDetectionInterval: NodeJS.Timer;
+	private deviceDetectionInterval: NodeJS.Timeout;
+	private emulatorDetectionInterval: NodeJS.Timeout;
 
 	constructor(
 		private $logger: ILogger,

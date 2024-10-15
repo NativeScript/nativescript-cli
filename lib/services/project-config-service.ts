@@ -286,7 +286,7 @@ export default {
 			);
 			this.$fs.writeFile(
 				configFilePath,
-				prettierFormat(newContent, {
+				await prettierFormat(newContent, {
 					...prettierOptions,
 					parser: "typescript",
 					// note: we don't use plugins here, since we are only formatting ts files, and they are supported by default

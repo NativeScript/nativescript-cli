@@ -361,7 +361,7 @@ export class PrepareController extends EventEmitter {
 
 		const patterns = await this.getWatcherPatterns(platformData, projectData);
 
-		const watcherOptions: choki.WatchOptions = {
+		const watcherOptions: choki.ChokidarOptions = {
 			ignoreInitial: true,
 			cwd: projectData.projectDir,
 			awaitWriteFinish: {
