@@ -1,10 +1,6 @@
 name: 'nativescript -> npm'
 
 on:
-  push:
-    branches: [ 'main' ]
-    paths-ignore:
-      - 'packages/**'
   workflow_dispatch:
 
 env:
@@ -26,7 +22,7 @@ jobs:
 
       - name: Generate Version
         run: |
-          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);")-$NPM_TAG-$(date +"%m-%d-%Y")-$GITHUB_RUN_ID >> $GITHUB_ENV
+          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);") >> $GITHUB_ENV
 
       - name: Bump Version
         run: npm version $NPM_VERSION
@@ -40,4 +36,4 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG..."
-          npm publish nativescript-$NPM_VERSION.tgz --tag $NPM_TAG
+          npm publish akylas-nativescript-cli-$NPM_VERSION.tgz --tag $NPM_TAG
