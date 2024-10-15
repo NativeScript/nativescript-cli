@@ -1,15 +1,13 @@
-import * as path from "path";
-import * as shelljs from "shelljs";
-import * as os from "os";
 import * as _ from "lodash";
-import {
-	IConfiguration,
-	IStaticConfig,
-	IAndroidToolsInfo,
-} from "./declarations";
-import { IFileSystem, IChildProcess, IHostInfo } from "./common/declarations";
+import * as path from "path";
+import { IFileSystem } from "./common/declarations";
 import { IInjector } from "./common/definitions/yok";
 import { injector } from "./common/yok";
+import {
+	IAndroidToolsInfo,
+	IConfiguration,
+	IStaticConfig,
+} from "./declarations";
 
 export class Configuration implements IConfiguration {
 	// User specific config
@@ -77,9 +75,7 @@ export class StaticConfig implements IStaticConfig {
 		if (!this._adbFilePath) {
 			const androidToolsInfo: IAndroidToolsInfo =
 				this.$injector.resolve("androidToolsInfo");
-			this._adbFilePath =
-				(await androidToolsInfo.getPathToAdbFromAndroidHome()) ||
-				(await this.getAdbFilePathCore());
+			this._adbFilePath = await androidToolsInfo.getPathToAdbFromAndroidHome();
 		}
 
 		return this._adbFilePath;
@@ -109,80 +105,6 @@ export class StaticConfig implements IStaticConfig {
 
 	public get HTML_COMMON_HELPERS_DIR(): string {
 		return path.join(__dirname, "common", "docs", "helpers");
-	}
-
-	private async getAdbFilePathCore(): Promise<string> {
-		const $childProcess: IChildProcess =
-			this.$injector.resolve("$childProcess");
-
-		try {
-			// Do NOT use the adb wrapper because it will end blow up with Segmentation fault because the wrapper uses this method!!!
-			const proc = await $childProcess.spawnFromEvent(
-				"adb",
-				["version"],
-				"exit",
-				undefined,
-				{ throwError: false }
-			);
-
-			if (proc.stderr) {
-				return await this.spawnPrivateAdb();
-			}
-		} catch (e) {
-			if (e.code === "ENOENT") {
-				return await this.spawnPrivateAdb();
-			}
-		}
-
-		return "adb";
-	}
-
-	/*
-		Problem:
-		1. Adb forks itself as a server which keeps running until adb kill-server is invoked or crashes
-		2. On Windows running processes lock their image files due to memory mapping. Locked files prevent their parent directories from deletion and cannot be overwritten.
-		3. Update and uninstall scenarios are broken
-		Solution:
-		- Copy adb and associated files into a temporary directory. Let this copy of adb run persistently
-		- On Posix OSes, immediately delete the file to not take file space
-		- Tie common lib version to updates of adb, so that when we integrate a newer adb we can use it
-		- Adb is named differently on OSes and may have additional files. The code is hairy to accommodate these differences
-	 */
-	private async spawnPrivateAdb(): Promise<string> {
-		const $fs: IFileSystem = this.$injector.resolve("$fs"),
-			$childProcess: IChildProcess = this.$injector.resolve("$childProcess"),
-			$hostInfo: IHostInfo = this.$injector.resolve("$hostInfo");
-
-		// prepare the directory to host our copy of adb
-		const defaultAdbDirPath = path.join(
-			__dirname,
-			"common",
-			"resources",
-			"platform-tools",
-			"android",
-			process.platform
-		);
-		const pathToPackageJson = path.join(__dirname, "..", "package.json");
-		const nsCliVersion = require(pathToPackageJson).version;
-		const tmpDir = path.join(os.tmpdir(), `nativescript-cli-${nsCliVersion}`);
-		$fs.createDirectory(tmpDir);
-
-		// copy the adb and associated files
-		const targetAdb = path.join(tmpDir, "adb");
-
-		// In case directory is missing or it's empty, copy the new adb
-		if (!$fs.exists(tmpDir) || !$fs.readDirectory(tmpDir).length) {
-			shelljs.cp(path.join(defaultAdbDirPath, "*"), tmpDir); // deliberately ignore copy errors
-			// adb loses its executable bit when packed inside electron asar file. Manually fix the issue
-			if (!$hostInfo.isWindows) {
-				shelljs.chmod("+x", targetAdb);
-			}
-		}
-
-		// let adb start its global server
-		await $childProcess.spawnFromEvent(targetAdb, ["start-server"], "exit");
-
-		return targetAdb;
 	}
 }
 injector.register("staticConfig", StaticConfig);
