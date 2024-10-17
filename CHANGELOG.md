@@ -1,3 +1,18 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [8.8.3](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.2...v8.8.3) (2024-10-17)
+
+
+### Bug Fixes
+
+* add runtime infos in app package.json. Cleanup that package.json ([8223062](https://github.com/farfromrefug/nativescript-cli/commit/8223062c58769dd557eb5de7fadd1d10d8f87828))
+* add webpack env data so that scripts can read it (like svelte-preprocessor) ([144d775](https://github.com/farfromrefug/nativescript-cli/commit/144d775d2adde5ad7299e42354f8d49991d22007))
+* android fix when passing compileSdk as gradle arg ([ee31dd4](https://github.com/farfromrefug/nativescript-cli/commit/ee31dd464055f5b6fc657500b5238e1af6b2a11d))
+* deps update ([fbb6b86](https://github.com/farfromrefug/nativescript-cli/commit/fbb6b86e59e323036b46c94ff047b6baaf156a1f))
+* updated bundletool.jar to support 16 KB page size. remove vendor adb ([db7f7f4](https://github.com/farfromrefug/nativescript-cli/commit/db7f7f4fa3411374b23b6a118c18dfdffc1c0459))
+
 ## [8.8.2](https://github.com/NativeScript/nativescript-cli/compare/v8.8.1...v8.8.2) (2024-08-28)
 
 
