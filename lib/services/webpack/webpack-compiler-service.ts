@@ -354,14 +354,16 @@ export class WebpackCompilerService
 			cwd: projectData.projectDir,
 			stdio,
 		};
-
+		options.env = {
+			NATIVESCRIPT_WEBPACK_ENV:JSON.stringify(envData)
+		}
 		if (this.$options.hostProjectPath) {
-			options.env = {
+			Object.assign(options.env, {
 				USER_PROJECT_PLATFORMS_ANDROID: this.$options.hostProjectPath,
 				USER_PROJECT_PLATFORMS_ANDROID_MODULE:
 					this.$options.hostProjectModuleName,
 				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
-			};
+			});
 		}
 
 		const childProcess = this.$childProcess.spawn(
