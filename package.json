@@ -1,7 +1,7 @@
 {
   "name": "@akylas/nativescript-cli",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "8.9.0",
+  "version": "8.8.3",
   "author": "NativeScript <support@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -42,6 +42,7 @@
     "mocha": "mocha",
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
+    "release": "standard-version",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}"
   },
@@ -168,7 +169,8 @@
     "lint-staged": "^13.2.0",
     "mocha": "10.2.0",
     "sinon": "15.0.3",
-    "source-map-support": "0.5.21"
+    "source-map-support": "0.5.21",
+    "standard-version": "9.5.0"
   },
   "optionalDependencies": {
     "fsevents": "*"
