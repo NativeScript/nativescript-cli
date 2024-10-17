@@ -1,4 +1,4 @@
-import SimplePlist from "simple-plist";
+import * as SimplePlist from "simple-plist";
 import { IPlistParser } from "./declarations";
 import { injector } from "./yok";
 
