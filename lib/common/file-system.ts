@@ -15,7 +15,6 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-import { detectNewline } from "detect-newline";
 import { IFileSystem, IReadFileOptions, IFsStats } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { create as createArchiver } from "archiver";
@@ -23,6 +22,7 @@ import { create as createArchiver } from "archiver";
 const stringifyPackage: any = require("stringify-package");
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
+const detectNewline = require("detect-newline");
 
 @injector.register("fs")
 export class FileSystem implements IFileSystem {
