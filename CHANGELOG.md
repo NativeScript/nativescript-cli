@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [8.8.4](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.3...v8.8.4) (2024-10-17)
+
+
+### Bug Fixes
+
+* regression fix ([fd25a26](https://github.com/farfromrefug/nativescript-cli/commit/fd25a26de1b81036a7c53842f5955264e387af13))
+
 ### [8.8.3](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.2...v8.8.3) (2024-10-17)
 
 
