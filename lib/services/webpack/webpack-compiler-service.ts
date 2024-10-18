@@ -354,9 +354,10 @@ export class WebpackCompilerService
 			cwd: projectData.projectDir,
 			stdio,
 		};
-		options.env = {
+		
+		options.env = Object.assign(process.env, {
 			NATIVESCRIPT_WEBPACK_ENV:JSON.stringify(envData)
-		}
+		});
 		if (this.$options.hostProjectPath) {
 			Object.assign(options.env, {
 				USER_PROJECT_PLATFORMS_ANDROID: this.$options.hostProjectPath,
