@@ -1047,6 +1047,7 @@ tasks.configureEach { DefaultTask currentTask ->
     }
     if (
         currentTask =~ /generate.*UnitTestLintModel/ || 
+        currentTask =~ /sentryCollectSourcesRelease/ || 
         currentTask =~ /compile.*ArtProfile/
         ) {
         currentTask.mustRunAfter(buildMetadata)
