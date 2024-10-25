@@ -625,7 +625,6 @@ export class ProjectDataService implements IProjectDataService {
 		projectDir: string,
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
-		console.log('getInstalledRuntimePackage');
 		let packageName: string[] = [];
 		if (platform === constants.PlatformTypes.ios) {
 			packageName.push(this.$projectData.nsConfig.ios?.runtimePackageName, constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME);

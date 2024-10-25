@@ -14,7 +14,7 @@ import {
 import { IDictionary } from "../declarations";
 import { injector } from "../yok";
 import { color } from "../../color";
-const TerminalRenderer = require("marked-terminal");
+const markedTerminal = require("marked-terminal").markedTerminal;
 
 export class Logger implements ILogger {
 	private log4jsLogger: log4js.Logger = null;
@@ -149,7 +149,8 @@ export class Logger implements ILogger {
 			},
 		};
 
-		marked.setOptions({ renderer: new TerminalRenderer(opts) });
+		marked.use(markedTerminal(opts));
+		// marked.setOptions({ renderer: new TerminalRenderer(opts) });
 
 		const formattedMessage = marked(util.format.apply(null, args));
 		this.info(formattedMessage, { [LoggerConfigData.skipNewLine]: true });
