@@ -122,7 +122,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
     </dict>`;
 		}
 		plistTemplate += `    <key>method</key>
-    <string>app-store</string>
+    <string>app-store-connect</string>
     <key>uploadBitcode</key>
     <false/>
     <key>compileBitcode</key>
