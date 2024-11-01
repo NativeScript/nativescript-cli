@@ -112,7 +112,9 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 `;
 		}
 		if (provision) {
-			plistTemplate += `    <key>provisioningProfiles</key>
+			plistTemplate += ` <key>signingStyle</key>
+    <string>manual</string>
+	   <key>provisioningProfiles</key>
     <dict>
         <key>${projectData.projectIdentifiers.ios}</key>
         <string>${provision}</string>
