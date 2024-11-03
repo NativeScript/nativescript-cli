@@ -127,6 +127,7 @@ describe("xcodebuildService", () => {
 				exportOptionsPlistOutput.exportFileDir,
 				"-exportOptionsPlist",
 				exportOptionsPlistOutput.exportOptionsPlistFilePath,
+				"-allowProvisioningUpdates",
 			];
 			assert.deepStrictEqual(actualBuildArgs, expectedBuildArgs);
 			assert.deepStrictEqual(actualBuildOptions, { cwd: projectRoot });
