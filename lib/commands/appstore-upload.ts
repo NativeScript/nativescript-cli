@@ -54,8 +54,8 @@ export class PublishIOS implements ICommand {
 		const user = await this.$applePortalSessionService.createUserSession(
 			{ username, password },
 			{
-				applicationSpecificPassword: this.$options
-					.appleApplicationSpecificPassword,
+				applicationSpecificPassword:
+					this.$options.appleApplicationSpecificPassword,
 				sessionBase64: this.$options.appleSessionBase64,
 				requireInteractiveConsole: true,
 				requireApplicationSpecificPassword: true,
@@ -91,14 +91,12 @@ export class PublishIOS implements ICommand {
 						mobileProvisionIdentifier
 				);
 
-				// As we need to build the package for device
-				this.$options.forDevice = true;
 				this.$options.provision = mobileProvisionIdentifier;
 
 				const buildData = new IOSBuildData(
 					this.$projectData.projectDir,
 					platform,
-					{ ...this.$options.argv, watch: false }
+					{ ...this.$options.argv, buildForAppStore: true, watch: false }
 				);
 				ipaFilePath = await this.$buildController.prepareAndBuild(buildData);
 			} else {
@@ -118,8 +116,8 @@ export class PublishIOS implements ICommand {
 		await this.$itmsTransporterService.upload({
 			credentials: { username, password },
 			user,
-			applicationSpecificPassword: this.$options
-				.appleApplicationSpecificPassword,
+			applicationSpecificPassword:
+				this.$options.appleApplicationSpecificPassword,
 			ipaFilePath,
 			shouldExtractIpa: !!this.$options.ipa,
 			verboseLogging: this.$logger.getLevel() === "TRACE",

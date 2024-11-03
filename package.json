@@ -54,6 +54,7 @@
     "mobile"
   ],
   "dependencies": {
+    "@foxt/js-srp": "^0.0.3-patch2",
     "@nativescript/doctor": "2.0.15",
     "@nativescript/schematics-executor": "0.0.2",
     "@npmcli/arborist": "^7.2.0",

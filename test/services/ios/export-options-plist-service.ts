@@ -188,7 +188,7 @@ describe("ExportOptionsPlistService", () => {
 
 				expectPlistTemplateToContain(
 					actualPlistTemplate,
-					`<key>method</key><string>app-store</string>`
+					`<key>method</key><string>app-store-connect</string>`
 				);
 				expectPlistTemplateToContain(
 					actualPlistTemplate,
