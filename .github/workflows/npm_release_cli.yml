@@ -11,7 +11,7 @@ on:
       next_version:
         description: 'Next Version with Next tag'
         required: true
-        default: true
+        default: false
         type: boolean
 
 jobs:
