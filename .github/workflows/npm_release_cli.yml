@@ -2,9 +2,17 @@ name: 'nativescript -> npm'
 
 on:
   workflow_dispatch:
-
-env:
-  NPM_TAG: 'next'
+    inputs:
+      bump_version:
+        description: 'Bump Version'
+        required: true
+        default: true
+        type: boolean
+      next_version:
+        description: 'Next Version with Next tag'
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   release:
@@ -20,20 +28,41 @@ jobs:
       - name: Setup
         run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
 
+      - name: Bump Standard Version
+        if: github.event.inputs.bump_version == 'true'
+        run: |
+          npm run release
+
       - name: Generate Version
         run: |
           echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);") >> $GITHUB_ENV
 
       - name: Bump Version
+        if: github.event.inputs.next_version == 'true'
         run: npm version $NPM_VERSION
 
       - name: Build nativescript
         run: npm pack
-
-      - name: Publish nativescript
+      
+      - name: npm ENV
         env:
           NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+
+      - name: Publish next nativescript version
+        if: github.event.inputs.next_version == 'true'
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG..."
           npm publish akylas-nativescript-cli-$NPM_VERSION.tgz --tag $NPM_TAG
+
+      - name: Publish nativescript
+        if: github.event.inputs.next_version == 'false'
+        run: |
+          echo "Publishing nativescript@$NPM_VERSION to NPM..."
+          npm publish akylas-nativescript-cli-$NPM_VERSION.tgz 
+
+      - name: Push to git
+        if: github.event.inputs.bump_version == 'true'
+        run: |
+          git push origin --tags
+          git push origin
