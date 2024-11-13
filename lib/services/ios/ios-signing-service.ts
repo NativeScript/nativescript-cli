@@ -311,7 +311,17 @@ export class IOSSigningService implements IiOSSigningService {
 			"project.pbxproj"
 		);
 	}
-
+	private readTeamIdFromFile(projectRoot: string): string | undefined {
+		try {
+			const filePath = path.join(projectRoot, "teamid");
+			if (this.$fs.exists(filePath)) {
+				return this.$fs.readText(filePath);
+			}
+		} catch (e) {
+			this.$logger.trace("Unable to read file: teamid. Error is: ", e);
+		}
+		return undefined;
+	}
 	private async getDevelopmentTeam(
 		projectData: IProjectData,
 		projectRoot: string,
@@ -345,45 +355,54 @@ export class IOSSigningService implements IiOSSigningService {
 						)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`
 					);
 				}
-
-				const choices: string[] = [];
-				for (const team of teams) {
-					choices.push(team.name + " (" + team.id + ")");
+				const fromFile = this.readTeamIdFromFile(projectRoot);
+				if (fromFile) {
+					const idFromFile = teams.find((value) => value.id === fromFile);
+					if (idFromFile) {
+						teamId = idFromFile.id;
+						this.$logger.info(`Team Id resolved from file: '${teamId}'.`);
+					}
 				}
-				const choice = await this.$prompter.promptForChoice(
-					"Found multiple development teams, select one:",
-					choices
-				);
-				teamId = teams[choices.indexOf(choice)].id;
+				if (!teamId) {
+					const choices: string[] = [];
+					for (const team of teams) {
+						choices.push(team.name + " (" + team.id + ")");
+					}
+					const choice = await this.$prompter.promptForChoice(
+						"Found multiple development teams, select one:",
+						choices
+					);
+					teamId = teams[choices.indexOf(choice)].id;
 
-				const choicesPersist = [
-					"Yes, set the DEVELOPMENT_TEAM setting in build.xcconfig file.",
-					"Yes, persist the team id in platforms folder.",
-					"No, don't persist this setting.",
-				];
-				const choicePersist = await this.$prompter.promptForChoice(
-					"Do you want to make teamId: " +
-						teamId +
-						" a persistent choice for your app?",
-					choicesPersist
-				);
-				switch (choicesPersist.indexOf(choicePersist)) {
-					case 0:
-						const xcconfigFile = path.join(
-							projectData.appResourcesDirectoryPath,
-							"iOS",
-							BUILD_XCCONFIG_FILE_NAME
-						);
-						this.$fs.appendFile(
-							xcconfigFile,
-							"\nDEVELOPMENT_TEAM = " + teamId + "\n"
-						);
-						break;
-					case 1:
-						this.$fs.writeFile(path.join(projectRoot, "teamid"), teamId);
-						break;
-					default:
-						break;
+					const choicesPersist = [
+						"Yes, set the DEVELOPMENT_TEAM setting in build.xcconfig file.",
+						"Yes, persist the team id in platforms folder.",
+						"No, don't persist this setting.",
+					];
+					const choicePersist = await this.$prompter.promptForChoice(
+						"Do you want to make teamId: " +
+							teamId +
+							" a persistent choice for your app?",
+						choicesPersist
+					);
+					switch (choicesPersist.indexOf(choicePersist)) {
+						case 0:
+							const xcconfigFile = path.join(
+								projectData.appResourcesDirectoryPath,
+								"iOS",
+								BUILD_XCCONFIG_FILE_NAME
+							);
+							this.$fs.appendFile(
+								xcconfigFile,
+								"\nDEVELOPMENT_TEAM = " + teamId + "\n"
+							);
+							break;
+						case 1:
+							this.$fs.writeFile(path.join(projectRoot, "teamid"), teamId);
+							break;
+						default:
+							break;
+					}
 				}
 			}
 		}
