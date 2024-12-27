@@ -436,6 +436,10 @@ export class WebpackCompilerService
 			envData.sourceMap = envData.sourceMap === "true";
 		}
 
+		if (prepareData.uniqueBundle > 0) {
+			envData.uniqueBundle = prepareData.uniqueBundle;
+		}
+
 		return envData;
 	}
 
