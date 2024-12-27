@@ -50,6 +50,34 @@ export class ShiftA implements IKeyCommand {
 		private $projectData: IProjectData
 	) {}
 
+	getAndroidStudioPath(): string | null {
+		const os = currentPlatform();
+
+		if (os === "darwin") {
+			const possibleStudioPaths = [
+				"/Applications/Android Studio.app",
+				`${process.env.HOME}/Applications/Android Studio.app`,
+			];
+
+			return possibleStudioPaths.find((p) => fs.existsSync(p)) || null;
+		} else if (os === "win32") {
+			const studioPath = path.join(
+				"C:",
+				"Program Files",
+				"Android",
+				"Android Studio",
+				"bin",
+				"studio64.exe"
+			);
+			return fs.existsSync(studioPath) ? studioPath : null;
+		} else if (os === "linux") {
+			const studioPath = "/usr/local/android-studio/bin/studio.sh";
+			return fs.existsSync(studioPath) ? studioPath : null;
+		}
+
+		return null;
+	}
+
 	async execute(): Promise<void> {
 		this.$liveSyncCommandHelper.validatePlatform(this.platform);
 		this.$projectData.initializeProjectData();
@@ -65,53 +93,32 @@ export class ShiftA implements IKeyCommand {
 			}
 		}
 
-		const os = currentPlatform();
+		let studioPath = null;
 
-		if (os === "darwin") {
-			const possibleStudioPaths = [
-				"/Applications/Android Studio.app",
-				`${process.env.HOME}/Applications/Android Studio.app`,
-			];
+		studioPath = process.env.NATIVESCRIPT_ANDROID_STUDIO_PATH;
 
-			const studioPath = possibleStudioPaths.find((p) => {
-				this.$logger.trace(`Checking for Android Studio at ${p}`);
-				return fs.existsSync(p);
-			});
+		if (!studioPath) {
+			studioPath = this.getAndroidStudioPath();
 
 			if (!studioPath) {
 				this.$logger.error(
-					"Android Studio is not installed, or not in a standard location."
+					"Android Studio is not installed, or is not in a standard location. Use NATIVESCRIPT_ANDROID_STUDIO_PATH."
 				);
 				return;
 			}
+		}
+
+		const os = currentPlatform();
+		if (os === "darwin") {
 			this.$childProcess.exec(`open -a "${studioPath}" ${androidDir}`);
 		} else if (os === "win32") {
-			const studioPath = path.join(
-				"C:",
-				"Program Files",
-				"Android",
-				"Android Studio",
-				"bin",
-				"studio64.exe"
-			);
-			if (!fs.existsSync(studioPath)) {
-				this.$logger.error("Android Studio is not installed");
-				return;
-			}
-
 			const child = this.$childProcess.spawn(studioPath, [androidDir], {
 				detached: true,
 				stdio: "ignore",
 			});
 			child.unref();
 		} else if (os === "linux") {
-			if (!fs.existsSync(`/usr/local/android-studio/bin/studio.sh`)) {
-				this.$logger.error("Android Studio is not installed");
-				return;
-			}
-			this.$childProcess.exec(
-				`/usr/local/android-studio/bin/studio.sh ${androidDir}`
-			);
+			this.$childProcess.exec(`${studioPath} ${androidDir}`);
 		}
 	}
 }
