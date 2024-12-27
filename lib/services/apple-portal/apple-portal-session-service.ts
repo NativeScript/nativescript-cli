@@ -10,6 +10,8 @@ import {
 } from "./definitions";
 import * as crypto from "crypto";
 
+import { GSASRPAuthenticator } from "./srp/srp-wrapper";
+
 export class ApplePortalSessionService implements IApplePortalSessionService {
 	private loginConfigEndpoint =
 		"https://appstoreconnect.apple.com/olympus/v1/app/config?hostname=itunesconnect.apple.com";
@@ -174,29 +176,53 @@ For more details how to set up your environment, please execute "ns publish ios 
 	}
 
 	private async loginCore(credentials: ICredentials): Promise<void> {
+		const wrapper = new GSASRPAuthenticator(credentials.username);
+		const initData = await wrapper.getInit();
+
 		const loginConfig = await this.getLoginConfig();
-		const loginUrl = `${loginConfig.authServiceUrl}/auth/signin`;
+		const loginUrl = `${loginConfig.authServiceUrl}/auth/signin/init`;
 		const headers = {
 			"Content-Type": "application/json",
 			"X-Requested-With": "XMLHttpRequest",
 			"X-Apple-Widget-Key": loginConfig.authServiceKey,
 			Accept: "application/json, text/javascript",
 		};
-		const body = {
-			accountName: credentials.username,
-			password: credentials.password,
-			rememberMe: true,
-		};
 
-		const loginResponse = await this.$httpClient.httpRequest({
+		const initResponse = await this.$httpClient.httpRequest({
 			url: loginUrl,
 			method: "POST",
-			body,
+			body: initData,
 			headers,
 		});
 
+		const body = JSON.parse(initResponse.response.body);
+
+		const completeData = await wrapper.getComplete(credentials.password, body);
+
+		const hashcash = await this.fetchHashcash(
+			loginConfig.authServiceUrl,
+			loginConfig.authServiceKey
+		);
+
+		const completeUrl = `${loginConfig.authServiceUrl}/auth/signin/complete?isRememberMeEnabled=false`;
+		const completeHeaders = {
+			"Content-Type": "application/json",
+			"X-Requested-With": "XMLHttpRequest",
+			"X-Apple-Widget-Key": loginConfig.authServiceKey,
+			Accept: "application/json, text/javascript",
+			"X-Apple-HC": hashcash || "",
+		};
+
+		const completeResponse = await this.$httpClient.httpRequest({
+			url: completeUrl,
+			method: "POST",
+			completeHeaders,
+			body: completeData,
+			headers: completeHeaders,
+		});
+
 		this.$applePortalCookieService.updateUserSessionCookie(
-			loginResponse.headers["set-cookie"]
+			completeResponse.headers["set-cookie"]
 		);
 	}
 
@@ -219,6 +245,23 @@ For more details how to set up your environment, please execute "ns publish ios 
 		}
 
 		return config || this.defaultLoginConfig;
+	}
+
+	private async fetchHashcash(
+		authServiceUrl: string,
+		authServiceKey: string
+	): Promise<string> {
+		const loginUrl = `${authServiceUrl}/auth/signin?widgetKey=${authServiceKey}`;
+		const response = await this.$httpClient.httpRequest({
+			url: loginUrl,
+			method: "GET",
+		});
+
+		const headers = response.headers;
+
+		const bits = headers["X-Apple-HC-Bits"];
+		const challenge = headers["X-Apple-HC-Challenge"];
+		return makeHashCash(bits, challenge);
 	}
 
 	private async handleTwoFactorAuthentication(
