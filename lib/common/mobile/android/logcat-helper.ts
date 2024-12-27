@@ -231,7 +231,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		];
 
 		if (appId) {
-			logcatCommand.push(`--regex=START.*${appId}`);
+			logcatCommand.push(`--regex=Start.*${appId}`);
 		}
 
 		const appStartTrackingStream = await adb.executeCommand(logcatCommand, {
