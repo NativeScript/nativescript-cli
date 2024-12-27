@@ -194,7 +194,7 @@ export class PrepareController extends EventEmitter {
 			};
 		}
 
-		await this.writeRuntimePackageJson(projectData, platformData);
+		await this.writeRuntimePackageJson(projectData, platformData, prepareData);
 
 		await this.$projectChangesService.savePrepareInfo(
 			platformData,
@@ -433,7 +433,8 @@ export class PrepareController extends EventEmitter {
 	 */
 	public async writeRuntimePackageJson(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
+		prepareData: IPrepareData = null
 	) {
 		const configInfo = this.$projectConfigService.detectProjectConfigs(
 			projectData.projectDir
@@ -507,6 +508,10 @@ export class PrepareController extends EventEmitter {
 				"Failed to read emitted package.json. Error is: ",
 				error
 			);
+		}
+
+		if (prepareData?.uniqueBundle) {
+			packageData.main = `${packageData.main}.${prepareData.uniqueBundle}`;
 		}
 
 		this.$fs.writeJson(packagePath, packageData);

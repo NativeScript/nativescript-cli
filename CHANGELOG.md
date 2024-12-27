@@ -1,3 +1,11 @@
+## [8.8.3](https://github.com/NativeScript/nativescript-cli/compare/v8.8.2...v8.8.3) (2024-12-03)
+
+* SPM package version now supports semver ranges
+  * `~1.0.0` => upToNextMinor
+  * `^1.0.0` => upToNextMajor
+  * `#hash` => specific commit hash
+  * `<branch>` => specific branch
+
 ## [8.8.2](https://github.com/NativeScript/nativescript-cli/compare/v8.8.1...v8.8.2) (2024-08-28)
 
 
