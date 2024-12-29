@@ -203,7 +203,7 @@ export class CreateProjectCommand implements ICommand {
 			this.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
 			this.$logger.printMarkdown(`
 Answer the following questions to help us build the right app for you. (Note: you
-can skip this prompt next time using the --template option, or the --ng, --react, --vue, --svelte, --ts, or --js flags.)
+can skip this prompt next time using the --template option, or using --ng, --react, --solid, --svelte, --vue, --ts, or --js flags.)
 `);
 		}
 	}
@@ -365,6 +365,11 @@ can skip this prompt next time using the --template option, or the --ng, --react
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.solid,
 				description: CreateProjectCommand.HelloWorldTemplateDescription,
+			},
+			{
+				key: `${CreateProjectCommand.HelloWorldTemplateKey} using TypeScript`,
+				value: constants.RESERVED_TEMPLATE_NAMES.solidts,
+				description: `${CreateProjectCommand.HelloWorldTemplateDescription} using TypeScript`,
 			},
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
