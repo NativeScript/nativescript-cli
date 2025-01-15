@@ -355,7 +355,10 @@ export class WebpackCompilerService
 			stdio,
 		};
 		options.env = {
-			NATIVESCRIPT_WEBPACK_ENV:JSON.stringify(envData)
+			NATIVESCRIPT_WEBPACK_ENV: JSON.stringify(envData),
+		};
+		if (this.$hostInfo.isWindows) {
+			Object.assign(options.env, { APPDATA: process.env.appData });
 		}
 		if (this.$options.hostProjectPath) {
 			Object.assign(options.env, {
