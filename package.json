@@ -75,7 +75,7 @@
     "esprima": "4.0.1",
     "font-finder": "1.1.0",
     "glob": "9.3.4",
-    "ios-device-lib": "0.9.3",
+    "ios-device-lib": "0.9.4",
     "ios-mobileprovision-finder": "1.2.1",
     "ios-sim-portable": "4.5.0",
     "jimp": "0.22.10",
