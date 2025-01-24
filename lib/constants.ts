@@ -147,6 +147,7 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	reactjs: "@nativescript/template-blank-react",
 	solid: "@nativescript/template-blank-solid",
 	solidjs: "@nativescript/template-blank-solid",
+	solidts: "@nativescript/template-blank-solid-ts",
 	svelte: "@nativescript/template-blank-svelte",
 	// vision templates
 	vision: "@nativescript/template-hello-world-ts-vision",

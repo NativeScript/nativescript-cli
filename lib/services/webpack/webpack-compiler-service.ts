@@ -358,6 +358,9 @@ export class WebpackCompilerService
 		options.env = Object.assign(process.env, {
 			NATIVESCRIPT_WEBPACK_ENV:JSON.stringify(envData)
 		});
+		if (this.$hostInfo.isWindows) {
+			Object.assign(options.env, { APPDATA: process.env.appData });
+		}
 		if (this.$options.hostProjectPath) {
 			Object.assign(options.env, {
 				USER_PROJECT_PLATFORMS_ANDROID: this.$options.hostProjectPath,
@@ -439,6 +442,10 @@ export class WebpackCompilerService
 		// convert string to boolean
 		if (envData.sourceMap === "true" || envData.sourceMap === "false") {
 			envData.sourceMap = envData.sourceMap === "true";
+		}
+
+		if (prepareData.uniqueBundle > 0) {
+			envData.uniqueBundle = prepareData.uniqueBundle;
 		}
 
 		return envData;

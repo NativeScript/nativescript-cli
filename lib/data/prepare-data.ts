@@ -9,6 +9,7 @@ export class PrepareData extends ControllerDataBase {
 	public watch?: boolean;
 	public watchNative: boolean = true;
 	public hostProjectPath?: string;
+	public uniqueBundle: number;
 
 	constructor(
 		public projectDir: string,
@@ -43,6 +44,8 @@ export class PrepareData extends ControllerDataBase {
 			this.watchNative = data.watchNative;
 		}
 		this.hostProjectPath = data.hostProjectPath;
+
+		this.uniqueBundle = !this.watch && data.uniqueBundle ? Date.now() : 0;
 	}
 }
 

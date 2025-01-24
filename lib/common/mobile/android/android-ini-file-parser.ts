@@ -20,26 +20,28 @@ export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
 			contents,
 			(result: Mobile.IAvdInfo, line: string) => {
 				const parsedLine = line.split("=");
-				const key = parsedLine[0];
+
+				const key = parsedLine[0]?.trim();
+				const value = parsedLine[1]?.trim();
 				switch (key) {
 					case "target":
-						result.target = parsedLine[1];
+						result.target = value;
 						result.targetNum = this.readTargetNum(result.target);
 						break;
 					case "path":
 					case "AvdId":
-						result[_.lowerFirst(key)] = parsedLine[1];
+						result[_.lowerFirst(key)] = value;
 						break;
 					case "hw.device.name":
-						result.device = parsedLine[1];
+						result.device = value;
 						break;
 					case "avd.ini.displayname":
-						result.displayName = parsedLine[1];
+						result.displayName = value;
 						break;
 					case "abi.type":
 					case "skin.name":
 					case "sdcard.size":
-						result[key.split(".")[0]] = parsedLine[1];
+						result[key.split(".")[0]] = value;
 						break;
 				}
 				return result;
