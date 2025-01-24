@@ -9,12 +9,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@akylas/nativescript-cli@workspace:."
   dependencies:
+    "@foxt/js-srp": "npm:^0.0.3-patch2"
     "@nativescript/doctor": "npm:2.0.15"
     "@nativescript/schematics-executor": "npm:0.0.2"
     "@npmcli/arborist": "npm:^7.2.0"
     "@npmcli/move-file": "npm:^2.0.1"
     "@rigor789/resolve-package-path": "npm:1.0.7"
-    "@rigor789/trapezedev-project": "npm:7.1.1"
+    "@rigor789/trapezedev-project": "npm:7.1.2"
     "@types/archiver": "npm:^6.0.2"
     "@types/byline": "npm:^4.2.36"
     "@types/chai": "npm:4.3.4"
@@ -75,8 +76,8 @@ __metadata:
     grunt-template: "npm:1.0.0"
     grunt-ts: "npm:6.0.0-beta.22"
     husky: "npm:8.0.3"
-    ios-device-lib: "npm:0.9.3"
-    ios-mobileprovision-finder: "npm:1.1.0"
+    ios-device-lib: "npm:0.9.4"
+    ios-mobileprovision-finder: "npm:1.2.1"
     ios-sim-portable: "npm:4.5.0"
     istanbul: "npm:0.4.5"
     jimp: "npm:0.22.10"
@@ -222,6 +223,13 @@ __metadata:
   dependencies:
     "@jridgewell/trace-mapping": "npm:0.3.9"
   checksum: 05c5368c13b662ee4c122c7bfbe5dc0b613416672a829f3e78bc49a357a197e0218d6e74e7c66cfcd04e15a179acab080bd3c69658c9fbefd0e1ccd950a07fc6
+  languageName: node
+  linkType: hard
+
+"@foxt/js-srp@npm:^0.0.3-patch2":
+  version: 0.0.3
+  resolution: "@foxt/js-srp@npm:0.0.3"
+  checksum: b38df00e80473e4e255e36bfeef242da8f38c0607ab61b2842c911a8472c36ff885ba32d34131bca666411aa63a74692050ea34f74e292ed3468aabe7058208c
   languageName: node
   linkType: hard
 
@@ -1111,9 +1119,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rigor789/trapezedev-project@npm:7.1.1":
-  version: 7.1.1
-  resolution: "@rigor789/trapezedev-project@npm:7.1.1"
+"@rigor789/trapezedev-project@npm:7.1.2":
+  version: 7.1.2
+  resolution: "@rigor789/trapezedev-project@npm:7.1.2"
   dependencies:
     "@ionic/utils-fs": "npm:^3.1.5"
     "@ionic/utils-subprocess": "npm:^2.1.8"
@@ -1130,7 +1138,7 @@ __metadata:
     kleur: "npm:^4.1.5"
     lodash: "npm:^4.17.21"
     mergexml: "npm:^1.2.3"
-    npm-watch: "npm:^0.9.0"
+    npm-watch: "npm:^0.11.0"
     plist: "npm:^3.0.4"
     prettier: "npm:^2.7.1"
     prompts: "npm:^2.4.2"
@@ -1142,7 +1150,7 @@ __metadata:
     xml-js: "npm:^1.6.11"
     xpath: "npm:^0.0.32"
     yargs: "npm:^17.2.1"
-  checksum: 8c683d161c945cda86b6468e6622dacce5ec4c03de3b5cb13f34475b72d5d165b925840efe53cfb7c20521440ec4838ed356f50651b7ab1ed85611188664b067
+  checksum: 47ce723683e9b0da1f4dcdd285f453ee1c20df4b1725194e992701f64322755530755288c5fb8e09177cf98509bf4a72cf01465664f3c3842335612bfc83f4a9
   languageName: node
   linkType: hard
 
@@ -5818,26 +5826,26 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ios-device-lib@npm:0.9.3":
-  version: 0.9.3
-  resolution: "ios-device-lib@npm:0.9.3"
+"ios-device-lib@npm:0.9.4":
+  version: 0.9.4
+  resolution: "ios-device-lib@npm:0.9.4"
   dependencies:
     bufferpack: "npm:0.0.6"
     uuid: "npm:8.3.2"
-  checksum: 5c6269c40843981c5714d001c554fa67f96515a613cb0359e5258759c5f84368c448dc5cf595b20f79a193e7bd3340c328588c741d236685582790983e47df41
+  checksum: af976c5ff9f497e52a193fa6ee91506545f3e56f7110b636b1b8b4d02e86363be03d6f9d934ce729bb0440e95e585a6303b5b9da7c6db172d282b8559fe7afd8
   languageName: node
   linkType: hard
 
-"ios-mobileprovision-finder@npm:1.1.0":
-  version: 1.1.0
-  resolution: "ios-mobileprovision-finder@npm:1.1.0"
+"ios-mobileprovision-finder@npm:1.2.1":
+  version: 1.2.1
+  resolution: "ios-mobileprovision-finder@npm:1.2.1"
   dependencies:
     chalk: "npm:^5.2.0"
     plist: "npm:^3.0.6"
     yargs: "npm:^17.7.1"
   bin:
     ios-mobileprovision-finder: src/ios-mobileprovision-finder.js
-  checksum: 0c4f100affabd328ed1b67a0702af2f98483f1ff418b00d90333bfb18d2a81c60d26adcc746ed274c09f6115dc6387de138a443e89ac7552a68a89e77fc984f3
+  checksum: 0823cd21f570e6b5ea450f34c260dfb128cfa99a7873d65855ece718e5587e2cefc9b146ea4739481e3942fe8a179797ce7d1f465d550248fa4ffacaca925ec3
   languageName: node
   linkType: hard
 
@@ -7917,15 +7925,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"npm-watch@npm:^0.9.0":
-  version: 0.9.0
-  resolution: "npm-watch@npm:0.9.0"
+"npm-watch@npm:^0.11.0":
+  version: 0.11.0
+  resolution: "npm-watch@npm:0.11.0"
   dependencies:
     nodemon: "npm:^2.0.7"
     through2: "npm:^4.0.2"
   bin:
     npm-watch: cli.js
-  checksum: 57ca687d33d04e453b9566236a0a00c657baa60edbec968469a988e8122da91396846c0a08bafdff012fa230babe26091b0a3d782b5b109cef685a80e179fe27
+  checksum: 03f92823a5fe979d47767b16f220659be437d6fec8fd0492e230d7e66a2e934baab11de98c709ae12a717219c32a26feda405aff47e439cdbeb29fd96709b376
   languageName: node
   linkType: hard
 
