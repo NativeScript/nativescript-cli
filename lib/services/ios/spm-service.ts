@@ -8,6 +8,8 @@ import { IPlatformData } from "../../definitions/platform";
 import path = require("path");
 
 export class SPMService implements ISPMService {
+	public pluginSpmPackages: IosSPMPackageDefinition[];
+
 	constructor(
 		private $logger: ILogger,
 		private $projectConfigService: IProjectConfigService,
@@ -41,6 +43,11 @@ export class SPMService implements ISPMService {
 				projectData,
 				platformData.platformNameLowerCase
 			);
+
+			if (this.pluginSpmPackages?.length) {
+				// include swift packages from plugin configs
+				spmPackages.push(...this.pluginSpmPackages);
+			}
 
 			if (!spmPackages.length) {
 				this.$logger.trace("SPM: no SPM packages to apply.");
