@@ -1177,33 +1177,30 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 		}
 
+		const pluginSpmPackages = [];
 		for (const plugin of pluginsData) {
-			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(
-				IOSProjectService.IOS_PLATFORM_NAME
-			);
 			const pluginConfigPath = path.join(
-				pluginPlatformsFolderPath,
+				plugin.fullPath,
 				constants.CONFIG_FILE_NAME_TS
 			);
 			if (this.$fs.exists(pluginConfigPath)) {
-				const config = this.$projectConfigService.readConfig(pluginConfigPath);
-
-				const pluginSpmPackages = _.get(
+				const config = this.$projectConfigService.readConfig(plugin.fullPath);
+				const packages = _.get(
 					config,
 					`${platformData.platformNameLowerCase}.SPMPackages`,
 					[]
 				);
-				if (pluginSpmPackages.length) {
-					if (!this.$spmService.pluginSpmPackages) {
-						this.$spmService.pluginSpmPackages = [];
-					}
-
-					this.$spmService.pluginSpmPackages.push(...pluginSpmPackages);
+				if (packages.length) {
+					pluginSpmPackages.push(...packages);
 				}
 			}
 		}
 
-		await this.$spmService.applySPMPackages(platformData, projectData);
+		await this.$spmService.applySPMPackages(
+			platformData,
+			projectData,
+			pluginSpmPackages
+		);
 	}
 
 	public beforePrepareAllPlugins(
