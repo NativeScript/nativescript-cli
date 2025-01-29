@@ -1,5 +1,6 @@
 import * as shelljs from "shelljs";
 import { use } from "chai";
+import chaiAsPromised from "chai-as-promised";
 import { ICliGlobal } from "../lib/common/definitions/cli-global";
 
 shelljs.config.silent = true;
@@ -12,7 +13,7 @@ cliGlobal._ = _;
 import { injector } from "../lib/common/yok";
 cliGlobal.$injector = injector;
 
-use(require("chai-as-promised"));
+use(chaiAsPromised);
 
 cliGlobal.$injector.register("analyticsService", {
 	trackException: async (exception: any, message: string): Promise<void> => {

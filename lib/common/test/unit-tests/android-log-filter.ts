@@ -1323,7 +1323,7 @@ describe("androidLogFilter", () => {
 		inputData: string,
 		expectedOutput: string,
 		_logLevel?: string,
-		_pid?: string
+		_pid?: string,
 	) => {
 		if (_logLevel?.toLowerCase() !== "full") {
 			// pre-filter data since we use adb logcat filtering now - these should be filtered out by adb anyways.
@@ -1361,7 +1361,7 @@ describe("androidLogFilter", () => {
 		assert.deepStrictEqual(
 			filteredData,
 			expectedOutput,
-			`The actual result '${filteredData}' did NOT match expected output '${expectedOutput}'.`
+			`The actual result '${filteredData}' did NOT match expected output '${expectedOutput}'.`,
 		);
 	};
 
@@ -1390,7 +1390,7 @@ describe("androidLogFilter", () => {
 					assertFiltering(
 						testData.input,
 						testData.output ? testData.output + EOL : testData.output,
-						logLevel
+						logLevel,
 					);
 				});
 			});
@@ -1400,7 +1400,7 @@ describe("androidLogFilter", () => {
 					assertFiltering(
 						testData.input,
 						testData.output ? testData.output + EOL : testData.output,
-						logLevel
+						logLevel,
 					);
 				});
 			});
@@ -1412,7 +1412,7 @@ describe("androidLogFilter", () => {
 						testData.input,
 						testData.output ? testData.output + EOL : testData.output,
 						logLevel,
-						appPid
+						appPid,
 					);
 				});
 			});
@@ -1420,14 +1420,14 @@ describe("androidLogFilter", () => {
 			it("when API level 23 or later is used, and application pid doesn't match any logcat pids", () => {
 				const appPid = "99999";
 				const expectedOutputMap = androidApiLevel23MapForPid8141.map(
-					(testData) => ({ input: testData.input, output: null })
+					(testData) => ({ input: testData.input, output: null as any }),
 				);
 				_.each(expectedOutputMap, (testData) => {
 					assertFiltering(
 						testData.input,
 						testData.output ? testData.output + EOL : testData.output,
 						logLevel,
-						appPid
+						appPid,
 					);
 				});
 			});

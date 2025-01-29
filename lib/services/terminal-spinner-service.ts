@@ -1,4 +1,4 @@
-import * as ora from "ora";
+import ora from "ora";
 import { injector } from "../common/yok";
 import {
 	ITerminalSpinner,
@@ -8,7 +8,7 @@ import {
 
 export class TerminalSpinnerService implements ITerminalSpinnerService {
 	public createSpinner(
-		spinnerOptions: ITerminalSpinnerOptions = {}
+		spinnerOptions: ITerminalSpinnerOptions = {},
 	): ITerminalSpinner {
 		// @ts-expect-error - options are readonly, however we still want to override them before passing them on...
 		spinnerOptions.stream = spinnerOptions.stream || process.stdout;
@@ -17,7 +17,7 @@ export class TerminalSpinnerService implements ITerminalSpinnerService {
 
 	public async execute<T>(
 		spinnerOptions: ITerminalSpinnerOptions,
-		action: () => Promise<T>
+		action: () => Promise<T>,
 	): Promise<T> {
 		const spinner = this.createSpinner(spinnerOptions);
 
