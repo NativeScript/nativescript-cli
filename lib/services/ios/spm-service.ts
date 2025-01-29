@@ -34,13 +34,19 @@ export class SPMService implements ISPMService {
 
 	public async applySPMPackages(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
+		pluginSpmPackages?: IosSPMPackageDefinition[]
 	) {
 		try {
 			const spmPackages = this.getSPMPackages(
 				projectData,
 				platformData.platformNameLowerCase
 			);
+
+			if (pluginSpmPackages?.length) {
+				// include swift packages from plugin configs
+				spmPackages.push(...pluginSpmPackages);
+			}
 
 			if (!spmPackages.length) {
 				this.$logger.trace("SPM: no SPM packages to apply.");

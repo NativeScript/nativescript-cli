@@ -42,7 +42,15 @@ declare global {
 	}
 
 	interface ISPMService {
-		applySPMPackages(platformData: IPlatformData, projectData: IProjectData);
+		applySPMPackages(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			pluginSpmPackages?: IosSPMPackageDefinition[]
+		);
+		getSPMPackages(
+			projectData: IProjectData,
+			platform: string
+		): IosSPMPackageDefinition[];
 	}
 
 	interface IXcodebuildArgsService {

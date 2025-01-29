@@ -32,6 +32,7 @@ import {
 	IIOSWatchAppService,
 	IIOSNativeTargetService,
 	IValidatePlatformOutput,
+	IProjectConfigService,
 } from "../definitions/project";
 
 import { IBuildData } from "../definitions/build";
@@ -121,7 +122,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		private $sysInfo: ISysInfo,
 		private $tempService: ITempService,
 		private $spmService: ISPMService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
+		private $projectConfigService: IProjectConfigService
 	) {
 		super($fs, $projectDataService);
 	}
@@ -1175,7 +1177,30 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 		}
 
-		await this.$spmService.applySPMPackages(platformData, projectData);
+		const pluginSpmPackages = [];
+		for (const plugin of pluginsData) {
+			const pluginConfigPath = path.join(
+				plugin.fullPath,
+				constants.CONFIG_FILE_NAME_TS
+			);
+			if (this.$fs.exists(pluginConfigPath)) {
+				const config = this.$projectConfigService.readConfig(plugin.fullPath);
+				const packages = _.get(
+					config,
+					`${platformData.platformNameLowerCase}.SPMPackages`,
+					[]
+				);
+				if (packages.length) {
+					pluginSpmPackages.push(...packages);
+				}
+			}
+		}
+
+		await this.$spmService.applySPMPackages(
+			platformData,
+			projectData,
+			pluginSpmPackages
+		);
 	}
 
 	public beforePrepareAllPlugins(
