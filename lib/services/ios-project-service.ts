@@ -1179,19 +1179,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		const pluginSpmPackages = [];
 		for (const plugin of pluginsData) {
-			const pluginConfigPath = path.join(
-				plugin.fullPath,
-				constants.CONFIG_FILE_NAME_TS
-			);
-			if (this.$fs.exists(pluginConfigPath)) {
-				const config = this.$projectConfigService.readConfig(plugin.fullPath);
-				const packages = _.get(
-					config,
-					`${platformData.platformNameLowerCase}.SPMPackages`,
-					[]
+			if (plugin.fullPath) {
+				const pluginConfigPath = path.join(
+					plugin.fullPath,
+					constants.CONFIG_FILE_NAME_TS
 				);
-				if (packages.length) {
-					pluginSpmPackages.push(...packages);
+				if (this.$fs.exists(pluginConfigPath)) {
+					const config = this.$projectConfigService.readConfig(plugin.fullPath);
+					const packages = _.get(
+						config,
+						`${platformData.platformNameLowerCase}.SPMPackages`,
+						[]
+					);
+					if (packages.length) {
+						pluginSpmPackages.push(...packages);
+					}
 				}
 			}
 		}
