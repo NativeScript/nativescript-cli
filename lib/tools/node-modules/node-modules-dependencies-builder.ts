@@ -15,16 +15,17 @@ interface IDependencyDescription {
 }
 
 export class NodeModulesDependenciesBuilder
-	implements INodeModulesDependenciesBuilder {
+	implements INodeModulesDependenciesBuilder
+{
 	public constructor(private $fs: IFileSystem) {}
 
 	public getProductionDependencies(
 		projectPath: string,
-		ignore?: string[]
+		ignore?: string[],
 	): IDependencyData[] {
 		const projectPackageJsonPath = path.join(
 			projectPath,
-			PACKAGE_JSON_FILE_NAME
+			PACKAGE_JSON_FILE_NAME,
 		);
 		const packageJsonContent = this.$fs.readJson(projectPackageJsonPath);
 		const dependencies = packageJsonContent && packageJsonContent.dependencies;
@@ -33,11 +34,11 @@ export class NodeModulesDependenciesBuilder
 
 		const queue: IDependencyDescription[] = _.keys(dependencies).map(
 			(dependencyName) => ({
-				parent: null,
+				parent: null as any,
 				parentDir: projectPath,
 				name: dependencyName,
 				depth: 0,
-			})
+			}),
 		);
 
 		while (queue.length) {
@@ -45,14 +46,14 @@ export class NodeModulesDependenciesBuilder
 			const resolvedDependency = this.findModule(
 				currentModule,
 				resolvedDependencies,
-				projectPath
+				projectPath,
 			);
 
 			if (
 				resolvedDependency &&
 				!_.some(
 					resolvedDependencies,
-					(r) => r.directory === resolvedDependency.directory
+					(r) => r.directory === resolvedDependency.directory,
 				)
 			) {
 				_.each(resolvedDependency.dependencies, (d) => {
@@ -69,7 +70,7 @@ export class NodeModulesDependenciesBuilder
 							element.parent === dependency.parent &&
 							element.name === dependency.name &&
 							element.parentDir === dependency.parentDir &&
-							element.depth === dependency.depth
+							element.depth === dependency.depth,
 					);
 
 					if (shouldAdd) {
@@ -89,7 +90,7 @@ export class NodeModulesDependenciesBuilder
 	private findModule(
 		depDescription: IDependencyDescription,
 		resolvedDependencies: IDependencyData[],
-		rootPath: string
+		rootPath: string,
 	): IDependencyData {
 		try {
 			const parentModulesPath =
@@ -124,7 +125,7 @@ export class NodeModulesDependenciesBuilder
 			return this.getDependencyData(
 				depDescription.name,
 				modulePath,
-				depDescription.depth
+				depDescription.depth,
 			);
 		} catch (err) {
 			return null;
@@ -134,7 +135,7 @@ export class NodeModulesDependenciesBuilder
 	private getDependencyData(
 		name: string,
 		directory: string,
-		depth: number
+		depth: number,
 	): IDependencyData {
 		const dependency: IDependencyData = {
 			name,
@@ -165,5 +166,5 @@ export class NodeModulesDependenciesBuilder
 
 injector.register(
 	"nodeModulesDependenciesBuilder",
-	NodeModulesDependenciesBuilder
+	NodeModulesDependenciesBuilder,
 );
