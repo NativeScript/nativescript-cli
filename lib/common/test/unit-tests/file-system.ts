@@ -3,6 +3,7 @@ import * as path from "path";
 import * as temp from "temp";
 import * as hostInfoLib from "../../host-info";
 import { assert, use } from "chai";
+import "chai-as-promised";
 import chaiAsPromised from "chai-as-promised";
 import * as fileSystemFile from "../../file-system";
 import * as childProcessLib from "../../child-process";

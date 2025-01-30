@@ -83,19 +83,19 @@ describe("errors", () => {
 		const assertProcessExited = () => {
 			assert.isTrue(
 				isProcessExitCalled,
-				"When the action fails, process.exit must be called."
+				"When the action fails, process.exit must be called.",
 			);
 			assert.equal(
 				processExitCode,
 				127,
-				"When the action fails, process.exit must be called with 127 by default."
+				"When the action fails, process.exit must be called with 127 by default.",
 			);
 		};
 
 		const assertPrintCommandHelpSuggestionIsNotCalled = () => {
 			assert.isFalse(
 				isPrintCommandHelpSuggestionExecuted,
-				"printCommandHelpSuggestion should not be called when the suggestCommandHelp is not set to the exception."
+				"printCommandHelpSuggestion should not be called when the suggestCommandHelp is not set to the exception.",
 			);
 		};
 
@@ -103,18 +103,18 @@ describe("errors", () => {
 			const { action, printCommandHelpSuggestion } = setupTest();
 			let result = await errors.beginCommand(
 				action,
-				printCommandHelpSuggestion
+				printCommandHelpSuggestion,
 			);
 			assert.isTrue(
 				result,
-				"beginCommand must return the result of the passed action."
+				"beginCommand must return the result of the passed action.",
 			);
 
 			actionResult = false;
 			result = await errors.beginCommand(action, printCommandHelpSuggestion);
 			assert.isFalse(
 				result,
-				"beginCommand must return the result of the passed action."
+				"beginCommand must return the result of the passed action.",
 			);
 			assert.equal(logger.errorOutput, "");
 			assert.equal(logger.output, "");
@@ -136,15 +136,15 @@ describe("errors", () => {
 			const assertCallStack = () => {
 				assert.isTrue(
 					logger.errorOutput.indexOf(errMsg) !== -1,
-					"The error output must contain the error message"
+					"The error output must contain the error message",
 				);
 				assert.isTrue(
-					logger.errorOutput.indexOf("at Generator.next") !== -1,
-					"The error output must contain callstack"
+					logger.errorOutput.indexOf("at next") !== -1,
+					"The error output must contain callstack",
 				);
 				assert.isTrue(
 					logger.errorOutput.indexOf(path.join("lib", "common")) !== -1,
-					"The error output must contain path to lib/common, as this is the location of the file"
+					"The error output must contain path to lib/common, as this is the location of the file",
 				);
 			};
 
@@ -213,7 +213,7 @@ describe("errors", () => {
 			assertProcessExited();
 			assert.isTrue(
 				isPrintCommandHelpSuggestionExecuted,
-				"printCommandHelpSuggestion should be called when the action fails with an error object for which suggestCommandHelp is true."
+				"printCommandHelpSuggestion should be called when the action fails with an error object for which suggestCommandHelp is true.",
 			);
 		});
 
@@ -225,12 +225,12 @@ describe("errors", () => {
 			assert.equal(logger.errorOutput, `${errMsg}\n`);
 			assert.isTrue(
 				isProcessExitCalled,
-				"When the action fails, process.exit must be called."
+				"When the action fails, process.exit must be called.",
 			);
 			assert.equal(
 				processExitCode,
 				errObj.errorCode,
-				`When the action fails, process.exit must be called with ${errObj.errorCode}.`
+				`When the action fails, process.exit must be called with ${errObj.errorCode}.`,
 			);
 		});
 
@@ -242,12 +242,12 @@ describe("errors", () => {
 			assert.equal(logger.errorOutput, `${errMsg}\n`);
 			assert.isTrue(
 				isProcessExitCalled,
-				"When the action fails, process.exit must be called."
+				"When the action fails, process.exit must be called.",
 			);
 			assert.equal(
 				processExitCode,
 				127,
-				"When the action fails, process.exit must be called with 127 by default."
+				"When the action fails, process.exit must be called with 127 by default.",
 			);
 		});
 	});

@@ -15,6 +15,7 @@ import { EventEmitter } from "events";
 import { assert, use } from "chai";
 import * as util from "util";
 import * as _ from "lodash";
+import "chai-as-promised";
 import chaiAsPromised from "chai-as-promised";
 
 use(chaiAsPromised);
