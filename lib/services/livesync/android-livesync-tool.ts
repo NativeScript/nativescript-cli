@@ -52,7 +52,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $injector: IInjector
+		private $injector: IInjector,
 	) {
 		this.operationPromises = Object.create(null);
 		this.socketError = null;
@@ -60,7 +60,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	public async connect(
-		configuration: IAndroidLivesyncToolConfiguration
+		configuration: IAndroidLivesyncToolConfiguration,
 	): Promise<void> {
 		if (!configuration.appIdentifier) {
 			this.$errors.fail(AndroidLivesyncTool.APP_IDENTIFIER_MISSING_ERROR);
@@ -72,7 +72,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 
 		if (this.socketConnection) {
 			this.$errors.fail(
-				AndroidLivesyncTool.SOCKET_CONNECTION_ALREADY_EXISTS_ERROR
+				AndroidLivesyncTool.SOCKET_CONNECTION_ALREADY_EXISTS_ERROR,
 			);
 		}
 
@@ -91,13 +91,13 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				deviceIdentifier: configuration.deviceIdentifier,
 				appIdentifier: configuration.appIdentifier,
 				abstractPort: `localabstract:${configuration.appIdentifier}-livesync`,
-			}
+			},
 		);
 
 		const connectionResult = await this.connectEventuallyUntilTimeout(
 			this.createSocket.bind(this, port),
 			connectTimeout,
-			configuration
+			configuration,
 		);
 		this.handleConnection(connectionResult);
 	}
@@ -131,25 +131,25 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			PROTOCOL_OPERATION_LENGTH_SIZE +
 				SIZE_BYTE_LENGTH +
 				filePathData.filePathLengthSize +
-				filePathData.filePathLengthBytes
+				filePathData.filePathLengthBytes,
 		);
 
 		let offset = 0;
 		offset += headerBuffer.write(
 			AndroidLivesyncTool.DELETE_FILE_OPERATION.toString(),
 			offset,
-			PROTOCOL_OPERATION_LENGTH_SIZE
+			PROTOCOL_OPERATION_LENGTH_SIZE,
 		);
 		offset = headerBuffer.writeInt8(filePathData.filePathLengthSize, offset);
 		offset += headerBuffer.write(
 			filePathData.filePathLengthString,
 			offset,
-			filePathData.filePathLengthSize
+			filePathData.filePathLengthSize,
 		);
 		headerBuffer.write(
 			filePathData.relativeFilePath,
 			offset,
-			filePathData.filePathLengthBytes
+			filePathData.filePathLengthBytes,
 		);
 		const hash = crypto.createHash("md5").update(headerBuffer).digest();
 
@@ -171,11 +171,11 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	}
 
 	public sendDoSyncOperation(
-		options?: IDoSyncOperationOptions
+		options?: IDoSyncOperationOptions,
 	): Promise<IAndroidLivesyncSyncOperationResult> {
 		options = _.assign(
 			{ doRefresh: true, timeout: SYNC_OPERATION_TIMEOUT },
-			options
+			options,
 		);
 		const { doRefresh, timeout, operationId } = options;
 		const id = operationId || this.generateOperationIdentifier();
@@ -186,7 +186,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				}
 				const message = `${AndroidLivesyncTool.DO_SYNC_OPERATION}${id}`;
 				const headerBuffer = Buffer.alloc(
-					Buffer.byteLength(message) + DO_REFRESH_LENGTH
+					Buffer.byteLength(message) + DO_REFRESH_LENGTH,
 				);
 				const socketId = this.socketConnection.uid;
 				const doRefreshCode = doRefresh
@@ -206,7 +206,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					if (this.isOperationInProgress(id)) {
 						this.handleSocketError(
 							socketId,
-							"Sync operation is taking too long"
+							"Sync operation is taking too long",
 						);
 					}
 				}, timeout);
@@ -229,7 +229,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 			error =
 				error ||
 				this.getErrorWithMessage(
-					"Socket connection ended before sync operation is complete."
+					"Socket connection ended before sync operation is complete.",
 				);
 			//remove listeners and delete this.socketConnection
 			this.cleanState(socketUid);
@@ -258,7 +258,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 				filePathData.filePathLengthSize +
 				filePathData.filePathLengthBytes +
 				SIZE_BYTE_LENGTH +
-				fileContentLengthSize
+				fileContentLengthSize,
 		);
 
 		if (filePathData.filePathLengthSize > 255) {
@@ -271,18 +271,18 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		offset += headerBuffer.write(
 			AndroidLivesyncTool.CREATE_FILE_OPERATION.toString(),
 			offset,
-			PROTOCOL_OPERATION_LENGTH_SIZE
+			PROTOCOL_OPERATION_LENGTH_SIZE,
 		);
 		offset = headerBuffer.writeUInt8(filePathData.filePathLengthSize, offset);
 		offset += headerBuffer.write(
 			filePathData.filePathLengthString,
 			offset,
-			filePathData.filePathLengthSize
+			filePathData.filePathLengthSize,
 		);
 		offset += headerBuffer.write(
 			filePathData.relativeFilePath,
 			offset,
-			filePathData.filePathLengthBytes
+			filePathData.filePathLengthBytes,
 		);
 		offset = headerBuffer.writeUInt8(fileContentLengthSize, offset);
 		headerBuffer.write(fileContentLengthString, offset, fileContentLengthSize);
@@ -326,7 +326,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private checkConnectionStatus() {
 		if (this.socketConnection === null) {
 			const defaultError = this.getErrorWithMessage(
-				AndroidLivesyncTool.NO_SOCKET_CONNECTION_AVAILABLE_ERROR
+				AndroidLivesyncTool.NO_SOCKET_CONNECTION_AVAILABLE_ERROR,
 			);
 			const error = this.socketError || defaultError;
 
@@ -361,25 +361,25 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		const versionLength = (<Buffer>data).readUInt8(0);
 		const versionBuffer = data.slice(
 			PROTOCOL_VERSION_LENGTH_SIZE,
-			versionLength + PROTOCOL_VERSION_LENGTH_SIZE
+			versionLength + PROTOCOL_VERSION_LENGTH_SIZE,
 		);
 		const appIdentifierBuffer = data.slice(
 			versionLength + PROTOCOL_VERSION_LENGTH_SIZE,
-			data.length
+			data.length,
 		);
 
 		const protocolVersion = versionBuffer.toString();
 		const appIdentifier = appIdentifierBuffer.toString();
 		this.$logger.trace(
-			`Handle socket connection for app identifier: ${appIdentifier} with protocol version: ${protocolVersion}.`
+			`Handle socket connection for app identifier: ${appIdentifier} with protocol version: ${protocolVersion}.`,
 		);
 		this.protocolVersion = protocolVersion;
 
 		this.socketConnection.on("data", (connectionData: Buffer) =>
-			this.handleData(socket.uid, connectionData)
+			this.handleData(socket.uid, connectionData),
 		);
 		this.socketConnection.on("close", (hasError: boolean) =>
-			this.handleSocketClose(socket.uid, hasError)
+			this.handleSocketClose(socket.uid, hasError),
 		);
 		this.socketConnection.on("error", (err: Error) => {
 			const error = new Error(`Socket Error:\n${err}`);
@@ -394,7 +394,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private connectEventuallyUntilTimeout(
 		factory: () => ILiveSyncSocket,
 		timeout: number,
-		configuration: IAndroidLivesyncToolConfiguration
+		configuration: IAndroidLivesyncToolConfiguration,
 	): Promise<{ socket: ILiveSyncSocket; data: Buffer | string }> {
 		return new Promise((resolve, reject) => {
 			let lastKnownError: Error | string,
@@ -405,7 +405,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					isConnected = true;
 					if (
 						this.pendingConnectionData &&
-						this.pendingConnectionData.socketTimer
+						typeof this.pendingConnectionData.socketTimer === "number"
 					) {
 						clearTimeout(this.pendingConnectionData.socketTimer);
 					}
@@ -413,17 +413,17 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					const applicationPid =
 						await this.$androidProcessService.getAppProcessId(
 							configuration.deviceIdentifier,
-							configuration.appIdentifier
+							configuration.appIdentifier,
 						);
 					if (!applicationPid) {
 						this.$logger.trace(
 							"In Android LiveSync tool, lastKnownError is: ",
-							lastKnownError
+							lastKnownError,
 						);
 						this.$logger.info(
 							color.yellow(
-								`Application ${configuration.appIdentifier} is not running on device ${configuration.deviceIdentifier}.`
-							)
+								`Application ${configuration.appIdentifier} is not running on device ${configuration.deviceIdentifier}.`,
+							),
 						);
 						this.$logger.info(
 							color.cyan(
@@ -431,18 +431,20 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	* crash at startup (try \`ns debug android --debug-brk\` to check why it crashes)
 	* different application identifier in your package.json and in your gradle files (check your identifier in \`package.json\` and in all *.gradle files in your App_Resources directory)
 	* device is locked
-	* manual closing of the application`
-							)
+	* manual closing of the application`,
+							),
 						);
 						reject(
 							new Error(
-								`Application ${configuration.appIdentifier} is not running`
-							)
+								`Application ${configuration.appIdentifier} is not running`,
+							),
 						);
 					} else {
 						reject(
 							lastKnownError ||
-								new Error(AndroidLivesyncTool.SOCKET_CONNECTION_TIMED_OUT_ERROR)
+								new Error(
+									AndroidLivesyncTool.SOCKET_CONNECTION_TIMED_OUT_ERROR,
+								),
 						);
 					}
 
@@ -587,7 +589,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private resolveRelativePath(filePath: string): string {
 		const relativeFilePath = path.relative(
 			this.configuration.appPlatformsPath,
-			filePath
+			filePath,
 		);
 
 		return this.$mobileHelper.buildDevicePath(relativeFilePath);

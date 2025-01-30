@@ -39,7 +39,6 @@ inline-diffs: false
 recursive: true
 reporter: 'spec'
 require:
-  - 'source-map-support/register'
   - 'test/test-bootstrap.js'
 retries: 1
 slow: 500

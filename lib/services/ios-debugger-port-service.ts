@@ -10,7 +10,8 @@ import { IDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
 
 export class IOSDebuggerPortService implements IIOSDebuggerPortService {
-	public static DEBUG_PORT_LOG_REGEX = /NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
+	public static DEBUG_PORT_LOG_REGEX =
+		/NativeScript debugger has opened inspector socket on port (\d+?) for (.*)[.]/;
 	private mapDebuggerPortData: IDictionary<IIOSDebuggerPortStoredData> = {};
 	private currentAppId: string;
 
@@ -18,7 +19,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		private $logParserService: ILogParserService,
 		private $iOSNotification: IiOSNotification,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async getPort(data: IIOSDebuggerPortInputData): Promise<number> {
@@ -27,7 +28,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 			const retryInterval = 500;
 			let retryCount = Math.max(
 				(APPLICATION_RESPONSE_TIMEOUT_SECONDS * 1000) / retryInterval,
-				10
+				10,
 			);
 
 			const interval = setInterval(() => {
@@ -106,13 +107,13 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 					this.clearTimeout(data);
 					if (!this.getPortByKey(`${data.deviceId}${data.appId}`)) {
 						this.$logger.warn(
-							`NativeScript debugger was not able to get inspector socket port on device ${data.deviceId} for application ${data.appId}.`
+							`NativeScript debugger was not able to get inspector socket port on device ${data.deviceId} for application ${data.appId}.`,
 						);
 					}
 				}, APPLICATION_RESPONSE_TIMEOUT_SECONDS * 1000);
 
 				this.setData(data, { port: null, timer });
-			}
+			},
 		);
 	}
 
@@ -126,7 +127,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 
 	private setData(
 		data: IIOSDebuggerPortData,
-		storedData: IIOSDebuggerPortStoredData
+		storedData: IIOSDebuggerPortStoredData,
 	): void {
 		const key = `${data.deviceId}${data.appId}`;
 
@@ -140,10 +141,9 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	}
 
 	private clearTimeout(data: IIOSDebuggerPortData): void {
-		const storedData = this.mapDebuggerPortData[
-			`${data.deviceId}${data.appId}`
-		];
-		if (storedData && storedData.timer) {
+		const storedData =
+			this.mapDebuggerPortData[`${data.deviceId}${data.appId}`];
+		if (storedData && typeof storedData.timer === "number") {
 			clearTimeout(storedData.timer);
 		}
 	}

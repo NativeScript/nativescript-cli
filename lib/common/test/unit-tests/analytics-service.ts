@@ -6,7 +6,7 @@ import { HostInfo } from "../../host-info";
 import { OsInfo } from "../../os-info";
 import { IInjector } from "../../definitions/yok";
 import { IAnalyticsService } from "../../declarations";
-const assert = require("chai").assert;
+import { assert } from "chai";
 
 let savedSettingNamesAndValues = "";
 
@@ -14,13 +14,12 @@ class UserSettingsServiceStub {
 	constructor(
 		public featureTracking: boolean,
 		public exceptionsTracking: boolean,
-		public testInjector: IInjector
+		public testInjector: IInjector,
 	) {}
 
 	async getSettingValue<T>(settingName: string): Promise<T | string> {
-		const $staticConfig: Config.IStaticConfig = this.testInjector.resolve(
-			"staticConfig"
-		);
+		const $staticConfig: Config.IStaticConfig =
+			this.testInjector.resolve("staticConfig");
 
 		if (settingName === $staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME) {
 			return this.featureTracking !== undefined
@@ -94,8 +93,8 @@ function createTestInjector(testScenario: ITestScenario): IInjector {
 		new UserSettingsServiceStub(
 			testScenario.featureTracking,
 			testScenario.exceptionsTracking,
-			testInjector
-		)
+			testInjector,
+		),
 	);
 	setIsInteractive(() => {
 		return testScenario.isInteractive;
@@ -137,44 +136,43 @@ describe("analytics-service", () => {
 		it("returns true when analytics status is enabled", async () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
+			assert.isTrue(
+				await service.isEnabled(staticConfig.ERROR_REPORT_SETTING_NAME),
 			);
 			assert.isTrue(
-				await service.isEnabled(staticConfig.ERROR_REPORT_SETTING_NAME)
-			);
-			assert.isTrue(
-				await service.isEnabled(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME)
+				await service.isEnabled(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME),
 			);
 		});
 
 		it("returns false when analytics status is disabled", async () => {
-			baseTestScenario.exceptionsTracking = baseTestScenario.featureTracking = false;
+			baseTestScenario.exceptionsTracking = baseTestScenario.featureTracking =
+				false;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
+			assert.isFalse(
+				await service.isEnabled(staticConfig.ERROR_REPORT_SETTING_NAME),
 			);
 			assert.isFalse(
-				await service.isEnabled(staticConfig.ERROR_REPORT_SETTING_NAME)
-			);
-			assert.isFalse(
-				await service.isEnabled(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME)
+				await service.isEnabled(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME),
 			);
 		});
 
 		it("returns false when analytics status is notConfirmed", async () => {
-			baseTestScenario.exceptionsTracking = baseTestScenario.featureTracking = undefined;
+			baseTestScenario.exceptionsTracking = baseTestScenario.featureTracking =
+				undefined;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
+			assert.isFalse(
+				await service.isEnabled(staticConfig.ERROR_REPORT_SETTING_NAME),
 			);
 			assert.isFalse(
-				await service.isEnabled(staticConfig.ERROR_REPORT_SETTING_NAME)
-			);
-			assert.isFalse(
-				await service.isEnabled(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME)
+				await service.isEnabled(staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME),
 			);
 		});
 	});
@@ -183,17 +181,16 @@ describe("analytics-service", () => {
 		it("sets correct status", async () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			await service.setStatus(
 				staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
-				false
+				false,
 			);
 			assert.isTrue(
 				savedSettingNamesAndValues.indexOf(
-					`${staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME}.false`
-				) !== -1
+					`${staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME}.false`,
+				) !== -1,
 			);
 		});
 	});
@@ -202,17 +199,16 @@ describe("analytics-service", () => {
 		it("returns correct string results when status is enabled", async () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			const expectedMsg = "Expected result";
 			assert.equal(
 				`${expectedMsg} is enabled.`,
 				await service.getStatusMessage(
 					staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 					false,
-					expectedMsg
-				)
+					expectedMsg,
+				),
 			);
 		});
 
@@ -220,17 +216,16 @@ describe("analytics-service", () => {
 			baseTestScenario.featureTracking = false;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			const expectedMsg = "Expected result";
 			assert.equal(
 				`${expectedMsg} is disabled.`,
 				await service.getStatusMessage(
 					staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 					false,
-					expectedMsg
-				)
+					expectedMsg,
+				),
 			);
 		});
 
@@ -238,33 +233,31 @@ describe("analytics-service", () => {
 			baseTestScenario.featureTracking = undefined;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			const expectedMsg = "Expected result";
 			assert.equal(
 				`${expectedMsg} is disabled until confirmed.`,
 				await service.getStatusMessage(
 					staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 					false,
-					expectedMsg
-				)
+					expectedMsg,
+				),
 			);
 		});
 
 		it("returns correct json results when status is enabled", async () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			assert.deepStrictEqual(
 				JSON.stringify({ enabled: true }),
 				await service.getStatusMessage(
 					staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 					true,
-					""
-				)
+					"",
+				),
 			);
 		});
 
@@ -272,16 +265,15 @@ describe("analytics-service", () => {
 			baseTestScenario.featureTracking = false;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			assert.deepStrictEqual(
 				JSON.stringify({ enabled: false }),
 				await service.getStatusMessage(
 					staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 					true,
-					""
-				)
+					"",
+				),
 			);
 		});
 
@@ -289,16 +281,15 @@ describe("analytics-service", () => {
 			baseTestScenario.featureTracking = undefined;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			assert.deepStrictEqual(
 				JSON.stringify({ enabled: null }),
 				await service.getStatusMessage(
 					staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 					true,
-					""
-				)
+					"",
+				),
 			);
 		});
 	});
@@ -310,13 +301,12 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			assert.isTrue(
 				savedSettingNamesAndValues.indexOf(
-					`${staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME}.true`
-				) !== -1
+					`${staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME}.true`,
+				) !== -1,
 			);
 		});
 
@@ -327,13 +317,12 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			assert.isTrue(
 				savedSettingNamesAndValues.indexOf(
-					`${staticConfig.ERROR_REPORT_SETTING_NAME}.true`
-				) !== -1
+					`${staticConfig.ERROR_REPORT_SETTING_NAME}.true`,
+				) !== -1,
 			);
 		});
 
@@ -344,13 +333,12 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			assert.isTrue(
 				savedSettingNamesAndValues.indexOf(
-					`${staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME}.false`
-				) !== -1
+					`${staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME}.false`,
+				) !== -1,
 			);
 		});
 
@@ -362,13 +350,12 @@ describe("analytics-service", () => {
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
-			const staticConfig: Config.IStaticConfig = testInjector.resolve(
-				"staticConfig"
-			);
+			const staticConfig: Config.IStaticConfig =
+				testInjector.resolve("staticConfig");
 			assert.isTrue(
 				savedSettingNamesAndValues.indexOf(
-					`${staticConfig.ERROR_REPORT_SETTING_NAME}.false`
-				) !== -1
+					`${staticConfig.ERROR_REPORT_SETTING_NAME}.false`,
+				) !== -1,
 			);
 		});
 
@@ -379,19 +366,19 @@ describe("analytics-service", () => {
 				const testInjector = createTestInjector(baseTestScenario);
 				service = testInjector.resolve<IAnalyticsService>("analyticsService");
 				await service.checkConsent();
-				const staticConfig: Config.IStaticConfig = testInjector.resolve(
-					"staticConfig"
-				);
+				const staticConfig: Config.IStaticConfig =
+					testInjector.resolve("staticConfig");
 				assert.isTrue(
 					savedSettingNamesAndValues.indexOf(
-						`${staticConfig.ERROR_REPORT_SETTING_NAME}.${featureTrackingValue}`
-					) !== -1
+						`${staticConfig.ERROR_REPORT_SETTING_NAME}.${featureTrackingValue}`,
+					) !== -1,
 				);
 			});
 		});
 
 		it("does nothing when exception and feature tracking are already set", async () => {
-			baseTestScenario.featureTracking = baseTestScenario.exceptionsTracking = true;
+			baseTestScenario.featureTracking = baseTestScenario.exceptionsTracking =
+				true;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
@@ -400,7 +387,8 @@ describe("analytics-service", () => {
 
 		it("does nothing when cannot make request", async () => {
 			baseTestScenario.canDoRequest = false;
-			baseTestScenario.featureTracking = baseTestScenario.exceptionsTracking = undefined;
+			baseTestScenario.featureTracking = baseTestScenario.exceptionsTracking =
+				undefined;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();
@@ -409,7 +397,8 @@ describe("analytics-service", () => {
 
 		it("does nothing when values are not set and console is not interactive", async () => {
 			baseTestScenario.isInteractive = false;
-			baseTestScenario.featureTracking = baseTestScenario.exceptionsTracking = undefined;
+			baseTestScenario.featureTracking = baseTestScenario.exceptionsTracking =
+				undefined;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();

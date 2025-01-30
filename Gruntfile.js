@@ -2,7 +2,8 @@ const childProcess = require("child_process");
 const EOL = require("os").EOL;
 const path = require("path");
 const now = new Date().toISOString();
-const latestVersion = require('latest-version');
+const latestVersion = require('latest-version').default;
+
 
 const ENVIRONMENTS = {
 	live: "live",

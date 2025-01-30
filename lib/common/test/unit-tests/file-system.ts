@@ -3,6 +3,8 @@ import * as path from "path";
 import * as temp from "temp";
 import * as hostInfoLib from "../../host-info";
 import { assert, use } from "chai";
+import "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import * as fileSystemFile from "../../file-system";
 import * as childProcessLib from "../../child-process";
 import { CommonLoggerStub } from "./stubs";
@@ -10,16 +12,16 @@ import { IInjector } from "../../definitions/yok";
 import * as _ from "lodash";
 import { IFileSystem } from "../../declarations";
 
-use(require("chai-as-promised"));
+use(chaiAsPromised);
 
 const sampleZipFileTest = path.join(
 	__dirname,
-	"../resources/sampleZipFileTest.zip"
+	"../resources/sampleZipFileTest.zip",
 );
 const unzippedFileName = "sampleZipFileTest.txt";
 const sampleZipFileTestIncorrectName = path.join(
 	__dirname,
-	"../resources/sampleZipfileTest.zip"
+	"../resources/sampleZipfileTest.zip",
 );
 
 function isOsCaseSensitive(testInjector: IInjector): boolean {
@@ -133,13 +135,13 @@ describe("FileSystem", () => {
 					sampleZipFileTest,
 					tempDir,
 					{ overwriteExisitingFiles: false },
-					[unzippedFileName]
+					[unzippedFileName],
 				);
 				const data = fs.readFile(file);
 				assert.strictEqual(
 					msg,
 					data.toString(),
-					"When overwriteExistingFiles is false, we should not ovewrite files."
+					"When overwriteExistingFiles is false, we should not ovewrite files.",
 				);
 			});
 
@@ -148,13 +150,13 @@ describe("FileSystem", () => {
 					sampleZipFileTest,
 					tempDir,
 					{ overwriteExisitingFiles: true },
-					[unzippedFileName]
+					[unzippedFileName],
 				);
 				const data = fs.readFile(file);
 				assert.notEqual(
 					msg,
 					data.toString(),
-					"We must overwrite files when overwriteExisitingFiles is true."
+					"We must overwrite files when overwriteExisitingFiles is true.",
 				);
 			});
 
@@ -164,7 +166,7 @@ describe("FileSystem", () => {
 				assert.notEqual(
 					msg,
 					data.toString(),
-					"We must overwrite files when overwriteExisitingFiles is not set."
+					"We must overwrite files when overwriteExisitingFiles is not set.",
 				);
 			});
 
@@ -176,7 +178,7 @@ describe("FileSystem", () => {
 				assert.notEqual(
 					msg,
 					data.toString(),
-					"We must overwrite files when options is not defined."
+					"We must overwrite files when options is not defined.",
 				);
 			});
 		});
@@ -193,7 +195,7 @@ describe("FileSystem", () => {
 						fs.unzip(sampleZipFileTestIncorrectName, tempDir, undefined, [
 							unzippedFileName,
 						]),
-						commandUnzipFailedMessage
+						commandUnzipFailedMessage,
 					);
 				}
 			});
@@ -207,7 +209,7 @@ describe("FileSystem", () => {
 						fs.unzip(sampleZipFileTestIncorrectName, tempDir, {}, [
 							unzippedFileName,
 						]),
-						commandUnzipFailedMessage
+						commandUnzipFailedMessage,
 					);
 				}
 			});
@@ -222,9 +224,9 @@ describe("FileSystem", () => {
 							sampleZipFileTestIncorrectName,
 							tempDir,
 							{ caseSensitive: true },
-							[unzippedFileName]
+							[unzippedFileName],
 						),
-						commandUnzipFailedMessage
+						commandUnzipFailedMessage,
 					);
 				}
 			});
@@ -238,7 +240,7 @@ describe("FileSystem", () => {
 					sampleZipFileTestIncorrectName,
 					tempDir,
 					{ caseSensitive: false },
-					[unzippedFileName]
+					[unzippedFileName],
 				);
 				// This will throw error in case file is not extracted
 				fs.readFile(file);
@@ -261,7 +263,7 @@ describe("FileSystem", () => {
 			assert.isTrue(fs.exists(newFileName), "Renamed file should exists.");
 			assert.isFalse(
 				fs.exists(testFileName),
-				"Original file should not exist."
+				"Original file should not exist.",
 			);
 		});
 
@@ -300,7 +302,7 @@ describe("FileSystem", () => {
 			assert.deepStrictEqual(
 				fs.getFsStats(testFileName).size,
 				fs.getFsStats(testFileName).size,
-				"Original file and copied file must have the same size."
+				"Original file and copied file must have the same size.",
 			);
 		});
 
@@ -310,13 +312,13 @@ describe("FileSystem", () => {
 			fs.copyFile(testFileName, newFileNameInSubDir);
 			assert.isTrue(
 				fs.exists(newFileNameInSubDir),
-				"Renamed file should exists."
+				"Renamed file should exists.",
 			);
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
 			assert.deepStrictEqual(
 				fs.getFsStats(testFileName).size,
 				fs.getFsStats(testFileName).size,
-				"Original file and copied file must have the same size."
+				"Original file and copied file must have the same size.",
 			);
 		});
 
@@ -327,12 +329,12 @@ describe("FileSystem", () => {
 			assert.deepStrictEqual(
 				fs.getFsStats(testFileName).size,
 				originalSize,
-				"Original file and copied file must have the same size."
+				"Original file and copied file must have the same size.",
 			);
 			assert.deepStrictEqual(
 				fs.readText(testFileName),
 				fileContent,
-				"File content should not be changed."
+				"File content should not be changed.",
 			);
 		});
 	});
@@ -398,7 +400,7 @@ describe("FileSystem", () => {
 				(<any>JSON).stringify = (
 					value: any,
 					replacer: any[],
-					space: string | number
+					space: string | number,
 				) => {
 					actualIndentation = <string>space;
 				};
