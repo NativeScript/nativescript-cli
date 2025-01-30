@@ -1,5 +1,6 @@
 import * as shelljs from "shelljs";
 import { use } from "chai";
+import "chai-as-promised";
 import chaiAsPromised from "chai-as-promised";
 import { ICliGlobal } from "../lib/common/definitions/cli-global";
 
