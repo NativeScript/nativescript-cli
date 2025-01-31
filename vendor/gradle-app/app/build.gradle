@@ -711,6 +711,7 @@ def listf(String directoryName, ArrayList<File> store) {
 }
 
 task buildMetadata(type: BuildToolTask) {
+    logging.captureStandardOutput LogLevel.DEBUG
     def rootPath = ""
     if (!findProject(':android-metadata-generator').is(null)) {
         rootPath = Paths.get(project(':android-metadata-generator').projectDir.path, "build/libs").toString()
@@ -1009,6 +1010,7 @@ tasks.configureEach { DefaultTask currentTask ->
         currentTask =~ /checkBenchmarkDuplicateClasses/ ||
         currentTask =~ /checkBenchmark.+DuplicateClasses/ || 
         currentTask =~ /bundle.*Resources/ ||
+        currentTask =~ /optimize.*Resources/ ||
         // currentTask =~ /compile.*ArtProfile/ ||
         currentTask =~ /extractBenchmarkNativeSymbolTables/ ||
         currentTask =~ /buildKotlinToolingMetadata/ ||
