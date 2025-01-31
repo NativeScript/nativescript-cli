@@ -59,7 +59,7 @@ async function executeTests(
 	}
 }
 const ksPath = temp.path({ prefix: "ksPath" });
-const expectedInfoLoggingArgs = ["--quiet"];
+const expectedInfoLoggingArgs = ["--info"];
 const expectedTraceLoggingArgs = ["--debug"];
 const expectedDebugBuildArgs = [
 	"--stacktrace",

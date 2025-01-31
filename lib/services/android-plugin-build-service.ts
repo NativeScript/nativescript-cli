@@ -814,7 +814,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		if (this.$logger.getLevel() === "INFO") {
-			localArgs.push("--quiet");
+			localArgs.push("--info");
 		}
 
 		const opts: any = {
