@@ -235,6 +235,7 @@ export class Options {
 				default: APP_FOLDER_NAME,
 			},
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
+			filterDevicesArch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
 			appleApplicationSpecificPassword: {
 				type: OptionType.String,
