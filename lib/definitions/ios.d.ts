@@ -41,16 +41,18 @@ declare global {
 		): Promise<string>;
 	}
 
+	type IosSPMPackage = IosSPMPackageDefinition & { targets?: string[] };
+
 	interface ISPMService {
 		applySPMPackages(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			pluginSpmPackages?: IosSPMPackageDefinition[]
+			pluginSpmPackages?: IosSPMPackage[]
 		);
 		getSPMPackages(
 			projectData: IProjectData,
 			platform: string
-		): IosSPMPackageDefinition[];
+		): IosSPMPackage[];
 	}
 
 	interface IXcodebuildArgsService {

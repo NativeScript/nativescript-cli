@@ -1425,7 +1425,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		if (addedExtensionsFromResources || addedExtensionsFromPlugins) {
 			this.$logger.warn(
-				"The support for iOS App Extensions is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/nativescript-cli/issues/4472"
+				"Let us know if there are other Extension features you'd like! https://github.com/NativeScript/NativeScript/issues"
 			);
 		}
 	}
