@@ -1,9 +1,6 @@
 import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
-import {
-	MobileProject,
-	IosSPMPackageDefinition,
-} from "@rigor789/trapezedev-project";
+import { MobileProject } from "@rigor789/trapezedev-project";
 import { IPlatformData } from "../../definitions/platform";
 import path = require("path");
 
@@ -12,16 +9,16 @@ export class SPMService implements ISPMService {
 		private $logger: ILogger,
 		private $projectConfigService: IProjectConfigService,
 		private $xcodebuildCommandService: IXcodebuildCommandService,
-		private $xcodebuildArgsService: IXcodebuildArgsService
+		private $xcodebuildArgsService: IXcodebuildArgsService,
 	) {}
 
 	public getSPMPackages(
 		projectData: IProjectData,
-		platform: string
+		platform: string,
 	): IosSPMPackage[] {
 		const spmPackages = this.$projectConfigService.getValue(
 			`${platform}.SPMPackages`,
-			[]
+			[],
 		);
 
 		return spmPackages;
@@ -35,12 +32,12 @@ export class SPMService implements ISPMService {
 	public async applySPMPackages(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		pluginSpmPackages?: IosSPMPackage[]
+		pluginSpmPackages?: IosSPMPackage[],
 	) {
 		try {
 			const spmPackages = this.getSPMPackages(
 				projectData,
-				platformData.platformNameLowerCase
+				platformData.platformNameLowerCase,
 			);
 
 			if (pluginSpmPackages?.length) {
@@ -95,7 +92,7 @@ export class SPMService implements ISPMService {
 
 	public async resolveSPMDependencies(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	) {
 		await this.$xcodebuildCommandService.executeCommand(
 			this.$xcodebuildArgsService
@@ -108,7 +105,7 @@ export class SPMService implements ISPMService {
 			{
 				cwd: projectData.projectDir,
 				message: "Resolving SPM dependencies...",
-			}
+			},
 		);
 	}
 }
