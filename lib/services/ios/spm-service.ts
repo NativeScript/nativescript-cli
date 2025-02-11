@@ -76,6 +76,13 @@ export class SPMService implements ISPMService {
 				}
 				this.$logger.trace(`SPM: adding package ${pkg.name} to project.`, pkg);
 				await project.ios.addSPMPackage(projectData.projectName, pkg);
+
+				// Add to other Targets if specified (like widgets, etc.)
+				if (pkg.targets?.length) {
+					for (const target of pkg.targets) {
+						await project.ios.addSPMPackage(target, pkg);
+					}
+				}
 			}
 			await project.commit();
 
