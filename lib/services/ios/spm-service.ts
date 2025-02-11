@@ -18,7 +18,7 @@ export class SPMService implements ISPMService {
 	public getSPMPackages(
 		projectData: IProjectData,
 		platform: string
-	): IosSPMPackageDefinition[] {
+	): IosSPMPackage[] {
 		const spmPackages = this.$projectConfigService.getValue(
 			`${platform}.SPMPackages`,
 			[]
@@ -35,7 +35,7 @@ export class SPMService implements ISPMService {
 	public async applySPMPackages(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		pluginSpmPackages?: IosSPMPackageDefinition[]
+		pluginSpmPackages?: IosSPMPackage[]
 	) {
 		try {
 			const spmPackages = this.getSPMPackages(
