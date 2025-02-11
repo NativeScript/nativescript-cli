@@ -19,15 +19,15 @@ export class PrepareCommand
 		watch: {
 			type: OptionType.Boolean,
 			default: false,
-			hasSensitiveValue: false,
+			hasSensitiveValue: false
 		},
 		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
 
 		whatever: {
 			type: OptionType.Boolean,
 			default: false,
-			hasSensitiveValue: false,
-		},
+			hasSensitiveValue: false
+		}
 	};
 
 	constructor(
@@ -74,7 +74,7 @@ export class PrepareCommand
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
-				platforms: [platform],
+				platforms: [platform]
 			});
 		}
 

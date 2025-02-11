@@ -18,7 +18,7 @@ describe("userSettingsService", () => {
 	const createTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("settingsService", {
-			getProfileDir: () => profileDir,
+			getProfileDir: () => profileDir
 		});
 
 		testInjector.register(
@@ -33,28 +33,28 @@ describe("userSettingsService", () => {
 		{
 			methodName: "getSettingValue",
 			input: ["settingName"],
-			expectedArgs: ["settingName", undefined],
+			expectedArgs: ["settingName", undefined]
 		},
 		{
 			methodName: "saveSetting",
 			input: ["settingName", "settingValue"],
-			expectedArgs: ["settingName", "settingValue", undefined],
+			expectedArgs: ["settingName", "settingValue", undefined]
 		},
 		{
 			methodName: "saveSettings",
 			input: [{ value: { subValue: 1 } }],
-			expectedArgs: [{ value: { subValue: 1 } }, undefined],
+			expectedArgs: [{ value: { subValue: 1 } }, undefined]
 		},
 		{
 			methodName: "removeSetting",
 			input: ["settingName"],
-			expectedArgs: ["settingName"],
+			expectedArgs: ["settingName"]
 		},
 		{
 			methodName: "loadUserSettingsFile",
 			input: [],
-			expectedArgs: [],
-		},
+			expectedArgs: []
+		}
 	];
 
 	for (const testCase of testCases) {

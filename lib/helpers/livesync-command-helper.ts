@@ -3,7 +3,7 @@ import {
 	ErrorCodes,
 	IAnalyticsService,
 	IDictionary,
-	IErrors,
+	IErrors
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -49,7 +49,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			timeout: this.$options.timeout,
 			useHotModuleReload: this.$options.hmr,
 			force: this.$options.force,
-			emulator: this.$options.emulator,
+			emulator: this.$options.emulator
 		};
 
 		return liveSyncInfo;
@@ -63,7 +63,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			deviceId: this.$options.device,
 			emulator: this.$options.emulator,
 			skipInferPlatform: !platform,
-			sdk: this.$options.sdk,
+			sdk: this.$options.sdk
 		});
 
 		const devices = this.$devicesService
@@ -90,7 +90,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
 					emulator: d.isEmulator,
-					projectDir: this.$projectData.projectDir,
+					projectDir: this.$projectData.projectDir
 				});
 
 			const buildData = this.$buildDataService.getBuildData(
@@ -102,9 +102,9 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					buildForDevice: !d.isEmulator,
 					watch: !this.$options.release && this.$options.watch,
 					nativePrepare: {
-						forceRebuildNativeApp: additionalOptions.forceRebuildNativeApp,
+						forceRebuildNativeApp: additionalOptions.forceRebuildNativeApp
 					},
-					_device: d,
+					_device: d
 				}
 			);
 			this.$androidBundleValidatorHelper.validateDeviceApiLevel(d, buildData);
@@ -116,7 +116,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 							d.deviceInfo.platform,
 							buildData,
 							this.$projectData
-					  )
+						)
 					: this.$buildController.build.bind(this.$buildController, buildData);
 
 			const info: ILiveSyncDeviceDescriptor = {
@@ -129,7 +129,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				debugOptions: this.$options,
 				skipNativePrepare:
 					additionalOptions && additionalOptions.skipNativePrepare,
-				buildData,
+				buildData
 			};
 
 			return info;
@@ -143,7 +143,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			? [platform]
 			: _.values<string>(
 					this.$mobileHelper.platformNames.map((p) => p.toLowerCase())
-			  );
+				);
 		return availablePlatforms;
 	}
 
@@ -178,20 +178,20 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				deviceIdentifiers: deviceDescriptors.map((device) => device.identifier),
 				stopOptions: {
 					shouldAwaitAllActions: true,
-					keepProcessAlive: true,
-				},
+					keepProcessAlive: true
+				}
 			});
 
 			const devices = await this.getDeviceInstances(platform);
 			await this.executeLiveSyncOperation(devices, platform, {
 				...additionalOptions,
-				restartLiveSync: false,
+				restartLiveSync: false
 			});
 			return;
 		} else {
 			await this.$runController.run({
 				liveSyncInfo,
-				deviceDescriptors,
+				deviceDescriptors
 			});
 		}
 
@@ -289,7 +289,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			deviceId: this.$options.device,
 			emulator: this.$options.emulator,
 			skipInferPlatform: !platform,
-			sdk: this.$options.sdk,
+			sdk: this.$options.sdk
 		});
 
 		await this.$deployController.deploy({ deviceDescriptors });
@@ -304,7 +304,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 						device.deviceInfo.platform.toLowerCase()
 					],
 				projectName: this.$projectData.projectName,
-				projectDir: this.$projectData.projectDir,
+				projectDir: this.$projectData.projectDir
 			});
 		}
 	}
@@ -316,8 +316,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			deviceIdentifiers: devices.map((d) => d.deviceInfo.identifier),
 			stopOptions: {
 				shouldAwaitAllActions: true,
-				keepProcessAlive: true,
-			},
+				keepProcessAlive: true
+			}
 		});
 	}
 }

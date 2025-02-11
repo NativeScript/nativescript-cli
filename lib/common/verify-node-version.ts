@@ -30,7 +30,7 @@ function getNodeVersionOpts(): INodeVersionOpts {
 		supportedVersionsRange: supportedVersionsRange,
 		cliName: cliName,
 		nodeVer: nodeVer,
-		deprecatedVersions: deprecatedVersions,
+		deprecatedVersions: deprecatedVersions
 	};
 }
 
@@ -101,7 +101,7 @@ export function getNodeWarning(): ISystemWarning {
 		if (warningMessage) {
 			nodeWarn = {
 				message: warningMessage,
-				severity: SystemWarningsSeverity.medium,
+				severity: SystemWarningsSeverity.medium
 			};
 		}
 	}

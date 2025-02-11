@@ -63,12 +63,14 @@ export class EmulatorDiscoveryNames {
 
 export const DEVICE_LOG_EVENT_NAME = "deviceLogData";
 export const IOS_LOG_PREDICATE = 'senderImagePath contains "NativeScript"';
-export const IOS_APP_CRASH_LOG_REG_EXP = /Fatal JavaScript exception \- application has been terminated/;
-export const FAIL_LIVESYNC_LOG_REGEX = /Failed to refresh the application with RefreshRequest./;
+export const IOS_APP_CRASH_LOG_REG_EXP =
+	/Fatal JavaScript exception \- application has been terminated/;
+export const FAIL_LIVESYNC_LOG_REGEX =
+	/Failed to refresh the application with RefreshRequest./;
 
 export const TARGET_FRAMEWORK_IDENTIFIERS = {
 	Cordova: "Cordova",
-	NativeScript: "NativeScript",
+	NativeScript: "NativeScript"
 };
 
 export class Configurations {
@@ -110,13 +112,13 @@ export class HttpStatusCodes {
 
 export const HttpProtocolToPort: IDictionary<number> = {
 	"http:": 80,
-	"https:": 443,
+	"https:": 443
 };
 
 export const enum AnalyticsClients {
 	Cli = "CLI",
 	NonInteractive = "Non-interactive",
-	Unknown = "Unknown",
+	Unknown = "Unknown"
 }
 
 export const DEFAULT_CHUNK_SIZE = 100;
@@ -125,7 +127,7 @@ export const enum CommandsDelimiters {
 	HierarchicalCommand = "|",
 	DefaultCommandSymbol = "*",
 	DefaultHierarchicalCommand = "|*",
-	HooksCommand = "-",
+	HooksCommand = "-"
 }
 
 export const DEBUGGER_PORT_FOUND_EVENT_NAME = "DEBUGGER_PORT_FOUND";

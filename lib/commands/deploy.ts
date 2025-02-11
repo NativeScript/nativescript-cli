@@ -1,6 +1,6 @@
 import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
-	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
+	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE
 } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { DeployCommandHelper } from "../helpers/deploy-command-helper";
@@ -15,16 +15,17 @@ import { injector } from "../common/yok";
 
 export class DeployOnDeviceCommand
 	extends ValidatePlatformCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	public allowedParameters: ICommandParameter[] = [];
 
 	public dashedOptions = {
 		watch: {
 			type: OptionType.Boolean,
 			default: false,
-			hasSensitiveValue: false,
+			hasSensitiveValue: false
 		},
-		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false }
 	};
 
 	constructor(
@@ -58,7 +59,7 @@ export class DeployOnDeviceCommand
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
-				platforms: [platform],
+				platforms: [platform]
 			});
 		}
 
@@ -83,7 +84,7 @@ export class DeployOnDeviceCommand
 		}
 
 		const result = await super.canExecuteCommandBase(platform, {
-			validateOptions: true,
+			validateOptions: true
 		});
 		return result;
 	}

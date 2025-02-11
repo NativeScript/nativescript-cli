@@ -3,7 +3,7 @@ import {
 	IAndroidBuildOptionsSettings,
 	IProvision,
 	ITeamIdentifier,
-	IPlatformBuildData,
+	IPlatformBuildData
 } from "../declarations";
 import { ICheckEnvironmentRequirementsOutput, IPlatformData } from "./platform";
 import { IPluginData, IBasePluginData } from "./plugins";
@@ -14,7 +14,7 @@ import {
 	IRelease,
 	IPlatform,
 	IDependencyInformation,
-	ISpawnResult,
+	ISpawnResult
 } from "../common/declarations";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 import * as constants from "../constants";
@@ -753,7 +753,7 @@ interface ICocoaPodsPlatformManager {
 
 declare const enum BuildNames {
 	debug = "Debug",
-	release = "Release",
+	release = "Release"
 }
 
 interface IXcodeTargetBuildConfigurationProperty {

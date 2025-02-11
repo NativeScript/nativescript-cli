@@ -61,12 +61,11 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 	): void {
 		const buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		const buildInfo: IBuildInfo = {
 			prepareTime: prepareInfo.changesRequireBuildTime,
-			buildTime: new Date().toString(),
+			buildTime: new Date().toString()
 		};
 
 		this.$fs.writeJson(buildInfoFile, buildInfo);
@@ -96,13 +95,11 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 		projectData: IProjectData
 	): Promise<string> {
 		const platform = device.deviceInfo.platform.toLowerCase();
-		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(
-			device,
-			{
+		const deviceRootPath =
+			await this.$devicePathProvider.getDeviceProjectRootPath(device, {
 				appIdentifier: projectData.projectIdentifiers[platform],
-				getDirname: true,
-			}
-		);
+				getDirname: true
+			});
 		const result = helpers.fromWindowsRelativePathToUnix(
 			path.join(deviceRootPath, buildInfoFileName)
 		);

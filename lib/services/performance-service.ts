@@ -70,7 +70,7 @@ export class PerformanceService implements IPerformanceService {
 			.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.Performance,
 				additionalData: methodInfo,
-				value: executionTime,
+				value: executionTime
 			})
 			.catch((err) => {
 				throw err;
@@ -95,7 +95,7 @@ export class PerformanceService implements IPerformanceService {
 			methodInfo,
 			executionTime,
 			timestamp: getFixedLengthDateString(),
-			methodArgs: JSON.parse(methodArgs),
+			methodArgs: JSON.parse(methodArgs)
 		};
 
 		try {

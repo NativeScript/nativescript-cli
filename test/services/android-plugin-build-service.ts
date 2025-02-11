@@ -3,7 +3,7 @@ import { assert } from "chai";
 import {
 	INCLUDE_GRADLE_NAME,
 	AndroidBuildDefaults,
-	PLUGIN_BUILD_DATA_FILENAME,
+	PLUGIN_BUILD_DATA_FILENAME
 } from "../../lib/constants";
 import { getShortPluginName } from "../../lib/common/helpers";
 import * as FsLib from "../../lib/common/file-system";
@@ -13,7 +13,7 @@ import * as temp from "temp";
 import {
 	IFileSystem,
 	ISpawnResult,
-	IStringDictionary,
+	IStringDictionary
 } from "../../lib/common/declarations";
 import { IPluginBuildOptions } from "../../lib/definitions/android-plugin-migrator";
 import { IInjector } from "../../lib/common/definitions/yok";
@@ -57,7 +57,7 @@ describe("androidPluginBuildService", () => {
 			pluginName: pluginName,
 			aarOutputDir: pluginFolder,
 			tempPluginDirPath: tempFolder,
-			projectDir: options.addProjectDir ? pluginFolder : null,
+			projectDir: options.addProjectDir ? pluginFolder : null
 		};
 	}
 
@@ -85,7 +85,7 @@ describe("androidPluginBuildService", () => {
 				fs.writeFile(aar, "");
 				spawnFromEventCalled = command.indexOf("gradlew") !== -1;
 				return null;
-			},
+			}
 		});
 		testInjector.register("packageManager", setupNpm(options));
 		testInjector.register("projectData", stubs.ProjectDataStub);
@@ -100,11 +100,11 @@ describe("androidPluginBuildService", () => {
 			hasChangesInShasums: (
 				oldHashes: IStringDictionary,
 				newHashes: IStringDictionary
-			): boolean => !!options.hasChangesInShasums,
+			): boolean => !!options.hasChangesInShasums
 		});
 
 		testInjector.register("watchIgnoreListService", {
-			addFileToIgnoreList: () => ({}),
+			addFileToIgnoreList: () => ({})
 		});
 
 		fs = testInjector.resolve("fs");
@@ -133,15 +133,15 @@ describe("androidPluginBuildService", () => {
 					name: packageName,
 					gradle: {
 						version: options.projectRuntimeGradleVersion,
-						android: options.projectRuntimeGradleAndroidVersion,
-					},
+						android: options.projectRuntimeGradleAndroidVersion
+					}
 				};
 				result.versions["4.1.2"] = {
 					name: packageName,
 					gradle: {
 						version: options.latestRuntimeGradleVersion,
-						android: options.latestRuntimeGradleAndroidVersion,
-					},
+						android: options.latestRuntimeGradleAndroidVersion
+					}
 				};
 
 				return result;
@@ -155,13 +155,13 @@ describe("androidPluginBuildService", () => {
 						case "1.0.0":
 							result = {
 								version: options.projectRuntimeGradleVersion,
-								android: options.projectRuntimeGradleAndroidVersion,
+								android: options.projectRuntimeGradleAndroidVersion
 							};
 							break;
 						case "4.1.2":
 							result = {
 								version: options.latestRuntimeGradleVersion,
-								android: options.latestRuntimeGradleAndroidVersion,
+								android: options.latestRuntimeGradleAndroidVersion
 							};
 							break;
 					}
@@ -169,12 +169,12 @@ describe("androidPluginBuildService", () => {
 
 				if (config && config["dist-tags"]) {
 					result = {
-						latest: "4.1.2",
+						latest: "4.1.2"
 					};
 				}
 
 				return result;
-			},
+			}
 		};
 	}
 
@@ -258,7 +258,7 @@ dependencies {
 			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addResFolder: true,
-				addAssetsFolder: true,
+				addAssetsFolder: true
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -277,7 +277,7 @@ dependencies {
 		it("builds aar when there are res and assets folders", async () => {
 			const config: IPluginBuildOptions = setup({
 				addResFolder: true,
-				addAssetsFolder: true,
+				addAssetsFolder: true
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -287,7 +287,7 @@ dependencies {
 
 		it("builds aar when there is an android manifest", async () => {
 			const config: IPluginBuildOptions = setup({
-				addManifest: true,
+				addManifest: true
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -299,7 +299,7 @@ dependencies {
 			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addPreviousBuildInfo: true,
-				hasChangesInShasums: true,
+				hasChangesInShasums: true
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -310,7 +310,7 @@ dependencies {
 		it("does not build aar when plugin is already build and source files have not changed", async () => {
 			const config: IPluginBuildOptions = setup({
 				addManifest: true,
-				addPreviousBuildInfo: true,
+				addPreviousBuildInfo: true
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -324,7 +324,7 @@ dependencies {
 			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				latestRuntimeGradleVersion: expectedGradleVersion,
-				latestRuntimeGradleAndroidVersion: expectedAndroidVersion,
+				latestRuntimeGradleAndroidVersion: expectedAndroidVersion
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -348,7 +348,7 @@ dependencies {
 				latestRuntimeGradleAndroidVersion: expectedAndroidVersion,
 				addProjectRuntime: true,
 				projectRuntimeGradleVersion: null,
-				projectRuntimeGradleAndroidVersion: null,
+				projectRuntimeGradleAndroidVersion: null
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -372,7 +372,7 @@ dependencies {
 				latestRuntimeGradleAndroidVersion: "5.5.5",
 				addProjectRuntime: true,
 				projectRuntimeGradleVersion: expectedGradleVersion,
-				projectRuntimeGradleAndroidVersion: expectedAndroidVersion,
+				projectRuntimeGradleAndroidVersion: expectedAndroidVersion
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -394,7 +394,7 @@ dependencies {
 				latestRuntimeGradleAndroidVersion: null,
 				addProjectRuntime: true,
 				projectRuntimeGradleVersion: null,
-				projectRuntimeGradleAndroidVersion: null,
+				projectRuntimeGradleAndroidVersion: null
 			});
 
 			await androidBuildPluginService.buildAar(config);
@@ -415,12 +415,11 @@ dependencies {
 	describe("migrateIncludeGradle", () => {
 		it("if there is a legacy include.gradle file", async () => {
 			const config: IPluginBuildOptions = setup({
-				addLegacyIncludeGradle: true,
+				addLegacyIncludeGradle: true
 			});
 
-			const isMigrated = await androidBuildPluginService.migrateIncludeGradle(
-				config
-			);
+			const isMigrated =
+				await androidBuildPluginService.migrateIncludeGradle(config);
 			const includeGradleContent = fs.readText(
 				path.join(pluginFolder, INCLUDE_GRADLE_NAME).toString()
 			);
@@ -433,12 +432,11 @@ dependencies {
 
 		it("if there is an already migrated include.gradle file", async () => {
 			const config: IPluginBuildOptions = setup({
-				addIncludeGradle: true,
+				addIncludeGradle: true
 			});
 
-			const isMigrated = await androidBuildPluginService.migrateIncludeGradle(
-				config
-			);
+			const isMigrated =
+				await androidBuildPluginService.migrateIncludeGradle(config);
 
 			assert.isFalse(isMigrated);
 		});

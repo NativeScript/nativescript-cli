@@ -3,7 +3,7 @@ import { IProjectData } from "../definitions/project";
 import {
 	IOptions,
 	IPlatformCommandHelper,
-	IPlatformValidationService,
+	IPlatformValidationService
 } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
@@ -52,15 +52,16 @@ export class CleanCommand implements ICommand {
 				this.$projectData
 			);
 
-			const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
-				platform,
-				this.$projectData
-			);
+			const currentRuntimeVersion =
+				this.$platformCommandHelper.getCurrentPlatformVersion(
+					platform,
+					this.$projectData
+				);
 			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform,
 				projectDir: this.$projectData.projectDir,
 				runtimeVersion: currentRuntimeVersion,
-				options: this.$options,
+				options: this.$options
 			});
 		}
 

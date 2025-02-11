@@ -7,14 +7,14 @@ import { INodePackageManager, INpmsSingleResultData } from "../declarations";
 import {
 	IFileSystem,
 	ISettingsService,
-	IStringDictionary,
+	IStringDictionary
 } from "../common/declarations";
 import {
 	IExtensibilityService,
 	IExtensionData,
 	IExtensionCommandInfo,
 	IExtensionLoadingError,
-	IGetExtensionCommandInfoParams,
+	IGetExtensionCommandInfoParams
 } from "../common/definitions/extensibility";
 import { injector } from "../common/yok";
 
@@ -53,7 +53,7 @@ export class ExtensibilityService implements IExtensibilityService {
 
 		const npmOpts: any = {
 			save: true,
-			["save-exact"]: true,
+			["save-exact"]: true
 		};
 
 		const localPath = path.resolve(extensionName);
@@ -135,7 +135,7 @@ export class ExtensibilityService implements IExtensibilityService {
 			extensionName: packageJsonData.name,
 			version: packageJsonData.version,
 			docs,
-			pathToExtension,
+			pathToExtension
 		};
 	}
 
@@ -190,9 +190,8 @@ export class ExtensibilityService implements IExtensibilityService {
 
 			try {
 				// now get full package.json for the latest version of the package
-				const registryData = await this.$packageManager.getRegistryPackageData(
-					extensionName
-				);
+				const registryData =
+					await this.$packageManager.getRegistryPackageData(extensionName);
 				const latestPackageData =
 					registryData.versions[registryData["dist-tags"].latest];
 				const commands: string[] =
@@ -226,7 +225,7 @@ export class ExtensibilityService implements IExtensibilityService {
 							return {
 								extensionName,
 								registeredCommandName: currentCommand,
-								installationMessage: `The command ${beautifiedCommandName} is registered in extension ${extensionName}. You can install it by executing 'tns extension install ${extensionName}'`,
+								installationMessage: `The command ${beautifiedCommandName} is registered in extension ${extensionName}. You can install it by executing 'tns extension install ${extensionName}'`
 							};
 						}
 
@@ -304,7 +303,7 @@ export class ExtensibilityService implements IExtensibilityService {
 				readme:
 					"The place where all packages that extend CLI will be installed.",
 				repository: "none",
-				dependencies: {},
+				dependencies: {}
 			});
 
 			this.$logger.trace(`Created ${this.pathToPackageJson}.`);

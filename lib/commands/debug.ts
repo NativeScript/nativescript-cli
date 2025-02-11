@@ -8,7 +8,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import {
 	IDebugDataService,
 	IDebugController,
-	IDebugOptions,
+	IDebugOptions
 } from "../definitions/debug";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
@@ -20,7 +20,8 @@ import * as _ from "lodash";
 
 export class DebugPlatformCommand
 	extends ValidatePlatformCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(
@@ -52,13 +53,13 @@ export class DebugPlatformCommand
 			platform: this.platform,
 			deviceId: this.$options.device,
 			emulator: this.$options.emulator,
-			skipDeviceDetectionInterval: true,
+			skipDeviceDetectionInterval: true
 		});
 
 		const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice({
 			onlyEmulators: this.$options.emulator,
 			onlyDevices: this.$options.forDevice,
-			deviceId: this.$options.device,
+			deviceId: this.$options.device
 		});
 
 		if (this.$options.start) {
@@ -79,10 +80,10 @@ export class DebugPlatformCommand
 			this.platform,
 			{
 				deviceDebugMap: {
-					[selectedDeviceForDebug.deviceInfo.identifier]: true,
+					[selectedDeviceForDebug.deviceInfo.identifier]: true
 				},
 				buildPlatform: undefined,
-				skipNativePrepare: false,
+				skipNativePrepare: false
 			}
 		);
 	}
@@ -91,7 +92,7 @@ export class DebugPlatformCommand
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
-				platforms: [this.platform],
+				platforms: [this.platform]
 			});
 		}
 
@@ -113,7 +114,7 @@ export class DebugPlatformCommand
 		}
 
 		const result = await super.canExecuteCommandBase(this.platform, {
-			validateOptions: true,
+			validateOptions: true
 		});
 		return result;
 	}
@@ -123,7 +124,7 @@ export class DebugIOSCommand implements ICommand {
 	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
 		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, {
-			platform: this.platform,
+			platform: this.platform
 		});
 	}
 
@@ -213,7 +214,7 @@ export class DebugAndroidCommand implements ICommand {
 	@cache()
 	private get debugPlatformCommand(): DebugPlatformCommand {
 		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, {
-			platform: this.platform,
+			platform: this.platform
 		});
 	}
 

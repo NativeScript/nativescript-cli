@@ -3,12 +3,13 @@ import {
 	IDebugData,
 	IDebugOptions,
 	IDeviceDebugService,
-	IDebugResultInfo,
+	IDebugResultInfo
 } from "../definitions/debug";
 
 export abstract class DebugServiceBase
 	extends EventEmitter
-	implements IDeviceDebugService {
+	implements IDeviceDebugService
+{
 	constructor(
 		protected device: Mobile.IDevice,
 		protected $devicesService: Mobile.IDevicesService
@@ -33,7 +34,8 @@ export abstract class DebugServiceBase
 				let isSearchedDevice =
 					device.deviceInfo.identifier === deviceIdentifier;
 				if (!isSearchedDevice) {
-					const deviceByDeviceOption = this.$devicesService.getDeviceByDeviceOption();
+					const deviceByDeviceOption =
+						this.$devicesService.getDeviceByDeviceOption();
 					isSearchedDevice =
 						deviceByDeviceOption &&
 						device.deviceInfo.identifier ===

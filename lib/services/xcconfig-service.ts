@@ -4,22 +4,23 @@ import { IXcconfigService } from "../declarations";
 import {
 	IChildProcess,
 	IFileSystem,
-	IStringDictionary,
+	IStringDictionary
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 export class XcconfigService implements IXcconfigService {
-	constructor(private $childProcess: IChildProcess, private $fs: IFileSystem) {}
+	constructor(
+		private $childProcess: IChildProcess,
+		private $fs: IFileSystem
+	) {}
 
 	public getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary {
 		return {
-			[Configurations.Debug.toLowerCase()]: this.getPluginsDebugXcconfigFilePath(
-				projectRoot
-			),
-			[Configurations.Release.toLowerCase()]: this.getPluginsReleaseXcconfigFilePath(
-				projectRoot
-			),
+			[Configurations.Debug.toLowerCase()]:
+				this.getPluginsDebugXcconfigFilePath(projectRoot),
+			[Configurations.Release.toLowerCase()]:
+				this.getPluginsReleaseXcconfigFilePath(projectRoot)
 		};
 	}
 

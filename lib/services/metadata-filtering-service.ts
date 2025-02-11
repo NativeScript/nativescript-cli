@@ -7,7 +7,7 @@ import { IProjectData } from "../definitions/project";
 import {
 	IMetadataFilteringService,
 	INativeApiUsageConfiguration,
-	INativeApiUsagePluginConfiguration,
+	INativeApiUsagePluginConfiguration
 } from "../definitions/metadata-filtering-service";
 import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -49,9 +49,8 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 					platform
 				);
 				for (const pluginData of plugins) {
-					const pathToPlatformsDir = pluginData.pluginPlatformsFolderPath(
-						platform
-					);
+					const pathToPlatformsDir =
+						pluginData.pluginPlatformsFolderPath(platform);
 					const pathToPluginsMetadataConfig = path.join(
 						pathToPlatformsDir,
 						MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
@@ -122,9 +121,8 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 					platform
 				);
 				for (const pluginData of plugins) {
-					const pathToPlatformsDir = pluginData.pluginPlatformsFolderPath(
-						platform
-					);
+					const pathToPlatformsDir =
+						pluginData.pluginPlatformsFolderPath(platform);
 					const pathToPluginsMetadataConfig = path.join(
 						pathToPlatformsDir,
 						MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
@@ -167,10 +165,8 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 		platform: string
 	): INativeApiUsageConfiguration {
 		let config: INativeApiUsageConfiguration = null;
-		const pathToApplicationConfigurationFile = this.getPathToApplicationConfigurationForPlatform(
-			projectData,
-			platform
-		);
+		const pathToApplicationConfigurationFile =
+			this.getPathToApplicationConfigurationForPlatform(projectData, platform);
 		if (this.$fs.exists(pathToApplicationConfigurationFile)) {
 			config = this.$fs.readJson(pathToApplicationConfigurationFile);
 		}

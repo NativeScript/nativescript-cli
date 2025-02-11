@@ -11,13 +11,13 @@ export class GenerateCommand implements ICommand {
 	constructor(
 		private $logger: ILogger,
 		// private $options: IOptions,
-		private $errors: IErrors,
+		private $errors: IErrors
 	) {}
 
 	public async execute(_rawArgs: string[]): Promise<void> {
 		try {
 			this.$logger.info(
-				"If you have ideas for this command, please discuss at https://nativescript.org/discord",
+				"If you have ideas for this command, please discuss at https://nativescript.org/discord"
 			);
 			// await run(this.executionOptions);
 		} catch (error) {

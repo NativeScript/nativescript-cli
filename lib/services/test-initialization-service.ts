@@ -5,7 +5,7 @@ import { ITestInitializationService } from "../definitions/project";
 import {
 	IErrors,
 	IFileSystem,
-	IDependencyInformation,
+	IDependencyInformation
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
@@ -13,7 +13,10 @@ import { injector } from "../common/yok";
 export class TestInitializationService implements ITestInitializationService {
 	private configsPath = path.join(__dirname, "..", "..", "config");
 
-	constructor(private $errors: IErrors, private $fs: IFileSystem) {}
+	constructor(
+		private $errors: IErrors,
+		private $fs: IFileSystem
+	) {}
 
 	@cache()
 	public getDependencies(selectedFramework: string): IDependencyInformation[] {
@@ -33,18 +36,21 @@ export class TestInitializationService implements ITestInitializationService {
 		);
 		const dependenciesVersions = this.$fs.readJson(dependenciesVersionsPath);
 
-		const targetFrameworkDependencies: IDependencyInformation[] = allDependencies
-			.filter(
-				(dependency) =>
-					!dependency.framework || dependency.framework === selectedFramework
-			)
-			.map((dependency) => {
-				const dependencyVersion = dependenciesVersions[dependency.name];
-				if (!dependencyVersion) {
-					this.$errors.fail(`'${dependency}' is not a registered dependency.`);
-				}
-				return { ...dependency, version: dependencyVersion };
-			});
+		const targetFrameworkDependencies: IDependencyInformation[] =
+			allDependencies
+				.filter(
+					(dependency) =>
+						!dependency.framework || dependency.framework === selectedFramework
+				)
+				.map((dependency) => {
+					const dependencyVersion = dependenciesVersions[dependency.name];
+					if (!dependencyVersion) {
+						this.$errors.fail(
+							`'${dependency}' is not a registered dependency.`
+						);
+					}
+					return { ...dependency, version: dependencyVersion };
+				});
 
 		return targetFrameworkDependencies;
 	}

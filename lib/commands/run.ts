@@ -4,14 +4,14 @@ import { cache } from "../common/decorators";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import {
 	IKeyCommandHelper,
-	IKeyCommandPlatform,
+	IKeyCommandPlatform
 } from "../common/definitions/key-commands";
 import { IInjector } from "../common/definitions/yok";
 import { hasValidAndroidSigning } from "../common/helpers";
 import { injector } from "../common/yok";
 import {
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
-	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
+	ANDROID_RELEASE_BUILD_ERROR_MESSAGE
 } from "../constants";
 import { IOptions, IPlatformValidationService } from "../declarations";
 import { IMigrateController } from "../definitions/migrate";
@@ -63,13 +63,13 @@ export class RunCommandBase implements ICommand {
 			? [this.platform]
 			: [
 					this.$devicePlatformsConstants.Android,
-					this.$devicePlatformsConstants.iOS,
-			  ];
+					this.$devicePlatformsConstants.iOS
+				];
 
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
-				platforms,
+				platforms
 			});
 		}
 

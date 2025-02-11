@@ -5,7 +5,7 @@ import { RunController } from "../controllers/run-controller";
 import {
 	ITestExecutionService,
 	IProjectDataService,
-	IProjectData,
+	IProjectData
 } from "../definitions/project";
 import { IConfiguration, IOptions } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
@@ -13,7 +13,7 @@ import {
 	Server,
 	IFileSystem,
 	IChildProcess,
-	ErrorCodes,
+	ErrorCodes
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
@@ -105,7 +105,7 @@ export class TestExecutionService implements ITestExecutionService {
 
 			await this.$runController.run({
 				liveSyncInfo,
-				deviceDescriptors,
+				deviceDescriptors
 			});
 		};
 
@@ -149,7 +149,7 @@ export class TestExecutionService implements ITestExecutionService {
 		});
 
 		const pathToKarma = resolvePackagePath("karma", {
-			paths: [projectData.projectDir],
+			paths: [projectData.projectDir]
 		});
 
 		canStartKarmaServer = canStartKarmaServer && !!pathToKarma;
@@ -174,7 +174,7 @@ export class TestExecutionService implements ITestExecutionService {
 		const config = {
 			port,
 			ips,
-			options,
+			options
 		};
 
 		return "module.exports = " + JSON.stringify(config);
@@ -198,9 +198,9 @@ export class TestExecutionService implements ITestExecutionService {
 					debugBrk: this.$options.debugBrk,
 					watch: !!this.$options.watch,
 					bundle: true,
-					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath(),
-				},
-			},
+					appDirectoryRelativePath: projectData.getAppDirectoryRelativePath()
+				}
+			}
 		};
 
 		if (this.$config.DEBUG || this.$logger.getLevel() === "TRACE") {

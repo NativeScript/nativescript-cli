@@ -6,13 +6,13 @@ import {
 	IProjectData,
 	IProjectCleanupService,
 	IProjectBackupService,
-	IBackup,
+	IBackup
 } from "../definitions/project";
 import { IPlatformsDataService } from "../definitions/platform";
 import {
 	IPlatformCommandHelper,
 	IPackageInstallationManager,
-	IPackageManager,
+	IPackageManager
 } from "../declarations";
 import { IFileSystem, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -22,37 +22,38 @@ import { IPluginsService } from "../definitions/plugins";
 import { color } from "../color";
 import {
 	ITerminalSpinner,
-	ITerminalSpinnerService,
+	ITerminalSpinnerService
 } from "../definitions/terminal-spinner-service";
 
 export class UpdateController
 	extends UpdateControllerBase
-	implements IUpdateController {
+	implements IUpdateController
+{
 	static readonly updatableDependencies: IDependency[] = [
 		// dependencies
 		{
-			packageName: "@nativescript/core",
+			packageName: "@nativescript/core"
 		},
 
 		// devDependencies
 		{
 			packageName: "@nativescript/webpack",
-			isDev: true,
+			isDev: true
 		},
 		{
 			packageName: "@nativescript/types",
-			isDev: true,
+			isDev: true
 		},
 
 		// runtimes
 		{
 			packageName: "@nativescript/ios",
-			isDev: true,
+			isDev: true
 		},
 		{
 			packageName: "@nativescript/android",
-			isDev: true,
-		},
+			isDev: true
+		}
 	];
 
 	static readonly backupFolderName: string = ".migration_backup";
@@ -62,7 +63,7 @@ export class UpdateController
 		constants.WEBPACK_CONFIG_NAME,
 		constants.PACKAGE_JSON_FILE_NAME,
 		constants.PACKAGE_LOCK_JSON_FILE_NAME,
-		constants.CONFIG_NS_FILE_NAME,
+		constants.CONFIG_NS_FILE_NAME
 	];
 
 	private spinner: ITerminalSpinner;
@@ -248,10 +249,11 @@ export class UpdateController
 		dependency: IDependency,
 		desiredVersion: string
 	): Promise<boolean> {
-		const installedVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
-			dependency.packageName,
-			projectData.projectDir
-		);
+		const installedVersion =
+			await this.$packageInstallationManager.getInstalledDependencyVersion(
+				dependency.packageName,
+				projectData.projectDir
+			);
 
 		if (!installedVersion) {
 			return false;
@@ -298,7 +300,7 @@ export class UpdateController
 			constants.HOOKS_DIR_NAME,
 			constants.PLATFORMS_DIR_NAME,
 			constants.NODE_MODULES_FOLDER_NAME,
-			constants.PACKAGE_LOCK_JSON_FILE_NAME,
+			constants.PACKAGE_LOCK_JSON_FILE_NAME
 		]);
 	}
 }

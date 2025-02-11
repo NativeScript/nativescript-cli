@@ -21,16 +21,16 @@ function createTestInjector(): IInjector {
 				},
 				projectIdentifiers: {
 					android: "org.nativescript.sourceMap",
-					ios: "org.nativescript.sourceMap",
+					ios: "org.nativescript.sourceMap"
 				},
-				projectDir: "projectDir",
+				projectDir: "projectDir"
 			};
 		},
 		getRuntimePackage: (projectDir: string, platform: any): any => {
 			return {
-				version: runtimeVersion,
+				version: runtimeVersion
 			};
-		},
+		}
 	});
 	testInjector.register("platformsDataService", {
 		getPlatformData: (platform: string) => {
@@ -42,16 +42,16 @@ function createTestInjector(): IInjector {
 					"sourceMapBundle",
 					platform.toLowerCase()
 				),
-				frameworkPackageName: `tns-${platform.toLowerCase()}`,
+				frameworkPackageName: `tns-${platform.toLowerCase()}`
 			};
-		},
+		}
 	});
 	testInjector.register("fs", FileSystem);
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("logSourceMapService", LogSourceMapService);
 	testInjector.register("options", {
-		hostProjectModuleName: "app",
+		hostProjectModuleName: "app"
 	});
 
 	return testInjector;
@@ -76,7 +76,7 @@ const testCases: IDictionary<
 				"JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap (file:///data/data/org.nativescript.sourceMap/files/app/bundle.js:303:17)",
 			expected: `JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap file: ${toPlatformSep(
 				"src/main-view-model.ts"
-			)}:30:16\n`,
+			)}:30:16\n`
 		},
 		{
 			caseName: "error message",
@@ -84,21 +84,21 @@ const testCases: IDictionary<
 				"System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 304, column: 15",
 			expected: `System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file: ${toPlatformSep(
 				"src/main-view-model.ts"
-			)}:31:14\n`,
+			)}:31:14\n`
 		},
 		{
 			caseName: "error message no match",
 			message:
 				"System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 400, column: 15",
 			expected:
-				"System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 400, column: 15\n",
+				"System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 400, column: 15\n"
 		},
 		{
 			caseName: "no file match",
 			message:
 				"System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1203)",
 			expected:
-				"System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1203)\n",
+				"System.err: 	at com.tns.Runtime.dispatchCallJSMethodNative(Runtime.java:1203)\n"
 		},
 		// External maps
 		{
@@ -107,7 +107,7 @@ const testCases: IDictionary<
 				"JS: at onTap (file:///data/data/org.nativescript.sourceMap/files/app/external.js:12:22)",
 			expected: `JS: at onTap file: ${toPlatformSep(
 				"src/external-test.js"
-			)}:3:4\n`,
+			)}:3:4\n`
 		},
 		{
 			caseName: "error message (external map)",
@@ -115,8 +115,8 @@ const testCases: IDictionary<
 				"System.err: 	Frame: function:'./external-test.js.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/external.js', line: 13, column: 32",
 			expected: `System.err: 	Frame: function:'./external-test.js.onTap', file:'file: ${toPlatformSep(
 				"src/external-test.js"
-			)}:4:4\n`,
-		},
+			)}:4:4\n`
+		}
 	],
 	ios: [
 		{
@@ -124,33 +124,31 @@ const testCases: IDictionary<
 			message: "CONSOLE LOG file:///app/bundle.js:294:20: Test.",
 			expected: `CONSOLE LOG file: ${toPlatformSep(
 				"src/main-view-model.ts"
-			)}:29:20 Test.\n`,
+			)}:29:20 Test.\n`
 		},
 		{
 			caseName: "trace message",
 			message: "CONSOLE TRACE file:///app/bundle.js:295:22: Test",
 			expected: `CONSOLE TRACE file: ${toPlatformSep(
 				"src/main-view-model.ts"
-			)}:30:22 Test\n`,
+			)}:30:22 Test\n`
 		},
 		{
 			caseName: "error message",
 			message: "file:///app/bundle.js:296:32: JS ERROR Error: Test",
 			expected: `file: ${toPlatformSep(
 				"src/main-view-model.ts"
-			)}:31:31 JS ERROR Error: Test\n`,
+			)}:31:31 JS ERROR Error: Test\n`
 		},
 		{
 			caseName: "error stack trace",
 			message: "onTap@file:///app/bundle.js:296:32",
-			expected: `onTap@file: ${toPlatformSep(
-				"src/main-view-model.ts"
-			)}:31:31\n`,
+			expected: `onTap@file: ${toPlatformSep("src/main-view-model.ts")}:31:31\n`
 		},
 		{
 			caseName: "error message no match",
 			message: "file:///app/bundle.js:400:32: JS ERROR Error: Test",
-			expected: "file:///app/bundle.js:400:32: JS ERROR Error: Test\n",
+			expected: "file:///app/bundle.js:400:32: JS ERROR Error: Test\n"
 		},
 		{
 			caseName: "error stack trace (new runtime)",
@@ -158,7 +156,7 @@ const testCases: IDictionary<
 			message: "onTap(file:///app/bundle.js:296:22)",
 			expected: `onTap(file: ${toPlatformSep(
 				"src/main-view-model.ts"
-			)}:31:18)\n`,
+			)}:31:18)\n`
 		},
 		// External maps
 		{
@@ -166,28 +164,28 @@ const testCases: IDictionary<
 			message: "CONSOLE LOG file:///app/external.js:11:20: Test.",
 			expected: `CONSOLE LOG file: ${toPlatformSep(
 				"src/external-test.js"
-			)}:2:16 Test.\n`,
+			)}:2:16 Test.\n`
 		},
 		{
 			caseName: "trace message (external map)",
 			message: "CONSOLE TRACE file:///app/external.js:12:22: Test",
 			expected: `CONSOLE TRACE file: ${toPlatformSep(
 				"src/external-test.js"
-			)}:3:4 Test\n`,
+			)}:3:4 Test\n`
 		},
 		{
 			caseName: "error message (external map)",
 			message: "file:///app/external.js:13:32: JS ERROR Error: Test",
 			expected: `file: ${toPlatformSep(
 				"src/external-test.js"
-			)}:4:4 JS ERROR Error: Test\n`,
+			)}:4:4 JS ERROR Error: Test\n`
 		},
 		{
 			caseName: "error stack trace (external map)",
 			message: "onTap@file:///app/external.js:13:32",
-			expected: `onTap@file: ${toPlatformSep("src/external-test.js")}:4:4\n`,
-		},
-	],
+			expected: `onTap@file: ${toPlatformSep("src/external-test.js")}:4:4\n`
+		}
+	]
 };
 
 describe("log-source-map-service", () => {

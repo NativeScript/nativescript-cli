@@ -2,7 +2,7 @@ import { IOptions } from "../declarations";
 import { IJsonFileSettingsService } from "./definitions/json-file-settings-service";
 import {
 	IEventActionData,
-	IGoogleAnalyticsData,
+	IGoogleAnalyticsData
 } from "./definitions/google-analytics";
 import * as child_process from "child_process";
 
@@ -37,7 +37,7 @@ interface IiTunesConnectApplicationType {
  */
 declare const enum GoogleAnalyticsDataType {
 	Page = "pageview",
-	Event = "event",
+	Event = "event"
 }
 
 /**
@@ -221,7 +221,7 @@ declare const enum TrackingTypes {
 	 * Defines that the broker process should send all the pending information to Analytics.
 	 * After that the process should send information it has finished tracking and die gracefully.
 	 */
-	FinishTracking = "FinishTracking",
+	FinishTracking = "FinishTracking"
 }
 
 /**
@@ -241,7 +241,7 @@ declare const enum AnalyticsStatus {
 	/**
 	 * User has not been asked to allow feature and error tracking.
 	 */
-	notConfirmed = "not confirmed",
+	notConfirmed = "not confirmed"
 }
 
 /**
@@ -267,7 +267,7 @@ declare const enum OptionType {
 	/**
 	 * Object option
 	 */
-	Object = "object",
+	Object = "object"
 }
 
 /**
@@ -546,7 +546,10 @@ interface IFileSystem {
 	enumerateFilesInDirectorySync(
 		directoryPath: string,
 		filterCallback?: (file: string, stat: IFsStats) => boolean,
-		opts?: { enumerateDirectories?: boolean; includeEmptyDirectories?: boolean }
+		opts?: {
+			enumerateDirectories?: boolean;
+			includeEmptyDirectories?: boolean;
+		}
 	): string[];
 
 	/**
@@ -665,7 +668,7 @@ declare const enum ErrorCodes {
 	UNHANDLED_REJECTION_FAILURE = 131,
 	DELETED_KILL_FILE = 132,
 	TESTS_INIT_REQUIRED = 133,
-	ALL_DEVICES_DISCONNECTED = 134,
+	ALL_DEVICES_DISCONNECTED = 134
 }
 
 interface IFutureDispatcher {

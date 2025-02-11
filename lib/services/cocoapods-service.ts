@@ -9,7 +9,7 @@ import {
 	IProjectData,
 	ICocoaPodsPlatformManager,
 	ICocoaPodsService,
-	IPodfilePlatformData,
+	IPodfilePlatformData
 } from "../definitions/project";
 import { IPlatformData } from "../definitions/platform";
 import { IConfiguration, IXcconfigService } from "../declarations";
@@ -17,7 +17,7 @@ import {
 	IFileSystem,
 	IChildProcess,
 	IErrors,
-	ISpawnResult,
+	ISpawnResult
 } from "../common/declarations";
 import { injector } from "../common/yok";
 import { XcodeSelectService } from "../common/services/xcode-select-service";
@@ -72,7 +72,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 			// in which case, we should run it natively.
 			const res: string = await this.$childProcess
 				.exec("arch -x86_64 pod --version", null, {
-					showStderr: true,
+					showStderr: true
 				})
 				.then((res) => res.stdout + " " + res.stderr)
 				.catch((err) => err.message);
@@ -236,7 +236,7 @@ end`.trim();
 					extensionFolderPath,
 					name,
 					constants.PODFILE_NAME
-				),
+				)
 			}));
 
 		extensionsPodfile.forEach(({ targetName, podfilePath }) => {
@@ -307,7 +307,7 @@ end`.trim();
 				? this.getPodfileContentWithoutTarget(
 						projectData,
 						this.$fs.readText(pathToProjectPodfile)
-				  )
+					)
 				: "";
 
 			if (
@@ -619,7 +619,7 @@ end`.trim();
 				pluginPodFilePath
 			)}${EOL}${replacedContent}${EOL}${this.getPluginPodfileEnd()}`,
 			replacedFunctions: data.newFunctions,
-			podfilePlatformData,
+			podfilePlatformData
 		};
 	}
 

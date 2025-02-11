@@ -1,7 +1,7 @@
 import {
 	DEBUGGER_PORT_FOUND_EVENT_NAME,
 	ATTACH_REQUEST_EVENT_NAME,
-	IOS_APP_CRASH_LOG_REG_EXP,
+	IOS_APP_CRASH_LOG_REG_EXP
 } from "../common/constants";
 import { cache } from "../common/decorators";
 import { APPLICATION_RESPONSE_TIMEOUT_SECONDS } from "../constants";
@@ -19,7 +19,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		private $logParserService: ILogParserService,
 		private $iOSNotification: IiOSNotification,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $logger: ILogger,
+		private $logger: ILogger
 	) {}
 
 	public async getPort(data: IIOSDebuggerPortInputData): Promise<number> {
@@ -28,7 +28,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 			const retryInterval = 500;
 			let retryCount = Math.max(
 				(APPLICATION_RESPONSE_TIMEOUT_SECONDS * 1000) / retryInterval,
-				10,
+				10
 			);
 
 			const interval = setInterval(() => {
@@ -63,13 +63,13 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 			regex: IOSDebuggerPortService.DEBUG_PORT_LOG_REGEX,
 			handler: this.handlePortFound.bind(this),
 			name: "debugPort",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
 		this.$logParserService.addParseRule({
 			regex: IOS_APP_CRASH_LOG_REG_EXP,
 			handler: this.handleAppCrash.bind(this),
 			name: "appCrash",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
 	}
 
@@ -78,7 +78,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 			port: 0,
 			appId: this.currentAppId,
 			deviceId,
-			error: new Error("The application has been terminated."),
+			error: new Error("The application has been terminated.")
 		};
 
 		this.clearTimeout(data);
@@ -89,7 +89,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 		const data = {
 			port: parseInt(matches[1]),
 			appId: matches[2],
-			deviceId,
+			deviceId
 		};
 
 		this.$logger.trace(DEBUGGER_PORT_FOUND_EVENT_NAME, data);
@@ -107,13 +107,13 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 					this.clearTimeout(data);
 					if (!this.getPortByKey(`${data.deviceId}${data.appId}`)) {
 						this.$logger.warn(
-							`NativeScript debugger was not able to get inspector socket port on device ${data.deviceId} for application ${data.appId}.`,
+							`NativeScript debugger was not able to get inspector socket port on device ${data.deviceId} for application ${data.appId}.`
 						);
 					}
 				}, APPLICATION_RESPONSE_TIMEOUT_SECONDS * 1000);
 
 				this.setData(data, { port: null, timer });
-			},
+			}
 		);
 	}
 
@@ -127,7 +127,7 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 
 	private setData(
 		data: IIOSDebuggerPortData,
-		storedData: IIOSDebuggerPortStoredData,
+		storedData: IIOSDebuggerPortStoredData
 	): void {
 		const key = `${data.deviceId}${data.appId}`;
 

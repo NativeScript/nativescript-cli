@@ -4,7 +4,7 @@ import {
 	IValidBuildOutputData,
 	IPlatformData,
 	IBuildOutputOptions,
-	IBuildInfo,
+	IBuildInfo
 } from "./platform";
 
 interface IBuildData extends IPrepareData {

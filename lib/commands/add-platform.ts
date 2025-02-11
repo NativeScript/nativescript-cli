@@ -3,7 +3,7 @@ import { IProjectData } from "../definitions/project";
 import {
 	IOptions,
 	IPlatformCommandHelper,
-	IPlatformValidationService,
+	IPlatformValidationService
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";

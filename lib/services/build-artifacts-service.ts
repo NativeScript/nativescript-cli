@@ -3,7 +3,7 @@ import { IBuildArtifactsService } from "../definitions/build";
 import {
 	IPlatformData,
 	IBuildOutputOptions,
-	IValidBuildOutputData,
+	IValidBuildOutputData
 } from "../definitions/platform";
 import { IApplicationPackage } from "../declarations";
 import { IErrors, IFileSystem } from "../common/declarations";
@@ -151,7 +151,7 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		return packages.map((packageName) => {
 			return {
 				packageName,
-				time: this.$fs.getFsStats(packageName).mtime,
+				time: this.$fs.getFsStats(packageName).mtime
 			};
 		});
 	}

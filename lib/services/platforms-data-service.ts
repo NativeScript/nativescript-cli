@@ -15,7 +15,7 @@ export class PlatformsDataService implements IPlatformsDataService {
 		this.platformsDataService = {
 			ios: $iOSProjectService,
 			android: $androidProjectService,
-			visionos: $iOSProjectService,
+			visionos: $iOSProjectService
 		};
 	}
 

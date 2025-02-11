@@ -11,19 +11,19 @@ import { performanceLog } from ".././common/decorators";
 import {
 	IProjectData,
 	IProjectDataService,
-	IValidatePlatformOutput,
+	IValidatePlatformOutput
 } from "../definitions/project";
 import {
 	IPlatformData,
 	IBuildOutputOptions,
 	IPlatformEnvironmentRequirements,
-	IValidBuildOutputData,
+	IValidBuildOutputData
 } from "../definitions/platform";
 import {
 	IAndroidToolsInfo,
 	IAndroidResourcesMigrationService,
 	IOptions,
-	IDependencyData,
+	IDependencyData
 } from "../declarations";
 import { IAndroidBuildData } from "../definitions/build";
 import { IPluginData } from "../definitions/plugins";
@@ -33,16 +33,16 @@ import {
 	IAnalyticsService,
 	IDictionary,
 	IRelease,
-	ISpawnResult,
+	ISpawnResult
 } from "../common/declarations";
 import {
 	IAndroidPluginBuildService,
-	IPluginBuildOptions,
+	IPluginBuildOptions
 } from "../definitions/android-plugin-migrator";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import {
 	IGradleCommandService,
-	IGradleBuildService,
+	IGradleBuildService
 } from "../definitions/gradle";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -169,28 +169,28 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				: path.join(
 						projectData.platformsDir,
 						AndroidProjectService.ANDROID_PLATFORM_NAME
-				  );
+					);
 
 			const appDestinationDirectoryArr = [
 				projectRoot,
 				this.$options.hostProjectModuleName,
 				constants.SRC_DIR,
 				constants.MAIN_DIR,
-				constants.ASSETS_DIR,
+				constants.ASSETS_DIR
 			];
 			const configurationsDirectoryArr = [
 				projectRoot,
 				this.$options.hostProjectModuleName,
 				constants.SRC_DIR,
 				constants.MAIN_DIR,
-				constants.MANIFEST_FILE_NAME,
+				constants.MANIFEST_FILE_NAME
 			];
 			const deviceBuildOutputArr = [
 				projectRoot,
 				this.$options.hostProjectModuleName,
 				constants.BUILD_DIR,
 				constants.OUTPUTS_DIR,
-				constants.APK_DIR,
+				constants.APK_DIR
 			];
 
 			const packageName = this.getProjectNameFromId(projectData);
@@ -230,8 +230,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 						return {
 							packageNames: [
 								`${this.$options.hostProjectModuleName}${constants.AAB_EXTENSION_NAME}`,
-								`${this.$options.hostProjectModuleName}-${buildMode}${constants.AAB_EXTENSION_NAME}`,
-							],
+								`${this.$options.hostProjectModuleName}-${buildMode}${constants.AAB_EXTENSION_NAME}`
+							]
 						};
 					}
 
@@ -240,14 +240,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							`${packageName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
 							`${projectData.projectName}${constants.APK_EXTENSION_NAME}`,
-							`${this.$options.hostProjectModuleName}-${buildMode}${constants.APK_EXTENSION_NAME}`,
+							`${this.$options.hostProjectModuleName}-${buildMode}${constants.APK_EXTENSION_NAME}`
 						],
 						regexes: [
 							new RegExp(
 								`(${packageName}|${this.$options.hostProjectModuleName})-.*-(${Configurations.Debug}|${Configurations.Release})(-unsigned)?${constants.APK_EXTENSION_NAME}`,
 								"i"
-							),
-						],
+							)
+						]
 					};
 				},
 				configurationFileName: constants.MANIFEST_FILE_NAME,
@@ -257,7 +257,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					constants.MAIN_DIR,
 					constants.MANIFEST_FILE_NAME
 				),
-				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"], // http://developer.android.com/guide/appendix/media-formats.html
+				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"] // http://developer.android.com/guide/appendix/media-formats.html
 			};
 		}
 
@@ -309,17 +309,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				platform: this.getPlatformData(projectData).normalizedPlatformName,
 				projectDir: projectData.projectDir,
 				options,
-				notConfiguredEnvOptions,
+				notConfiguredEnvOptions
 			});
 
 		this.$androidToolsInfo.validateInfo({
 			showWarningsAsErrors: true,
 			projectDir: projectData.projectDir,
-			validateTargetSdk: true,
+			validateTargetSdk: true
 		});
 
 		return {
-			checkEnvironmentRequirementsOutput,
+			checkEnvironmentRequirementsOutput
 		};
 	}
 
@@ -343,7 +343,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.getPlatformData(projectData).projectRoot
 		);
 		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({
-			projectDir: projectData.projectDir,
+			projectDir: projectData.projectDir
 		});
 		const targetSdkVersion =
 			androidToolsInfo && androidToolsInfo.targetSdkVersion;
@@ -393,7 +393,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 						dir.substr(
 							AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length
 						)
-					),
+					)
 				};
 			})
 			.filter(
@@ -667,7 +667,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		}
 
 		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({
-			projectDir: projectData.projectDir,
+			projectDir: projectData.projectDir
 		});
 		const compileSdkVersion =
 			androidToolsInfo && androidToolsInfo.compileSdkVersion;
@@ -691,7 +691,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
 				aarOutputDir: pluginPlatformsFolderPath,
-				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin")
 			};
 
 			if (await this.$androidPluginBuildService.buildAar(options)) {
@@ -733,14 +733,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private filterUniqueDependencies(
 		dependencies: IDependencyData[]
 	): IDependencyData[] {
-		const depsDictionary = dependencies.reduce((dict, dep) => {
-			const collision = dict[dep.name];
-			// in case there are multiple dependencies to the same module, the one declared in the package.json takes precedence
-			if (!collision || collision.depth > dep.depth) {
-				dict[dep.name] = dep;
-			}
-			return dict;
-		}, <IDictionary<IDependencyData>>{});
+		const depsDictionary = dependencies.reduce(
+			(dict, dep) => {
+				const collision = dict[dep.name];
+				// in case there are multiple dependencies to the same module, the one declared in the package.json takes precedence
+				if (!collision || collision.depth > dep.depth) {
+					dict[dep.name] = dep;
+				}
+				return dict;
+			},
+			<IDictionary<IDependencyData>>{}
+		);
 		return _.values(depsDictionary);
 	}
 
@@ -753,7 +756,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			: path.join(
 					projectData.platformsDir,
 					AndroidProjectService.ANDROID_PLATFORM_NAME
-			  );
+				);
 		const dependenciesJsonPath = path.join(
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME
@@ -774,7 +777,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 								(nativeDep) => nativeDep.name === dep
 							) !== -1
 						);
-					}),
+					})
 				} as NativeDependency;
 			}
 		);
@@ -792,7 +795,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private static isNativeAndroidDependency({
-		nativescript,
+		nativescript
 	}: IDependencyData): boolean {
 		return (
 			nativescript &&
@@ -807,7 +810,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			{
 				cwd: projectRoot,
 				message: "Gradle stop services...",
-				stdio: "pipe",
+				stdio: "pipe"
 			}
 		);
 
@@ -816,7 +819,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async cleanProject(projectRoot: string): Promise<void> {
 		await this.$gradleBuildService.cleanProject(projectRoot, <any>{
-			release: false,
+			release: false
 		});
 	}
 
@@ -825,7 +828,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectData: IProjectData
 	): Promise<void> {
 		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, {
-			identifier: deviceIdentifier,
+			identifier: deviceIdentifier
 		});
 		const deviceRootPath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${projectData.projectIdentifiers.android}`;
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
@@ -882,7 +885,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.$options.hostProjectModuleName,
 			constants.SRC_DIR,
 			constants.MAIN_DIR,
-			constants.RESOURCES_DIR,
+			constants.RESOURCES_DIR
 		];
 
 		return path.join(
@@ -896,7 +899,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	): string {
 		const resourcePath: string[] = [
 			this.$options.hostProjectModuleName,
-			constants.SRC_DIR,
+			constants.SRC_DIR
 		];
 
 		return path.join(
@@ -958,7 +961,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				const hasKotlinRuntimeClassesData = `hasKotlinRuntimeClasses${analyticsDelimiter}${buildStatistics.kotlinUsage.hasKotlinRuntimeClasses}`;
 				await this.$analyticsService.trackEventActionInGoogleAnalytics({
 					action: constants.TrackActionNames.UsingKotlin,
-					additionalData: `${hasUseKotlinPropertyInAppData}${analyticsDelimiter}${hasKotlinRuntimeClassesData}`,
+					additionalData: `${hasUseKotlinPropertyInAppData}${analyticsDelimiter}${hasKotlinRuntimeClassesData}`
 				});
 			}
 		} catch (e) {

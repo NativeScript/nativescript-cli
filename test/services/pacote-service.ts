@@ -31,7 +31,7 @@ const proxySettings: IProxySettings = {
 	port: "8888",
 	rejectUnauthorized: true,
 	username: null,
-	password: null,
+	password: null
 };
 
 interface ITestSetup {
@@ -64,12 +64,12 @@ const createTestInjector = (opts?: ITestSetup): IInjector => {
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("pacoteService", PacoteService);
 	testInjector.register("fs", {
-		exists: (p: string): boolean => opts.isLocalPackage,
+		exists: (p: string): boolean => opts.isLocalPackage
 	});
 
 	testInjector.register("proxyService", {
 		getCache: async (): Promise<IProxySettings> =>
-			opts.useProxySettings ? proxySettings : null,
+			opts.useProxySettings ? proxySettings : null
 	});
 	testInjector.register("packageManager", {
 		getCachePath: async (): Promise<string> => {
@@ -78,7 +78,7 @@ const createTestInjector = (opts?: ITestSetup): IInjector => {
 			}
 
 			return npmCachePath;
-		},
+		}
 	});
 	testInjector.register("npm", {
 		getCachePath: async (): Promise<string> => {
@@ -87,7 +87,7 @@ const createTestInjector = (opts?: ITestSetup): IInjector => {
 			}
 
 			return npmCachePath;
-		},
+		}
 	});
 
 	return testInjector;
@@ -163,49 +163,49 @@ describe("pacoteService", () => {
 			const testData: ITestCase[] = [
 				{
 					name: "with 'cache' only when no opts are passed",
-					expectedPackageName: packageName,
+					expectedPackageName: packageName
 				},
 				{
 					name: "with 'cache' and passed options",
 					manifestOptions,
-					expectedPackageName: packageName,
+					expectedPackageName: packageName
 				},
 				{
 					name: "with 'cache' and proxy settings",
 					useProxySettings: true,
-					expectedPackageName: packageName,
+					expectedPackageName: packageName
 				},
 				{
 					name: "with 'cache', passed options and proxy settings when proxy is configured",
 					manifestOptions,
 					useProxySettings: true,
-					expectedPackageName: packageName,
+					expectedPackageName: packageName
 				},
 				{
 					name: "with full path to file when it is local one",
 					isLocalPackage: true,
-					expectedPackageName: fullPath,
+					expectedPackageName: fullPath
 				},
 				{
 					name: "with full path to file, 'cache' and passed options when local path is passed",
 					manifestOptions,
 					isLocalPackage: true,
-					expectedPackageName: fullPath,
+					expectedPackageName: fullPath
 				},
 				{
 					name: "with full path to file, 'cache' and proxy settings when proxy is configured",
 					manifestOptions,
 					isLocalPackage: true,
 					useProxySettings: true,
-					expectedPackageName: fullPath,
+					expectedPackageName: fullPath
 				},
 				{
 					name: "with full path to file, 'cache', passed options and proxy settings when proxy is configured and local path is passed",
 					manifestOptions,
 					useProxySettings: true,
 					isLocalPackage: true,
-					expectedPackageName: fullPath,
-				},
+					expectedPackageName: fullPath
+				}
 			];
 
 			testData.forEach((testCase) => {
@@ -213,7 +213,7 @@ describe("pacoteService", () => {
 					const pacoteService = setupTest(testCase);
 					const result = await pacoteService.manifest(
 						packageName,
-						testCase.manifestOptions,
+						testCase.manifestOptions
 					);
 
 					const expectedArgs = [
@@ -222,8 +222,8 @@ describe("pacoteService", () => {
 							{},
 							defaultPacoteOpts,
 							testCase.manifestOptions || {},
-							testCase.useProxySettings ? proxySettings : {},
-						),
+							testCase.useProxySettings ? proxySettings : {}
+						)
 					];
 
 					assert.equal(result, manifestResult);
@@ -237,7 +237,7 @@ describe("pacoteService", () => {
 			const pacoteService = setupTest({ npmGetCachePathError });
 			await assert.isRejected(
 				pacoteService.manifest(packageName, null),
-				npmGetCachePathError.message,
+				npmGetCachePathError.message
 			);
 		});
 	});
@@ -249,7 +249,7 @@ describe("pacoteService", () => {
 			tarballStreamStub.returns(Promise.reject(new Error(errorMessage)));
 			const pacoteExtractPackagePromise = pacoteService.extractPackage(
 				packageName,
-				destinationDir,
+				destinationDir
 			);
 
 			await assert.isRejected(pacoteExtractPackagePromise, errorMessage);
@@ -260,7 +260,7 @@ describe("pacoteService", () => {
 
 			const pacoteExtractPackagePromise = pacoteService.extractPackage(
 				packageName,
-				destinationDir,
+				destinationDir
 			);
 			setImmediate(() => {
 				tarExtractDestinationStream.emit("error", new Error(errorMessage));
@@ -274,7 +274,7 @@ describe("pacoteService", () => {
 
 			const pacoteExtractPackagePromise = pacoteService.extractPackage(
 				packageName,
-				destinationDir,
+				destinationDir
 			);
 
 			setImmediate(() => {
@@ -287,17 +287,17 @@ describe("pacoteService", () => {
 		describe("passes correct options to tar.x", () => {
 			const defaultExtractOpts = { strip: 1, C: destinationDir };
 			const additionalExtractOpts: IPacoteExtractOptions = {
-				filter: (p: string, stat: any) => true,
+				filter: (p: string, stat: any) => true
 			};
 
 			const testData: ITestCase[] = [
 				{
-					name: "when only default options should be passed",
+					name: "when only default options should be passed"
 				},
 				{
 					name: "when additional options are passed",
-					additionalExtractOpts,
-				},
+					additionalExtractOpts
+				}
 			];
 
 			testData.forEach((testCase) => {
@@ -307,7 +307,7 @@ describe("pacoteService", () => {
 					const pacoteExtractPackagePromise = pacoteService.extractPackage(
 						packageName,
 						destinationDir,
-						testCase.additionalExtractOpts,
+						testCase.additionalExtractOpts
 					);
 					setImmediate(() => {
 						tarExtractDestinationStream.emit("finish");
@@ -319,8 +319,8 @@ describe("pacoteService", () => {
 						_.extend(
 							{},
 							defaultExtractOpts,
-							testCase.additionalExtractOpts || {},
-						),
+							testCase.additionalExtractOpts || {}
+						)
 					];
 
 					assert.deepStrictEqual(tarXStub.firstCall.args, expectedArgs);
@@ -332,24 +332,24 @@ describe("pacoteService", () => {
 			const testData: ITestCase[] = [
 				{
 					name: "when proxy is not set",
-					expectedPackageName: packageName,
+					expectedPackageName: packageName
 				},
 				{
 					name: "when proxy is not set and a local path is passed",
 					isLocalPackage: true,
-					expectedPackageName: fullPath,
+					expectedPackageName: fullPath
 				},
 				{
 					name: "when proxy is set",
 					useProxySettings: true,
-					expectedPackageName: packageName,
+					expectedPackageName: packageName
 				},
 				{
 					name: "when proxy is set and a local path is passed",
 					useProxySettings: true,
 					isLocalPackage: true,
-					expectedPackageName: fullPath,
-				},
+					expectedPackageName: fullPath
+				}
 			];
 
 			testData.forEach((testCase) => {
@@ -358,7 +358,7 @@ describe("pacoteService", () => {
 
 					const pacoteExtractPackagePromise = pacoteService.extractPackage(
 						packageName,
-						destinationDir,
+						destinationDir
 					);
 					setImmediate(() => {
 						tarExtractDestinationStream.emit("finish");
@@ -369,14 +369,14 @@ describe("pacoteService", () => {
 						_.extend(
 							{},
 							defaultPacoteOpts,
-							testCase.useProxySettings ? proxySettings : {},
-						),
+							testCase.useProxySettings ? proxySettings : {}
+						)
 					];
 
 					await assert.isFulfilled(pacoteExtractPackagePromise);
 					assert.deepStrictEqual(
 						tarballStreamStub.firstCall.args,
-						expectedArgs,
+						expectedArgs
 					);
 				});
 			});

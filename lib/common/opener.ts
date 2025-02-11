@@ -6,8 +6,8 @@ export class Opener implements IOpener {
 	public open(target: string, appname?: string): any {
 		return open(target, {
 			app: {
-				name: appname,
-			},
+				name: appname
+			}
 		});
 	}
 }

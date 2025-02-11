@@ -117,7 +117,7 @@ export class Yok implements IInjector {
 	}
 
 	public publicApi: any = {
-		__modules__: {},
+		__modules__: {}
 	};
 
 	public requirePublic(names: any, file: string): void {
@@ -138,7 +138,7 @@ export class Yok implements IInjector {
 		Object.defineProperty(this.publicApi, name, {
 			get: () => {
 				return this.resolveInstance(name);
-			},
+			}
 		});
 	}
 
@@ -147,7 +147,7 @@ export class Yok implements IInjector {
 			get: () => {
 				this.resolveInstance(name);
 				return this.publicApi.__modules__[name];
-			},
+			}
 		});
 	}
 
@@ -168,7 +168,7 @@ export class Yok implements IInjector {
 			)
 				? relativePath
 				: file,
-			shared: true,
+			shared: true
 		};
 
 		if (!this.modules[name] || this.overrideAlreadyRequiredModule) {
@@ -255,7 +255,7 @@ export class Yok implements IInjector {
 					parentCommandName,
 					finalSubCommandName
 				),
-				remainingArguments: finalRemainingArguments,
+				remainingArguments: finalRemainingArguments
 			};
 		}
 	}
@@ -316,7 +316,7 @@ export class Yok implements IInjector {
 						commandName,
 						commandName === "help" ? [name] : commandArguments
 					);
-				},
+				}
 			};
 		};
 

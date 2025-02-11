@@ -6,7 +6,7 @@ import {
 	IAllowEmpty,
 	IPrompterAnswers,
 	IPrompterOptions,
-	IPrompterQuestion,
+	IPrompterQuestion
 } from "./declarations";
 import { injector } from "./yok";
 const MuteStream = require("mute-stream");
@@ -61,7 +61,7 @@ export class Prompter implements IPrompter {
 			validate: (value: any) => {
 				const allowEmpty = options && options.allowEmpty;
 				return !allowEmpty && !value ? "Password must be non-empty" : true;
-			},
+			}
 		};
 
 		const result = await this.get([schema]);
@@ -83,7 +83,7 @@ export class Prompter implements IPrompter {
 					? `${message} must be non-empty`
 					: true;
 			},
-			default: options && options.defaultAction,
+			default: options && options.defaultAction
 		};
 
 		const result = await this.get([schema]);
@@ -103,14 +103,13 @@ export class Prompter implements IPrompter {
 			type: multiple ? "multiselect" : "select",
 			name: "userAnswer",
 			choices,
-			...options,
+			...options
 		};
 
 		const result = await this.get([schema]);
 
-		type ArrayElement<
-			ArrayType extends readonly unknown[]
-		> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+		type ArrayElement<ArrayType extends readonly unknown[]> =
+			ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
 		type Choice = ArrayElement<typeof choices>;
 
@@ -141,7 +140,7 @@ export class Prompter implements IPrompter {
 			return {
 				title: choice.key,
 				value: choice.key,
-				description: choice.description,
+				description: choice.description
 			};
 		});
 
@@ -149,7 +148,7 @@ export class Prompter implements IPrompter {
 			message: promptMessage,
 			type: "select",
 			name: "userAnswer",
-			choices: inquirerChoices,
+			choices: inquirerChoices
 		};
 
 		const result = await this.get([schema]);
@@ -164,7 +163,7 @@ export class Prompter implements IPrompter {
 			type: "confirm",
 			name: "prompt",
 			default: defaultAction,
-			message,
+			message
 		};
 
 		const result = await this.get([schema]);
@@ -184,7 +183,7 @@ export class Prompter implements IPrompter {
 
 			this.ctrlcReader = readline.createInterface(<any>{
 				input: process.stdin,
-				output: this.muteStreamInstance,
+				output: this.muteStreamInstance
 			});
 
 			this.ctrlcReader.on("SIGINT", () => {
@@ -215,16 +214,16 @@ export class Prompter implements IPrompter {
 		const memoryLeakEvents: IMemoryLeakEvent[] = [
 			{
 				eventName: "close",
-				listenerName: "cleanup",
+				listenerName: "cleanup"
 			},
 			{
 				eventName: "error",
-				listenerName: "onerror",
+				listenerName: "onerror"
 			},
 			{
 				eventName: "drain",
-				listenerName: "ondrain",
-			},
+				listenerName: "ondrain"
+			}
 		];
 
 		_.each(memoryLeakEvents, (memoryleakEvent: IMemoryLeakEvent) =>

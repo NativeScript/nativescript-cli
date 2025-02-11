@@ -16,7 +16,7 @@ describe("ipService", () => {
 			httpRequest: async (
 				options: any,
 				proxySettings?: IProxySettings
-			): Promise<Server.IResponse> => <any>{},
+			): Promise<Server.IResponse> => <any>{}
 		});
 
 		testInjector.register("logger", LoggerStub);
@@ -42,7 +42,7 @@ describe("ipService", () => {
 
 			assert.equal(ipAddress, ip);
 			assert.deepStrictEqual(httpRequestPassedOptions, [
-				{ method: "GET", url: "https://api.myip.com", timeout: 1000 },
+				{ method: "GET", url: "https://api.myip.com", timeout: 1000 }
 			]);
 		});
 
@@ -68,7 +68,7 @@ describe("ipService", () => {
 			assert.equal(ipAddress, ip);
 			assert.deepStrictEqual(httpRequestPassedOptions, [
 				{ method: "GET", url: "https://api.myip.com", timeout: 1000 },
-				{ method: "GET", url: "https://api.ipify.org", timeout: 1000 },
+				{ method: "GET", url: "https://api.ipify.org", timeout: 1000 }
 			]);
 
 			const logger = testInjector.resolve<LoggerStub>("logger");
@@ -104,7 +104,7 @@ describe("ipService", () => {
 			assert.isNull(ipAddress);
 			assert.deepStrictEqual(httpRequestPassedOptions, [
 				{ method: "GET", url: "https://api.myip.com", timeout: 1000 },
-				{ method: "GET", url: "https://api.ipify.org", timeout: 1000 },
+				{ method: "GET", url: "https://api.ipify.org", timeout: 1000 }
 			]);
 
 			const logger = testInjector.resolve<LoggerStub>("logger");

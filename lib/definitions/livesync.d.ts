@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import {
 	INativePrepare,
 	IValidatePlatformOutput,
-	IProjectData,
+	IProjectData
 } from "./project";
 import { IBuildPlatformAction } from "./platform";
 import { IDebugOptions } from "./debug";
@@ -13,7 +13,7 @@ import {
 	IProjectDir,
 	IRelease,
 	IQrCodeImageData,
-	IDictionary,
+	IDictionary
 } from "../common/declarations";
 
 declare global {

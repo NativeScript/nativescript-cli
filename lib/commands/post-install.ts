@@ -5,7 +5,7 @@ import {
 	IHelpService,
 	ISettingsService,
 	IAnalyticsService,
-	IHostInfo,
+	IHostInfo
 } from "../common/declarations";
 import { injector } from "../common/yok";
 import { color } from "../color";

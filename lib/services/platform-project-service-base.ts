@@ -3,7 +3,7 @@ import * as _ from "lodash";
 import {
 	IProjectDataService,
 	IPlatformProjectServiceBase,
-	IProjectData,
+	IProjectData
 } from "../definitions/project";
 import { IPlatformData } from "../definitions/platform";
 import { IPluginData } from "../definitions/plugins";
@@ -12,7 +12,8 @@ import { PlatformTypes } from "../constants";
 
 export abstract class PlatformProjectServiceBase
 	extends EventEmitter
-	implements IPlatformProjectServiceBase {
+	implements IPlatformProjectServiceBase
+{
 	constructor(
 		protected $fs: IFileSystem,
 		protected $projectDataService: IProjectDataService

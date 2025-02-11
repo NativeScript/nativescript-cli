@@ -6,7 +6,7 @@ import { cache } from "../common/decorators";
 import {
 	TrackActionNames,
 	NODE_MODULES_FOLDER_NAME,
-	TNS_CORE_MODULES_NAME,
+	TNS_CORE_MODULES_NAME
 } from "../constants";
 import { doctor, constants } from "@nativescript/doctor";
 import { IProjectDataService } from "../definitions/project";
@@ -19,7 +19,7 @@ import {
 	IChildProcess,
 	IFileSystem,
 	ISettingsService,
-	ISpawnResult,
+	ISpawnResult
 } from "../common/declarations";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { IInjector } from "../common/definitions/yok";
@@ -43,7 +43,7 @@ export class DoctorService implements IDoctorService {
 		"-NoNewWindow",
 		"-Wait",
 		"-ArgumentList",
-		"\"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString('https://www.nativescript.org/setup/win'))\"",
+		"\"-NoProfile -ExecutionPolicy Bypass -Command iex ((new-object net.webclient).DownloadString('https://www.nativescript.org/setup/win'))\""
 	];
 
 	@cache()
@@ -87,13 +87,13 @@ export class DoctorService implements IDoctorService {
 		const getInfosData: any = {
 			projectDir: configOptions.projectDir,
 			androidRuntimeVersion: configOptions.runtimeVersion,
-			platform: configOptions.platform,
+			platform: configOptions.platform
 		};
 		const infos = await this.$terminalSpinnerService.execute<
 			NativeScriptDoctor.IInfo[]
 		>(
 			{
-				text: `Getting environment information ${EOL}`,
+				text: `Getting environment information ${EOL}`
 			},
 			() =>
 				this.getInfos({ forceCheck: configOptions.forceCheck }, getInfosData)
@@ -152,20 +152,20 @@ export class DoctorService implements IDoctorService {
 				platform: configOptions.platform,
 				projectDir: configOptions.projectDir,
 				runtimeVersion: configOptions.runtimeVersion,
-				options: configOptions.options,
+				options: configOptions.options
 			});
 	}
 
 	public async runSetupScript(): Promise<ISpawnResult> {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.RunSetupScript,
-			additionalData: "Starting",
+			additionalData: "Starting"
 		});
 
 		if (this.$hostInfo.isLinux) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.RunSetupScript,
-				additionalData: "Skipped as OS is Linux",
+				additionalData: "Skipped as OS is Linux"
 			});
 			return;
 		}
@@ -190,7 +190,7 @@ export class DoctorService implements IDoctorService {
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.RunSetupScript,
-			additionalData: "Finished",
+			additionalData: "Finished"
 		});
 	}
 
@@ -202,12 +202,12 @@ export class DoctorService implements IDoctorService {
 	}): Promise<boolean> {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.CheckLocalBuildSetup,
-			additionalData: "Starting",
+			additionalData: "Starting"
 		});
 		const sysInfoConfig: NativeScriptDoctor.ISysInfoConfig = {
 			platform: configuration.platform,
 			projectDir: configuration.projectDir,
-			androidRuntimeVersion: configuration.runtimeVersion,
+			androidRuntimeVersion: configuration.runtimeVersion
 		};
 		const infos = await this.getInfos(
 			{ forceCheck: configuration && configuration.forceCheck },
@@ -221,7 +221,7 @@ export class DoctorService implements IDoctorService {
 			this.$fs.deleteFile(this.jsonFileSettingsPath);
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.CheckLocalBuildSetup,
-				additionalData: `Warnings:${warnings.map((w) => w.message).join("__")}`,
+				additionalData: `Warnings:${warnings.map((w) => w.message).join("__")}`
 			});
 			this.printInfosCore(infos);
 		} else {
@@ -234,7 +234,7 @@ export class DoctorService implements IDoctorService {
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.CheckLocalBuildSetup,
-			additionalData: `Finished: Is setup correct: ${!hasWarnings}`,
+			additionalData: `Finished: Is setup correct: ${!hasWarnings}`
 		});
 
 		return !hasWarnings;
@@ -243,9 +243,8 @@ export class DoctorService implements IDoctorService {
 	public checkForDeprecatedShortImportsInAppDir(projectDir: string): void {
 		if (projectDir) {
 			try {
-				const files = this.$projectDataService.getAppExecutableFiles(
-					projectDir
-				);
+				const files =
+					this.$projectDataService.getAppExecutableFiles(projectDir);
 				const shortImports = this.getDeprecatedShortImportsInFiles(
 					files,
 					projectDir
@@ -415,7 +414,7 @@ export class DoctorService implements IDoctorService {
 			process.env.PROCESSOR_ARCHITEW6432,
 			process.env.ProgramFiles,
 			process.env["ProgramFiles(x86)"],
-			nativeScriptData,
+			nativeScriptData
 		]
 			.filter((a) => !!a)
 			.join(delimiter);
@@ -434,7 +433,7 @@ export class DoctorService implements IDoctorService {
 			? null
 			: await this.$jsonFileSettingsService.getSettingValue<
 					NativeScriptDoctor.IInfo[]
-			  >(key);
+				>(key);
 
 		this.$logger.trace(
 			`getInfos cacheConfig options:`,

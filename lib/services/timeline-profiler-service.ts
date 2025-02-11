@@ -17,7 +17,7 @@ enum ChromeTraceEventPhase {
 	BEGIN = "B",
 	END = "E",
 	INSTANT = "i",
-	COMPLETE = "X",
+	COMPLETE = "X"
 }
 
 interface ChromeTraceEvent {
@@ -60,7 +60,7 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 		if (!this.timelines.has(deviceIdentifier)) {
 			this.timelines.set(deviceIdentifier, {
 				startPoint: null,
-				timeline: [],
+				timeline: []
 			});
 		}
 
@@ -90,7 +90,7 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 			domain: result[2]?.trim().replace(":", ""),
 			name: result[3].trim(),
 			from: parseFloat(result[4]),
-			to: parseFloat(result[5]),
+			to: parseFloat(result[5])
 		};
 
 		return {
@@ -100,7 +100,7 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 			dur: (trace.to - trace.from) * 1000,
 			name: trace.name,
 			cat: trace.domain ?? "default",
-			ph: ChromeTraceEventPhase.COMPLETE,
+			ph: ChromeTraceEventPhase.COMPLETE
 		};
 	}
 

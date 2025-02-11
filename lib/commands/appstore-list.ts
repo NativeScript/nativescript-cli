@@ -8,13 +8,13 @@ import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
 import {
 	IApplePortalApplicationService,
-	IApplePortalSessionService,
+	IApplePortalSessionService
 } from "../services/apple-portal/definitions";
 
 export class ListiOSApps implements ICommand {
 	public allowedParameters: ICommandParameter[] = [
 		new StringCommandParameter(this.$injector),
-		new StringCommandParameter(this.$injector),
+		new StringCommandParameter(this.$injector)
 	];
 
 	constructor(
@@ -49,7 +49,7 @@ export class ListiOSApps implements ICommand {
 
 		if (!username) {
 			username = await this.$prompter.getString("Apple ID", {
-				allowEmpty: false,
+				allowEmpty: false
 			});
 		}
 
@@ -60,7 +60,7 @@ export class ListiOSApps implements ICommand {
 		const user = await this.$applePortalSessionService.createUserSession(
 			{ username, password },
 			{
-				sessionBase64: this.$options.appleSessionBase64,
+				sessionBase64: this.$options.appleSessionBase64
 			}
 		);
 		if (!user.areCredentialsValid) {
@@ -69,9 +69,8 @@ export class ListiOSApps implements ICommand {
 			);
 		}
 
-		const applications = await this.$applePortalApplicationService.getApplications(
-			user
-		);
+		const applications =
+			await this.$applePortalApplicationService.getApplications(user);
 
 		if (!applications || !applications.length) {
 			this.$logger.info("Seems you don't have any applications yet.");

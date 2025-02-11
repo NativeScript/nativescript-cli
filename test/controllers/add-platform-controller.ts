@@ -26,7 +26,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("addPlatformService", AddPlatformService);
 	injector.register("pacoteService", PacoteServiceStub);
 	injector.register("analyticsService", {
-		trackEventActionInGoogleAnalytics: () => ({}),
+		trackEventActionInGoogleAnalytics: () => ({})
 	});
 	injector.register("packageManager", PackageManager);
 	injector.register("npm", NodePackageManager);
@@ -36,7 +36,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	injector.register("bun", BunPackageManager);
 
 	injector.register("userSettingsService", {
-		getSettingValue: async (settingName: string): Promise<void> => undefined,
+		getSettingValue: async (settingName: string): Promise<void> => undefined
 	});
 	injector.register("tempService", TempServiceStub);
 	injector.register("mobileHelper", MobileHelper);
@@ -69,19 +69,19 @@ describe("PlatformController", () => {
 	const testCases = [
 		{
 			name: "should add the platform (tns platform add <platform>@7.0.0)",
-			latestFrameworkVersion: "7.0.0",
+			latestFrameworkVersion: "7.0.0"
 		},
 		{
 			name: "should add the latest compatible version (tns platform add <platform>)",
 			latestFrameworkVersion,
 			getPlatformParam: (platform: string) =>
-				`${platform}@${latestFrameworkVersion}`,
+				`${platform}@${latestFrameworkVersion}`
 		},
 		{
 			name: "should add the platform when --frameworkPath is provided",
 			frameworkPath: "/my/path/to/framework.tgz",
-			latestFrameworkVersion: "6.5.0",
-		},
+			latestFrameworkVersion: "6.5.0"
+		}
 	];
 
 	afterEach(() => {
@@ -92,7 +92,7 @@ describe("PlatformController", () => {
 		_.each(["ios", "android"], (platform) => {
 			it(`${testCase.name} for ${platform} platform`, async () => {
 				const injector = createInjector({
-					latestFrameworkVersion: testCase.latestFrameworkVersion,
+					latestFrameworkVersion: testCase.latestFrameworkVersion
 				});
 
 				const platformParam = testCase.getPlatformParam
@@ -103,7 +103,7 @@ describe("PlatformController", () => {
 				await platformController.addPlatform({
 					projectDir,
 					platform: platformParam,
-					frameworkPath: testCase.frameworkPath,
+					frameworkPath: testCase.frameworkPath
 				});
 
 				const expectedMessage = `Platform ${platform} successfully added. v${testCase.latestFrameworkVersion}`;
@@ -179,7 +179,7 @@ describe("PlatformController", () => {
 			injector.resolve("platformController");
 		await platformController.addPlatform({
 			projectDir,
-			platform: "android",
+			platform: "android"
 		});
 
 		assert(writeFileCalled, "expected to write gradle.properties");

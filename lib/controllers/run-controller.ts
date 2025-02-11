@@ -4,7 +4,7 @@ import {
 	TrackActionNames,
 	DEBUGGER_DETACHED_EVENT_NAME,
 	RunOnDeviceEvents,
-	USER_INTERACTION_NEEDED_EVENT_NAME,
+	USER_INTERACTION_NEEDED_EVENT_NAME
 } from "../constants";
 import { cache, performanceLog } from "../common/decorators";
 import { EventEmitter } from "events";
@@ -19,7 +19,7 @@ import {
 	IAnalyticsService,
 	IErrors,
 	IHooksService,
-	IDictionary,
+	IDictionary
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -47,7 +47,7 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareDataService: IPrepareDataService,
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
-		protected $projectDataService: IProjectDataService,
+		protected $projectDataService: IProjectDataService
 	) {
 		super();
 	}
@@ -70,7 +70,7 @@ export class RunController extends EventEmitter implements IRunController {
 		this.$liveSyncProcessDataService.persistData(
 			projectDir,
 			deviceDescriptors,
-			platforms,
+			platforms
 		);
 
 		const shouldStartWatcher =
@@ -85,23 +85,23 @@ export class RunController extends EventEmitter implements IRunController {
 				if (data.hasNativeChanges) {
 					const platformData = this.$platformsDataService.getPlatformData(
 						data.platform,
-						projectData,
+						projectData
 					);
 					const prepareData = this.$prepareDataService.getPrepareData(
 						liveSyncInfo.projectDir,
 						data.platform,
-						{ ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher },
+						{ ...liveSyncInfo, watch: !liveSyncInfo.skipWatcher }
 					);
 					const changesInfo = await this.$projectChangesService.checkForChanges(
 						platformData,
 						projectData,
-						prepareData,
+						prepareData
 					);
 					if (changesInfo.hasChanges) {
 						await this.syncChangedDataOnDevices(
 							data,
 							projectData,
-							liveSyncInfo,
+							liveSyncInfo
 						);
 					}
 				} else {
@@ -112,13 +112,13 @@ export class RunController extends EventEmitter implements IRunController {
 			this.prepareReadyEventHandler = handler.bind(this);
 			this.$prepareController.on(
 				PREPARE_READY_EVENT_NAME,
-				this.prepareReadyEventHandler,
+				this.prepareReadyEventHandler
 			);
 		}
 		await this.syncInitialDataOnDevices(
 			projectData,
 			liveSyncInfo,
-			deviceDescriptorsForInitialSync,
+			deviceDescriptorsForInitialSync
 		);
 
 		this.attachDeviceLostHandler();
@@ -142,7 +142,7 @@ export class RunController extends EventEmitter implements IRunController {
 			const removedDeviceIdentifiers = _.remove(
 				liveSyncProcessInfo.deviceDescriptors,
 				(descriptor) =>
-					_.includes(deviceIdentifiersToRemove, descriptor.identifier),
+					_.includes(deviceIdentifiersToRemove, descriptor.identifier)
 			).map((descriptor) => descriptor.identifier);
 
 			// Handle the case when no more devices left for any of the persisted platforms
@@ -169,7 +169,7 @@ export class RunController extends EventEmitter implements IRunController {
 				for (let k = 0; k < liveSyncProcessInfo.platforms.length; k++) {
 					await this.$prepareController.stopWatchers(
 						projectDir,
-						liveSyncProcessInfo.platforms[k],
+						liveSyncProcessInfo.platforms[k]
 					);
 				}
 
@@ -184,7 +184,7 @@ export class RunController extends EventEmitter implements IRunController {
 				if (this.prepareReadyEventHandler) {
 					this.$prepareController.removeListener(
 						PREPARE_READY_EVENT_NAME,
-						this.prepareReadyEventHandler,
+						this.prepareReadyEventHandler
 					);
 					this.prepareReadyEventHandler = null;
 				}
@@ -192,8 +192,8 @@ export class RunController extends EventEmitter implements IRunController {
 				const projectData = this.$projectDataService.getProjectData(projectDir);
 				await this.$hooksService.executeAfterHooks("watch", {
 					hookArgs: {
-						projectData,
-					},
+						projectData
+					}
 				});
 			} else if (
 				liveSyncProcessInfo.currentSyncAction &&
@@ -207,7 +207,7 @@ export class RunController extends EventEmitter implements IRunController {
 				this.emitCore(RunOnDeviceEvents.runOnDeviceStopped, {
 					projectDir,
 					deviceIdentifier,
-					keepProcessAlive: stopOptions?.keepProcessAlive,
+					keepProcessAlive: stopOptions?.keepProcessAlive
 				});
 			});
 
@@ -221,7 +221,7 @@ export class RunController extends EventEmitter implements IRunController {
 		projectDir: string;
 	}): ILiveSyncDeviceDescriptor[] {
 		return this.$liveSyncProcessDataService.getDeviceDescriptors(
-			data.projectDir,
+			data.projectDir
 		);
 	}
 
@@ -230,14 +230,14 @@ export class RunController extends EventEmitter implements IRunController {
 		liveSyncResultInfo: ILiveSyncResultInfo,
 		filesChangeEventData: IFilesChangeEventData,
 		deviceDescriptor: ILiveSyncDeviceDescriptor,
-		fullSyncAction?: () => Promise<void>,
+		fullSyncAction?: () => Promise<void>
 	): Promise<IRestartApplicationInfo> {
 		const result = deviceDescriptor.debuggingEnabled
 			? await this.refreshApplicationWithDebug(
 					projectData,
 					liveSyncResultInfo,
 					filesChangeEventData,
-					deviceDescriptor,
+					deviceDescriptor
 				)
 			: await this.refreshApplicationWithoutDebug(
 					projectData,
@@ -245,7 +245,7 @@ export class RunController extends EventEmitter implements IRunController {
 					filesChangeEventData,
 					deviceDescriptor,
 					undefined,
-					fullSyncAction,
+					fullSyncAction
 				);
 
 		const device = liveSyncResultInfo.deviceAppData.device;
@@ -258,9 +258,9 @@ export class RunController extends EventEmitter implements IRunController {
 					device.deviceInfo.platform.toLowerCase()
 				],
 			syncedFiles: liveSyncResultInfo.modifiedFilesData.map((m) =>
-				m.getLocalPath(),
+				m.getLocalPath()
 			),
-			isFullSync: liveSyncResultInfo.isFullSync,
+			isFullSync: liveSyncResultInfo.isFullSync
 		});
 
 		return result;
@@ -270,7 +270,7 @@ export class RunController extends EventEmitter implements IRunController {
 		projectData: IProjectData,
 		liveSyncResultInfo: ILiveSyncResultInfo,
 		filesChangeEventData: IFilesChangeEventData,
-		deviceDescriptor: ILiveSyncDeviceDescriptor,
+		deviceDescriptor: ILiveSyncDeviceDescriptor
 	): Promise<IRestartApplicationInfo> {
 		const debugOptions = deviceDescriptor.debugOptions || {};
 
@@ -284,8 +284,8 @@ export class RunController extends EventEmitter implements IRunController {
 			deviceDescriptor,
 			{
 				shouldSkipEmitLiveSyncNotification: true,
-				shouldCheckDeveloperDiscImage: true,
-			},
+				shouldCheckDeveloperDiscImage: true
+			}
 		);
 
 		// we do not stop the application when debugBrk is false, so we need to attach, instead of launch
@@ -296,7 +296,7 @@ export class RunController extends EventEmitter implements IRunController {
 		await this.$debugController.enableDebuggingCoreWithoutWaitingCurrentAction(
 			projectData.projectDir,
 			deviceDescriptor.identifier,
-			debugOptions,
+			debugOptions
 		);
 
 		return refreshInfo;
@@ -309,7 +309,7 @@ export class RunController extends EventEmitter implements IRunController {
 		filesChangeEventData: IFilesChangeEventData,
 		deviceDescriptor: ILiveSyncDeviceDescriptor,
 		settings?: IRefreshApplicationSettings,
-		fullSyncAction?: () => Promise<void>,
+		fullSyncAction?: () => Promise<void>
 	): Promise<IRestartApplicationInfo> {
 		const result = { didRestart: false };
 		const platform = liveSyncResultInfo.deviceAppData.platform;
@@ -327,20 +327,20 @@ export class RunController extends EventEmitter implements IRunController {
 			if (!shouldRestart) {
 				shouldRestart = await platformLiveSyncService.shouldRestart(
 					projectData,
-					liveSyncResultInfo,
+					liveSyncResultInfo
 				);
 			}
 
 			if (!shouldRestart) {
 				shouldRestart = !(await platformLiveSyncService.tryRefreshApplication(
 					projectData,
-					liveSyncResultInfo,
+					liveSyncResultInfo
 				));
 			}
 
 			if (!isFullSync && shouldRestart && fullSyncAction) {
 				this.$logger.trace(
-					`Syncing all files as the current app state does not support hot updates.`,
+					`Syncing all files as the current app state does not support hot updates.`
 				);
 				liveSyncResultInfo.didRecover = true;
 				await fullSyncAction();
@@ -349,11 +349,11 @@ export class RunController extends EventEmitter implements IRunController {
 			if (shouldRestart) {
 				this.emit(DEBUGGER_DETACHED_EVENT_NAME, {
 					deviceIdentifier:
-						liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+						liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier
 				});
 				await platformLiveSyncService.restartApplication(
 					projectData,
-					liveSyncResultInfo,
+					liveSyncResultInfo
 				);
 				result.didRestart = true;
 			}
@@ -361,7 +361,7 @@ export class RunController extends EventEmitter implements IRunController {
 			this.$logger.info(
 				`Error while trying to start application ${applicationIdentifier} on device ${
 					liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier
-				}. Error is: ${err.message || err}`,
+				}. Error is: ${err.message || err}`
 			);
 			const msg = `Unable to start application ${applicationIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}. Try starting it manually.`;
 			this.$logger.warn(msg);
@@ -377,7 +377,7 @@ export class RunController extends EventEmitter implements IRunController {
 						projectData.projectIdentifiers[
 							device.deviceInfo.platform.toLowerCase()
 						],
-					notification: msg,
+					notification: msg
 				});
 			}
 
@@ -392,7 +392,7 @@ export class RunController extends EventEmitter implements IRunController {
 					projectDir: projectData.projectDir,
 					deviceIdentifier,
 					debugOptions: deviceDescriptor.debugOptions,
-					outputPath: deviceDescriptor.buildData.outputPath,
+					outputPath: deviceDescriptor.buildData.outputPath
 				};
 				this.emit(USER_INTERACTION_NEEDED_EVENT_NAME, attachDebuggerOptions);
 			}
@@ -403,7 +403,7 @@ export class RunController extends EventEmitter implements IRunController {
 
 	private getDeviceDescriptorsForInitialSync(
 		projectDir: string,
-		deviceDescriptors: ILiveSyncDeviceDescriptor[],
+		deviceDescriptors: ILiveSyncDeviceDescriptor[]
 	) {
 		const currentRunData =
 			this.$liveSyncProcessDataService.getPersistedData(projectDir);
@@ -413,7 +413,7 @@ export class RunController extends EventEmitter implements IRunController {
 			? _.differenceBy(
 					deviceDescriptors,
 					currentRunData.deviceDescriptors,
-					"identifier",
+					"identifier"
 				)
 			: deviceDescriptors;
 
@@ -426,7 +426,7 @@ export class RunController extends EventEmitter implements IRunController {
 		} catch (err) {
 			this.$logger.trace(err);
 			this.$errors.fail(
-				`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`,
+				`Unable to install dependencies. Make sure your package.json is valid and all dependencies are correct. Error is: ${err.message}`
 			);
 		}
 	}
@@ -437,7 +437,7 @@ export class RunController extends EventEmitter implements IRunController {
 			DeviceDiscoveryEventNames.DEVICE_LOST,
 			async (device: Mobile.IDevice) => {
 				this.$logger.trace(
-					`Received ${DeviceDiscoveryEventNames.DEVICE_LOST} event in LiveSync service for ${device.deviceInfo.identifier}. Will stop LiveSync operation for this device.`,
+					`Received ${DeviceDiscoveryEventNames.DEVICE_LOST} event in LiveSync service for ${device.deviceInfo.identifier}. Will stop LiveSync operation for this device.`
 				);
 
 				for (const projectDir in this.$liveSyncProcessDataService.getAllPersistedData()) {
@@ -446,29 +446,29 @@ export class RunController extends EventEmitter implements IRunController {
 						if (
 							_.find(
 								deviceDescriptors,
-								(d) => d.identifier === device.deviceInfo.identifier,
+								(d) => d.identifier === device.deviceInfo.identifier
 							)
 						) {
 							await this.stop({
 								projectDir,
-								deviceIdentifiers: [device.deviceInfo.identifier],
+								deviceIdentifiers: [device.deviceInfo.identifier]
 							});
 						}
 					} catch (err) {
 						this.$logger.warn(
 							`Unable to stop LiveSync operation for ${device.deviceInfo.identifier}.`,
-							err,
+							err
 						);
 					}
 				}
-			},
+			}
 		);
 	}
 
 	private async syncInitialDataOnDevices(
 		projectData: IProjectData,
 		liveSyncInfo: ILiveSyncInfo,
-		deviceDescriptors: ILiveSyncDeviceDescriptor[],
+		deviceDescriptors: ILiveSyncDeviceDescriptor[]
 	): Promise<void> {
 		const rebuiltInformation: IDictionary<{
 			packageFilePath: string;
@@ -479,7 +479,7 @@ export class RunController extends EventEmitter implements IRunController {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(
 				deviceDescriptors,
-				(dd) => dd.identifier === device.deviceInfo.identifier,
+				(dd) => dd.identifier === device.deviceInfo.identifier
 			);
 			const prepareData = this.$prepareDataService.getPrepareData(
 				liveSyncInfo.projectDir,
@@ -488,10 +488,10 @@ export class RunController extends EventEmitter implements IRunController {
 					...liveSyncInfo,
 					...deviceDescriptor.buildData,
 					nativePrepare: {
-						skipNativePrepare: !!deviceDescriptor.skipNativePrepare,
+						skipNativePrepare: !!deviceDescriptor.skipNativePrepare
 					},
-					watch: !liveSyncInfo.skipWatcher,
-				},
+					watch: !liveSyncInfo.skipWatcher
+				}
 			);
 
 			const prepareResultData =
@@ -499,11 +499,11 @@ export class RunController extends EventEmitter implements IRunController {
 
 			const buildData = {
 				...deviceDescriptor.buildData,
-				buildForDevice: !device.isEmulator,
+				buildForDevice: !device.isEmulator
 			};
 			const platformData = this.$platformsDataService.getPlatformData(
 				device.deviceInfo.platform,
-				projectData,
+				projectData
 			);
 
 			try {
@@ -514,7 +514,7 @@ export class RunController extends EventEmitter implements IRunController {
 				if (
 					rebuiltInformation[platformData.platformNameLowerCase] &&
 					(this.$mobileHelper.isAndroidPlatform(
-						platformData.platformNameLowerCase,
+						platformData.platformNameLowerCase
 					) ||
 						rebuiltInformation[platformData.platformNameLowerCase]
 							.isEmulator === device.isEmulator)
@@ -525,7 +525,7 @@ export class RunController extends EventEmitter implements IRunController {
 					await this.$deviceInstallAppService.installOnDevice(
 						device,
 						buildData,
-						packageFilePath,
+						packageFilePath
 					);
 				} else {
 					const shouldBuild =
@@ -537,26 +537,26 @@ export class RunController extends EventEmitter implements IRunController {
 						rebuiltInformation[platformData.platformNameLowerCase] = {
 							isEmulator: device.isEmulator,
 							platform: platformData.platformNameLowerCase,
-							packageFilePath,
+							packageFilePath
 						};
 					} else {
 						await this.$analyticsService.trackEventActionInGoogleAnalytics({
 							action: TrackActionNames.LiveSync,
 							device,
-							projectDir: projectData.projectDir,
+							projectDir: projectData.projectDir
 						});
 					}
 
 					await this.$deviceInstallAppService.installOnDeviceIfNeeded(
 						device,
 						buildData,
-						packageFilePath,
+						packageFilePath
 					);
 				}
 
 				const platformLiveSyncService =
 					this.$liveSyncServiceResolver.resolveLiveSyncService(
-						platformData.platformNameLowerCase,
+						platformData.platformNameLowerCase
 					);
 				const { force, useHotModuleReload, skipWatcher } = liveSyncInfo;
 				const liveSyncResultInfo = await platformLiveSyncService.fullSync({
@@ -565,18 +565,18 @@ export class RunController extends EventEmitter implements IRunController {
 					projectData,
 					device,
 					watch: !skipWatcher,
-					liveSyncDeviceData: deviceDescriptor,
+					liveSyncDeviceData: deviceDescriptor
 				});
 
 				await this.refreshApplication(
 					projectData,
 					liveSyncResultInfo,
 					null,
-					deviceDescriptor,
+					deviceDescriptor
 				);
 
 				this.$logger.info(
-					`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`,
+					`Successfully synced application ${liveSyncResultInfo.deviceAppData.appIdentifier} on device ${liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier}.`
 				);
 
 				this.emitCore(RunOnDeviceEvents.runOnDeviceStarted, {
@@ -585,11 +585,11 @@ export class RunController extends EventEmitter implements IRunController {
 					applicationIdentifier:
 						projectData.projectIdentifiers[
 							device.deviceInfo.platform.toLowerCase()
-						],
+						]
 				});
 			} catch (err) {
 				this.$logger.warn(
-					`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`,
+					`Unable to apply changes on device: ${device.deviceInfo.identifier}. Error is: ${err.message}.`
 				);
 				this.$logger.trace(err);
 
@@ -600,13 +600,13 @@ export class RunController extends EventEmitter implements IRunController {
 						projectData.projectIdentifiers[
 							device.deviceInfo.platform.toLowerCase()
 						],
-					error: err,
+					error: err
 				});
 
 				await this.stop({
 					projectDir: projectData.projectDir,
 					deviceIdentifiers: [device.deviceInfo.identifier],
-					stopOptions: { shouldAwaitAllActions: false },
+					stopOptions: { shouldAwaitAllActions: false }
 				});
 			}
 		};
@@ -616,16 +616,16 @@ export class RunController extends EventEmitter implements IRunController {
 				_.some(
 					deviceDescriptors,
 					(deviceDescriptor) =>
-						deviceDescriptor.identifier === device.deviceInfo.identifier,
-				),
-			),
+						deviceDescriptor.identifier === device.deviceInfo.identifier
+				)
+			)
 		);
 	}
 
 	private async syncChangedDataOnDevices(
 		data: IFilesChangeEventData,
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncInfo,
+		liveSyncInfo: ILiveSyncInfo
 	): Promise<void> {
 		const successfullySyncedMessageFormat = `Successfully synced application %s on device %s.`;
 		const rebuiltInformation: IDictionary<{
@@ -637,15 +637,15 @@ export class RunController extends EventEmitter implements IRunController {
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptors =
 				this.$liveSyncProcessDataService.getDeviceDescriptors(
-					projectData.projectDir,
+					projectData.projectDir
 				);
 			const deviceDescriptor = _.find(
 				deviceDescriptors,
-				(dd) => dd.identifier === device.deviceInfo.identifier,
+				(dd) => dd.identifier === device.deviceInfo.identifier
 			);
 			const platformData = this.$platformsDataService.getPlatformData(
 				data.platform,
-				projectData,
+				projectData
 			);
 			const prepareData = this.$prepareDataService.getPrepareData(
 				liveSyncInfo.projectDir,
@@ -654,16 +654,16 @@ export class RunController extends EventEmitter implements IRunController {
 					...liveSyncInfo,
 					...deviceDescriptor.buildData,
 					nativePrepare: {
-						skipNativePrepare: !!deviceDescriptor.skipNativePrepare,
+						skipNativePrepare: !!deviceDescriptor.skipNativePrepare
 					},
-					watch: !liveSyncInfo.skipWatcher,
-				},
+					watch: !liveSyncInfo.skipWatcher
+				}
 			);
 
 			try {
 				const platformLiveSyncService =
 					this.$liveSyncServiceResolver.resolveLiveSyncService(
-						device.deviceInfo.platform,
+						device.deviceInfo.platform
 					);
 				const allAppFiles = data.hmrData?.fallbackFiles?.length
 					? data.hmrData.fallbackFiles
@@ -682,17 +682,17 @@ export class RunController extends EventEmitter implements IRunController {
 					hmrData: data.hmrData,
 					useHotModuleReload: liveSyncInfo.useHotModuleReload,
 					force: liveSyncInfo.force,
-					connectTimeout: 1000,
+					connectTimeout: 1000
 				};
 				const deviceAppData = await platformLiveSyncService.getAppData(
-					_.merge({ device, watch: true }, watchInfo),
+					_.merge({ device, watch: true }, watchInfo)
 				);
 
 				if (data.hasNativeChanges) {
 					const rebuiltInfo =
 						rebuiltInformation[platformData.platformNameLowerCase] &&
 						(this.$mobileHelper.isAndroidPlatform(
-							platformData.platformNameLowerCase,
+							platformData.platformNameLowerCase
 						) ||
 							rebuiltInformation[platformData.platformNameLowerCase]
 								.isEmulator === device.isEmulator);
@@ -700,13 +700,13 @@ export class RunController extends EventEmitter implements IRunController {
 						await this.$prepareNativePlatformService.prepareNativePlatform(
 							platformData,
 							projectData,
-							prepareData,
+							prepareData
 						);
 						await deviceDescriptor.buildAction();
 						rebuiltInformation[platformData.platformNameLowerCase] = {
 							isEmulator: device.isEmulator,
 							platform: platformData.platformNameLowerCase,
-							packageFilePath: null,
+							packageFilePath: null
 						};
 					}
 
@@ -714,7 +714,7 @@ export class RunController extends EventEmitter implements IRunController {
 						device,
 						deviceDescriptor.buildData,
 						rebuiltInformation[platformData.platformNameLowerCase]
-							.packageFilePath,
+							.packageFilePath
 					);
 					await platformLiveSyncService.syncAfterInstall(device, watchInfo);
 					await this.refreshApplication(
@@ -723,17 +723,17 @@ export class RunController extends EventEmitter implements IRunController {
 							deviceAppData,
 							modifiedFilesData: [],
 							isFullSync: false,
-							useHotModuleReload: liveSyncInfo.useHotModuleReload,
+							useHotModuleReload: liveSyncInfo.useHotModuleReload
 						},
 						data,
-						deviceDescriptor,
+						deviceDescriptor
 					);
 					this.$logger.info(
 						util.format(
 							successfullySyncedMessageFormat,
 							deviceAppData.appIdentifier,
-							device.deviceInfo.identifier,
-						),
+							device.deviceInfo.identifier
+						)
 					);
 				} else {
 					const isInHMRMode =
@@ -743,7 +743,7 @@ export class RunController extends EventEmitter implements IRunController {
 					if (isInHMRMode) {
 						this.$hmrStatusService.watchHmrStatus(
 							device.deviceInfo.identifier,
-							data.hmrData.hash,
+							data.hmrData.hash
 						);
 					}
 
@@ -751,14 +751,14 @@ export class RunController extends EventEmitter implements IRunController {
 						const liveSyncResultInfo =
 							await platformLiveSyncService.liveSyncWatchAction(
 								device,
-								watchInfo,
+								watchInfo
 							);
 						const fullSyncAction = async () => {
 							watchInfo.filesToSync = allAppFiles;
 							const fullLiveSyncResultInfo =
 								await platformLiveSyncService.liveSyncWatchAction(
 									device,
-									watchInfo,
+									watchInfo
 								);
 							// IMPORTANT: keep the same instance as we rely on side effects
 							_.assign(liveSyncResultInfo, fullLiveSyncResultInfo);
@@ -769,8 +769,8 @@ export class RunController extends EventEmitter implements IRunController {
 								filesToSync,
 								allAppFiles,
 								isInHMRMode,
-								filesChangedEvent: data,
-							},
+								filesChangedEvent: data
+							}
 						});
 
 						await this.refreshApplication(
@@ -778,13 +778,13 @@ export class RunController extends EventEmitter implements IRunController {
 							liveSyncResultInfo,
 							data,
 							deviceDescriptor,
-							fullSyncAction,
+							fullSyncAction
 						);
 
 						if (!liveSyncResultInfo.didRecover && isInHMRMode) {
 							const status = await this.$hmrStatusService.getHmrStatus(
 								device.deviceInfo.identifier,
-								data.hmrData.hash,
+								data.hmrData.hash
 							);
 
 							// the timeout is assumed OK as the app could be blocked on a breakpoint
@@ -795,7 +795,7 @@ export class RunController extends EventEmitter implements IRunController {
 									projectData,
 									liveSyncResultInfo,
 									data,
-									deviceDescriptor,
+									deviceDescriptor
 								);
 							}
 						}
@@ -804,38 +804,38 @@ export class RunController extends EventEmitter implements IRunController {
 							filesToSync,
 							allAppFiles,
 							filesChangedEvent: data,
-							isInHMRMode,
+							isInHMRMode
 						});
 
 						this.$logger.info(
 							util.format(
 								successfullySyncedMessageFormat,
 								deviceAppData.appIdentifier,
-								device.deviceInfo.identifier,
-							),
+								device.deviceInfo.identifier
+							)
 						);
 					};
 
 					if (liveSyncInfo.useHotModuleReload) {
 						try {
 							this.$logger.trace(
-								"Try executing watch action without any preparation of files.",
+								"Try executing watch action without any preparation of files."
 							);
 							await watchAction();
 							this.$logger.trace(
-								"Successfully executed watch action without any preparation of files.",
+								"Successfully executed watch action without any preparation of files."
 							);
 							return;
 						} catch (err) {
 							this.$logger.trace(
-								`Error while trying to execute fast sync. Now we'll check the state of the app and we'll try to resurrect from the error. The error is: ${err}`,
+								`Error while trying to execute fast sync. Now we'll check the state of the app and we'll try to resurrect from the error. The error is: ${err}`
 							);
 						}
 					}
 
 					await this.$deviceInstallAppService.installOnDeviceIfNeeded(
 						device,
-						deviceDescriptor.buildData,
+						deviceDescriptor.buildData
 					);
 					watchInfo.connectTimeout = null;
 					await watchAction();
@@ -844,7 +844,7 @@ export class RunController extends EventEmitter implements IRunController {
 				this.$logger.warn(
 					`Unable to apply changes for device: ${
 						device.deviceInfo.identifier
-					}. Error is: ${err && err.message}.`,
+					}. Error is: ${err && err.message}.`
 				);
 
 				this.emitCore(RunOnDeviceEvents.runOnDeviceError, {
@@ -854,13 +854,13 @@ export class RunController extends EventEmitter implements IRunController {
 						projectData.projectIdentifiers[
 							device.deviceInfo.platform.toLowerCase()
 						],
-					error: err,
+					error: err
 				});
 
 				await this.stop({
 					projectDir: projectData.projectDir,
 					deviceIdentifiers: [device.deviceInfo.identifier],
-					stopOptions: { shouldAwaitAllActions: false },
+					stopOptions: { shouldAwaitAllActions: false }
 				});
 			}
 		};
@@ -869,7 +869,7 @@ export class RunController extends EventEmitter implements IRunController {
 			this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) => {
 				const liveSyncProcessInfo =
 					this.$liveSyncProcessDataService.getPersistedData(
-						projectData.projectDir,
+						projectData.projectDir
 					);
 				return (
 					data.platform.toLowerCase() ===
@@ -878,16 +878,16 @@ export class RunController extends EventEmitter implements IRunController {
 					_.some(
 						liveSyncProcessInfo.deviceDescriptors,
 						(deviceDescriptor) =>
-							deviceDescriptor.identifier === device.deviceInfo.identifier,
+							deviceDescriptor.identifier === device.deviceInfo.identifier
 					)
 				);
-			}),
+			})
 		);
 	}
 
 	private async addActionToChain<T>(
 		projectDir: string,
-		action: () => Promise<T>,
+		action: () => Promise<T>
 	): Promise<T> {
 		const liveSyncInfo =
 			this.$liveSyncProcessDataService.getPersistedData(projectDir);

@@ -3,7 +3,10 @@ import { IUtils } from "./declarations";
 import { injector } from "./yok";
 
 export class Utils implements IUtils {
-	constructor(private $options: IOptions, private $logger: ILogger) {}
+	constructor(
+		private $options: IOptions,
+		private $logger: ILogger
+	) {}
 
 	public getParsedTimeout(defaultTimeout: number): number {
 		let timeout = defaultTimeout;

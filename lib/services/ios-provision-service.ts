@@ -16,7 +16,7 @@ const months = [
 	"Sep",
 	"Oct",
 	"Nov",
-	"Dec",
+	"Dec"
 ];
 function formatDate(date: Date): string {
 	return `${date.getDay()} ${months[date.getMonth()]} ${date.getFullYear()}`;
@@ -83,7 +83,7 @@ export class IOSProvisionService {
 				"Provision Name / Provision UUID / App Id",
 				"Team",
 				"Type / Due",
-				"Devices",
+				"Devices"
 			],
 			[]
 		);
@@ -94,7 +94,7 @@ export class IOSProvisionService {
 				quoteString(prov.Name),
 				prov.TeamName,
 				prov.Type,
-				formatTotalDeviceCount(prov),
+				formatTotalDeviceCount(prov)
 			]);
 			table.push([
 				prov.UUID,
@@ -102,7 +102,7 @@ export class IOSProvisionService {
 					? "(" + prov.TeamIdentifier[0] + ")"
 					: "",
 				formatDate(prov.ExpirationDate),
-				formatSupportedDeviceCount(prov),
+				formatSupportedDeviceCount(prov)
 			]);
 			table.push([prov.Entitlements["application-identifier"], "", "", ""]);
 		}
@@ -136,7 +136,7 @@ export class IOSProvisionService {
 		const query: mobileprovision.provision.Query = {
 			Certificates: certificates.valid,
 			Unique: true,
-			AppId: projectId,
+			AppId: projectId
 		};
 
 		let devices: string[] = [];
@@ -145,7 +145,7 @@ export class IOSProvisionService {
 		} else {
 			await this.$devicesService.initialize({
 				platform: "ios",
-				skipEmulatorStart: true,
+				skipEmulatorStart: true
 			});
 			devices = _(this.$devicesService.getDeviceInstances())
 				.filter((d) => this.$mobileHelper.isiOSPlatform(d.deviceInfo.platform))

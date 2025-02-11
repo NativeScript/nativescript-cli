@@ -8,25 +8,25 @@ import {
 	IPluginData,
 	IPackageJsonDepedenciesResult,
 	IBasePluginData,
-	INodeModuleData,
+	INodeModuleData
 } from "../definitions/plugins";
 import {
 	IPlatformsDataService,
 	INodeModulesDependenciesBuilder,
-	IPlatformData,
+	IPlatformData
 } from "../definitions/platform";
 import { IProjectDataService, IProjectData } from "../definitions/project";
 import {
 	INodePackageManagerInstallOptions,
 	INodePackageManager,
 	IOptions,
-	IDependencyData,
+	IDependencyData
 } from "../declarations";
 import {
 	IFileSystem,
 	IErrors,
 	IDictionary,
-	IStringDictionary,
+	IStringDictionary
 } from "../common/declarations";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import * as _ from "lodash";
@@ -34,7 +34,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import {
 	resolvePackagePath,
-	resolvePackageJSONPath,
+	resolvePackageJSONPath
 } from "../helpers/package-path-helper";
 import { color } from "../color";
 
@@ -42,14 +42,14 @@ export class PluginsService implements IPluginsService {
 	private static INSTALL_COMMAND_NAME = "install";
 	private static UNINSTALL_COMMAND_NAME = "uninstall";
 	private static NPM_CONFIG = {
-		save: true,
+		save: true
 	};
 
 	private static LOCK_FILES = [
 		"package-lock.json",
 		"npm-shrinkwrap.json",
 		"yarn.lock",
-		"pnpm-lock.yaml",
+		"pnpm-lock.yaml"
 	];
 
 	private get $platformsDataService(): IPlatformsDataService {
@@ -65,7 +65,7 @@ export class PluginsService implements IPluginsService {
 				disableNpmInstall: this.$options.disableNpmInstall,
 				frameworkPath: this.$options.frameworkPath,
 				ignoreScripts: this.$options.ignoreScripts,
-				path: this.$options.path,
+				path: this.$options.path
 			},
 			PluginsService.NPM_CONFIG
 		);
@@ -233,7 +233,7 @@ export class PluginsService implements IPluginsService {
 	public async preparePluginNativeCode({
 		pluginData,
 		platform,
-		projectData,
+		projectData
 	}: IPreparePluginNativeCodeData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
@@ -276,7 +276,7 @@ export class PluginsService implements IPluginsService {
 					pathToPluginsBuildFile,
 					pluginData,
 					currentPluginNativeHashes: updatedPluginNativeHashes,
-					allPluginsNativeHashes,
+					allPluginsNativeHashes
 				});
 			}
 		}
@@ -296,7 +296,7 @@ export class PluginsService implements IPluginsService {
 			.map((dep) => {
 				this.$logger.trace(`Checking if ${dep} is installed...`);
 				const pathToPackage = resolvePackagePath(dep, {
-					paths: [projectData.projectDir],
+					paths: [projectData.projectDir]
 				});
 
 				if (pathToPackage) {
@@ -325,7 +325,7 @@ export class PluginsService implements IPluginsService {
 					disableNpmInstall: this.$options.disableNpmInstall,
 					frameworkPath: this.$options.frameworkPath,
 					ignoreScripts: this.$options.ignoreScripts,
-					path: this.$options.path,
+					path: this.$options.path
 				}
 			);
 		}
@@ -394,7 +394,7 @@ export class PluginsService implements IPluginsService {
 
 		return {
 			dependencies,
-			devDependencies,
+			devDependencies
 		};
 	}
 
@@ -500,7 +500,7 @@ export class PluginsService implements IPluginsService {
 						dependenciesWithFrameworks.push({
 							...d,
 							frameworkName: path.basename(file),
-							frameworkLocation: path.join(pathToPlatforms, file),
+							frameworkLocation: path.join(pathToPlatforms, file)
 						});
 					}
 				});
@@ -684,14 +684,14 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 
 		return {
 			hasModifiedPackageJson,
-			packageJsonContent,
+			packageJsonContent
 		};
 	}
 
 	private getBasicPluginInformation(dependencies: any): IBasePluginData[] {
 		return _.map(dependencies, (version: string, key: string) => ({
 			name: key,
-			version: version,
+			version: version
 		}));
 	}
 
@@ -708,7 +708,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		projectDir: string
 	): string {
 		const pathToJsonFile = resolvePackageJSONPath(moduleName, {
-			paths: [projectDir],
+			paths: [projectDir]
 		});
 		return pathToJsonFile;
 	}
@@ -733,7 +733,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			version: data.version,
 			fullPath: path.dirname(module),
 			isPlugin: data.nativescript !== undefined,
-			nativescript: data.nativescript,
+			nativescript: data.nativescript
 		};
 	}
 

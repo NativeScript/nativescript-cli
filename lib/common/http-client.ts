@@ -30,7 +30,7 @@ export class HttpClient implements Server.IHttpClient {
 			return {
 				response: result,
 				body: result.body,
-				headers: result.headers,
+				headers: result.headers
 			};
 		} catch (err) {
 			if (
@@ -49,7 +49,7 @@ export class HttpClient implements Server.IHttpClient {
 				return {
 					response: retryResult,
 					body: retryResult.body,
-					headers: retryResult.headers,
+					headers: retryResult.headers
 				};
 			}
 
@@ -64,7 +64,7 @@ export class HttpClient implements Server.IHttpClient {
 		if (_.isString(options)) {
 			options = {
 				url: options,
-				method: "GET",
+				method: "GET"
 			};
 		}
 
@@ -103,8 +103,8 @@ export class HttpClient implements Server.IHttpClient {
 			agent = tunnel.httpsOverHttp({
 				proxy: {
 					host: cliProxySettings.hostname,
-					port: parseInt(cliProxySettings.port),
-				},
+					port: parseInt(cliProxySettings.port)
+				}
 			});
 		}
 		const result = await axios({
@@ -113,7 +113,7 @@ export class HttpClient implements Server.IHttpClient {
 			method: options.method,
 			proxy: false,
 			httpAgent: agent,
-			data: options.body,
+			data: options.body
 		}).catch((err) => {
 			this.$logger.trace("An error occurred while sending the request:", err);
 			if (err.response) {
@@ -143,7 +143,7 @@ export class HttpClient implements Server.IHttpClient {
 			return {
 				response: result,
 				body: JSON.stringify(result.data),
-				headers: result.headers,
+				headers: result.headers
 			};
 		}
 	}

@@ -59,7 +59,7 @@ export class ProjectBackupService implements IProjectBackupService {
 			// create backup.json
 			this.$super.$fs.writeJson(path.resolve(this.backupDir, "_backup.json"), {
 				name: this.name,
-				paths: backedUpPaths,
+				paths: backedUpPaths
 			});
 
 			return this;

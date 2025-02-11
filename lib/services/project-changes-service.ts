@@ -7,19 +7,19 @@ import {
 	PLATFORMS_DIR_NAME,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
-	CONFIG_NS_FILE_NAME,
+	CONFIG_NS_FILE_NAME
 } from "../constants";
 import { getHash, hook } from "../common/helpers";
 import {
 	INodeModulesDependenciesBuilder,
-	IPlatformData,
+	IPlatformData
 } from "../definitions/platform";
 import { IProjectData } from "../definitions/project";
 import { IFileSystem, IHooksService, IFsStats } from "../common/declarations";
 import {
 	IProjectChangesInfo,
 	IPrepareInfo,
-	IAddedNativePlatform,
+	IAddedNativePlatform
 } from "../definitions/project-changes";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
@@ -153,7 +153,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			this._changesInfo.nsConfigChanged = this.filesChanged([
 				path.join(projectData.projectDir, CONFIG_FILE_NAME_JS),
 				path.join(projectData.projectDir, CONFIG_FILE_NAME_TS),
-				path.join(projectData.projectDir, CONFIG_NS_FILE_NAME),
+				path.join(projectData.projectDir, CONFIG_NS_FILE_NAME)
 			]);
 			this._changesInfo.nativeChanged =
 				this._changesInfo.nativeChanged || this._changesInfo.nsConfigChanged;
@@ -169,12 +169,12 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._changesInfo.configChanged = this.filesChanged([
 					path.join(platformResourcesDir, platformData.configurationFileName),
 					path.join(platformResourcesDir, "LaunchScreen.storyboard"),
-					path.join(platformResourcesDir, BUILD_XCCONFIG_FILE_NAME),
+					path.join(platformResourcesDir, BUILD_XCCONFIG_FILE_NAME)
 				]);
 			} else {
 				this._changesInfo.configChanged = this.filesChanged([
 					path.join(platformResourcesDir, platformData.configurationFileName),
-					path.join(platformResourcesDir, APP_GRADLE_FILE_NAME),
+					path.join(platformResourcesDir, APP_GRADLE_FILE_NAME)
 				]);
 			}
 
@@ -288,7 +288,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				addedPlatform.nativePlatformStatus;
 		} else {
 			this._prepareInfo = {
-				nativePlatformStatus: addedPlatform.nativePlatformStatus,
+				nativePlatformStatus: addedPlatform.nativePlatformStatus
 			};
 		}
 
@@ -328,7 +328,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				projectData.projectDir,
 				platformData
 			),
-			changesRequireBuildTime: null,
+			changesRequireBuildTime: null
 		};
 
 		this._outputProjectMtime = 0;

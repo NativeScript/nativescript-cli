@@ -8,7 +8,7 @@ import {
 	CONNECTION_ERROR_EVENT_NAME,
 	DebugCommandErrors,
 	TrackActionNames,
-	DebugTools,
+	DebugTools
 } from "../../lib/constants";
 import { DebugController } from "../../lib/controllers/debug-controller";
 import { BuildDataService } from "../../lib/services/build-data-service";
@@ -23,7 +23,7 @@ import {
 	IDebugData,
 	IDebugOptions,
 	IDebugResultInfo,
-	IDeviceDebugService,
+	IDeviceDebugService
 } from "../../lib/definitions/debug";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { IAnalyticsService } from "../../lib/common/declarations";
@@ -68,10 +68,10 @@ const getDefaultDeviceInformation = (
 	deviceInfo: {
 		status: constants.CONNECTED_STATUS,
 		platform: platform || "Android",
-		identifier: defaultDeviceIdentifier,
+		identifier: defaultDeviceIdentifier
 	},
 
-	isEmulator: false,
+	isEmulator: false
 });
 
 const getDefaultTestData = (platform?: string): IDebugTestData => ({
@@ -80,8 +80,8 @@ const getDefaultTestData = (platform?: string): IDebugTestData => ({
 	isApplicationInstalledOnDevice: true,
 	hostInfo: {
 		isWindows: false,
-		isDarwin: true,
-	},
+		isDarwin: true
+	}
 });
 
 describe("debugController", () => {
@@ -98,13 +98,13 @@ describe("debugController", () => {
 							applicationManager: {
 								isApplicationInstalled: async (
 									appIdentifier: string
-								): Promise<boolean> => testData.isApplicationInstalledOnDevice,
+								): Promise<boolean> => testData.isApplicationInstalledOnDevice
 							},
 
-							isEmulator: testData.deviceInformation.isEmulator,
-					  }
+							isEmulator: testData.deviceInformation.isEmulator
+						}
 					: null;
-			},
+			}
 		});
 
 		testInjector.register("androidDeviceDebugService", PlatformDebugService);
@@ -117,7 +117,7 @@ describe("debugController", () => {
 			},
 			isiOSPlatform: (platform: string) => {
 				return platform.toLowerCase() === "ios";
-			},
+			}
 		});
 
 		testInjector.register("errors", stubs.ErrorsStub);
@@ -128,7 +128,7 @@ describe("debugController", () => {
 
 		testInjector.register("analyticsService", {
 			trackEventActionInGoogleAnalytics: (data: IEventActionData) =>
-				Promise.resolve(),
+				Promise.resolve()
 		});
 
 		testInjector.register("buildDataService", BuildDataService);
@@ -163,7 +163,7 @@ describe("debugController", () => {
 			applicationIdentifier: "org.nativescript.app1",
 			projectDir: "/Users/user/app1",
 			projectName: "app1",
-			debugOptions: debugOptions || {},
+			debugOptions: debugOptions || {}
 		});
 
 		describe("rejects the result promise when", () => {
@@ -275,11 +275,12 @@ describe("debugController", () => {
 					const expectedErrorData = {
 						deviceIdentifier: "deviceId",
 						message: "my message",
-						code: 2048,
+						code: 2048
 					};
-					const platformDebugService = testInjector.resolve<
-						IDeviceDebugService
-					>(`${platform}DeviceDebugService`);
+					const platformDebugService =
+						testInjector.resolve<IDeviceDebugService>(
+							`${platform}DeviceDebugService`
+						);
 					platformDebugService.emit(
 						CONNECTION_ERROR_EVENT_NAME,
 						expectedErrorData
@@ -307,7 +308,7 @@ describe("debugController", () => {
 					assert.deepStrictEqual(debugInfo, {
 						url: fakeChromeDebugUrl,
 						port: fakeChromeDebugPort,
-						deviceIdentifier: debugData.deviceIdentifier,
+						deviceIdentifier: debugData.deviceIdentifier
 					});
 				});
 			});
@@ -319,18 +320,18 @@ describe("debugController", () => {
 					{
 						testName: "Inspector when --inspector is passed",
 						debugOptions: { inspector: true },
-						additionalData: DebugTools.Inspector,
+						additionalData: DebugTools.Inspector
 					},
 					{
 						testName: "Chrome when no options are passed",
 						debugOptions: null,
-						additionalData: DebugTools.Chrome,
+						additionalData: DebugTools.Chrome
 					},
 					{
 						testName: "Chrome when --chrome is passed",
 						debugOptions: { chrome: true },
-						additionalData: DebugTools.Chrome,
-					},
+						additionalData: DebugTools.Chrome
+					}
 				],
 				(testCase) => {
 					it(testCase.testName, async () => {
@@ -338,9 +339,8 @@ describe("debugController", () => {
 						testData.deviceInformation.deviceInfo.platform = "iOS";
 
 						const testInjector = getTestInjectorForTestConfiguration(testData);
-						const analyticsService = testInjector.resolve<IAnalyticsService>(
-							"analyticsService"
-						);
+						const analyticsService =
+							testInjector.resolve<IAnalyticsService>("analyticsService");
 						let dataTrackedToGA: IEventActionData = null;
 						analyticsService.trackEventActionInGoogleAnalytics = async (
 							data: IEventActionData
@@ -351,9 +351,8 @@ describe("debugController", () => {
 						const debugController = testInjector.resolve(DebugController);
 						const debugData = getDebugData(testCase.debugOptions);
 						await debugController.startDebug(debugData);
-						const devicesService = testInjector.resolve<Mobile.IDevicesService>(
-							"devicesService"
-						);
+						const devicesService =
+							testInjector.resolve<Mobile.IDevicesService>("devicesService");
 						const device = devicesService.getDeviceByIdentifier(
 							testData.deviceInformation.deviceInfo.identifier
 						);
@@ -363,7 +362,7 @@ describe("debugController", () => {
 								action: TrackActionNames.Debug,
 								device,
 								additionalData: testCase.additionalData,
-								projectDir: debugData.projectDir,
+								projectDir: debugData.projectDir
 							},
 							null,
 							2

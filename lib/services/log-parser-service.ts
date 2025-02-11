@@ -7,7 +7,8 @@ import { injector } from "../common/yok";
 
 export class LogParserService
 	extends EventEmitter
-	implements ILogParserService {
+	implements ILogParserService
+{
 	private parseRules: IDictionary<ILogParseRule> = {};
 
 	constructor(

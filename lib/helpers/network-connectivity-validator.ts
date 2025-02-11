@@ -4,13 +4,17 @@ import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
 
 export class NetworkConnectivityValidator
-	implements INetworkConnectivityValidator {
+	implements INetworkConnectivityValidator
+{
 	private static DNS_LOOKUP_URL = "play.nativescript.org";
 	private static NO_INTERNET_ERROR_CODE = "ENOTFOUND";
 	private static NO_INTERNET_ERROR_MESSAGE =
 		"No internet connection. Check your internet settings and try again.";
 
-	constructor(private $errors: IErrors, private $logger: ILogger) {}
+	constructor(
+		private $errors: IErrors,
+		private $logger: ILogger
+	) {}
 
 	public async validate(): Promise<void> {
 		const isConnected = await this.isConnected();

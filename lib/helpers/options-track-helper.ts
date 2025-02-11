@@ -5,7 +5,7 @@ import {
 	IAnalyticsService,
 	IDictionary,
 	IDashedOption,
-	OptionType,
+	OptionType
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
@@ -23,7 +23,7 @@ export class OptionsTracker {
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.Options,
-			additionalData: JSON.stringify(trackObject),
+			additionalData: JSON.stringify(trackObject)
 		});
 	}
 

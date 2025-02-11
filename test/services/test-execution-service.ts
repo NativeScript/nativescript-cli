@@ -28,60 +28,56 @@ function getDependenciesObj(deps: string[]): IDictionary<string> {
 describe("testExecutionService", () => {
 	const testCases = [
 		{
-			name:
-				"should return false when the project has no dependencies and dev dependencies",
+			name: "should return false when the project has no dependencies and dev dependencies",
 			expectedCanStartKarmaServer: false,
-			projectData: { dependencies: {}, devDependencies: {} },
+			projectData: { dependencies: {}, devDependencies: {} }
 		},
 		{
 			name: "should return false when the project has no karma",
 			expectedCanStartKarmaServer: false,
 			projectData: {
 				dependencies: getDependenciesObj([unitTestsPluginName]),
-				devDependencies: {},
-			},
+				devDependencies: {}
+			}
 		},
 		{
 			name: "should return false when the project has no unit test runner",
 			expectedCanStartKarmaServer: false,
 			projectData: {
 				dependencies: getDependenciesObj([karmaPluginName]),
-				devDependencies: {},
-			},
+				devDependencies: {}
+			}
 		},
 		{
-			name:
-				"should return true when the project has the required plugins as dependencies",
+			name: "should return true when the project has the required plugins as dependencies",
 			expectedCanStartKarmaServer: true,
 			projectData: {
 				dependencies: getDependenciesObj([
 					karmaPluginName,
-					unitTestsPluginName,
+					unitTestsPluginName
 				]),
-				devDependencies: {},
-			},
+				devDependencies: {}
+			}
 		},
 		{
-			name:
-				"should return true when the project has the required plugins as dev dependencies",
+			name: "should return true when the project has the required plugins as dev dependencies",
 			expectedCanStartKarmaServer: true,
 			projectData: {
 				dependencies: {},
 				devDependencies: getDependenciesObj([
 					karmaPluginName,
-					unitTestsPluginName,
-				]),
-			},
+					unitTestsPluginName
+				])
+			}
 		},
 		{
-			name:
-				"should return true when the project has the required plugins as dev and normal dependencies",
+			name: "should return true when the project has the required plugins as dev and normal dependencies",
 			expectedCanStartKarmaServer: true,
 			projectData: {
 				dependencies: getDependenciesObj([karmaPluginName]),
-				devDependencies: getDependenciesObj([unitTestsPluginName]),
-			},
-		},
+				devDependencies: getDependenciesObj([unitTestsPluginName])
+			}
+		}
 	];
 
 	describe("canStartKarmaServer", () => {
@@ -109,9 +105,8 @@ describe("testExecutionService", () => {
 				};
 				// END MOCK
 
-				const canStartKarmaServer = await testExecutionService.canStartKarmaServer(
-					testCase.projectData
-				);
+				const canStartKarmaServer =
+					await testExecutionService.canStartKarmaServer(testCase.projectData);
 				assert.equal(canStartKarmaServer, testCase.expectedCanStartKarmaServer);
 
 				// restore mock

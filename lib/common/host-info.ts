@@ -24,7 +24,10 @@ export class HostInfo implements IHostInfo {
 		return this.$injector.resolve("logger");
 	}
 
-	constructor(private $errors: IErrors, private $injector: IInjector) {}
+	constructor(
+		private $errors: IErrors,
+		private $injector: IInjector
+	) {}
 
 	public get isWindows() {
 		return process.platform === HostInfo.WIN32_NAME;
@@ -65,11 +68,11 @@ export class HostInfo implements IHostInfo {
 		this.$logger.trace("Trying to get macOS version.");
 		let macOSVersion: string;
 		try {
-			const systemProfileOutput = await this.$childProcess.exec(
-				systemProfileCommand
-			);
+			const systemProfileOutput =
+				await this.$childProcess.exec(systemProfileCommand);
 
-			const versionRegExp = /System Version:\s+?macOS\s+?(\d+\.\d+)(\.\d+)?\s+/g;
+			const versionRegExp =
+				/System Version:\s+?macOS\s+?(\d+\.\d+)(\.\d+)?\s+/g;
 			const regExpMatchers = versionRegExp.exec(systemProfileOutput);
 			macOSVersion = regExpMatchers && regExpMatchers[1];
 			if (macOSVersion) {
@@ -106,7 +109,7 @@ export class HostInfo implements IHostInfo {
 				const Winreg = require("winreg");
 				const regKey = new Winreg({
 					hive: Winreg.HKLM,
-					key: HostInfo.DOT_NET_REGISTRY_PATH,
+					key: HostInfo.DOT_NET_REGISTRY_PATH
 				});
 				regKey.get("Version", (err: Error, value: any) => {
 					if (err) {

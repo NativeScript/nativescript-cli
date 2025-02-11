@@ -4,12 +4,12 @@ import { EOL } from "os";
 import {
 	IPlatformEnvironmentRequirements,
 	ICheckEnvironmentRequirementsInput,
-	ICheckEnvironmentRequirementsOutput,
+	ICheckEnvironmentRequirementsOutput
 } from "../definitions/platform";
 import {
 	IErrors,
 	IAnalyticsService,
-	IDoctorService,
+	IDoctorService
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -39,11 +39,11 @@ export class PlatformEnvironmentRequirements
 		if (process.env.NS_SKIP_ENV_CHECK) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.CheckEnvironmentRequirements,
-				additionalData: "Skipped: NS_SKIP_ENV_CHECK is set",
+				additionalData: "Skipped: NS_SKIP_ENV_CHECK is set"
 			});
 			return {
 				canExecute: true,
-				selectedOption,
+				selectedOption
 			};
 		}
 
@@ -51,7 +51,7 @@ export class PlatformEnvironmentRequirements
 			platform,
 			projectDir,
 			runtimeVersion,
-			forceCheck: input.forceCheck,
+			forceCheck: input.forceCheck
 		});
 
 		if (!canExecute) {
@@ -59,14 +59,14 @@ export class PlatformEnvironmentRequirements
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: TrackActionNames.CheckEnvironmentRequirements,
 				additionalData:
-					"Non-interactive terminal, unable to execute local builds.",
+					"Non-interactive terminal, unable to execute local builds."
 			});
 			this.fail(this.getNonInteractiveConsoleMessage(platform));
 		}
 
 		return {
 			canExecute,
-			selectedOption,
+			selectedOption
 		};
 	}
 
@@ -77,7 +77,7 @@ export class PlatformEnvironmentRequirements
 	private getNonInteractiveConsoleMessage(platform: string) {
 		return [
 			PlatformEnvironmentRequirements.MISSING_LOCAL_SETUP_MESSAGE,
-			this.getEnvVerificationMessage(platform),
+			this.getEnvVerificationMessage(platform)
 		].join(EOL);
 	}
 
@@ -87,7 +87,7 @@ export class PlatformEnvironmentRequirements
 			{
 				linux: "linux",
 				win32: "windows",
-				darwin: "macos",
+				darwin: "macos"
 			} as any
 		)[process.platform];
 

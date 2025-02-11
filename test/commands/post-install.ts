@@ -9,7 +9,7 @@ const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
 	testInjector.register("fs", {
 		setCurrentUserAsOwner: async (path: string, owner: string): Promise<void> =>
-			undefined,
+			undefined
 	});
 
 	testInjector.register("staticConfig", {});
@@ -18,28 +18,28 @@ const createTestInjector = (): IInjector => {
 		tryExecuteCommand: async (
 			commandName: string,
 			commandArguments: string[]
-		): Promise<void> => undefined,
+		): Promise<void> => undefined
 	});
 
 	testInjector.register("helpService", {
-		generateHtmlPages: async (): Promise<void> => undefined,
+		generateHtmlPages: async (): Promise<void> => undefined
 	});
 
 	testInjector.register("options", {});
 
 	testInjector.register("doctorService", {
-		printWarnings: async (): Promise<boolean> => undefined,
+		printWarnings: async (): Promise<boolean> => undefined
 	});
 
 	testInjector.register("analyticsService", {
 		checkConsent: async (): Promise<void> => undefined,
 		track: async (featureName: string, featureValue: string): Promise<void> =>
-			undefined,
+			undefined
 	});
 
 	testInjector.register("logger", {
 		info: (formatStr?: any, ...args: any[]): void => undefined,
-		printMarkdown: (...args: any[]): void => undefined,
+		printMarkdown: (...args: any[]): void => undefined
 	});
 
 	testInjector.register("settingsService", SettingsService);
@@ -71,17 +71,15 @@ describe("post-install command", () => {
 			isGenerateHtmlPagesCalled = true;
 		};
 
-		const analyticsService = testInjector.resolve<IAnalyticsService>(
-			"analyticsService"
-		);
+		const analyticsService =
+			testInjector.resolve<IAnalyticsService>("analyticsService");
 		let isCheckConsentCalled = false;
 		analyticsService.checkConsent = async (): Promise<void> => {
 			isCheckConsentCalled = true;
 		};
 
-		const commandsService = testInjector.resolve<ICommandsService>(
-			"commandsService"
-		);
+		const commandsService =
+			testInjector.resolve<ICommandsService>("commandsService");
 		let isTryExecuteCommandCalled = false;
 		commandsService.tryExecuteCommand = async (): Promise<void> => {
 			isTryExecuteCommandCalled = true;
@@ -120,7 +118,7 @@ describe("post-install command", () => {
 
 	it("calls specific methods when CLI is installed with sudo with `--unsafe-perm`", async () => {
 		process.env.npm_config_argv = JSON.stringify({
-			original: ["--unsafe-perm"],
+			original: ["--unsafe-perm"]
 		});
 		process.env.SUDO_USER = "user1";
 		return verifyResult({ shouldCallMethod: true });

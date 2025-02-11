@@ -11,13 +11,13 @@ import { IBuildConfig, IProjectData } from "../../lib/definitions/project";
 import {
 	IAndroidToolsInfo,
 	IAndroidToolsInfoData,
-	IAndroidResourcesMigrationService,
+	IAndroidResourcesMigrationService
 } from "../../lib/declarations";
 import { IInjector } from "../../lib/common/definitions/yok";
 import {
 	IDictionary,
 	IFileSystem,
-	IProjectDir,
+	IProjectDir
 } from "../../lib/common/declarations";
 
 const createTestInjector = (): IInjector => {
@@ -36,31 +36,31 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("androidResourcesMigrationService", {});
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("filesHashService", {
-		saveHashesForProject: () => ({}),
+		saveHashesForProject: () => ({})
 	});
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("options", {
-		hostProjectModuleName: "app",
+		hostProjectModuleName: "app"
 	});
 	testInjector.register("projectData", stubs.ProjectDataStub);
 	testInjector.register("androidToolsInfo", {
 		getToolsInfo: () => {
 			return {
-				androidHomeEnvVar: true,
+				androidHomeEnvVar: true
 			};
 		},
 		validateInfo: () => {
 			return true;
-		},
+		}
 	});
 	testInjector.register("gradleCommandService", GradleCommandService);
 	testInjector.register("gradleBuildService", GradleBuildService);
 	testInjector.register("gradleBuildArgsService", GradleBuildArgsService);
 	testInjector.register("analyticsService", stubs.AnalyticsService);
 	testInjector.register("staticConfig", {
-		TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage",
+		TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage"
 	});
 	return testInjector;
 };
@@ -74,7 +74,7 @@ const getDefautlBuildConfig = (): IBuildConfig => {
 		provision: null,
 		teamId: "",
 		projectDir: "location/location",
-		keyStorePath: "",
+		keyStorePath: ""
 	};
 };
 
@@ -107,7 +107,7 @@ describe("androidProjectService", () => {
 			getPlatformDataStub.callsFake(() => {
 				return {
 					configurationFilePath: "",
-					getBuildOutputPath: () => "",
+					getBuildOutputPath: () => ""
 				};
 			});
 		});
@@ -248,7 +248,7 @@ describe("androidProjectService", () => {
 				config?: IProjectDir
 			): IAndroidToolsInfoData => {
 				return <any>{
-					compileSdkVersion,
+					compileSdkVersion
 				};
 			};
 		});
@@ -278,8 +278,8 @@ describe("androidProjectService", () => {
 							"android",
 							"app",
 							"src"
-						),
-					},
+						)
+					}
 				]);
 			});
 
@@ -290,8 +290,8 @@ describe("androidProjectService", () => {
 						"values-v21",
 						"values-v26",
 						"values-v27",
-						"values-v28",
-					],
+						"values-v28"
+					]
 				};
 
 				compileSdkVersion = 26;
@@ -306,7 +306,7 @@ describe("androidProjectService", () => {
 						"drawable-ldpi",
 						"values",
 						"values-v21",
-						"values-v29",
+						"values-v29"
 					],
 					[`${pathToResDirInPlatforms}`]: [
 						"drawable-hdpi",
@@ -314,8 +314,8 @@ describe("androidProjectService", () => {
 						"drawable-mdpi",
 						"values",
 						"values-v21",
-						"values-v29",
-					],
+						"values-v29"
+					]
 				};
 
 				await androidProjectService.prepareAppResources(projectData);
@@ -324,7 +324,7 @@ describe("androidProjectService", () => {
 				// This is not correct behavior and it should be fixed in a later point.
 				assert.deepStrictEqual(deletedDirs, [
 					drawableHdpiPath,
-					drawableLdpiPath,
+					drawableLdpiPath
 				]);
 			});
 		});
@@ -344,8 +344,8 @@ describe("androidProjectService", () => {
 				assert.deepStrictEqual(copiedFiles, [
 					{
 						sourceFileName: path.join(pathToAppResourcesAndroid, "*"),
-						destinationFileName: pathToResDirInPlatforms,
-					},
+						destinationFileName: pathToResDirInPlatforms
+					}
 				]);
 			});
 
@@ -356,8 +356,8 @@ describe("androidProjectService", () => {
 						"values-v21",
 						"values-v26",
 						"values-v27",
-						"values-v28",
-					],
+						"values-v28"
+					]
 				};
 
 				compileSdkVersion = 26;
@@ -368,7 +368,7 @@ describe("androidProjectService", () => {
 				assert.deepStrictEqual(deletedDirs, [
 					libsPath,
 					valuesV27Path,
-					valuesV28Path,
+					valuesV28Path
 				]);
 			});
 
@@ -379,7 +379,7 @@ describe("androidProjectService", () => {
 						"drawable-ldpi",
 						"values",
 						"values-v21",
-						"values-v29",
+						"values-v29"
 					],
 					[`${pathToResDirInPlatforms}`]: [
 						"drawable-hdpi",
@@ -387,8 +387,8 @@ describe("androidProjectService", () => {
 						"drawable-mdpi",
 						"values",
 						"values-v21",
-						"values-v29",
-					],
+						"values-v29"
+					]
 				};
 
 				await androidProjectService.prepareAppResources(projectData);
@@ -398,7 +398,7 @@ describe("androidProjectService", () => {
 				assert.deepStrictEqual(deletedDirs, [
 					drawableHdpiPath,
 					drawableLdpiPath,
-					libsPath,
+					libsPath
 				]);
 			});
 		});

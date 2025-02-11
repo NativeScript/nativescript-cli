@@ -4,7 +4,7 @@ import { IProjectData } from "../definitions/project";
 import {
 	IPlatformCommandHelper,
 	IPackageInstallationManager,
-	IPackageManager,
+	IPackageManager
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IDependency } from "../definitions/migrate";
@@ -74,31 +74,33 @@ export class UpdateControllerBase {
 
 	protected hasRuntimeDependency({
 		platform,
-		projectData,
+		projectData
 	}: {
 		platform: string;
 		projectData: IProjectData;
 	}): boolean {
 		const lowercasePlatform = platform.toLowerCase();
-		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
-			lowercasePlatform,
-			projectData
-		);
+		const currentPlatformVersion =
+			this.$platformCommandHelper.getCurrentPlatformVersion(
+				lowercasePlatform,
+				projectData
+			);
 		return !!currentPlatformVersion;
 	}
 
 	protected async getMaxRuntimeVersion({
 		platform,
-		projectData,
+		projectData
 	}: {
 		platform: string;
 		projectData: IProjectData;
 	}) {
 		const lowercasePlatform = platform.toLowerCase();
-		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
-			lowercasePlatform,
-			projectData
-		);
+		const currentPlatformVersion =
+			this.$platformCommandHelper.getCurrentPlatformVersion(
+				lowercasePlatform,
+				projectData
+			);
 		const platformData = this.$platformsDataService.getPlatformData(
 			lowercasePlatform,
 			projectData

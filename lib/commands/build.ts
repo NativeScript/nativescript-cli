@@ -1,6 +1,6 @@
 import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
-	AndroidAppBundleMessages,
+	AndroidAppBundleMessages
 } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
@@ -8,7 +8,7 @@ import { IProjectData } from "../definitions/project";
 import {
 	IOptions,
 	IPlatformValidationService,
-	IAndroidBundleValidatorHelper,
+	IAndroidBundleValidatorHelper
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IBuildController, IBuildDataService } from "../definitions/build";
@@ -42,9 +42,9 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		watch: {
 			type: OptionType.Boolean,
 			default: false,
-			hasSensitiveValue: false,
+			hasSensitiveValue: false
 		},
-		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false }
 	};
 
 	public async executeCore(args: string[]): Promise<string> {
@@ -132,7 +132,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
-				platforms: [platform],
+				platforms: [platform]
 			});
 		}
 
@@ -180,7 +180,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		await this.executeCore([
-			this.$devicePlatformsConstants.Android.toLowerCase(),
+			this.$devicePlatformsConstants.Android.toLowerCase()
 		]);
 
 		if (this.$options.aab) {
@@ -201,7 +201,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
-				platforms: [platform],
+				platforms: [platform]
 			});
 		}
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(

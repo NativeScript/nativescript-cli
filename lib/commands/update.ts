@@ -30,7 +30,7 @@ export class UpdateCommand implements ICommand {
 			// ns update --markingMode
 			await this.$markingModeService.handleMarkingModeFullDeprecation({
 				projectDir: this.$projectData.projectDir,
-				forceSwitch: true,
+				forceSwitch: true
 			});
 			return;
 		}
@@ -38,7 +38,7 @@ export class UpdateCommand implements ICommand {
 		if (
 			!(await this.$updateController.shouldUpdate({
 				projectDir: this.$projectData.projectDir,
-				version: args[0],
+				version: args[0]
 			}))
 		) {
 			this.$logger.printMarkdown(
@@ -50,7 +50,7 @@ export class UpdateCommand implements ICommand {
 		await this.$updateController.update({
 			projectDir: this.$projectData.projectDir,
 			version: args[0],
-			frameworkPath: this.$options.frameworkPath,
+			frameworkPath: this.$options.frameworkPath
 		});
 	}
 
@@ -59,9 +59,9 @@ export class UpdateCommand implements ICommand {
 			projectDir: this.$projectData.projectDir,
 			platforms: [
 				this.$devicePlatformsConstants.Android,
-				this.$devicePlatformsConstants.iOS,
+				this.$devicePlatformsConstants.iOS
 			],
-			loose: true,
+			loose: true
 		});
 
 		if (shouldMigrate) {

@@ -123,7 +123,7 @@ export class CreateProjectCommand implements ICommand {
 		projectName = await this.$projectService.validateProjectName({
 			projectName: projectName,
 			force: this.$options.force,
-			pathToProject: this.$options.path,
+			pathToProject: this.$options.path
 		});
 
 		if (!selectedTemplate && isInteractive()) {
@@ -141,7 +141,7 @@ export class CreateProjectCommand implements ICommand {
 			pathToProject: this.$options.path,
 			// its already validated above
 			force: true,
-			ignoreScripts: this.$options.ignoreScripts,
+			ignoreScripts: this.$options.ignoreScripts
 		});
 	}
 
@@ -164,33 +164,33 @@ export class CreateProjectCommand implements ICommand {
 			[
 				{
 					key: constants.NgFlavorName,
-					description: "Learn more at https://nativescript.org/angular",
+					description: "Learn more at https://nativescript.org/angular"
 				},
 				{
 					key: constants.ReactFlavorName,
 					description:
-						"Learn more at https://github.com/shirakaba/react-nativescript",
+						"Learn more at https://github.com/shirakaba/react-nativescript"
 				},
 				{
 					key: constants.VueFlavorName,
-					description: "Learn more at https://nativescript.org/vue",
+					description: "Learn more at https://nativescript.org/vue"
 				},
 				{
 					key: constants.SolidFlavorName,
-					description: "Learn more at https://www.solidjs.com",
+					description: "Learn more at https://www.solidjs.com"
 				},
 				{
 					key: constants.SvelteFlavorName,
-					description: "Learn more at https://svelte-native.technology",
+					description: "Learn more at https://svelte-native.technology"
 				},
 				{
 					key: constants.TsFlavorName,
-					description: "Learn more at https://nativescript.org/typescript",
+					description: "Learn more at https://nativescript.org/typescript"
 				},
 				{
 					key: constants.JsFlavorName,
-					description: "Use NativeScript without any framework",
-				},
+					description: "Use NativeScript without any framework"
+				}
 			]
 		);
 		return flavorSelection;
@@ -271,18 +271,18 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			{
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.javascript,
-				description: CreateProjectCommand.HelloWorldTemplateDescription,
+				description: CreateProjectCommand.HelloWorldTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
 				value: "@nativescript/template-drawer-navigation",
-				description: CreateProjectCommand.DrawerTemplateDescription,
+				description: CreateProjectCommand.DrawerTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
 				value: "@nativescript/template-tab-navigation",
-				description: CreateProjectCommand.TabsTemplateDescription,
-			},
+				description: CreateProjectCommand.TabsTemplateDescription
+			}
 		];
 
 		return templates;
@@ -293,23 +293,23 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			{
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.typescript,
-				description: CreateProjectCommand.HelloWorldTemplateDescription,
+				description: CreateProjectCommand.HelloWorldTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
 				value: "@nativescript/template-drawer-navigation-ts",
-				description: CreateProjectCommand.DrawerTemplateDescription,
+				description: CreateProjectCommand.DrawerTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
 				value: "@nativescript/template-tab-navigation-ts",
-				description: CreateProjectCommand.TabsTemplateDescription,
+				description: CreateProjectCommand.TabsTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
 				value: "@nativescript/template-hello-world-ts-vision",
-				description: CreateProjectCommand.BlankVisionTemplateDescription,
-			},
+				description: CreateProjectCommand.BlankVisionTemplateDescription
+			}
 		];
 
 		return templates;
@@ -320,23 +320,23 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			{
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.angular,
-				description: CreateProjectCommand.HelloWorldTemplateDescription,
+				description: CreateProjectCommand.HelloWorldTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
 				value: "@nativescript/template-drawer-navigation-ng",
-				description: CreateProjectCommand.DrawerTemplateDescription,
+				description: CreateProjectCommand.DrawerTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
 				value: "@nativescript/template-tab-navigation-ng",
-				description: CreateProjectCommand.TabsTemplateDescription,
+				description: CreateProjectCommand.TabsTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
 				value: "@nativescript/template-hello-world-ng-vision",
-				description: CreateProjectCommand.BlankVisionTemplateDescription,
-			},
+				description: CreateProjectCommand.BlankVisionTemplateDescription
+			}
 		];
 
 		return templates;
@@ -347,13 +347,13 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			{
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.react,
-				description: CreateProjectCommand.HelloWorldTemplateDescription,
+				description: CreateProjectCommand.HelloWorldTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
 				value: "@nativescript/template-blank-react-vision",
-				description: CreateProjectCommand.BlankVisionTemplateDescription,
-			},
+				description: CreateProjectCommand.BlankVisionTemplateDescription
+			}
 		];
 
 		return templates;
@@ -364,18 +364,18 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			{
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.solid,
-				description: CreateProjectCommand.HelloWorldTemplateDescription,
+				description: CreateProjectCommand.HelloWorldTemplateDescription
 			},
 			{
 				key: `${CreateProjectCommand.HelloWorldTemplateKey} using TypeScript`,
 				value: constants.RESERVED_TEMPLATE_NAMES.solidts,
-				description: `${CreateProjectCommand.HelloWorldTemplateDescription} using TypeScript`,
+				description: `${CreateProjectCommand.HelloWorldTemplateDescription} using TypeScript`
 			},
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
 				value: "@nativescript/template-blank-solid-vision",
-				description: CreateProjectCommand.BlankVisionTemplateDescription,
-			},
+				description: CreateProjectCommand.BlankVisionTemplateDescription
+			}
 		];
 
 		return templates;
@@ -386,13 +386,13 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			{
 				key: CreateProjectCommand.HelloWorldTemplateKey,
 				value: constants.RESERVED_TEMPLATE_NAMES.svelte,
-				description: CreateProjectCommand.HelloWorldTemplateDescription,
+				description: CreateProjectCommand.HelloWorldTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
 				value: "@nativescript/template-blank-svelte-vision",
-				description: CreateProjectCommand.BlankVisionTemplateDescription,
-			},
+				description: CreateProjectCommand.BlankVisionTemplateDescription
+			}
 		];
 
 		return templates;
@@ -403,28 +403,28 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			{
 				key: CreateProjectCommand.BlankTemplateKey,
 				value: "@nativescript/template-blank-vue",
-				description: CreateProjectCommand.BlankTemplateDescription,
+				description: CreateProjectCommand.BlankTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.BlankTsTemplateKey,
 				value: "@nativescript/template-blank-vue-ts",
-				description: CreateProjectCommand.BlankTsTemplateDescription,
+				description: CreateProjectCommand.BlankTsTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.DrawerTemplateKey,
 				value: "@nativescript/template-drawer-navigation-vue",
-				description: CreateProjectCommand.DrawerTemplateDescription,
+				description: CreateProjectCommand.DrawerTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.TabsTemplateKey,
 				value: "@nativescript/template-tab-navigation-vue",
-				description: CreateProjectCommand.TabsTemplateDescription,
+				description: CreateProjectCommand.TabsTemplateDescription
 			},
 			{
 				key: CreateProjectCommand.BlankVisionTemplateKey,
 				value: "@nativescript/template-blank-vue-vision",
-				description: CreateProjectCommand.BlankVisionTemplateDescription,
-			},
+				description: CreateProjectCommand.BlankVisionTemplateDescription
+			}
 		];
 
 		return templates;
@@ -448,7 +448,7 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			runDebugNotes = [
 				`Run the project on Vision Pro with:`,
 				"",
-				`  ${greyDollarSign} ${color.green("ns run visionos --no-hmr")}`,
+				`  ${greyDollarSign} ${color.green("ns run visionos --no-hmr")}`
 			];
 		} else {
 			runDebugNotes = [
@@ -460,7 +460,7 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 				"Debug the project with Chrome DevTools:",
 				"",
 				`  ${greyDollarSign} ${color.green("ns debug ios")}`,
-				`  ${greyDollarSign} ${color.green("ns debug android")}`,
+				`  ${greyDollarSign} ${color.green("ns debug android")}`
 			];
 		}
 		this.$logger.info(
@@ -468,7 +468,7 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 				[
 					color.green(`Project`),
 					color.cyan(projectName),
-					color.green(`was successfully created.`),
+					color.green(`was successfully created.`)
 				].join(" "),
 				"",
 				`Now you can navigate to your project with ${color.cyan(
@@ -478,7 +478,7 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 				...runDebugNotes,
 				``,
 				`For more options consult the docs or run ${color.green("ns --help")}`,
-				"",
+				""
 			].join("\n")
 		);
 		// todo: add back ns preview

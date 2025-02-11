@@ -86,7 +86,7 @@ export function memoize(options: MemoizeOptions): any {
 			DEBUG &&
 				console.log({
 					cacheMapName,
-					hashKey,
+					hashKey
 				});
 
 			// initialize cache map if not exists
@@ -96,14 +96,14 @@ export function memoize(options: MemoizeOptions): any {
 					configurable: false,
 					enumerable: false,
 					writable: false,
-					value: new Map<any, any>(),
+					value: new Map<any, any>()
 				});
 			}
 			const cacheMap: Map<any, any> = this[cacheMapName];
 
 			DEBUG &&
 				console.log({
-					cacheMap,
+					cacheMap
 				});
 
 			// check if has memoized value based on hashFn
@@ -198,9 +198,8 @@ export function performanceLog(localInjector?: IInjector): any {
 		const originalMethod = descriptor.value;
 		const className = target.constructor.name;
 		const trackName = `${className}${AnalyticsEventLabelDelimiter}${propertyKey}`;
-		const performanceService: IPerformanceService = localInjector.resolve(
-			"performanceService"
-		);
+		const performanceService: IPerformanceService =
+			localInjector.resolve("performanceService");
 
 		//needed for the returned function to have the same name as the original - used in hooks decorator
 		const functionWrapper = {
@@ -236,7 +235,7 @@ export function performanceLog(localInjector?: IInjector): any {
 				}
 
 				return result;
-			},
+			}
 		};
 		descriptor.value = functionWrapper[originalMethod.name];
 

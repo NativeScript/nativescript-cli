@@ -9,14 +9,14 @@ import {
 	ANDROID_DEVICE_APP_ROOT_TEMPLATE,
 	APP_FOLDER_NAME,
 	NODE_MODULES_FOLDER_NAME,
-	PlatformTypes,
+	PlatformTypes
 } from "../constants";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IPlatformsDataService } from "../definitions/platform";
 import {
 	IDictionary,
 	IStringDictionary,
-	IFileSystem,
+	IFileSystem
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -211,7 +211,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			if (smc) {
 				const originalPosition = smc.originalPositionFor({
 					line: parsedLine.line,
-					column: parsedLine.column,
+					column: parsedLine.column
 				});
 				let sourceFile =
 					originalPosition.source &&
@@ -232,7 +232,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 						const platformSpecificFile = path.format({
 							dir,
 							ext,
-							name: platformSpecificName,
+							name: platformSpecificName
 						});
 						if (
 							this.$fs.exists(
@@ -249,7 +249,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 					return {
 						sourceFile: this.originalFilesLocationCache[sourceFile],
 						line: originalPosition.line,
-						column: originalPosition.column,
+						column: originalPosition.column
 					};
 				}
 			}

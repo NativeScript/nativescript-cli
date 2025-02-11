@@ -2,7 +2,7 @@ import { cache } from "../common/decorators";
 import {
 	HmrConstants,
 	IOS_APP_CRASH_LOG_REG_EXP,
-	FAIL_LIVESYNC_LOG_REGEX,
+	FAIL_LIVESYNC_LOG_REGEX
 } from "../common/constants";
 import { IDictionary } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -51,25 +51,25 @@ export class HmrStatusService implements IHmrStatusService {
 		this.$logParserService.addParseRule({
 			regex: HmrStatusService.HMR_STATUS_LOG_REGEX,
 			handler: this.handleHmrStatusFound.bind(this),
-			name: "hmrStatus",
+			name: "hmrStatus"
 		});
 		this.$logParserService.addParseRule({
 			regex: IOS_APP_CRASH_LOG_REG_EXP,
 			handler: this.handleAppCrash.bind(this),
 			name: "appCrashHmr",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
 		this.$logParserService.addParseRule({
 			regex: FAIL_LIVESYNC_LOG_REGEX,
 			handler: this.handleAppCrash.bind(this),
 			name: "failedLiveSync",
-			platform: this.$devicePlatformsConstants.iOS.toLowerCase(),
+			platform: this.$devicePlatformsConstants.iOS.toLowerCase()
 		});
 
 		// webpack5
 		const statusStringMap: any = {
 			success: HmrConstants.HMR_SUCCESS_STATUS,
-			failure: HmrConstants.HMR_ERROR_STATUS,
+			failure: HmrConstants.HMR_ERROR_STATUS
 		};
 		this.$logParserService.addParseRule({
 			regex: /\[HMR]\[(.+)]\s*(\w+)\s*\|/,
@@ -80,7 +80,7 @@ export class HmrStatusService implements IHmrStatusService {
 					this.setData(deviceId, hash, statusStringMap[status]);
 				}
 			},
-			name: "hmr-status",
+			name: "hmr-status"
 		});
 	}
 

@@ -1,14 +1,14 @@
 import * as path from "path";
 import {
 	IOSNativeTargetProductTypes,
-	IOSNativeTargetTypes,
+	IOSNativeTargetTypes
 } from "../constants";
 import {
 	IIOSNativeTargetService,
 	IIOSExtensionsService,
 	IAddExtensionsFromPathOptions,
 	IRemoveExtensionsOptions,
-	IProjectData,
+	IProjectData
 } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -25,7 +25,7 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		extensionsFolderPath,
 		projectData,
 		platformData,
-		pbxProjPath,
+		pbxProjPath
 	}: IAddExtensionsFromPathOptions): Promise<boolean> {
 		const targetUuids: string[] = [];
 		let addedExtensions = false;
@@ -81,8 +81,8 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 			[
 				{
 					name: "PRODUCT_BUNDLE_IDENTIFIER",
-					value: `${projectData.projectIdentifiers.ios}.${extensionName}`,
-				},
+					value: `${projectData.projectIdentifiers.ios}.${extensionName}`
+				}
 			],
 			extensionName,
 			project

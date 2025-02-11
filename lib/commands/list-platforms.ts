@@ -16,14 +16,12 @@ export class ListPlatformsCommand implements ICommand {
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const installedPlatforms = this.$platformCommandHelper.getInstalledPlatforms(
-			this.$projectData
-		);
+		const installedPlatforms =
+			this.$platformCommandHelper.getInstalledPlatforms(this.$projectData);
 
 		if (installedPlatforms.length > 0) {
-			const preparedPlatforms = this.$platformCommandHelper.getPreparedPlatforms(
-				this.$projectData
-			);
+			const preparedPlatforms =
+				this.$platformCommandHelper.getPreparedPlatforms(this.$projectData);
 			if (preparedPlatforms.length > 0) {
 				this.$logger.info(
 					"The project is prepared for: ",

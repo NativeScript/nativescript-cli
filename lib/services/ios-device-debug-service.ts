@@ -3,7 +3,7 @@ import { ChildProcess } from "child_process";
 import { DebugServiceBase } from "./debug-service-base";
 import {
 	CONNECTION_ERROR_EVENT_NAME,
-	DeviceConnectionType,
+	DeviceConnectionType
 } from "../constants";
 const inspectorAppName = "NativeScript Inspector.app";
 const inspectorNpmPackageName = "tns-ios-inspector";
@@ -14,11 +14,11 @@ import {
 	IDeviceDebugService,
 	IDebugOptions,
 	IDebugResultInfo,
-	IDebugData,
+	IDebugData
 } from "../definitions/debug";
 import {
 	IPackageInstallationManager,
-	IAppDebugSocketProxyFactory,
+	IAppDebugSocketProxyFactory
 } from "../declarations";
 import { IProjectDataService } from "../definitions/project";
 import { IChildProcess, IHostInfo, IErrors } from "../common/declarations";
@@ -26,7 +26,8 @@ import { injector } from "../common/yok";
 
 export class IOSDeviceDebugService
 	extends DebugServiceBase
-	implements IDeviceDebugService {
+	implements IDeviceDebugService
+{
 	private deviceIdentifier: string;
 
 	constructor(
@@ -148,12 +149,13 @@ export class IOSDeviceDebugService
 			);
 		}
 		const projectName = this.getProjectName(debugData);
-		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(
-			this.device,
-			debugData.applicationIdentifier,
-			projectName,
-			debugData.projectDir
-		);
+		const webSocketProxy =
+			await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(
+				this.device,
+				debugData.applicationIdentifier,
+				projectName,
+				debugData.projectDir
+			);
 
 		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
 	}
@@ -198,10 +200,11 @@ export class IOSDeviceDebugService
 		debugOptions: IDebugOptions
 	): Promise<ChildProcess> {
 		if (debugOptions.client) {
-			const inspectorPath = await this.$packageInstallationManager.getInspectorFromCache(
-				inspectorNpmPackageName,
-				debugData.projectDir
-			);
+			const inspectorPath =
+				await this.$packageInstallationManager.getInspectorFromCache(
+					inspectorNpmPackageName,
+					debugData.projectDir
+				);
 
 			const inspectorSourceLocation = path.join(
 				inspectorPath,

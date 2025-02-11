@@ -5,7 +5,7 @@ import { IOptions } from "../declarations";
 import { ISettingsService, ISysInfo } from "../common/declarations";
 import {
 	IInitializeOptions,
-	IInitializeService,
+	IInitializeService
 } from "../definitions/initialize-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -30,17 +30,15 @@ export class InitializeService implements IInitializeService {
 		}
 
 		if (initOpts.settingsServiceOptions) {
-			const $settingsService = this.$injector.resolve<ISettingsService>(
-				"settingsService"
-			);
+			const $settingsService =
+				this.$injector.resolve<ISettingsService>("settingsService");
 			$settingsService.setSettings(initOpts.settingsServiceOptions);
 		}
 
 		if (initOpts.extensibilityOptions) {
 			if (initOpts.extensibilityOptions.pathToExtensions) {
-				const $extensibilityService = this.$injector.resolve<
-					IExtensibilityService
-				>("extensibilityService");
+				const $extensibilityService =
+					this.$injector.resolve<IExtensibilityService>("extensibilityService");
 				$extensibilityService.pathToExtensions =
 					initOpts.extensibilityOptions.pathToExtensions;
 			}

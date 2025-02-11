@@ -2,7 +2,7 @@ import { ChildProcess } from "child_process";
 import { IChildProcess } from "../common/declarations";
 import {
 	IKeyCommandHelper,
-	IValidKeyName,
+	IValidKeyName
 } from "../common/definitions/key-commands";
 import { injector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
@@ -47,8 +47,8 @@ export default class StartService implements IStartService {
 					FORCE_COLOR: 1,
 					HIDE_HEADER: true,
 					NS_IS_INTERACTIVE: true,
-					...process.env,
-				},
+					...process.env
+				}
 			}
 		);
 
@@ -112,7 +112,7 @@ export default class StartService implements IStartService {
 
 			const clean = this.$childProcess.spawn("node", [
 				this.$staticConfig.cliBinPath,
-				"clean",
+				"clean"
 			]);
 			clean.stdout.on("data", (data) => {
 				process.stdout.write(data);

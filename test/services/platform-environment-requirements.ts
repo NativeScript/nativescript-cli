@@ -16,17 +16,17 @@ function createTestInjector() {
 	const testInjector = new Yok();
 
 	testInjector.register("analyticsService", {
-		trackEventActionInGoogleAnalytics: () => ({}),
+		trackEventActionInGoogleAnalytics: () => ({})
 	});
 	testInjector.register("commandsService", {
-		currentCommandData: { commandName: "test", commandArguments: [""] },
+		currentCommandData: { commandName: "test", commandArguments: [""] }
 	});
 	testInjector.register("doctorService", {});
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 	testInjector.register("errors", {
 		fail: (err: any) => {
 			throw new Error(err.formatStr || err.message || err);
-		},
+		}
 	});
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register("prompter", {});
@@ -50,7 +50,8 @@ describe("platformEnvironmentRequirements ", () => {
 
 	describe("checkRequirements", () => {
 		let testInjector: IInjector = null;
-		let platformEnvironmentRequirements: IPlatformEnvironmentRequirements = null;
+		let platformEnvironmentRequirements: IPlatformEnvironmentRequirements =
+			null;
 		let promptForChoiceData: { message: string; choices: string[] }[] = [];
 
 		function mockDoctorService(data: {
@@ -98,9 +99,10 @@ describe("platformEnvironmentRequirements ", () => {
 
 		it("should return true when environment is configured", async () => {
 			mockDoctorService({ canExecuteLocalBuild: true });
-			const result = await platformEnvironmentRequirements.checkEnvironmentRequirements(
-				{ platform }
-			);
+			const result =
+				await platformEnvironmentRequirements.checkEnvironmentRequirements({
+					platform
+				});
 			assert.isTrue(result.canExecute);
 			assert.isTrue(promptForChoiceData.length === 0);
 		});
@@ -108,9 +110,10 @@ describe("platformEnvironmentRequirements ", () => {
 		it("should skip env check when NS_SKIP_ENV_CHECK environment variable is passed", async () => {
 			(<any>process.env).NS_SKIP_ENV_CHECK = true;
 
-			const output = await platformEnvironmentRequirements.checkEnvironmentRequirements(
-				{ platform }
-			);
+			const output =
+				await platformEnvironmentRequirements.checkEnvironmentRequirements({
+					platform
+				});
 
 			assert.isTrue(output.canExecute);
 			assert.isTrue(promptForChoiceData.length === 0);
@@ -125,7 +128,7 @@ describe("platformEnvironmentRequirements ", () => {
 			it("should fail", async () => {
 				await assert.isRejected(
 					platformEnvironmentRequirements.checkEnvironmentRequirements({
-						platform,
+						platform
 					})
 				);
 			});

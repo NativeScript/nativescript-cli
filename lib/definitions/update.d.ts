@@ -2,7 +2,7 @@ interface IUpdateController {
 	update(updateOptions: IUpdateOptions): Promise<void>;
 	shouldUpdate({
 		projectDir,
-		version,
+		version
 	}: {
 		projectDir: string;
 		version?: string;

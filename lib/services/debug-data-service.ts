@@ -2,7 +2,7 @@ import { IProjectData } from "../definitions/project";
 import {
 	IDebugOptions,
 	IDebugData,
-	IDebugDataService,
+	IDebugDataService
 } from "../definitions/debug";
 import { injector } from "../common/yok";
 
@@ -24,7 +24,7 @@ export class DebugDataService implements IDebugDataService {
 			projectDir: projectData.projectDir,
 			deviceIdentifier,
 			projectName: projectData.projectName,
-			debugOptions,
+			debugOptions
 		};
 	}
 }

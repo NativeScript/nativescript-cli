@@ -4,7 +4,7 @@ import { IPlatformsDataService } from "../definitions/platform";
 import {
 	ICommandParameter,
 	ICanExecuteCommandOptions,
-	INotConfiguredEnvOptions,
+	INotConfiguredEnvOptions
 } from "../common/definitions/commands";
 
 export abstract class ValidatePlatformCommandBase {

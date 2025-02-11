@@ -2,7 +2,7 @@ import {
 	IBuildConfig,
 	IProjectData,
 	IBuildForDevice,
-	INativePrepare,
+	INativePrepare
 } from "./project";
 import { IHasAndroidBundle, IDependencyData, IOptions } from "../declarations";
 import { IControllerDataBase } from "./data";

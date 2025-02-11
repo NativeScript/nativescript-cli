@@ -37,7 +37,7 @@ export class PrepareData extends ControllerDataBase {
 		this.hmr = data.hmr || data.useHotModuleReload;
 		this.env = {
 			...env,
-			hmr: data.hmr || data.useHotModuleReload,
+			hmr: data.hmr || data.useHotModuleReload
 		};
 		this.watch = data.watch;
 		if (_.isBoolean(data.watchNative)) {

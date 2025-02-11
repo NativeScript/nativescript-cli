@@ -9,7 +9,7 @@ import {
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
 	AssetConstants,
-	ProjectTypes,
+	ProjectTypes
 } from "../../lib/constants";
 import { DevicePlatformsConstants } from "../../lib/common/mobile/device-platforms-constants";
 import { basename, join } from "path";
@@ -17,13 +17,13 @@ import { FileSystem } from "../../lib/common/file-system";
 import { regExpEscape } from "../../lib/common/helpers";
 import {
 	IProjectDataService,
-	IAssetGroup,
+	IAssetGroup
 } from "../../lib/definitions/project";
 import { IInjector } from "../../lib/common/definitions/yok";
 import {
 	IReadFileOptions,
 	IFsStats,
-	IFileSystem,
+	IFileSystem
 } from "../../lib/common/declarations";
 import { ProjectConfigService } from "../../lib/services/project-config-service";
 
@@ -69,7 +69,7 @@ const createTestInjector = (
 	testInjector.register("projectData", ProjectDataStub);
 	testInjector.register("staticConfig", {
 		CLIENT_NAME_KEY_IN_PROJECT_FILE: CLIENT_NAME_KEY_IN_PROJECT_FILE,
-		PROJECT_FILE_NAME: "package.json",
+		PROJECT_FILE_NAME: "package.json"
 	});
 
 	testInjector.register("fs", {
@@ -112,7 +112,7 @@ const createTestInjector = (
 				includeEmptyDirectories?: boolean;
 			},
 			foundFiles?: string[]
-		): string[] => [],
+		): string[] => []
 	});
 
 	testInjector.register("logger", LoggerStub);
@@ -121,7 +121,7 @@ const createTestInjector = (
 	testInjector.register("projectConfigService", ProjectConfigService);
 
 	testInjector.register("androidResourcesMigrationService", {
-		hasMigrated: (appResourcesDir: string): boolean => true,
+		hasMigrated: (appResourcesDir: string): boolean => true
 	});
 
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
@@ -131,7 +131,7 @@ const createTestInjector = (
 	testInjector.register("errors", {});
 
 	testInjector.register("projectHelper", {
-		sanitizeName: (appName: string): string => appName,
+		sanitizeName: (appName: string): string => appName
 	});
 
 	testInjector.register("options", {});
@@ -183,9 +183,8 @@ describe("projectDataService", () => {
 				const testInjector = createTestInjector(
 					generateFileContentFromTestData(currentTestData)
 				);
-				const projectDataService: IProjectDataService = testInjector.resolve(
-					"projectDataService"
-				);
+				const projectDataService: IProjectDataService =
+					testInjector.resolve("projectDataService");
 
 				const actualValue = projectDataService.getNSValue(
 					"projectDir",
@@ -217,9 +216,8 @@ describe("projectDataService", () => {
 					dataPassedToWriteJson = data;
 				};
 
-				const projectDataService: IProjectDataService = testInjector.resolve(
-					"projectDataService"
-				);
+				const projectDataService: IProjectDataService =
+					testInjector.resolve("projectDataService");
 				projectDataService.setNSValue(
 					"projectDir",
 					currentTestData.propertyName,
@@ -242,8 +240,8 @@ describe("projectDataService", () => {
 			initialData[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {
 				root: {
 					id: "1",
-					constantItem: "myValue",
-				},
+					constantItem: "myValue"
+				}
 			};
 
 			const testInjector = createTestInjector(JSON.stringify(initialData));
@@ -259,9 +257,8 @@ describe("projectDataService", () => {
 				dataPassedToWriteJson = data;
 			};
 
-			const projectDataService: IProjectDataService = testInjector.resolve(
-				"projectDataService"
-			);
+			const projectDataService: IProjectDataService =
+				testInjector.resolve("projectDataService");
 			projectDataService.setNSValue(
 				"projectDir",
 				getPropertyName(["root", "id"]),
@@ -322,9 +319,8 @@ describe("projectDataService", () => {
 					dataPassedToWriteJson = data;
 				};
 
-				const projectDataService: IProjectDataService = testInjector.resolve(
-					"projectDataService"
-				);
+				const projectDataService: IProjectDataService =
+					testInjector.resolve("projectDataService");
 				projectDataService.removeNSProperty(
 					"projectDir",
 					currentTestData.propertyName
@@ -346,8 +342,8 @@ describe("projectDataService", () => {
 			initialData[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {
 				root: {
 					id: "1",
-					constantItem: "myValue",
-				},
+					constantItem: "myValue"
+				}
 			};
 
 			const testInjector = createTestInjector(JSON.stringify(initialData));
@@ -363,15 +359,14 @@ describe("projectDataService", () => {
 				dataPassedToWriteJson = data;
 			};
 
-			const projectDataService: IProjectDataService = testInjector.resolve(
-				"projectDataService"
-			);
+			const projectDataService: IProjectDataService =
+				testInjector.resolve("projectDataService");
 			projectDataService.removeNSProperty(
 				"projectDir",
 				getPropertyName(["root", "id"])
 			);
 			assert.deepStrictEqual(dataPassedToWriteJson, {
-				nativescript: { root: { constantItem: "myValue" } },
+				nativescript: { root: { constantItem: "myValue" } }
 			});
 		});
 	});
@@ -411,9 +406,8 @@ describe("projectDataService", () => {
 					dataPassedToWriteJson = data;
 				};
 
-				const projectDataService: IProjectDataService = testInjector.resolve(
-					"projectDataService"
-				);
+				const projectDataService: IProjectDataService =
+					testInjector.resolve("projectDataService");
 				const propDelimiterRegExp = new RegExp(
 					regExpEscape(NATIVESCRIPT_PROPS_INTERNAL_DELIMITER),
 					"g"
@@ -439,8 +433,8 @@ describe("projectDataService", () => {
 			initialData[CLIENT_NAME_KEY_IN_PROJECT_FILE] = {
 				root: {
 					id: "1",
-					constantItem: "myValue",
-				},
+					constantItem: "myValue"
+				}
 			};
 
 			const testInjector = createTestInjector(JSON.stringify(initialData));
@@ -456,15 +450,14 @@ describe("projectDataService", () => {
 				dataPassedToWriteJson = data;
 			};
 
-			const projectDataService: IProjectDataService = testInjector.resolve(
-				"projectDataService"
-			);
+			const projectDataService: IProjectDataService =
+				testInjector.resolve("projectDataService");
 			projectDataService.removeNSProperty(
 				"projectDir",
 				getPropertyName(["root", "id"])
 			);
 			assert.deepStrictEqual(dataPassedToWriteJson, {
-				nativescript: { root: { constantItem: "myValue" } },
+				nativescript: { root: { constantItem: "myValue" } }
 			});
 		});
 	});
@@ -473,7 +466,7 @@ describe("projectDataService", () => {
 		it("removes specified dependency from project file", () => {
 			const currentTestData = {
 				propertyName: getPropertyName(["dependencies", "myDeps"]),
-				propertyValue: "1.0.0",
+				propertyValue: "1.0.0"
 			};
 
 			const testInjector = createTestInjector(
@@ -491,9 +484,8 @@ describe("projectDataService", () => {
 				dataPassedToWriteJson = data;
 			};
 
-			const projectDataService: IProjectDataService = testInjector.resolve(
-				"projectDataService"
-			);
+			const projectDataService: IProjectDataService =
+				testInjector.resolve("projectDataService");
 			projectDataService.removeDependency("projectDir", "myDeps");
 
 			assert.deepStrictEqual(dataPassedToWriteJson, { dependencies: {} });
@@ -514,32 +506,31 @@ describe("projectDataService", () => {
 				throw new Error(`Unable to read file ${filePath}`);
 			};
 
-			const projectDataService = testInjector.resolve<IProjectDataService>(
-				"projectDataService"
-			);
+			const projectDataService =
+				testInjector.resolve<IProjectDataService>("projectDataService");
 			const assetStructure = await projectDataService.getAssetsStructure({
-				projectDir: ".",
+				projectDir: "."
 			});
 			const emptyAssetStructure: IAssetGroup = {
 				icons: {
-					images: [],
+					images: []
 				},
 				splashBackgrounds: {
-					images: [],
+					images: []
 				},
 				splashCenterImages: {
-					images: [],
+					images: []
 				},
 				splashImages: {
-					images: [],
-				},
+					images: []
+				}
 			};
 
 			assert.deepStrictEqual(assetStructure, {
 				ios: emptyAssetStructure,
 				android: _.merge(_.cloneDeep(emptyAssetStructure), {
-					splashImages: null,
-				}),
+					splashImages: null
+				})
 			});
 		});
 
@@ -560,10 +551,10 @@ describe("projectDataService", () => {
 									height: 20,
 									directory: "Assets.xcassets/AppIcon.appiconset",
 									filename: "icon-20@3x.png",
-									scale: "3x",
-								},
-							],
-						},
+									scale: "3x"
+								}
+							]
+						}
 					};
 				}
 
@@ -577,38 +568,37 @@ describe("projectDataService", () => {
 								size: "20x20",
 								idiom: "iphone",
 								filename: "icon-20@2x.png",
-								scale: "2x",
+								scale: "2x"
 							},
 							{
 								size: "20x20",
 								idiom: "iphone",
 								filename: "icon-20@3x.png",
-								scale: "3x",
-							},
-						],
+								scale: "3x"
+							}
+						]
 					};
 				}
 			};
 
-			const projectDataService = testInjector.resolve<IProjectDataService>(
-				"projectDataService"
-			);
+			const projectDataService =
+				testInjector.resolve<IProjectDataService>("projectDataService");
 			const assetStructure = await projectDataService.getAssetsStructure({
-				projectDir: ".",
+				projectDir: "."
 			});
 			const emptyAssetStructure: IAssetGroup = {
 				icons: {
-					images: [],
+					images: []
 				},
 				splashBackgrounds: {
-					images: [],
+					images: []
 				},
 				splashCenterImages: {
-					images: [],
+					images: []
 				},
 				splashImages: {
-					images: [],
-				},
+					images: []
+				}
 			};
 
 			const expectedIOSStructure = _.merge({}, emptyAssetStructure, {
@@ -620,7 +610,7 @@ describe("projectDataService", () => {
 							idiom: "iphone",
 							scale: "2x",
 							size: "20x20",
-							width: 20,
+							width: 20
 						},
 						{
 							filename: "icon-20@3x.png",
@@ -631,10 +621,10 @@ describe("projectDataService", () => {
 							rgba: undefined,
 							scale: "3x",
 							size: "20x20",
-							width: 20,
-						},
-					],
-				},
+							width: 20
+						}
+					]
+				}
 			});
 
 			_.each(assetStructure.ios.icons.images, (icon) => {
@@ -645,8 +635,8 @@ describe("projectDataService", () => {
 			assert.deepStrictEqual(assetStructure, {
 				ios: expectedIOSStructure,
 				android: _.merge(_.cloneDeep(emptyAssetStructure), {
-					splashImages: null,
-				}),
+					splashImages: null
+				})
 			});
 		});
 	});
@@ -662,12 +652,12 @@ describe("projectDataService", () => {
 					"component1.ts",
 					"component1.js",
 					"component2.ts",
-					"App_Resources",
+					"App_Resources"
 				],
 				expectedResult: [
 					join(appDirectoryPath, "component1.ts"),
-					join(appDirectoryPath, "component2.ts"),
-				],
+					join(appDirectoryPath, "component2.ts")
+				]
 			},
 			{
 				projectType: ProjectTypes.TsFlavorName,
@@ -675,12 +665,12 @@ describe("projectDataService", () => {
 					"component1.ts",
 					"component1.js",
 					"component2.ts",
-					"App_Resources",
+					"App_Resources"
 				],
 				expectedResult: [
 					join(appDirectoryPath, "component1.ts"),
-					join(appDirectoryPath, "component2.ts"),
-				],
+					join(appDirectoryPath, "component2.ts")
+				]
 			},
 			{
 				projectType: ProjectTypes.JsFlavorName,
@@ -688,9 +678,9 @@ describe("projectDataService", () => {
 					"component1.ts",
 					"component1.js",
 					"component2.ts",
-					"App_Resources",
+					"App_Resources"
 				],
-				expectedResult: [join(appDirectoryPath, "component1.js")],
+				expectedResult: [join(appDirectoryPath, "component1.js")]
 			},
 			{
 				projectType: ProjectTypes.VueFlavorName,
@@ -698,10 +688,10 @@ describe("projectDataService", () => {
 					"component1.ts",
 					"component1.js",
 					"component2.ts",
-					"App_Resources",
+					"App_Resources"
 				],
-				expectedResult: [join(appDirectoryPath, "component1.js")],
-			},
+				expectedResult: [join(appDirectoryPath, "component1.js")]
+			}
 		];
 
 		const setupTestCase = (
@@ -741,14 +731,13 @@ describe("projectDataService", () => {
 				return [];
 			};
 
-			const projectDataService = testInjector.resolve<IProjectDataService>(
-				"projectDataService"
-			);
+			const projectDataService =
+				testInjector.resolve<IProjectDataService>("projectDataService");
 			projectDataService.getProjectData = () =>
 				<any>{
 					appDirectoryPath,
 					appResourcesDirectoryPath,
-					projectType: testCase.projectType,
+					projectType: testCase.projectType
 				};
 
 			return { projectDataService, testInjector };
@@ -757,9 +746,8 @@ describe("projectDataService", () => {
 		getAppExecutableFilesTestData.forEach((testCase) => {
 			it(`returns correct files for application type ${testCase.projectType}`, () => {
 				const { projectDataService } = setupTestCase(testCase);
-				const appExecutableFiles = projectDataService.getAppExecutableFiles(
-					"projectDir"
-				);
+				const appExecutableFiles =
+					projectDataService.getAppExecutableFiles("projectDir");
 				assert.deepStrictEqual(appExecutableFiles, testCase.expectedResult);
 			});
 		});
@@ -774,14 +762,14 @@ describe("projectDataService", () => {
 					"component1.js",
 					"component2.ts",
 					"App_Resources",
-					innerDirName,
+					innerDirName
 				],
 				expectedResult: [
 					join(appDirectoryPath, "component1.ts"),
 					join(appDirectoryPath, "component2.ts"),
 					join(innerDirPath, "subcomponent1.ts"),
-					join(innerDirPath, "subcomponent2.ts"),
-				],
+					join(innerDirPath, "subcomponent2.ts")
+				]
 			};
 			const { projectDataService, testInjector } = setupTestCase(testCase);
 			const fs = testInjector.resolve<IFileSystem>("fs");
@@ -790,7 +778,7 @@ describe("projectDataService", () => {
 				"subcomponent1.ts",
 				"subcomponent1.js",
 				"subcomponent2.ts",
-				"subcomponent2.js",
+				"subcomponent2.js"
 			];
 
 			fs.readDirectory = (dirPath) => {
@@ -810,9 +798,8 @@ describe("projectDataService", () => {
 				return baseFsGetFsStats(filePath);
 			};
 
-			const appExecutableFiles = projectDataService.getAppExecutableFiles(
-				"projectDir"
-			);
+			const appExecutableFiles =
+				projectDataService.getAppExecutableFiles("projectDir");
 			assert.deepStrictEqual(appExecutableFiles, testCase.expectedResult);
 		});
 	});

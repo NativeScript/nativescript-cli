@@ -4,7 +4,7 @@ import {
 	IKeyCommandPlatform,
 	IValidKeyName,
 	SpecialKeys,
-	SupportedProcessType,
+	SupportedProcessType
 } from "../common/definitions/key-commands";
 import { injector } from "../common/yok";
 
@@ -118,7 +118,7 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 				)}, you can press the following keys any time (make sure the terminal has focus).`,
 				"",
 				...commandHelp,
-				"",
+				""
 			].join("\n")
 		);
 	}

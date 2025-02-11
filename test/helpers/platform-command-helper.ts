@@ -12,25 +12,25 @@ let isAddPlatformCalled = false;
 const projectDir = "/my/path/to/project";
 const projectData: any = {
 	projectDir,
-	platformsDir: "/my/path/to/project/platforms",
+	platformsDir: "/my/path/to/project/platforms"
 };
 
 function createTestInjector() {
 	const injector = new InjectorStub();
 	injector.register("addPlatformService", {
-		addPlatform: () => ({}),
+		addPlatform: () => ({})
 	});
 
 	injector.register("platformController", {
-		addPlatform: () => (isAddPlatformCalled = true),
+		addPlatform: () => (isAddPlatformCalled = true)
 	});
 
 	injector.register("pacoteService", {
-		extractPackage: () => ({}),
+		extractPackage: () => ({})
 	});
 	injector.register("platformValidationService", {
 		validatePlatform: () => ({}),
-		validatePlatformInstalled: () => ({}),
+		validatePlatformInstalled: () => ({})
 	});
 
 	injector.register("platformCommandHelper", PlatformCommandHelper);

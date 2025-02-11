@@ -1,7 +1,7 @@
 import { IShouldDispose, IDisposable } from "../common/declarations";
 import {
 	ISpawnCommandInfo,
-	IJSCommand,
+	IJSCommand
 } from "../detached-processes/cleanup-process-definitions";
 
 /**

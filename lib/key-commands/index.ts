@@ -11,7 +11,7 @@ import {
 	IKeyCommandPlatform,
 	IValidKeyName,
 	SpecialKeys,
-	SupportedProcessType,
+	SupportedProcessType
 } from "../common/definitions/key-commands";
 import { injector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
@@ -56,7 +56,7 @@ export class ShiftA implements IKeyCommand {
 		if (os === "darwin") {
 			const possibleStudioPaths = [
 				"/Applications/Android Studio.app",
-				`${process.env.HOME}/Applications/Android Studio.app`,
+				`${process.env.HOME}/Applications/Android Studio.app`
 			];
 
 			return possibleStudioPaths.find((p) => fs.existsSync(p)) || null;
@@ -114,7 +114,7 @@ export class ShiftA implements IKeyCommand {
 		} else if (os === "win32") {
 			const child = this.$childProcess.spawn(studioPath, [androidDir], {
 				detached: true,
-				stdio: "ignore",
+				stdio: "ignore"
 			});
 			child.unref();
 		} else if (os === "linux") {
@@ -356,15 +356,14 @@ export class R implements IKeyCommand {
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
 
 	async execute(platform: string): Promise<void> {
-		const devices = await this.$liveSyncCommandHelper.getDeviceInstances(
-			platform
-		);
+		const devices =
+			await this.$liveSyncCommandHelper.getDeviceInstances(platform);
 
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation(
 			devices,
 			platform,
 			{
-				restartLiveSync: true,
+				restartLiveSync: true
 			} as ILiveSyncCommandHelperAdditionalOptions
 		);
 	}
@@ -380,16 +379,15 @@ export class ShiftR implements IKeyCommand {
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
 
 	async execute(platform: string): Promise<void> {
-		const devices = await this.$liveSyncCommandHelper.getDeviceInstances(
-			platform
-		);
+		const devices =
+			await this.$liveSyncCommandHelper.getDeviceInstances(platform);
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation(
 			devices,
 			platform,
 			{
 				skipNativePrepare: false,
 				forceRebuildNativeApp: true,
-				restartLiveSync: true,
+				restartLiveSync: true
 			} as ILiveSyncCommandHelperAdditionalOptions
 		);
 	}

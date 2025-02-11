@@ -5,17 +5,17 @@ import { performanceLog } from "../common/decorators";
 import {
 	IProjectTemplatesService,
 	ITemplateData,
-	ITemplatePackageJsonContent,
+	ITemplatePackageJsonContent
 } from "../definitions/project";
 import {
 	IPackageInstallationManager,
 	INodePackageManager,
-	IStaticConfig,
+	IStaticConfig
 } from "../declarations";
 import {
 	IFileSystem,
 	IAnalyticsService,
-	IDictionary,
+	IDictionary
 } from "../common/declarations";
 import { injector } from "../common/yok";
 
@@ -41,9 +41,8 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			templateValue = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
 
-		const templateNameParts = await this.$packageManager.getPackageNameParts(
-			templateValue
-		);
+		const templateNameParts =
+			await this.$packageManager.getPackageNameParts(templateValue);
 		templateValue =
 			constants.RESERVED_TEMPLATE_NAMES[templateNameParts.name] ||
 			templateNameParts.name;
@@ -55,12 +54,11 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		const fullTemplateName = await this.$packageManager.getPackageFullName({
 			name: templateValue,
-			version: version,
+			version: version
 		});
 
-		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(
-			fullTemplateName
-		);
+		const templatePackageJsonContent =
+			await this.getTemplatePackageJsonContent(fullTemplateName);
 
 		const templateNameToBeTracked = this.getTemplateNameToBeTracked(
 			templateValue,
@@ -70,19 +68,19 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: constants.TrackActionNames.CreateProject,
 				isForDevice: null,
-				additionalData: templateNameToBeTracked,
+				additionalData: templateNameToBeTracked
 			});
 
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
 				action: constants.TrackActionNames.UsingTemplate,
-				additionalData: templateNameToBeTracked,
+				additionalData: templateNameToBeTracked
 			});
 		}
 
 		return {
 			templateName: templateValue,
 			templatePackageJsonContent,
-			version,
+			version
 		};
 	}
 
@@ -90,11 +88,10 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		templateName: string
 	): Promise<ITemplatePackageJsonContent> {
 		if (!this.templatePackageContents[templateName]) {
-			this.templatePackageContents[
-				templateName
-			] = await this.$pacoteService.manifest(templateName, {
-				fullMetadata: true,
-			});
+			this.templatePackageContents[templateName] =
+				await this.$pacoteService.manifest(templateName, {
+					fullMetadata: true
+				});
 		}
 
 		return this.templatePackageContents[templateName];

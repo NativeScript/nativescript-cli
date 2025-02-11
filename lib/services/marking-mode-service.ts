@@ -2,7 +2,7 @@ import { EOL } from "os";
 import { LoggerConfigData, PlatformTypes } from "../constants";
 import {
 	IProjectConfigService,
-	IProjectDataService,
+	IProjectDataService
 } from "../definitions/project";
 import { injector } from "../common/yok";
 import { IProjectHelper } from "../common/declarations";
@@ -10,7 +10,7 @@ import * as semver from "semver/preload";
 
 const enum MarkingMode {
 	None = "none",
-	Full = "full",
+	Full = "full"
 }
 
 const MARKING_MODE_PROP = "markingMode";
@@ -62,7 +62,7 @@ export class MarkingModeService implements IMarkingModeService {
 		const markingModeFullWarning = `You are using the deprecated "${MARKING_MODE_PROP}:${MarkingMode.Full}".${EOL}${EOL}${MARKING_MODE_FULL_DEPRECATION_MSG}${EOL}${EOL}You should update your marking mode by executing 'ns update --markingMode'.`;
 
 		this.$logger.warn(markingModeFullWarning, {
-			[LoggerConfigData.wrapMessageWithBorders]: true,
+			[LoggerConfigData.wrapMessageWithBorders]: true
 		});
 	}
 }

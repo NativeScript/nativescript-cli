@@ -6,7 +6,7 @@ import {
 	IDeviceDebugService,
 	IDebugData,
 	IDebugOptions,
-	IDebugResultInfo,
+	IDebugResultInfo
 } from "../definitions/debug";
 import { IStaticConfig } from "../declarations";
 import { IErrors, INet } from "../common/declarations";
@@ -16,7 +16,8 @@ import * as _ from "lodash";
 
 export class AndroidDeviceDebugService
 	extends DebugServiceBase
-	implements IDeviceDebugService {
+	implements IDeviceDebugService
+{
 	private _packageName: string;
 	private deviceIdentifier: string;
 
@@ -87,7 +88,7 @@ export class AndroidDeviceDebugService
 		return this.device.adb.executeCommand([
 			"forward",
 			"--remove",
-			`tcp:${port}`,
+			`tcp:${port}`
 		]);
 	}
 
@@ -99,7 +100,7 @@ export class AndroidDeviceDebugService
 		let port = -1;
 		const forwardsResult = await this.device.adb.executeCommand([
 			"forward",
-			"--list",
+			"--list"
 		]);
 
 		const unixSocketName = `${packageName}-inspectorServer`;
@@ -121,7 +122,7 @@ export class AndroidDeviceDebugService
 
 		await this.$cleanupService.addCleanupCommand({
 			command: await this.$staticConfig.getAdbFilePath(),
-			args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`],
+			args: ["-s", deviceId, "forward", "--remove", `tcp:${port}`]
 		});
 
 		return port;
@@ -135,7 +136,7 @@ export class AndroidDeviceDebugService
 		await this.device.adb.executeCommand([
 			"forward",
 			`tcp:${local}`,
-			`localabstract:${remote}`,
+			`localabstract:${remote}`
 		]);
 	}
 
@@ -191,7 +192,7 @@ export class AndroidDeviceDebugService
 			const forwardsResult = await this.device.adb.executeShellCommand([
 				"ls",
 				"-s",
-				debuggerStartedFilePath,
+				debuggerStartedFilePath
 			]);
 
 			maxWait--;
@@ -214,9 +215,8 @@ export class AndroidDeviceDebugService
 		appIdentifier: string,
 		deviceIdentifier: string
 	): Promise<boolean> {
-		const debuggableApps = await this.$androidProcessService.getDebuggableApps(
-			deviceIdentifier
-		);
+		const debuggableApps =
+			await this.$androidProcessService.getDebuggableApps(deviceIdentifier);
 
 		return !!_.find(debuggableApps, (a) => a.appIdentifier === appIdentifier);
 	}

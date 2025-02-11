@@ -2,7 +2,7 @@ import {
 	IProjectCleanupOptions,
 	IProjectCleanupResult,
 	IProjectCleanupService,
-	IProjectPathCleanupResult,
+	IProjectPathCleanupResult
 } from "../definitions/project";
 import { IFileSystem, IProjectHelper } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -10,7 +10,7 @@ import * as path from "path";
 import { color } from "../color";
 import {
 	ITerminalSpinner,
-	ITerminalSpinnerService,
+	ITerminalSpinnerService
 } from "../definitions/terminal-spinner-service";
 
 export class ProjectCleanupService implements IProjectCleanupService {
@@ -28,7 +28,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		options?: IProjectCleanupOptions
 	): Promise<IProjectCleanupResult> {
 		this.spinner = this.$terminalSpinnerService.createSpinner({
-			isSilent: options?.silent,
+			isSilent: options?.silent
 		});
 
 		let stats = options?.stats ? new Map<string, number>() : false;

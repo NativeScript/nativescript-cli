@@ -10,7 +10,7 @@ import {
 	PlatformTypes,
 	ProjectTypes,
 	RESOURCES_DIR,
-	SRC_DIR,
+	SRC_DIR
 } from "../constants";
 import { parseJson } from "../common/helpers";
 import { exported, memoize } from "../common/decorators";
@@ -22,11 +22,11 @@ import {
 	IImageDefinitionsStructure,
 	INsConfig,
 	IProjectData,
-	IProjectDataService,
+	IProjectDataService
 } from "../definitions/project";
 import {
 	IAndroidResourcesMigrationService,
-	IStaticConfig,
+	IStaticConfig
 } from "../declarations";
 import { IBasePluginData, IPluginsService } from "../definitions/plugins";
 import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
@@ -159,7 +159,7 @@ export class ProjectDataService implements IProjectDataService {
 
 		return {
 			ios: iOSAssetStructure,
-			android: androidAssetStructure,
+			android: androidAssetStructure
 		};
 	}
 
@@ -202,7 +202,7 @@ export class ProjectDataService implements IProjectDataService {
 			icons,
 			splashBackgrounds,
 			splashCenterImages,
-			splashImages,
+			splashImages
 		};
 	}
 
@@ -259,7 +259,7 @@ export class ProjectDataService implements IProjectDataService {
 				content.splashCenterImages,
 				basePath
 			),
-			splashImages: null,
+			splashImages: null
 		};
 	}
 
@@ -461,7 +461,7 @@ export class ProjectDataService implements IProjectDataService {
 		basePath: string
 	): IAssetSubGroup {
 		const assetSubGroup: IAssetSubGroup = {
-			images: <any>[],
+			images: <any>[]
 		};
 
 		_.each(assetItems, (assetItem) => {
@@ -564,7 +564,7 @@ export class ProjectDataService implements IProjectDataService {
 
 		return {
 			projectData,
-			projectFilePath,
+			projectFilePath
 		};
 	}
 
@@ -599,7 +599,7 @@ export class ProjectDataService implements IProjectDataService {
 			// that information
 			return {
 				name: runtimeName,
-				version: packageJson.nativescript[runtimeName].version,
+				version: packageJson.nativescript[runtimeName].version
 			};
 		}
 
@@ -618,7 +618,7 @@ export class ProjectDataService implements IProjectDataService {
 
 			// only cache if version is defined
 			return !!result.version;
-		},
+		}
 	})
 	private getInstalledRuntimePackage(
 		projectDir: string,
@@ -630,12 +630,12 @@ export class ProjectDataService implements IProjectDataService {
 				if (platform === constants.PlatformTypes.ios) {
 					return [
 						constants.SCOPED_IOS_RUNTIME_NAME,
-						constants.TNS_IOS_RUNTIME_NAME,
+						constants.TNS_IOS_RUNTIME_NAME
 					].includes(d.name);
 				} else if (platform === constants.PlatformTypes.android) {
 					return [
 						constants.SCOPED_ANDROID_RUNTIME_NAME,
-						constants.TNS_ANDROID_RUNTIME_NAME,
+						constants.TNS_ANDROID_RUNTIME_NAME
 					].includes(d.name);
 				} else if (platform === constants.PlatformTypes.visionos) {
 					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
@@ -653,7 +653,7 @@ export class ProjectDataService implements IProjectDataService {
 					const runtimePackageJsonPath = resolvePackageJSONPath(
 						runtimePackage.name,
 						{
-							paths: [projectDir],
+							paths: [projectDir]
 						}
 					);
 
@@ -688,17 +688,17 @@ export class ProjectDataService implements IProjectDataService {
 		if (platform === constants.PlatformTypes.ios) {
 			return {
 				name: constants.SCOPED_IOS_RUNTIME_NAME,
-				version: null,
+				version: null
 			};
 		} else if (platform === constants.PlatformTypes.android) {
 			return {
 				name: constants.SCOPED_ANDROID_RUNTIME_NAME,
-				version: null,
+				version: null
 			};
 		} else if (platform === constants.PlatformTypes.visionos) {
 			return {
 				name: constants.SCOPED_VISIONOS_RUNTIME_NAME,
-				version: null,
+				version: null
 			};
 		}
 	}

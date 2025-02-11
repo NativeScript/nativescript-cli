@@ -3,14 +3,14 @@ import * as path from "path";
 import {
 	IProjectDataService,
 	IProjectData,
-	INativePrepare,
+	INativePrepare
 } from "../definitions/project";
 import {
 	IPlatformController,
 	IAddPlatformService,
 	IPlatformsDataService,
 	IAddPlatformData,
-	IPlatformData,
+	IPlatformData
 } from "../definitions/platform";
 import { IPackageInstallationManager } from "../declarations";
 import { IFileSystem, IErrors } from "../common/declarations";
@@ -98,7 +98,7 @@ export class PlatformController implements IPlatformController {
 					commentHeader,
 					`appPath = ${appPath}`,
 					`appResourcesPath = ${appResourcesPath}`,
-					"",
+					""
 				].join("\n");
 
 				gradlePropertiesContents += dataToWrite;

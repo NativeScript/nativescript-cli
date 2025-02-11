@@ -15,7 +15,7 @@ import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service
 export enum VersionInformationType {
 	UpToDate = "UpToDate",
 	UpdateAvailable = "UpdateAvailable",
-	NotInstalled = "NotInstalled",
+	NotInstalled = "NotInstalled"
 }
 
 class VersionsService implements IVersionsService {
@@ -40,24 +40,26 @@ class VersionsService implements IVersionsService {
 
 	public async getNativescriptCliVersion(): Promise<IVersionInformation> {
 		const currentCliVersion = this.$staticConfig.version;
-		const latestCliVersion = await this.$packageInstallationManager.getLatestVersion(
-			constants.NATIVESCRIPT_KEY_NAME
-		);
+		const latestCliVersion =
+			await this.$packageInstallationManager.getLatestVersion(
+				constants.NATIVESCRIPT_KEY_NAME
+			);
 
 		return {
 			componentName: constants.NATIVESCRIPT_KEY_NAME,
 			currentVersion: currentCliVersion,
-			latestVersion: latestCliVersion,
+			latestVersion: latestCliVersion
 		};
 	}
 
 	public async getTnsCoreModulesVersion(): Promise<IVersionInformation[]> {
-		const latestTnsCoreModulesVersion = await this.$packageInstallationManager.getLatestVersion(
-			constants.TNS_CORE_MODULES_NAME
-		);
+		const latestTnsCoreModulesVersion =
+			await this.$packageInstallationManager.getLatestVersion(
+				constants.TNS_CORE_MODULES_NAME
+			);
 		const nativescriptCoreModulesInfo: IVersionInformation = {
 			componentName: constants.TNS_CORE_MODULES_NAME,
-			latestVersion: latestTnsCoreModulesVersion,
+			latestVersion: latestTnsCoreModulesVersion
 		};
 
 		const versionInformations: IVersionInformation[] = [];
@@ -76,12 +78,10 @@ class VersionsService implements IVersionsService {
 				constants.TNS_CORE_MODULES_NAME
 			);
 
-			const dependsOnNonScopedPackage = !!this.projectData.dependencies[
-				constants.TNS_CORE_MODULES_NAME
-			];
-			const dependsOnScopedPackage = !!this.projectData.dependencies[
-				constants.SCOPED_TNS_CORE_MODULES
-			];
+			const dependsOnNonScopedPackage =
+				!!this.projectData.dependencies[constants.TNS_CORE_MODULES_NAME];
+			const dependsOnScopedPackage =
+				!!this.projectData.dependencies[constants.SCOPED_TNS_CORE_MODULES];
 
 			// ensure the dependencies are installed, so we can get their actual versions from node_modules
 			if (
@@ -98,16 +98,18 @@ class VersionsService implements IVersionsService {
 				const currentTnsCoreModulesVersion = this.$fs.readJson(
 					path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)
 				).version;
-				nativescriptCoreModulesInfo.currentVersion = currentTnsCoreModulesVersion;
+				nativescriptCoreModulesInfo.currentVersion =
+					currentTnsCoreModulesVersion;
 				versionInformations.push(nativescriptCoreModulesInfo);
 			}
 
 			if (dependsOnScopedPackage && this.$fs.exists(scopedPackagePath)) {
 				const scopedModulesInformation: IVersionInformation = {
 					componentName: constants.SCOPED_TNS_CORE_MODULES,
-					latestVersion: await this.$packageInstallationManager.getLatestVersion(
-						constants.SCOPED_TNS_CORE_MODULES
-					),
+					latestVersion:
+						await this.$packageInstallationManager.getLatestVersion(
+							constants.SCOPED_TNS_CORE_MODULES
+						)
 				};
 
 				const currentScopedPackageVersion = this.$fs.readJson(
@@ -146,13 +148,12 @@ class VersionsService implements IVersionsService {
 
 		const runtimesVersions: IVersionInformation[] = await Promise.all(
 			runtimes.map(async (runtime: IBasePluginData) => {
-				const latestVersion = await this.$packageInstallationManager.getLatestVersion(
-					runtime.name
-				);
+				const latestVersion =
+					await this.$packageInstallationManager.getLatestVersion(runtime.name);
 				const runtimeInformation: IVersionInformation = {
 					componentName: runtime.name,
 					currentVersion: runtime.version,
-					latestVersion,
+					latestVersion
 				};
 
 				return runtimeInformation;
@@ -168,20 +169,21 @@ class VersionsService implements IVersionsService {
 		try {
 			let allComponents: IVersionInformation[] = [];
 
-			const nativescriptCliInformation: IVersionInformation = await this.getNativescriptCliVersion();
+			const nativescriptCliInformation: IVersionInformation =
+				await this.getNativescriptCliVersion();
 			if (nativescriptCliInformation) {
 				allComponents.push(nativescriptCliInformation);
 			}
 
 			if (this.projectData) {
-				const nativescriptCoreModulesInformation: IVersionInformation[] = await this.getTnsCoreModulesVersion();
+				const nativescriptCoreModulesInformation: IVersionInformation[] =
+					await this.getTnsCoreModulesVersion();
 				if (nativescriptCoreModulesInformation) {
 					allComponents.push(...nativescriptCoreModulesInformation);
 				}
 
-				const runtimesVersions: IVersionInformation[] = await this.getRuntimesVersions(
-					platform
-				);
+				const runtimesVersions: IVersionInformation[] =
+					await this.getRuntimesVersions(platform);
 				allComponents = allComponents.concat(runtimesVersions);
 			}
 
@@ -215,7 +217,7 @@ class VersionsService implements IVersionsService {
 			IVersionInformation[]
 		>(
 			{
-				text: `Getting NativeScript components versions information...`,
+				text: `Getting NativeScript components versions information...`
 			},
 			() => this.getAllComponentsVersions(platform)
 		);

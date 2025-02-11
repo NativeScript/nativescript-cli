@@ -5,12 +5,12 @@ import { injector } from "../common/yok";
 import {
 	IUserSettingsService,
 	ISettingsService,
-	IDictionary,
+	IDictionary
 } from "../common/declarations";
 import {
 	IJsonFileSettingsService,
 	ICacheTimeoutOpts,
-	IUseCacheOpts,
+	IUseCacheOpts
 } from "../common/definitions/json-file-settings-service";
 
 export class UserSettingsService implements IUserSettingsService {
@@ -20,7 +20,7 @@ export class UserSettingsService implements IUserSettingsService {
 			"user-settings.json"
 		);
 		return this.$injector.resolve("jsonFileSettingsService", {
-			jsonFileSettingsPath: userSettingsFilePath,
+			jsonFileSettingsPath: userSettingsFilePath
 		});
 	}
 

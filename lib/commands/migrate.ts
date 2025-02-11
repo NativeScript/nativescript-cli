@@ -21,12 +21,11 @@ export class MigrateCommand implements ICommand {
 			projectDir: this.$projectData.projectDir,
 			platforms: [
 				this.$devicePlatformsConstants.Android,
-				this.$devicePlatformsConstants.iOS,
-			],
+				this.$devicePlatformsConstants.iOS
+			]
 		};
-		const shouldMigrateResult = await this.$migrateController.shouldMigrate(
-			migrationData
-		);
+		const shouldMigrateResult =
+			await this.$migrateController.shouldMigrate(migrationData);
 
 		if (!shouldMigrateResult) {
 			const cliVersion = this.$staticConfig.version;

@@ -4,7 +4,7 @@ import {
 	IIOSNativeTargetService,
 	IProjectData,
 	IXcodeTargetBuildConfigurationProperty,
-	BuildNames,
+	BuildNames
 } from "../definitions/project";
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem } from "../common/declarations";
@@ -57,7 +57,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 		project.addPbxGroup(files, targetFolder, targetPath, null, {
 			isMain: true,
 			target: target.uuid,
-			filesRelativeToProject: true,
+			filesRelativeToProject: true
 		});
 		project.addToHeaderSearchPaths(
 			targetPath,
@@ -109,7 +109,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 		properties.forEach((property) => {
 			const buildNames = property.buildNames || [
 				BuildNames.debug,
-				BuildNames.release,
+				BuildNames.release
 			];
 			buildNames.forEach((buildName) => {
 				project.addBuildProperty(

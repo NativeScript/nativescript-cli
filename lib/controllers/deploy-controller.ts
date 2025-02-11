@@ -19,8 +19,8 @@ export class DeployController {
 			const prepareData = {
 				...deviceDescriptor.buildData,
 				nativePrepare: {
-					skipNativePrepare: !!deviceDescriptor.skipNativePrepare,
-				},
+					skipNativePrepare: !!deviceDescriptor.skipNativePrepare
+				}
 			};
 			await this.$prepareController.prepare(prepareData);
 			const packageFilePath = await deviceDescriptor.buildAction();

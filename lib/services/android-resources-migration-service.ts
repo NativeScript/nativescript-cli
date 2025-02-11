@@ -6,7 +6,8 @@ import { IFileSystem, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
 
 export class AndroidResourcesMigrationService
-	implements IAndroidResourcesMigrationService {
+	implements IAndroidResourcesMigrationService
+{
 	private static ANDROID_DIR = "Android";
 	private static ANDROID_DIR_TEMP = "Android-Updated";
 	private static ANDROID_DIR_OLD = "Android-Pre-v4";

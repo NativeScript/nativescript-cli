@@ -55,7 +55,7 @@ const createTestInjector = (
 				includeEmptyDirectories?: boolean;
 			},
 			foundFiles?: string[]
-		): string[] => [],
+		): string[] => []
 	});
 	testInjector.register("logger", LoggerStub);
 	testInjector.register("injector", testInjector);

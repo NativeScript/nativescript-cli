@@ -6,7 +6,7 @@ describe("config.json", () => {
 		ANDROID_DEBUG_UI_MAC: "Google Chrome",
 		USE_POD_SANDBOX: false,
 		DISABLE_HOOKS: false,
-		GA_TRACKING_ID: "UA-111455-51",
+		GA_TRACKING_ID: "UA-111455-51"
 	};
 
 	it("validates content is correct", () => {

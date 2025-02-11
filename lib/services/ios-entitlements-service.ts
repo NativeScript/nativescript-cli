@@ -50,7 +50,7 @@ export class IOSEntitlementsService {
 
 	public async merge(projectData: IProjectData): Promise<void> {
 		const session = new PlistSession({
-			log: (txt: string) => this.$logger.trace("App.entitlements: " + txt),
+			log: (txt: string) => this.$logger.trace("App.entitlements: " + txt)
 		});
 
 		const projectDir = projectData.projectDir;
@@ -63,7 +63,7 @@ export class IOSEntitlementsService {
 			this.$logger.trace("Schedule merge plist at: " + plistPath);
 			session.patch({
 				name: path.relative(projectDir, plistPath),
-				read: () => this.$fs.readText(plistPath),
+				read: () => this.$fs.readText(plistPath)
 			});
 		};
 

@@ -4,14 +4,14 @@ import {
 	IOS_WATCHAPP_FOLDER,
 	IOS_WATCHAPP_EXTENSION_FOLDER,
 	IOSNativeTargetProductTypes,
-	IOSNativeTargetTypes,
+	IOSNativeTargetTypes
 } from "../constants";
 import {
 	IIOSWatchAppService,
 	IIOSNativeTargetService,
 	IAddWatchAppFromPathOptions,
 	IRemoveWatchAppOptions,
-	IProjectData,
+	IProjectData
 } from "../definitions/project";
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem } from "../common/declarations";
@@ -31,7 +31,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		watchAppFolderPath,
 		projectData,
 		platformData,
-		pbxProjPath,
+		pbxProjPath
 	}: IAddWatchAppFromPathOptions): Promise<boolean> {
 		const targetUuids: string[] = [];
 		const appPath = path.join(watchAppFolderPath, IOS_WATCHAPP_FOLDER);
@@ -44,12 +44,10 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			return false;
 		}
 
-		const appFolder = this.$iOSNativeTargetService.getTargetDirectories(
-			appPath
-		)[0];
-		const extensionFolder = this.$iOSNativeTargetService.getTargetDirectories(
-			extensionPath
-		)[0];
+		const appFolder =
+			this.$iOSNativeTargetService.getTargetDirectories(appPath)[0];
+		const extensionFolder =
+			this.$iOSNativeTargetService.getTargetDirectories(extensionPath)[0];
 
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
@@ -72,14 +70,15 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		);
 		targetUuids.push(watchApptarget.uuid);
 
-		const watchExtensionTarget = this.$iOSNativeTargetService.addTargetToProject(
-			extensionPath,
-			extensionFolder,
-			IOSNativeTargetTypes.watchExtension,
-			project,
-			platformData,
-			watchApptarget.uuid
-		);
+		const watchExtensionTarget =
+			this.$iOSNativeTargetService.addTargetToProject(
+				extensionPath,
+				extensionFolder,
+				IOSNativeTargetTypes.watchExtension,
+				project,
+				platformData,
+				watchApptarget.uuid
+			);
 		this.configureTarget(
 			extensionFolder,
 			path.join(extensionPath, extensionFolder),
@@ -152,7 +151,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				{ name: "SDKROOT", value: "watchos" },
 				{ name: "TARGETED_DEVICE_FAMILY", value: IOSDeviceTargets.watchos },
 				{ name: "WATCHOS_DEPLOYMENT_TARGET", value: 5.2 },
-				{ name: "WK_APP_BUNDLE_IDENTIFIER", value: wkAppBundleIdentifier },
+				{ name: "WK_APP_BUNDLE_IDENTIFIER", value: wkAppBundleIdentifier }
 			],
 			targetName,
 			project

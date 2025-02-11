@@ -4,7 +4,7 @@ import { TESTING_FRAMEWORKS, ProjectTypes } from "../constants";
 import { fromWindowsRelativePathToUnix } from "../common/helpers";
 import {
 	IProjectData,
-	ITestInitializationService,
+	ITestInitializationService
 } from "../definitions/project";
 import { INodePackageManager, IOptions } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
@@ -14,7 +14,7 @@ import {
 	IErrors,
 	IFileSystem,
 	IResourceLoader,
-	IDependencyInformation,
+	IDependencyInformation
 } from "../common/declarations";
 import { injector } from "../common/yok";
 import { color } from "../color";
@@ -23,7 +23,7 @@ class TestInitCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
 
 	private karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
-		mocha: ["chai"],
+		mocha: ["chai"]
 	};
 
 	constructor(
@@ -64,9 +64,8 @@ class TestInitCommand implements ICommand {
 
 		let modulesToInstall: IDependencyInformation[] = [];
 		try {
-			modulesToInstall = this.$testInitializationService.getDependencies(
-				frameworkToInstall
-			);
+			modulesToInstall =
+				this.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
 			this.$errors.fail(
 				`Unable to install the unit testing dependencies. Error: '${err.message}'`
@@ -89,7 +88,7 @@ class TestInitCommand implements ICommand {
 				disableNpmInstall: this.$options.disableNpmInstall,
 				frameworkPath: this.$options.frameworkPath,
 				ignoreScripts: this.$options.ignoreScripts,
-				path: this.$options.path,
+				path: this.$options.path
 			});
 
 			const modulePath = path.join(projectDir, "node_modules", mod.name);
@@ -121,7 +120,7 @@ class TestInitCommand implements ICommand {
 							disableNpmInstall: false,
 							frameworkPath: this.$options.frameworkPath,
 							ignoreScripts: this.$options.ignoreScripts,
-							path: this.$options.path,
+							path: this.$options.path
 						}
 					);
 				} catch (e) {
@@ -156,7 +155,7 @@ class TestInitCommand implements ICommand {
 					[
 						`Note: The "${projectTestsDir}" directory already exists, will not create example tests in the project.`,
 						`You may create "${specFilenamePattern}" files anywhere you'd like.`,
-						"",
+						""
 					].join("\n")
 				)
 			);
@@ -176,7 +175,7 @@ class TestInitCommand implements ICommand {
 		const karmaConf = _.template(karmaConfTemplate)({
 			frameworks,
 			testFiles,
-			basePath: this.$projectData.getAppDirectoryRelativePath(),
+			basePath: this.$projectData.getAppDirectoryRelativePath()
 		});
 
 		this.$fs.writeFile(path.join(projectDir, "karma.conf.js"), karmaConf);
@@ -221,7 +220,7 @@ class TestInitCommand implements ICommand {
 			"test/tsconfig.spec.json"
 		);
 		const testTsConfig = _.template(testTsConfigTemplate)({
-			basePath: this.$projectData.getAppDirectoryRelativePath(),
+			basePath: this.$projectData.getAppDirectoryRelativePath()
 		});
 
 		this.$fs.writeFile(
@@ -236,7 +235,7 @@ class TestInitCommand implements ICommand {
 				[
 					color.green(`Tests using`),
 					color.cyan(frameworkToInstall),
-					color.green(`were successfully initialized.`),
+					color.green(`were successfully initialized.`)
 				].join(" "),
 				"",
 				...bufferedLogs,
@@ -254,7 +253,7 @@ class TestInitCommand implements ICommand {
 				"",
 				`  ${greyDollarSign} ${color.green("ns test ios")}`,
 				`  ${greyDollarSign} ${color.green("ns test android")}`,
-				"",
+				""
 			].join("\n")
 		);
 	}

@@ -68,7 +68,7 @@ export class TypingsCommand implements ICommand {
 		const pattern = `${target.replaceAll(":", "/")}/**/*.{jar,aar}`;
 
 		const res = await glob(pattern, {
-			cwd: gradleFiles,
+			cwd: gradleFiles
 		});
 
 		if (!res || res.length === 0) {
@@ -85,7 +85,7 @@ export class TypingsCommand implements ICommand {
 				version,
 				sha1,
 				file,
-				path: path.resolve(gradleFiles, item),
+				path: path.resolve(gradleFiles, item)
 			};
 		});
 
@@ -102,7 +102,7 @@ export class TypingsCommand implements ICommand {
 
 					return a.version.localeCompare(b.version, undefined, {
 						numeric: true,
-						sensitivity: "base",
+						sensitivity: "base"
 					});
 				})
 				.map((item) => {
@@ -112,12 +112,12 @@ export class TypingsCommand implements ICommand {
 						)}:${color.yellow(item.version)} - ${color.cyanBright.bold(
 							item.file
 						)}`,
-						value: item.id,
+						value: item.id
 					};
 				}),
 			true,
 			{
-				optionsPerPage: process.stdout.rows - 6, // 6 lines are taken up by the instructions
+				optionsPerPage: process.stdout.rows - 6 // 6 lines are taken up by the instructions
 			} as Partial<PromptObject>
 		);
 
@@ -150,7 +150,7 @@ export class TypingsCommand implements ICommand {
 				[
 					"No .jar or .aar file specified. Please specify at least one of the following:",
 					"  - path to .jar file with --jar <jar>",
-					"  - path to .aar file with --aar <aar>",
+					"  - path to .aar file with --aar <aar>"
 				].join("\n")
 			);
 			return false;
@@ -192,7 +192,7 @@ export class TypingsCommand implements ICommand {
 		const inputs: string[] = [
 			...asArray(this.$options.jar),
 			...asArray(this.$options.aar),
-			...paths,
+			...paths
 		];
 
 		await this.$childProcess.spawnFromEvent(
@@ -203,7 +203,7 @@ export class TypingsCommand implements ICommand {
 				"-input",
 				...inputs,
 				"-output",
-				path.resolve(this.$projectData.projectDir, "typings", "android"),
+				path.resolve(this.$projectData.projectDir, "typings", "android")
 			],
 			"exit",
 			{ stdio: "inherit" }
@@ -230,9 +230,9 @@ export class TypingsCommand implements ICommand {
 						this.$projectData.projectDir,
 						"typings",
 						"ios"
-					),
+					)
 				},
-				stdio: "inherit",
+				stdio: "inherit"
 			}
 		);
 	}

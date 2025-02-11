@@ -12,20 +12,20 @@ import {
 	IProjectSettings,
 	IProjectCreationSettings,
 	ITemplateData,
-	IProjectConfigService,
+	IProjectConfigService
 } from "../definitions/project";
 import {
 	INodePackageManager,
 	IOptions,
 	IProjectNameService,
-	IStaticConfig,
+	IStaticConfig
 } from "../declarations";
 import {
 	IHooksService,
 	IErrors,
 	IFileSystem,
 	IProjectHelper,
-	IChildProcess,
+	IChildProcess
 } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
@@ -63,7 +63,7 @@ export class ProjectService implements IProjectService {
 		}
 
 		projectName = await this.$projectNameService.ensureValidName(projectName, {
-			force: opts.force,
+			force: opts.force
 		});
 		const projectDir = this.getValidProjectDir(opts.pathToProject, projectName);
 		if (this.$fs.exists(projectDir) && !this.$fs.isEmptyDir(projectDir)) {
@@ -81,7 +81,7 @@ export class ProjectService implements IProjectService {
 		const projectName = await this.validateProjectName({
 			projectName: projectOptions.projectName,
 			force: projectOptions.force,
-			pathToProject: projectOptions.pathToProject,
+			pathToProject: projectOptions.pathToProject
 		});
 		const projectDir = this.getValidProjectDir(
 			projectOptions.pathToProject,
@@ -105,7 +105,7 @@ export class ProjectService implements IProjectService {
 			projectDir,
 			ignoreScripts: projectOptions.ignoreScripts,
 			appId: appId,
-			projectName,
+			projectName
 		});
 
 		// can pass --no-git to skip creating a git repo
@@ -141,9 +141,8 @@ export class ProjectService implements IProjectService {
 	@exported("projectService")
 	public isValidNativeScriptProject(pathToProject?: string): boolean {
 		try {
-			const projectData = this.$projectDataService.getProjectData(
-				pathToProject
-			);
+			const projectData =
+				this.$projectDataService.getProjectData(pathToProject);
 
 			return (
 				!!projectData &&
@@ -171,13 +170,8 @@ export class ProjectService implements IProjectService {
 	private async createProjectCore(
 		projectCreationSettings: IProjectCreationSettings
 	): Promise<ICreateProjectData> {
-		const {
-			template,
-			projectDir,
-			appId,
-			projectName,
-			ignoreScripts,
-		} = projectCreationSettings;
+		const { template, projectDir, appId, projectName, ignoreScripts } =
+			projectCreationSettings;
 
 		try {
 			const templateData = await this.$projectTemplatesService.prepareTemplate(
@@ -196,7 +190,7 @@ export class ProjectService implements IProjectService {
 			await this.$packageManager.install(projectDir, projectDir, {
 				disableNpmInstall: false,
 				frameworkPath: null,
-				ignoreScripts,
+				ignoreScripts
 			});
 		} catch (err) {
 			this.$fs.deleteDirectory(projectDir);
@@ -204,7 +198,7 @@ export class ProjectService implements IProjectService {
 		}
 
 		await this.$hooksService.executeAfterHooks(Hooks.createProject, {
-			hookArgs: projectCreationSettings,
+			hookArgs: projectCreationSettings
 		});
 
 		return { projectName, projectDir };
@@ -226,9 +220,8 @@ export class ProjectService implements IProjectService {
 	@performanceLog()
 	public async ensureAppResourcesExist(projectDir: string): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const appResourcesDestinationPath = projectData.getAppResourcesDirectoryPath(
-			projectDir
-		);
+		const appResourcesDestinationPath =
+			projectData.getAppResourcesDirectoryPath(projectDir);
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
 			this.$logger.trace(
@@ -241,12 +234,10 @@ export class ProjectService implements IProjectService {
 				constants.RESERVED_TEMPLATE_NAMES["default"],
 				tempDir
 			);
-			const templateProjectData = this.$projectDataService.getProjectData(
-				tempDir
-			);
-			const templateAppResourcesDir = templateProjectData.getAppResourcesDirectoryPath(
-				tempDir
-			);
+			const templateProjectData =
+				this.$projectDataService.getProjectData(tempDir);
+			const templateAppResourcesDir =
+				templateProjectData.getAppResourcesDirectoryPath(tempDir);
 			this.$fs.copyFile(
 				path.join(templateAppResourcesDir, "*"),
 				appResourcesDestinationPath
@@ -283,7 +274,7 @@ export class ProjectService implements IProjectService {
 			version: "1.0.0",
 			private: true,
 			dependencies: {},
-			devDependencies: {},
+			devDependencies: {}
 			// anythign else would go below
 		};
 

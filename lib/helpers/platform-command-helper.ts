@@ -9,7 +9,7 @@ import {
 	IPlatformCommandHelper,
 	IPackageInstallationManager,
 	IUpdatePlatformOptions,
-	IOptions,
+	IOptions
 } from "../declarations";
 import { IPlatformsDataService, IPlatformData } from "../definitions/platform";
 import { IFileSystem, IErrors } from "../common/declarations";
@@ -64,7 +64,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			await this.$platformController.addPlatform({
 				projectDir: projectData.projectDir,
 				platform,
-				frameworkPath,
+				frameworkPath
 			});
 		}
 	}
@@ -162,7 +162,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			} else {
 				await this.$platformController.addPlatform({
 					projectDir: projectData.projectDir,
-					platform: platformParam,
+					platform: platformParam
 				});
 			}
 		}
@@ -254,18 +254,17 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		);
 		const currentVersion = data && data.version ? data.version : "0.2.0";
 
-		const installedModuleDir = await this.$tempService.mkdirSync(
-			"runtime-to-update"
-		);
+		const installedModuleDir =
+			await this.$tempService.mkdirSync("runtime-to-update");
 		let newVersion =
 			version === constants.PackageVersion.NEXT
 				? await this.$packageInstallationManager.getNextVersion(
 						platformData.frameworkPackageName
-				  )
+					)
 				: version ||
-				  (await this.$packageInstallationManager.getLatestCompatibleVersion(
+					(await this.$packageInstallationManager.getLatestCompatibleVersion(
 						platformData.frameworkPackageName
-				  ));
+					));
 		await this.$pacoteService.extractPackage(
 			`${platformData.frameworkPackageName}@${newVersion}`,
 			installedModuleDir
@@ -309,7 +308,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			: packageName;
 		await this.$platformController.addPlatform({
 			projectDir: projectData.projectDir,
-			platform: packageName,
+			platform: packageName
 		});
 		this.$logger.info(
 			"Successfully updated to version ",

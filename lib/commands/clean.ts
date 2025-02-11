@@ -6,14 +6,14 @@ import {
 	IProjectCleanupResult,
 	IProjectCleanupService,
 	IProjectConfigService,
-	IProjectService,
+	IProjectService
 } from "../definitions/project";
 
 import type { PromptObject } from "prompts";
 import { IOptions, IStaticConfig } from "../declarations";
 import {
 	ITerminalSpinner,
-	ITerminalSpinnerService,
+	ITerminalSpinnerService
 } from "../definitions/terminal-spinner-service";
 import { IChildProcess } from "../common/declarations";
 import * as os from "os";
@@ -47,7 +47,7 @@ function bytesToHumanReadable(bytes: number): string {
 function promiseMap<T>(
 	values: T[],
 	mapper: (value: T) => Promise<void>,
-	concurrency = 10,
+	concurrency = 10
 ) {
 	let index = 0;
 	let pending = 0;
@@ -89,7 +89,7 @@ export class CleanCommand implements ICommand {
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $childProcess: IChildProcess,
-		private $staticConfig: IStaticConfig,
+		private $staticConfig: IStaticConfig
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -97,7 +97,7 @@ export class CleanCommand implements ICommand {
 		const isJSON = this.$options.json ?? false;
 
 		const spinner = this.$terminalSpinnerService.createSpinner({
-			isSilent: isJSON,
+			isSilent: isJSON
 		});
 
 		if (!this.$projectService.isValidNativeScriptProject()) {
@@ -110,14 +110,14 @@ export class CleanCommand implements ICommand {
 			constants.HOOKS_DIR_NAME,
 			constants.PLATFORMS_DIR_NAME,
 			constants.NODE_MODULES_FOLDER_NAME,
-			constants.PACKAGE_LOCK_JSON_FILE_NAME,
+			constants.PACKAGE_LOCK_JSON_FILE_NAME
 		];
 
 		try {
 			const overridePathsToClean =
 				this.$projectConfigService.getValue("cli.pathsToClean");
 			const additionalPaths = this.$projectConfigService.getValue(
-				"cli.additionalPathsToClean",
+				"cli.additionalPathsToClean"
 			);
 
 			// allow overriding default paths to clean
@@ -135,7 +135,7 @@ export class CleanCommand implements ICommand {
 		const res = await this.$projectCleanupService.clean(pathsToClean, {
 			dryRun: isDryRun,
 			silent: isJSON,
-			stats: isJSON,
+			stats: isJSON
 		});
 
 		if (res.stats && isJSON) {
@@ -144,11 +144,11 @@ export class CleanCommand implements ICommand {
 					{
 						ok: res.ok,
 						dryRun: isDryRun,
-						stats: Object.fromEntries(res.stats.entries()),
+						stats: Object.fromEntries(res.stats.entries())
 					},
 					null,
-					2,
-				),
+					2
+				)
 			);
 
 			return;
@@ -169,7 +169,7 @@ export class CleanCommand implements ICommand {
 		}
 
 		const shouldScan = await this.$prompter.confirm(
-			"No project found in the current directory. Would you like to scan for all projects in sub-directories instead?",
+			"No project found in the current directory. Would you like to scan for all projects in sub-directories instead?"
 		);
 
 		if (!shouldScan) {
@@ -184,7 +184,7 @@ export class CleanCommand implements ICommand {
 		const updateProgress = () => {
 			const current = color.grey(`${computed}/${paths.length}`);
 			spinner.start(
-				`Gathering cleanable sizes. This may take a while... ${current}`,
+				`Gathering cleanable sizes. This may take a while... ${current}`
 			);
 		};
 
@@ -200,8 +200,8 @@ export class CleanCommand implements ICommand {
 					.exec(
 						`node ${this.$staticConfig.cliBinPath} clean --dry-run --json --disable-analytics`,
 						{
-							cwd: p,
-						},
+							cwd: p
+						}
 					)
 					.then((res) => {
 						const paths: Record<string, number> = JSON.parse(res).stats;
@@ -211,7 +211,7 @@ export class CleanCommand implements ICommand {
 						this.$logger.trace(
 							"Failed to get project size for %s, Error is:",
 							p,
-							err,
+							err
 						);
 						return -1;
 					})
@@ -225,7 +225,7 @@ export class CleanCommand implements ICommand {
 						updateProgress();
 					});
 			},
-			os.cpus().length,
+			os.cpus().length
 		);
 
 		spinner.clear();
@@ -241,7 +241,7 @@ export class CleanCommand implements ICommand {
 			`Found ${
 				projects.size
 			} cleanable project(s) with a total size of: ${color.green(
-				bytesToHumanReadable(totalSize),
+				bytesToHumanReadable(totalSize)
 			)}. Select projects to clean`,
 			Array.from(projects.keys()).map((p) => {
 				const size = projects.get(p);
@@ -254,27 +254,27 @@ export class CleanCommand implements ICommand {
 
 				return {
 					title: `${p}${color.grey(description)}`,
-					value: p,
+					value: p
 				};
 			}),
 			true,
 			{
-				optionsPerPage: process.stdout.rows - 6, // 6 lines are taken up by the instructions
-			} as Partial<PromptObject>,
+				optionsPerPage: process.stdout.rows - 6 // 6 lines are taken up by the instructions
+			} as Partial<PromptObject>
 		);
 		this.$logger.clearScreen();
 
 		spinner.warn(
 			`This will run "${color.yellow(
-				`ns clean`,
+				`ns clean`
 			)}" in all the selected projects and ${color.red.bold(
-				"delete files from your system",
-			)}!`,
+				"delete files from your system"
+			)}!`
 		);
 		spinner.warn(`This action cannot be undone!`);
 
 		let confirmed = await this.$prompter.confirm(
-			"Are you sure you want to clean the selected projects?",
+			"Are you sure you want to clean the selected projects?"
 		);
 		if (!confirmed) {
 			return;
@@ -287,7 +287,7 @@ export class CleanCommand implements ICommand {
 			const currentPath = pathsToClean[i];
 
 			spinner.start(
-				`Cleaning ${color.cyan(currentPath)}... ${i + 1}/${pathsToClean.length}`,
+				`Cleaning ${color.cyan(currentPath)}... ${i + 1}/${pathsToClean.length}`
 			);
 
 			const ok = await this.$childProcess
@@ -296,8 +296,8 @@ export class CleanCommand implements ICommand {
 						this.$options.dryRun ? "--dry-run" : ""
 					} --json --disable-analytics`,
 					{
-						cwd: currentPath,
-					},
+						cwd: currentPath
+					}
 				)
 				.then((res) => {
 					const cleanupRes = JSON.parse(res) as IProjectCleanupResult;
@@ -311,7 +311,7 @@ export class CleanCommand implements ICommand {
 			if (ok) {
 				const cleanedSize = projects.get(currentPath);
 				const cleanedSizeStr = color.grey(
-					`- ${bytesToHumanReadable(cleanedSize)}`,
+					`- ${bytesToHumanReadable(cleanedSize)}`
 				);
 				spinner.succeed(`Cleaned ${color.cyan(currentPath)} ${cleanedSizeStr}`);
 				totalSizeCleaned += cleanedSize;
@@ -323,19 +323,19 @@ export class CleanCommand implements ICommand {
 		spinner.stop();
 		spinner.succeed(
 			`Done! We've just freed up ${color.green(
-				bytesToHumanReadable(totalSizeCleaned),
-			)}! Woohoo! 🎉`,
+				bytesToHumanReadable(totalSizeCleaned)
+			)}! Woohoo! 🎉`
 		);
 
 		if (this.$options.dryRun) {
 			spinner.info(
-				'Note: the "--dry-run" flag was used, so no files were actually deleted.',
+				'Note: the "--dry-run" flag was used, so no files were actually deleted.'
 			);
 		}
 	}
 
 	private async getNSProjectPathsInDirectory(
-		dir = process.cwd(),
+		dir = process.cwd()
 	): Promise<string[]> {
 		let nsDirs: string[] = [];
 
@@ -350,16 +350,16 @@ export class CleanCommand implements ICommand {
 					this.$logger.trace(
 						'Failed to read directory "%s". Error is:',
 						dir,
-						err,
+						err
 					);
 					return [];
-				},
+				}
 			);
 
 			const hasNSConfig = dirents.some(
 				(ent) =>
 					ent.name.includes("nativescript.config.ts") ||
-					ent.name.includes("nativescript.config.js"),
+					ent.name.includes("nativescript.config.js")
 			);
 
 			if (hasNSConfig) {
@@ -375,7 +375,7 @@ export class CleanCommand implements ICommand {
 					if (dirent.isDirectory()) {
 						return getFiles(res);
 					}
-				}),
+				})
 			);
 		};
 

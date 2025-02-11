@@ -18,7 +18,7 @@ describe("metadataFilteringService", () => {
 	const projectDir = "projectDir";
 	const projectRoot = path.join(projectDir, "platforms", platform);
 	const projectData: any = {
-		appResourcesDirectoryPath: path.join(projectDir, "App_Resources"),
+		appResourcesDirectoryPath: path.join(projectDir, "App_Resources")
 	};
 	const blacklistArray: string[] = ["blacklisted1", "blacklisted2"];
 	const whitelistArray: string[] = ["whitelisted1", "whitelisted2"];
@@ -46,20 +46,20 @@ describe("metadataFilteringService", () => {
 				const plugins = !!(input && input.hasPlugins)
 					? [
 							<any>{
-								pluginPlatformsFolderPath: (pl: string) => pluginPlatformsDir,
-							},
-					  ]
+								pluginPlatformsFolderPath: (pl: string) => pluginPlatformsDir
+							}
+						]
 					: [];
 
 				return plugins;
-			},
+			}
 		});
 		testInjector.register("mobileHelper", {
-			normalizePlatformName: (pl: string) => pl,
+			normalizePlatformName: (pl: string) => pl
 		});
 		testInjector.register("platformsDataService", {
 			getPlatformData: (pl: string, prjData: IProjectData): IPlatformData =>
-				<any>{ projectRoot },
+				<any>{ projectRoot }
 		});
 		return testInjector;
 	};
@@ -96,40 +96,38 @@ describe("metadataFilteringService", () => {
 
 		it("deletes previously generated files for metadata filtering", () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { fs } = mockFs({
 				testInjector,
 				writeFileAction: (filePath: string, data: string) => {
 					throw new Error(
 						`No data should be written when the ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} does not exist in App_Resource/<platform>`
 					);
-				},
+				}
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
 
 			const expectedDeletedFiles = [
 				path.join(projectRoot, MetadataFilteringConstants.WHITELIST_FILE_NAME),
-				path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME),
+				path.join(projectRoot, MetadataFilteringConstants.BLACKLIST_FILE_NAME)
 			];
 			assert.deepStrictEqual(fs.deletedFiles, expectedDeletedFiles);
 		});
 
 		it(`generates ${MetadataFilteringConstants.BLACKLIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [appResourcesNativeApiUsageFilePath],
 				readJsonData: {
 					[`${appResourcesNativeApiUsageFilePath}`]: {
-						blacklist: blacklistArray,
-					},
-				},
+						blacklist: blacklistArray
+					}
+				}
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
@@ -138,7 +136,7 @@ describe("metadataFilteringService", () => {
 				[path.join(
 					projectRoot,
 					MetadataFilteringConstants.BLACKLIST_FILE_NAME
-				)]: blacklistArray.join(EOL),
+				)]: blacklistArray.join(EOL)
 			});
 		});
 
@@ -168,17 +166,16 @@ describe("metadataFilteringService", () => {
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [appResourcesNativeApiUsageFilePath],
 				readJsonData: {
 					[`${appResourcesNativeApiUsageFilePath}`]: {
-						whitelist: whitelistArray,
-					},
-				},
+						whitelist: whitelistArray
+					}
+				}
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
@@ -187,28 +184,27 @@ describe("metadataFilteringService", () => {
 					projectRoot,
 					MetadataFilteringConstants.WHITELIST_FILE_NAME
 				)]: getExpectedWhitelistContent({
-					applicationWhitelist: whitelistArray,
-				}),
+					applicationWhitelist: whitelistArray
+				})
 			});
 		});
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} with content from plugins when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform> and whitelist-plugins-usages is true`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
 					appResourcesNativeApiUsageFilePath,
-					pluginNativeApiUsageFilePath,
+					pluginNativeApiUsageFilePath
 				],
 				readJsonData: {
 					[`${appResourcesNativeApiUsageFilePath}`]: {
-						["whitelist-plugins-usages"]: true,
+						["whitelist-plugins-usages"]: true
 					},
-					[`${pluginNativeApiUsageFilePath}`]: { uses: whitelistArray },
-				},
+					[`${pluginNativeApiUsageFilePath}`]: { uses: whitelistArray }
+				}
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
@@ -216,35 +212,34 @@ describe("metadataFilteringService", () => {
 				[path.join(
 					projectRoot,
 					MetadataFilteringConstants.WHITELIST_FILE_NAME
-				)]: getExpectedWhitelistContent({ pluginWhitelist: whitelistArray }),
+				)]: getExpectedWhitelistContent({ pluginWhitelist: whitelistArray })
 			});
 		});
 
 		it(`generates all files when both plugins and applications filters are included`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
 					appResourcesNativeApiUsageFilePath,
-					pluginNativeApiUsageFilePath,
+					pluginNativeApiUsageFilePath
 				],
 				readJsonData: {
 					[`${appResourcesNativeApiUsageFilePath}`]: {
 						whitelist: whitelistArray,
 						blacklist: blacklistArray,
-						["whitelist-plugins-usages"]: true,
+						["whitelist-plugins-usages"]: true
 					},
-					[`${pluginNativeApiUsageFilePath}`]: { uses: pluginsUses },
-				},
+					[`${pluginNativeApiUsageFilePath}`]: { uses: pluginsUses }
+				}
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, platform);
 			const expectedWhitelist = getExpectedWhitelistContent({
 				pluginWhitelist: pluginsUses,
-				applicationWhitelist: whitelistArray,
+				applicationWhitelist: whitelistArray
 			});
 
 			assert.deepStrictEqual(dataWritten, {
@@ -255,34 +250,33 @@ describe("metadataFilteringService", () => {
 				[path.join(
 					projectRoot,
 					MetadataFilteringConstants.BLACKLIST_FILE_NAME
-				)]: blacklistArray.join(EOL),
+				)]: blacklistArray.join(EOL)
 			});
 		});
 
 		it(`skips plugins ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} files when whitelist-plugins-usages in App_Resources is false`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
 					appResourcesNativeApiUsageFilePath,
-					pluginNativeApiUsageFilePath,
+					pluginNativeApiUsageFilePath
 				],
 				readJsonData: {
 					[`${appResourcesNativeApiUsageFilePath}`]: {
 						whitelist: whitelistArray,
 						blacklist: blacklistArray,
-						["whitelist-plugins-usages"]: false,
+						["whitelist-plugins-usages"]: false
 					},
-					[`${pluginNativeApiUsageFilePath}`]: { uses: pluginsUses },
-				},
+					[`${pluginNativeApiUsageFilePath}`]: { uses: pluginsUses }
+				}
 			});
 
 			metadataFilteringService.generateMetadataFilters(projectData, "platform");
 			const expectedWhitelist = getExpectedWhitelistContent({
-				applicationWhitelist: whitelistArray,
+				applicationWhitelist: whitelistArray
 			});
 
 			assert.deepStrictEqual(dataWritten, {
@@ -293,7 +287,7 @@ describe("metadataFilteringService", () => {
 				[path.join(
 					projectRoot,
 					MetadataFilteringConstants.BLACKLIST_FILE_NAME
-				)]: blacklistArray.join(EOL),
+				)]: blacklistArray.join(EOL)
 			});
 		});
 	});

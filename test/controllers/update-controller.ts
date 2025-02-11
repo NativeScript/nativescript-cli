@@ -21,20 +21,20 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 			/* empty */
 		},
 		dependencies: {
-			"@nativescript/core": "next",
+			"@nativescript/core": "next"
 		},
 		devDependencies: {
 			"@nativescript/ios": "8.0.0",
 			"@nativescript/android": "~8.0.0",
 			"@nativescript/webpack": "5.0.0-beta.9",
-			"@nativescript/types": "8.1.0",
-		},
+			"@nativescript/types": "8.1.0"
+		}
 	});
 	testInjector.register("fs", stubs.FileSystemStub);
 	testInjector.register("platformCommandHelper", {
 		getCurrentPlatformVersion: () => {
 			return "5.2.0";
-		},
+		}
 	});
 	testInjector.register("packageManager", {
 		getTagVersion(packageName: string, tag: string) {
@@ -50,10 +50,10 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 			}
 
 			return false;
-		},
+		}
 	});
 	testInjector.register("pluginsService", {
-		addToPackageJson() {},
+		addToPackageJson() {}
 	});
 
 	class PackageInstallationManagerStub extends stubs.PackageInstallationManagerStub {
@@ -61,7 +61,7 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 			const projectData = testInjector.resolve("projectData");
 			const deps = {
 				...projectData.dependencies,
-				...projectData.devDependencies,
+				...projectData.devDependencies
 			};
 
 			if (deps[packageName]) {
@@ -80,12 +80,12 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 	testInjector.register("projectDataService", {
 		getProjectData() {
 			return testInjector.resolve("projectData");
-		},
+		}
 	});
 	testInjector.register("updateController", UpdateController);
 	testInjector.register("projectBackupService", stubs.ProjectBackupServiceStub);
 	testInjector.register("projectCleanupService", {
-		clean() {},
+		clean() {}
 	});
 
 	return testInjector;
@@ -126,7 +126,7 @@ describe("update controller method tests", () => {
 		await updateController
 			.update({
 				projectDir: projectFolder,
-				version: "3.3.0",
+				version: "3.3.0"
 			})
 			.catch(() => {
 				hasError = true;
@@ -154,15 +154,14 @@ describe("update controller method tests", () => {
 	it("handles exact versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "8.0.1234",
+			version: "8.0.1234"
 		});
 
 		assertCalled(stub, "@nativescript/core", "8.0.1234");
@@ -175,15 +174,14 @@ describe("update controller method tests", () => {
 	it("handles range versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "~8.0.1234",
+			version: "~8.0.1234"
 		});
 
 		assertCalled(stub, "@nativescript/core", "~8.0.1234");
@@ -196,15 +194,14 @@ describe("update controller method tests", () => {
 	it("handles range versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "^8.0.1234",
+			version: "^8.0.1234"
 		});
 
 		assertCalled(stub, "@nativescript/core", "^8.0.1234");
@@ -217,15 +214,14 @@ describe("update controller method tests", () => {
 	it("handles latest tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "latest",
+			version: "latest"
 		});
 
 		assertCalled(stub, "@nativescript/core", "~8.0.4567");
@@ -238,15 +234,14 @@ describe("update controller method tests", () => {
 	it("handles existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "next",
+			version: "next"
 		});
 
 		assertCalled(stub, "@nativescript/core", "8.0.0-next");
@@ -259,15 +254,14 @@ describe("update controller method tests", () => {
 	it("handles non-existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "nonexistent",
+			version: "nonexistent"
 		});
 
 		assert(stub.notCalled);
@@ -276,15 +270,14 @@ describe("update controller method tests", () => {
 	it("handles partially existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
 			projectDir: projectFolder,
-			version: "JSC",
+			version: "JSC"
 		});
 
 		assert(stub.calledOnce);
@@ -294,14 +287,13 @@ describe("update controller method tests", () => {
 	it("handles no version - falls back to latest", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
 		await updateController.update({
-			projectDir: projectFolder,
+			projectDir: projectFolder
 		});
 
 		assertCalled(stub, "@nativescript/core", "~8.0.4567");

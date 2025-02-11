@@ -29,7 +29,7 @@ export class IPService implements IIPService {
 			const response = await this.$httpClient.httpRequest({
 				method: "GET",
 				url: apiEndpoint,
-				timeout: IPService.GET_IP_TIMEOUT,
+				timeout: IPService.GET_IP_TIMEOUT
 			});
 
 			this.$logger.trace(`${apiEndpoint} returns ${response.body}`);
@@ -54,7 +54,7 @@ export class IPService implements IIPService {
 			const response = await this.$httpClient.httpRequest({
 				method: "GET",
 				url: ipifyOrgAPIEndpoint,
-				timeout: IPService.GET_IP_TIMEOUT,
+				timeout: IPService.GET_IP_TIMEOUT
 			});
 
 			this.$logger.trace(`${ipifyOrgAPIEndpoint} returns ${response.body}`);

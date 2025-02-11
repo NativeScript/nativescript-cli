@@ -10,7 +10,7 @@ declare const enum DetachedProcessMessages {
 	/**
 	 * The detached process finished its tasks and will now exit.
 	 */
-	ProcessFinishedTasks = "ProcessFinishedTasks",
+	ProcessFinishedTasks = "ProcessFinishedTasks"
 }
 
 /**
@@ -25,7 +25,7 @@ declare const enum FileLogMessageType {
 	/**
 	 * Error message - used to indicate that some action did not succeed.
 	 */
-	Error = "Error",
+	Error = "Error"
 }
 
 declare const enum CleanupProcessMessage {
@@ -66,5 +66,5 @@ declare const enum CleanupProcessMessage {
 	/**
 	 * This type of message defines that the cleanup procedure will not require the previously specified JS file.
 	 */
-	RemoveJSFileToRequire = "RemoveJSFileToRequire",
+	RemoveJSFileToRequire = "RemoveJSFileToRequire"
 }

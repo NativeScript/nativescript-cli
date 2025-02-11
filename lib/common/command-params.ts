@@ -1,6 +1,6 @@
 import {
 	ICommandParameter,
-	IStringParameterBuilder,
+	IStringParameterBuilder
 } from "./definitions/commands";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";

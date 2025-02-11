@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import { IProjectData } from "../definitions/project";
 import {
 	IPlatformCommandHelper,
-	IPlatformValidationService,
+	IPlatformValidationService
 } from "../declarations";
 import { injector } from "../common/yok";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";

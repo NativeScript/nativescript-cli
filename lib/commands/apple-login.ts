@@ -8,7 +8,7 @@ import { IApplePortalSessionService } from "../services/apple-portal/definitions
 export class AppleLogin implements ICommand {
 	public allowedParameters: ICommandParameter[] = [
 		new StringCommandParameter(this.$injector),
-		new StringCommandParameter(this.$injector),
+		new StringCommandParameter(this.$injector)
 	];
 
 	constructor(
@@ -23,7 +23,7 @@ export class AppleLogin implements ICommand {
 		let username = args[0];
 		if (!username) {
 			username = await this.$prompter.getString("Apple ID", {
-				allowEmpty: false,
+				allowEmpty: false
 			});
 		}
 
@@ -34,7 +34,7 @@ export class AppleLogin implements ICommand {
 
 		const user = await this.$applePortalSessionService.createUserSession({
 			username,
-			password,
+			password
 		});
 		if (!user.areCredentialsValid) {
 			this.$errors.fail(

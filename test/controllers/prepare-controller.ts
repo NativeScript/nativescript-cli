@@ -14,7 +14,7 @@ const prepareData = {
 	env: {},
 	watch: true,
 	watchNative: true,
-	uniqueBundle: 0,
+	uniqueBundle: 0
 };
 
 let isCompileWithWatchCalled = false;
@@ -28,14 +28,14 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	const injector = new InjectorStub();
 
 	injector.register("platformController", {
-		addPlatformIfNeeded: () => ({}),
+		addPlatformIfNeeded: () => ({})
 	});
 
 	injector.register("prepareNativePlatformService", {
 		prepareNativePlatform: async () => {
 			isNativePrepareCalled = true;
 			return data.hasNativeChanges;
-		},
+		}
 	});
 
 	injector.register("webpackCompilerService", {
@@ -46,23 +46,23 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		},
 		compileWithoutWatch: async () => {
 			isCompileWithoutWatchCalled = true;
-		},
+		}
 	});
 
 	injector.register("mobileHelper", MobileHelper);
 	injector.register("prepareController", PrepareController);
 
 	injector.register("nodeModulesDependenciesBuilder", {
-		getProductionDependencies: () => <any>[],
+		getProductionDependencies: () => <any>[]
 	});
 
 	injector.register("watchIgnoreListService", {
 		addFileToIgnoreList: () => ({}),
-		isFileInIgnoreList: () => false,
+		isFileInIgnoreList: () => false
 	});
 
 	injector.register("analyticsService", {
-		trackEventActionInGoogleAnalytics: () => ({}),
+		trackEventActionInGoogleAnalytics: () => ({})
 	});
 
 	injector.register("tempService", TempServiceStub);
@@ -70,7 +70,7 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		ensureAppResourcesExist(projectDir: string): Promise<void> {
 			isEnsuringAppResourcesExist = true;
 			return;
-		},
+		}
 	});
 
 	const prepareController: PrepareController =
@@ -145,7 +145,7 @@ describe("prepareController", () => {
 					hasNativeChanges: true,
 					hasOnlyHotUpdateFiles: false,
 					hmrData: null,
-					platform: platform.toLowerCase(),
+					platform: platform.toLowerCase()
 				});
 			});
 		});
@@ -161,7 +161,7 @@ describe("prepareController", () => {
 				await prepareController.prepare({
 					...prepareData,
 					watch: false,
-					platform,
+					platform
 				});
 
 				assert.isTrue(isNativePrepareCalled);

@@ -2,7 +2,7 @@ import {
 	IPrompterOptions,
 	IAllowEmpty,
 	IDisposable,
-	IPrompterQuestion,
+	IPrompterQuestion
 } from "../common/declarations";
 
 declare global {

@@ -19,11 +19,11 @@ const logFile = process.argv[3];
 const jsFilePath = process.argv[4];
 
 const fileLogService = injector.resolve<IFileLogService>(FileLogService, {
-	logFile,
+	logFile
 });
 const uniqueId = uuidv4();
 fileLogService.logData({
-	message: `Initializing Cleanup process for path: ${jsFilePath} Unique id: ${uniqueId}`,
+	message: `Initializing Cleanup process for path: ${jsFilePath} Unique id: ${uniqueId}`
 });
 
 if (!fs.existsSync(jsFilePath)) {

@@ -11,7 +11,7 @@ import {
 	IRequestCleanupMessage,
 	IFileCleanupMessage,
 	IJSCommand,
-	IJSCleanupMessage,
+	IJSCleanupMessage
 } from "../detached-processes/cleanup-process-definitions";
 import { injector } from "../common/yok";
 
@@ -36,7 +36,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<ISpawnCommandCleanupMessage>{
 			messageType: CleanupProcessMessage.AddCleanCommand,
-			commandInfo,
+			commandInfo
 		});
 	}
 
@@ -46,7 +46,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<ISpawnCommandCleanupMessage>{
 			messageType: CleanupProcessMessage.RemoveCleanCommand,
-			commandInfo,
+			commandInfo
 		});
 	}
 
@@ -54,7 +54,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<IRequestCleanupMessage>{
 			messageType: CleanupProcessMessage.AddRequest,
-			requestInfo,
+			requestInfo
 		});
 	}
 
@@ -62,7 +62,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<IRequestCleanupMessage>{
 			messageType: CleanupProcessMessage.RemoveRequest,
-			requestInfo,
+			requestInfo
 		});
 	}
 
@@ -70,7 +70,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<IFileCleanupMessage>{
 			messageType: CleanupProcessMessage.AddDeleteFileAction,
-			filePath,
+			filePath
 		});
 	}
 
@@ -78,7 +78,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<IFileCleanupMessage>{
 			messageType: CleanupProcessMessage.RemoveDeleteFileAction,
-			filePath,
+			filePath
 		});
 	}
 
@@ -86,7 +86,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<IJSCleanupMessage>{
 			messageType: CleanupProcessMessage.AddJSFileToRequire,
-			jsCommand,
+			jsCommand
 		});
 	}
 
@@ -94,7 +94,7 @@ export class CleanupService implements ICleanupService {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<IJSCleanupMessage>{
 			messageType: CleanupProcessMessage.RemoveJSFileToRequire,
-			jsCommand,
+			jsCommand
 		});
 	}
 
@@ -135,7 +135,7 @@ export class CleanupService implements ICleanupService {
 				cleanupProcessArgs,
 				{
 					stdio: ["ignore", "ignore", "ignore", "ipc"],
-					detached: true,
+					detached: true
 				}
 			);
 
@@ -176,7 +176,7 @@ export class CleanupService implements ICleanupService {
 	private getCleanupProcessArgs(): string[] {
 		const cleanupProcessArgs = [
 			path.join(__dirname, "..", "detached-processes", "cleanup-process.js"),
-			this.$staticConfig.PATH_TO_BOOTSTRAP,
+			this.$staticConfig.PATH_TO_BOOTSTRAP
 		];
 
 		if (this.pathToCleanupLogFile) {
@@ -203,7 +203,7 @@ export class CleanupService implements ICleanupService {
 
 		return {
 			command,
-			args,
+			args
 		};
 	}
 }

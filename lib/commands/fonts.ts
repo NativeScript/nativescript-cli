@@ -28,7 +28,7 @@ export class FontsCommand implements ICommand {
 				constants.FONTS_DIR
 			),
 			path.join(constants.APP_FOLDER_NAME, constants.FONTS_DIR),
-			path.join(constants.SRC_DIR, constants.FONTS_DIR),
+			path.join(constants.SRC_DIR, constants.FONTS_DIR)
 		].map((entry) => path.resolve(this.$projectData.projectDir, entry));
 
 		const fontsFolderPath = defaultFontsFolderPaths.find((entry) =>
@@ -58,7 +58,7 @@ export class FontsCommand implements ICommand {
 			const font = await fontFinder.get(fontsFolderPath + "/" + file.base);
 			table.push([
 				file.base,
-				`font-family: "${font.name}", "${file.name}"; font-weight: ${font.weight};`,
+				`font-family: "${font.name}", "${file.name}"; font-weight: ${font.weight};`
 			]);
 		}
 

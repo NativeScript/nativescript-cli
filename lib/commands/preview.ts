@@ -24,7 +24,7 @@ export class PreviewCommand implements ICommand {
 
 	private getPreviewCLIPath(): string {
 		return resolvePackagePath(PREVIEW_CLI_PACKAGE, {
-			paths: [this.$projectData.projectDir],
+			paths: [this.$projectData.projectDir]
 		});
 	}
 
@@ -36,7 +36,7 @@ export class PreviewCommand implements ICommand {
 				this.$projectData.projectDir,
 				{
 					"save-dev": true,
-					"save-exact": true,
+					"save-exact": true
 				} as any
 			);
 		}
@@ -77,7 +77,7 @@ export class PreviewCommand implements ICommand {
 					"",
 					color.cyan("  ./node_modules/.bin/preview-cli"),
 					"",
-					"And if you are still having issues, try again - or reach out on Discord/open an issue on GitHub.",
+					"And if you are still having issues, try again - or reach out on Discord/open an issue on GitHub."
 				].join("\n")
 			);
 
@@ -92,7 +92,7 @@ export class PreviewCommand implements ICommand {
 			process.execPath,
 			[previewCLIBinPath, ...commandArgs],
 			{
-				stdio: "inherit",
+				stdio: "inherit"
 			}
 		);
 	}

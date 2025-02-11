@@ -3,7 +3,7 @@ import { IProjectData, IProjectDataService } from "../definitions/project";
 import {
 	IOptions,
 	IPlatformCommandHelper,
-	INodePackageManager,
+	INodePackageManager
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
@@ -91,7 +91,7 @@ export class InstallCommand implements ICommand {
 			disableNpmInstall: this.$options.disableNpmInstall,
 			frameworkPath: this.$options.frameworkPath,
 			ignoreScripts: this.$options.ignoreScripts,
-			path: this.$options.path,
+			path: this.$options.path
 		});
 	}
 }

@@ -7,7 +7,7 @@ import {
 	IBuildController,
 	IBuildArtifactsService,
 	IBuildInfoFileService,
-	IBuildData,
+	IBuildData
 } from "../definitions/build";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IAnalyticsService, IFileSystem } from "../common/declarations";
@@ -71,7 +71,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 				buildData.clean
 					? constants.BuildStates.Clean
 					: constants.BuildStates.Incremental
-			}`,
+			}`
 		});
 
 		if (buildData.clean) {
@@ -83,7 +83,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 			this.$logger.info(data.data.toString(), {
-				[constants.LoggerConfigData.skipNewLine]: true,
+				[constants.LoggerConfigData.skipNewLine]: true
 			});
 		};
 
@@ -165,9 +165,8 @@ export class BuildController extends EventEmitter implements IBuildController {
 			return true;
 		}
 
-		const validBuildOutputData = platformData.getValidBuildOutputData(
-			buildData
-		);
+		const validBuildOutputData =
+			platformData.getValidBuildOutputData(buildData);
 		const packages = this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
 			validBuildOutputData
@@ -176,9 +175,8 @@ export class BuildController extends EventEmitter implements IBuildController {
 			return true;
 		}
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		const buildInfo = this.$buildInfoFileService.getLocalBuildInfo(
 			platformData,
 			buildData

@@ -6,7 +6,7 @@ import { IProjectData } from "../definitions/project";
 import {
 	IITMSTransporterService,
 	IOptions,
-	IPlatformValidationService,
+	IPlatformValidationService
 } from "../declarations";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IInjector } from "../common/definitions/yok";
@@ -19,7 +19,7 @@ export class PublishIOS implements ICommand {
 		new StringCommandParameter(this.$injector),
 		new StringCommandParameter(this.$injector),
 		new StringCommandParameter(this.$injector),
-		new StringCommandParameter(this.$injector),
+		new StringCommandParameter(this.$injector)
 	];
 
 	constructor(
@@ -58,7 +58,7 @@ export class PublishIOS implements ICommand {
 					this.$options.appleApplicationSpecificPassword,
 				sessionBase64: this.$options.appleSessionBase64,
 				requireInteractiveConsole: true,
-				requireApplicationSpecificPassword: true,
+				requireApplicationSpecificPassword: true
 			}
 		);
 		if (!user.areCredentialsValid) {
@@ -121,7 +121,7 @@ export class PublishIOS implements ICommand {
 			ipaFilePath,
 			shouldExtractIpa: !!this.$options.ipa,
 			verboseLogging: this.$logger.getLevel() === "TRACE",
-			teamId: this.$options.teamId,
+			teamId: this.$options.teamId
 		});
 	}
 

@@ -8,7 +8,7 @@ import {
 	ISysInfo,
 	IFutureDispatcher,
 	IQueue,
-	IErrors,
+	IErrors
 } from "./declarations";
 import { IOptions, IPackageManager, IVersionsService } from "../declarations";
 import { IInjector } from "./definitions/yok";
@@ -46,7 +46,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 					"..",
 					"..",
 					"package.json"
-				),
+				)
 			});
 			this.$logger.trace("System information:");
 			this.$logger.trace(JSON.stringify(sysInfo, null, 2));
@@ -69,7 +69,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 		({
 			commandName,
 			commandArguments,
-			argv: process.argv,
+			argv: process.argv
 		} = await this.resolveCommand(commandName, commandArguments, process.argv));
 
 		await this.$cancellation.begin("cli");
@@ -141,7 +141,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 				nativescriptCliVersion.currentVersion,
 				nativescriptCliVersion.latestVersion,
 				{
-					loose: true,
+					loose: true
 				}
 			)
 		) {

@@ -6,7 +6,7 @@ import { PODFILE_NAME } from "../constants";
 import {
 	IProjectData,
 	ICocoaPodsPlatformManager,
-	IPodfilePlatformData,
+	IPodfilePlatformData
 } from "../definitions/project";
 import { injector } from "../common/yok";
 
@@ -67,9 +67,8 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 			);
 			const allPodfiles =
 				projectPodfileContent.match(podfileContentRegExp) || [];
-			const selectedPlatformData = this.selectPlatformDataFromProjectPodfile(
-				allPodfiles
-			);
+			const selectedPlatformData =
+				this.selectPlatformDataFromProjectPodfile(allPodfiles);
 			const newPlatformSection = selectedPlatformData
 				? this.buildPlatformSection(selectedPlatformData)
 				: "";
@@ -101,7 +100,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 				podfilePlatformData = {
 					content: firstGroup,
 					version: secondGroup,
-					path: podfilePath,
+					path: podfilePath
 				};
 				return `# ${substring.trim()}`;
 			}
@@ -110,9 +109,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 		return { replacedContent, podfilePlatformData };
 	}
 
-	private getPlatformSectionData(
-		projectPodfileContent: string
-	): {
+	private getPlatformSectionData(projectPodfileContent: string): {
 		podfilePlatformData: IPodfilePlatformData;
 		platformSectionContent: string;
 	} {
@@ -128,8 +125,8 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 				podfilePlatformData: {
 					path: match[1].trim(),
 					content: match[2],
-					version: match[3],
-				},
+					version: match[3]
+				}
 			};
 		}
 
@@ -156,7 +153,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 				selectedPlatformData = {
 					version: null,
 					content: platformMatch[1],
-					path: podfilePathMatch[1],
+					path: podfilePathMatch[1]
 				};
 				return false;
 			}
@@ -173,7 +170,7 @@ export class CocoaPodsPlatformManager implements ICocoaPodsPlatformManager {
 					selectedPlatformData = {
 						version: platformMatch[2],
 						content: platformMatch[1],
-						path: podfilePathMatch[1],
+						path: podfilePathMatch[1]
 					};
 				}
 			}

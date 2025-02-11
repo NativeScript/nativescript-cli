@@ -3,7 +3,7 @@ import { IOptions, IAssetsGenerationService } from "../declarations";
 import {
 	ICommand,
 	ICommandParameter,
-	IStringParameterBuilder,
+	IStringParameterBuilder
 } from "../common/definitions/commands";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -12,7 +12,7 @@ export abstract class GenerateCommandBase implements ICommand {
 	public allowedParameters: ICommandParameter[] = [
 		this.$stringParameterBuilder.createMandatoryParameter(
 			"You have to provide path to image to generate other images based on it."
-		),
+		)
 	];
 
 	constructor(
@@ -38,7 +38,8 @@ export abstract class GenerateCommandBase implements ICommand {
 
 export class GenerateIconsCommand
 	extends GenerateCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	constructor(
 		protected $options: IOptions,
 		$injector: IInjector,
@@ -62,7 +63,7 @@ export class GenerateIconsCommand
 		await this.$assetsGenerationService.generateIcons({
 			imagePath,
 			background,
-			projectDir: this.$projectData.projectDir,
+			projectDir: this.$projectData.projectDir
 		});
 	}
 }
@@ -71,7 +72,8 @@ injector.registerCommand("resources|generate|icons", GenerateIconsCommand);
 
 export class GenerateSplashScreensCommand
 	extends GenerateCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	constructor(
 		protected $options: IOptions,
 		$injector: IInjector,
@@ -95,7 +97,7 @@ export class GenerateSplashScreensCommand
 		await this.$assetsGenerationService.generateSplashScreens({
 			imagePath,
 			background,
-			projectDir: this.$projectData.projectDir,
+			projectDir: this.$projectData.projectDir
 		});
 	}
 }

@@ -1,7 +1,7 @@
 import { hasValidAndroidSigning } from "../common/helpers";
 import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
-	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
+	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE
 } from "../constants";
 import { IProjectData, ITestExecutionService } from "../definitions/project";
 import { IOptions } from "../declarations";
@@ -13,7 +13,7 @@ import {
 	IAnalyticsService,
 	IErrors,
 	IDictionary,
-	ErrorCodes,
+	ErrorCodes
 } from "../common/declarations";
 import { ICleanupService } from "../definitions/cleanup-service";
 import { injector } from "../common/yok";
@@ -21,7 +21,7 @@ import { injector } from "../common/yok";
 abstract class TestCommandBase {
 	public allowedParameters: ICommandParameter[] = [];
 	public dashedOptions = {
-		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false }
 	};
 
 	protected abstract platform: string;
@@ -44,16 +44,15 @@ abstract class TestCommandBase {
 				deviceId: this.$options.device,
 				emulator: this.$options.emulator,
 				skipInferPlatform: !this.platform,
-				sdk: this.$options.sdk,
+				sdk: this.$options.sdk
 			});
 
-			const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice(
-				{
+			const selectedDeviceForDebug =
+				await this.$devicesService.pickSingleDevice({
 					onlyEmulators: this.$options.emulator,
 					onlyDevices: this.$options.forDevice,
-					deviceId: this.$options.device,
-				}
-			);
+					deviceId: this.$options.device
+				});
 			devices = [selectedDeviceForDebug];
 			// const debugData = this.getDebugData(platform, projectData, deployOptions, { device: selectedDeviceForDebug.deviceInfo.identifier });
 			// await this.$debugService.debug(debugData, this.$options);
@@ -78,11 +77,12 @@ abstract class TestCommandBase {
 				(deviceDebugMap[device.deviceInfo.identifier] = this.$options.debugBrk)
 		);
 
-		const deviceDescriptors = await this.$liveSyncCommandHelper.createDeviceDescriptors(
-			devices,
-			this.platform,
-			<any>{ deviceDebugMap }
-		);
+		const deviceDescriptors =
+			await this.$liveSyncCommandHelper.createDeviceDescriptors(
+				devices,
+				this.platform,
+				<any>{ deviceDebugMap }
+			);
 
 		await this.$testExecutionService.startKarmaServer(
 			this.platform,
@@ -106,7 +106,7 @@ abstract class TestCommandBase {
 
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
-				platforms: [this.platform],
+				platforms: [this.platform]
 			});
 		}
 
@@ -118,22 +118,20 @@ abstract class TestCommandBase {
 			this.$options.justlaunch || !this.$options.watch
 		);
 
-		const output = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(
-			{
+		const output =
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform: this.platform,
 				projectDir: this.$projectData.projectDir,
-				options: this.$options,
-			}
-		);
+				options: this.$options
+			});
 
-		const canStartKarmaServer = await this.$testExecutionService.canStartKarmaServer(
-			this.$projectData
-		);
+		const canStartKarmaServer =
+			await this.$testExecutionService.canStartKarmaServer(this.$projectData);
 		if (!canStartKarmaServer) {
 			this.$errors.fail({
 				formatStr:
 					"Error: In order to run unit tests, your project must already be configured by running $ ns test init.",
-				errorCode: ErrorCodes.TESTS_INIT_REQUIRED,
+				errorCode: ErrorCodes.TESTS_INIT_REQUIRED
 			});
 		}
 

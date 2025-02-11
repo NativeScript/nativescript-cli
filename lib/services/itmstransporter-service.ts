@@ -9,7 +9,7 @@ import {
 	IErrors,
 	IFileSystem,
 	IPlistParser,
-	IXcodeSelectService,
+	IXcodeSelectService
 } from "../common/declarations";
 import { IApplePortalApplicationService } from "./apple-portal/definitions";
 import { IInjector } from "../common/definitions/yok";
@@ -74,17 +74,18 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			? ITMSConstants.VerboseLoggingLevels.Verbose
 			: ITMSConstants.VerboseLoggingLevels.Informational;
 		const bundleId = await this.getBundleIdentifier(data);
-		const application = await this.$applePortalApplicationService.getApplicationByBundleId(
-			data.user,
-			bundleId
-		);
+		const application =
+			await this.$applePortalApplicationService.getApplicationByBundleId(
+				data.user,
+				bundleId
+			);
 
 		this.$fs.createDirectory(innerDirectory);
 
 		this.$fs.copyFile(data.ipaFilePath, ipaFileLocation);
 
 		const ipaFileHash = await this.$fs.getFileShasum(ipaFileLocation, {
-			algorithm: "md5",
+			algorithm: "md5"
 		});
 		const ipaFileSize = this.$fs.getFileSize(ipaFileLocation);
 		const metadata = this.getITMSMetadataXml(
@@ -114,7 +115,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				"-p",
 				quoteString(password),
 				"-v",
-				loggingLevel,
+				loggingLevel
 			],
 			"close",
 			{ stdio: "inherit" }
@@ -144,7 +145,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			data.credentials.username,
 			"-p",
 			password,
-			"-k 100000",
+			"-k 100000"
 		];
 
 		if (data.teamId) {
@@ -157,7 +158,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		}
 
 		await this.$childProcess.spawnFromEvent(altoolPath, args, "close", {
-			stdio: "inherit",
+			stdio: "inherit"
 		});
 	}
 

@@ -26,7 +26,7 @@ export class DeployCommandHelper {
 			platform,
 			emulator,
 			skipInferPlatform: !platform,
-			sdk: this.$options.sdk,
+			sdk: this.$options.sdk
 		});
 
 		const devices = this.$devicesService
@@ -44,7 +44,7 @@ export class DeployCommandHelper {
 				additionalOptions.getOutputDirectory({
 					platform: d.deviceInfo.platform,
 					emulator: d.isEmulator,
-					projectDir: this.$projectData.projectDir,
+					projectDir: this.$projectData.projectDir
 				});
 
 			const buildData = this.$buildDataService.getBuildData(
@@ -57,8 +57,8 @@ export class DeployCommandHelper {
 					skipWatcher: !this.$options.watch,
 					nativePrepare: {
 						skipNativePrepare:
-							additionalOptions && additionalOptions.skipNativePrepare,
-					},
+							additionalOptions && additionalOptions.skipNativePrepare
+					}
 				}
 			);
 
@@ -70,7 +70,7 @@ export class DeployCommandHelper {
 							d.deviceInfo.platform,
 							buildData,
 							this.$projectData
-					  )
+						)
 					: this.$buildController.build.bind(this.$buildController, buildData);
 
 			const info: ILiveSyncDeviceDescriptor = {
@@ -83,7 +83,7 @@ export class DeployCommandHelper {
 				debugOptions: this.$options,
 				skipNativePrepare:
 					additionalOptions && additionalOptions.skipNativePrepare,
-				buildData,
+				buildData
 			};
 
 			return info;

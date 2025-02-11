@@ -6,14 +6,14 @@ import {
 	IErrors,
 	IExecOptions,
 	ISpawnFromEventOptions,
-	ISpawnResult,
+	ISpawnResult
 } from "./declarations";
 import { injector } from "./yok";
 
 export class ChildProcess extends EventEmitter implements IChildProcess {
 	constructor(
 		private $logger: ILogger,
-		private $errors: IErrors,
+		private $errors: IErrors
 	) {
 		super();
 	}
@@ -21,19 +21,19 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 	public async exec(
 		command: string,
 		options?: any,
-		execOptions?: IExecOptions,
+		execOptions?: IExecOptions
 	): Promise<any> {
 		return new Promise<any>((resolve, reject) => {
 			const callback = (
 				error: Error,
 				stdout: string | Buffer,
-				stderr: string | Buffer,
+				stderr: string | Buffer
 			) => {
 				this.$logger.trace(
 					"Exec %s \n stdout: %s \n stderr: %s",
 					command,
 					stdout.toString(),
-					stderr.toString(),
+					stderr.toString()
 				);
 
 				if (error) {
@@ -57,7 +57,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		this.$logger.trace(
 			"execFile: %s %s",
 			command,
-			this.getArgumentsAsQuotedString(args),
+			this.getArgumentsAsQuotedString(args)
 		);
 
 		return new Promise<any>((resolve, reject) => {
@@ -70,7 +70,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 					} else {
 						resolve(stdout);
 					}
-				},
+				}
 			);
 		});
 	}
@@ -78,7 +78,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 	public spawn(
 		command: string,
 		args?: string[],
-		options?: any,
+		options?: any
 	): child_process.ChildProcess {
 		if (command.charAt(0) === ".") {
 			// resolve relative paths to full paths to avoid node Spawn ENOENT errors on some setups.
@@ -88,7 +88,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		this.$logger.trace(
 			"spawn: %s %s",
 			command,
-			this.getArgumentsAsQuotedString(args),
+			this.getArgumentsAsQuotedString(args)
 		);
 		return child_process.spawn(command, args, options);
 	}
@@ -96,12 +96,12 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 	public fork(
 		modulePath: string,
 		args?: string[],
-		options?: any,
+		options?: any
 	): child_process.ChildProcess {
 		this.$logger.trace(
 			"fork: %s %s",
 			modulePath,
-			this.getArgumentsAsQuotedString(args),
+			this.getArgumentsAsQuotedString(args)
 		);
 		return child_process.fork(modulePath, args, options);
 	}
@@ -111,7 +111,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		args: string[],
 		event: string,
 		options?: any,
-		spawnFromEventOptions?: ISpawnFromEventOptions,
+		spawnFromEventOptions?: ISpawnFromEventOptions
 	): Promise<ISpawnResult> {
 		// event should be exit or close
 
@@ -124,11 +124,11 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 
 			if (spawnFromEventOptions && spawnFromEventOptions.timeout) {
 				this.$logger.trace(
-					`Setting maximum time for execution of current child process to ${spawnFromEventOptions.timeout}`,
+					`Setting maximum time for execution of current child process to ${spawnFromEventOptions.timeout}`
 				);
 				killTimer = setTimeout(() => {
 					this.$logger.trace(
-						`Sending SIGTERM to current child process as maximum time for execution ${spawnFromEventOptions.timeout} had passed.`,
+						`Sending SIGTERM to current child process as maximum time for execution ${spawnFromEventOptions.timeout} had passed.`
 					);
 					childProcess.kill("SIGTERM");
 				}, spawnFromEventOptions.timeout);
@@ -142,7 +142,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 					) {
 						this.emit(spawnFromEventOptions.emitOptions.eventName, {
 							data,
-							pipe: "stdout",
+							pipe: "stdout"
 						});
 					}
 
@@ -159,7 +159,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 					) {
 						this.emit(spawnFromEventOptions.emitOptions.eventName, {
 							data,
-							pipe: "stderr",
+							pipe: "stderr"
 						});
 					}
 
@@ -172,7 +172,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 				const result = {
 					stdout: capturedOut,
 					stderr: capturedErr,
-					exitCode: exitCode,
+					exitCode: exitCode
 				};
 
 				const clearKillTimer = () => {
@@ -223,7 +223,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 						const result = {
 							stdout: capturedOut,
 							stderr: err.message,
-							exitCode: (<any>err).code,
+							exitCode: (<any>err).code
 						};
 						isResolved = true;
 						resolve(result);
@@ -240,7 +240,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		command: string,
 		args: string[],
 		options?: any,
-		spawnFromEventOptions?: ISpawnFromEventOptions,
+		spawnFromEventOptions?: ISpawnFromEventOptions
 	): Promise<ISpawnResult> {
 		try {
 			const childProcessResult = await this.spawnFromEvent(
@@ -248,17 +248,17 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 				args,
 				"close",
 				options,
-				spawnFromEventOptions,
+				spawnFromEventOptions
 			);
 			return childProcessResult;
 		} catch (err) {
 			this.$logger.trace(
-				`Error from trySpawnFromCloseEvent method. More info: ${err}`,
+				`Error from trySpawnFromCloseEvent method. More info: ${err}`
 			);
 			return Promise.resolve({
 				stderr: err && err.message ? err.message : err,
 				stdout: null,
-				exitCode: -1,
+				exitCode: -1
 			});
 		}
 	}
@@ -268,13 +268,13 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		args: string[],
 		event: string,
 		errorMessage: string,
-		condition: (_childProcess: any) => boolean,
+		condition: (_childProcess: any) => boolean
 	): Promise<any> {
 		const childProcess = await this.tryExecuteApplicationCore(
 			command,
 			args,
 			event,
-			errorMessage,
+			errorMessage
 		);
 
 		if (condition && condition(childProcess)) {
@@ -286,11 +286,11 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 		command: string,
 		args: string[],
 		event: string,
-		errorMessage: string,
+		errorMessage: string
 	): Promise<any> {
 		try {
 			return this.spawnFromEvent(command, args, event, undefined, {
-				throwError: false,
+				throwError: false
 			});
 		} catch (e) {
 			const message = e.code === "ENOENT" ? errorMessage : e.message;

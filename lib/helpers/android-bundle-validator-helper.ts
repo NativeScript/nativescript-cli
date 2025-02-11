@@ -10,7 +10,8 @@ import { injector } from "../common/yok";
 
 export class AndroidBundleValidatorHelper
 	extends VersionValidatorHelper
-	implements IAndroidBundleValidatorHelper {
+	implements IAndroidBundleValidatorHelper
+{
 	public static MIN_RUNTIME_VERSION = "5.0.0";
 	public static MIN_ANDROID_WITH_AAB_SUPPORT = "4.4.0";
 

@@ -55,7 +55,7 @@ async function resolveCallStack(error: Error): Promise<string> {
 			return await SourceMapConsumer.with(mapData, null, (consumer) => {
 				const sourcePos = consumer.originalPositionFor({
 					line: line,
-					column: column,
+					column: column
 				});
 				if (sourcePos && sourcePos.source) {
 					const source = path.join(path.dirname(fileName), sourcePos.source);
@@ -228,8 +228,8 @@ export class Errors implements IErrors {
 			const message = printCallStack
 				? await resolveCallStack(ex)
 				: isInteractive()
-				? `\x1B[31;1m${ex.message}\x1B[0m`
-				: ex.message;
+					? `\x1B[31;1m${ex.message}\x1B[0m`
+					: ex.message;
 
 			if (ex.printOnStdout) {
 				logger.info(message);

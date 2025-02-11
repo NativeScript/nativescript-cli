@@ -2,7 +2,7 @@ import { assert } from "chai";
 import {
 	CONNECTED_STATUS,
 	DEBUGGER_PORT_FOUND_EVENT_NAME,
-	DEVICE_LOG_EVENT_NAME,
+	DEVICE_LOG_EVENT_NAME
 } from "../../lib/common/constants";
 import { ErrorsStub, LoggerStub } from "../stubs";
 import { IOSDebuggerPortService } from "../../lib/services/ios-debugger-port-service";
@@ -28,9 +28,9 @@ const device = <Mobile.IDevice>{
 	deviceInfo: {
 		identifier: deviceId,
 		status: CONNECTED_STATUS,
-		platform: "ios",
+		platform: "ios"
 	},
-	applicationManager: new DeviceApplicationManagerMock(),
+	applicationManager: new DeviceApplicationManagerMock()
 };
 
 function createTestInjector() {
@@ -42,22 +42,22 @@ function createTestInjector() {
 	injector.register("iOSDebuggerPortService", IOSDebuggerPortService);
 	injector.register("logParserService", LogParserService);
 	injector.register("iOSProjectService", {
-		getFrameworkVersion: () => "4.1.0",
+		getFrameworkVersion: () => "4.1.0"
 	});
 	injector.register("iOSSimResolver", {
-		iOSSim: () => ({}),
+		iOSSim: () => ({})
 	});
 	injector.register("logger", LoggerStub);
 	injector.register("projectDataService", {
 		getProjectData: (projectDir: string) => ({
 			projectName: "test",
-			projectId: appId,
-		}),
+			projectId: appId
+		})
 	});
 	injector.register("devicesService", {
 		getDeviceByIdentifier: () => {
 			return device;
-		},
+		}
 	});
 	injector.register("iOSNotification", DeviceApplicationManagerMock);
 
@@ -165,21 +165,21 @@ describe("iOSDebuggerPortService", () => {
 		}[] = [
 			{
 				name: `should return null when ${DEBUGGER_PORT_FOUND_EVENT_NAME} event is not emitted`,
-				emittedPort: null,
+				emittedPort: null
 			},
 			{
 				name: `should return default port when ${DEBUGGER_PORT_FOUND_EVENT_NAME} event is emitted`,
-				emittedPort: 18181,
+				emittedPort: 18181
 			},
 			{
 				name: `should return random port when ${DEBUGGER_PORT_FOUND_EVENT_NAME} event is emitted`,
-				emittedPort: 65432,
+				emittedPort: 65432
 			},
 			{
 				name: `should reject when the app crashes`,
 				expectedError: "The application has been terminated.",
-				crashApp: true,
-			},
+				crashApp: true
+			}
 		];
 
 		_.each(testCases, (testCase) => {
@@ -193,7 +193,7 @@ describe("iOSDebuggerPortService", () => {
 
 				const promise = iOSDebuggerPortService.getPort({
 					deviceId: deviceId,
-					appId: appId,
+					appId: appId
 				});
 				clock.tick(70000);
 				let port = 0;
@@ -214,7 +214,7 @@ describe("iOSDebuggerPortService", () => {
 
 				const promise = iOSDebuggerPortService.getPort({
 					deviceId: deviceId,
-					appId: appId,
+					appId: appId
 				});
 				clock.tick(70000);
 				let port = 0;
