@@ -28,8 +28,7 @@ export class DeviceInstallAppService {
 
 	public async installOnDevice(
 		device: Mobile.IDevice,
-		buildData: IBuildData,
-		packageFile?: string
+		buildData: IBuildData
 	): Promise<void> {
 		this.$logger.info(
 			`Installing on device ${device.deviceInfo.identifier}...`
@@ -49,12 +48,38 @@ export class DeviceInstallAppService {
 			device,
 			projectDir: projectData.projectDir,
 		});
+		const buildOutputOptions = platformData.getValidBuildOutputData(buildData);
+		const outputPath = buildData.outputPath || platformData.getBuildOutputPath(buildData);
+		const packages = await this.$buildArtifactsService.getAllAppPackages(
+			outputPath,
+			buildOutputOptions
+		);
+		let packageFile;
+		if (packages.length === 1) {
+			// will always be the case on iOS
+			packageFile = packages[0].packageName;
+		} else if (device.deviceInfo.abis) {
+			device.deviceInfo.abis.every(abi=>{
+				const index = packages.findIndex(p => p.packageName.indexOf(abi) !== -1);
+				if (index !== -1) {
+					packageFile = packages[index].packageName;
+					return false;
+				}
+				return true;
+			})
+		} else {
+			//we did not find corresponding abi let's try universal
+			const index = packages.findIndex(p => p.packageName.indexOf('universal') !== -1);
+			if (index !== -1) {
+				packageFile = packages[index].packageName;
+			}
+		}
 
 		if (!packageFile) {
-			packageFile = await this.$buildArtifactsService.getLatestAppPackagePath(
-				platformData,
-				buildData
+			this.$logger.error(
+				`Could not find a package corresponding to the device with identifier '${device.deviceInfo.identifier}'.`
 			);
+			return;
 		}
 
 		await platformData.platformProjectService.cleanDeviceTempFolder(
@@ -88,18 +113,17 @@ export class DeviceInstallAppService {
 		}
 
 		this.$logger.info(
-			`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`
+			`Successfully installed on device with identifier '${device.deviceInfo.identifier} using package ${packageFile}'.`
 		);
 	}
 
 	public async installOnDeviceIfNeeded(
 		device: Mobile.IDevice,
-		buildData: IBuildData,
-		packageFile?: string
+		buildData: IBuildData
 	): Promise<void> {
 		const shouldInstall = await this.shouldInstall(device, buildData);
 		if (shouldInstall) {
-			await this.installOnDevice(device, buildData, packageFile);
+			await this.installOnDevice(device, buildData);
 		}
 	}
 

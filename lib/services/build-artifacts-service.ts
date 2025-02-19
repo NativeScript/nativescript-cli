@@ -75,7 +75,7 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		return [];
 	}
 
-	public copyLatestAppPackage(
+	public copyAppPackages(
 		targetPath: string,
 		platformData: IPlatformData,
 		buildOutputOptions: IBuildOutputOptions
@@ -85,31 +85,43 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		const outputPath =
 			buildOutputOptions.outputPath ||
 			platformData.getBuildOutputPath(buildOutputOptions);
-		const applicationPackage = this.getLatestApplicationPackage(
+		const applicationPackages = this.getAllAppPackages(
 			outputPath,
 			platformData.getValidBuildOutputData(buildOutputOptions)
 		);
-		const packageFile = applicationPackage.packageName;
 
 		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
 
+		let filterRegex: RegExp;
+		let targetIsDirectory = false;
 		if (
 			this.$fs.exists(targetPath) &&
 			this.$fs.getFsStats(targetPath).isDirectory()
 		) {
-			const sourceFileName = path.basename(packageFile);
-			this.$logger.trace(
-				`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`
-			);
-			targetPath = path.join(targetPath, sourceFileName);
+			targetIsDirectory = true;
+		} else if (targetPath.match(/\.(ipa|aab|apk)/)){
+			if (applicationPackages.length > 1){
+				filterRegex = new RegExp('universal');
+				this.$logger.trace(
+					`Multiple packages were built but only the universal one will be copied if existing'.`
+				);
+			}
+		} else {
+			targetIsDirectory = true;
 		}
-		this.$fs.copyFile(packageFile, targetPath);
-		this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
+		applicationPackages.forEach(pack => {
+			const targetFilePath = targetIsDirectory ? path.join(targetPath, path.basename(pack.packageName)) : targetPath;
+			if (!filterRegex || filterRegex.test(pack.packageName)) {
+				this.$fs.copyFile(pack.packageName, targetFilePath);
+				this.$logger.info(`Copied file '${pack.packageName}' to '${targetFilePath}'.`);
+			}
+		});
 	}
 
 	private getLatestApplicationPackage(
 		buildOutputPath: string,
-		validBuildOutputData: IValidBuildOutputData
+		validBuildOutputData: IValidBuildOutputData,
+		abis?: string[]
 	): IApplicationPackage {
 		let packages = this.getAllAppPackages(
 			buildOutputPath,
