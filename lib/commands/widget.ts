@@ -691,7 +691,7 @@ extension ConfigurationAppIntent {
 			);
 			console.log(
 				`Followup steps:\n
-- Check		App_Resources/iOS/build.xcconfig IPHONEOS_DEPLOYMENT_TARGET=17 or higher.
+- Check		App_Resources/iOS/build.xcconfig uses IPHONEOS_DEPLOYMENT_TARGET=17 or higher.
 - Update	App_Resources/iOS/extensions/provisioning.json with your profile id.
 - Customize	App_Resources/iOS/extensions/${name}/${capitalizeFirstLetter(
 					name
