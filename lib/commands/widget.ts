@@ -321,7 +321,7 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 import SwiftUI
 
 @main
-struct ${capitalName}Bundle: WidgetBundle {
+struct ${capitalName}Bundle: SwiftUI.WidgetBundle {
 	var body: some Widget {
 		${[1, 2].includes(type) ? capitalName + "HomeScreenWidget()" : ""}
 		${[0, 1].includes(type) ? capitalName + "LiveActivity()" : ""}
@@ -691,6 +691,7 @@ extension ConfigurationAppIntent {
 			);
 			console.log(
 				`Followup steps:\n
+- Check		App_Resources/iOS/build.xcconfig IPHONEOS_DEPLOYMENT_TARGET=17 or higher.
 - Update	App_Resources/iOS/extensions/provisioning.json with your profile id.
 - Customize	App_Resources/iOS/extensions/${name}/${capitalizeFirstLetter(
 					name
