@@ -86,7 +86,7 @@
     "minimatch": "7.4.2",
     "mkdirp": "2.1.6",
     "mute-stream": "1.0.0",
-    "nativescript-dev-xcode": "0.8.0",
+    "nativescript-dev-xcode": "0.8.1",
     "open": "8.4.2",
     "ora": "5.4.1",
     "pacote": "15.1.1",
