@@ -93,6 +93,8 @@ export class WidgetIOSCommand extends WidgetCommand {
 			initial: 1,
 		});
 
+		const bundleId = this.$projectConfigService.getValue(`id`, "");
+
 		switch (result.value) {
 			case 0:
 				this.$logger.info("TODO");
@@ -102,8 +104,13 @@ export class WidgetIOSCommand extends WidgetCommand {
 					this.$projectData.projectDir,
 					name
 				);
-				this.generateWidget(this.$projectData.projectDir, name, result.value);
-				this.generateAppleUtility(this.$projectData.projectDir, name);
+				this.generateWidget(
+					this.$projectData.projectDir,
+					name,
+					bundleId,
+					result.value
+				);
+				this.generateAppleUtility(this.$projectData.projectDir, name, bundleId);
 				break;
 			case 2:
 				this.$logger.info("TODO");
@@ -165,12 +172,12 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 
   public struct ContentState: Codable, Hashable {
     // Dynamic stateful properties about your activity go here!
-    public var driverName: String
-    public var estimatedDeliveryTime: ClosedRange<Date>
+    public var message: String
+    public var deliveryTime: Double
 
-    public init(driverName: String, estimatedDeliveryTime: ClosedRange<Date>) {
-      self.driverName = driverName
-      self.estimatedDeliveryTime = estimatedDeliveryTime
+    public init(message: String, deliveryTime: Double) {
+      self.message = message
+      self.deliveryTime = deliveryTime
     }
   }
 
@@ -236,7 +243,12 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 		}
 	}
 
-	private generateWidget(projectDir: string, name: string, type: number): void {
+	private generateWidget(
+		projectDir: string,
+		name: string,
+		bundleId: string,
+		type: number
+	): void {
 		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
 		const capitalName = capitalizeFirstLetter(name);
 		const appInfoPlistPath = path.join(appResourcePath, "iOS", "Info.plist");
@@ -262,7 +274,7 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 			widgetPath,
 			`${capitalName}LiveActivity.swift`
 		);
-		const appIntentPath = path.join(widgetPath, `AppIntent.swift`);
+		// const appIntentPath = path.join(widgetPath, `AppIntent.swift`);
 		// const widgetLockScreenControlPath = path.join(
 		// 	widgetPath,
 		// 	`${capitalName}LockScreenControl.swift`
@@ -285,6 +297,10 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1.0</string>
 </dict>
 </plist>${EOL}`;
 
@@ -330,112 +346,117 @@ struct ${capitalName}Bundle: SwiftUI.WidgetBundle {
 
 			fs.writeFileSync(widgetBundlePath, content);
 
-			content = `import WidgetKit
-import AppIntents
-
-struct ConfigurationAppIntent: WidgetConfigurationIntent {
-    static var title: LocalizedStringResource { "Pizza Delivery" }
-    static var description: IntentDescription { "Get up to date delivery details" }
-
-    // An example configurable parameter.
-    @Parameter(title: "Favorite Pizza", default: "🍕")
-    var favoritePizza: String
-
-    @Parameter(title: "Random", default: "Hello")
-    var random: String
-}${EOL}`;
-
-			fs.writeFileSync(appIntentPath, content);
-
 			if ([0, 1].includes(type)) {
 				content = `import ActivityKit
 import SwiftUI
 import WidgetKit
 import Foundation
 import SharedWidget
+import os
 
 struct ${capitalName}LiveActivity: Widget {
-  var body: some WidgetConfiguration {
-    ActivityConfiguration(for: ${capitalName}Model.self) { context in
-      // Lock screen/banner UI goes here
-      ContentView(driver: context.state.driverName)
-        .activityBackgroundTint(Color.black)
-        .activitySystemActionForegroundColor(Color.white)
-
-    } dynamicIsland: { context in
-      DynamicIsland {
-        // Expanded UI goes here.  Compose the expanded UI through
-        // various regions, like leading/trailing/center/bottom
-        DynamicIslandExpandedRegion(.leading) {
-            if let timeLeft = timeLeft(range1: Date(), range2: context.state.estimatedDeliveryTime) {
-              Image(systemName: "car")
-                  .resizable()
-                  .scaledToFit()
-                  .frame(width: 50, height: 50) // Adjust size
-                  .foregroundColor(timeLeft <= 1000 ? Color.green : Color.orange)
-            }
-        }
-        DynamicIslandExpandedRegion(.trailing) {
-            if let timeLeft = timeLeft(range1: Date(), range2: context.state.estimatedDeliveryTime) {
-                ProgressView(value: timeLeft, total: 3600)
-                    .progressViewStyle(.circular)
-                    .tint(timeLeft <= 1000 ? Color.green : Color.orange)
-            }
-        }
-        DynamicIslandExpandedRegion(.bottom) {
-            if let timeLeft = timeLeft(range1: Date(), range2: context.state.estimatedDeliveryTime) {
-                Text("\\(context.state.driverName) \\(timeLeft <= 0 ? "has arrived!" : String(format: "is %.1f min away", timeLeft / 60))")
-            }
-        }
-      } compactLeading: {
-        if let timeLeft = timeLeft(range1: Date(), range2: context.state.estimatedDeliveryTime) {
-          Image(systemName: "car")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 20, height: 20)
-              .foregroundColor(timeLeft <= 0 ? .green : .orange)
-        }
-      } compactTrailing: {
-        if let timeLeft = timeLeft(range1: Date(), range2: context.state.estimatedDeliveryTime) {
-          Image(systemName: "timer.circle.fill")
-              .resizable()
-              .scaledToFit()
-              .frame(width: 20, height: 20)
-              .foregroundColor(timeLeft <= 0 ? .green : .orange)
-        }
-      } minimal: {
-        Text(context.state.driverName).font(.system(size: 12)) 
-      }
-      .widgetURL(URL(string: "http://www.apple.com"))
-      .keylineTint(Color.red)
-    }
-  }
     
-    func timeLeft(range1: Date, range2: ClosedRange<Date>) -> TimeInterval? {
-        let end = min(range1, range2.upperBound)
-        
-        if end > range1 {
-          	let remaining = end.timeIntervalSince(range1)
-          	print("Time left: \\(remaining)")
-        	return remaining
-        } else {
-            return 0
-        }
-    }
+	var body: some WidgetConfiguration {
+		ActivityConfiguration(for: ${capitalName}Model.self) { context in
+
+			LockScreenView(message: context.state.message, deliveryTime: context.state.deliveryTime)
+				.activityBackgroundTint(Color.black)
+				.activitySystemActionForegroundColor(Color.white)
+
+		} dynamicIsland: { context in
+			DynamicIsland {
+				DynamicIslandExpandedRegion(.leading) {
+					Image(systemName: context.state.deliveryTime >= 0 ? "car.side.arrowtriangle.up.fill" : "face.smiling.inverse")
+						.resizable()
+						.scaledToFit()
+						.frame(width: 50, height: 50)
+						.foregroundColor(context.state.deliveryTime >= 0 ? Color.green : Color.blue)
+				}
+				DynamicIslandExpandedRegion(.trailing) {
+					if (context.state.deliveryTime >= 0) {
+						ZStack {
+							ProgressView(value: context.state.deliveryTime, total: 60)
+								.progressViewStyle(.circular)
+								.tint(Color.green)
+								.frame(width: 75, height: 75)
+							Text("\(formatter.string(for: context.state.deliveryTime) ?? "") mins")
+								.font(.system(size: 11)) 
+								.foregroundStyle(.white)
+						}.frame(width: 75, height: 75)
+					} else {
+						Image(systemName: "checkmark.circle.fill")
+							.resizable()
+							.scaledToFit()
+							.frame(width: 50, height: 50)
+							.foregroundColor(.blue)
+					}
+				}
+				DynamicIslandExpandedRegion(.bottom) {
+					Text("\(context.state.message)")
+				}
+			} compactLeading: {
+				Image(systemName: context.state.deliveryTime >= 0 ? "car.side.arrowtriangle.up.fill" : "face.smiling.inverse")
+					.resizable()
+					.scaledToFit()
+					.frame(width: 20, height: 20)
+					.foregroundColor(context.state.deliveryTime >= 0 ? .green : .blue)
+			} compactTrailing: {
+				Image(systemName: context.state.deliveryTime >= 0 ? "timer.circle.fill" : "checkmark.circle.fill")
+					.resizable()
+					.scaledToFit()
+					.frame(width: 20, height: 20)
+					.foregroundColor(context.state.deliveryTime >= 0 ? .green : .blue)
+			} minimal: {
+				Text(context.state.message).font(.system(size: 12)) 
+			}
+			.widgetURL(URL(string: "http://www.apple.com"))
+			.keylineTint(Color.red)
+		}
+	}
+
+	private let formatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.maximumFractionDigits = 0
+        formatter.minimumFractionDigits = 0
+        return formatter
+    }()
 }
 
-struct ContentView: View {
-  @State var driver = ""
+struct LockScreenView: View {
+	@State private var message = ""
+	@State private var deliveryTime: Double = 0
+	// for console debugging
+	let logger = Logger(subsystem: "${bundleId}.${name}", category: "Widget")
 
-  var body: some View {
-	HStack {
-      Spacer()
-      Image(uiImage: UIImage(named: "pizza-live") ?? UIImage())
-      Spacer()
-      Text("\\(driver) is on \\(driver == "Sally" ? "her" : "his") way!")
-      Spacer()
-    }.frame(maxWidth: .infinity, maxHeight: .infinity)
-  }
+	var body: some View {
+		ZStack {
+			LinearGradient(
+				gradient: Gradient(colors: [Color.gray.opacity(0.3), Color.black]),
+				startPoint: .top,
+				endPoint: .bottom
+			)
+			VStack {
+				Spacer()
+				Image(systemName: deliveryTime >= 0 ? "car.side.arrowtriangle.up.fill" : "face.smiling.inverse")
+					.resizable()
+					.scaledToFit()
+					.frame(width: 50, height: 50)
+					.foregroundColor(deliveryTime >= 0 ? .green : .blue)
+				Spacer()
+				Text("\(message)")
+					.foregroundStyle(.white)
+				Spacer()
+			}
+		}.frame(maxWidth: .infinity, maxHeight: .infinity)		
+	}
+
+	init(message: String = "", deliveryTime: Double = 0) {
+        _message = State(initialValue: message)
+        _deliveryTime = State(initialValue: deliveryTime)
+
+        // Logs the deliveryTime at init for debugging purposes if needed
+        logger.log("deliveryTime: \(deliveryTime)")
+    }
 }${EOL}`;
 
 				fs.writeFileSync(widgetLiveActivityPath, content);
@@ -445,130 +466,180 @@ struct ContentView: View {
 				content = `import SwiftUI
 import WidgetKit
 
-struct Provider: AppIntentTimelineProvider {
+/**
+ * Widget data shared between the app and the widget extension.
+ */
+struct WidgetData: Codable {
+    let pizzas: [String]
+    let orderTime: Double
+    let delivered: Bool
+}
+
+struct Provider: TimelineProvider {
+    
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), random: "Starting", configuration: ConfigurationAppIntent())
+        SimpleEntry(date: Date(), pizza: "Pepperoni", delivered: false, orderTime: Date())
     }
-    
-    func snapshot(for configuration: ConfigurationAppIntent, in context: Context) async -> SimpleEntry
-    {
-        SimpleEntry(date: Date(), random: configuration.random, configuration: configuration)
+
+    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
+        let entry = SimpleEntry(date: Date(), pizza: "Pepperoni", delivered: false, orderTime: Date())
+        completion(entry)
     }
-    
-    func timeline(for configuration: ConfigurationAppIntent, in context: Context) async -> Timeline<
-        SimpleEntry
-    > {
+
+    func getTimeline(in context: Context, completion: @escaping @Sendable (Timeline<Entry>) -> ()) {
         var entries: [SimpleEntry] = []
-        
-        // Generate a timeline consisting of five entries a second apart, starting from the current time.
-        let currentDate = Date()
-        for secondOffset in 0..<5 {
-            let entryDate = Calendar.current.date(
-                byAdding: .second, value: secondOffset, to: currentDate)!
-            var config = configuration
-            switch (secondOffset) {
-            case 1:
-                config = .pepperoni
-            case 2:
-                config = .supreme
-            case 3:
-                config = .cowboy
-            case 4:
-                config = .pineswine
-            default:
-                break;
+
+        if let sharedDefaults = UserDefaults(suiteName: "group.${bundleId}") {
+            let currentDate = Date()
+            if let jsonString = sharedDefaults.string(forKey: "widgetData") {
+                if let jsonData = jsonString.data(using: .utf8) {
+                    do {
+                        let widgetData = try JSONDecoder().decode(WidgetData.self, from: jsonData)
+                        let pizzas = widgetData.pizzas
+                        let orderTime = Date(timeIntervalSince1970: widgetData.orderTime/1000)
+                        let delivered = widgetData.delivered
+                        
+                        // Generate a timeline of entries 1 second apart, starting from the current date.
+                        for secondOffset in 0..<pizzas.count {
+                            let entryDate = Calendar.current.date(
+                                byAdding: .second, value: secondOffset, to: currentDate)!
+                            let entry = SimpleEntry(date: entryDate, pizza: secondOffset < pizzas.count ? pizzas[secondOffset] : pizzas[0], delivered: delivered, orderTime: orderTime)
+                            entries.append(entry)
+                        }
+                    } catch {
+                        print("Failed to decode JSON: (error)")
+                    }
+                }
+            } else {
+                let entry = SimpleEntry(date: currentDate, pizza: "", delivered: false, orderTime: nil)
+                entries.append(entry)
             }
-            let entry = SimpleEntry(date: entryDate, random: config.random, configuration: config)
-            entries.append(entry)
         }
-        
-        return Timeline(entries: entries, policy: .atEnd)
+
+        let timeline = Timeline(entries: entries, policy: .atEnd)
+        completion(timeline)
     }
+
+//    func relevances() async -> WidgetRelevances<Void> {
+//        // Generate a list containing the contexts this widget is relevant in.
+//    }
 }
 
 struct SimpleEntry: TimelineEntry {
     let date: Date
-    let random: String
-    let configuration: ConfigurationAppIntent
+    let pizza: String
+    let delivered: Bool
+    let orderTime: Date?
 }
 
 struct WidgetView: View {
+    @Environment(\.widgetFamily) var widgetFamily
     var entry: Provider.Entry
     
     var body: some View {
-        ZStack {
-            Image(uiImage: UIImage(named: "pizza") ?? UIImage()).frame(
-                maxWidth: .infinity, maxHeight: .infinity)
-            VStack {
-                Text("Time:")
+        VStack {
+            if (entry.pizza != "") {
+                Spacer()
+                Image(systemName: entry.delivered ? "face.smiling.inverse" : "car.side")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: iconSize(for: widgetFamily), height: iconSize(for: widgetFamily))
+                    .foregroundColor(entry.delivered ? .blue : .green)
+                Spacer()
+                if (entry.delivered) {
+                    Text("Pizza Delivered!")
+                        .font(.system(size: fontSize(for: widgetFamily), weight: .bold))
+                        .foregroundStyle(.white)
+                } else {
+                    HStack(spacing: 4) {
+                        Text("Ordered:")
+                            .font(.system(size: fontSize(for: widgetFamily)))
+                            .foregroundStyle(.white)
+                        Text(entry.orderTime!, style: .time)
+                            .font(.system(size: fontSize(for: widgetFamily), weight: .bold))
+                            .foregroundStyle(.white)
+                    }
+                    HStack(spacing: 4) {
+                        Text("Pizza:")
+                            .font(.system(size: fontSize(for: widgetFamily)))
+                            .foregroundStyle(.white)
+                        Text(entry.pizza)
+                            .font(.system(size: fontSize(for: widgetFamily), weight: .bold))
+                            .foregroundStyle(.white)
+                    } 
+                }
+                Spacer() 
+            } else {
+                Spacer()
+                Image(systemName: "car.side.rear.open")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 55, height: 55)
+                    .foregroundColor(.gray)
+                Spacer()
+                Text("Awaiting orders...")
                     .foregroundStyle(.white)
-                Text(entry.date, style: .time)
-                    .foregroundStyle(.white)
-                Text("Random City:")
-                    .foregroundStyle(.white)
-                Text(entry.configuration.random)
-                    .foregroundStyle(.white)
-                Text("Favorite Pizza:")
-                    .foregroundStyle(.white)
-                Text(entry.configuration.favoritePizza)
-                    .foregroundStyle(.white)
+                Spacer()
             }
         }.frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func iconSize(for family: WidgetFamily) -> CGFloat {
+        switch family {
+        case .systemSmall:
+            return 65
+        case .systemMedium:
+            return 85
+        case .systemLarge:
+            return 150
+        default:
+            return 65 
+        }
+    }
+
+    private func fontSize(for family: WidgetFamily) -> CGFloat {
+        switch family {
+        case .systemSmall:
+            return 12
+        case .systemMedium:
+            return 14
+        case .systemLarge:
+            return 18
+        default:
+            return 14 
+        }
     }
 }
 
 @available(iOSApplicationExtension 17.0, *)
 struct ${capitalName}HomeScreenWidget: Widget {
     let kind: String = "widget"
-    
-    var body: some WidgetConfiguration {
-        AppIntentConfiguration(kind: kind, intent: ConfigurationAppIntent.self, provider: Provider()) {
-            entry in
-            WidgetView(entry: entry)
-                .containerBackground(.fill.tertiary, for: .widget)
-        }
-    }
-}
 
-extension ConfigurationAppIntent {
-    fileprivate static var pepperoni: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoritePizza = "Pepperoni"
-        intent.random = "Georgia"
-        return intent
-    }
-    fileprivate static var supreme: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoritePizza = "Supreme"
-        intent.random = "Kansas City"
-        return intent
-    }
-    
-    fileprivate static var cowboy: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoritePizza = "Cowboy"
-        intent.random = "Nashville"
-        return intent
-    }
-    
-    fileprivate static var pineswine: ConfigurationAppIntent {
-        let intent = ConfigurationAppIntent()
-        intent.favoritePizza = "Pine & Swine"
-        intent.random = "Portland"
-        return intent
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+            WidgetView(entry: entry)
+                .containerBackground(for: .widget) {
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color.black.opacity(0.6), Color.black]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                }
+        }
+        .configurationDisplayName("${capitalName} Widget")
+        .description("${capitalName} delivery service.")
     }
 }
 
 #Preview(as: .systemSmall) {
     ${capitalName}HomeScreenWidget()
 } timeline: {
-    SimpleEntry(date: .now, random: "Atlanta", configuration: .pepperoni)
-    SimpleEntry(date: .now, random: "Austin", configuration: .supreme)
+    SimpleEntry(date: .now, pizza: "Pepperoni", delivered: false, orderTime: Date())
+    SimpleEntry(date: .now, pizza: "Hawaiian", delivered: false, orderTime: Date())
 }${EOL}`;
 				fs.writeFileSync(widgetHomeScreenPath, content);
 			}
 
-			const bundleId = this.$projectConfigService.getValue(`id`, "");
 			content = `{
     "${bundleId}.${name}": "{set-your-provision-profile-id}"
 }`;
@@ -709,7 +780,11 @@ extension ConfigurationAppIntent {
 		// }
 	}
 
-	private generateAppleUtility(projectDir: string, name: string): void {
+	private generateAppleUtility(
+		projectDir: string,
+		name: string,
+		bundleId: string
+	): void {
 		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
 		const appResourceSrcPath = path.join(appResourcePath, "iOS", "src");
 		const appleUtilityPath = path.join(
@@ -738,43 +813,35 @@ public class AppleWidgetUtils: NSObject {
         if ActivityAuthorizationInfo().areActivitiesEnabled {
 			let numberOfPizzas = data.object(forKey: "numberOfPizzas") as! Int
             let totalAmount = data.object(forKey: "totalAmount") as! String
-            let attrs = ${capitalizeFirstLetter(
-							name
-						)}Model(numberOfPizzas: numberOfPizzas, totalAmount: totalAmount)
+            let attrs = ${capitalizeFirstLetter}Model(numberOfPizzas: numberOfPizzas, totalAmount: totalAmount)
             
-			let driverName = data.object(forKey: "driverName") as! String
-            let deliveryTime = data.object(forKey: "deliveryTime") as! CGFloat
-            let initialStatus = ${capitalizeFirstLetter(
-							name
-						)}Model.DeliveryStatus(
-                driverName: driverName, estimatedDeliveryTime: Date()...Date().addingTimeInterval(deliveryTime * 60))
+			let message = data.object(forKey: "message") as! String
+            let deliveryTime = data.object(forKey: "deliveryTime") as! Double
+            let initialStatus = ${capitalizeFirstLetter}Model.DeliveryStatus(
+                message: message, deliveryTime: deliveryTime)
             let content = ActivityContent(state: initialStatus, staleDate: nil)
             
             do {
-                let activity = try Activity<${capitalizeFirstLetter(
-									name
-								)}Model>.request(
+                let activity = try Activity<${capitalizeFirstLetter}Model>.request(
                     attributes: attrs,
                     content: content,
                     pushType: nil)
-                print("Requested a Live Activity \\(activity.id)")
+                print("Requested a Live Activity \(activity.id)")
             } catch (let error) {
-                print("Error requesting Live Activity \\(error.localizedDescription)")
+                print("Error requesting Live Activity \(error.localizedDescription)")
             }
         }
     }
     public static func updateActivity(_ data: NSDictionary) {
         if ActivityAuthorizationInfo().areActivitiesEnabled {
             Task {
-				let driverName = data.object(forKey: "driverName") as! String
-                let deliveryTime = data.object(forKey: "deliveryTime") as! CGFloat
-                let status = ${capitalizeFirstLetter(name)}Model.DeliveryStatus(
-                    driverName: driverName, estimatedDeliveryTime: Date()...Date().addingTimeInterval(deliveryTime * 60))
+				let message = data.object(forKey: "message") as! String
+                let deliveryTime = data.object(forKey: "deliveryTime") as! Double
+                let status = ${capitalizeFirstLetter}Model.DeliveryStatus(
+                    message: message, deliveryTime: deliveryTime)
                 let content = ActivityContent(state: status, staleDate: nil)
                 
-                for activity in Activity<${capitalizeFirstLetter(
-									name
-								)}Model>.activities {
+                for activity in Activity<${capitalizeFirstLetter}Model>.activities {
                     await activity.update(content)
                 }
             }
@@ -783,30 +850,37 @@ public class AppleWidgetUtils: NSObject {
     public static func cancelActivity(_ data: NSDictionary) {
         if ActivityAuthorizationInfo().areActivitiesEnabled {
             Task {
-				let driverName = data.object(forKey: "driverName") as! String
-                let status = ${capitalizeFirstLetter(name)}Model.DeliveryStatus(
-                    driverName: driverName, estimatedDeliveryTime: Date()...Date())
+				let message = data.object(forKey: "message") as! String
+                let status = ${capitalizeFirstLetter}Model.DeliveryStatus(
+                    message: message, deliveryTime: 0)
                 let content = ActivityContent(state: status, staleDate: nil)
                 
-                for activity in Activity<${capitalizeFirstLetter(
-									name
-								)}Model>.activities {
+                for activity in Activity<${capitalizeFirstLetter}Model>.activities {
                     await activity.end(content, dismissalPolicy: .immediate)
                 }
             }
         }
     }
-    public static func showAllActivities() {
-        if ActivityAuthorizationInfo().areActivitiesEnabled {
-            Task {
-                for activity in Activity<${capitalizeFirstLetter(
-									name
-								)}Model>.activities {
-                    print("Activity Details: \\(activity.id) -> \\(activity.attributes)")
-                }
-            }
-        }
-    }
+    public static func getData(key: String) -> String? {
+		guard let sharedDefaults = UserDefaults(suiteName: "group.${bundleId}") else {
+			return nil
+		}
+		return sharedDefaults.object(forKey: key) as? String
+	}
+    public static func updateData(key: String, _ data: String) {
+		guard let sharedDefaults = UserDefaults(suiteName: "group.${bundleId}") else {
+			return
+		}
+		sharedDefaults.set(data, forKey: key)
+    	sharedDefaults.synchronize()
+	}
+	public static func removeData(key: String) {
+		guard let sharedDefaults = UserDefaults(suiteName: "group.${bundleId}") else {
+			return
+		}
+		sharedDefaults.removeObject(forKey: key)
+        sharedDefaults.synchronize()
+	}
     
     // Home Screen Widget Handling
     public static func updateWidget() {
@@ -832,11 +906,13 @@ declare interface AppleWidgetModelData {
 declare class AppleWidgetUtils extends NSObject {
   static startActivity(data: AppleWidgetModelData): void;
   static updateActivity(
-    data: Pick<AppleWidgetModelData, "driverName" | "deliveryTime">
+    data: Pick<AppleWidgetModelData, "message" | "deliveryTime">
   ): void;
-  static cancelActivity(data: Pick<AppleWidgetModelData, "driverName">): void;
-  static showAllActivities(): void;
+  static cancelActivity(data: Pick<AppleWidgetModelData, "message">): void;
   static updateWidget(): void;
+  static updateDataWithKey(key: string, data: string): void;
+  static getDataWithKey(key: string): string;
+  static removeDataWithKey(key: string): void;
 }${EOL}`;
 
 		if (!fs.existsSync(referenceTypesPath)) {
