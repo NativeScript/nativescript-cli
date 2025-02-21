@@ -379,7 +379,7 @@ struct ${capitalName}LiveActivity: Widget {
 								.progressViewStyle(.circular)
 								.tint(Color.green)
 								.frame(width: 75, height: 75)
-							Text("\(formatter.string(for: context.state.deliveryTime) ?? "") mins")
+							Text("\\(formatter.string(for: context.state.deliveryTime) ?? "") mins")
 								.font(.system(size: 11)) 
 								.foregroundStyle(.white)
 						}.frame(width: 75, height: 75)
@@ -392,7 +392,7 @@ struct ${capitalName}LiveActivity: Widget {
 					}
 				}
 				DynamicIslandExpandedRegion(.bottom) {
-					Text("\(context.state.message)")
+					Text("\\(context.state.message)")
 				}
 			} compactLeading: {
 				Image(systemName: context.state.deliveryTime >= 0 ? "car.side.arrowtriangle.up.fill" : "face.smiling.inverse")
@@ -443,7 +443,7 @@ struct LockScreenView: View {
 					.frame(width: 50, height: 50)
 					.foregroundColor(deliveryTime >= 0 ? .green : .blue)
 				Spacer()
-				Text("\(message)")
+				Text("\\(message)")
 					.foregroundStyle(.white)
 				Spacer()
 			}
