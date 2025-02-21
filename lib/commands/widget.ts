@@ -785,6 +785,7 @@ struct ${capitalName}HomeScreenWidget: Widget {
 		name: string,
 		bundleId: string
 	): void {
+		const capitalName = capitalizeFirstLetter(name);
 		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
 		const appResourceSrcPath = path.join(appResourcePath, "iOS", "src");
 		const appleUtilityPath = path.join(
@@ -813,16 +814,16 @@ public class AppleWidgetUtils: NSObject {
         if ActivityAuthorizationInfo().areActivitiesEnabled {
 			let numberOfPizzas = data.object(forKey: "numberOfPizzas") as! Int
             let totalAmount = data.object(forKey: "totalAmount") as! String
-            let attrs = ${capitalizeFirstLetter}Model(numberOfPizzas: numberOfPizzas, totalAmount: totalAmount)
+            let attrs = ${capitalName}Model(numberOfPizzas: numberOfPizzas, totalAmount: totalAmount)
             
 			let message = data.object(forKey: "message") as! String
             let deliveryTime = data.object(forKey: "deliveryTime") as! Double
-            let initialStatus = ${capitalizeFirstLetter}Model.DeliveryStatus(
+            let initialStatus = ${capitalName}Model.DeliveryStatus(
                 message: message, deliveryTime: deliveryTime)
             let content = ActivityContent(state: initialStatus, staleDate: nil)
             
             do {
-                let activity = try Activity<${capitalizeFirstLetter}Model>.request(
+                let activity = try Activity<${capitalName}Model>.request(
                     attributes: attrs,
                     content: content,
                     pushType: nil)
@@ -837,11 +838,11 @@ public class AppleWidgetUtils: NSObject {
             Task {
 				let message = data.object(forKey: "message") as! String
                 let deliveryTime = data.object(forKey: "deliveryTime") as! Double
-                let status = ${capitalizeFirstLetter}Model.DeliveryStatus(
+                let status = ${capitalName}Model.DeliveryStatus(
                     message: message, deliveryTime: deliveryTime)
                 let content = ActivityContent(state: status, staleDate: nil)
                 
-                for activity in Activity<${capitalizeFirstLetter}Model>.activities {
+                for activity in Activity<${capitalName}Model>.activities {
                     await activity.update(content)
                 }
             }
@@ -851,11 +852,11 @@ public class AppleWidgetUtils: NSObject {
         if ActivityAuthorizationInfo().areActivitiesEnabled {
             Task {
 				let message = data.object(forKey: "message") as! String
-                let status = ${capitalizeFirstLetter}Model.DeliveryStatus(
+                let status = ${capitalName}Model.DeliveryStatus(
                     message: message, deliveryTime: 0)
                 let content = ActivityContent(state: status, staleDate: nil)
                 
-                for activity in Activity<${capitalizeFirstLetter}Model>.activities {
+                for activity in Activity<${capitalName}Model>.activities {
                     await activity.end(content, dismissalPolicy: .immediate)
                 }
             }
