@@ -70,7 +70,7 @@ export class WidgetIOSCommand extends WidgetCommand {
 		result = await prompts.prompt({
 			type: "select",
 			name: "value",
-			message: `What type of widget would you like? (Request more options: https://github.com/NativeScript/nativescript-cli/issues)`,
+			message: `What type of widget would you like?`,
 			choices: [
 				{
 					title: "Live Activity",
