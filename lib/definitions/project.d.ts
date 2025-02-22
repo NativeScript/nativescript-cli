@@ -101,8 +101,34 @@ interface INsConfigPlaform {
 	id?: string;
 }
 
+interface IOSSPMPackageBase {
+	name: string;
+	libs: string[];
+	/**
+	 * Optional: If you have more targets (like widgets for example)
+	 * you can list their names here to include the Swift Package with them
+	 */
+	targets?: string[];
+}
+
+export interface IOSRemoteSPMPackage extends IOSSPMPackageBase {
+	repositoryURL: string;
+	version: string;
+}
+
+export interface IOSLocalSPMPackage extends IOSSPMPackageBase {
+	path: string;
+}
+
+export type IOSSPMPackage = IOSRemoteSPMPackage | IOSLocalSPMPackage;
+
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
+	/**
+	 * Swift Package Manager
+	 * List packages to be included in the iOS build.
+	 */
+	SPMPackages?: Array<IOSSPMPackage>;
 }
 
 interface INSConfigVisionOS extends INsConfigIOS {}

@@ -21,7 +21,8 @@ export type SupportedConfigValues =
 	| string
 	| number
 	| boolean
-	| { [key: string]: SupportedConfigValues };
+	| { [key: string]: SupportedConfigValues }
+	| any[];
 
 export interface IConfigTransformer {
 	/**
@@ -167,11 +168,18 @@ export class ConfigTransformer implements IConfigTransformer {
 		return this.addProperty(key, value, this.getDefaultExportValue());
 	}
 
-	private createInitializer(value: SupportedConfigValues | {}): string {
+	private createInitializer(value: SupportedConfigValues): any {
 		if (typeof value === "string") {
 			return `'${value}'`;
 		} else if (typeof value === "number" || typeof value === "boolean") {
 			return `${value}`;
+		} else if (Array.isArray(value)) {
+			return `[${value.map((v) => this.createInitializer(v)).join(", ")}]`;
+		} else if (typeof value === "object" && value !== null) {
+			const properties = Object.entries(value)
+				.map(([key, val]) => `${key}: ${this.createInitializer(val)}`)
+				.join(", ");
+			return `{ ${properties} }`;
 		}
 		return `{}`;
 	}

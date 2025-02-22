@@ -31,6 +31,7 @@ export class ConfigListCommand implements ICommand {
 					.map((key) => {
 						return (
 							color.green(`${indent()}${key}: `) +
+							// @ts-ignore
 							this.getValueString(value[key], depth + 1)
 						);
 					})
