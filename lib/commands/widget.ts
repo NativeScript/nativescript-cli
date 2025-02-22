@@ -533,7 +533,7 @@ struct SimpleEntry: TimelineEntry {
 }
 
 struct WidgetView: View {
-    @Environment(\.widgetFamily) var widgetFamily
+    @Environment(\\.widgetFamily) var widgetFamily
     var entry: Provider.Entry
     
     var body: some View {
@@ -574,7 +574,7 @@ struct WidgetView: View {
                 Image(systemName: "car.side.rear.open")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 55, height: 55)
+                    .frame(width: iconSize(for: widgetFamily), height: iconSize(for: widgetFamily))
                     .foregroundColor(.gray)
                 Spacer()
                 Text("Awaiting orders...")
