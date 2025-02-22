@@ -9,6 +9,7 @@ import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession, Reporter } from "plist-merge-patch";
 import { EOL } from "os";
 import * as plist from "plist";
+import * as fastGlob from "fast-glob";
 import { IOSProvisionService } from "./ios-provision-service";
 import { IOSEntitlementsService } from "./ios-entitlements-service";
 import { IOSBuildData } from "../data/build-data";
@@ -817,6 +818,21 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				resourcesNativeCodePath,
 				projectData
 			);
+
+			const nativeSource = this.$projectConfigService.getValue(
+				`${this._platformData.platformNameLowerCase}.NativeSource`,
+				[]
+			);
+
+			if (nativeSource?.length) {
+				for (const source of nativeSource) {
+					await this.prepareNativeSourceCode(
+						source.name,
+						source.path,
+						projectData
+					);
+				}
+			}
 		}
 
 		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
@@ -1360,7 +1376,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData
 	): Promise<void> {
 		const project = this.createPbxProj(projectData);
-		const group = this.getRootGroup(groupName, sourceFolderPath);
+		const group = await this.getRootGroup(groupName, sourceFolderPath);
 		project.addPbxGroup(group.files, group.name, group.path, null, {
 			isMain: true,
 			filesRelativeToProject: true,
@@ -1430,7 +1446,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	private getRootGroup(name: string, rootPath: string) {
+	private async getRootGroup(name: string, rootPath: string) {
 		const filePathsArr: string[] = [];
 		const rootGroup: INativeSourceCodeGroup = {
 			name: name,
@@ -1438,13 +1454,22 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			path: rootPath,
 		};
 
-		if (this.$fs.exists(rootPath)) {
-			const stats = this.$fs.getFsStats(rootPath);
-			if (stats.isDirectory() && !this.$fs.isEmptyDir(rootPath)) {
-				this.$fs.readDirectory(rootPath).forEach((fileName) => {
-					const filePath = path.join(rootGroup.path, fileName);
-					filePathsArr.push(filePath);
-				});
+		if (fastGlob.isDynamicPattern(rootPath)) {
+			const projectRoot = this.$projectDataService.getProjectData().projectDir;
+			const filePaths = await fastGlob(rootPath);
+			for (const filePath of filePaths) {
+				const sourceFilePath = path.normalize(path.join(projectRoot, filePath));
+				filePathsArr.push(sourceFilePath);
+			}
+		} else {
+			if (this.$fs.exists(rootPath)) {
+				const stats = this.$fs.getFsStats(rootPath);
+				if (stats.isDirectory() && !this.$fs.isEmptyDir(rootPath)) {
+					this.$fs.readDirectory(rootPath).forEach((fileName) => {
+						const filePath = path.join(rootGroup.path, fileName);
+						filePathsArr.push(filePath);
+					});
+				}
 			}
 		}
 
@@ -1499,13 +1524,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
-	private removeNativeSourceCode(
+	private async removeNativeSourceCode(
 		pluginPlatformsFolderPath: string,
 		pluginData: IPluginData,
 		projectData: IProjectData
-	): void {
+	) {
 		const project = this.createPbxProj(projectData);
-		const group = this.getRootGroup(pluginData.name, pluginPlatformsFolderPath);
+		const group = await this.getRootGroup(
+			pluginData.name,
+			pluginPlatformsFolderPath
+		);
 		project.removePbxGroup(group.name, group.path);
 		project.removeFromHeaderSearchPaths(group.path);
 		this.savePbxProj(project, projectData);
