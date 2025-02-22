@@ -255,7 +255,7 @@ export default {
 			this.writeDefaultConfig(this.projectHelper.projectDir);
 		}
 
-		if (typeof value === "object") {
+		if (!Array.isArray(value) && typeof value === "object") {
 			let allSuccessful = true;
 
 			for (const prop of this.flattenObjectToPaths(value)) {
@@ -298,7 +298,7 @@ export default {
 			this.$logger.error(`Failed to update config.` + error);
 		} finally {
 			// verify config is updated correctly
-			if (this.getValue(key) !== value) {
+			if (!Array.isArray(this.getValue(key)) && this.getValue(key) !== value) {
 				this.$logger.error(
 					`${EOL}Failed to update ${
 						hasTSConfig ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
@@ -465,7 +465,15 @@ You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as
 	): Array<{ key: string; value: any }> {
 		const toPath = (key: any) => [basePath, key].filter(Boolean).join(".");
 		return Object.keys(obj).reduce((all: any, key) => {
-			if (typeof obj[key] === "object") {
+			if (Array.isArray(obj[key])) {
+				return [
+					...all,
+					{
+						key: toPath(key),
+						value: obj[key], // Preserve arrays as they are
+					},
+				];
+			} else if (typeof obj[key] === "object" && obj[key] !== null) {
 				return [...all, ...this.flattenObjectToPaths(obj[key], toPath(key))];
 			}
 			return [
