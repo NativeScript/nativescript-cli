@@ -455,7 +455,7 @@ struct LockScreenView: View {
         _deliveryTime = State(initialValue: deliveryTime)
 
         // Logs the deliveryTime at init for debugging purposes if needed
-        logger.log("deliveryTime: \(deliveryTime)")
+        logger.log("deliveryTime: \\(deliveryTime)")
     }
 }${EOL}`;
 
@@ -827,9 +827,9 @@ public class AppleWidgetUtils: NSObject {
                     attributes: attrs,
                     content: content,
                     pushType: nil)
-                print("Requested a Live Activity \(activity.id)")
+                print("Requested a Live Activity \\(activity.id)")
             } catch (let error) {
-                print("Error requesting Live Activity \(error.localizedDescription)")
+                print("Error requesting Live Activity \\(error.localizedDescription)")
             }
         }
     }
