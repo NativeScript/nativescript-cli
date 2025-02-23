@@ -50,7 +50,7 @@ Command | Description
 [install](project/configuration/install.html) | Installs all platforms and dependencies described in the `package.json` file in the current directory.
 [plugin](lib-management/plugin.html) | Lets you manage the plugins for your project.
 [open](project/configuration/open.md) | Opens the native project in Xcode/Android Studio.
-
+[widget ios](project/configuration/widget.md) | Adds a new iOS widget to the project.
 ## Publishing Commands
 Command | Description
 ---|---
