@@ -17,7 +17,7 @@ export class WidgetCommand implements ICommand {
 		protected $projectData: IProjectData,
 		protected $projectConfigService: IProjectConfigService,
 		protected $logger: ILogger,
-		protected $errors: IErrors
+		protected $errors: IErrors,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -46,7 +46,7 @@ export class WidgetIOSCommand extends WidgetCommand {
 		$projectData: IProjectData,
 		$projectConfigService: IProjectConfigService,
 		$logger: ILogger,
-		$errors: IErrors
+		$errors: IErrors,
 	) {
 		super($projectData, $projectConfigService, $logger, $errors);
 	}
@@ -81,7 +81,7 @@ export class WidgetIOSCommand extends WidgetCommand {
 				{
 					title: "Live Activity with Home Screen Widget",
 					description:
-						"This will create a Live Activity that will display on the iOS Lock Screen with an optional Widget.",
+						"This will create a Live Activity that will display on the iOS Lock Screen with ability to also display a Home Screen Widget.",
 					value: 1,
 				},
 				{
@@ -95,27 +95,25 @@ export class WidgetIOSCommand extends WidgetCommand {
 
 		const bundleId = this.$projectConfigService.getValue(`id`, "");
 
-		switch (result.value) {
-			case 0:
-				this.$logger.info("TODO");
-				break;
-			case 1:
-				await this.generateSharedWidgetPackage(
-					this.$projectData.projectDir,
-					name
-				);
-				this.generateWidget(
-					this.$projectData.projectDir,
-					name,
-					bundleId,
-					result.value
-				);
-				this.generateAppleUtility(this.$projectData.projectDir, name, bundleId);
-				break;
-			case 2:
-				this.$logger.info("TODO");
-				break;
+		if ([0, 1].includes(result.value)) {
+			// shared model only needed with live activities
+			await this.generateSharedWidgetPackage(
+				this.$projectData.projectDir,
+				name,
+			);
 		}
+		this.generateWidget(
+			this.$projectData.projectDir,
+			name,
+			bundleId,
+			result.value,
+		);
+		this.generateAppleUtility(
+			this.$projectData.projectDir,
+			name,
+			bundleId,
+			result.value,
+		);
 	}
 
 	private async generateSharedWidgetPackage(projectDir: string, name: string) {
@@ -124,11 +122,11 @@ export class WidgetIOSCommand extends WidgetCommand {
 		const sharedWidgetSourceDir = "Sources/SharedWidget";
 		const sharedWidgetPackagePath = path.join(
 			projectDir,
-			`${sharedWidgetDir}/Package.swift`
+			`${sharedWidgetDir}/Package.swift`,
 		);
 		const sharedWidgetSourcePath = path.join(
 			sharedWidgetPath,
-			`${sharedWidgetSourceDir}/${capitalizeFirstLetter(name)}Model.swift`
+			`${sharedWidgetSourceDir}/${capitalizeFirstLetter(name)}Model.swift`,
 		);
 		const gitIgnorePath = path.join(projectDir, ".gitignore");
 
@@ -203,7 +201,7 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 			}
 			const spmPackages = configData.ios.SPMPackages;
 			const sharedWidgetPackage = spmPackages?.find(
-				(p) => p.name === "SharedWidget"
+				(p) => p.name === "SharedWidget",
 			);
 			if (!sharedWidgetPackage) {
 				spmPackages.push({
@@ -223,7 +221,7 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 			configData.ios.SPMPackages = spmPackages;
 			await this.$projectConfigService.setValue(
 				"", // root
-				configData as { [key: string]: SupportedConfigValues }
+				configData as { [key: string]: SupportedConfigValues },
 			);
 
 			if (fs.existsSync(gitIgnorePath)) {
@@ -247,7 +245,7 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 		projectDir: string,
 		name: string,
 		bundleId: string,
-		type: number
+		type: number,
 	): void {
 		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
 		const capitalName = capitalizeFirstLetter(name);
@@ -258,21 +256,21 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 		const extensionsInfoPath = path.join(widgetPath, `Info.plist`);
 		const extensionsPrivacyPath = path.join(
 			widgetPath,
-			`PrivacyInfo.xcprivacy`
+			`PrivacyInfo.xcprivacy`,
 		);
 		const extensionsConfigPath = path.join(widgetPath, `extension.json`);
 		const entitlementsPath = path.join(widgetPath, `${name}.entitlements`);
 		const widgetBundlePath = path.join(
 			widgetPath,
-			`${capitalName}Bundle.swift`
+			`${capitalName}Bundle.swift`,
 		);
 		const widgetHomeScreenPath = path.join(
 			widgetPath,
-			`${capitalName}HomeScreenWidget.swift`
+			`${capitalName}HomeScreenWidget.swift`,
 		);
 		const widgetLiveActivityPath = path.join(
 			widgetPath,
-			`${capitalName}LiveActivity.swift`
+			`${capitalName}LiveActivity.swift`,
 		);
 		// const appIntentPath = path.join(widgetPath, `AppIntent.swift`);
 		// const widgetLockScreenControlPath = path.join(
@@ -282,7 +280,7 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 		const appEntitlementsPath = path.join(
 			appResourcePath,
 			"iOS",
-			"app.entitlements"
+			"app.entitlements",
 		);
 
 		if (!fs.existsSync(extensionsConfigPath)) {
@@ -664,7 +662,7 @@ struct ${capitalName}HomeScreenWidget: Widget {
 				const appInfoPlist = plist.parse(
 					fs.readFileSync(appInfoPlistPath, {
 						encoding: "utf-8",
-					})
+					}),
 				) as plist.PlistObject;
 
 				if (!appInfoPlist[appSupportLiveActivity]) {
@@ -680,7 +678,7 @@ struct ${capitalName}HomeScreenWidget: Widget {
 				const appEntitlementsPlist = plist.parse(
 					fs.readFileSync(appEntitlementsPath, {
 						encoding: "utf-8",
-					})
+					}),
 				) as plist.PlistObject;
 
 				if (!appEntitlementsPlist[appGroupKey]) {
@@ -758,20 +756,26 @@ struct ${capitalName}HomeScreenWidget: Widget {
 			fs.writeFileSync(extensionsConfigPath, content);
 
 			console.log(
-				`🚀 Your widget is now ready to develop: App_Resources/iOS/extensions/${name}.\n`
+				`🚀 Your widget is now ready to develop: App_Resources/iOS/extensions/${name}.\n`,
 			);
-			console.log(
-				`Followup steps:\n
-- Check		App_Resources/iOS/build.xcconfig uses IPHONEOS_DEPLOYMENT_TARGET=17 or higher.
-- Update	App_Resources/iOS/extensions/provisioning.json with your profile id.
-- Customize	App_Resources/iOS/extensions/${name}/${capitalizeFirstLetter(
-					name
-				)}LiveActivity.swift for your display.
-- Customize	Shared_Resources/iOS/SharedWidget/Sources/SharedWidget/${capitalizeFirstLetter(
-					name
-				)}Model.swift for your data.
-`
+			const steps = ["Followup steps:"];
+			steps.push(
+				"- Check		App_Resources/iOS/build.xcconfig uses IPHONEOS_DEPLOYMENT_TARGET = 17 or higher.",
 			);
+			steps.push(
+				"- Update	App_Resources/iOS/extensions/provisioning.json with your profile id.",
+			);
+			if ([0, 1].includes(type)) {
+				steps.push(
+					`- Customize	App_Resources/iOS/extensions/${name}/${capitalizeFirstLetter(name)}LiveActivity.swift for your display.`,
+				);
+				steps.push(
+					`- Customize	Shared_Resources/iOS/SharedWidget/Sources/SharedWidget/${capitalizeFirstLetter(
+						name,
+					)}Model.swift for your data.`,
+				);
+			}
+			console.log(steps.join("\n"));
 		}
 
 		// if (fs.existsSync(filePath)) {
@@ -783,14 +787,15 @@ struct ${capitalName}HomeScreenWidget: Widget {
 	private generateAppleUtility(
 		projectDir: string,
 		name: string,
-		bundleId: string
+		bundleId: string,
+		type: number,
 	): void {
 		const capitalName = capitalizeFirstLetter(name);
 		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
 		const appResourceSrcPath = path.join(appResourcePath, "iOS", "src");
 		const appleUtilityPath = path.join(
 			appResourceSrcPath,
-			`AppleWidgetUtils.swift`
+			`AppleWidgetUtils.swift`,
 		);
 		const referenceTypesPath = path.join(projectDir, "references.d.ts");
 
@@ -800,16 +805,7 @@ struct ${capitalName}HomeScreenWidget: Widget {
 		if (!fs.existsSync(appleUtilityPath)) {
 		}
 
-		let content = `import Foundation
-import UIKit
-import ActivityKit
-import WidgetKit
-import SharedWidget
-
-@objcMembers
-public class AppleWidgetUtils: NSObject {
-    
-    // Live Activity Handling
+		const liveActivityUtilities = `// Live Activity Handling
     public static func startActivity(_ data: NSDictionary) {
         if ActivityAuthorizationInfo().areActivitiesEnabled {
 			let numberOfPizzas = data.object(forKey: "numberOfPizzas") as! Int
@@ -861,7 +857,18 @@ public class AppleWidgetUtils: NSObject {
                 }
             }
         }
-    }
+    }`;
+
+		let content = `import Foundation
+import UIKit
+import ActivityKit
+import WidgetKit
+${[0, 1].includes(type) ? "import SharedWidget" : ""}
+
+@objcMembers
+public class AppleWidgetUtils: NSObject {
+	${[0, 1].includes(type) ? liveActivityUtilities : ""}
+	// Shared App Group Data
     public static func getData(key: String) -> String? {
 		guard let sharedDefaults = UserDefaults(suiteName: "group.${bundleId}") else {
 			return nil
@@ -882,7 +889,6 @@ public class AppleWidgetUtils: NSObject {
 		sharedDefaults.removeObject(forKey: key)
         sharedDefaults.synchronize()
 	}
-    
     // Home Screen Widget Handling
     public static func updateWidget() {
         if #available(iOS 14.0, *) {
@@ -901,7 +907,7 @@ public class AppleWidgetUtils: NSObject {
 declare interface AppleWidgetModelData {
   numberOfPizzas: number;
   totalAmount: string;
-  driverName: string;
+  message: string;
   deliveryTime: number;
 }
 declare class AppleWidgetUtils extends NSObject {
