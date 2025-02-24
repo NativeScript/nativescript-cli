@@ -1,5 +1,5 @@
 import { Jimp, cssColorToHex, rgbaToInt, JimpInstance } from "jimp";
-import * as Color from "color";
+import Color from "color";
 import { exported } from "../../common/decorators";
 import { AssetConstants } from "../../constants";
 import {
