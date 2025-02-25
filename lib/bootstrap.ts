@@ -12,46 +12,46 @@ injector.require("projectData", "./project-data");
 injector.requirePublic("projectDataService", "./services/project-data-service");
 injector.requirePublic(
 	"projectBackupService",
-	"./services/project-backup-service"
+	"./services/project-backup-service",
 );
 injector.requirePublic(
 	"projectCleanupService",
-	"./services/project-cleanup-service"
+	"./services/project-cleanup-service",
 );
 injector.requirePublic(
 	"projectConfigService",
-	"./services/project-config-service"
+	"./services/project-config-service",
 );
 injector.require("performanceService", "./services/performance-service");
 injector.requirePublic("projectService", "./services/project-service");
 injector.require("androidProjectService", "./services/android-project-service");
 injector.require(
 	"androidPluginBuildService",
-	"./services/android-plugin-build-service"
+	"./services/android-plugin-build-service",
 );
 injector.require(
 	"gradleCommandService",
-	"./services/android/gradle-command-service"
+	"./services/android/gradle-command-service",
 );
 injector.require(
 	"gradleBuildService",
-	"./services/android/gradle-build-service"
+	"./services/android/gradle-build-service",
 );
 injector.require(
 	"gradleBuildArgsService",
-	"./services/android/gradle-build-args-service"
+	"./services/android/gradle-build-args-service",
 );
 injector.require(
 	"androidBundleToolService",
-	"./services/android/android-bundle-tool-service"
+	"./services/android/android-bundle-tool-service",
 );
 injector.require(
 	"iOSEntitlementsService",
-	"./services/ios-entitlements-service"
+	"./services/ios-entitlements-service",
 );
 injector.require(
 	"iOSNativeTargetService",
-	"./services/ios-native-target-service"
+	"./services/ios-native-target-service",
 );
 injector.require("iOSExtensionsService", "./services/ios-extensions-service");
 injector.require("iOSWatchAppService", "./services/ios-watch-app-service");
@@ -62,27 +62,27 @@ injector.require("iOSSigningService", "./services/ios/ios-signing-service");
 injector.require("spmService", "./services/ios/spm-service");
 injector.require(
 	"xcodebuildArgsService",
-	"./services/ios/xcodebuild-args-service"
+	"./services/ios/xcodebuild-args-service",
 );
 injector.require(
 	"xcodebuildCommandService",
-	"./services/ios/xcodebuild-command-service"
+	"./services/ios/xcodebuild-command-service",
 );
 injector.require("xcodebuildService", "./services/ios/xcodebuild-service");
 injector.require(
 	"exportOptionsPlistService",
-	"./services/ios/export-options-plist-service"
+	"./services/ios/export-options-plist-service",
 );
 
 injector.require("cocoapodsService", "./services/cocoapods-service");
 injector.require(
 	"cocoaPodsPlatformManager",
-	"./services/cocoapods-platform-manager"
+	"./services/cocoapods-platform-manager",
 );
 
 injector.require(
 	"projectTemplatesService",
-	"./services/project-templates-service"
+	"./services/project-templates-service",
 );
 injector.require("projectNameService", "./services/project-name-service");
 injector.require("tnsModulesService", "./services/tns-modules-service");
@@ -90,23 +90,23 @@ injector.require("tnsModulesService", "./services/tns-modules-service");
 injector.require("platformsDataService", "./services/platforms-data-service");
 injector.require(
 	"addPlatformService",
-	"./services/platform/add-platform-service"
+	"./services/platform/add-platform-service",
 );
 injector.require("buildInfoFileService", "./services/build-info-file-service");
 injector.require(
 	"prepareNativePlatformService",
-	"./services/platform/prepare-native-platform-service"
+	"./services/platform/prepare-native-platform-service",
 );
 injector.require(
 	"platformValidationService",
-	"./services/platform/platform-validation-service"
+	"./services/platform/platform-validation-service",
 );
 
 injector.require("buildArtifactsService", "./services/build-artifacts-service");
 
 injector.require(
 	"deviceInstallAppService",
-	"./services/device/device-install-app-service"
+	"./services/device/device-install-app-service",
 );
 
 injector.require("platformController", "./controllers/platform-controller");
@@ -114,20 +114,20 @@ injector.require("prepareController", "./controllers/prepare-controller");
 injector.require("deployController", "./controllers/deploy-controller");
 injector.requirePublicClass(
 	"buildController",
-	"./controllers/build-controller"
+	"./controllers/build-controller",
 );
 injector.requirePublicClass("runController", "./controllers/run-controller");
 injector.requirePublicClass(
 	"debugController",
-	"./controllers/debug-controller"
+	"./controllers/debug-controller",
 );
 injector.requirePublicClass(
 	"updateController",
-	"./controllers/update-controller"
+	"./controllers/update-controller",
 );
 injector.requirePublicClass(
 	"migrateController",
-	"./controllers/migrate-controller"
+	"./controllers/migrate-controller",
 );
 
 injector.require("prepareDataService", "./services/prepare-data-service");
@@ -135,36 +135,36 @@ injector.require("buildDataService", "./services/build-data-service");
 
 injector.require(
 	"liveSyncServiceResolver",
-	"./resolvers/livesync-service-resolver"
+	"./resolvers/livesync-service-resolver",
 );
 
 injector.require(
 	"liveSyncProcessDataService",
-	"./services/livesync-process-data-service"
+	"./services/livesync-process-data-service",
 );
 injector.require("debugDataService", "./services/debug-data-service");
 injector.require(
 	"iOSDeviceDebugService",
-	"./services/ios-device-debug-service"
+	"./services/ios-device-debug-service",
 );
 injector.require(
 	"androidDeviceDebugService",
-	"./services/android-device-debug-service"
+	"./services/android-device-debug-service",
 );
 
 injector.require(
 	"timelineProfilerService",
-	"./services/timeline-profiler-service"
+	"./services/timeline-profiler-service",
 );
 injector.require("userSettingsService", "./services/user-settings-service");
 injector.requirePublic(
 	"analyticsSettingsService",
-	"./services/analytics-settings-service"
+	"./services/analytics-settings-service",
 );
 injector.require("analyticsService", "./services/analytics/analytics-service");
 injector.require(
 	"googleAnalyticsProvider",
-	"./services/analytics/google-analytics-provider"
+	"./services/analytics/google-analytics-provider",
 );
 injector.require("platformCommandParameter", "./platform-command-param");
 injector.requireCommand("create", "./commands/create-project");
@@ -217,7 +217,7 @@ injector.requireCommand("publish|ios", "./commands/appstore-upload");
 injector.requireCommand("apple-login", "./commands/apple-login");
 injector.require(
 	"itmsTransporterService",
-	"./services/itmstransporter-service"
+	"./services/itmstransporter-service",
 );
 
 injector.requireCommand("setup|*", "./commands/setup");
@@ -230,16 +230,16 @@ injector.requirePublic("pnpm", "./pnpm-package-manager");
 injector.requirePublic("bun", "./bun-package-manager");
 injector.requireCommand(
 	"package-manager|*get",
-	"./commands/package-manager-get"
+	"./commands/package-manager-get",
 );
 injector.requireCommand(
 	"package-manager|set",
-	"./commands/package-manager-set"
+	"./commands/package-manager-set",
 );
 
 injector.require(
 	"packageInstallationManager",
-	"./package-installation-manager"
+	"./package-installation-manager",
 );
 
 injector.require("deviceLogProvider", "./common/mobile/device-log-provider");
@@ -247,12 +247,12 @@ injector.require("projectFilesProvider", "./providers/project-files-provider");
 
 injector.require(
 	"nodeModulesBuilder",
-	"./tools/node-modules/node-modules-builder"
+	"./tools/node-modules/node-modules-builder",
 );
 
 injector.require(
 	"pluginVariablesService",
-	"./services/plugin-variables-service"
+	"./services/plugin-variables-service",
 );
 injector.require("pluginsService", "./services/plugins-service");
 injector.requireCommand("plugin|*list", "./commands/plugin/list-plugins");
@@ -273,11 +273,11 @@ injector.requireCommand("info", "./commands/info");
 
 injector.require(
 	"androidResourcesMigrationService",
-	"./services/android-resources-migration-service"
+	"./services/android-resources-migration-service",
 );
 injector.requireCommand(
 	"resources|update",
-	"./commands/resources/resources-update"
+	"./commands/resources/resources-update",
 );
 
 injector.require("androidToolsInfo", "./android-tools-info");
@@ -287,7 +287,7 @@ injector.requireCommand("platform|clean", "./commands/platform-clean");
 
 injector.require(
 	"androidBundleValidatorHelper",
-	"./helpers/android-bundle-validator-helper"
+	"./helpers/android-bundle-validator-helper",
 );
 injector.require("liveSyncCommandHelper", "./helpers/livesync-command-helper");
 
@@ -297,36 +297,36 @@ injector.require("optionsTracker", "./helpers/options-track-helper");
 
 injector.requirePublicClass(
 	"localBuildService",
-	"./services/local-build-service"
+	"./services/local-build-service",
 );
 injector.require("LiveSyncSocket", "./services/livesync/livesync-socket");
 injector.requirePublicClass(
 	"androidLivesyncTool",
-	"./services/livesync/android-livesync-tool"
+	"./services/livesync/android-livesync-tool",
 );
 injector.require(
 	"androidLiveSyncService",
-	"./services/livesync/android-livesync-service"
+	"./services/livesync/android-livesync-service",
 );
 injector.require(
 	"iOSLiveSyncService",
-	"./services/livesync/ios-livesync-service"
+	"./services/livesync/ios-livesync-service",
 );
 injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 injector.requirePublic("sysInfo", "./sys-info");
 
 injector.require(
 	"iOSNotificationService",
-	"./services/ios-notification-service"
+	"./services/ios-notification-service",
 );
 injector.require(
 	"appDebugSocketProxyFactory",
-	"./device-sockets/ios/app-debug-socket-proxy-factory"
+	"./device-sockets/ios/app-debug-socket-proxy-factory",
 );
 injector.require("iOSNotification", "./device-sockets/ios/notification");
 injector.require(
 	"iOSSocketRequestExecutor",
-	"./device-sockets/ios/socket-request-executor"
+	"./device-sockets/ios/socket-request-executor",
 );
 injector.require("messages", "./common/messages/messages");
 
@@ -347,110 +347,110 @@ injector.require("requireService", "./services/require-service");
 
 injector.requireCommand(
 	"extension|*list",
-	"./commands/extensibility/list-extensions"
+	"./commands/extensibility/list-extensions",
 );
 injector.requireCommand(
 	"extension|install",
-	"./commands/extensibility/install-extension"
+	"./commands/extensibility/install-extension",
 );
 injector.requireCommand(
 	"extension|uninstall",
-	"./commands/extensibility/uninstall-extension"
+	"./commands/extensibility/uninstall-extension",
 );
 injector.requirePublicClass(
 	"extensibilityService",
-	"./services/extensibility-service"
+	"./services/extensibility-service",
 );
 
 injector.require(
 	"nodeModulesDependenciesBuilder",
-	"./tools/node-modules/node-modules-dependencies-builder"
+	"./tools/node-modules/node-modules-dependencies-builder",
 );
 injector.require(
 	"terminalSpinnerService",
-	"./services/terminal-spinner-service"
+	"./services/terminal-spinner-service",
 );
 
 injector.require(
 	"platformEnvironmentRequirements",
-	"./services/platform-environment-requirements"
+	"./services/platform-environment-requirements",
 );
 
 injector.requireCommand(
 	"resources|generate|icons",
-	"./commands/generate-assets"
+	"./commands/generate-assets",
 );
 injector.requireCommand(
 	"resources|generate|splashes",
-	"./commands/generate-assets"
+	"./commands/generate-assets",
 );
 injector.requirePublic(
 	"assetsGenerationService",
-	"./services/assets-generation/assets-generation-service"
+	"./services/assets-generation/assets-generation-service",
 );
 
 injector.require("filesHashService", "./services/files-hash-service");
 injector.require("logParserService", "./services/log-parser-service");
 injector.require(
 	"iOSDebuggerPortService",
-	"./services/ios-debugger-port-service"
+	"./services/ios-debugger-port-service",
 );
 injector.require("hmrStatusService", "./services/hmr-status-service");
 
 injector.require("pacoteService", "./services/pacote-service");
 injector.require(
 	"qrCodeTerminalService",
-	"./services/qr-code-terminal-service"
+	"./services/qr-code-terminal-service",
 );
 injector.require(
 	"testInitializationService",
-	"./services/test-initialization-service"
+	"./services/test-initialization-service",
 );
 
 injector.require(
 	"networkConnectivityValidator",
-	"./helpers/network-connectivity-validator"
+	"./helpers/network-connectivity-validator",
 );
 injector.requirePublic("cleanupService", "./services/cleanup-service");
 
 injector.require(
 	"webpackCompilerService",
-	"./services/webpack/webpack-compiler-service"
+	"./services/webpack/webpack-compiler-service",
 );
 
 injector.require(
 	"applePortalSessionService",
-	"./services/apple-portal/apple-portal-session-service"
+	"./services/apple-portal/apple-portal-session-service",
 );
 injector.require(
 	"applePortalCookieService",
-	"./services/apple-portal/apple-portal-cookie-service"
+	"./services/apple-portal/apple-portal-cookie-service",
 );
 injector.require(
 	"applePortalApplicationService",
-	"./services/apple-portal/apple-portal-application-service"
+	"./services/apple-portal/apple-portal-application-service",
 );
 
 injector.require(
 	"watchIgnoreListService",
-	"./services/watch-ignore-list-service"
+	"./services/watch-ignore-list-service",
 );
 
 injector.requirePublicClass(
 	"initializeService",
-	"./services/initialize-service"
+	"./services/initialize-service",
 );
 
 injector.require("npmConfigService", "./services/npm-config-service");
 injector.require("ipService", "./services/ip-service");
 injector.require(
 	"jsonFileSettingsService",
-	"./common/services/json-file-settings-service"
+	"./common/services/json-file-settings-service",
 );
 injector.require("markingModeService", "./services/marking-mode-service");
 injector.require(
 	"metadataFilteringService",
-	"./services/metadata-filtering-service"
+	"./services/metadata-filtering-service",
 );
 injector.require("tempService", "./services/temp-service");
 
@@ -468,7 +468,7 @@ injector.requireCommand(
 		"native|add|swift",
 		"native|add|objective-c",
 	],
-	"./commands/native-add"
+	"./commands/native-add",
 );
 injector.requireCommand(["widget", "widget|ios"], "./commands/widget");
 require("./key-commands/bootstrap");

@@ -10,7 +10,7 @@ export class ConfigListCommand implements ICommand {
 
 	constructor(
 		private $projectConfigService: IProjectConfigService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -49,7 +49,7 @@ export class ConfigGetCommand implements ICommand {
 	constructor(
 		private $projectConfigService: IProjectConfigService,
 		private $logger: ILogger,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -77,7 +77,7 @@ export class ConfigSetCommand implements ICommand {
 	constructor(
 		private $projectConfigService: IProjectConfigService,
 		private $logger: ILogger,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -85,7 +85,7 @@ export class ConfigSetCommand implements ICommand {
 		const current = this.$projectConfigService.getValue(key);
 		if (current && typeof current === "object") {
 			this.$errors.fail(
-				`Unable to change object values. Please update individual values instead.\nEg: ns config set android.codeCache true`
+				`Unable to change object values. Please update individual values instead.\nEg: ns config set android.codeCache true`,
 			);
 		}
 		const convertedValue = this.getConvertedValue(value);
@@ -97,7 +97,7 @@ export class ConfigSetCommand implements ICommand {
 		this.$logger.info(
 			`${existingKey ? "Updating" : "Setting"} ${keyDisplay}${
 				existingKey ? ` from ${currentDisplay} ` : " "
-			}to ${updatedDisplay}`
+			}to ${updatedDisplay}`,
 		);
 
 		try {

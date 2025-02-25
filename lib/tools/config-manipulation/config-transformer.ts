@@ -53,7 +53,7 @@ export class ConfigTransformer implements IConfigTransformer {
 			content,
 			{
 				scriptKind: this.scriptKind,
-			}
+			},
 		);
 	}
 
@@ -96,7 +96,7 @@ export class ConfigTransformer implements IConfigTransformer {
 
 	private getProperty(
 		key: string,
-		parent: ObjectLiteralExpression = null
+		parent: ObjectLiteralExpression = null,
 	): ObjectLiteralElementLike {
 		if (key.includes(".")) {
 			const parts = key.split(".");
@@ -132,7 +132,7 @@ export class ConfigTransformer implements IConfigTransformer {
 	private addProperty(
 		key: string,
 		value: SupportedConfigValues | {},
-		parent: ObjectLiteralExpression = null
+		parent: ObjectLiteralExpression = null,
 	): any {
 		if (key.includes(".")) {
 			const parts = key.split(".");
@@ -143,7 +143,7 @@ export class ConfigTransformer implements IConfigTransformer {
 				property = this.addProperty(
 					name,
 					{},
-					parent || this.getDefaultExportValue()
+					parent || this.getDefaultExportValue(),
 				);
 			}
 
@@ -186,7 +186,7 @@ export class ConfigTransformer implements IConfigTransformer {
 
 	private setInitializerValue(
 		initializer: any,
-		newValue: SupportedConfigValues
+		newValue: SupportedConfigValues,
 	) {
 		if (Node.isStringLiteral(initializer)) {
 			return (initializer as StringLiteral).setLiteralValue(newValue as string);
@@ -194,13 +194,13 @@ export class ConfigTransformer implements IConfigTransformer {
 
 		if (Node.isNumericLiteral(initializer)) {
 			return (initializer as NumericLiteral).setLiteralValue(
-				newValue as number
+				newValue as number,
 			);
 		}
 
 		if (Node.isBooleanKeyword(initializer)) {
 			return (initializer as BooleanLiteral).setLiteralValue(
-				newValue as boolean
+				newValue as boolean,
 			);
 		}
 
@@ -233,7 +233,7 @@ export class ConfigTransformer implements IConfigTransformer {
 
 	private getIdentifierValue(identifier: Identifier): any {
 		const decl = this.config.getVariableDeclarationOrThrow(
-			identifier.getText()
+			identifier.getText(),
 		);
 		const initializer = decl.getInitializerOrThrow();
 
@@ -242,10 +242,10 @@ export class ConfigTransformer implements IConfigTransformer {
 
 	private setIdentifierValue(
 		identifier: Identifier,
-		newValue: SupportedConfigValues
+		newValue: SupportedConfigValues,
 	) {
 		const decl = this.config.getVariableDeclarationOrThrow(
-			identifier.getText()
+			identifier.getText(),
 		);
 		const initializer = decl.getInitializerOrThrow();
 
@@ -266,7 +266,7 @@ export class ConfigTransformer implements IConfigTransformer {
 		} else {
 			throw new Error(
 				"getPropertyValue Unsupported value found: " +
-					objectProperty.getKindName()
+					objectProperty.getKindName(),
 			);
 		}
 
@@ -289,7 +289,7 @@ export class ConfigTransformer implements IConfigTransformer {
 
 	private setPropertyValue(
 		objectProperty: any,
-		newValue: SupportedConfigValues
+		newValue: SupportedConfigValues,
 	) {
 		let initializer;
 		if (

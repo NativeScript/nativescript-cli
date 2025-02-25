@@ -15,12 +15,11 @@ import * as shelljs from "shelljs";
 import { parseJson } from "./helpers";
 import { PACKAGE_JSON_FILE_NAME } from "../constants";
 import { EOL } from "os";
-import * as detectNewline from "detect-newline";
+import { detectNewline } from "detect-newline";
 import { IFileSystem, IReadFileOptions, IFsStats } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { create as createArchiver } from "archiver";
 
-const stringifyPackage: any = require("stringify-package");
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
 
@@ -34,7 +33,7 @@ export class FileSystem implements IFileSystem {
 	public async zipFiles(
 		zipFile: string,
 		files: string[],
-		zipPathCallback: (path: string) => string
+		zipPathCallback: (path: string) => string,
 	): Promise<void> {
 		//we are resolving it here instead of in the constructor, because config has dependency on file system and config shouldn't require logger
 		const $logger = this.$injector.resolve("logger");
@@ -71,7 +70,7 @@ export class FileSystem implements IFileSystem {
 		zipFile: string,
 		destinationDir: string,
 		options?: { overwriteExisitingFiles?: boolean; caseSensitive?: boolean },
-		fileFilters?: string[]
+		fileFilters?: string[],
 	): Promise<void> {
 		const shouldOverwriteFiles = !(
 			options && options.overwriteExisitingFiles === false
@@ -166,7 +165,7 @@ export class FileSystem implements IFileSystem {
 		const dirSize = (
 			dir: string,
 			paths: Map<string, number> = new Map(),
-			root = true
+			root = true,
 		) => {
 			const files = fs.readdirSync(dir, { withFileTypes: true });
 			files.map((file: any) => {
@@ -187,7 +186,7 @@ export class FileSystem implements IFileSystem {
 				// console.log("root", paths);
 				return Array.from(paths.values()).reduce(
 					(sum, current) => sum + current,
-					0
+					0,
 				);
 			}
 		};
@@ -244,14 +243,14 @@ export class FileSystem implements IFileSystem {
 
 	public readFile(
 		filename: string,
-		options?: IReadFileOptions
+		options?: IReadFileOptions,
 	): string | Buffer {
 		return fs.readFileSync(filename, options);
 	}
 
 	public readText(
 		filename: string,
-		options?: IReadFileOptions | string
+		options?: IReadFileOptions | string,
 	): string {
 		options = options || { encoding: "utf8" };
 
@@ -277,7 +276,7 @@ export class FileSystem implements IFileSystem {
 	public writeFile(
 		filename: string,
 		data: string | Buffer,
-		encoding?: string
+		encoding?: string,
 	): void {
 		this.createDirectory(dirname(filename));
 		if (!data) {
@@ -296,7 +295,7 @@ export class FileSystem implements IFileSystem {
 		filename: string,
 		data: any,
 		space?: string,
-		encoding?: string
+		encoding?: string,
 	): void {
 		if (!space) {
 			space = this.getIndentationCharacter(filename);
@@ -309,7 +308,7 @@ export class FileSystem implements IFileSystem {
 				const existingFile = this.readText(filename);
 				newline = detectNewline(existingFile);
 			}
-			stringifiedData = stringifyPackage(data, space, newline);
+			stringifiedData = JSON.stringify(data, null, space).concat(newline);
 		} else {
 			stringifiedData = JSON.stringify(data, null, space);
 		}
@@ -347,7 +346,7 @@ export class FileSystem implements IFileSystem {
 			start?: number;
 			end?: number;
 			highWaterMark?: number;
-		}
+		},
 	): NodeJS.ReadableStream {
 		return fs.createReadStream(path, options);
 	}
@@ -363,7 +362,7 @@ export class FileSystem implements IFileSystem {
 			emitClose?: boolean;
 			start?: number;
 			highWaterMark?: number;
-		}
+		},
 	): any {
 		return fs.createWriteStream(path, options);
 	}
@@ -431,14 +430,14 @@ export class FileSystem implements IFileSystem {
 	public symlink(
 		sourcePath: string,
 		destinationPath: string,
-		type?: fs.symlink.Type
+		type?: fs.symlink.Type,
 	): void {
 		fs.symlinkSync(sourcePath, destinationPath, type);
 	}
 
 	public async setCurrentUserAsOwner(
 		path: string,
-		owner: string
+		owner: string,
 	): Promise<void> {
 		const $childProcess = this.$injector.resolve("childProcess");
 
@@ -460,7 +459,7 @@ export class FileSystem implements IFileSystem {
 			enumerateDirectories?: boolean;
 			includeEmptyDirectories?: boolean;
 		},
-		foundFiles?: string[]
+		foundFiles?: string[],
 	): string[] {
 		foundFiles = foundFiles || [];
 
@@ -498,7 +497,7 @@ export class FileSystem implements IFileSystem {
 					file,
 					filterCallback,
 					opts,
-					foundFiles
+					foundFiles,
 				);
 			} else {
 				foundFiles.push(file);
@@ -509,7 +508,7 @@ export class FileSystem implements IFileSystem {
 
 	public async getFileShasum(
 		fileName: string,
-		options?: { algorithm?: string; encoding?: "hex" | "base64" }
+		options?: { algorithm?: string; encoding?: "hex" | "base64" },
 	): Promise<string> {
 		return new Promise<string>((resolve, reject) => {
 			const algorithm = (options && options.algorithm) || "sha1";

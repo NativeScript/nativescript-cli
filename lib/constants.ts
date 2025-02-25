@@ -413,7 +413,7 @@ const pathToLoggerAppendersDir = join(
 	__dirname,
 	"common",
 	"logger",
-	"appenders"
+	"appenders",
 );
 export const LoggerAppenders = {
 	emitAppender: join(pathToLoggerAppendersDir, "emit-appender"),
