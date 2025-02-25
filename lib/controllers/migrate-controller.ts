@@ -75,7 +75,7 @@ export class MigrateController
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $projectCleanupService: IProjectCleanupService,
 		private $projectBackupService: IProjectBackupService,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
 	) {
 		super(
 			$fs,
@@ -83,7 +83,7 @@ export class MigrateController
 			$platformsDataService,
 			$packageInstallationManager,
 			$packageManager,
-			$pacoteService
+			$pacoteService,
 		);
 	}
 
@@ -107,10 +107,10 @@ export class MigrateController
 		const cliVersion = semver.coerce(this.$staticConfig.version);
 		const shouldMigrateCacheFilePath = path.join(
 			this.$settingsService.getProfileDir(),
-			`should-migrate-cache-${cliVersion}.json`
+			`should-migrate-cache-${cliVersion}.json`,
 		);
 		this.$logger.trace(
-			`Migration cache path is: ${shouldMigrateCacheFilePath}`
+			`Migration cache path is: ${shouldMigrateCacheFilePath}`,
 		);
 		return this.$injector.resolve("jsonFileSettingsService", {
 			jsonFileSettingsPath: shouldMigrateCacheFilePath,
@@ -121,7 +121,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~8.8.0",
+			desiredVersion: "~8.9.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -131,7 +131,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.8.0",
+			desiredVersion: "~8.9.0",
 			isDev: true,
 		},
 		{
@@ -168,7 +168,7 @@ export class MigrateController
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				loose: boolean
+				loose: boolean,
 			) {
 				if (!this.hasDependency(dependency, projectData)) {
 					return false;
@@ -177,7 +177,7 @@ export class MigrateController
 				return await this.shouldMigrateDependencyVersion(
 					dependency,
 					projectData,
-					loose
+					loose,
 				);
 			},
 			migrateAction: this.migrateNativeScriptVue.bind(this),
@@ -190,11 +190,11 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "^18.0.0",
+			desiredVersion: "^19.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				loose: boolean
+				loose: boolean,
 			) {
 				if (!this.hasDependency(dependency, projectData)) {
 					return false;
@@ -203,7 +203,7 @@ export class MigrateController
 				return await this.shouldMigrateDependencyVersion(
 					dependency,
 					projectData,
-					loose
+					loose,
 				);
 			},
 			migrateAction: this.migrateNativeScriptAngular.bind(this),
@@ -215,7 +215,7 @@ export class MigrateController
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				loose: boolean
+				loose: boolean,
 			) {
 				if (!this.hasDependency(dependency, projectData)) {
 					return false;
@@ -223,7 +223,7 @@ export class MigrateController
 				return await this.shouldMigrateDependencyVersion(
 					dependency,
 					projectData,
-					loose
+					loose,
 				);
 			},
 			migrateAction: this.migrateNativeScriptSvelte.bind(this),
@@ -245,7 +245,7 @@ export class MigrateController
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
-				loose: boolean
+				loose: boolean,
 			) {
 				if (!this.hasDependency(dependency, projectData)) {
 					return false;
@@ -253,7 +253,7 @@ export class MigrateController
 				return await this.shouldMigrateDependencyVersion(
 					dependency,
 					projectData,
-					loose
+					loose,
 				);
 			},
 			migrateAction: this.migrateUnitTestRunner.bind(this),
@@ -262,7 +262,7 @@ export class MigrateController
 			packageName: "typescript",
 			isDev: true,
 			minVersion: "3.7.0",
-			desiredVersion: "~5.4.0",
+			desiredVersion: "~5.7.0",
 		},
 		{
 			packageName: "node-sass",
@@ -295,13 +295,13 @@ export class MigrateController
 		{
 			packageName: "@nativescript/ios",
 			minVersion: "6.5.3",
-			desiredVersion: "~8.8.0",
+			desiredVersion: "~8.9.0",
 			isDev: true,
 		},
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.8.0",
+			desiredVersion: "~8.9.0",
 			isDev: true,
 		},
 	];
@@ -324,10 +324,10 @@ export class MigrateController
 			// should only run in loose mode...
 			const cachedResult = await this.getCachedShouldMigrate(
 				projectDir,
-				platform
+				platform,
 			);
 			this.$logger.trace(
-				`Got cached result for shouldMigrate for platform: ${platform}: ${cachedResult}`
+				`Got cached result for shouldMigrate for platform: ${platform}: ${cachedResult}`,
 			);
 
 			// the cached result is only used if it's false, otherwise we need to check again
@@ -343,7 +343,7 @@ export class MigrateController
 				loose,
 			});
 			this.$logger.trace(
-				`Executed shouldMigrate for platforms: ${remainingPlatforms}. Result is: ${shouldMigrate}`
+				`Executed shouldMigrate for platforms: ${remainingPlatforms}. Result is: ${shouldMigrate}`,
 			);
 
 			// only cache results if running in loose mode
@@ -369,7 +369,7 @@ export class MigrateController
 		});
 		if (shouldMigrate) {
 			this.$errors.fail(
-				`The current application is not compatible with NativeScript CLI ${this.$staticConfig.version}.\n\nRun 'ns migrate' to migrate your project to the latest NativeScript version.\n\nAlternatively you may try running it with '--force' to skip this check.`
+				`The current application is not compatible with NativeScript CLI ${this.$staticConfig.version}.\n\nRun 'ns migrate' to migrate your project to the latest NativeScript version.\n\nAlternatively you may try running it with '--force' to skip this check.`,
 			);
 		}
 	}
@@ -424,15 +424,15 @@ export class MigrateController
 		if (!this.$fs.exists(newConfigPath)) {
 			// migrate configs
 			this.spinner.info(
-				`Migrating project to use ${color.green("nativescript.config.ts")}`
+				`Migrating project to use ${color.green("nativescript.config.ts")}`,
 			);
 
 			await this.migrateConfigs(projectDir);
 
 			this.spinner.succeed(
 				`Project has been migrated to use ${color.green(
-					"nativescript.config.ts"
-				)}`
+					"nativescript.config.ts",
+				)}`,
 			);
 		}
 
@@ -447,7 +447,7 @@ export class MigrateController
 			{
 				packageName: "@nativescript/angular",
 			},
-			projectData
+			projectData,
 		);
 
 		// ensure polyfills.ts exists in angular projects
@@ -480,7 +480,7 @@ export class MigrateController
 		this.$logger.info("");
 		this.$logger.printMarkdown(
 			"Project has been successfully migrated. The next step is to run `ns run <platform>` to ensure everything is working properly." +
-				"\n\nPlease note that you may need additional changes to complete the migration."
+				"\n\nPlease note that you may need additional changes to complete the migration.",
 			// + "\n\nYou may restore your project with `ns migrate restore`"
 		);
 
@@ -502,7 +502,7 @@ export class MigrateController
 		const isMigrate = _.get(this.$options, "argv._[0]") === "migrate";
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const projectInfo = this.$projectConfigService.detectProjectConfigs(
-			projectData.projectDir
+			projectData.projectDir,
 		);
 		if (!isMigrate && projectInfo.hasNSConfig) {
 			return;
@@ -518,7 +518,7 @@ export class MigrateController
 			if (!hasDependency) {
 				if (dependency.shouldAddIfMissing) {
 					this.$logger.trace(
-						`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`
+						`${shouldMigrateCommonMessage}'${dependency.packageName}' is missing.`,
 					);
 
 					if (loose) {
@@ -536,12 +536,12 @@ export class MigrateController
 				const shouldMigrate = await dependency.shouldMigrateAction.bind(this)(
 					dependency,
 					projectData,
-					loose
+					loose,
 				);
 
 				if (shouldMigrate) {
 					this.$logger.trace(
-						`${shouldMigrateCommonMessage}'${dependency.packageName}' requires an update.`
+						`${shouldMigrateCommonMessage}'${dependency.packageName}' requires an update.`,
 					);
 					return true;
 				}
@@ -549,7 +549,7 @@ export class MigrateController
 
 			if (dependency.replaceWith || dependency.shouldRemove) {
 				this.$logger.trace(
-					`${shouldMigrateCommonMessage}'${dependency.packageName}' is deprecated.`
+					`${shouldMigrateCommonMessage}'${dependency.packageName}' is deprecated.`,
 				);
 
 				// in loose mode we ignore deprecated dependencies
@@ -563,12 +563,12 @@ export class MigrateController
 			const shouldUpdate = await this.shouldMigrateDependencyVersion(
 				dependency,
 				projectData,
-				loose
+				loose,
 			);
 
 			if (shouldUpdate) {
 				this.$logger.trace(
-					`${shouldMigrateCommonMessage}'${dependency.packageName}' should be updated.`
+					`${shouldMigrateCommonMessage}'${dependency.packageName}' should be updated.`,
 				);
 
 				return true;
@@ -581,12 +581,12 @@ export class MigrateController
 	private async shouldMigrateDependencyVersion(
 		dependency: IMigrationDependency,
 		projectData: IProjectData,
-		loose: boolean
+		loose: boolean,
 	): Promise<boolean> {
 		const installedVersion =
 			await this.$packageInstallationManager.getInstalledDependencyVersion(
 				dependency.packageName,
-				projectData.projectDir
+				projectData.projectDir,
 			);
 
 		const desiredVersion = dependency.desiredVersion ?? dependency.minVersion;
@@ -602,18 +602,18 @@ export class MigrateController
 		return this.isOutdatedVersion(
 			installedVersion,
 			{ minVersion, desiredVersion },
-			loose
+			loose,
 		);
 	}
 
 	private async getCachedShouldMigrate(
 		projectDir: string,
-		platform: string
+		platform: string,
 	): Promise<boolean> {
 		let cachedShouldMigrateValue = null;
 
 		const cachedHash = await this.$jsonFileSettingsService.getSettingValue(
-			getHash(`${projectDir}${platform.toLowerCase()}`)
+			getHash(`${projectDir}${platform.toLowerCase()}`),
 		);
 		const packageJsonHash = await this.getPackageJsonHash(projectDir);
 		if (cachedHash === packageJsonHash) {
@@ -625,22 +625,22 @@ export class MigrateController
 
 	private async setCachedShouldMigrate(
 		projectDir: string,
-		platform: string
+		platform: string,
 	): Promise<void> {
 		this.$logger.trace(
-			`Caching shouldMigrate result for platform ${platform}.`
+			`Caching shouldMigrate result for platform ${platform}.`,
 		);
 		const packageJsonHash = await this.getPackageJsonHash(projectDir);
 		await this.$jsonFileSettingsService.saveSetting(
 			getHash(`${projectDir}${platform.toLowerCase()}`),
-			packageJsonHash
+			packageJsonHash,
 		);
 	}
 
 	private async getPackageJsonHash(projectDir: string) {
 		const projectPackageJsonFilePath = path.join(
 			projectDir,
-			constants.PACKAGE_JSON_FILE_NAME
+			constants.PACKAGE_JSON_FILE_NAME,
 		);
 		return await this.$fs.getFileShasum(projectPackageJsonFilePath);
 	}
@@ -674,7 +674,7 @@ export class MigrateController
 			// not a git repo and no --force
 			if (!isForce) {
 				this.$logger.printMarkdown(
-					`Running \`ns migrate\` in a non-git project is not recommended. If you want to skip this check run \`ns migrate --force\`.`
+					`Running \`ns migrate\` in a non-git project is not recommended. If you want to skip this check run \`ns migrate --force\`.`,
 				);
 				this.$errors.fail("Not in Git repo.");
 				return false;
@@ -687,13 +687,13 @@ export class MigrateController
 		if (!isClean) {
 			if (!isForce) {
 				this.$logger.printMarkdown(
-					`Current git branch has uncommitted changes. Please commit the changes and try again. Alternatively run \`ns migrate --force\` to skip this check.`
+					`Current git branch has uncommitted changes. Please commit the changes and try again. Alternatively run \`ns migrate --force\` to skip this check.`,
 				);
 				this.$errors.fail("Git branch not clean.");
 				return false;
 			}
 			this.spinner.warn(
-				`Git branch not clean, but using ${color.red("--force")}`
+				`Git branch not clean, but using ${color.red("--force")}`,
 			);
 			return true;
 		}
@@ -728,10 +728,10 @@ export class MigrateController
 
 		const { dependencies, devDependencies } =
 			await this.$pluginsService.getDependenciesFromPackageJson(
-				projectData.projectDir
+				projectData.projectDir,
 			);
 		const hasSchematics = [...dependencies, ...devDependencies].find(
-			(p) => p.name === "@nativescript/schematics"
+			(p) => p.name === "@nativescript/schematics",
 		);
 
 		if (!hasSchematics) {
@@ -744,7 +744,7 @@ export class MigrateController
 
 	private async handleAutoGeneratedFiles(
 		backup: IBackup,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		const globOptions: GlobOptions = {
 			nocase: true,
@@ -759,21 +759,21 @@ export class MigrateController
 		const autoGeneratedJsFiles = this.getGeneratedFiles(
 			jsFiles,
 			[".js"],
-			[".ts"]
+			[".ts"],
 		);
 		const autoGeneratedJsMapFiles = this.getGeneratedFiles(
 			jsFiles,
 			[".map"],
-			[""]
+			[""],
 		);
 		const cssFiles = globSync(
 			"*.@(less|sass|scss|css)",
-			globOptions
+			globOptions,
 		) as string[];
 		const autoGeneratedCssFiles = this.getGeneratedFiles(
 			cssFiles,
 			[".css"],
-			[".scss", ".sass", ".less"]
+			[".scss", ".sass", ".less"],
 		);
 
 		const allGeneratedFiles = autoGeneratedJsFiles
@@ -781,7 +781,7 @@ export class MigrateController
 			.concat(autoGeneratedCssFiles);
 
 		const pathsToBackup = allGeneratedFiles.map((generatedFile) =>
-			path.join(projectData.appDirectoryPath, generatedFile)
+			path.join(projectData.appDirectoryPath, generatedFile),
 		);
 		backup.addPaths(pathsToBackup);
 		backup.create();
@@ -794,7 +794,7 @@ export class MigrateController
 	private getGeneratedFiles(
 		allFiles: string[],
 		generatedFileExts: string[],
-		sourceFileExts: string[]
+		sourceFileExts: string[],
 	): string[] {
 		return allFiles.filter((file) => {
 			let isGenerated = false;
@@ -816,7 +816,7 @@ export class MigrateController
 	private isOutdatedVersion(
 		current: string,
 		target: IDependencyVersion,
-		loose: boolean
+		loose: boolean,
 	): boolean {
 		// in loose mode, a falsy version is not considered outdated
 		if (!current && loose) {
@@ -853,7 +853,7 @@ export class MigrateController
 		];
 
 		const appPath = possibleAppPaths.find((possiblePath) =>
-			this.$fs.exists(possiblePath)
+			this.$fs.exists(possiblePath),
 		);
 		if (appPath) {
 			const relativeAppPath = path
@@ -873,13 +873,13 @@ export class MigrateController
 			path.resolve(
 				projectDir,
 				configData.appPath,
-				constants.APP_RESOURCES_FOLDER_NAME
+				constants.APP_RESOURCES_FOLDER_NAME,
 			),
 			path.resolve(projectDir, constants.APP_RESOURCES_FOLDER_NAME),
 		];
 
 		const appResourcesPath = possibleAppResourcesPaths.find((possiblePath) =>
-			this.$fs.exists(possiblePath)
+			this.$fs.exists(possiblePath),
 		);
 		if (appResourcesPath) {
 			const relativeAppResourcesPath = path
@@ -894,7 +894,7 @@ export class MigrateController
 		dependency: IMigrationDependency,
 		projectData: IProjectData,
 		loose: boolean,
-		force: boolean = false
+		force: boolean = false,
 	): Promise<void> {
 		if (dependency.migrateAction) {
 			const shouldMigrate =
@@ -902,13 +902,13 @@ export class MigrateController
 				(await dependency.shouldMigrateAction.bind(this)(
 					dependency,
 					projectData,
-					loose
+					loose,
 				));
 
 			if (shouldMigrate) {
 				const newDependencies = await dependency.migrateAction(
 					projectData,
-					path.join(projectData.projectDir, MigrateController.backupFolderName)
+					path.join(projectData.projectDir, MigrateController.backupFolderName),
 				);
 				for (const newDependency of newDependencies) {
 					await this.migrateDependency(newDependency, projectData, loose);
@@ -920,7 +920,7 @@ export class MigrateController
 	private async migrateDependencies(
 		projectData: IProjectData,
 		platforms: string[],
-		loose: boolean
+		loose: boolean,
 	): Promise<void> {
 		for (let i = 0; i < this.migrationDependencies.length; i++) {
 			const dependency = this.migrationDependencies[i];
@@ -939,7 +939,7 @@ export class MigrateController
 	private async migrateDependency(
 		dependency: IMigrationDependency,
 		projectData: IProjectData,
-		loose: boolean
+		loose: boolean,
 	): Promise<void> {
 		const hasDependency = this.hasDependency(dependency, projectData);
 
@@ -958,14 +958,14 @@ export class MigrateController
 				dependency.packageName,
 				version,
 				dependency.isDev,
-				projectData.projectDir
+				projectData.projectDir,
 			);
 
 			this.spinner.clear();
 			this.$logger.info(
 				`  - ${color.yellow(dependency.packageName)} ${color.green(
-					version
-				)} has been added`
+					version,
+				)} has been added`,
 			);
 			this.spinner.render();
 
@@ -976,7 +976,7 @@ export class MigrateController
 			// remove
 			this.$pluginsService.removeFromPackageJson(
 				dependency.packageName,
-				projectData.projectDir
+				projectData.projectDir,
 			);
 
 			// no replacement required - we're done
@@ -987,7 +987,7 @@ export class MigrateController
 			const replacementDep = _.find(
 				this.migrationDependencies,
 				(migrationPackage) =>
-					migrationPackage.packageName === dependency.replaceWith
+					migrationPackage.packageName === dependency.replaceWith,
 			);
 
 			if (!replacementDep) {
@@ -1005,16 +1005,16 @@ export class MigrateController
 				replacementDep.packageName,
 				version,
 				replacementDep.isDev,
-				projectData.projectDir
+				projectData.projectDir,
 			);
 
 			this.spinner.clear();
 			this.$logger.info(
 				`  - ${color.yellow(
-					dependency.packageName
+					dependency.packageName,
 				)} has been replaced with ${color.cyan(
-					replacementDep.packageName
-				)} ${color.green(version)}`
+					replacementDep.packageName,
+				)} ${color.green(version)}`,
 			);
 			this.spinner.render();
 
@@ -1022,7 +1022,7 @@ export class MigrateController
 				replacementDep,
 				projectData,
 				loose,
-				true
+				true,
 			);
 
 			return;
@@ -1031,7 +1031,7 @@ export class MigrateController
 		const shouldMigrateVersion = await this.shouldMigrateDependencyVersion(
 			dependency,
 			projectData,
-			loose
+			loose,
 		);
 
 		if (!shouldMigrateVersion) {
@@ -1044,14 +1044,14 @@ export class MigrateController
 			dependency.packageName,
 			version,
 			dependency.isDev,
-			projectData.projectDir
+			projectData.projectDir,
 		);
 
 		this.spinner.clear();
 		this.$logger.info(
 			`  - ${color.yellow(
-				dependency.packageName
-			)} has been updated to ${color.green(version)}`
+				dependency.packageName,
+			)} has been updated to ${color.green(version)}`,
 		);
 		this.spinner.render();
 	}
@@ -1062,18 +1062,18 @@ export class MigrateController
 		// package.json
 		const rootPackageJsonPath: any = path.resolve(
 			projectDir,
-			constants.PACKAGE_JSON_FILE_NAME
+			constants.PACKAGE_JSON_FILE_NAME,
 		);
 		// nested package.json
 		const embeddedPackageJsonPath = path.resolve(
 			projectData.projectDir,
 			projectData.getAppDirectoryRelativePath(),
-			constants.PACKAGE_JSON_FILE_NAME
+			constants.PACKAGE_JSON_FILE_NAME,
 		);
 		// nsconfig.json
 		const legacyNsConfigPath = path.resolve(
 			projectData.projectDir,
-			constants.CONFIG_NS_FILE_NAME
+			constants.CONFIG_NS_FILE_NAME,
 		);
 
 		let rootPackageJsonData: any = {};
@@ -1083,7 +1083,7 @@ export class MigrateController
 
 		// write the default config unless it already exists
 		const newConfigPath = this.$projectConfigService.writeDefaultConfig(
-			projectData.projectDir
+			projectData.projectDir,
 		);
 
 		// force legacy config mode
@@ -1091,7 +1091,7 @@ export class MigrateController
 
 		// all different sources are combined into configData (nested package.json, nsconfig and root package.json[nativescript])
 		const configData = this.$projectConfigService.readConfig(
-			projectData.projectDir
+			projectData.projectDir,
 		);
 
 		// we no longer want to force legacy config mode
@@ -1107,7 +1107,7 @@ export class MigrateController
 		configData.appPath = this.detectAppPath(projectDir, configData);
 		configData.appResourcesPath = this.detectAppResourcesPath(
 			projectDir,
-			configData
+			configData,
 		);
 
 		// delete nativescript key from root package.json
@@ -1121,7 +1121,7 @@ export class MigrateController
 		const hasUpdatedConfigSuccessfully =
 			await this.$projectConfigService.setValue(
 				"", // root
-				configData as { [key: string]: SupportedConfigValues }
+				configData as { [key: string]: SupportedConfigValues },
 			);
 
 		if (!hasUpdatedConfigSuccessfully) {
@@ -1131,7 +1131,7 @@ export class MigrateController
 			}
 
 			this.$errors.fail(
-				`Failed to migrate project to use ${constants.CONFIG_FILE_NAME_TS}. One or more values could not be updated.`
+				`Failed to migrate project to use ${constants.CONFIG_FILE_NAME_TS}. One or more values could not be updated.`,
 			);
 		}
 
@@ -1147,12 +1147,12 @@ export class MigrateController
 
 	private async migrateUnitTestRunner(
 		projectData: IProjectData,
-		migrationBackupDirPath: string
+		migrationBackupDirPath: string,
 	): Promise<IMigrationDependency[]> {
 		// Migrate karma.conf.js
 		const pathToKarmaConfig = path.join(
 			migrationBackupDirPath,
-			constants.KARMA_CONFIG_NAME
+			constants.KARMA_CONFIG_NAME,
 		);
 		if (this.$fs.exists(pathToKarmaConfig)) {
 			const oldKarmaContent = this.$fs.readText(pathToKarmaConfig);
@@ -1165,7 +1165,7 @@ export class MigrateController
 			const testsDir = path.join(projectData.appDirectoryPath, "tests");
 			const relativeTestsDir = path.relative(projectData.projectDir, testsDir);
 			const testFiles = `'${fromWindowsRelativePathToUnix(
-				relativeTestsDir
+				relativeTestsDir,
 			)}/**/*.*'`;
 
 			const karmaConfTemplate = this.$resources.readText("test/karma.conf.js");
@@ -1176,7 +1176,7 @@ export class MigrateController
 			});
 			this.$fs.writeFile(
 				path.join(projectData.projectDir, constants.KARMA_CONFIG_NAME),
-				karmaConf
+				karmaConf,
 			);
 		}
 
@@ -1267,7 +1267,7 @@ export class MigrateController
 	}
 
 	private async checkOrCreatePolyfillsTS(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<string> {
 		const { projectDir, appDirectoryPath } = projectData;
 
@@ -1292,12 +1292,12 @@ export class MigrateController
 		// get from default angular template
 		await this.$pacoteService.extractPackage(
 			constants.RESERVED_TEMPLATE_NAMES["angular"],
-			tempDir
+			tempDir,
 		);
 
 		this.$fs.copyFile(
 			path.resolve(tempDir, "src/polyfills.ts"),
-			possiblePaths[0]
+			possiblePaths[0],
 		);
 
 		// clean up temp project
@@ -1310,7 +1310,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~18.0.0";
+		const desiredVersion = "~19.1.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
@@ -1370,7 +1370,7 @@ export class MigrateController
 			{
 				packageName: "zone.js",
 				minVersion: "0.11.1",
-				desiredVersion: "~0.14.0",
+				desiredVersion: "~0.15.0",
 				shouldAddIfMissing: true,
 			},
 
@@ -1551,7 +1551,7 @@ export class MigrateController
 
 			if (webpackConfigContent.includes("webpack.init(")) {
 				this.spinner.succeed(
-					`Project already using new ${color.yellow("webpack.config.js")}`
+					`Project already using new ${color.yellow("webpack.config.js")}`,
 				);
 				return;
 			}
@@ -1561,7 +1561,7 @@ export class MigrateController
 
 		this.spinner.info(`Initializing new ${color.yellow("webpack.config.js")}`);
 		const { desiredVersion: webpackVersion } = this.migrationDependencies.find(
-			(dep) => dep.packageName === constants.WEBPACK_PLUGIN_NAME
+			(dep) => dep.packageName === constants.WEBPACK_PLUGIN_NAME,
 		);
 
 		try {
@@ -1569,7 +1569,7 @@ export class MigrateController
 			const resolvedVersion =
 				await this.$packageInstallationManager.getMaxSatisfyingVersion(
 					scopedWebpackPackage,
-					webpackVersion
+					webpackVersion,
 				);
 			await this.runNPX([
 				"--package",
@@ -1578,18 +1578,18 @@ export class MigrateController
 				"init",
 			]);
 			this.spinner.succeed(
-				`Initialized new ${color.yellow("webpack.config.js")}`
+				`Initialized new ${color.yellow("webpack.config.js")}`,
 			);
 		} catch (err) {
 			this.spinner.fail(
-				`Failed to initialize ${color.yellow("webpack.config.js")}`
+				`Failed to initialize ${color.yellow("webpack.config.js")}`,
 			);
 			this.$logger.trace(
 				"Failed to initialize webpack.config.js. Error is: ",
-				err
+				err,
 			);
 			this.$logger.printMarkdown(
-				`You can try again by running \`npm install\` (or yarn, pnpm) and then \`npx @nativescript/webpack init\`.`
+				`You can try again by running \`npm install\` (or yarn, pnpm) and then \`npx @nativescript/webpack init\`.`,
 			);
 		}
 
@@ -1621,21 +1621,21 @@ export class MigrateController
 		if (replacedMain) {
 			replacedMain = `./${path.relative(projectDir, replacedMain)}`.replace(
 				/\\/g,
-				"/"
+				"/",
 			);
 			packageJSON.main = replacedMain;
 			this.$fs.writeJson(projectData.projectFilePath, packageJSON);
 
 			this.spinner.info(
 				`Updated ${color.yellow("package.json")} main field to ${color.green(
-					replacedMain
-				)}`
+					replacedMain,
+				)}`,
 			);
 		} else {
 			this.$logger.warn();
 			this.$logger.warn("Note:\n-----");
 			this.$logger.printMarkdown(
-				`Could not determine the correct \`main\` field for \`package.json\`. Make sure to update it manually, pointing to the actual entry file relative to the \`package.json\`.\n`
+				`Could not determine the correct \`main\` field for \`package.json\`. Make sure to update it manually, pointing to the actual entry file relative to the \`package.json\`.\n`,
 			);
 		}
 	}
