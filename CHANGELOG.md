@@ -1,3 +1,32 @@
+# [8.9.0](https://github.com/NativeScript/nativescript-cli/compare/v8.8.3...v8.9.0) (2025-02-27)
+
+
+### Bug Fixes
+
+* add webpack env data so that scripts can read it ([#5817](https://github.com/NativeScript/nativescript-cli/issues/5817)) ([bc23679](https://github.com/NativeScript/nativescript-cli/commit/bc23679c426858dc4a6824641123116a8720d33f))
+* **android:** emulator ini file parsing ([#5824](https://github.com/NativeScript/nativescript-cli/issues/5824)) ([2f35b34](https://github.com/NativeScript/nativescript-cli/commit/2f35b347e1d9710f17862009784826cfb0c589aa))
+* **android:** logging after app restart ([#5815](https://github.com/NativeScript/nativescript-cli/issues/5815)) ([86d9f29](https://github.com/NativeScript/nativescript-cli/commit/86d9f29ced188a8b7904a83f3c58f06131db8282))
+* apple team id not being used when persisted to the platforms folder ([#5821](https://github.com/NativeScript/nativescript-cli/issues/5821)) ([4176e98](https://github.com/NativeScript/nativescript-cli/commit/4176e989cc132591b94d2a876fe72a3ab85a3527))
+* ensure plugin path is defined to process configs ([d96fde1](https://github.com/NativeScript/nativescript-cli/commit/d96fde1f151e1565ac38d311b42a91b552d70d1c))
+* ios-device-lib compiled with arm and x64 ([#5825](https://github.com/NativeScript/nativescript-cli/issues/5825)) ([9eac531](https://github.com/NativeScript/nativescript-cli/commit/9eac5314ac34ee1eea69d480534e1de7e3c99cd6))
+* ios-mobileprovision-finder updates for profile location adjustments ([ea0a138](https://github.com/NativeScript/nativescript-cli/commit/ea0a1389bc91c5549744cf710bef7f471bcc9823))
+* ios-mobileprovision-finder updates for windows ([c06e099](https://github.com/NativeScript/nativescript-cli/commit/c06e0995364769848e693ad513fcad8b6699029a))
+* ns publish, apple authentication, appstore list ([#5820](https://github.com/NativeScript/nativescript-cli/issues/5820)) ([5e381d4](https://github.com/NativeScript/nativescript-cli/commit/5e381d435ee8e65d729b5683040cef0a9a03a71c))
+* **windows:** APPDATA required ([#5823](https://github.com/NativeScript/nativescript-cli/issues/5823)) ([91eab28](https://github.com/NativeScript/nativescript-cli/commit/91eab28c982e98f7dec6ab3aa943900daed2f12a))
+
+
+### Features
+
+* build flag to append generated suffix to bundles ([#5814](https://github.com/NativeScript/nativescript-cli/issues/5814)) ([d10b817](https://github.com/NativeScript/nativescript-cli/commit/d10b817f7428f7fc668b21c38302704592060823))
+* custom android-studio path to support nixos using new env.NATIVESCRIPT_ANDROID_STUDIO_PATH ([#5816](https://github.com/NativeScript/nativescript-cli/issues/5816)) ([661b653](https://github.com/NativeScript/nativescript-cli/commit/661b653f39332859bb808cec5992c6b4fcbfe150))
+* **ios:** 'ns widget ios' for single command widget generator ([#5829](https://github.com/NativeScript/nativescript-cli/issues/5829)) ([89d09d3](https://github.com/NativeScript/nativescript-cli/commit/89d09d3d27030ec98ce1e50b21be2d238c79f2e5))
+* **ios:** allow collections of NativeSource to be included via nativescript.config ([#5830](https://github.com/NativeScript/nativescript-cli/issues/5830)) ([daa567c](https://github.com/NativeScript/nativescript-cli/commit/daa567caa7250d17cb567883a4753480dcb6b933))
+* **ios:** multi target support for swift packages ([#5828](https://github.com/NativeScript/nativescript-cli/issues/5828)) ([2090491](https://github.com/NativeScript/nativescript-cli/commit/209049163b6235f6726230e8eec2f19908e893ea))
+* plugins can now define their own nativescript.config for SPMPackage inclusion ([#5826](https://github.com/NativeScript/nativescript-cli/issues/5826)) ([b2bad0c](https://github.com/NativeScript/nativescript-cli/commit/b2bad0cfaaaea4d1aafddfdf1153e1f3e3afee5d))
+* support solid with typescript template ([1b6202d](https://github.com/NativeScript/nativescript-cli/commit/1b6202db13eb585e342b72604028dd3e0aeef97f))
+
+
+
 ## [8.8.3](https://github.com/NativeScript/nativescript-cli/compare/v8.8.2...v8.8.3) (2024-12-03)
 
 * SPM package version now supports semver ranges

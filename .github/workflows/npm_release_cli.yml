@@ -19,7 +19,7 @@ jobs:
       
       - uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 22.14.0
 
       - name: Setup
         run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
