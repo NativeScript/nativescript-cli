@@ -63,12 +63,12 @@
     "archiver": "^7.0.1",
     "axios": "1.7.9",
     "byline": "5.0.0",
-    "chalk": "^5.4.1",
+    "chalk": "4.1.2",
     "chokidar": "4.0.3",
     "cli-table3": "0.6.5",
-    "color": "5.0.0",
+    "color": "4.2.3",
     "convert-source-map": "2.0.0",
-    "detect-newline": "4.0.1",
+    "detect-newline": "3.1.0",
     "email-validator": "2.0.4",
     "esprima": "4.0.1",
     "font-finder": "1.1.0",
@@ -85,8 +85,8 @@
     "mkdirp": "3.0.1",
     "mute-stream": "2.0.0",
     "nativescript-dev-xcode": "0.8.1",
-    "open": "10.1.0",
-    "ora": "8.2.0",
+    "open": "8.4.2",
+    "ora": "5.4.1",
     "pacote": "21.0.0",
     "pbxproj-dom": "1.2.0",
     "plist": "3.1.0",
@@ -176,7 +176,7 @@
   "analyze": true,
   "license": "Apache-2.0",
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=20.0.0"
   },
   "lint-staged": {
     "*.ts": "prettier --write"

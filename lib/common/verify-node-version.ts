@@ -1,5 +1,6 @@
 // This function must be separate to avoid dependencies on C++ modules - it must execute precisely when other functions cannot
 
+import { color } from "../color";
 import { ISystemWarning } from "./declarations";
 
 // Use only ES5 code here - pure JavaScript can be executed with any Node.js version (even 0.10, 0.12).
@@ -11,7 +12,7 @@ var util = require("util");
 // These versions cannot be used with CLI due to bugs in the node itself.
 // We are absolutely sure we cannot work with them, so inform the user if he is trying to use any of them and exit the process.
 var versionsCausingFailure = ["0.10.34", "4.0.0", "4.2.0", "5.0.0"];
-var minimumRequiredVersion = "22.12.0";
+var minimumRequiredVersion = "8.0.0";
 
 interface INodeVersionOpts {
 	supportedVersionsRange: string;
@@ -45,13 +46,15 @@ export function verifyNodeVersion(): void {
 		semver.lt(nodeVer, minimumRequiredVersion)
 	) {
 		console.error(
-			util.format(
-				"%sNode.js '%s' is not supported. To be able to work with %s CLI, install any Node.js version in the following range: %s.%s",
-				os.EOL,
-				nodeVer,
-				cliName,
-				supportedVersionsRange,
-				os.EOL,
+			color.red.bold(
+				util.format(
+					"%sNode.js '%s' is not supported. To be able to work with %s CLI, install any Node.js version in the following range: %s.%s",
+					os.EOL,
+					nodeVer,
+					cliName,
+					supportedVersionsRange,
+					os.EOL,
+				),
 			),
 		);
 		process.exit(1);
