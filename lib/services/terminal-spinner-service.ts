@@ -1,4 +1,4 @@
-import ora from "ora";
+import * as ora from "ora";
 import { injector } from "../common/yok";
 import {
 	ITerminalSpinner,
