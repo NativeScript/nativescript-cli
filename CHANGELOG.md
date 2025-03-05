@@ -1,3 +1,12 @@
+## [8.9.1](https://github.com/NativeScript/nativescript-cli/compare/v8.9.0...v8.9.1) (2025-03-05)
+
+
+### Bug Fixes
+
+* support node < 22.14 ([#5834](https://github.com/NativeScript/nativescript-cli/issues/5834)) ([9c5fdb2](https://github.com/NativeScript/nativescript-cli/commit/9c5fdb24a826974d62ce72b74a13e5e419136d77))
+
+
+
 # [8.9.0](https://github.com/NativeScript/nativescript-cli/compare/v8.8.3...v8.9.0) (2025-02-27)
 
 
