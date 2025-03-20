@@ -16,7 +16,7 @@ import {
 	IOptions,
 } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
-import { IProjectData } from "../../definitions/project";
+import { IProjectConfigService, IProjectData } from "../../definitions/project";
 import {
 	IDictionary,
 	IErrors,
@@ -64,7 +64,8 @@ export class WebpackCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager // private $sharedEventBus: ISharedEventBus
+		private $packageInstallationManager: IPackageInstallationManager,
+		private $projectConfigService: IProjectConfigService,
 	) {
 		super();
 	}
@@ -72,7 +73,7 @@ export class WebpackCompilerService
 	public async compileWithWatch(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<any> {
 		return new Promise(async (resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
@@ -86,7 +87,7 @@ export class WebpackCompilerService
 				const childProcess = await this.startWebpackProcess(
 					platformData,
 					projectData,
-					prepareData
+					prepareData,
 				);
 
 				childProcess.stdout.on("data", function (data) {
@@ -125,7 +126,7 @@ export class WebpackCompilerService
 							message as IWebpackMessage<IWebpackCompilation>,
 							platformData,
 							projectData,
-							prepareData
+							prepareData,
 						);
 					}
 
@@ -153,7 +154,7 @@ export class WebpackCompilerService
 								message.emittedFiles,
 								message.chunkFiles,
 								message.hash,
-								platformData.platformNameLowerCase
+								platformData.platformNameLowerCase,
 							);
 						} else {
 							result = {
@@ -166,21 +167,21 @@ export class WebpackCompilerService
 							path.join(
 								platformData.appDestinationDirectoryPath,
 								this.$options.hostProjectModuleName,
-								file
-							)
+								file,
+							),
 						);
 						const fallbackFiles = result.fallbackFiles.map((file: string) =>
 							path.join(
 								platformData.appDestinationDirectoryPath,
 								this.$options.hostProjectModuleName,
-								file
-							)
+								file,
+							),
 						);
 
 						const data = {
 							files,
 							hasOnlyHotUpdateFiles: files.every(
-								(f) => f.indexOf("hot-update") > -1
+								(f) => f.indexOf("hot-update") > -1,
 							),
 							hmrData: {
 								hash: result.hash,
@@ -204,7 +205,7 @@ export class WebpackCompilerService
 
 				childProcess.on("error", (err) => {
 					this.$logger.trace(
-						`Unable to start webpack process in watch mode. Error is: ${err}`
+						`Unable to start webpack process in watch mode. Error is: ${err}`,
 					);
 					delete this.webpackProcesses[platformData.platformNameLowerCase];
 					reject(err);
@@ -212,15 +213,15 @@ export class WebpackCompilerService
 
 				childProcess.on("close", async (arg: any) => {
 					await this.$cleanupService.removeKillProcess(
-						childProcess.pid.toString()
+						childProcess.pid.toString(),
 					);
 
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					this.$logger.trace(
-						`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`
+						`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`,
 					);
 					const error: any = new Error(
-						`Executing webpack failed with exit code ${exitCode}.`
+						`Executing webpack failed with exit code ${exitCode}.`,
 					);
 					error.code = exitCode;
 					delete this.webpackProcesses[platformData.platformNameLowerCase];
@@ -235,7 +236,7 @@ export class WebpackCompilerService
 	public async compileWithoutWatch(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<void> {
 		return new Promise(async (resolve, reject) => {
 			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
@@ -247,12 +248,12 @@ export class WebpackCompilerService
 				const childProcess = await this.startWebpackProcess(
 					platformData,
 					projectData,
-					prepareData
+					prepareData,
 				);
 
 				childProcess.on("error", (err) => {
 					this.$logger.trace(
-						`Unable to start webpack process in non-watch mode. Error is: ${err}`
+						`Unable to start webpack process in non-watch mode. Error is: ${err}`,
 					);
 					delete this.webpackProcesses[platformData.platformNameLowerCase];
 					reject(err);
@@ -260,7 +261,7 @@ export class WebpackCompilerService
 
 				childProcess.on("close", async (arg: any) => {
 					await this.$cleanupService.removeKillProcess(
-						childProcess.pid.toString()
+						childProcess.pid.toString(),
 					);
 
 					delete this.webpackProcesses[platformData.platformNameLowerCase];
@@ -269,7 +270,7 @@ export class WebpackCompilerService
 						resolve();
 					} else {
 						const error: any = new Error(
-							`Executing webpack failed with exit code ${exitCode}.`
+							`Executing webpack failed with exit code ${exitCode}.`,
 						);
 						error.code = exitCode;
 						reject(error);
@@ -307,24 +308,24 @@ export class WebpackCompilerService
 	private async startWebpackProcess(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<child_process.ChildProcess> {
 		if (!this.$fs.exists(projectData.webpackConfigPath)) {
 			this.$errors.fail(
-				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`
+				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`,
 			);
 		}
 
 		const envData = this.buildEnvData(
 			platformData.platformNameLowerCase,
 			projectData,
-			prepareData
+			prepareData,
 		);
 		const envParams = await this.buildEnvCommandLineParams(
 			envData,
 			platformData,
 			projectData,
-			prepareData
+			prepareData,
 		);
 		const additionalNodeArgs =
 			semver.major(process.version) <= 8 ? ["--harmony"] : [];
@@ -340,7 +341,7 @@ export class WebpackCompilerService
 		const args = [
 			...additionalNodeArgs,
 			this.getWebpackExecutablePath(projectData),
-			this.isWebpack5(projectData) ? `build` : null,
+			this.isModernBundler(projectData) ? `build` : null,
 			`--config=${projectData.webpackConfigPath}`,
 			...envParams,
 		].filter(Boolean);
@@ -372,7 +373,7 @@ export class WebpackCompilerService
 		const childProcess = this.$childProcess.spawn(
 			process.execPath,
 			args,
-			options
+			options,
 		);
 
 		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
@@ -384,7 +385,7 @@ export class WebpackCompilerService
 	private buildEnvData(
 		platform: string,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	) {
 		const { env } = prepareData;
 		const envData = Object.assign({}, env, { [platform.toLowerCase()]: true });
@@ -403,9 +404,9 @@ export class WebpackCompilerService
 					__dirname,
 					"..",
 					"..",
-					"nativescript-cli-lib.js"
+					"nativescript-cli-lib.js",
 				),
-			}
+			},
 		);
 
 		envData.verbose = envData.verbose || this.$logger.isVerbose();
@@ -452,7 +453,7 @@ export class WebpackCompilerService
 		envData: any,
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	) {
 		const envFlagNames = Object.keys(envData);
 		const canSnapshot =
@@ -462,7 +463,7 @@ export class WebpackCompilerService
 			if (!canSnapshot) {
 				this.$logger.warn(
 					"Stripping the snapshot flag. " +
-						"Bear in mind that snapshot is only available in Android release builds."
+						"Bear in mind that snapshot is only available in Android release builds.",
 				);
 				envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
 			} else if (this.$hostInfo.isWindows) {
@@ -470,18 +471,18 @@ export class WebpackCompilerService
 				const installedWebpackPluginVersion =
 					await this.$packageInstallationManager.getInstalledDependencyVersion(
 						WEBPACK_PLUGIN_NAME,
-						projectData.projectDir
+						projectData.projectDir,
 					);
 				const hasWebpackPluginWithWinSnapshotsSupport =
 					!!installedWebpackPluginVersion
 						? semver.gte(
 								semver.coerce(installedWebpackPluginVersion),
-								minWebpackPluginWithWinSnapshotsVersion
-						  )
+								minWebpackPluginWithWinSnapshotsVersion,
+							)
 						: true;
 				if (!hasWebpackPluginWithWinSnapshotsSupport) {
 					this.$errors.fail(
-						`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i ${WEBPACK_PLUGIN_NAME}@latest).`
+						`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i ${WEBPACK_PLUGIN_NAME}@latest).`,
 					);
 				}
 			}
@@ -513,7 +514,7 @@ export class WebpackCompilerService
 		allEmittedFiles: string[],
 		chunkFiles: string[],
 		nextHash: string,
-		platform: string
+		platform: string,
 	) {
 		const currentHash = this.getCurrentHotUpdateHash(allEmittedFiles);
 
@@ -535,7 +536,7 @@ export class WebpackCompilerService
 			? _.difference(allEmittedFiles, chunkFiles)
 			: allEmittedFiles;
 		const fallbackFiles = chunkFiles.concat(
-			emittedHotUpdatesAndAssets.filter((f) => f.indexOf("hot-update") === -1)
+			emittedHotUpdatesAndAssets.filter((f) => f.indexOf("hot-update") === -1),
 		);
 
 		return {
@@ -548,7 +549,7 @@ export class WebpackCompilerService
 	private getCurrentHotUpdateHash(emittedFiles: string[]) {
 		let hotHash;
 		const hotUpdateScripts = emittedFiles.filter((x) =>
-			x.endsWith(".hot-update.js")
+			x.endsWith(".hot-update.js"),
 		);
 		if (hotUpdateScripts && hotUpdateScripts.length) {
 			// the hash is the same for each hot update in the current compilation
@@ -575,7 +576,7 @@ export class WebpackCompilerService
 		message: IWebpackMessage,
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	) {
 		// handle new webpack hmr packets
 		this.$logger.trace("Received message from webpack process:", message);
@@ -590,21 +591,21 @@ export class WebpackCompilerService
 			path.join(
 				platformData.appDestinationDirectoryPath,
 				this.$options.hostProjectModuleName,
-				asset
-			)
+				asset,
+			),
 		);
 		const staleFiles = message.data.staleAssets.map((asset: string) =>
 			path.join(
 				platformData.appDestinationDirectoryPath,
 				this.$options.hostProjectModuleName,
-				asset
-			)
+				asset,
+			),
 		);
 
 		// extract last hash from emitted filenames
 		const lastHash = (() => {
 			const absoluteFileNameWithLastHash = files.find((fileName: string) =>
-				fileName.endsWith("hot-update.js")
+				fileName.endsWith("hot-update.js"),
 			);
 
 			if (!absoluteFileNameWithLastHash) {
@@ -636,8 +637,10 @@ export class WebpackCompilerService
 	}
 
 	private getWebpackExecutablePath(projectData: IProjectData): string {
-		if (this.isWebpack5(projectData)) {
-			const packagePath = resolvePackagePath("@nativescript/webpack", {
+		const bundler = this.getBundler();
+
+		if (this.isModernBundler(projectData)) {
+			const packagePath = resolvePackagePath(`@nativescript/${bundler}`, {
 				paths: [projectData.projectDir],
 			});
 
@@ -657,21 +660,35 @@ export class WebpackCompilerService
 		return path.resolve(packagePath, "bin", "webpack.js");
 	}
 
-	private isWebpack5(projectData: IProjectData): boolean {
-		const packageJSONPath = resolvePackageJSONPath("@nativescript/webpack", {
-			paths: [projectData.projectDir],
-		});
-
-		if (packageJSONPath) {
-			const packageData = this.$fs.readJson(packageJSONPath);
-			const ver = semver.coerce(packageData.version);
-
-			if (semver.satisfies(ver, ">= 5.0.0")) {
+	private isModernBundler(projectData: IProjectData): boolean {
+		const bundler = this.getBundler();
+		switch (bundler) {
+			case "rspack":
 				return true;
-			}
+			default:
+				const packageJSONPath = resolvePackageJSONPath(
+					"@nativescript/webpack",
+					{
+						paths: [projectData.projectDir],
+					},
+				);
+
+				if (packageJSONPath) {
+					const packageData = this.$fs.readJson(packageJSONPath);
+					const ver = semver.coerce(packageData.version);
+
+					if (semver.satisfies(ver, ">= 5.0.0")) {
+						return true;
+					}
+				}
+				break;
 		}
 
 		return false;
+	}
+
+	public getBundler(): "webpack" | "rspack" | "vite" {
+		return this.$projectConfigService.getValue(`bundler`, "webpack");
 	}
 }
 
