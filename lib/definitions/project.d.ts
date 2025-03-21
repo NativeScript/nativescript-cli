@@ -182,6 +182,7 @@ interface INsConfig {
 	shared?: boolean;
 	overridePods?: string;
 	webpackConfigPath?: string;
+	bundlerConfigPath?: string;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
 	visionos?: INSConfigVisionOS;
@@ -217,11 +218,17 @@ interface IProjectData extends ICreateProjectData {
 	isShared: boolean;
 
 	/**
+	 * @deprecated Use bundlerConfigPath
 	 * Defines the path to the configuration file passed to webpack process.
 	 * By default this is the webpack.config.js at the root of the application.
 	 * The value can be changed by setting `webpackConfigPath` in nativescript.config.
 	 */
 	webpackConfigPath: string;
+	/**
+	 * Defines the path to the bundler configuration file passed to the compiler.
+	 * The value can be changed by setting `bundlerConfigPath` in nativescript.config.
+	 */
+	bundlerConfigPath: string;
 	projectName: string;
 
 	/**

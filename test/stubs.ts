@@ -658,6 +658,7 @@ export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
 	webpackConfigPath: string;
+	bundlerConfigPath: string;
 
 	get platformsDir(): string {
 		return (

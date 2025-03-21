@@ -310,10 +310,18 @@ export class WebpackCompilerService
 		projectData: IProjectData,
 		prepareData: IPrepareData,
 	): Promise<child_process.ChildProcess> {
-		if (!this.$fs.exists(projectData.webpackConfigPath)) {
-			this.$errors.fail(
-				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`,
-			);
+		if (projectData.bundlerConfigPath) {
+			if (!this.$fs.exists(projectData.bundlerConfigPath)) {
+				this.$errors.fail(
+					`The bundler configuration file ${projectData.bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`,
+				);
+			}
+		} else {
+			if (!this.$fs.exists(projectData.webpackConfigPath)) {
+				this.$errors.fail(
+					`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`,
+				);
+			}
 		}
 
 		const envData = this.buildEnvData(
@@ -342,7 +350,7 @@ export class WebpackCompilerService
 			...additionalNodeArgs,
 			this.getWebpackExecutablePath(projectData),
 			this.isModernBundler(projectData) ? `build` : null,
-			`--config=${projectData.webpackConfigPath}`,
+			`--config=${projectData.bundlerConfigPath || projectData.webpackConfigPath}`,
 			...envParams,
 		].filter(Boolean);
 
