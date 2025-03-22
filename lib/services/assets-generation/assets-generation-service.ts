@@ -226,7 +226,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		return image.scaleToFit({
 			w: width,
 			h: height,
-		}) as any;
+		}) as JimpModule.JimpInstance;
 	}
 
 	private generateImage(
