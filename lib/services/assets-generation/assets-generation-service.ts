@@ -1,4 +1,4 @@
-import { Jimp, cssColorToHex, rgbaToInt, JimpInstance } from "jimp";
+import JimpModule = require("jimp");
 import * as Color from "color";
 import { exported } from "../../common/decorators";
 import { AssetConstants } from "../../constants";
@@ -113,7 +113,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 						assetItem.data?.default ??
 						"white";
 
-					const colorHEX: number = cssColorToHex(color);
+					const colorHEX: number = JimpModule.cssColorToHex(color);
 					const hex = colorHEX?.toString(16).substring(0, 6) ?? "FFFFFF";
 
 					this.$fs.writeFile(
@@ -164,7 +164,8 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 				continue;
 			}
 
-			let image: JimpInstance;
+			let image: JimpModule.JimpInstance;
+
 			switch (operation) {
 				case Operations.OverlayWith:
 					const overlayImageScale =
@@ -178,16 +179,10 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 						imageResize,
 						imageResize,
 					);
-					image = this.generateImage(
-						background,
-						width,
-						height,
-						outputPath,
-						image,
-					);
+					image = this.generateImage(background, width, height, image);
 					break;
 				case Operations.Blank:
-					image = this.generateImage(background, width, height, outputPath);
+					image = this.generateImage(background, width, height);
 					break;
 				case Operations.Resize:
 					image = await this.resize(generationData.imagePath, width, height);
@@ -200,13 +195,7 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 						assetItem.height,
 					);
 					// The scale will apply to the underlying layer of the generated image
-					image = this.generateImage(
-						"#00000000",
-						width,
-						height,
-						outputPath,
-						image,
-					);
+					image = this.generateImage("#00000000", width, height, image);
 					break;
 				default:
 					throw new Error(`Invalid image generation operation: ${operation}`);
@@ -214,16 +203,17 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 
 			// This code disables the alpha chanel, as some images for the Apple App Store must not have transparency.
 			if (assetItem.rgba === false) {
-				//
-				// The original code here became broken at some time and there is an issue posted here..
-				//    https://github.com/oliver-moran/jimp/issues/954
-				// But NathanaelA recommended the below change and it works so maybe that's just what we go with.
-				//
-				// image = image.rgba(false);
-				image = (image as any).colorType(2);
+				// Add an underlying white layer
+				image = this.generateImage("#FFFFFF", image.width, image.height, image);
 			}
 
-			image.write(outputPath as any);
+			if (this.isAssetFilePath(outputPath)) {
+				image.write(outputPath);
+			} else {
+				this.$logger.warn(
+					`Incorrect destination path ${outputPath} for image ${assetItem.filename}`,
+				);
+			}
 		}
 	}
 
@@ -231,8 +221,8 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		imagePath: string,
 		width: number,
 		height: number,
-	): Promise<JimpInstance> {
-		const image = await Jimp.read(imagePath);
+	): Promise<JimpModule.JimpInstance> {
+		const image = await JimpModule.Jimp.read(imagePath);
 		return image.scaleToFit({
 			w: width,
 			h: height,
@@ -243,17 +233,18 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		background: string,
 		width: number,
 		height: number,
-		outputPath: string,
-		overlayImage?: JimpInstance,
-	): JimpInstance {
-		// Typescript declarations for Jimp are not updated to define the constructor with backgroundColor so we workaround it by casting it to <any> for this case only.
-		const J = <any>Jimp;
+		overlayImage?: JimpModule.JimpInstance,
+	): JimpModule.JimpInstance {
 		const backgroundColor = this.getRgbaNumber(background);
-		let image = new J(width, height, backgroundColor);
+		let image = new JimpModule.Jimp({
+			width,
+			height,
+			color: backgroundColor,
+		});
 
 		if (overlayImage) {
-			const centeredWidth = (width - overlayImage.bitmap.width) / 2;
-			const centeredHeight = (height - overlayImage.bitmap.height) / 2;
+			const centeredWidth = (width - overlayImage.width) / 2;
+			const centeredHeight = (height - overlayImage.height) / 2;
 			image = image.composite(overlayImage, centeredWidth, centeredHeight);
 		}
 
@@ -265,7 +256,21 @@ export class AssetsGenerationService implements IAssetsGenerationService {
 		const colorRgb = color.rgb();
 		const alpha = Math.round(colorRgb.alpha() * 255);
 
-		return rgbaToInt(colorRgb.red(), colorRgb.green(), colorRgb.blue(), alpha);
+		return JimpModule.rgbaToInt(
+			colorRgb.red(),
+			colorRgb.green(),
+			colorRgb.blue(),
+			alpha,
+		);
+	}
+
+	private isAssetFilePath(path: string): path is `${string}.${string}` {
+		if (!path) {
+			return false;
+		}
+
+		const index = path.lastIndexOf(".");
+		return index > -1 && index < path.length - 1;
 	}
 }
 
