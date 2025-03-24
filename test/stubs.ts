@@ -38,6 +38,7 @@ import {
 	IProjectConfigInformation,
 	IProjectBackupService,
 	IBackup,
+	BundlerType,
 } from "../lib/definitions/project";
 import {
 	IPlatformData,
@@ -659,6 +660,7 @@ export class ProjectDataStub implements IProjectData {
 	projectName: string;
 	webpackConfigPath: string;
 	bundlerConfigPath: string;
+	bundler: BundlerType;
 
 	get platformsDir(): string {
 		return (
