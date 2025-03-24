@@ -47,10 +47,7 @@ export class BunPackageManager extends BasePackageManager {
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
 		const flags = this.getFlagsString(config, true);
-		// TODO: Confirm desired behavior. The npm version uses --legacy-peer-deps
-		// by default, we could use `--no-peer` for Bun if similar is needed; the
-		// pnpm version uses `--shamefully-hoist`, but Bun has no similar flag.
-		let params = ["install", "--legacy-peer-deps"];
+		let params = ["install"];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
 			params.push(packageName);
