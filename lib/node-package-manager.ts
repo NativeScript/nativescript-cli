@@ -47,7 +47,7 @@ export class NodePackageManager extends BasePackageManager {
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
 		const flags = this.getFlagsString(config, true);
-		let params = ["install", "--legacy-peer-deps"];
+		let params = ["install"];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
 			params.push(packageName);
