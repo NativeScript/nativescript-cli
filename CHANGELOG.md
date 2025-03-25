@@ -1,3 +1,13 @@
+## [8.9.2](https://github.com/NativeScript/nativescript-cli/compare/v8.9.1...v8.9.2) (2025-03-25)
+
+
+### Bug Fixes
+
+* icon generator color type error ([#5838](https://github.com/NativeScript/nativescript-cli/issues/5838)) ([af81491](https://github.com/NativeScript/nativescript-cli/commit/af8149113844a7aebcd6bf66eeae73154ac7927b))
+* remove --legacy-peer-deps flag on install ([#5839](https://github.com/NativeScript/nativescript-cli/issues/5839)) ([ca6fb68](https://github.com/NativeScript/nativescript-cli/commit/ca6fb68a96cbf4006885c878527c0743b3dae248))
+
+
+
 ## [8.9.1](https://github.com/NativeScript/nativescript-cli/compare/v8.9.0...v8.9.1) (2025-03-05)
 
 
