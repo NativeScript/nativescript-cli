@@ -207,21 +207,17 @@ export class ProjectData implements IProjectData {
 				constants.PODFILE_NAME,
 			);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
-			this.webpackConfigPath =
+
+			const webpackConfigPath =
 				this.nsConfig && this.nsConfig.webpackConfigPath
 					? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath)
 					: path.join(this.projectDir, "webpack.config.js");
+			this.webpackConfigPath = webpackConfigPath;
 			this.bundlerConfigPath =
 				this.nsConfig && this.nsConfig.bundlerConfigPath
 					? path.resolve(this.projectDir, this.nsConfig.bundlerConfigPath)
-					: null;
-			this.bundler =
-				this.nsConfig && this.nsConfig.bundler
-					? (path.resolve(
-							this.projectDir,
-							this.nsConfig.bundler,
-						) as BundlerType)
-					: "webpack";
+					: webpackConfigPath;
+			this.bundler = this?.nsConfig?.bundler ?? "webpack";
 			return;
 		}
 
