@@ -5,6 +5,7 @@ import { parseJson } from "./common/helpers";
 import { EOL } from "os";
 import { cache } from "./common/decorators";
 import {
+	BundlerType,
 	INsConfig,
 	IProjectConfigService,
 	IProjectData,
@@ -100,6 +101,7 @@ export class ProjectData implements IProjectData {
 	public isShared: boolean;
 	public webpackConfigPath: string;
 	public bundlerConfigPath: string;
+	public bundler: BundlerType;
 	public initialized: boolean;
 
 	constructor(
@@ -213,6 +215,13 @@ export class ProjectData implements IProjectData {
 				this.nsConfig && this.nsConfig.bundlerConfigPath
 					? path.resolve(this.projectDir, this.nsConfig.bundlerConfigPath)
 					: null;
+			this.bundler =
+				this.nsConfig && this.nsConfig.bundler
+					? (path.resolve(
+							this.projectDir,
+							this.nsConfig.bundler,
+						) as BundlerType)
+					: "webpack";
 			return;
 		}
 
