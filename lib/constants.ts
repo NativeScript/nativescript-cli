@@ -224,7 +224,6 @@ export const CACACHE_DIRECTORY_NAME = "_cacache";
 export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";
 export const INITIAL_SYNC_EVENT_NAME = "initialSyncEvent";
 export const PREPARE_READY_EVENT_NAME = "prepareReadyEvent";
-export const WEBPACK_COMPILATION_COMPLETE = "webpackCompilationComplete";
 export const BUNDLER_COMPILATION_COMPLETE = "bundlerCompilationComplete";
 
 export class DebugCommandErrors {

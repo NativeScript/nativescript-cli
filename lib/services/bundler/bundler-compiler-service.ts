@@ -224,13 +224,30 @@ export class BundlerCompilerService
 				});
 
 				childProcess.on("close", async (arg: any) => {
-					await this.$cleanupService.removeKillProcess(
-						childProcess.pid.toString(),
-					);
-
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					this.$logger.trace(
 						`${capitalizeFirstLetter(projectData.bundler)} process exited with code ${exitCode} when we expected it to be long living with watch.`,
+					);
+					if (this.getBundler() === "vite" && exitCode === 0) {
+						// note experimental: investigate watch mode
+						const bundlePath = path.join(
+							projectData.projectDir,
+							"dist/bundle.js",
+						);
+						console.log("bundlePath:", bundlePath);
+						const data = {
+							files: [bundlePath],
+							hasOnlyHotUpdateFiles: false,
+							hmrData: {},
+							platform: platformData.platformNameLowerCase,
+						};
+						this.emit(BUNDLER_COMPILATION_COMPLETE, data);
+						resolve(1);
+						return;
+					}
+
+					await this.$cleanupService.removeKillProcess(
+						childProcess.pid.toString(),
 					);
 					const error: any = new Error(
 						`Executing ${projectData.bundler} failed with exit code ${exitCode}.`,
@@ -341,12 +358,15 @@ export class BundlerCompilerService
 			projectData,
 			prepareData,
 		);
-		const envParams = await this.buildEnvCommandLineParams(
-			envData,
-			platformData,
-			projectData,
-			prepareData,
-		);
+		const isVite = this.getBundler() === "vite";
+		const envParams = isVite
+			? [`--mode=${platformData.platformNameLowerCase}`]
+			: await this.buildEnvCommandLineParams(
+					envData,
+					platformData,
+					projectData,
+					prepareData,
+				);
 		const additionalNodeArgs =
 			semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
@@ -366,8 +386,10 @@ export class BundlerCompilerService
 			...envParams,
 		].filter(Boolean);
 
-		if (prepareData.watch) {
-			args.push("--watch");
+		if (!isVite) {
+			if (prepareData.watch) {
+				args.push("--watch");
+			}
 		}
 
 		const stdio = prepareData.watch ? ["ipc"] : "inherit";
@@ -390,6 +412,8 @@ export class BundlerCompilerService
 				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
 			});
 		}
+
+		console.log("args:", args);
 
 		const childProcess = this.$childProcess.spawn(
 			process.execPath,
@@ -670,7 +694,15 @@ export class BundlerCompilerService
 	private getBundlerExecutablePath(projectData: IProjectData): string {
 		const bundler = this.getBundler();
 
-		if (this.isModernBundler(projectData)) {
+		if (bundler === "vite") {
+			const packagePath = resolvePackagePath(`vite`, {
+				paths: [projectData.projectDir],
+			});
+
+			if (packagePath) {
+				return path.resolve(packagePath, "bin", "vite.js");
+			}
+		} else if (this.isModernBundler(projectData)) {
 			const packagePath = resolvePackagePath(`@nativescript/${bundler}`, {
 				paths: [projectData.projectDir],
 			});

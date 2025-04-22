@@ -13,6 +13,7 @@ import { hook } from "../common/helpers";
 import { injector } from "../common/yok";
 import {
 	AnalyticsEventLabelDelimiter,
+	BUNDLER_COMPILATION_COMPLETE,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
 	PACKAGE_JSON_FILE_NAME,
@@ -20,7 +21,6 @@ import {
 	PREPARE_READY_EVENT_NAME,
 	SupportedPlatform,
 	TrackActionNames,
-	WEBPACK_COMPILATION_COMPLETE,
 } from "../constants";
 import { IOptions, IWatchIgnoreListService } from "../declarations";
 import {
@@ -119,7 +119,7 @@ export class PrepareController extends EventEmitter {
 		) {
 			await this.$bundlerCompilerService.stopBundlerCompiler(platformLowerCase);
 			this.$bundlerCompilerService.removeListener(
-				WEBPACK_COMPILATION_COMPLETE,
+				BUNDLER_COMPILATION_COMPLETE,
 				this.webpackCompilerHandler,
 			);
 			this.watchersData[projectDir][
@@ -297,7 +297,7 @@ export class PrepareController extends EventEmitter {
 
 			this.webpackCompilerHandler = handler.bind(this);
 			this.$bundlerCompilerService.on(
-				WEBPACK_COMPILATION_COMPLETE,
+				BUNDLER_COMPILATION_COMPLETE,
 				this.webpackCompilerHandler,
 			);
 
