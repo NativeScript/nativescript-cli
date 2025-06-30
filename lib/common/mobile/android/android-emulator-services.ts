@@ -235,7 +235,7 @@ export class AndroidEmulatorServices
 		const minVersion = semver.coerce(AndroidVirtualDevice.MIN_ANDROID_VERSION);
 		const bestVersion = best && best.version && semver.coerce(best.version);
 
-		return bestVersion && semver.gte(bestVersion, minVersion) ? best : null;
+		return !bestVersion || semver.gte(bestVersion, minVersion) ? best : null;
 	}
 
 	private async waitForEmulatorBootToComplete(
