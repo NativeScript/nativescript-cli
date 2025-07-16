@@ -358,6 +358,9 @@ export class WebpackCompilerService
 			NATIVESCRIPT_WEBPACK_ENV: JSON.stringify(envData),
 			...process.env,
 		};
+		if (this.$hostInfo.isWindows) {
+			Object.assign(options.env, { APPDATA: process.env.appData });
+		}
 		if (this.$options.hostProjectPath) {
 			Object.assign(options.env, {
 				USER_PROJECT_PLATFORMS_ANDROID: this.$options.hostProjectPath,
