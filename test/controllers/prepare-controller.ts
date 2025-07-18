@@ -38,7 +38,7 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 		},
 	});
 
-	injector.register("webpackCompilerService", {
+	injector.register("bundlerCompilerService", {
 		on: () => ({}),
 		emit: () => ({}),
 		compileWithWatch: async () => {
@@ -119,7 +119,7 @@ describe("prepareController", () => {
 					injector.resolve("prepareController");
 
 				const prepareNativePlatformService = injector.resolve(
-					"prepareNativePlatformService"
+					"prepareNativePlatformService",
 				);
 				prepareNativePlatformService.prepareNativePlatform = async () => {
 					const nativeFilesWatcher = (<any>prepareController).watchersData[
@@ -128,7 +128,7 @@ describe("prepareController", () => {
 					nativeFilesWatcher.emit(
 						"all",
 						"change",
-						"my/project/App_Resources/some/file"
+						"my/project/App_Resources/some/file",
 					);
 					isNativePrepareCalled = true;
 					return false;

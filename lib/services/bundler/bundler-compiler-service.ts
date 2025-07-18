@@ -5,8 +5,8 @@ import * as _ from "lodash";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import {
-	WEBPACK_COMPILATION_COMPLETE,
 	WEBPACK_PLUGIN_NAME,
+	BUNDLER_COMPILATION_COMPLETE,
 	PackageManagers,
 	CONFIG_FILE_NAME_DISPLAY,
 } from "../../constants";
@@ -16,7 +16,11 @@ import {
 	IOptions,
 } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
-import { IProjectData } from "../../definitions/project";
+import {
+	BundlerType,
+	IProjectConfigService,
+	IProjectData,
+} from "../../definitions/project";
 import {
 	IDictionary,
 	IErrors,
@@ -34,23 +38,23 @@ import {
 } from "../../helpers/package-path-helper";
 
 // todo: move out of here
-interface IWebpackMessage<T = any> {
+interface IBundlerMessage<T = any> {
 	type: "compilation" | "hmr-status";
 	version?: number;
 	hash?: string;
 	data?: T;
 }
 
-interface IWebpackCompilation {
+interface IBundlerCompilation {
 	emittedAssets: string[];
 	staleAssets: string[];
 }
 
-export class WebpackCompilerService
+export class BundlerCompilerService
 	extends EventEmitter
-	implements IWebpackCompilerService
+	implements IBundlerCompilerService
 {
-	private webpackProcesses: IDictionary<child_process.ChildProcess> = {};
+	private bundlerProcesses: IDictionary<child_process.ChildProcess> = {};
 	private expectedHashes: IStringDictionary = {};
 
 	constructor(
@@ -65,6 +69,7 @@ export class WebpackCompilerService
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
 		private $packageInstallationManager: IPackageInstallationManager, // private $sharedEventBus: ISharedEventBus
+		private $projectConfigService: IProjectConfigService,
 	) {
 		super();
 	}
@@ -75,15 +80,15 @@ export class WebpackCompilerService
 		prepareData: IPrepareData,
 	): Promise<any> {
 		return new Promise(async (resolve, reject) => {
-			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
+			if (this.bundlerProcesses[platformData.platformNameLowerCase]) {
 				resolve(void 0);
 				return;
 			}
 
-			let isFirstWebpackWatchCompilation = true;
+			let isFirstBundlerWatchCompilation = true;
 			prepareData.watch = true;
 			try {
-				const childProcess = await this.startWebpackProcess(
+				const childProcess = await this.startBundleProcess(
 					platformData,
 					projectData,
 					prepareData,
@@ -97,8 +102,8 @@ export class WebpackCompilerService
 					process.stderr.write(data);
 				});
 
-				childProcess.on("message", (message: string | IWebpackEmitMessage) => {
-					this.$logger.trace("Message from webpack", message);
+				childProcess.on("message", (message: string | IBundlerEmitMessage) => {
+					this.$logger.trace(`Message from ${projectData.bundler}`, message);
 
 					// if we are on webpack5 - we handle HMR in a  slightly different way
 					if (
@@ -108,8 +113,8 @@ export class WebpackCompilerService
 					) {
 						// first compilation can be ignored because it will be synced regardless
 						// handling it here would trigger 2 syncs
-						if (isFirstWebpackWatchCompilation) {
-							isFirstWebpackWatchCompilation = false;
+						if (isFirstBundlerWatchCompilation) {
+							isFirstBundlerWatchCompilation = false;
 							resolve(childProcess);
 							return;
 						}
@@ -122,22 +127,27 @@ export class WebpackCompilerService
 						// }
 
 						return this.handleHMRMessage(
-							message as IWebpackMessage<IWebpackCompilation>,
+							message as IBundlerMessage<IBundlerCompilation>,
 							platformData,
 							projectData,
 							prepareData,
 						);
 					}
 
-					if (message === "Webpack compilation complete.") {
-						this.$logger.info("Webpack build done!");
+					if (
+						message ===
+						`${capitalizeFirstLetter(projectData.bundler)} compilation complete.`
+					) {
+						this.$logger.info(
+							`${capitalizeFirstLetter(projectData.bundler)} build done!`,
+						);
 						resolve(childProcess);
 					}
 
-					message = message as IWebpackEmitMessage;
+					message = message as IBundlerEmitMessage;
 					if (message.emittedFiles) {
-						if (isFirstWebpackWatchCompilation) {
-							isFirstWebpackWatchCompilation = false;
+						if (isFirstBundlerWatchCompilation) {
+							isFirstBundlerWatchCompilation = false;
 							this.expectedHashes[platformData.platformNameLowerCase] =
 								prepareData.hmr ? message.hash : "";
 							return;
@@ -189,7 +199,10 @@ export class WebpackCompilerService
 							platform: platformData.platformNameLowerCase,
 						};
 
-						this.$logger.trace("Generated data from webpack message:", data);
+						this.$logger.trace(
+							`Generated data from ${projectData.bundler} message:`,
+							data,
+						);
 
 						// the hash of the compilation is the same as the previous one and there are only hot updates produced
 						if (data.hasOnlyHotUpdateFiles && previousHash === message.hash) {
@@ -197,33 +210,50 @@ export class WebpackCompilerService
 						}
 
 						if (data.files.length) {
-							this.emit(WEBPACK_COMPILATION_COMPLETE, data);
+							this.emit(BUNDLER_COMPILATION_COMPLETE, data);
 						}
 					}
 				});
 
 				childProcess.on("error", (err) => {
 					this.$logger.trace(
-						`Unable to start webpack process in watch mode. Error is: ${err}`,
+						`Unable to start ${projectData.bundler} process in watch mode. Error is: ${err}`,
 					);
-					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[platformData.platformNameLowerCase];
 					reject(err);
 				});
 
 				childProcess.on("close", async (arg: any) => {
+					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
+					this.$logger.trace(
+						`${capitalizeFirstLetter(projectData.bundler)} process exited with code ${exitCode} when we expected it to be long living with watch.`,
+					);
+					if (this.getBundler() === "vite" && exitCode === 0) {
+						// note experimental: investigate watch mode
+						const bundlePath = path.join(
+							projectData.projectDir,
+							"dist/bundle.js",
+						);
+						console.log("bundlePath:", bundlePath);
+						const data = {
+							files: [bundlePath],
+							hasOnlyHotUpdateFiles: false,
+							hmrData: {},
+							platform: platformData.platformNameLowerCase,
+						};
+						this.emit(BUNDLER_COMPILATION_COMPLETE, data);
+						resolve(1);
+						return;
+					}
+
 					await this.$cleanupService.removeKillProcess(
 						childProcess.pid.toString(),
 					);
-
-					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
-					this.$logger.trace(
-						`Webpack process exited with code ${exitCode} when we expected it to be long living with watch.`,
-					);
 					const error: any = new Error(
-						`Executing webpack failed with exit code ${exitCode}.`,
+						`Executing ${projectData.bundler} failed with exit code ${exitCode}.`,
 					);
 					error.code = exitCode;
-					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[platformData.platformNameLowerCase];
 					reject(error);
 				});
 			} catch (err) {
@@ -238,13 +268,13 @@ export class WebpackCompilerService
 		prepareData: IPrepareData,
 	): Promise<void> {
 		return new Promise(async (resolve, reject) => {
-			if (this.webpackProcesses[platformData.platformNameLowerCase]) {
+			if (this.bundlerProcesses[platformData.platformNameLowerCase]) {
 				resolve();
 				return;
 			}
 
 			try {
-				const childProcess = await this.startWebpackProcess(
+				const childProcess = await this.startBundleProcess(
 					platformData,
 					projectData,
 					prepareData,
@@ -252,9 +282,9 @@ export class WebpackCompilerService
 
 				childProcess.on("error", (err) => {
 					this.$logger.trace(
-						`Unable to start webpack process in non-watch mode. Error is: ${err}`,
+						`Unable to start ${projectData.bundler} process in non-watch mode. Error is: ${err}`,
 					);
-					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[platformData.platformNameLowerCase];
 					reject(err);
 				});
 
@@ -263,13 +293,13 @@ export class WebpackCompilerService
 						childProcess.pid.toString(),
 					);
 
-					delete this.webpackProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[platformData.platformNameLowerCase];
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					if (exitCode === 0) {
 						resolve();
 					} else {
 						const error: any = new Error(
-							`Executing webpack failed with exit code ${exitCode}.`,
+							`Executing ${projectData.bundler} failed with exit code ${exitCode}.`,
 						);
 						error.code = exitCode;
 						reject(error);
@@ -281,14 +311,14 @@ export class WebpackCompilerService
 		});
 	}
 
-	public async stopWebpackCompiler(platform: string): Promise<void> {
+	public async stopBundlerCompiler(platform: string): Promise<void> {
 		if (platform) {
-			await this.stopWebpackForPlatform(platform);
+			await this.stopBundlerForPlatform(platform);
 		} else {
-			const webpackedPlatforms = Object.keys(this.webpackProcesses);
+			const bundlerPlatforms = Object.keys(this.bundlerProcesses);
 
-			for (let i = 0; i < webpackedPlatforms.length; i++) {
-				await this.stopWebpackForPlatform(webpackedPlatforms[i]);
+			for (let i = 0; i < bundlerPlatforms.length; i++) {
+				await this.stopBundlerForPlatform(bundlerPlatforms[i]);
 			}
 		}
 	}
@@ -304,15 +334,23 @@ export class WebpackCompilerService
 	}
 
 	@performanceLog()
-	private async startWebpackProcess(
+	private async startBundleProcess(
 		platformData: IPlatformData,
 		projectData: IProjectData,
 		prepareData: IPrepareData,
 	): Promise<child_process.ChildProcess> {
-		if (!this.$fs.exists(projectData.webpackConfigPath)) {
-			this.$errors.fail(
-				`The webpack configuration file ${projectData.webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`,
-			);
+		if (projectData.bundlerConfigPath) {
+			if (!this.$fs.exists(projectData.bundlerConfigPath)) {
+				this.$errors.fail(
+					`The bundler configuration file ${projectData.bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`,
+				);
+			}
+		} else {
+			if (!this.$fs.exists(projectData.bundlerConfigPath)) {
+				this.$errors.fail(
+					`The ${projectData.bundler} configuration file ${projectData.bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}.`,
+				);
+			}
 		}
 
 		const envData = this.buildEnvData(
@@ -320,12 +358,15 @@ export class WebpackCompilerService
 			projectData,
 			prepareData,
 		);
-		const envParams = await this.buildEnvCommandLineParams(
-			envData,
-			platformData,
-			projectData,
-			prepareData,
-		);
+		const isVite = this.getBundler() === "vite";
+		const envParams = isVite
+			? [`--mode=${platformData.platformNameLowerCase}`]
+			: await this.buildEnvCommandLineParams(
+					envData,
+					platformData,
+					projectData,
+					prepareData,
+				);
 		const additionalNodeArgs =
 			semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
@@ -339,14 +380,16 @@ export class WebpackCompilerService
 
 		const args = [
 			...additionalNodeArgs,
-			this.getWebpackExecutablePath(projectData),
-			this.isWebpack5(projectData) ? `build` : null,
-			`--config=${projectData.webpackConfigPath}`,
+			this.getBundlerExecutablePath(projectData),
+			this.isModernBundler(projectData) ? `build` : null,
+			`--config=${projectData.bundlerConfigPath}`,
 			...envParams,
 		].filter(Boolean);
 
-		if (prepareData.watch) {
-			args.push("--watch");
+		if (!isVite) {
+			if (prepareData.watch) {
+				args.push("--watch");
+			}
 		}
 
 		const stdio = prepareData.watch ? ["ipc"] : "inherit";
@@ -357,6 +400,7 @@ export class WebpackCompilerService
 		options.env = {
 			...process.env,
 			NATIVESCRIPT_WEBPACK_ENV: JSON.stringify(envData),
+			NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
 		};
 		if (this.$hostInfo.isWindows) {
 			Object.assign(options.env, { APPDATA: process.env.appData });
@@ -370,13 +414,15 @@ export class WebpackCompilerService
 			});
 		}
 
+		console.log("args:", args);
+
 		const childProcess = this.$childProcess.spawn(
 			process.execPath,
 			args,
 			options,
 		);
 
-		this.webpackProcesses[platformData.platformNameLowerCase] = childProcess;
+		this.bundlerProcesses[platformData.platformNameLowerCase] = childProcess;
 		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
 
 		return childProcess;
@@ -467,23 +513,26 @@ export class WebpackCompilerService
 				);
 				envFlagNames.splice(envFlagNames.indexOf("snapshot"), 1);
 			} else if (this.$hostInfo.isWindows) {
-				const minWebpackPluginWithWinSnapshotsVersion = "1.3.0";
-				const installedWebpackPluginVersion =
-					await this.$packageInstallationManager.getInstalledDependencyVersion(
-						WEBPACK_PLUGIN_NAME,
-						projectData.projectDir,
-					);
-				const hasWebpackPluginWithWinSnapshotsSupport =
-					!!installedWebpackPluginVersion
-						? semver.gte(
-								semver.coerce(installedWebpackPluginVersion),
-								minWebpackPluginWithWinSnapshotsVersion,
-							)
-						: true;
-				if (!hasWebpackPluginWithWinSnapshotsSupport) {
-					this.$errors.fail(
-						`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i ${WEBPACK_PLUGIN_NAME}@latest).`,
-					);
+				if (projectData.bundler === "webpack") {
+					//TODO: check this use case for webpack5 WEBPACK_PLUGIN_NAME
+					const minWebpackPluginWithWinSnapshotsVersion = "1.3.0";
+					const installedWebpackPluginVersion =
+						await this.$packageInstallationManager.getInstalledDependencyVersion(
+							WEBPACK_PLUGIN_NAME,
+							projectData.projectDir,
+						);
+					const hasWebpackPluginWithWinSnapshotsSupport =
+						!!installedWebpackPluginVersion
+							? semver.gte(
+									semver.coerce(installedWebpackPluginVersion),
+									minWebpackPluginWithWinSnapshotsVersion,
+								)
+							: true;
+					if (!hasWebpackPluginWithWinSnapshotsSupport) {
+						this.$errors.fail(
+							`In order to generate Snapshots on Windows, please upgrade your Webpack plugin version (npm i ${WEBPACK_PLUGIN_NAME}@latest).`,
+						);
+					}
 				}
 			}
 		}
@@ -562,30 +611,37 @@ export class WebpackCompilerService
 		return hotHash || "";
 	}
 
-	private async stopWebpackForPlatform(platform: string) {
-		this.$logger.trace(`Stopping webpack watch for platform ${platform}.`);
-		const webpackProcess = this.webpackProcesses[platform];
-		await this.$cleanupService.removeKillProcess(webpackProcess.pid.toString());
-		if (webpackProcess) {
-			webpackProcess.kill("SIGINT");
-			delete this.webpackProcesses[platform];
+	private async stopBundlerForPlatform(platform: string) {
+		this.$logger.trace(
+			`Stopping ${this.getBundler()} watch for platform ${platform}.`,
+		);
+		const bundlerProcess = this.bundlerProcesses[platform];
+		await this.$cleanupService.removeKillProcess(bundlerProcess.pid.toString());
+		if (bundlerProcess) {
+			bundlerProcess.kill("SIGINT");
+			delete this.bundlerProcesses[platform];
 		}
 	}
 
 	private handleHMRMessage(
-		message: IWebpackMessage,
+		message: IBundlerMessage,
 		platformData: IPlatformData,
 		projectData: IProjectData,
 		prepareData: IPrepareData,
 	) {
-		// handle new webpack hmr packets
-		this.$logger.trace("Received message from webpack process:", message);
+		// handle new bundler hmr packets
+		this.$logger.trace(
+			`Received message from ${projectData.bundler} process:`,
+			message,
+		);
 
 		if (message.type !== "compilation") {
 			return;
 		}
 
-		this.$logger.trace("Webpack build done!");
+		this.$logger.trace(
+			`${capitalizeFirstLetter(projectData.bundler)} build done!`,
+		);
 
 		const files = message.data.emittedAssets.map((asset: string) =>
 			path.join(
@@ -624,7 +680,7 @@ export class WebpackCompilerService
 			return;
 		}
 
-		this.emit(WEBPACK_COMPILATION_COMPLETE, {
+		this.emit(BUNDLER_COMPILATION_COMPLETE, {
 			files,
 			staleFiles,
 			hasOnlyHotUpdateFiles: prepareData.hmr,
@@ -636,9 +692,19 @@ export class WebpackCompilerService
 		});
 	}
 
-	private getWebpackExecutablePath(projectData: IProjectData): string {
-		if (this.isWebpack5(projectData)) {
-			const packagePath = resolvePackagePath("@nativescript/webpack", {
+	private getBundlerExecutablePath(projectData: IProjectData): string {
+		const bundler = this.getBundler();
+
+		if (bundler === "vite") {
+			const packagePath = resolvePackagePath(`vite`, {
+				paths: [projectData.projectDir],
+			});
+
+			if (packagePath) {
+				return path.resolve(packagePath, "bin", "vite.js");
+			}
+		} else if (this.isModernBundler(projectData)) {
+			const packagePath = resolvePackagePath(`@nativescript/${bundler}`, {
 				paths: [projectData.projectDir],
 			});
 
@@ -658,22 +724,37 @@ export class WebpackCompilerService
 		return path.resolve(packagePath, "bin", "webpack.js");
 	}
 
-	private isWebpack5(projectData: IProjectData): boolean {
-		const packageJSONPath = resolvePackageJSONPath("@nativescript/webpack", {
-			paths: [projectData.projectDir],
-		});
-
-		if (packageJSONPath) {
-			const packageData = this.$fs.readJson(packageJSONPath);
-			const ver = semver.coerce(packageData.version);
-
-			if (semver.satisfies(ver, ">= 5.0.0")) {
+	private isModernBundler(projectData: IProjectData): boolean {
+		const bundler = this.getBundler();
+		switch (bundler) {
+			case "rspack":
 				return true;
-			}
+			default:
+				const packageJSONPath = resolvePackageJSONPath(WEBPACK_PLUGIN_NAME, {
+					paths: [projectData.projectDir],
+				});
+
+				if (packageJSONPath) {
+					const packageData = this.$fs.readJson(packageJSONPath);
+					const ver = semver.coerce(packageData.version);
+
+					if (semver.satisfies(ver, ">= 5.0.0")) {
+						return true;
+					}
+				}
+				break;
 		}
 
 		return false;
 	}
+
+	public getBundler(): BundlerType {
+		return this.$projectConfigService.getValue(`bundler`, "webpack");
+	}
 }
 
-injector.register("webpackCompilerService", WebpackCompilerService);
+function capitalizeFirstLetter(val: string) {
+	return String(val).charAt(0).toUpperCase() + String(val).slice(1);
+}
+
+injector.register("bundlerCompilerService", BundlerCompilerService);
