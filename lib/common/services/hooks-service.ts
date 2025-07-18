@@ -179,7 +179,7 @@ export class HooksService implements IHooksService {
 		let inProc = false;
 		if (!command) {
 			command = hook.fullPath;
-			if (path.extname(hook.fullPath).toLowerCase() === ".js") {
+			if ([".mjs", ".js"].includes(path.extname(hook.fullPath).toLowerCase())) {
 				command = process.argv[0];
 				inProc = this.shouldExecuteInProcess(this.$fs.readText(hook.fullPath));
 			}
