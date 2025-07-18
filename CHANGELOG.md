@@ -1,3 +1,23 @@
+## [8.9.3](https://github.com/NativeScript/nativescript-cli/compare/v8.9.2...v8.9.3) (2025-07-16)
+
+
+### Bug Fixes
+
+* **bundler:** include process.env first ([4df139d](https://github.com/NativeScript/nativescript-cli/commit/4df139dc83456ac98dc4cdae765b72a47a945f91))
+* pass down process environment to webpack process ([#5844](https://github.com/NativeScript/nativescript-cli/issues/5844)) ([1e8b93f](https://github.com/NativeScript/nativescript-cli/commit/1e8b93fb0b8c5ac3080fdb5eecec5b7326859c81))
+
+
+
+## [8.9.2](https://github.com/NativeScript/nativescript-cli/compare/v8.9.1...v8.9.2) (2025-03-25)
+
+
+### Bug Fixes
+
+* icon generator color type error ([#5838](https://github.com/NativeScript/nativescript-cli/issues/5838)) ([af81491](https://github.com/NativeScript/nativescript-cli/commit/af8149113844a7aebcd6bf66eeae73154ac7927b))
+* remove --legacy-peer-deps flag on install ([#5839](https://github.com/NativeScript/nativescript-cli/issues/5839)) ([ca6fb68](https://github.com/NativeScript/nativescript-cli/commit/ca6fb68a96cbf4006885c878527c0743b3dae248))
+
+
+
 ## [8.9.1](https://github.com/NativeScript/nativescript-cli/compare/v8.9.0...v8.9.1) (2025-03-05)
 
 

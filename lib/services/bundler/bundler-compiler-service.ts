@@ -68,7 +68,7 @@ export class BundlerCompilerService
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $cleanupService: ICleanupService,
 		private $packageManager: IPackageManager,
-		private $packageInstallationManager: IPackageInstallationManager,
+		private $packageInstallationManager: IPackageInstallationManager, // private $sharedEventBus: ISharedEventBus
 		private $projectConfigService: IProjectConfigService,
 	) {
 		super();
@@ -398,6 +398,7 @@ export class BundlerCompilerService
 			stdio,
 		};
 		options.env = {
+			...process.env,
 			NATIVESCRIPT_WEBPACK_ENV: JSON.stringify(envData),
 			NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
 		};
