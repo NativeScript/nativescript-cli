@@ -56,14 +56,16 @@ describe("projectData", () => {
 		configData?: {
 			shared?: boolean;
 			webpackConfigPath?: string;
+			bundlerConfigPath?: string;
 			projectName?: string;
+			bundler?: string;
 		};
 	}): IProjectData => {
 		const testInjector = createTestInjector();
 		const fs = testInjector.resolve("fs");
 		testInjector.register(
 			"projectConfigService",
-			stubs.ProjectConfigServiceStub.initWithConfig(opts?.configData)
+			stubs.ProjectConfigServiceStub.initWithConfig(opts?.configData),
 		);
 
 		fs.exists = (filePath: string) => {
@@ -98,7 +100,7 @@ describe("projectData", () => {
 		const assertProjectType = (
 			dependencies: any,
 			devDependencies: any,
-			expectedProjecType: string
+			expectedProjecType: string,
 		) => {
 			const projectData = prepareTest({
 				packageJsonData: {
@@ -125,7 +127,7 @@ describe("projectData", () => {
 			assertProjectType(
 				{ "nativescript-vue": "*" },
 				{ typescript: "*" },
-				"Vue.js"
+				"Vue.js",
 			);
 		});
 
@@ -141,7 +143,7 @@ describe("projectData", () => {
 			assertProjectType(
 				null,
 				{ "nativescript-dev-typescript": "*" },
-				"Pure TypeScript"
+				"Pure TypeScript",
 			);
 		});
 
@@ -195,13 +197,13 @@ describe("projectData", () => {
 			const projectData = prepareTest();
 			assert.equal(
 				projectData.webpackConfigPath,
-				path.join(projectDir, "webpack.config.js")
+				path.join(projectDir, "webpack.config.js"),
 			);
 		});
 
 		it("returns correct path when full path is set in nsconfig.json", () => {
 			const pathToConfig = path.resolve(
-				path.join("/testDir", "innerDir", "mywebpack.config.js")
+				path.join("/testDir", "innerDir", "mywebpack.config.js"),
 			);
 			const projectData = prepareTest({
 				configData: { webpackConfigPath: pathToConfig },
@@ -211,7 +213,7 @@ describe("projectData", () => {
 
 		it("returns correct path when relative path is set in nsconfig.json", () => {
 			const pathToConfig = path.resolve(
-				path.join("projectDir", "innerDir", "mywebpack.config.js")
+				path.join("projectDir", "innerDir", "mywebpack.config.js"),
 			);
 			const projectData = prepareTest({
 				configData: {
@@ -219,6 +221,83 @@ describe("projectData", () => {
 				},
 			});
 			assert.equal(projectData.webpackConfigPath, pathToConfig);
+		});
+	});
+
+	describe("bundlerConfigPath", () => {
+		it("default path to webpack.config.js is set when nsconfig.json does not set value", () => {
+			const projectData = prepareTest();
+			assert.equal(
+				projectData.bundlerConfigPath,
+				path.join(projectDir, "webpack.config.js"),
+			);
+		});
+
+		it("should use webpackConfigPath property when bundlerConfigPath is not defined", () => {
+			const pathToConfig = path.resolve(
+				path.join("/testDir", "innerDir", "mywebpack.config.js"),
+			);
+			const projectData = prepareTest({
+				configData: { webpackConfigPath: pathToConfig },
+			});
+			assert.equal(projectData.bundlerConfigPath, pathToConfig);
+		});
+
+		it("returns correct path when full path is set in nsconfig.json", () => {
+			const pathToConfig = path.resolve(
+				path.join("/testDir", "innerDir", "mywebpack.config.js"),
+			);
+			const projectData = prepareTest({
+				configData: { bundlerConfigPath: pathToConfig },
+			});
+			assert.equal(projectData.bundlerConfigPath, pathToConfig);
+		});
+
+		it("returns correct path when relative path is set in nsconfig.json", () => {
+			const pathToConfig = path.resolve(
+				path.join("projectDir", "innerDir", "mywebpack.config.js"),
+			);
+			const projectData = prepareTest({
+				configData: {
+					bundlerConfigPath: path.join("./innerDir", "mywebpack.config.js"),
+				},
+			});
+			assert.equal(projectData.bundlerConfigPath, pathToConfig);
+		});
+
+		it("should use bundlerConfigPath instead of webpackConfigPath if both are defined.", () => {
+			const pathToConfig = path.resolve(
+				path.join("projectDir", "innerDir", "myrspack.config.js"),
+			);
+			const projectData = prepareTest({
+				configData: {
+					webpackConfigPath: path.join("./innerDir", "mywebpack.config.js"),
+					bundlerConfigPath: path.join("./innerDir", "myrspack.config.js"),
+				},
+			});
+			assert.equal(projectData.bundlerConfigPath, pathToConfig);
+		});
+	});
+
+	describe("bundler", () => {
+		it("sets bundler to 'webpack' by default when nsconfig.json does not specify a bundler", () => {
+			const projectData = prepareTest();
+			assert.equal(projectData.bundler, "webpack");
+		});
+
+		it("sets bundler to 'webpack' when explicitly defined in nsconfig.json", () => {
+			const projectData = prepareTest({ configData: { bundler: "webpack" } });
+			assert.equal(projectData.bundler, "webpack");
+		});
+
+		it("sets bundler to 'rspack' when explicitly defined in nsconfig.json", () => {
+			const projectData = prepareTest({ configData: { bundler: "rspack" } });
+			assert.equal(projectData.bundler, "rspack");
+		});
+
+		it("sets bundler to 'vite' when explicitly defined in nsconfig.json", () => {
+			const projectData = prepareTest({ configData: { bundler: "vite" } });
+			assert.equal(projectData.bundler, "vite");
 		});
 	});
 });
