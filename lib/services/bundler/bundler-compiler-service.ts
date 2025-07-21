@@ -359,14 +359,16 @@ export class BundlerCompilerService
 			prepareData,
 		);
 		const isVite = this.getBundler() === "vite";
+		const cliArgs = await this.buildEnvCommandLineParams(
+			envData,
+			platformData,
+			projectData,
+			prepareData,
+		);
+		// Note: With Vite, we need `--` to prevent vite cli from erroring on unknown options.
 		const envParams = isVite
-			? [`--mode=${platformData.platformNameLowerCase}`]
-			: await this.buildEnvCommandLineParams(
-					envData,
-					platformData,
-					projectData,
-					prepareData,
-				);
+			? [`--mode=${platformData.platformNameLowerCase}`, "--", ...cliArgs]
+			: cliArgs;
 		const additionalNodeArgs =
 			semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
