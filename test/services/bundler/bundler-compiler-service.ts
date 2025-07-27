@@ -1,5 +1,5 @@
 import { Yok } from "../../../lib/common/yok";
-import { WebpackCompilerService } from "../../../lib/services/webpack/webpack-compiler-service";
+import { BundlerCompilerService } from "../../../lib/services/bundler/bundler-compiler-service";
 import { assert } from "chai";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
@@ -23,7 +23,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("packageManager", {
 		getPackageManagerName: async () => "npm",
 	});
-	testInjector.register("webpackCompilerService", WebpackCompilerService);
+	testInjector.register("bundlerCompilerService", BundlerCompilerService);
 	testInjector.register("childProcess", {});
 	testInjector.register("hooksService", {});
 	testInjector.register("hostInfo", {});
@@ -33,6 +33,9 @@ function createTestInjector(): IInjector {
 	testInjector.register("packageInstallationManager", {});
 	testInjector.register("mobileHelper", {});
 	testInjector.register("cleanupService", {});
+	testInjector.register("projectConfigService", {
+		getValue: (key: string, defaultValue?: string) => defaultValue,
+	});
 	testInjector.register("fs", {
 		exists: (filePath: string) => true,
 	});
@@ -40,23 +43,23 @@ function createTestInjector(): IInjector {
 	return testInjector;
 }
 
-describe("WebpackCompilerService", () => {
+describe("BundlerCompilerService", () => {
 	let testInjector: IInjector = null;
-	let webpackCompilerService: WebpackCompilerService = null;
+	let bundlerCompilerService: BundlerCompilerService = null;
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
-		webpackCompilerService = testInjector.resolve(WebpackCompilerService);
+		bundlerCompilerService = testInjector.resolve(BundlerCompilerService);
 	});
 
 	describe("getUpdatedEmittedFiles", () => {
 		// backwards compatibility with old versions of nativescript-dev-webpack
 		it("should return only hot updates when nextHash is not provided", async () => {
-			const result = webpackCompilerService.getUpdatedEmittedFiles(
+			const result = bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash1"),
 				chunkFiles,
 				null,
-				iOSPlatformName
+				iOSPlatformName,
 			);
 			const expectedEmittedFiles = [
 				"bundle.hash1.hot-update.js",
@@ -65,19 +68,19 @@ describe("WebpackCompilerService", () => {
 
 			assert.deepStrictEqual(result.emittedFiles, expectedEmittedFiles);
 		});
-		// 2 successful webpack compilations
+		// 2 successful bundler compilations
 		it("should return only hot updates when nextHash is provided", async () => {
-			webpackCompilerService.getUpdatedEmittedFiles(
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash1"),
 				chunkFiles,
 				"hash2",
-				iOSPlatformName
+				iOSPlatformName,
 			);
-			const result = webpackCompilerService.getUpdatedEmittedFiles(
+			const result = bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash2"),
 				chunkFiles,
 				"hash3",
-				iOSPlatformName
+				iOSPlatformName,
 			);
 
 			assert.deepStrictEqual(result.emittedFiles, [
@@ -85,19 +88,19 @@ describe("WebpackCompilerService", () => {
 				"hash2.hot-update.json",
 			]);
 		});
-		// 1 successful webpack compilation, n compilations with no emitted files
-		it("should return all files when there is a webpack compilation with no emitted files", () => {
-			webpackCompilerService.getUpdatedEmittedFiles(
+		// 1 successful bundler compilation, n compilations with no emitted files
+		it("should return all files when there is a bundler compilation with no emitted files", () => {
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash1"),
 				chunkFiles,
 				"hash2",
-				iOSPlatformName
+				iOSPlatformName,
 			);
-			const result = webpackCompilerService.getUpdatedEmittedFiles(
+			const result = bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash4"),
 				chunkFiles,
 				"hash5",
-				iOSPlatformName
+				iOSPlatformName,
 			);
 
 			assert.deepStrictEqual(result.emittedFiles, [
@@ -107,25 +110,25 @@ describe("WebpackCompilerService", () => {
 				"hash4.hot-update.json",
 			]);
 		});
-		// 1 successful webpack compilation, n compilations with no emitted files, 1 successful webpack compilation
+		// 1 successful bundler compilation, n compilations with no emitted files, 1 successful bundler compilation
 		it("should return only hot updates after fixing the compilation error", () => {
-			webpackCompilerService.getUpdatedEmittedFiles(
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash1"),
 				chunkFiles,
 				"hash2",
-				iOSPlatformName
+				iOSPlatformName,
 			);
-			webpackCompilerService.getUpdatedEmittedFiles(
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash5"),
 				chunkFiles,
 				"hash6",
-				iOSPlatformName
+				iOSPlatformName,
 			);
-			const result = webpackCompilerService.getUpdatedEmittedFiles(
+			const result = bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash6"),
 				chunkFiles,
 				"hash7",
-				iOSPlatformName
+				iOSPlatformName,
 			);
 
 			assert.deepStrictEqual(result.emittedFiles, [
@@ -133,16 +136,16 @@ describe("WebpackCompilerService", () => {
 				"hash6.hot-update.json",
 			]);
 		});
-		// 1 webpack compilation with no emitted files
+		// 1 bundler compilation with no emitted files
 		it("should return all files when first compilation on livesync change is not successful", () => {
-			(<any>webpackCompilerService).expectedHashes = {
+			(<any>bundlerCompilerService).expectedHashes = {
 				ios: "hash1",
 			};
-			const result = webpackCompilerService.getUpdatedEmittedFiles(
+			const result = bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash1"),
 				chunkFiles,
 				"hash2",
-				iOSPlatformName
+				iOSPlatformName,
 			);
 
 			assert.deepStrictEqual(result.emittedFiles, [
@@ -151,48 +154,48 @@ describe("WebpackCompilerService", () => {
 			]);
 		});
 		it("should return correct hashes when there are more than one platform", () => {
-			webpackCompilerService.getUpdatedEmittedFiles(
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash1"),
 				chunkFiles,
 				"hash2",
-				iOSPlatformName
+				iOSPlatformName,
 			);
-			webpackCompilerService.getUpdatedEmittedFiles(
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash3"),
 				chunkFiles,
 				"hash4",
-				androidPlatformName
+				androidPlatformName,
 			);
 
-			webpackCompilerService.getUpdatedEmittedFiles(
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash2"),
 				chunkFiles,
 				"hash5",
-				iOSPlatformName
+				iOSPlatformName,
 			);
-			webpackCompilerService.getUpdatedEmittedFiles(
+			bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash4"),
 				chunkFiles,
 				"hash6",
-				androidPlatformName
+				androidPlatformName,
 			);
 
-			const iOSResult = webpackCompilerService.getUpdatedEmittedFiles(
+			const iOSResult = bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash5"),
 				chunkFiles,
 				"hash7",
-				iOSPlatformName
+				iOSPlatformName,
 			);
 			assert.deepStrictEqual(iOSResult.emittedFiles, [
 				"bundle.hash5.hot-update.js",
 				"hash5.hot-update.json",
 			]);
 
-			const androidResult = webpackCompilerService.getUpdatedEmittedFiles(
+			const androidResult = bundlerCompilerService.getUpdatedEmittedFiles(
 				getAllEmittedFiles("hash6"),
 				chunkFiles,
 				"hash8",
-				androidPlatformName
+				androidPlatformName,
 			);
 			assert.deepStrictEqual(androidResult.emittedFiles, [
 				"bundle.hash6.hot-update.js",
@@ -202,33 +205,33 @@ describe("WebpackCompilerService", () => {
 	});
 
 	describe("compileWithWatch", () => {
-		it("fails when the value set for webpackConfigPath is not existant file", async () => {
-			const webpackConfigPath = "some path.js";
+		it("fails when the value set for bundlerConfigPath is not existant file", async () => {
+			const bundlerConfigPath = "some path.js";
 			testInjector.resolve("fs").exists = (filePath: string) =>
-				filePath !== webpackConfigPath;
+				filePath !== bundlerConfigPath;
 			await assert.isRejected(
-				webpackCompilerService.compileWithWatch(
+				bundlerCompilerService.compileWithWatch(
 					<any>{ platformNameLowerCase: "android" },
-					<any>{ webpackConfigPath },
-					<any>{}
+					<any>{ bundlerConfigPath: bundlerConfigPath },
+					<any>{},
 				),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The bundler configuration file ${bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`,
 			);
 		});
 	});
 
 	describe("compileWithoutWatch", () => {
-		it("fails when the value set for webpackConfigPath is not existant file", async () => {
-			const webpackConfigPath = "some path.js";
+		it("fails when the value set for bundlerConfigPath is not existant file", async () => {
+			const bundlerConfigPath = "some path.js";
 			testInjector.resolve("fs").exists = (filePath: string) =>
-				filePath !== webpackConfigPath;
+				filePath !== bundlerConfigPath;
 			await assert.isRejected(
-				webpackCompilerService.compileWithoutWatch(
+				bundlerCompilerService.compileWithoutWatch(
 					<any>{ platformNameLowerCase: "android" },
-					<any>{ webpackConfigPath },
-					<any>{}
+					<any>{ bundlerConfigPath: bundlerConfigPath },
+					<any>{},
 				),
-				`The webpack configuration file ${webpackConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`
+				`The bundler configuration file ${bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`,
 			);
 		});
 	});
