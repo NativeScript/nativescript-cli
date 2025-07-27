@@ -5,6 +5,7 @@ import { injector } from "../yok";
 export class EmulatorHelper implements Mobile.IEmulatorHelper {
 	// https://developer.android.com/guide/topics/manifest/uses-sdk-element
 	public mapAndroidApiLevelToVersion = {
+		"android-36": "16.0.0",
 		"android-35": "15.0.0",
 		"android-34": "14.0.0",
 		"android-33": "13.0.0",
@@ -27,7 +28,7 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 	};
 
 	public getEmulatorsFromAvailableEmulatorsOutput(
-		availableEmulatorsOutput: Mobile.IListEmulatorsOutput
+		availableEmulatorsOutput: Mobile.IListEmulatorsOutput,
 	): Mobile.IDeviceInfo[] {
 		return <Mobile.IDeviceInfo[]>_(availableEmulatorsOutput)
 			.valuesIn()
@@ -38,7 +39,7 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 	}
 
 	public getErrorsFromAvailableEmulatorsOutput(
-		availableEmulatorsOutput: Mobile.IListEmulatorsOutput
+		availableEmulatorsOutput: Mobile.IListEmulatorsOutput,
 	): string[] {
 		return <string[]>_(availableEmulatorsOutput)
 			.valuesIn()
@@ -50,7 +51,7 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 
 	public getEmulatorByImageIdentifier(
 		imageIdentifier: string,
-		emulators: Mobile.IDeviceInfo[]
+		emulators: Mobile.IDeviceInfo[],
 	): Mobile.IDeviceInfo {
 		const imagerIdentifierLowerCase =
 			imageIdentifier && imageIdentifier.toLowerCase();
@@ -60,13 +61,13 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 				emulator &&
 				emulator.imageIdentifier &&
 				imageIdentifier &&
-				emulator.imageIdentifier.toLowerCase() === imagerIdentifierLowerCase
+				emulator.imageIdentifier.toLowerCase() === imagerIdentifierLowerCase,
 		);
 	}
 
 	public getEmulatorByIdOrName(
 		emulatorIdOrName: string,
-		emulators: Mobile.IDeviceInfo[]
+		emulators: Mobile.IDeviceInfo[],
 	): Mobile.IDeviceInfo {
 		const emulatorIdOrNameLowerCase =
 			emulatorIdOrName && emulatorIdOrName.toLowerCase();
@@ -77,7 +78,7 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 				emulatorIdOrNameLowerCase &&
 				((emulator.identifier &&
 					emulator.identifier.toLowerCase() === emulatorIdOrNameLowerCase) ||
-					emulator.displayName.toLowerCase() === emulatorIdOrNameLowerCase)
+					emulator.displayName.toLowerCase() === emulatorIdOrNameLowerCase),
 		);
 	}
 
@@ -87,7 +88,7 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 
 	public getEmulatorByStartEmulatorOptions(
 		options: Mobile.IStartEmulatorOptions,
-		emulators: Mobile.IDeviceInfo[]
+		emulators: Mobile.IDeviceInfo[],
 	): Mobile.IDeviceInfo {
 		let result: Mobile.IDeviceInfo = null;
 
@@ -98,7 +99,7 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 		if (!result && options.imageIdentifier) {
 			result = this.getEmulatorByImageIdentifier(
 				options.imageIdentifier,
-				emulators
+				emulators,
 			);
 		}
 
@@ -111,7 +112,7 @@ export class EmulatorHelper implements Mobile.IEmulatorHelper {
 
 	public setRunningAndroidEmulatorProperties(
 		emulatorId: string,
-		emulator: Mobile.IDeviceInfo
+		emulator: Mobile.IDeviceInfo,
 	): void {
 		emulator.identifier = emulatorId;
 		emulator.status = RUNNING_EMULATOR_STATUS;

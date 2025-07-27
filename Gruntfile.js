@@ -248,7 +248,6 @@ function registerTestingDependenciesTasks(grunt) {
 	const generatedVersionFilePath = path.join(configsBasePath, "test-deps-versions-generated.json");
 
 	grunt.registerTask("generate_unit_testing_dependencies", async function () {
-		var done = this.async();
 		const dependenciesVersions = {};
 		const testDependencies = grunt.file.readJSON(path.join(configsBasePath, "test-dependencies.json"));
 		for (var dependency of testDependencies) {
@@ -256,7 +255,6 @@ function registerTestingDependenciesTasks(grunt) {
 			dependenciesVersions[dependency.name] = dependencyVersion;
 		}
 		grunt.file.write(generatedVersionFilePath, JSON.stringify(dependenciesVersions));
-		done();
 	});
 
 	grunt.registerTask("verify_unit_testing_dependencies", function () {

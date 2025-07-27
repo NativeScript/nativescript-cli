@@ -42,7 +42,7 @@ describe("androidToolsInfo", () => {
 							devDependencies: {
 								"@nativescript/android": runtimeVersion,
 							},
-					  }
+						}
 					: null;
 			},
 			readDirectory: (path: string) => {
@@ -70,6 +70,7 @@ describe("androidToolsInfo", () => {
 						"android-33",
 						"android-34",
 						"android-35",
+						"android-36",
 					];
 				}
 			},
@@ -113,7 +114,7 @@ describe("androidToolsInfo", () => {
 		const assertSupportedRange = (
 			runtimeVersion: string,
 			min: number,
-			max: number
+			max: number,
 		) => {
 			let cnt = 0;
 			const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
@@ -210,7 +211,7 @@ describe("androidToolsInfo", () => {
 					const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
 					const actualWarnings = androidToolsInfo.validateJavacVersion(
 						javacVersion,
-						"/Users/username/projectDir"
+						"/Users/username/projectDir",
 					);
 
 					let expectedWarnings: NativeScriptDoctor.IWarning[] = [];
@@ -227,7 +228,7 @@ describe("androidToolsInfo", () => {
 
 					assert.deepEqual(actualWarnings, expectedWarnings);
 				});
-			}
+			},
 		);
 
 		const npmTagsTestData: ITestData[] = [
@@ -322,12 +323,12 @@ describe("androidToolsInfo", () => {
 						childProcess,
 						fs,
 						hostInfo,
-						helpers
+						helpers,
 					);
 
 					const actualWarnings = androidToolsInfo.validateJavacVersion(
 						javacVersion,
-						"/Users/username/projectDir"
+						"/Users/username/projectDir",
 					);
 					let expectedWarnings: NativeScriptDoctor.IWarning[] = [];
 					if (warnings && warnings.length) {
@@ -344,10 +345,10 @@ describe("androidToolsInfo", () => {
 					assert.deepEqual(actualWarnings, expectedWarnings);
 					assert.equal(
 						execSyncCommand,
-						"npm view tns-android dist-tags --json"
+						"npm view tns-android dist-tags --json",
 					);
 				});
-			}
+			},
 		);
 	});
 
