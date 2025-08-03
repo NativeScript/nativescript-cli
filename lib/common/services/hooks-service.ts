@@ -188,7 +188,11 @@ export class HooksService implements IHooksService {
 		let inProc = false;
 		if (!command) {
 			command = hook.fullPath;
-			if ([".mjs", ".js"].includes(path.extname(hook.fullPath).toLowerCase())) {
+			if (
+				[".mjs", ".cjs", ".js"].includes(
+					path.extname(hook.fullPath).toLowerCase(),
+				)
+			) {
 				command = process.argv[0];
 				inProc = isESM
 					? true
