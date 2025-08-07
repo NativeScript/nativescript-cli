@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "9.0.0-alpha.0",
+  "version": "8.9.4",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -51,7 +51,7 @@
   "keywords": [
     "nativescript",
     "typescript",
-    "mobile"
+    "javascript"
   ],
   "dependencies": {
     "@foxt/js-srp": "^0.0.3-patch2",
