@@ -248,13 +248,40 @@ function registerTestingDependenciesTasks(grunt) {
 	const generatedVersionFilePath = path.join(configsBasePath, "test-deps-versions-generated.json");
 
 	grunt.registerTask("generate_unit_testing_dependencies", async function () {
+		const done = this.async();
+
 		const dependenciesVersions = {};
-		const testDependencies = grunt.file.readJSON(path.join(configsBasePath, "test-dependencies.json"));
-		for (var dependency of testDependencies) {
-			const dependencyVersion = dependency.version || await latestVersion(dependency.name);
-			dependenciesVersions[dependency.name] = dependencyVersion;
+		let testDependencies;
+
+		try {
+			testDependencies = grunt.file.readJSON(path.join(configsBasePath, "test-dependencies.json"));
+		} catch (err) {
+			grunt.log.error("Could not read test-dependencies.json:", err);
+			return done(false);
 		}
-		grunt.file.write(generatedVersionFilePath, JSON.stringify(dependenciesVersions));
+
+		
+		// Kick off all version resolutions in parallel
+		const versionPromises = testDependencies.map(dep => {
+			if (dep.version) {
+				dependenciesVersions[dep.name] = dep.version;
+				return Promise.resolve();
+			}
+			return latestVersion(dep.name).then(v => {
+				dependenciesVersions[dep.name] = v;
+			});
+		});
+
+		Promise.all(versionPromises)
+			.then(() => {
+				grunt.file.write(generatedVersionFilePath, JSON.stringify(dependenciesVersions, null, 2));
+				grunt.log.writeln("Wrote", generatedVersionFilePath);
+				done();
+			})
+			.catch(err => {
+				grunt.log.error(err);
+				done(false);
+			});
 	});
 
 	grunt.registerTask("verify_unit_testing_dependencies", function () {
