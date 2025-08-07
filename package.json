@@ -50,8 +50,8 @@
   },
   "keywords": [
     "nativescript",
-    "telerik",
-    "mobile"
+    "typescript",
+    "javascript"
   ],
   "dependencies": {
     "@foxt/js-srp": "^0.0.3-patch2",
