@@ -94,6 +94,9 @@ export class BundlerCompilerService
 					prepareData,
 				);
 
+				// Handle Vite differently from webpack
+				const isVite = this.getBundler() === "vite";
+
 				childProcess.stdout.on("data", function (data) {
 					process.stdout.write(data);
 				});
@@ -102,8 +105,123 @@ export class BundlerCompilerService
 					process.stderr.write(data);
 				});
 
+				// For both Vite and webpack, we wait for the first build to complete
+				// Don't resolve immediately for Vite - wait for first IPC message
+
 				childProcess.on("message", (message: string | IBundlerEmitMessage) => {
 					this.$logger.trace(`Message from ${projectData.bundler}`, message);
+
+					// Handle Vite messages
+					if (
+						isVite &&
+						message &&
+						(message as IBundlerEmitMessage).emittedFiles
+					) {
+						message = message as IBundlerEmitMessage;
+						console.log("Received Vite IPC message:", message);
+
+						// Copy Vite output files directly to platform destination
+						const distOutput = path.join(projectData.projectDir, "dist");
+						const destDir = path.join(
+							platformData.appDestinationDirectoryPath,
+							this.$options.hostProjectModuleName,
+						);
+
+						console.log(`🔥 Copying from ${distOutput} to ${destDir}`);
+
+						// For HMR updates, only copy changed files; for full builds, copy everything
+						if (
+							message.isHMR &&
+							message.changedFiles &&
+							message.changedFiles.length > 0
+						) {
+							console.log(
+								"🔥 HMR update - copying only changed files for:",
+								message.changedFiles,
+							);
+
+							// For HTML template changes, we need to copy the component files that were rebuilt
+							let filesToCopy = message.emittedFiles;
+
+							// If we have HTML changes, identify which component files need copying
+							const hasHTMLChanges = message.changedFiles.some((f) =>
+								f.endsWith(".html"),
+							);
+							if (hasHTMLChanges) {
+								// Copy component-related files (the ones that would have been rebuilt due to template changes)
+								filesToCopy = message.emittedFiles.filter(
+									(f) =>
+										f.includes(".component") ||
+										f === "bundle.mjs" ||
+										f === "bundle.mjs.map",
+								);
+								console.log(
+									"🔥 HTML change detected - copying component files:",
+									filesToCopy,
+								);
+							}
+
+							this.copyViteBundleToNative(distOutput, destDir, filesToCopy);
+						} else {
+							console.log("🔥 Full build - copying all files");
+							this.copyViteBundleToNative(distOutput, destDir);
+						}
+
+						// Resolve the promise on first build completion
+						if (isFirstBundlerWatchCompilation) {
+							isFirstBundlerWatchCompilation = false;
+							console.log(
+								"Vite first build completed, resolving compileWithWatch",
+							);
+							resolve(childProcess);
+						}
+
+						// Transform Vite message to match webpack format
+						const files = (message as IBundlerEmitMessage).emittedFiles.map(
+							(file) =>
+								path.join(
+									platformData.appDestinationDirectoryPath,
+									this.$options.hostProjectModuleName,
+									file,
+								),
+						);
+
+						const data = {
+							files,
+							hasOnlyHotUpdateFiles: message.isHMR || false,
+							hmrData: {
+								hash: (message as IBundlerEmitMessage).hash || "",
+								fallbackFiles: [] as string[],
+							},
+							platform: platformData.platformNameLowerCase,
+						};
+
+						this.$logger.info(
+							`Vite build completed! Files copied to native platform.`,
+						);
+						// Send HMR notification to connected WebSocket clients first
+						this.notifyHMRClients({
+							type: message.isHMR ? "js-update" : "build-complete",
+							timestamp: Date.now(),
+							changedFiles: message.changedFiles || [],
+							buildType: message.buildType || "incremental",
+							isHMR: message.isHMR || false,
+						});
+
+						if (message.isHMR) {
+							console.log(
+								"🔥 Skipping BUNDLER_COMPILATION_COMPLETE for HMR update - app will not restart",
+							);
+						} else {
+							// Only emit BUNDLER_COMPILATION_COMPLETE for non-HMR builds
+							// This prevents the CLI from restarting the app during HMR updates
+							console.log(
+								"🔥 Emitting BUNDLER_COMPILATION_COMPLETE for full build",
+							);
+							this.emit(BUNDLER_COMPILATION_COMPLETE, data);
+						}
+						return;
+					}
 
 					// if we are on webpack5 - we handle HMR in a  slightly different way
 					if (
@@ -228,23 +346,6 @@ export class BundlerCompilerService
 					this.$logger.trace(
 						`${capitalizeFirstLetter(projectData.bundler)} process exited with code ${exitCode} when we expected it to be long living with watch.`,
 					);
-					if (this.getBundler() === "vite" && exitCode === 0) {
-						// note experimental: investigate watch mode
-						const bundlePath = path.join(
-							projectData.projectDir,
-							"dist/bundle.js",
-						);
-						console.log("bundlePath:", bundlePath);
-						const data = {
-							files: [bundlePath],
-							hasOnlyHotUpdateFiles: false,
-							hmrData: {},
-							platform: platformData.platformNameLowerCase,
-						};
-						this.emit(BUNDLER_COMPILATION_COMPLETE, data);
-						resolve(1);
-						return;
-					}
 
 					await this.$cleanupService.removeKillProcess(
 						childProcess.pid.toString(),
@@ -367,7 +468,12 @@ export class BundlerCompilerService
 		);
 		// Note: With Vite, we need `--` to prevent vite cli from erroring on unknown options.
 		const envParams = isVite
-			? [`--mode=${platformData.platformNameLowerCase}`, "--", ...cliArgs]
+			? [
+					`--mode=${platformData.platformNameLowerCase}`,
+					`--watch`,
+					"--",
+					...cliArgs,
+				]
 			: cliArgs;
 		const additionalNodeArgs =
 			semver.major(process.version) <= 8 ? ["--harmony"] : [];
@@ -383,7 +489,7 @@ export class BundlerCompilerService
 		const args = [
 			...additionalNodeArgs,
 			this.getBundlerExecutablePath(projectData),
-			this.isModernBundler(projectData) ? `build` : null,
+			isVite ? "build" : this.isModernBundler(projectData) ? `build` : null,
 			`--config=${projectData.bundlerConfigPath}`,
 			...envParams,
 		].filter(Boolean);
@@ -394,7 +500,7 @@ export class BundlerCompilerService
 			}
 		}
 
-		const stdio = prepareData.watch ? ["ipc"] : "inherit";
+		const stdio = prepareData.watch || isVite ? ["ipc"] : "inherit";
 		const options: { [key: string]: any } = {
 			cwd: projectData.projectDir,
 			stdio,
@@ -752,6 +858,100 @@ export class BundlerCompilerService
 
 	public getBundler(): BundlerType {
 		return this.$projectConfigService.getValue(`bundler`, "webpack");
+	}
+
+	private copyViteBundleToNative(
+		distOutput: string,
+		destDir: string,
+		specificFiles: string[] = null,
+	) {
+		// Clean and copy Vite output to native platform folder
+		console.log(`Copying Vite bundle from "${distOutput}" to "${destDir}"`);
+
+		const fs = require("fs");
+
+		try {
+			if (specificFiles) {
+				// HMR mode: only copy specific files
+				console.log("🔥 HMR: Copying specific files:", specificFiles);
+
+				// Ensure destination directory exists
+				fs.mkdirSync(destDir, { recursive: true });
+
+				// Copy only the specified files
+				for (const file of specificFiles) {
+					const srcPath = path.join(distOutput, file);
+					const destPath = path.join(destDir, file);
+
+					if (!fs.existsSync(srcPath)) continue;
+
+					// create parent dirs
+					fs.mkdirSync(path.dirname(destPath), { recursive: true });
+
+					fs.copyFileSync(srcPath, destPath);
+
+					console.log(`🔥 HMR: Copied ${file}`);
+				}
+			} else {
+				// Full build mode: clean and copy everything
+				console.log("🔥 Full build: Copying all files");
+
+				// Clean destination directory
+				if (fs.existsSync(destDir)) {
+					fs.rmSync(destDir, { recursive: true, force: true });
+				}
+				fs.mkdirSync(destDir, { recursive: true });
+
+				// Copy all files from dist to platform destination
+				if (fs.existsSync(distOutput)) {
+					this.copyRecursiveSync(distOutput, destDir, fs);
+				} else {
+					this.$logger.warn(
+						`Vite output directory does not exist: ${distOutput}`,
+					);
+				}
+			}
+		} catch (error) {
+			this.$logger.warn(`Failed to copy Vite bundle: ${error.message}`);
+		}
+	}
+
+	private notifyHMRClients(message: any) {
+		// Send WebSocket notification to HMR clients
+		try {
+			const WebSocket = require("ws");
+
+			// Try to connect to HMR bridge and send notification
+			const ws = new WebSocket("ws://localhost:24678");
+
+			ws.on("open", () => {
+				console.log("🔥 Sending HMR notification to bridge:", message.type);
+				ws.send(JSON.stringify(message));
+				ws.close();
+			});
+
+			ws.on("error", () => {
+				// HMR bridge not available, which is fine
+				console.log("🔥 HMR bridge not available (this is normal without HMR)");
+			});
+		} catch (error) {
+			// WebSocket not available, which is fine
+			console.log("🔥 WebSocket not available for HMR notifications");
+		}
+	}
+
+	private copyRecursiveSync(src: string, dest: string, fs: any) {
+		for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
+			const srcPath = path.join(src, entry.name);
+			const destPath = path.join(dest, entry.name);
+
+			if (entry.isDirectory()) {
+				fs.mkdirSync(destPath, { recursive: true });
+				this.copyRecursiveSync(srcPath, destPath, fs);
+			} else if (entry.isFile() || entry.isSymbolicLink()) {
+				fs.copyFileSync(srcPath, destPath);
+			}
+		}
 	}
 }
 
