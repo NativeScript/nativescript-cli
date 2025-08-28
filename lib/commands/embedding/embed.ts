@@ -56,8 +56,9 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		if (!this.$fs.exists(resolvedHostProjectPath)) {
 			this.$logger.error(
 				`The host project path ${color.yellow(
-					hostProjectPath
-				)} (resolved to: ${color.yellow.dim(
+					hostProjectPath,
+				)} (resolved to: ${color.styleText(
+					["yellow", "dim"],
 					resolvedHostProjectPath
 				)}) does not exist.`
 			);

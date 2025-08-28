@@ -38,13 +38,17 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	public getClientName(): string {
-		return "" + color.cyan.bold(this.$staticConfig.CLIENT_NAME_ALIAS);
+		return (
+			"" +
+			color.styleText(["cyan", "bold"], this.$staticConfig.CLIENT_NAME_ALIAS)
+		);
 	}
 
 	public async getUserSessionsCount(projectName: string): Promise<number> {
-		const sessionsCountForProject = await this.$userSettingsService.getSettingValue<
-			number
-		>(this.getSessionsProjectKey(projectName));
+		const sessionsCountForProject =
+			await this.$userSettingsService.getSettingValue<number>(
+				this.getSessionsProjectKey(projectName),
+			);
 		return sessionsCountForProject || 0;
 	}
 
@@ -97,9 +101,8 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	private async getSettingValueOrDefault(settingName: string): Promise<string> {
-		let guid = await this.$userSettingsService.getSettingValue<string>(
-			settingName
-		);
+		let guid =
+			await this.$userSettingsService.getSettingValue<string>(settingName);
 		if (!guid) {
 			guid = createGUID(false);
 

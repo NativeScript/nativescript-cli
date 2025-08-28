@@ -4,7 +4,7 @@ import { injector } from "../yok";
 
 import { LoggerConfigData } from "../../constants";
 import { IOptions } from "../../declarations";
-import { Color, color } from "../../color";
+import { color, StyleFormat } from "../../color";
 
 import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
 
@@ -55,10 +55,9 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		time: color.greenBright,
 	};
 
-	private deviceColorMap = new Map<string, Color>();
+	private deviceColorMap = new Map<string, StyleFormat>();
 
-	private colorPool: Color[] = [
-		"bgBlackBright",
+	private colorPool: StyleFormat[] = [
 		"bgMagentaBright",
 		"bgBlueBright",
 		"bgWhiteBright",
@@ -73,7 +72,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			return this.deviceColorMap.get(deviceIdentifier);
 		}
 
-		const color = this.colorPool[this.colorPoolIndex];
+		const color = this.colorPool[this.colorPoolIndex] as StyleFormat;
 		// wrap around if we have no more colors in the pool
 		this.colorPoolIndex =
 			this.colorPoolIndex === this.colorPool.length - 1
@@ -150,7 +149,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 			toLog.split("\n").forEach((actualLine) => {
 				this.printLine(
-					color[this.getDeviceColor(deviceIdentifier)](" "),
+					color.styleText(this.getDeviceColor(deviceIdentifier), " "),
 					this.consoleLevelColor[level](actualLine)
 				);
 			});
