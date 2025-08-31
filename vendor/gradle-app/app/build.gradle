@@ -711,7 +711,7 @@ def listf(String directoryName, ArrayList<File> store) {
 }
 
 task buildMetadata(type: BuildToolTask) {
-    logging.captureStandardOutput LogLevel.DEBUG
+    // logging.captureStandardOutput LogLevel.DEBUG
     def rootPath = ""
     if (!findProject(':android-metadata-generator').is(null)) {
         rootPath = Paths.get(project(':android-metadata-generator').projectDir.path, "build/libs").toString()
@@ -1021,7 +1021,6 @@ tasks.configureEach { DefaultTask currentTask ->
         currentTask =~ /sync.+LibJars/ || 
         currentTask =~ /processNonMinified.+JavaRes/ || 
         currentTask =~ /process.*JavaRes/ || 
-        // currentTask =~ /optimize.+Resources/ || 
         currentTask =~ /lintAnalyze.*UnitTest/ || 
         currentTask =~ /buildCMake.*/ || 
         currentTask =~ /configureCMake.*/ || 
@@ -1030,7 +1029,7 @@ tasks.configureEach { DefaultTask currentTask ->
         currentTask =~ /generate.*UnitTestLintModel/ || 
         // because of sentry plugin. There must be a better way
         currentTask =~ /transformDebugClassesWithAsm/ || 
-        currentTask =~ /generateSentryDebugMetaPropertiesDebug/ || 
+        currentTask =~ /generateSentryDebugMetaProperties.*/ || 
         currentTask =~ /generateSentryBundleId.*/ || 
         currentTask =~ /collectExternal.+/
         )) {
