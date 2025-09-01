@@ -20,9 +20,9 @@
 *            -PappResourcesPath=[app_resources_path]
 */
 
-
 import groovy.io.FileType
 import groovy.json.JsonSlurper
+import groovy.xml.XmlSlurper
 import org.apache.commons.io.FileUtils
 
 import javax.inject.Inject
@@ -30,7 +30,6 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.security.MessageDigest
-
 import java.util.jar.JarEntry
 import java.util.jar.JarFile
 
@@ -43,12 +42,8 @@ apply plugin: "com.android.application"
 apply from: "gradle-helpers/BuildToolTask.gradle"
 apply from: "gradle-helpers/CustomExecutionLogger.gradle"
 apply from: "gradle-helpers/AnalyticsCollector.gradle"
-
-
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-parcelize'
-// apply plugin: "org.jetbrains.kotlin.android"
-
 
 def onlyX86 = project.hasProperty("onlyX86")
 if (onlyX86) {
@@ -88,6 +83,7 @@ def allJarLibraries = new LinkedList<String>()
 def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "${ns_default_kotlin_version}" }
 def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk as int : NS_DEFAULT_COMPILE_SDK_VERSION as int }
 def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk as int : NS_DEFAULT_COMPILE_SDK_VERSION as int }
+def computeMinSdkVersion = { -> project.hasProperty("minSdk") ? minSdk : NS_DEFAULT_MIN_SDK_VERSION as int }
 def computeBuildToolsVersion = { ->
     project.hasProperty("buildToolsVersion") ? buildToolsVersion : NS_DEFAULT_BUILD_TOOLS_VERSION as String
 }
@@ -183,19 +179,20 @@ def setAppIdentifier = { ->
 }
 
 android {
-    applyBeforePluginGradleConfiguration()
     namespace "__PACKAGE__"
+  
+    applyBeforePluginGradleConfiguration()
 
     kotlin {
         jvmToolchain(17)
     }
 
     compileSdk computeCompileSdkVersion()
-    buildToolsVersion computeBuildToolsVersion()
+    buildToolsVersion = computeBuildToolsVersion()
 
     defaultConfig {
         def manifest = new XmlSlurper().parse(file(android.sourceSets.main.manifest.srcFile))
-        def minSdkVer = manifest."uses-sdk"."@android:minSdkVersion".text() ?: NS_DEFAULT_MIN_SDK_VERSION
+        def minSdkVer = manifest."uses-sdk"."@android:minSdkVersion".text() ?: computeMinSdkVersion()
         minSdkVersion minSdkVer
         targetSdkVersion computeTargetSdkVersion()
         ndk {
@@ -285,7 +282,7 @@ repositories {
     })
 
     if (!externalRuntimeExists) {
-        pluginDependencies.add("$rootDir/app/libs/runtime-libs")
+        pluginDependencies.add("libs/runtime-libs")
     }
 
     def appResourcesPath = getAppResourcesPath()
@@ -390,16 +387,13 @@ dependencies {
         implementation project(':runtime')
     }
 
-    // def kotlinVersion = computeKotlinVersion()
-    // implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// CONFIGURATION PHASE //////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
-task addDependenciesFromNativeScriptPlugins {
+task 'addDependenciesFromNativeScriptPlugins' {
     nativescriptDependencies.each { dep ->
         def aarFiles = fileTree(dir: file("$rootDir/${dep.directory}/$PLATFORMS_ANDROID")).matching {
             include "**/*.aar"
@@ -428,7 +422,7 @@ task addDependenciesFromNativeScriptPlugins {
     }
 }
 
-task addDependenciesFromAppResourcesLibraries {
+task 'addDependenciesFromAppResourcesLibraries' {
     def appResourcesPath = getAppResourcesPath()
     def appResourcesLibraries = file("$appResourcesPath/Android/libs")
     if (appResourcesLibraries.exists()) {
@@ -457,6 +451,7 @@ if (failOnCompilationWarningsEnabled()) {
         options.deprecation = true
     }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// EXECUTION PHASE /////////////////////////////////////
@@ -679,9 +674,13 @@ task 'collectAllJars' {
     }
 }
 
-task copyMetadataFilters(type: Copy) {
-    from "$rootDir/whitelist.mdg", "$rootDir/blacklist.mdg"
-    into "$BUILD_TOOLS_PATH"
+task copyMetadataFilters {
+    outputs.files("$BUILD_TOOLS_PATH/whitelist.mdg", "$BUILD_TOOLS_PATH/blacklist.mdg")
+    // use an explicit copy task here because the copy task itselfs marks the whole built-tools as an output!
+    copy {
+        from file("$rootDir/whitelist.mdg"), file("$rootDir/blacklist.mdg")
+        into "$BUILD_TOOLS_PATH"
+    }
 }
 
 task 'copyMetadata' {
@@ -711,15 +710,174 @@ def listf(String directoryName, ArrayList<File> store) {
 }
 
 task buildMetadata(type: BuildToolTask) {
-    // logging.captureStandardOutput LogLevel.DEBUG
     def rootPath = ""
     if (!findProject(':android-metadata-generator').is(null)) {
         rootPath = Paths.get(project(':android-metadata-generator').projectDir.path, "build/libs").toString()
         dependsOn ':android-metadata-generator:jar'
     }
 
+
+
+    android.applicationVariants.all { variant ->
+        def buildTypeName = variant.buildType.name.capitalize()
+        def mergeShadersTaskName = "merge${buildTypeName}Shaders"
+        def mergeShadersTask = tasks.findByName(mergeShadersTaskName)
+
+        if (mergeShadersTask) {
+            dependsOn mergeShadersTask
+        }
+
+        def compileJavaWithJavacTaskName = "compile${buildTypeName}JavaWithJavac"
+        def compileJavaWithJavacTask = tasks.findByName(compileJavaWithJavacTaskName)
+
+
+        if (compileJavaWithJavacTask) {
+            dependsOn compileJavaWithJavacTask
+        }
+
+        def compileKotlinTaskName = "compile${buildTypeName}Kotlin"
+        def compileKotlinTask = tasks.findByName(compileKotlinTaskName)
+
+
+        if (compileKotlinTask) {
+            dependsOn compileKotlinTask
+        }
+
+
+        def mergeDexTaskName = "mergeDex${buildTypeName}"
+        def mergeDexTask = tasks.findByName(mergeDexTaskName)
+
+        if (mergeDexTask) {
+            dependsOn mergeDexTask
+        }
+
+        def checkDuplicateClassesTaskName = "check${buildTypeName}DuplicateClasses"
+        def checkDuplicateClassesTask = tasks.findByName(checkDuplicateClassesTaskName)
+
+        if (checkDuplicateClassesTask) {
+            dependsOn checkDuplicateClassesTask
+        }
+
+        def generateBuildConfigTaskName = "generate${buildTypeName}BuildConfig"
+        def generateBuildConfigTask = tasks.findByName(generateBuildConfigTaskName)
+
+        if (generateBuildConfigTask) {
+            dependsOn generateBuildConfigTask
+        }
+
+        def dexBuilderTaskName = "dexBuilder${buildTypeName}"
+        def dexBuilderTask = tasks.findByName(dexBuilderTaskName)
+
+        if (dexBuilderTask) {
+            dependsOn dexBuilderTask
+        }
+
+
+        def mergeExtDexTaskName = "mergeExtDex${buildTypeName}"
+        def mergeExtDexTask = tasks.findByName(mergeExtDexTaskName)
+
+        if (mergeExtDexTask) {
+            dependsOn mergeExtDexTask
+        }
+
+        def mergeLibDexTaskName = "mergeLibDex${buildTypeName}"
+        def mergeLibDexTask = tasks.findByName(mergeLibDexTaskName)
+
+        if (mergeLibDexTask) {
+            dependsOn mergeLibDexTask
+        }
+
+        def mergeProjectDexTaskName = "mergeProjectDex${buildTypeName}"
+        def mergeProjectDexTask = tasks.findByName(mergeProjectDexTaskName)
+
+        if (mergeProjectDexTask) {
+            dependsOn mergeProjectDexTask
+        }
+
+        def syncLibJarsTaskName = "sync${buildTypeName}LibJars"
+        def syncLibJarsTask = tasks.findByName(syncLibJarsTaskName)
+
+        if (syncLibJarsTask) {
+            dependsOn syncLibJarsTask
+        }
+
+        def mergeJavaResourceTaskName = "merge${buildTypeName}JavaResource"
+        def mergeJavaResourceTask = tasks.findByName(mergeJavaResourceTaskName)
+
+        if (mergeJavaResourceTask) {
+            dependsOn mergeJavaResourceTask
+        }
+
+        def mergeJniLibFoldersTaskName = "merge${buildTypeName}JniLibFolders"
+        def mergeJniLibFoldersTask = tasks.findByName(mergeJniLibFoldersTaskName)
+
+        if (mergeJniLibFoldersTask) {
+            dependsOn mergeJniLibFoldersTask
+        }
+
+        def mergeNativeLibsTaskName = "merge${buildTypeName}NativeLibs"
+        def mergeNativeLibsTask = tasks.findByName(mergeNativeLibsTaskName)
+
+        if (mergeNativeLibsTask) {
+            dependsOn mergeNativeLibsTask
+        }
+
+        def stripDebugSymbolsTaskName = "strip${buildTypeName}DebugSymbols"
+        def stripDebugSymbolsTask = tasks.findByName(stripDebugSymbolsTaskName)
+
+        if (stripDebugSymbolsTask) {
+            dependsOn stripDebugSymbolsTask
+        }
+
+        def validateSigningTaskName = "validateSigning${buildTypeName}"
+        def validateSigningTask = tasks.findByName(validateSigningTaskName)
+
+        if (validateSigningTask) {
+            dependsOn validateSigningTask
+        }
+
+
+        def extractProguardFilesTaskName = "extractProguardFiles"
+        def extractProguardFilesTask = tasks.findByName(extractProguardFilesTaskName)
+
+        if (extractProguardFilesTask) {
+            dependsOn extractProguardFilesTask
+        }
+
+
+        // def compileArtProfileTaskName = "compile${buildTypeName}ArtProfile"
+        // def compileArtProfileTask = tasks.findByName(compileArtProfileTaskName)
+
+        // if (compileArtProfileTask) {
+        //     dependsOn compileArtProfileTask
+        // }
+
+
+        def extractNativeSymbolTablesTaskName = "extract${buildTypeName}NativeSymbolTables"
+        def extractNativeSymbolTablesTask = tasks.findByName(extractNativeSymbolTablesTaskName)
+
+        if (extractNativeSymbolTablesTask) {
+            dependsOn extractNativeSymbolTablesTask
+        }
+
+
+        // def optimizeResourcesTaskName = "optimize${buildTypeName}Resources"
+        // def optimizeResourcesTask = tasks.findByName(optimizeResourcesTaskName)
+
+        // if (optimizeResourcesTask) {
+        //     dependsOn optimizeResourcesTask
+        // }
+
+        def bundleResourcesTaskName = "bundle${buildTypeName}Resources"
+        def bundleResourcesTask = tasks.findByName(bundleResourcesTaskName)
+
+        if (bundleResourcesTask) {
+            dependsOn bundleResourcesTask
+        }
+
+    }
+
     dependsOn copyMetadataFilters
-    dependsOn collectAllJars
 
     // As some external gradle plugins can reorder the execution order of the tasks it may happen that buildMetadata is executed after merge{Debug/Release}Assets
     // in that case the metadata won't be included in the result apk and it will crash, so to avoid this we are adding the copyMetadata task which will manually copy
@@ -734,7 +892,9 @@ task buildMetadata(type: BuildToolTask) {
     inputs.files("$MDG_JAVA_DEPENDENCIES")
 
     // make MDG aware of whitelist.mdg and blacklist.mdg files
-    inputs.files(project.fileTree(dir: "$rootDir", include: "**/*.mdg"))
+    // inputs.files(project.fileTree(dir: "$rootDir", include: "**/*.mdg"))
+    // use explicit inputs as the above makes the whole build-tools directory an input!
+    inputs.files("$BUILD_TOOLS_PATH/whitelist.mdg", "$BUILD_TOOLS_PATH/blacklist.mdg")
 
     def classesDir = layout.buildDirectory.dir("intermediates/javac").get().asFile
     if (classesDir.exists()) {
@@ -798,7 +958,7 @@ task buildMetadata(type: BuildToolTask) {
         }
 
         def store = new ArrayList<File>()
-        for (String dir : generatedClasses){
+        for (String dir : generatedClasses) {
             listf(dir, store)
         }
 
@@ -822,6 +982,10 @@ task buildMetadata(type: BuildToolTask) {
 
         def paramz = new ArrayList<String>()
         paramz.add(Paths.get(rootPath, "android-metadata-generator.jar"))
+
+        // if (enableAnalytics) {
+        //     paramz.add("analyticsFilePath=$analyticsFilePath")
+        // }
 
         if (enableVerboseMDG) {
             paramz.add("verbose")
@@ -945,120 +1109,183 @@ cleanSbg.dependsOn(cleanMdg)
 clean.dependsOn(cleanSbg)
 
 
-tasks.configureEach { DefaultTask currentTask ->
-    if (currentTask =~ /generate.+BuildConfig/) {
-        currentTask.finalizedBy(extractAllJars)
-        extractAllJars.finalizedBy(collectAllJars)
-    }
+//dependsOn {
+//    pattern {
+//        include "merge*.Shaders" // Matches tasks starting with "merge" and ending with "Shaders"
+//    }
+//}
+
+tasks.configureEach({ DefaultTask currentTask ->
+   // println "\t ~ [DEBUG][app] build.gradle - currentTask = ${currentTask.name} ..."
+
     if (currentTask =~ /compile.+JavaWithJavac/) {
         currentTask.dependsOn(runSbg)
-        currentTask.finalizedBy(buildMetadata)
+    }
+
+    if (currentTask =~ /mergeDex.+/) {
+        currentTask.dependsOn(runSbg)
     }
 
     if (currentTask =~ /compile.+Kotlin.+/) {
         currentTask.dependsOn(runSbg)
-        currentTask.finalizedBy(buildMetadata)
     }
 
     if (currentTask =~ /merge.*Assets/) {
         currentTask.dependsOn(buildMetadata)
     }
-    // ensure buildMetadata is done before R8 to allow custom proguard from metadata
+
+//    // ensure buildMetadata is done before R8 to allow custom proguard from metadata
     if (currentTask =~ /minify.*WithR8/) {
-        currentTask.dependsOn(buildMetadata)
+        buildMetadata.finalizedBy(currentTask)
     }
     if (currentTask =~ /assemble.*Debug/ || currentTask =~ /assemble.*Release/) {
         currentTask.finalizedBy("validateAppIdMatch")
     }
 
-    // added because of a error with gradle 8 telling us to add this
-    // because buildMetadata uses the output of those
-    // TODO: there must be a way to make it simpler
-    if (!(currentTask =~ /AndroidTest/) &&
-        (currentTask =~ /process.+Resources/ || 
-        currentTask =~ /desugar.+FileDependencies/ || 
-        currentTask =~ /desugarBenchmarkFileDependencies/ ||
-        currentTask =~ /dexBuilder.+/ || 
-        currentTask =~ /check.*DuplicateClasses/ || 
-        currentTask =~ /merge.+Shaders/ ||
-        currentTask =~ /merge.*JavaResource/ || 
-        currentTask =~ /merge.+GlobalSynthetics/ || 
-        currentTask =~ /merge.+JniLibFolders/ || 
-        currentTask =~ /merge.+NativeLibs/ || 
-        currentTask =~ /mergeDex.+/ || 
-        currentTask =~ /mergeLibDex.+/ || 
-        currentTask =~ /mergeProjectDex.+/ || 
-        currentTask =~ /mergeExtDex.+/ || 
-        currentTask =~ /mergeExtDexBenchmark/ ||
-        currentTask =~ /mergeExtDexNonMinified.+/ || 
-        currentTask =~ /mergeDexBenchmark/ ||
-        currentTask =~ /mergeDexNonMinified.+/ || 
-        currentTask =~ /mergeBenchmark.+JavaResource/ ||  
-        currentTask =~ /mergeBenchmarkShaders/ ||
-        currentTask =~ /mergeBenchmarkJavaResource/ ||
-        currentTask =~ /mergeBenchmarkJniLibFolders/ ||
-        currentTask =~ /mergeBenchmarkNativeLibs/ ||
-        currentTask =~ /mergeNonMinified.+Shaders/ || 
-        currentTask =~ /mergeNonMinified.+JavaResource/ ||
-        currentTask =~ /mergeNonMinified.+JniLibFolders/ || 
-        currentTask =~ /mergeNonMinified.+NativeLibs/ || 
-        currentTask =~ /strip.*DebugSymbols/ || 
-        currentTask =~ /stripBenchmark.+Symbols/ ||
-        currentTask =~ /stripNonMinified.+DebugSymbols/ || 
-        currentTask =~ /extract.+NativeSymbolTables/ ||
-        currentTask =~ /extractProguardFiles/ || 
-        currentTask =~ /checkBenchmarkDuplicateClasses/ ||
-        currentTask =~ /checkBenchmark.+DuplicateClasses/ || 
-        currentTask =~ /bundle.*Resources/ ||
-        currentTask =~ /optimize.*Resources/ ||
-        // currentTask =~ /compile.*ArtProfile/ ||
-        currentTask =~ /extractBenchmarkNativeSymbolTables/ ||
-        currentTask =~ /buildKotlinToolingMetadata/ ||
-        currentTask =~ /validateSigning.*/ || 
-        currentTask =~ /generate.+LintVitalReportMode/ || 
-        currentTask =~ /lintVitalAnalyze.+/ || 
-        currentTask =~ /lintAnalyze.*/ || 
-        currentTask =~ /sync.+LibJars/ || 
-        currentTask =~ /processNonMinified.+JavaRes/ || 
-        currentTask =~ /process.*JavaRes/ || 
-        currentTask =~ /lintAnalyze.*UnitTest/ || 
-        currentTask =~ /buildCMake.*/ || 
-        currentTask =~ /configureCMake.*/ || 
-        currentTask =~ /transform.+ClassesWithAsm/ || 
-        currentTask =~ /generate.*AndroidTestLintModel/ || 
-        currentTask =~ /generate.*UnitTestLintModel/ || 
-        // because of sentry plugin. There must be a better way
-        currentTask =~ /transformDebugClassesWithAsm/ || 
-        currentTask =~ /generateSentryDebugMetaProperties.*/ || 
-        currentTask =~ /generateSentryBundleId.*/ || 
-        currentTask =~ /collectExternal.+/
-        )) {
-        currentTask.finalizedBy(buildMetadata)
-    }
-    if (
-        currentTask =~ /generateSentryBundleId.*/ || 
-        currentTask =~ /sentryCollectSources.*/
-        ) {
-        currentTask.mustRunAfter(runSbg)
-    }
-    if (
-        currentTask =~ /generate.*AndroidTestResValues/
-        ) {
-        buildMetadata.dependsOn(currentTask)
-    }
-    if (
-        currentTask =~ /generate.*UnitTestLintModel/ || 
-        currentTask =~ /sentryCollectSourcesRelease/ || 
-        currentTask =~ /compile.*ArtProfile/
-        ) {
-        currentTask.mustRunAfter(buildMetadata)
-    }
-    // added because of a error with gradle 8 telling us to add this
-    // because buildMetadata uses the output of those
-    // TODO: there must be a way to make it simpler
-    if (!(currentTask =~ /AndroidTest/) && (
-        currentTask =~ /process.+Resources/
-        )) {
+    if (currentTask =~ /process.+Resources/) {
         cleanupAllJars.dependsOn(currentTask)
     }
+
+//    if (currentTask.name == "extractProguardFiles") {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+    if (currentTask =~ /generate.+LintVitalReportModel/) {
+        currentTask.dependsOn(buildMetadata)
+    }
+
+    if (currentTask =~ /lintVitalAnalyze.+/) {
+        currentTask.dependsOn(buildMetadata)
+    }
+//
+//    if (currentTask =~ /merge.+GlobalSynthetics/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /optimize.+Resources/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /buildCMake.*/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /configureCMake.*/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /validateSigning.*/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /generate.*LintReportModel/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /generate.*AndroidTestResValues/) {
+//      //  buildMetadata.dependsOn(currentTask)
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /generate.*AndroidTestLintModel/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /generate.*UnitTestLintModel/) {
+//        buildMetadata.mustRunAfter(currentTask)
+//    }
+//
+//    if (currentTask =~ /generate.*UnitTestLintModel/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//
+//    if (currentTask =~ /lintAnalyze.*UnitTest/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /process.*JavaRes/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /strip.*DebugSymbols/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /merge.*JavaResource/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /lintAnalyze.*/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /lintAnalyze.*AndroidTest/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /bundle.*Resources/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /compile.*ArtProfile/) {
+//        currentTask.mustRunAfter(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /check.*DuplicateClasses/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /check.*AarMetadata/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /create.*CompatibleScreenManifests/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /process.*Manifest/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /generate.*ResValues/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /merge.*Resources/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /package.*Resources/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /process.*Resources/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /desugar.*Dependencies/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+//
+//    if (currentTask =~ /merge.*JniLibFolders/) {
+//        currentTask.finalizedBy(buildMetadata)
+//    }
+
+})
+
+rootProject.subprojects.forEach {
+    it.tasks.configureEach({ DefaultTask currentTask ->
+        if (currentTask =~ /.+bundleLibCompileToJar.*/) {
+            currentTask.finalizedBy(cleanupAllJars)
+        }
+
+        if (currentTask =~ /bundleLibRuntimeToDir.*/) {
+            currentTask.finalizedBy(buildMetadata)
+        }
+  
+        if (currentTask =~ /compile.*LibraryResources/) {
+            currentTask.finalizedBy(buildMetadata)
+        }
+    })
 }
