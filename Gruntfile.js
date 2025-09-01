@@ -2,8 +2,6 @@ const childProcess = require("child_process");
 const EOL = require("os").EOL;
 const path = require("path");
 const now = new Date().toISOString();
-const latestVersion = require('latest-version').default;
-
 
 const ENVIRONMENTS = {
 	live: "live",
@@ -267,9 +265,9 @@ function registerTestingDependenciesTasks(grunt) {
 				dependenciesVersions[dep.name] = dep.version;
 				return Promise.resolve();
 			}
-			return latestVersion(dep.name).then(v => {
+			return import('latest-version').then(latestVersion=> latestVersion.default(dep.name).then(v => {
 				dependenciesVersions[dep.name] = v;
-			});
+			}));
 		});
 
 		Promise.all(versionPromises)
