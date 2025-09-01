@@ -43,7 +43,7 @@ export function doesCurrentNpmCommandMatch(patterns?: RegExp[]): boolean {
  */
 export function someWithRegExps(array: string[], patterns: RegExp[]): boolean {
 	return _.some(array, (item) =>
-		_.some(patterns, (pattern) => !!item.match(pattern))
+		_.some(patterns, (pattern) => !!item.match(pattern)),
 	);
 }
 
@@ -128,7 +128,7 @@ function sanitizePluginName(pluginName: string): string {
 export async function executeActionByChunks<T>(
 	initialData: T[] | IDictionary<T>,
 	chunkSize: number,
-	elementAction: (element: T, key?: string | number) => Promise<any>
+	elementAction: (element: T, key?: string | number) => Promise<any>,
 ): Promise<void> {
 	let arrayToChunk: (T | string)[];
 	let action: (key: string | T) => Promise<any>;
@@ -219,9 +219,9 @@ export function settlePromises<T>(promises: Promise<T>[]): Promise<T[]> {
 									new Error(
 										`Multiple errors were thrown:${EOL}${errors
 											.map((e) => e.message || e)
-											.join(EOL)}`
-									)
-							  )
+											.join(EOL)}`,
+									),
+								)
 							: resolve(results);
 					}
 				})
@@ -284,7 +284,7 @@ export function createGUID(useBraces?: boolean) {
 export function stringReplaceAll(
 	inputString: string,
 	find: any,
-	replace: string
+	replace: string,
 ): string {
 	return inputString.split(find).join(replace);
 }
@@ -299,7 +299,7 @@ export function isResponseRedirect(response: Server.IRequestResponseData) {
 
 export function formatListOfNames(
 	names: string[],
-	conjunction?: string
+	conjunction?: string,
 ): string {
 	conjunction = conjunction === undefined ? "or" : conjunction;
 	if (names.length <= 1) {
@@ -317,7 +317,7 @@ export function formatListOfNames(
 
 export function getRelativeToRootPath(
 	rootPath: string,
-	filePath: string
+	filePath: string,
 ): string {
 	const relativeToRootPath = filePath.substr(rootPath.length);
 	return relativeToRootPath;
@@ -383,7 +383,7 @@ export function isNumberWithoutExponent(n: any): boolean {
 }
 
 export function fromWindowsRelativePathToUnix(
-	windowsRelativePath: string
+	windowsRelativePath: string,
 ): string {
 	return windowsRelativePath.replace(/\\/g, "/");
 }
@@ -448,7 +448,7 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 		...message.split("\n").map((row) => formatRow(row.trim())),
 		emptyRow,
 		border + EOL,
-		EOL
+		EOL,
 	);
 	return messageWithBorders.join("");
 }
@@ -456,7 +456,7 @@ export function getMessageWithBorders(message: string, spanLength = 3): string {
 export function remove<T>(
 	array: T[],
 	predicate: (element: T) => boolean,
-	numberOfElements?: number
+	numberOfElements?: number,
 ): T[] {
 	numberOfElements = numberOfElements || 1;
 	const index = _.findIndex(array, predicate);
@@ -487,7 +487,7 @@ export function parseJson(data: string): any {
 // TODO: Use generic for predicatе predicate: (element: T|T[]) when TypeScript support this.
 export async function getFuturesResults<T>(
 	promises: Promise<T | T[] | T[][]>[],
-	predicate: (element: any) => boolean
+	predicate: (element: any) => boolean,
 ): Promise<T[] | T[][]> {
 	const results = await Promise.all(promises);
 
@@ -502,7 +502,7 @@ export async function getFuturesResults<T>(
  */
 export function appendZeroesToVersion(
 	version: string,
-	requiredVersionLength: number
+	requiredVersionLength: number,
 ): string {
 	if (version) {
 		const zeroesToAppend = requiredVersionLength - version.split(".").length;
@@ -516,12 +516,12 @@ export function appendZeroesToVersion(
 
 export function decorateMethod(
 	before: (method1: any, self1: any, args1: any[]) => Promise<any>,
-	after: (method2: any, self2: any, result2: any, args2: any[]) => Promise<any>
+	after: (method2: any, self2: any, result2: any, args2: any[]) => Promise<any>,
 ) {
 	return (
 		target: Object,
 		propertyKey: string,
-		descriptor: TypedPropertyDescriptor<Function>
+		descriptor: TypedPropertyDescriptor<Function>,
 	) => {
 		const sink = descriptor.value;
 		descriptor.value = async function (...args: any[]): Promise<any> {
@@ -539,7 +539,7 @@ export function decorateMethod(
 					const chainedReplacementMethod = _.reduce(
 						replacementMethods,
 						(prev, next) => next.bind(next, args, prev),
-						sink.bind(this)
+						sink.bind(this),
 					);
 					result = chainedReplacementMethod();
 				}
@@ -565,7 +565,7 @@ export function hook(commandName: string) {
 			const injector = self.$injector;
 			if (!injector) {
 				throw Error(
-					"Type with hooks needs to have either $hooksService or $injector injected."
+					"Type with hooks needs to have either $hooksService or $injector injected.",
 				);
 			}
 			hooksService = injector.resolve("hooksService");
@@ -576,7 +576,7 @@ export function hook(commandName: string) {
 	function prepareArguments(
 		method: any,
 		args: any[],
-		hooksService: IHooksService
+		hooksService: IHooksService,
 	): { [key: string]: any } {
 		annotate(method);
 		const argHash: any = {};
@@ -595,7 +595,7 @@ export function hook(commandName: string) {
 			const hooksService = getHooksService(self);
 			return hooksService.executeBeforeHooks(
 				commandName,
-				prepareArguments(method, args, hooksService)
+				prepareArguments(method, args, hooksService),
 			);
 		},
 		async (method: any, self: any, resultPromise: any, args: any[]) => {
@@ -603,10 +603,10 @@ export function hook(commandName: string) {
 			const hooksService = getHooksService(self);
 			await hooksService.executeAfterHooks(
 				commandName,
-				prepareArguments(method, args, hooksService)
+				prepareArguments(method, args, hooksService),
 			);
 			return Promise.resolve(result);
-		}
+		},
 	);
 }
 
@@ -618,7 +618,7 @@ export async function attachAwaitDetach(
 	eventName: string,
 	eventEmitter: EventEmitter,
 	eventHandler: (...args: any[]) => void,
-	operation: Promise<any>
+	operation: Promise<any>,
 ) {
 	eventEmitter.on(eventName, eventHandler);
 
@@ -631,7 +631,7 @@ export async function attachAwaitDetach(
 
 export async function connectEventually(
 	factory: () => Promise<net.Socket>,
-	handler: (_socket: net.Socket) => void
+	handler: (_socket: net.Socket) => void,
 ): Promise<void> {
 	async function tryConnect() {
 		const tryConnectAfterTimeout = setTimeout.bind(undefined, tryConnect, 1000);
@@ -650,7 +650,7 @@ export async function connectEventually(
 
 export function getHash(
 	str: string,
-	options?: { algorithm?: string; encoding?: crypto.BinaryToTextEncoding }
+	options?: { algorithm?: string; encoding?: crypto.BinaryToTextEncoding },
 ): string {
 	return crypto
 		.createHash((options && options.algorithm) || "sha256")
@@ -660,7 +660,7 @@ export function getHash(
 
 export async function connectEventuallyUntilTimeout(
 	factory: () => Promise<net.Socket>,
-	timeout: number
+	timeout: number,
 ): Promise<net.Socket> {
 	return new Promise<net.Socket>(async (resolve, reject) => {
 		let lastKnownError: Error;
@@ -670,7 +670,7 @@ export async function connectEventuallyUntilTimeout(
 			if (!isResolved) {
 				isResolved = true;
 				reject(
-					lastKnownError || new Error(`Unable to connect for ${timeout}ms`)
+					lastKnownError || new Error(`Unable to connect for ${timeout}ms`),
 				);
 			}
 		}, timeout);
@@ -725,7 +725,7 @@ export function getProjectFilesConfig(opts: {
  */
 export function getPidFromiOSSimulatorLogs(
 	applicationIdentifier: string,
-	logLine: string
+	logLine: string,
 ): string {
 	if (logLine) {
 		const pidRegExp = new RegExp(`${applicationIdentifier}:\\s?(\\d+)`);
@@ -743,7 +743,7 @@ export function getValueFromNestedObject(obj: any, key: string): any {
 		}
 
 		const res: any[] = [];
-		_.forEach(_obj as any, (v, k) => {
+		_.forEach(_obj, (v, k: string) => {
 			if (
 				typeof v === "object" &&
 				typeof k === "string" &&
@@ -763,7 +763,7 @@ export function getValueFromNestedObject(obj: any, key: string): any {
 
 export function getWinRegPropertyValue(
 	key: string,
-	propertyName: string
+	propertyName: string,
 ): Promise<string> {
 	return new Promise((resolve, reject) => {
 		const Winreg = require("winreg");
@@ -784,7 +784,7 @@ export function getWinRegPropertyValue(
 export function stringify(
 	value: any,
 	replacer?: (key: string, value: any) => any,
-	space?: string | number
+	space?: string | number,
 ): string {
 	return JSON.stringify(value, replacer, space || 2);
 }
@@ -801,7 +801,7 @@ export function getFixedLengthDateString(): string {
 	const milliseconds = getFormattedMilliseconds(currentDate);
 
 	return `${[year, month, day].join("-")} ${[hour, minutes, seconds].join(
-		":"
+		":",
 	)}.${milliseconds}`;
 }
 
@@ -871,7 +871,7 @@ export function annotate(fn: any) {
 			if (argDecl && fnText.length) {
 				argDecl[2].split(FN_ARG_SPLIT).forEach((arg) => {
 					arg.replace(FN_ARG, (all, underscore, name) =>
-						$inject.args.push(name)
+						$inject.args.push(name),
 					);
 				});
 			}
@@ -889,7 +889,7 @@ export function annotate(fn: any) {
  * @return {void}
  */
 export function hasValidAndroidSigning(
-	signingData: Partial<IAndroidSigningData>
+	signingData: Partial<IAndroidSigningData>,
 ): boolean {
 	const isValid =
 		signingData &&

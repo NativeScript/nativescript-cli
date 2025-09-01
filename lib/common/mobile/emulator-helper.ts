@@ -5,6 +5,7 @@ import { injector } from "../yok";
 export class EmulatorHelper implements Mobile.IEmulatorHelper {
 	// https://developer.android.com/guide/topics/manifest/uses-sdk-element
 	public mapAndroidApiLevelToVersion = {
+		"android-36": "16.0.0",
 		"android-35": "15.0.0",
 		"android-34": "14.0.0",
 		"android-33": "13.0.0",

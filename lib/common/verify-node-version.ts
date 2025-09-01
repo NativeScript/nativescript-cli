@@ -53,9 +53,9 @@ export function verifyNodeVersion(): void {
 					nodeVer,
 					cliName,
 					supportedVersionsRange,
-					os.EOL
-				)
-			)
+					os.EOL,
+				),
+			),
 		);
 		process.exit(1);
 	}

@@ -101,10 +101,36 @@ interface INsConfigPlaform {
 	id?: string;
 }
 
+interface IOSSPMPackageBase {
+	name: string;
+	libs: string[];
+	/**
+	 * Optional: If you have more targets (like widgets for example)
+	 * you can list their names here to include the Swift Package with them
+	 */
+	targets?: string[];
+}
+
+export interface IOSRemoteSPMPackage extends IOSSPMPackageBase {
+	repositoryURL: string;
+	version: string;
+}
+
+export interface IOSLocalSPMPackage extends IOSSPMPackageBase {
+	path: string;
+}
+
+export type IOSSPMPackage = IOSRemoteSPMPackage | IOSLocalSPMPackage;
+
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
 	runtimePackageName?: string
 	cocoapodUseBundleExec?: boolean
+	/**
+	 * Swift Package Manager
+	 * List packages to be included in the iOS build.
+	 */
+	SPMPackages?: Array<IOSSPMPackage>;
 }
 
 interface INSConfigVisionOS extends INsConfigIOS {}
@@ -218,7 +244,7 @@ interface IProjectData extends ICreateProjectData {
 	initializeProjectData(projectDir?: string): void;
 	initializeProjectDataFromContent(
 		packageJsonContent: string,
-		projectDir?: string
+		projectDir?: string,
 	): void;
 	getAppDirectoryPath(projectDir?: string): string;
 	getAppDirectoryRelativePath(): string;
@@ -309,7 +335,7 @@ interface IProjectDataService {
 	 */
 	getRuntimePackage(
 		projectDir: string,
-		platform: SupportedPlatform
+		platform: SupportedPlatform,
 	): IBasePluginData;
 
 	/**
@@ -329,7 +355,7 @@ interface IProjectCleanupService {
 	 */
 	clean(
 		pathsToClean: string[],
-		options?: IProjectCleanupOptions
+		options?: IProjectCleanupOptions,
 	): Promise<IProjectCleanupResult>;
 
 	/**
@@ -338,7 +364,7 @@ interface IProjectCleanupService {
 	 */
 	cleanPath(
 		pathToClean: string,
-		options?: IProjectCleanupOptions
+		options?: IProjectCleanupOptions,
 	): Promise<IProjectCleanupResult>;
 }
 
@@ -440,7 +466,7 @@ interface IProjectConfigService {
 
 	writeLegacyNSConfigIfNeeded(
 		projectDir: string,
-		runtimePackage: IBasePluginData
+		runtimePackage: IBasePluginData,
 	): Promise<void>;
 }
 
@@ -543,14 +569,14 @@ interface IProjectTemplatesService {
 	 */
 	prepareTemplate(
 		templateName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<ITemplateData>;
 }
 
 interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(
 		pluginData: IPluginData,
-		platform: string
+		platform: string,
 	): string;
 	getFrameworkVersion(projectData: IProjectData): string;
 }
@@ -612,7 +638,7 @@ interface ILocalBuildService {
 	 */
 	build(
 		platform: string,
-		platformBuildOptions: IPlatformBuildData
+		platformBuildOptions: IPlatformBuildData,
 	): Promise<string>;
 	/**
 	 * Removes build artifacts specific to the platform
@@ -632,7 +658,7 @@ interface ITestExecutionService {
 	startKarmaServer(
 		platform: string,
 		liveSyncInfo: ILiveSyncInfo,
-		deviceDescriptors: ILiveSyncDeviceDescriptor[]
+		deviceDescriptors: ILiveSyncDeviceDescriptor[],
 	): Promise<void>;
 	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
@@ -666,17 +692,17 @@ interface ICocoaPodsService {
 	 */
 	applyPodfileFromAppResources(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	applyPodfileArchExclusions(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	applyPodfileFromExtensions(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	/**
@@ -691,7 +717,7 @@ interface ICocoaPodsService {
 		moduleName: string,
 		podfilePath: string,
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	/**
@@ -713,7 +739,7 @@ interface ICocoaPodsService {
 		moduleName: string,
 		podfilePath: string,
 		projectData: IProjectData,
-		nativeProjectPath: string
+		nativeProjectPath: string,
 	): void;
 
 	/**
@@ -731,7 +757,7 @@ interface ICocoaPodsService {
 	 */
 	executePodInstall(
 		projectRoot: string,
-		xcodeProjPath: string
+		xcodeProjPath: string,
 	): Promise<ISpawnResult>;
 
 	/**
@@ -743,7 +769,7 @@ interface ICocoaPodsService {
 	mergePodXcconfigFile(
 		projectData: IProjectData,
 		platformData: IPlatformData,
-		opts: IRelease
+		opts: IRelease,
 	): Promise<void>;
 }
 
@@ -751,16 +777,16 @@ interface ICocoaPodsPlatformManager {
 	addPlatformSection(
 		projectData: IProjectData,
 		podfilePlatformData: IPodfilePlatformData,
-		projectPodfileContent: string
+		projectPodfileContent: string,
 	): string;
 	removePlatformSection(
 		moduleName: string,
 		projectPodFileContent: string,
-		podfilePath: string
+		podfilePath: string,
 	): string;
 	replacePlatformRow(
 		podfileContent: string,
-		podfilePath: string
+		podfilePath: string,
 	): { replacedContent: string; podfilePlatformData: IPodfilePlatformData };
 }
 
@@ -785,24 +811,24 @@ interface IIOSNativeTargetService {
 		targetType: string,
 		project: IXcode.project,
 		platformData: IPlatformData,
-		parentTarget?: string
+		parentTarget?: string,
 	): IXcode.target;
 	prepareSigning(
 		targetUuids: string[],
 		projectData: IProjectData,
-		projectPath: string
+		projectPath: string,
 	): void;
 	getTargetDirectories(folderPath: string): string[];
 	setXcodeTargetBuildConfigurationProperties(
 		properties: IXcodeTargetBuildConfigurationProperty[],
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): void;
 	setConfigurationsFromJsonFile(
 		jsonPath: string,
 		targetUuid: string,
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): void;
 }
 
@@ -811,7 +837,7 @@ interface IIOSNativeTargetService {
  */
 interface IIOSExtensionsService {
 	addExtensionsFromPath(
-		options: IAddExtensionsFromPathOptions
+		options: IAddExtensionsFromPathOptions,
 	): Promise<boolean>;
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }

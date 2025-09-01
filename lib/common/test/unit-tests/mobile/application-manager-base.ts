@@ -20,7 +20,7 @@ class ApplicationManager extends ApplicationManagerBase {
 	constructor(
 		$logger: ILogger,
 		$hooksService: IHooksService,
-		$deviceLogProvider: Mobile.IDeviceLogProvider
+		$deviceLogProvider: Mobile.IDeviceLogProvider,
 	) {
 		super($logger, $hooksService, $deviceLogProvider);
 	}
@@ -34,13 +34,13 @@ class ApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async startApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		return;
 	}
 
 	public async stopApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		return;
 	}
@@ -56,7 +56,7 @@ class ApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async getDebuggableAppViews(
-		appIdentifiers: string[]
+		appIdentifiers: string[],
 	): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> {
 		return _.cloneDeep(currentlyAvailableAppWebViewsForDebugging);
 	}
@@ -72,7 +72,7 @@ function createTestInjector(): IInjector {
 }
 
 function createAppsAvailableForDebugging(
-	count: number
+	count: number,
 ): Mobile.IDeviceApplicationInformation[] {
 	return _.times(count, (index: number) => ({
 		deviceIdentifier: "deviceId",
@@ -95,14 +95,14 @@ function createDebuggableWebView(uniqueId: string) {
 
 function createDebuggableWebViews(
 	appInfos: Mobile.IDeviceApplicationInformation[],
-	numberOfViews: number
+	numberOfViews: number,
 ): IDictionary<Mobile.IDebugWebViewInfo[]> {
 	const result: IDictionary<Mobile.IDebugWebViewInfo[]> = {};
 	_.each(appInfos, (appInfo, index) => {
 		result[appInfo.appIdentifier] = _.times(
 			numberOfViews,
 			(currentViewIndex: number) =>
-				createDebuggableWebView(`${index}_${currentViewIndex}`)
+				createDebuggableWebView(`${index}_${currentViewIndex}`),
 		);
 	});
 
@@ -144,12 +144,12 @@ describe("ApplicationManagerBase", () => {
 								(f: Mobile.IDeviceApplicationInformation, index: number) => {
 									assert.deepStrictEqual(
 										f,
-										currentlyAvailableAppsForDebugging[index]
+										currentlyAvailableAppsForDebugging[index],
 									);
-								}
+								},
 							);
 						}
-					}
+					},
 				);
 
 				await applicationManager.checkForApplicationUpdates();
@@ -173,16 +173,16 @@ describe("ApplicationManagerBase", () => {
 								(f: Mobile.IDeviceApplicationInformation, index: number) => {
 									assert.deepStrictEqual(
 										f,
-										currentlyAvailableAppsForDebugging[index]
+										currentlyAvailableAppsForDebugging[index],
 									);
-								}
+								},
 							);
 
 							if (isFinalCheck) {
 								return;
 							}
 						}
-					}
+					},
 				);
 
 				await applicationManager.checkForApplicationUpdates();
@@ -208,10 +208,10 @@ describe("ApplicationManagerBase", () => {
 								lostAppsForDebug,
 								(f: Mobile.IDeviceApplicationInformation, index: number) => {
 									assert.deepStrictEqual(f, expectedAppsToBeLost[index]);
-								}
+								},
 							);
 						}
-					}
+					},
 				);
 
 				// First call will raise debuggableAppFound two times.
@@ -238,10 +238,10 @@ describe("ApplicationManagerBase", () => {
 									f,
 									_.find(
 										initialAppsAvailableForDebug,
-										(t) => t.appIdentifier === f.appIdentifier
-									)
+										(t) => t.appIdentifier === f.appIdentifier,
+									),
 								);
-							}
+							},
 						);
 
 						if (
@@ -250,7 +250,7 @@ describe("ApplicationManagerBase", () => {
 						) {
 							return;
 						}
-					}
+					},
 				);
 
 				await applicationManager.checkForApplicationUpdates();
@@ -266,7 +266,7 @@ describe("ApplicationManagerBase", () => {
 				currentlyAvailableAppsForDebugging = _.take(allAppsForDebug, 2);
 				const remainingAppsForDebugging = _.difference(
 					allAppsForDebug,
-					currentlyAvailableAppsForDebugging
+					currentlyAvailableAppsForDebugging,
 				);
 
 				const foundAppsForDebug: Mobile.IDeviceApplicationInformation[] = [];
@@ -286,12 +286,12 @@ describe("ApplicationManagerBase", () => {
 									foundAppsForDebug,
 									(f: Mobile.IDeviceApplicationInformation, index: number) => {
 										assert.deepStrictEqual(f, remainingAppsForDebugging[index]);
-									}
+									},
 								);
 
 								resolve();
 							}
-						}
+						},
 					);
 				});
 
@@ -302,10 +302,10 @@ describe("ApplicationManagerBase", () => {
 							assert.deepStrictEqual(
 								d,
 								allAppsForDebug[0],
-								"Debuggable app lost does not match."
+								"Debuggable app lost does not match.",
 							);
 							resolve();
-						}
+						},
 					);
 				});
 
@@ -319,7 +319,7 @@ describe("ApplicationManagerBase", () => {
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(
 					currentlyAvailableAppsForDebugging,
-					numberOfViewsPerApp
+					numberOfViewsPerApp,
 				);
 				const currentDebuggableViews: IDictionary<Mobile.IDebugWebViewInfo[]> =
 					{};
@@ -330,7 +330,7 @@ describe("ApplicationManagerBase", () => {
 							currentDebuggableViews[appIdentifier] || [];
 						currentDebuggableViews[appIdentifier].push(d);
 						const numberOfFoundViewsPerApp = _.uniq(
-							_.values(currentDebuggableViews).map((arr) => arr.length)
+							_.values(currentDebuggableViews).map((arr) => arr.length),
 						);
 						if (
 							_.keys(currentDebuggableViews).length ===
@@ -342,14 +342,14 @@ describe("ApplicationManagerBase", () => {
 								_.each(webViews, (webView) => {
 									const expectedWebView = _.find(
 										currentlyAvailableAppWebViewsForDebugging[appId],
-										(c) => c.id === webView.id
+										(c) => c.id === webView.id,
 									);
 									assert.isTrue(_.isEqual(webView, expectedWebView));
 								});
 							});
 							setTimeout(done, 0);
 						}
-					}
+					},
 				);
 
 				/* tslint:disable:no-floating-promises */
@@ -362,10 +362,10 @@ describe("ApplicationManagerBase", () => {
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(
 					currentlyAvailableAppsForDebugging,
-					numberOfViewsPerApp
+					numberOfViewsPerApp,
 				);
 				const expectedResults = _.cloneDeep(
-					currentlyAvailableAppWebViewsForDebugging
+					currentlyAvailableAppWebViewsForDebugging,
 				);
 				const currentDebuggableViews: IDictionary<Mobile.IDebugWebViewInfo[]> =
 					{};
@@ -380,7 +380,7 @@ describe("ApplicationManagerBase", () => {
 									currentDebuggableViews[appIdentifier] || [];
 								currentDebuggableViews[appIdentifier].push(d);
 								const numberOfFoundViewsPerApp = _.uniq(
-									_.values(currentDebuggableViews).map((arr) => arr.length)
+									_.values(currentDebuggableViews).map((arr) => arr.length),
 								);
 								if (
 									_.keys(currentDebuggableViews).length ===
@@ -392,19 +392,19 @@ describe("ApplicationManagerBase", () => {
 										_.each(webViews, (webView) => {
 											const expectedWebView = _.find(
 												expectedResults[appId],
-												(c) => c.id === webView.id
+												(c) => c.id === webView.id,
 											);
 											assert.isTrue(_.isEqual(webView, expectedWebView));
 										});
 									});
 									setTimeout(done, 0);
 								}
-							}
+							},
 						);
 
 						currentlyAvailableAppWebViewsForDebugging = _.mapValues(
 							currentlyAvailableAppWebViewsForDebugging,
-							(a) => []
+							(a) => [] as any,
 						);
 						return applicationManager.checkForApplicationUpdates();
 					})
@@ -416,7 +416,7 @@ describe("ApplicationManagerBase", () => {
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(
 					currentlyAvailableAppsForDebugging,
-					numberOfViewsPerApp
+					numberOfViewsPerApp,
 				);
 				let expectedViewToBeFound = createDebuggableWebView("uniqueId");
 				let expectedAppIdentifier =
@@ -435,7 +435,7 @@ describe("ApplicationManagerBase", () => {
 								if (isLastCheck) {
 									setTimeout(done, 0);
 								}
-							}
+							},
 						);
 
 						currentlyAvailableAppWebViewsForDebugging[
@@ -471,7 +471,7 @@ describe("ApplicationManagerBase", () => {
 				const numberOfViewsPerApp = 2;
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(
 					currentlyAvailableAppsForDebugging,
-					numberOfViewsPerApp
+					numberOfViewsPerApp,
 				);
 				let expectedAppIdentifier =
 					currentlyAvailableAppsForDebugging[0].appIdentifier;
@@ -492,7 +492,7 @@ describe("ApplicationManagerBase", () => {
 								if (isLastCheck) {
 									setTimeout(done, 0);
 								}
-							}
+							},
 						);
 
 						return applicationManager.checkForApplicationUpdates();
@@ -522,7 +522,7 @@ describe("ApplicationManagerBase", () => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(1);
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(
 					currentlyAvailableAppsForDebugging,
-					2
+					2,
 				);
 				const viewToChange =
 					currentlyAvailableAppWebViewsForDebugging[
@@ -536,7 +536,7 @@ describe("ApplicationManagerBase", () => {
 					(appIdentifier: string, d: Mobile.IDebugWebViewInfo) => {
 						assert.isTrue(_.isEqual(d, expectedView));
 						setTimeout(done, 0);
-					}
+					},
 				);
 
 				applicationManager
@@ -552,7 +552,7 @@ describe("ApplicationManagerBase", () => {
 				currentlyAvailableAppsForDebugging = createAppsAvailableForDebugging(1);
 				currentlyAvailableAppWebViewsForDebugging = createDebuggableWebViews(
 					currentlyAvailableAppsForDebugging,
-					2
+					2,
 				);
 				const viewToChange =
 					currentlyAvailableAppWebViewsForDebugging[
@@ -570,19 +570,19 @@ describe("ApplicationManagerBase", () => {
 									() =>
 										done(
 											new Error(
-												"When id is changed, debuggableViewChanged must not be emitted."
-											)
+												"When id is changed, debuggableViewChanged must not be emitted.",
+											),
 										),
-									0
+									0,
 								);
-							}
+							},
 						);
 
 						applicationManager.on(
 							"debuggableViewLost",
 							(appIdentifier: string, d: Mobile.IDebugWebViewInfo) => {
 								assert.isTrue(_.isEqual(d, expectedView));
-							}
+							},
 						);
 
 						applicationManager.on(
@@ -591,7 +591,7 @@ describe("ApplicationManagerBase", () => {
 								expectedView.id = "new id";
 								assert.isTrue(_.isEqual(d, expectedView));
 								setTimeout(done, 0);
-							}
+							},
 						);
 
 						viewToChange.id = "new id";
@@ -627,7 +627,7 @@ describe("ApplicationManagerBase", () => {
 
 				assert.deepStrictEqual(
 					reportedInstalledApps.length,
-					currentlyInstalledApps.length
+					currentlyInstalledApps.length,
 				);
 			});
 
@@ -658,7 +658,7 @@ describe("ApplicationManagerBase", () => {
 
 					assert.deepStrictEqual(
 						reportedInstalledApps.length,
-						currentlyInstalledApps.length
+						currentlyInstalledApps.length,
 					);
 				};
 
@@ -699,7 +699,7 @@ describe("ApplicationManagerBase", () => {
 
 				assert.deepStrictEqual(
 					reportedUninstalledApps.length,
-					initiallyInstalledApps.length
+					initiallyInstalledApps.length,
 				);
 			});
 
@@ -739,7 +739,7 @@ describe("ApplicationManagerBase", () => {
 
 					assert.deepStrictEqual(
 						reportedUninstalledApps.length,
-						removedApps.length
+						removedApps.length,
 					);
 				};
 
@@ -799,7 +799,7 @@ describe("ApplicationManagerBase", () => {
 
 					assert.deepStrictEqual(
 						reportedUninstalledApps.length,
-						removedApps.length
+						removedApps.length,
 					);
 
 					_.each(installedApps, (c: string, index: number) => {
@@ -808,7 +808,7 @@ describe("ApplicationManagerBase", () => {
 
 					assert.deepStrictEqual(
 						reportedInstalledApps.length,
-						installedApps.length
+						installedApps.length,
 					);
 				};
 
@@ -832,11 +832,11 @@ describe("ApplicationManagerBase", () => {
 			currentlyInstalledApps = ["app1", "app2"];
 			assert.isTrue(
 				await applicationManager.isApplicationInstalled("app1"),
-				"app1 is installed, so result of isAppInstalled must be true."
+				"app1 is installed, so result of isAppInstalled must be true.",
 			);
 			assert.isTrue(
 				await applicationManager.isApplicationInstalled("app2"),
-				"app2 is installed, so result of isAppInstalled must be true."
+				"app2 is installed, so result of isAppInstalled must be true.",
 			);
 		});
 
@@ -844,11 +844,11 @@ describe("ApplicationManagerBase", () => {
 			currentlyInstalledApps = ["app1", "app2"];
 			assert.isFalse(
 				await applicationManager.isApplicationInstalled("app3"),
-				"app3 is NOT installed, so result of isAppInstalled must be false."
+				"app3 is NOT installed, so result of isAppInstalled must be false.",
 			);
 			assert.isFalse(
 				await applicationManager.isApplicationInstalled("app4"),
-				"app4 is NOT installed, so result of isAppInstalled must be false."
+				"app4 is NOT installed, so result of isAppInstalled must be false.",
 			);
 		});
 	});
@@ -857,7 +857,7 @@ describe("ApplicationManagerBase", () => {
 		it("calls stopApplication with correct arguments", async () => {
 			let passedApplicationData: Mobile.IApplicationData = null;
 			applicationManager.stopApplication = (
-				appData: Mobile.IApplicationData
+				appData: Mobile.IApplicationData,
 			) => {
 				passedApplicationData = appData;
 				return Promise.resolve();
@@ -867,14 +867,14 @@ describe("ApplicationManagerBase", () => {
 			assert.deepStrictEqual(
 				applicationData,
 				passedApplicationData,
-				"When bundleIdentifier is not passed to restartApplication, stopApplication must be called with application identifier."
+				"When bundleIdentifier is not passed to restartApplication, stopApplication must be called with application identifier.",
 			);
 		});
 
 		it("calls startApplication with correct arguments", async () => {
 			let passedApplicationData: Mobile.IApplicationData = null;
 			applicationManager.startApplication = (
-				appData: Mobile.IApplicationData
+				appData: Mobile.IApplicationData,
 			) => {
 				passedApplicationData = appData;
 				return Promise.resolve();
@@ -884,7 +884,7 @@ describe("ApplicationManagerBase", () => {
 			assert.deepStrictEqual(
 				passedApplicationData,
 				applicationData,
-				"startApplication must be called with correct args."
+				"startApplication must be called with correct args.",
 			);
 		});
 
@@ -893,18 +893,18 @@ describe("ApplicationManagerBase", () => {
 			let isStopApplicationCalled = false;
 
 			applicationManager.stopApplication = (
-				appData: Mobile.IApplicationData
+				appData: Mobile.IApplicationData,
 			) => {
 				isStopApplicationCalled = true;
 				return Promise.resolve();
 			};
 
 			applicationManager.startApplication = (
-				appData: Mobile.IApplicationData
+				appData: Mobile.IApplicationData,
 			) => {
 				assert.isTrue(
 					isStopApplicationCalled,
-					"When startApplication is called, stopApplication must have been resolved."
+					"When startApplication is called, stopApplication must have been resolved.",
 				);
 				isStartApplicationCalled = true;
 				return Promise.resolve();
@@ -914,7 +914,7 @@ describe("ApplicationManagerBase", () => {
 			assert.isTrue(isStopApplicationCalled, "stopApplication must be called.");
 			assert.isTrue(
 				isStartApplicationCalled,
-				"startApplication must be called."
+				"startApplication must be called.",
 			);
 		});
 	});
@@ -924,7 +924,7 @@ describe("ApplicationManagerBase", () => {
 			let passedApplicationData: Mobile.IApplicationData = null;
 
 			applicationManager.startApplication = (
-				appData: Mobile.IApplicationData
+				appData: Mobile.IApplicationData,
 			) => {
 				passedApplicationData = appData;
 				return Promise.resolve();
@@ -957,7 +957,7 @@ describe("ApplicationManagerBase", () => {
 			}) => {
 				assert.deepStrictEqual(logger.traceOutput, "");
 				applicationManager.startApplication = async (
-					appData: Mobile.IApplicationData
+					appData: Mobile.IApplicationData,
 				) => {
 					if (opts && opts.shouldStartApplicatinThrow) {
 						throw error;
@@ -970,15 +970,15 @@ describe("ApplicationManagerBase", () => {
 				await applicationManager.tryStartApplication(applicationData);
 				assert.isFalse(
 					isStartApplicationCalled,
-					"startApplication must not be called when there's an error."
+					"startApplication must not be called when there's an error.",
 				);
 				assert.isTrue(
 					logger.traceOutput.indexOf("Throw!") !== -1,
-					"Error message must be shown in trace output."
+					"Error message must be shown in trace output.",
 				);
 				assert.isTrue(
 					logger.traceOutput.indexOf("Unable to start application") !== -1,
-					"'Unable to start application' must be shown in trace output."
+					"'Unable to start application' must be shown in trace output.",
 				);
 			};
 
@@ -1004,7 +1004,7 @@ describe("ApplicationManagerBase", () => {
 			await applicationManager.reinstallApplication(
 				"appId",
 				"packageFilePath",
-				{ clean: true } as any
+				{ clean: true } as any,
 			);
 			assert.deepStrictEqual(uninstallApplicationAppIdParam, "appId");
 		});
@@ -1019,7 +1019,7 @@ describe("ApplicationManagerBase", () => {
 			await applicationManager.reinstallApplication("appId", "packageFilePath");
 			assert.deepStrictEqual(
 				installApplicationPackageFilePathParam,
-				"packageFilePath"
+				"packageFilePath",
 			);
 		});
 
@@ -1033,7 +1033,7 @@ describe("ApplicationManagerBase", () => {
 			applicationManager.uninstallApplication = (appId: string) => {
 				assert.isFalse(
 					isInstallApplicationCalled,
-					"When uninstallApplication is called, installApplication should not have been called."
+					"When uninstallApplication is called, installApplication should not have been called.",
 				);
 				isUninstallApplicationCalled = true;
 				return Promise.resolve();
@@ -1042,7 +1042,7 @@ describe("ApplicationManagerBase", () => {
 			applicationManager.installApplication = (packageFilePath: string) => {
 				assert.isTrue(
 					isUninstallApplicationCalled,
-					"When installApplication is called, uninstallApplication should have been called."
+					"When installApplication is called, uninstallApplication should have been called.",
 				);
 				isInstallApplicationCalled = true;
 				return Promise.resolve();
@@ -1051,16 +1051,16 @@ describe("ApplicationManagerBase", () => {
 			await applicationManager.reinstallApplication(
 				"appId",
 				"packageFilePath",
-				{ clean: true } as any
+				{ clean: true } as any,
 			);
 
 			assert.isTrue(
 				isUninstallApplicationCalled,
-				"uninstallApplication should have been called."
+				"uninstallApplication should have been called.",
 			);
 			assert.isTrue(
 				isInstallApplicationCalled,
-				"installApplication should have been called."
+				"installApplication should have been called.",
 			);
 		});
 	});

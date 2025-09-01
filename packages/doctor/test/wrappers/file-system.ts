@@ -1,6 +1,6 @@
 import { tmpdir } from "os";
 import { assert } from "chai";
-import * as rimraf from "rimraf";
+import { rimraf, rimrafSync } from "rimraf";
 
 import { FileSystem } from "../../src/wrappers/file-system";
 
@@ -42,6 +42,9 @@ describe("FileSystem", () => {
 				.catch((e) => done(e));
 		});
 
-		afterEach((done) => rimraf(tmpDir, done));
+		afterEach((done) => {
+			rimrafSync(tmpDir);
+			done();
+		});
 	});
 });

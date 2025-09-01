@@ -69,7 +69,7 @@ export const APK_EXTENSION_NAME = ".apk";
 export const AAB_EXTENSION_NAME = ".aab";
 export const APKS_EXTENSION_NAME = ".apks";
 export const HASHES_FILE_NAME = ".nshashes";
-export const TNS_NATIVE_SOURCE_GROUP_NAME = "NSNativeSources";
+export const TNS_NATIVE_SOURCE_GROUP_NAME = "AppResourcesSrc";
 export const NATIVE_SOURCE_FOLDER = "src";
 export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 export const NATIVE_EXTENSION_FOLDER = "extensions";
@@ -414,7 +414,7 @@ const pathToLoggerAppendersDir = join(
 	__dirname,
 	"common",
 	"logger",
-	"appenders"
+	"appenders",
 );
 export const LoggerAppenders = {
 	emitAppender: join(pathToLoggerAppendersDir, "emit-appender"),

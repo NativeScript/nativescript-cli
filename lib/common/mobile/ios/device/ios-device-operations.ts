@@ -13,7 +13,8 @@ import { injector } from "../../../yok";
 
 export class IOSDeviceOperations
 	extends EventEmitter
-	implements IIOSDeviceOperations, IDisposable, IShouldDispose {
+	implements IIOSDeviceOperations, IDisposable, IShouldDispose
+{
 	public isInitialized: boolean;
 	public shouldDispose: boolean;
 	private deviceLib: IOSDeviceLib.IOSDeviceLib;
@@ -28,30 +29,30 @@ export class IOSDeviceOperations
 	public async install(
 		ipaPath: string,
 		deviceIdentifiers: string[],
-		errorHandler: DeviceOperationErrorHandler
+		errorHandler: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 		this.$logger.trace(
-			`Installing ${ipaPath} on devices with identifiers: ${deviceIdentifiers}.`
+			`Installing ${ipaPath} on devices with identifiers: ${deviceIdentifiers}.`,
 		);
 		return await this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.install(ipaPath, deviceIdentifiers),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async uninstall(
 		appIdentifier: string,
 		deviceIdentifiers: string[],
-		errorHandler: DeviceOperationErrorHandler
+		errorHandler: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 		this.$logger.trace(
-			`Uninstalling ${appIdentifier} from devices with identifiers: ${deviceIdentifiers}.`
+			`Uninstalling ${appIdentifier} from devices with identifiers: ${deviceIdentifiers}.`,
 		);
 		return await this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.uninstall(appIdentifier, deviceIdentifiers),
-			errorHandler
+			errorHandler,
 		);
 	}
 
@@ -60,14 +61,14 @@ export class IOSDeviceOperations
 		deviceFoundCallback: DeviceInfoCallback,
 		deviceUpdatedCallback: DeviceInfoCallback,
 		deviceLostCallback: DeviceInfoCallback,
-		options?: Mobile.IDeviceLookingOptions
+		options?: Mobile.IDeviceLookingOptions,
 	): Promise<void> {
 		this.$logger.trace("Starting to look for iOS devices.");
 		this.isInitialized = true;
 		if (!this.deviceLib) {
 			let foundDevice = false;
 			const wrappedDeviceFoundCallback = (
-				deviceInfo: IOSDeviceLib.IDeviceActionInfo
+				deviceInfo: IOSDeviceLib.IDeviceActionInfo,
 			) => {
 				foundDevice = true;
 
@@ -77,7 +78,7 @@ export class IOSDeviceOperations
 			this.deviceLib = new IOSDeviceLibModule(
 				wrappedDeviceFoundCallback,
 				deviceUpdatedCallback,
-				deviceLostCallback
+				deviceLostCallback,
 			);
 			if (options && options.shouldReturnImmediateResult) {
 				return;
@@ -91,12 +92,12 @@ export class IOSDeviceOperations
 				const intervalHandle: NodeJS.Timeout = setInterval(() => {
 					if (foundDevice && !options.fullDiscovery) {
 						resolve();
-						return clearInterval(intervalHandle);
+						return clearInterval(intervalHandle as unknown as number);
 					}
 
 					iterationsCount++;
 					if (iterationsCount >= maxIterationsCount) {
-						clearInterval(intervalHandle);
+						clearInterval(intervalHandle as unknown as number);
 						return resolve();
 					}
 				}, 2000);
@@ -109,7 +110,7 @@ export class IOSDeviceOperations
 		this.setShouldDispose(false);
 
 		this.$logger.trace(
-			`Printing device log for device with identifier: ${deviceIdentifier}.`
+			`Printing device log for device with identifier: ${deviceIdentifier}.`,
 		);
 
 		this.attacheDeviceLogDataHandler();
@@ -119,75 +120,75 @@ export class IOSDeviceOperations
 
 	public async apps(
 		deviceIdentifiers: string[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceAppInfo> {
 		this.assertIsInitialized();
 		this.$logger.trace(
-			`Getting applications information for devices with identifiers: ${deviceIdentifiers}`
+			`Getting applications information for devices with identifiers: ${deviceIdentifiers}`,
 		);
 		return this.getMultipleResults(
 			() => this.deviceLib.apps(deviceIdentifiers),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async listDirectory(
 		listArray: IOSDeviceLib.IReadOperationData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceMultipleResponse> {
 		this.assertIsInitialized();
 
 		_.each(listArray, (l) => {
 			this.$logger.trace(
-				`Listing directory: ${l.path} for application ${l.appId} on device with identifier: ${l.deviceId}.`
+				`Listing directory: ${l.path} for application ${l.appId} on device with identifier: ${l.deviceId}.`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceMultipleResponse>(
 			() => this.deviceLib.list(listArray),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async readFiles(
 		deviceFilePaths: IOSDeviceLib.IReadOperationData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
 		_.each(deviceFilePaths, (p) => {
 			this.$logger.trace(
-				`Reading file: ${p.path} from application ${p.appId} on device with identifier: ${p.deviceId}.`
+				`Reading file: ${p.path} from application ${p.appId} on device with identifier: ${p.deviceId}.`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.read(deviceFilePaths),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async downloadFiles(
 		deviceFilePaths: IOSDeviceLib.IFileOperationData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
 		_.each(deviceFilePaths, (d) => {
 			this.$logger.trace(
-				`Downloading file: ${d.source} from application ${d.appId} on device with identifier: ${d.deviceId} to ${d.destination}.`
+				`Downloading file: ${d.source} from application ${d.appId} on device with identifier: ${d.deviceId} to ${d.destination}.`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.download(deviceFilePaths),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public uploadFiles(
 		files: IOSDeviceLib.IUploadFilesData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
@@ -195,67 +196,67 @@ export class IOSDeviceOperations
 			this.$logger.trace("Uploading files:");
 			this.$logger.trace(f.files);
 			this.$logger.trace(
-				`For application ${f.appId} on device with identifier: ${f.deviceId}.`
+				`For application ${f.appId} on device with identifier: ${f.deviceId}.`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.upload(files),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async deleteFiles(
 		deleteArray: IOSDeviceLib.IDeleteFileData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
 		_.each(deleteArray, (d) => {
 			this.$logger.trace(
-				`Deleting file: ${d.destination} from application ${d.appId} on device with identifier: ${d.deviceId}.`
+				`Deleting file: ${d.destination} from application ${d.appId} on device with identifier: ${d.deviceId}.`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.delete(deleteArray),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async start(
 		startArray: IOSDeviceLib.IDdiApplicationData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
 		_.each(startArray, (s) => {
 			this.$logger.trace(
-				`Starting application ${s.appId} on device with identifier: ${s.deviceId}.`
+				`Starting application ${s.appId} on device with identifier: ${s.deviceId}.`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.start(startArray),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async stop(
 		stopArray: IOSDeviceLib.IDdiApplicationData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
 		_.each(stopArray, (s) => {
 			this.$logger.trace(
-				`Stopping application ${s.appId} on device with identifier: ${s.deviceId}.`
+				`Stopping application ${s.appId} on device with identifier: ${s.deviceId}.`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.stop(stopArray),
-			errorHandler
+			errorHandler,
 		);
 	}
 
@@ -272,58 +273,58 @@ export class IOSDeviceOperations
 
 	public async postNotification(
 		postNotificationArray: IOSDeviceLib.IPostNotificationData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
 		_.each(postNotificationArray, (n) => {
 			this.$logger.trace(
-				`Sending notification ${n.notificationName} to device with identifier: ${n.deviceId}`
+				`Sending notification ${n.notificationName} to device with identifier: ${n.deviceId}`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() => this.deviceLib.postNotification(postNotificationArray),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async awaitNotificationResponse(
 		awaitNotificationResponseArray: IOSDeviceLib.IAwaitNotificatioNResponseData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IOSDeviceResponse> {
 		this.assertIsInitialized();
 
 		_.each(awaitNotificationResponseArray, (n) => {
 			this.$logger.trace(
-				`Awaiting notification response from socket: ${n.socket} with timeout: ${n.timeout}`
+				`Awaiting notification response from socket: ${n.socket} with timeout: ${n.timeout}`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
 			() =>
 				this.deviceLib.awaitNotificationResponse(
-					awaitNotificationResponseArray
+					awaitNotificationResponseArray,
 				),
-			errorHandler
+			errorHandler,
 		);
 	}
 
 	public async connectToPort(
 		connectToPortArray: IOSDeviceLib.IConnectToPortData[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IDictionary<IOSDeviceLib.IConnectToPortResponse[]>> {
 		this.assertIsInitialized();
 
 		_.each(connectToPortArray, (c) => {
 			this.$logger.trace(
-				`Connecting to port ${c.port} on device with identifier: ${c.deviceId}`
+				`Connecting to port ${c.port} on device with identifier: ${c.deviceId}`,
 			);
 		});
 
 		return this.getMultipleResults<IOSDeviceLib.IConnectToPortResponse>(
 			() => this.deviceLib.connectToPort(connectToPortArray),
-			errorHandler
+			errorHandler,
 		);
 	}
 
@@ -333,7 +334,7 @@ export class IOSDeviceOperations
 
 	private async getMultipleResults<T>(
 		getPromisesMethod: () => Promise<T>[],
-		errorHandler?: DeviceOperationErrorHandler
+		errorHandler?: DeviceOperationErrorHandler,
 	): Promise<IDictionary<T[]>> {
 		const result: T[] = [];
 		const promises = getPromisesMethod();
@@ -344,7 +345,7 @@ export class IOSDeviceOperations
 					result.push(await promise);
 				} catch (err) {
 					this.$logger.trace(
-						`Error while executing ios device operation: ${err.message} with code: ${err.code}`
+						`Error while executing ios device operation: ${err.message} with code: ${err.code}`,
 					);
 					errorHandler(err);
 				}
@@ -370,7 +371,7 @@ export class IOSDeviceOperations
 			DEVICE_LOG_EVENT_NAME,
 			(response: IOSDeviceLib.IDeviceLogData) => {
 				this.emit(DEVICE_LOG_EVENT_NAME, response);
-			}
+			},
 		);
 	}
 }

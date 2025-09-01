@@ -1,9 +1,6 @@
 import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
-import {
-	MobileProject,
-	IosSPMPackageDefinition,
-} from "@rigor789/trapezedev-project";
+import { MobileProject } from "@rigor789/trapezedev-project";
 import { IPlatformData } from "../../definitions/platform";
 import path = require("path");
 
@@ -12,16 +9,16 @@ export class SPMService implements ISPMService {
 		private $logger: ILogger,
 		private $projectConfigService: IProjectConfigService,
 		private $xcodebuildCommandService: IXcodebuildCommandService,
-		private $xcodebuildArgsService: IXcodebuildArgsService
+		private $xcodebuildArgsService: IXcodebuildArgsService,
 	) {}
 
 	public getSPMPackages(
 		projectData: IProjectData,
-		platform: string
-	): IosSPMPackageDefinition[] {
+		platform: string,
+	): IosSPMPackage[] {
 		const spmPackages = this.$projectConfigService.getValue(
 			`${platform}.SPMPackages`,
-			[]
+			[],
 		);
 
 		return spmPackages;
@@ -34,13 +31,19 @@ export class SPMService implements ISPMService {
 
 	public async applySPMPackages(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
+		pluginSpmPackages?: IosSPMPackage[],
 	) {
 		try {
 			const spmPackages = this.getSPMPackages(
 				projectData,
-				platformData.platformNameLowerCase
+				platformData.platformNameLowerCase,
 			);
+
+			if (pluginSpmPackages?.length) {
+				// include swift packages from plugin configs
+				spmPackages.push(...pluginSpmPackages);
+			}
 
 			if (!spmPackages.length) {
 				this.$logger.trace("SPM: no SPM packages to apply.");
@@ -70,6 +73,13 @@ export class SPMService implements ISPMService {
 				}
 				this.$logger.trace(`SPM: adding package ${pkg.name} to project.`, pkg);
 				await project.ios.addSPMPackage(projectData.projectName, pkg);
+
+				// Add to other Targets if specified (like widgets, etc.)
+				if (pkg.targets?.length) {
+					for (const target of pkg.targets) {
+						await project.ios.addSPMPackage(target, pkg);
+					}
+				}
 			}
 			await project.commit();
 
@@ -82,7 +92,7 @@ export class SPMService implements ISPMService {
 
 	public async resolveSPMDependencies(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	) {
 		await this.$xcodebuildCommandService.executeCommand(
 			this.$xcodebuildArgsService
@@ -95,7 +105,7 @@ export class SPMService implements ISPMService {
 			{
 				cwd: projectData.projectDir,
 				message: "Resolving SPM dependencies...",
-			}
+			},
 		);
 	}
 }
