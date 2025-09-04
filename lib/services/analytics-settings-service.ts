@@ -19,7 +19,7 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
 		private $osInfo: IOsInfo,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async canDoRequest(): Promise<boolean> {
@@ -33,28 +33,32 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	@exported("analyticsSettingsService")
 	public getClientId(): Promise<string> {
 		return this.getSettingValueOrDefault(
-			this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME
+			this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME,
 		);
 	}
 
 	public getClientName(): string {
-		return "" + color.cyan.bold(this.$staticConfig.CLIENT_NAME_ALIAS);
+		return (
+			"" +
+			color.styleText(["cyan", "bold"], this.$staticConfig.CLIENT_NAME_ALIAS)
+		);
 	}
 
 	public async getUserSessionsCount(projectName: string): Promise<number> {
-		const sessionsCountForProject = await this.$userSettingsService.getSettingValue<
-			number
-		>(this.getSessionsProjectKey(projectName));
+		const sessionsCountForProject =
+			await this.$userSettingsService.getSettingValue<number>(
+				this.getSessionsProjectKey(projectName),
+			);
 		return sessionsCountForProject || 0;
 	}
 
 	public async setUserSessionsCount(
 		count: number,
-		projectName: string
+		projectName: string,
 	): Promise<void> {
 		return this.$userSettingsService.saveSetting<number>(
 			this.getSessionsProjectKey(projectName),
-			count
+			count,
 		);
 	}
 
@@ -97,9 +101,8 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	}
 
 	private async getSettingValueOrDefault(settingName: string): Promise<string> {
-		let guid = await this.$userSettingsService.getSettingValue<string>(
-			settingName
-		);
+		let guid =
+			await this.$userSettingsService.getSettingValue<string>(settingName);
 		if (!guid) {
 			guid = createGUID(false);
 
