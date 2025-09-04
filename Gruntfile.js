@@ -2,7 +2,7 @@ const childProcess = require("child_process");
 const EOL = require("os").EOL;
 const path = require("path");
 const now = new Date().toISOString();
-const latestVersion = require('latest-version').default;
+const manifest = require('pacote').manifest;
 
 
 const ENVIRONMENTS = {
@@ -260,28 +260,26 @@ function registerTestingDependenciesTasks(grunt) {
 			return done(false);
 		}
 
-		
-		// Kick off all version resolutions in parallel
-		const versionPromises = testDependencies.map(dep => {
-			if (dep.version) {
-				dependenciesVersions[dep.name] = dep.version;
-				return Promise.resolve();
-			}
-			return latestVersion(dep.name).then(v => {
-				dependenciesVersions[dep.name] = v;
-			});
-		});
-
-		Promise.all(versionPromises)
-			.then(() => {
-				grunt.file.write(generatedVersionFilePath, JSON.stringify(dependenciesVersions, null, 2));
+		(async () => {
+			try {
+				for (const dep of testDependencies) {
+					if (dep.version) {
+						dependenciesVersions[dep.name] = dep.version;
+					} else {
+						dependenciesVersions[dep.name] = await latestVersion(dep.name);
+					}
+				}
+				grunt.file.write(
+					generatedVersionFilePath,
+					JSON.stringify(dependenciesVersions, null, 2)
+				);
 				grunt.log.writeln("Wrote", generatedVersionFilePath);
 				done();
-			})
-			.catch(err => {
+			} catch (err) {
 				grunt.log.error(err);
 				done(false);
-			});
+			}
+		})();
 	});
 
 	grunt.registerTask("verify_unit_testing_dependencies", function () {
@@ -289,5 +287,11 @@ function registerTestingDependenciesTasks(grunt) {
 			throw new Error("Unit testing dependencies are not configured.");
 		}
 	});
+}
+
+async function latestVersion(name) {
+  // only fetches the package.json for the latest dist-tag
+  const { version } = await manifest(name.toLowerCase(), { fullMetadata: false });
+  return version;
 }
 

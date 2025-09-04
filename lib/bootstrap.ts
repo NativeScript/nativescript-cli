@@ -414,8 +414,8 @@ injector.require(
 injector.requirePublic("cleanupService", "./services/cleanup-service");
 
 injector.require(
-	"webpackCompilerService",
-	"./services/webpack/webpack-compiler-service",
+	"bundlerCompilerService",
+	"./services/bundler/bundler-compiler-service",
 );
 
 injector.require(

@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "8.9.4",
+  "version": "9.0.0-alpha.5",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -153,7 +153,6 @@
     "grunt-ts": "6.0.0-beta.22",
     "husky": "9.1.7",
     "istanbul": "0.4.5",
-    "latest-version": "9.0.0",
     "lint-staged": "~15.4.3",
     "mocha": "11.1.0",
     "sinon": "19.0.2",

@@ -18,21 +18,21 @@ import {
 import { INotConfiguredEnvOptions } from "../../common/definitions/commands";
 
 declare global {
-	interface IWebpackCompilerService extends EventEmitter {
+	interface IBundlerCompilerService extends EventEmitter {
 		compileWithWatch(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			prepareData: IPrepareData
+			prepareData: IPrepareData,
 		): Promise<any>;
 		compileWithoutWatch(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			prepareData: IPrepareData
+			prepareData: IPrepareData,
 		): Promise<void>;
-		stopWebpackCompiler(platform: string): Promise<void>;
+		stopBundlerCompiler(platform: string): Promise<void>;
 	}
 
-	interface IWebpackEnvOptions {
+	interface IBundlerEnvOptions {
 		sourceMap?: boolean;
 		uglify?: boolean;
 		production?: boolean;
@@ -42,19 +42,19 @@ declare global {
 		checkForChanges(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			prepareData: IPrepareData
+			prepareData: IPrepareData,
 		): Promise<IProjectChangesInfo>;
 		getPrepareInfoFilePath(platformData: IPlatformData): string;
 		getPrepareInfo(platformData: IPlatformData): IPrepareInfo;
 		savePrepareInfo(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			prepareData: IPrepareData
+			prepareData: IPrepareData,
 		): Promise<void>;
 		setNativePlatformStatus(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			addedPlatform: IAddedNativePlatform
+			addedPlatform: IAddedNativePlatform,
 		): void;
 		currentChanges: IProjectChangesInfo;
 	}
@@ -68,10 +68,14 @@ declare global {
 		hasNativeChanges: boolean;
 	}
 
-	interface IWebpackEmitMessage {
+	interface IBundlerEmitMessage {
 		emittedFiles: string[];
 		chunkFiles: string[];
 		hash: string;
+		changedFiles?: string[];
+		isHMR?: boolean;
+		filesToCopy?: string[];
+		buildType?: string;
 	}
 
 	interface IPlatformProjectService
@@ -81,12 +85,12 @@ declare global {
 		validate(
 			projectData: IProjectData,
 			options: IOptions,
-			notConfiguredEnvOptions?: INotConfiguredEnvOptions
+			notConfiguredEnvOptions?: INotConfiguredEnvOptions,
 		): Promise<IValidatePlatformOutput>;
 		createProject(
 			frameworkDir: string,
 			frameworkVersion: string,
-			projectData: IProjectData
+			projectData: IProjectData,
 		): Promise<void>;
 		interpolateData(projectData: IProjectData): Promise<void>;
 		interpolateConfigurationFile(projectData: IProjectData): void;
@@ -108,13 +112,13 @@ declare global {
 		validateOptions(
 			projectId?: string,
 			provision?: true | string,
-			teamId?: true | string
+			teamId?: true | string,
 		): Promise<boolean>;
 
 		buildProject<T extends BuildData>(
 			projectRoot: string,
 			projectData: IProjectData,
-			buildConfig: T
+			buildConfig: T,
 		): Promise<void>;
 
 		/**
@@ -125,7 +129,7 @@ declare global {
 		 */
 		prepareProject<T extends PrepareData>(
 			projectData: IProjectData,
-			prepareData: T
+			prepareData: T,
 		): Promise<void>;
 
 		/**
@@ -146,7 +150,7 @@ declare global {
 
 		preparePluginNativeCode(
 			pluginData: IPluginData,
-			options?: any
+			options?: any,
 		): Promise<void>;
 
 		/**
@@ -157,17 +161,17 @@ declare global {
 		 */
 		removePluginNativeCode(
 			pluginData: IPluginData,
-			projectData: IProjectData
+			projectData: IProjectData,
 		): Promise<void>;
 
 		beforePrepareAllPlugins(
 			projectData: IProjectData,
-			dependencies?: IDependencyData[]
+			dependencies?: IDependencyData[],
 		): Promise<IDependencyData[]>;
 
 		handleNativeDependenciesChange(
 			projectData: IProjectData,
-			opts: IRelease
+			opts: IRelease,
 		): Promise<void>;
 
 		/**
@@ -178,11 +182,11 @@ declare global {
 
 		cleanDeviceTempFolder(
 			deviceIdentifier: string,
-			projectData: IProjectData
+			projectData: IProjectData,
 		): Promise<void>;
 		processConfigurationFilesFromAppResources(
 			projectData: IProjectData,
-			opts: { release: boolean }
+			opts: { release: boolean },
 		): Promise<void>;
 
 		/**
@@ -214,7 +218,7 @@ declare global {
 		checkForChanges<T extends PrepareData>(
 			changeset: IProjectChangesInfo,
 			prepareData: T,
-			projectData: IProjectData
+			projectData: IProjectData,
 		): Promise<void>;
 
 		/**
