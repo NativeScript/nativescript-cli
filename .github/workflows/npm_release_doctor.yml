@@ -14,6 +14,9 @@ defaults:
 env:
   NPM_TAG: 'next'
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
