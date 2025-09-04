@@ -10,15 +10,18 @@ export function printHeader() {
 
 	const header = [
 		color.dim("│ "),
-		color.cyanBright.bold("{N} NativeScript "),
-		color.whiteBright.bold("CLI"),
+		color.styleText(["cyanBright", "bold"], "{N} NativeScript "),
+		color.styleText(["whiteBright", "bold"], "CLI"),
 		color.dim(` [v${version}] `),
 		// color.dim("  │"),
 	].join("");
 	const tagLine = [
 		color.dim("│ "),
 		color.dim(" → "),
-		color.whiteBright.bold("Empower JavaScript with native APIs "),
+		color.styleText(
+			["whiteBright", "bold"],
+			"Empower JavaScript with native APIs ",
+		),
 		// color.dim("  │"),
 	].join("");
 

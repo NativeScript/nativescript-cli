@@ -1,4 +1,4 @@
-import { glob } from "glob";
+import { glob } from "node:fs/promises";
 import { homedir } from "os";
 import * as path from "path";
 import { PromptObject } from "prompts";
@@ -67,18 +67,12 @@ export class TypingsCommand implements ICommand {
 
 		const pattern = `${target.replaceAll(":", "/")}/**/*.{jar,aar}`;
 
-		const res = await glob(pattern, {
+		const items = [];
+		for await (const item of glob(pattern, {
 			cwd: gradleFiles,
-		});
-
-		if (!res || res.length === 0) {
-			this.$logger.warn("No files found");
-			return [];
-		}
-
-		const items = res.map((item) => {
+		})) {
 			const [group, artifact, version, sha1, file] = item.split(path.sep);
-			return {
+			items.push({
 				id: sha1 + version,
 				group,
 				artifact,
@@ -86,8 +80,13 @@ export class TypingsCommand implements ICommand {
 				sha1,
 				file,
 				path: path.resolve(gradleFiles, item),
-			};
-		});
+			});
+		}
+
+		if (items.length === 0) {
+			this.$logger.warn("No files found");
+			return [];
+		}
 
 		this.$logger.clearScreen();
 
@@ -108,9 +107,10 @@ export class TypingsCommand implements ICommand {
 				.map((item) => {
 					return {
 						title: `${color.white(item.group)}:${color.greenBright(
-							item.artifact
-						)}:${color.yellow(item.version)} - ${color.cyanBright.bold(
-							item.file
+							item.artifact,
+						)}:${color.yellow(item.version)} - ${color.styleText(
+							["cyanBright", "bold"],
+							item.file,
 						)}`,
 						value: item.id,
 					};

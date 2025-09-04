@@ -55,11 +55,14 @@ export class PostInstallCliCommand implements ICommand {
 	public async postCommandAction(args: string[]): Promise<void> {
 		this.$logger.info("");
 		this.$logger.info(
-			color.green.bold("You have successfully installed the NativeScript CLI!")
+			color.styleText(
+				["green", "bold"],
+				"You have successfully installed the NativeScript CLI!",
+			),
 		);
 		this.$logger.info("");
 		this.$logger.info("Your next step is to create a new project:");
-		this.$logger.info(color.green.bold("ns create"));
+		this.$logger.info(color.styleText(["green", "bold"], "ns create"));
 
 		this.$logger.info("");
 		this.$logger.printMarkdown(

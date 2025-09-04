@@ -46,14 +46,16 @@ export function verifyNodeVersion(): void {
 		semver.lt(nodeVer, minimumRequiredVersion)
 	) {
 		console.error(
-			color.red.bold(
-				util.format(
-					"%sNode.js '%s' is not supported. To be able to work with %s CLI, install any Node.js version in the following range: %s.%s",
-					os.EOL,
-					nodeVer,
-					cliName,
-					supportedVersionsRange,
-					os.EOL,
+			color.bold(
+				color.red(
+					util.format(
+						"%sNode.js '%s' is not supported. To be able to work with %s CLI, install any Node.js version in the following range: %s.%s",
+						os.EOL,
+						nodeVer,
+						cliName,
+						supportedVersionsRange,
+						os.EOL,
+					),
 				),
 			),
 		);

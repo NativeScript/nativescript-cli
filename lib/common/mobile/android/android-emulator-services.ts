@@ -8,7 +8,8 @@ import { injector } from "../../yok";
 import * as semver from "semver";
 
 export class AndroidEmulatorServices
-	implements Mobile.IEmulatorPlatformService {
+	implements Mobile.IEmulatorPlatformService
+{
 	constructor(
 		private $androidGenymotionService: Mobile.IAndroidVirtualDeviceService,
 		private $androidVirtualDeviceService: Mobile.IAndroidVirtualDeviceService,
@@ -16,71 +17,75 @@ export class AndroidEmulatorServices
 		private $childProcess: IChildProcess,
 		private $emulatorHelper: Mobile.IEmulatorHelper,
 		private $logger: ILogger,
-		private $utils: IUtils
+		private $utils: IUtils,
 	) {}
 
 	public async getEmulatorImages(): Promise<Mobile.IEmulatorImagesOutput> {
 		const adbDevicesOutput = await this.$adb.getDevicesSafe();
-		const avdAvailableEmulatorsOutput = await this.$androidVirtualDeviceService.getEmulatorImages(
-			adbDevicesOutput
-		);
-		const genyAvailableDevicesOutput = await this.$androidGenymotionService.getEmulatorImages(
-			adbDevicesOutput
-		);
+		const avdAvailableEmulatorsOutput =
+			await this.$androidVirtualDeviceService.getEmulatorImages(
+				adbDevicesOutput,
+			);
+		const genyAvailableDevicesOutput =
+			await this.$androidGenymotionService.getEmulatorImages(adbDevicesOutput);
 		const devices = _.concat(
 			avdAvailableEmulatorsOutput.devices,
-			genyAvailableDevicesOutput.devices
+			genyAvailableDevicesOutput.devices,
 		).filter((item) => !!item);
 
 		return {
 			devices,
 			errors: avdAvailableEmulatorsOutput.errors.concat(
-				genyAvailableDevicesOutput.errors
+				genyAvailableDevicesOutput.errors,
 			),
 		};
 	}
 
 	public async getRunningEmulatorIds(): Promise<string[]> {
 		const adbDevicesOutput = await this.$adb.getDevicesSafe();
-		const avds = await this.$androidVirtualDeviceService.getRunningEmulatorIds(
-			adbDevicesOutput
-		);
-		const genies = await this.$androidGenymotionService.getRunningEmulatorIds(
-			adbDevicesOutput
-		);
+		const avds =
+			await this.$androidVirtualDeviceService.getRunningEmulatorIds(
+				adbDevicesOutput,
+			);
+		const genies =
+			await this.$androidGenymotionService.getRunningEmulatorIds(
+				adbDevicesOutput,
+			);
 		return avds.concat(genies);
 	}
 
 	public async getRunningEmulatorName(emulatorId: string): Promise<string> {
-		let result = await this.$androidVirtualDeviceService.getRunningEmulatorName(
-			emulatorId
-		);
-		if (!result) {
-			result = await this.$androidGenymotionService.getRunningEmulatorName(
-				emulatorId
+		let result =
+			await this.$androidVirtualDeviceService.getRunningEmulatorName(
+				emulatorId,
 			);
+		if (!result) {
+			result =
+				await this.$androidGenymotionService.getRunningEmulatorName(emulatorId);
 		}
 
 		return result;
 	}
 
 	public async getRunningEmulatorImageIdentifier(
-		emulatorId: string
+		emulatorId: string,
 	): Promise<string> {
-		let result = await this.$androidVirtualDeviceService.getRunningEmulatorImageIdentifier(
-			emulatorId
-		);
-		if (!result) {
-			result = await this.$androidGenymotionService.getRunningEmulatorImageIdentifier(
-				emulatorId
+		let result =
+			await this.$androidVirtualDeviceService.getRunningEmulatorImageIdentifier(
+				emulatorId,
 			);
+		if (!result) {
+			result =
+				await this.$androidGenymotionService.getRunningEmulatorImageIdentifier(
+					emulatorId,
+				);
 		}
 
 		return result;
 	}
 
 	public async startEmulator(
-		options: Mobile.IAndroidStartEmulatorOptions
+		options: Mobile.IAndroidStartEmulatorOptions,
 	): Promise<Mobile.IStartEmulatorOutput> {
 		const output = await this.startEmulatorCore(options);
 		let bootToCompleteOutput = null;
@@ -88,13 +93,13 @@ export class AndroidEmulatorServices
 			bootToCompleteOutput = await this.waitForEmulatorBootToComplete(
 				output.runningEmulator,
 				output.endTimeEpoch,
-				options.timeout
+				options.timeout,
 			);
 		}
 
 		return {
 			errors: ((output && output.errors) || []).concat(
-				(bootToCompleteOutput && bootToCompleteOutput.errors) || []
+				(bootToCompleteOutput && bootToCompleteOutput.errors) || [],
 			),
 		};
 	}
@@ -104,7 +109,7 @@ export class AndroidEmulatorServices
 	}
 
 	private async startEmulatorCore(
-		options: Mobile.IAndroidStartEmulatorOptions
+		options: Mobile.IAndroidStartEmulatorOptions,
 	): Promise<{
 		runningEmulator: Mobile.IDeviceInfo;
 		errors: string[];
@@ -118,7 +123,7 @@ export class AndroidEmulatorServices
 
 		let emulator = this.$emulatorHelper.getEmulatorByStartEmulatorOptions(
 			options,
-			availableEmulators
+			availableEmulators,
 		);
 		if (
 			!emulator &&
@@ -158,7 +163,7 @@ export class AndroidEmulatorServices
 			const emulators = (await this.getEmulatorImages()).devices;
 			const newEmulator = _.find(
 				emulators,
-				(e) => e.imageIdentifier === emulator.imageIdentifier
+				(e) => e.imageIdentifier === emulator.imageIdentifier,
 			);
 			if (newEmulator && this.$emulatorHelper.isEmulatorRunning(newEmulator)) {
 				return {
@@ -185,29 +190,29 @@ export class AndroidEmulatorServices
 		let pathToEmulatorExecutable = null;
 		let startEmulatorArgs = null;
 		if (emulator.vendor === AndroidVirtualDevice.AVD_VENDOR_NAME) {
-			pathToEmulatorExecutable = this.$androidVirtualDeviceService
-				.pathToEmulatorExecutable;
+			pathToEmulatorExecutable =
+				this.$androidVirtualDeviceService.pathToEmulatorExecutable;
 			startEmulatorArgs = this.$androidVirtualDeviceService.startEmulatorArgs(
-				emulator.imageIdentifier
+				emulator.imageIdentifier,
 			);
 		} else if (
 			emulator.vendor === AndroidVirtualDevice.GENYMOTION_VENDOR_NAME
 		) {
-			pathToEmulatorExecutable = this.$androidGenymotionService
-				.pathToEmulatorExecutable;
+			pathToEmulatorExecutable =
+				this.$androidGenymotionService.pathToEmulatorExecutable;
 			startEmulatorArgs = this.$androidGenymotionService.startEmulatorArgs(
-				emulator.imageIdentifier
+				emulator.imageIdentifier,
 			);
 		}
 
 		this.$logger.info(
-			`Starting Android emulator with image ${emulator.imageIdentifier}`
+			`Starting Android emulator with image ${emulator.imageIdentifier}`,
 		);
 
 		const childProcess = this.$childProcess.spawn(
 			pathToEmulatorExecutable,
 			startEmulatorArgs,
-			{ stdio: "ignore", detached: true }
+			{ stdio: "ignore", detached: true },
 		);
 		childProcess.unref();
 		childProcess.on("error", (err: Error) => {
@@ -241,7 +246,7 @@ export class AndroidEmulatorServices
 	private async waitForEmulatorBootToComplete(
 		emulator: Mobile.IDeviceInfo,
 		endTimeEpoch: number,
-		timeout: number
+		timeout: number,
 	): Promise<{ runningEmulator: Mobile.IDeviceInfo; errors: string[] }> {
 		this.$logger.info("Waiting for emulator device initialization...", {
 			[LoggerConfigData.skipNewLine]: true,
@@ -249,11 +254,11 @@ export class AndroidEmulatorServices
 
 		const isInfiniteWait =
 			this.$utils.getMilliSecondsTimeout(
-				timeout || AndroidVirtualDevice.TIMEOUT_SECONDS
+				timeout || AndroidVirtualDevice.TIMEOUT_SECONDS,
 			) === 0;
 		while (getCurrentEpochTime() < endTimeEpoch || isInfiniteWait) {
 			const isEmulatorBootCompleted = await this.isEmulatorBootCompleted(
-				emulator.identifier
+				emulator.identifier,
 			);
 			if (isEmulatorBootCompleted) {
 				this.$logger.info(EOL, { [LoggerConfigData.skipNewLine]: true });
@@ -276,7 +281,7 @@ export class AndroidEmulatorServices
 	private async isEmulatorBootCompleted(emulatorId: string): Promise<boolean> {
 		const output = await this.$adb.getPropertyValue(
 			emulatorId,
-			"dev.bootcomplete"
+			"dev.bootcomplete",
 		);
 		const matches = output.match("1");
 		return matches && matches.length > 0;

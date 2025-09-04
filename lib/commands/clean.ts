@@ -267,7 +267,8 @@ export class CleanCommand implements ICommand {
 		spinner.warn(
 			`This will run "${color.yellow(
 				`ns clean`,
-			)}" in all the selected projects and ${color.red.bold(
+			)}" in all the selected projects and ${color.styleText(
+				["red", "bold"],
 				"delete files from your system",
 			)}!`,
 		);
