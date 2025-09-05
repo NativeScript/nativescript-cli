@@ -14,7 +14,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		protected $logger: ILogger,
 		protected $logSourceMapService: Mobile.ILogSourceMapService,
 		protected $timelineProfilerService: ITimelineProfilerService,
-		protected $options: IOptions
+		protected $options: IOptions,
 	) {
 		super($logFilter, $logger, $logSourceMapService);
 	}
@@ -22,7 +22,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	public logData(
 		lineText: string,
 		platform: string,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): void {
 		// console.log(lineText)
 		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
@@ -30,7 +30,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		data = this.$logSourceMapService.replaceWithOriginalFileLocations(
 			platform,
 			data,
-			loggingOptions
+			loggingOptions,
 		);
 
 		if (data) {
@@ -58,12 +58,12 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	private deviceColorMap = new Map<string, StyleFormat>();
 
 	private colorPool: StyleFormat[] = [
-		"bgMagentaBright",
+		"bgGray",
 		"bgBlueBright",
 		"bgWhiteBright",
 		"bgCyanBright",
 		"bgYellowBright",
-		"bgGreenBright",
+		"bgMagentaBright",
 	];
 	private colorPoolIndex = 0;
 
@@ -150,7 +150,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			toLog.split("\n").forEach((actualLine) => {
 				this.printLine(
 					color.styleText(this.getDeviceColor(deviceIdentifier), " "),
-					this.consoleLevelColor[level](actualLine)
+					this.consoleLevelColor[level](actualLine),
 				);
 			});
 		}
