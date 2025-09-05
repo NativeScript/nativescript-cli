@@ -58,12 +58,12 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	private deviceColorMap = new Map<string, StyleFormat>();
 
 	private colorPool: StyleFormat[] = [
-		"bgMagentaBright",
+		"bgGray",
 		"bgBlueBright",
 		"bgWhiteBright",
 		"bgCyanBright",
 		"bgYellowBright",
-		"bgGreenBright",
+		"bgMagentaBright",
 	];
 	private colorPoolIndex = 0;
 

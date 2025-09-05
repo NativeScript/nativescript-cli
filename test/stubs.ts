@@ -9,7 +9,9 @@ import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
 import { PrepareData } from "../lib/data/prepare-data";
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
+import * as path from "path";
 import {
 	IPackageInstallationManager,
 	INpmInstallOptions,
@@ -87,15 +89,12 @@ import {
 } from "../lib/common/definitions/google-analytics";
 import * as _ from "lodash";
 import { SupportedConfigValues } from "../lib/tools/config-manipulation/config-transformer";
-import { AffixOptions } from "temp";
-import { ITempService } from "../lib/definitions/temp-service";
+import { AffixOptions, ITempService } from "../lib/definitions/temp-service";
 import {
 	ITerminalSpinner,
 	ITerminalSpinnerOptions,
 	ITerminalSpinnerService,
 } from "../lib/definitions/terminal-spinner-service";
-
-temp.track();
 
 export class LoggerStub implements ILogger {
 	initialize(opts?: ILoggerOptions): void {}
@@ -1518,10 +1517,17 @@ export class InjectorStub extends Yok implements IInjector {
 
 export class TempServiceStub implements ITempService {
 	public async mkdirSync(affixes: string): Promise<string> {
-		return temp.mkdirSync(affixes);
+		const prefix = typeof affixes === "string" ? affixes : "tmp";
+		return mkdtempSync(path.join(tmpdir(), `${prefix}-`));
 	}
 
 	public async path(options: string | AffixOptions): Promise<string> {
-		return temp.path(options);
+		const opts: AffixOptions =
+			typeof options === "string" ? { prefix: options } : options || {};
+		const dir = opts.dir || tmpdir();
+		const prefix = opts.prefix || "tmp";
+		const suffix = opts.suffix || "";
+		const name = `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}${suffix}`;
+		return path.join(dir, name);
 	}
 }
