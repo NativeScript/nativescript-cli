@@ -1,6 +1,6 @@
 import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
-import { MobileProject } from "@rigor789/trapezedev-project";
+import { MobileProject } from "@nstudio/trapezedev-project";
 import { IPlatformData } from "../../definitions/platform";
 import path = require("path");
 
