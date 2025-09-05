@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "9.0.0-alpha.6",
+  "version": "9.0.0",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -55,7 +55,7 @@
   ],
   "dependencies": {
     "@foxt/js-srp": "^0.0.3-patch2",
-    "@nativescript/doctor": "2.0.17-alpha.0",
+    "@nativescript/doctor": "2.0.17",
     "@npmcli/arborist": "^9.1.4",
     "@rigor789/resolve-package-path": "1.0.7",
     "@nstudio/trapezedev-project": "7.2.3",
