@@ -2,12 +2,12 @@ import { Yok } from "../../../lib/common/yok";
 import { GradleBuildArgsService } from "../../../lib/services/android/gradle-build-args-service";
 import * as stubs from "../../stubs";
 import { assert } from "chai";
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import { IGradleBuildArgsService } from "../../../lib/definitions/gradle";
 import { IAndroidBuildData } from "../../../lib/definitions/build";
 import { IInjector } from "../../../lib/common/definitions/yok";
 import * as path from "path";
-temp.track();
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
@@ -37,8 +37,8 @@ async function executeTests(
 	testCases: any[],
 	testFunction: (
 		gradleBuildArgsService: IGradleBuildArgsService,
-		buildData: IAndroidBuildData
-	) => Promise<string[]>
+		buildData: IAndroidBuildData,
+	) => Promise<string[]>,
 ) {
 	for (const testCase of testCases) {
 		it(testCase.name, async () => {
@@ -51,21 +51,22 @@ async function executeTests(
 			const gradleBuildArgsService = injector.resolve("gradleBuildArgsService");
 			const args = await testFunction(
 				gradleBuildArgsService,
-				testCase.buildConfig
+				testCase.buildConfig,
 			);
 
 			assert.deepStrictEqual(args, testCase.expectedResult);
 		});
 	}
 }
-const ksPath = temp.path({ prefix: "ksPath" });
+const ksDir = mkdtempSync(path.join(tmpdir(), "ksPath-"));
+const ksPath = path.join(ksDir, "keystore.jks");
 const expectedInfoLoggingArgs = ["--quiet"];
 const expectedTraceLoggingArgs = ["--stacktrace", "--debug"];
 const expectedDebugBuildArgs = [
 	"-PappPath=/path/to/projectDir/app".replace(/\//g, path.sep),
 	"-PappResourcesPath=/path/to/projectDir/app/App_Resources".replace(
 		/\//g,
-		path.sep
+		path.sep,
 	),
 ];
 const expectedReleaseBuildArgs = expectedDebugBuildArgs.concat([
@@ -157,8 +158,8 @@ describe("GradleBuildArgsService", () => {
 			testCases,
 			(
 				gradleBuildArgsService: IGradleBuildArgsService,
-				buildData: IAndroidBuildData
-			) => gradleBuildArgsService.getBuildTaskArgs(buildData)
+				buildData: IAndroidBuildData,
+			) => gradleBuildArgsService.getBuildTaskArgs(buildData),
 		);
 	});
 
@@ -234,8 +235,8 @@ describe("GradleBuildArgsService", () => {
 			testCases,
 			(
 				gradleBuildArgsService: IGradleBuildArgsService,
-				buildData: IAndroidBuildData
-			) => Promise.resolve(gradleBuildArgsService.getCleanTaskArgs(buildData))
+				buildData: IAndroidBuildData,
+			) => Promise.resolve(gradleBuildArgsService.getCleanTaskArgs(buildData)),
 		);
 	});
 });

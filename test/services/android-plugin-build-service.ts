@@ -9,7 +9,8 @@ import { getShortPluginName } from "../../lib/common/helpers";
 import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
 import * as stubs from "../stubs";
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import {
 	IFileSystem,
 	ISpawnResult,
@@ -18,8 +19,6 @@ import {
 import { IPluginBuildOptions } from "../../lib/definitions/android-plugin-migrator";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { IFilesHashService } from "../../lib/definitions/files-hash-service";
-
-temp.track();
 
 describe("androidPluginBuildService", () => {
 	const pluginName = "my-plugin";
@@ -47,8 +46,12 @@ describe("androidPluginBuildService", () => {
 	}): IPluginBuildOptions {
 		options = options || {};
 		spawnFromEventCalled = false;
-		tempFolder = temp.mkdirSync("androidPluginBuildService-temp");
-		pluginFolder = temp.mkdirSync("androidPluginBuildService-plugin");
+		tempFolder = mkdtempSync(
+			path.join(tmpdir(), "androidPluginBuildService-temp-"),
+		);
+		pluginFolder = mkdtempSync(
+			path.join(tmpdir(), "androidPluginBuildService-plugin-"),
+		);
 		createTestInjector(options);
 		setupPluginFolders(options);
 
@@ -80,7 +83,7 @@ describe("androidPluginBuildService", () => {
 					"build",
 					"outputs",
 					"aar",
-					finalAarName
+					finalAarName,
 				);
 				fs.writeFile(aar, "");
 				spawnFromEventCalled = command.indexOf("gradlew") !== -1;
@@ -91,15 +94,15 @@ describe("androidPluginBuildService", () => {
 		testInjector.register("projectData", stubs.ProjectDataStub);
 		testInjector.register("filesHashService", <IFilesHashService>{
 			generateHashes: async (
-				files: string[]
+				files: string[],
 			): Promise<IStringDictionary> => ({}),
 			getChanges: async (
 				files: string[],
-				oldHashes: IStringDictionary
+				oldHashes: IStringDictionary,
 			): Promise<IStringDictionary> => ({}),
 			hasChangesInShasums: (
 				oldHashes: IStringDictionary,
-				newHashes: IStringDictionary
+				newHashes: IStringDictionary,
 			): boolean => !!options.hasChangesInShasums,
 		});
 
@@ -109,7 +112,7 @@ describe("androidPluginBuildService", () => {
 
 		fs = testInjector.resolve("fs");
 		androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(
-			AndroidPluginBuildService
+			AndroidPluginBuildService,
 		);
 
 		// initialize dummy projectData
@@ -219,7 +222,7 @@ dependencies {
 		if (options.addManifest) {
 			fs.writeFile(
 				path.join(pluginFolder, "AndroidManifest.xml"),
-				validAndroidManifestContent
+				validAndroidManifestContent,
 			);
 		}
 
@@ -228,7 +231,7 @@ dependencies {
 			fs.createDirectory(valuesFolder);
 			fs.writeFile(
 				path.join(valuesFolder, "strings.xml"),
-				validStringsXmlContent
+				validStringsXmlContent,
 			);
 		}
 
@@ -241,7 +244,7 @@ dependencies {
 		if (options.addLegacyIncludeGradle || options.addIncludeGradle) {
 			fs.writeFile(
 				path.join(pluginFolder, INCLUDE_GRADLE_NAME),
-				validIncludeGradleContent
+				validIncludeGradleContent,
 			);
 		}
 
@@ -329,7 +332,7 @@ dependencies {
 
 			await androidBuildPluginService.buildAar(config);
 			const actualAndroidVersion = getGradleAndroidPluginVersion(
-				expectedAndroidVersion
+				expectedAndroidVersion,
 			);
 			const actualGradleVersion = getGradleVersion();
 
@@ -353,7 +356,7 @@ dependencies {
 
 			await androidBuildPluginService.buildAar(config);
 			const actualAndroidVersion = getGradleAndroidPluginVersion(
-				expectedAndroidVersion
+				expectedAndroidVersion,
 			);
 			const actualGradleVersion = getGradleVersion();
 
@@ -377,7 +380,7 @@ dependencies {
 
 			await androidBuildPluginService.buildAar(config);
 			const actualAndroidVersion = getGradleAndroidPluginVersion(
-				expectedAndroidVersion
+				expectedAndroidVersion,
 			);
 			const actualGradleVersion = getGradleVersion();
 
@@ -399,14 +402,14 @@ dependencies {
 
 			await androidBuildPluginService.buildAar(config);
 			const actualAndroidVersion = getGradleAndroidPluginVersion(
-				AndroidBuildDefaults.GradleAndroidPluginVersion
+				AndroidBuildDefaults.GradleAndroidPluginVersion,
 			);
 			const actualGradleVersion = getGradleVersion();
 
 			assert.equal(actualGradleVersion, AndroidBuildDefaults.GradleVersion);
 			assert.equal(
 				actualAndroidVersion,
-				AndroidBuildDefaults.GradleAndroidPluginVersion
+				AndroidBuildDefaults.GradleAndroidPluginVersion,
 			);
 			assert.isTrue(spawnFromEventCalled);
 		});
@@ -418,11 +421,10 @@ dependencies {
 				addLegacyIncludeGradle: true,
 			});
 
-			const isMigrated = await androidBuildPluginService.migrateIncludeGradle(
-				config
-			);
+			const isMigrated =
+				await androidBuildPluginService.migrateIncludeGradle(config);
 			const includeGradleContent = fs.readText(
-				path.join(pluginFolder, INCLUDE_GRADLE_NAME).toString()
+				path.join(pluginFolder, INCLUDE_GRADLE_NAME).toString(),
 			);
 			const areProductFlavorsRemoved =
 				includeGradleContent.indexOf("productFlavors") === -1;
@@ -436,9 +438,8 @@ dependencies {
 				addIncludeGradle: true,
 			});
 
-			const isMigrated = await androidBuildPluginService.migrateIncludeGradle(
-				config
-			);
+			const isMigrated =
+				await androidBuildPluginService.migrateIncludeGradle(config);
 
 			assert.isFalse(isMigrated);
 		});
@@ -446,7 +447,7 @@ dependencies {
 
 	function getGradleAndroidPluginVersion(expected?: string) {
 		const gradleWrappersContent = fs.readText(
-			path.join(tempFolder, shortPluginName, "build.gradle")
+			path.join(tempFolder, shortPluginName, "build.gradle"),
 		);
 		const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)['"]/g;
 		const androidVersion = androidVersionRegex.exec(gradleWrappersContent)[1];
@@ -466,8 +467,8 @@ dependencies {
 				shortPluginName,
 				"gradle",
 				"wrapper",
-				"gradle-wrapper.properties"
-			)
+				"gradle-wrapper.properties",
+			),
 		);
 		const gradleVersionRegex = /gradle\-(.*)\-bin\.zip\r?\n/g;
 		const gradleVersion = gradleVersionRegex.exec(buildGradleContent)[1];

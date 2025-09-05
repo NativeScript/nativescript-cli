@@ -106,7 +106,7 @@ describe("androidToolsInfo", () => {
 			const androidToolsInfo = getAndroidToolsInfo("8.2.0");
 			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
 
-			assert.equal(toolsInfo.compileSdkVersion, 35);
+			assert.equal(toolsInfo.compileSdkVersion, 36);
 		});
 	});
 
@@ -140,7 +140,7 @@ describe("androidToolsInfo", () => {
 
 		it("runtime 8.2.0 should support android-17 - android-34", () => {
 			const min = 17;
-			const max = 35;
+			const max = 36;
 			assertSupportedRange("8.2.0", min, max);
 			assertSupportedRange("8.3.0", min, max);
 		});
