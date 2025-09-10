@@ -44,7 +44,7 @@
     "@types/chai": "5.2.2",
     "@types/lodash": "4.17.20",
     "@types/mocha": "10.0.10",
-    "@types/semver": "7.5.8",
+    "@types/semver": "7.7.1",
     "@types/shelljs": "0.8.17",
     "@types/temp": "0.9.4",
     "@types/winreg": "1.2.36",
