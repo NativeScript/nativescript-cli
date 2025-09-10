@@ -106,7 +106,7 @@
     "universal-analytics": "0.5.3",
     "uuid": "11.1.0",
     "winreg": "1.2.5",
-    "ws": "8.18.1",
+    "ws": "8.18.3",
     "xml2js": "0.6.2",
     "yargs": "17.7.2"
   },
@@ -135,7 +135,7 @@
     "@types/tunnel": "0.0.7",
     "@types/universal-analytics": "0.4.8",
     "@types/uuid": "^10.0.0",
-    "@types/ws": "8.5.14",
+    "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
     "@types/yargs": "17.0.33",
     "braces": ">=3.0.3",
