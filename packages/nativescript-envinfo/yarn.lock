@@ -2,12 +2,12 @@
 # yarn lockfile v1
 
 
-"@types/envinfo@^7.8.1":
-  version "7.8.1"
-  resolved "https://registry.yarnpkg.com/@types/envinfo/-/envinfo-7.8.1.tgz#1915df82c16d637e92146645c70db9360eb099c6"
-  integrity sha512-pTyshpmGxqB9lRwG75v2YR0oqKYpCrklOYlZWQ88z/JB0fimT8EVmYekuIwpU3IxPZDHSXCqXKzkCrtAcKY25g==
+"@types/envinfo@^7.8.4":
+  version "7.8.4"
+  resolved "https://registry.yarnpkg.com/@types/envinfo/-/envinfo-7.8.4.tgz#f13ec1050b8e260d6d7c149ba5b99f65d2b74058"
+  integrity sha512-K5WaRgSlqjc408IyPbxOFnz7rVG9E8ELhj7XR3Ncui15EgeyIXTcCfmwrRnU4uEOCJQhzZRAQurYznEEc1dD2g==
 
-envinfo@^7.8.1:
-  version "7.8.1"
-  resolved "https://registry.yarnpkg.com/envinfo/-/envinfo-7.8.1.tgz#06377e3e5f4d379fea7ac592d5ad8927e0c4d475"
-  integrity sha512-/o+BXHmB7ocbHEAs6F2EnG0ogybVVUdkRunTT2glZU9XAaGmhqskrvKwqXuDfNjEO0LZKWdejEEpnq8aM0tOaw==
+envinfo@^7.14.0:
+  version "7.14.0"
+  resolved "https://registry.yarnpkg.com/envinfo/-/envinfo-7.14.0.tgz#26dac5db54418f2a4c1159153a0b2ae980838aae"
+  integrity sha512-CO40UI41xDQzhLB1hWyqUKgFhs250pNcGbyGKe1l/e4FSaI/+YE4IMG76GDt0In67WLPACIITC+sOi08x4wIvg==
