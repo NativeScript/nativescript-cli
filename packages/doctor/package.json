@@ -62,7 +62,7 @@
     "rimraf": "6.0.1",
     "tslint": "6.1.3",
     "tslint-microsoft-contrib": "6.2.0",
-    "typescript": "~5.4.0"
+    "typescript": "~5.9.2"
   },
   "dependencies": {
     "lodash": "4.17.21",
