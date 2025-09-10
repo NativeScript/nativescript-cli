@@ -78,7 +78,7 @@
     "log4js": "6.9.1",
     "marked": "15.0.7",
     "marked-terminal": "7.3.0",
-    "minimatch": "10.0.1",
+    "minimatch": "10.0.3",
     "mkdirp": "3.0.1",
     "mute-stream": "2.0.0",
     "nativescript-dev-xcode": "0.8.1",
