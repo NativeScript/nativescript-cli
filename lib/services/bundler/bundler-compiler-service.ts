@@ -129,12 +129,9 @@ export class BundlerCompilerService
 
 						console.log(`🔥 Copying from ${distOutput} to ${destDir}`);
 
-						// For HMR updates, only copy changed files; for full builds, copy everything
-						if (
-							message.isHMR &&
-							message.changedFiles &&
-							message.changedFiles.length > 0
-						) {
+						// Determine which files to copy based on build type and changes
+						if (message.isHMR) {
+							// HMR updates: only copy changed files
 							console.log(
 								"🔥 HMR update - copying only changed files for:",
 								message.changedFiles,
@@ -160,6 +157,24 @@ export class BundlerCompilerService
 									filesToCopy,
 								);
 							}
+
+							this.copyViteBundleToNative(distOutput, destDir, filesToCopy);
+						} else if (
+							message.buildType === "incremental" &&
+							message.changedFiles &&
+							message.changedFiles.length > 0
+						) {
+							// Incremental builds: only copy files that are likely affected by the changes
+							console.log(
+								"🔥 Incremental build - copying only relevant files for:",
+								message.changedFiles,
+							);
+
+							const filesToCopy = this.getIncrementalFilesToCopy(
+								message.emittedFiles,
+								message.changedFiles,
+							);
+							console.log("🔥 Incremental build - files to copy:", filesToCopy);
 
 							this.copyViteBundleToNative(distOutput, destDir, filesToCopy);
 						} else {
@@ -872,8 +887,11 @@ export class BundlerCompilerService
 
 		try {
 			if (specificFiles) {
-				// HMR mode: only copy specific files
-				console.log("🔥 HMR: Copying specific files:", specificFiles);
+				// Selective mode: only copy specific files (HMR or incremental)
+				console.log(
+					"🔥 Selective copy - copying specific files:",
+					specificFiles,
+				);
 
 				// Ensure destination directory exists
 				fs.mkdirSync(destDir, { recursive: true });
@@ -890,7 +908,7 @@ export class BundlerCompilerService
 
 					fs.copyFileSync(srcPath, destPath);
 
-					console.log(`🔥 HMR: Copied ${file}`);
+					console.log(`🔥 Copied ${file}`);
 				}
 			} else {
 				// Full build mode: clean and copy everything
@@ -914,6 +932,58 @@ export class BundlerCompilerService
 		} catch (error) {
 			this.$logger.warn(`Failed to copy Vite bundle: ${error.message}`);
 		}
+	}
+
+	private getIncrementalFilesToCopy(
+		emittedFiles: string[],
+		changedFiles: string[],
+	): string[] {
+		// For incremental builds, we need to determine which emitted files are likely affected
+		// by the source file changes
+
+		const filesToCopy: string[] = [];
+
+		// Always copy bundle files as they contain the compiled source code
+		// ignoring vendor files as they are less likely to change frequently
+		const bundleFiles = emittedFiles.filter(
+			(file) =>
+				!file.includes("vendor") &&
+				(file.includes("bundle") ||
+					file.includes("main") ||
+					file.includes("app") ||
+					file.endsWith(".mjs") ||
+					file.endsWith(".js")),
+		);
+		filesToCopy.push(...bundleFiles);
+
+		// Always copy source maps for debugging
+		const sourceMapFiles = emittedFiles.filter(
+			(file) => !file.includes("vendor") && file.endsWith(".map"),
+		);
+		filesToCopy.push(...sourceMapFiles);
+
+		// Only handle assets if they're explicitly referenced in the changed files
+		const hasAssetChanges = changedFiles.some(
+			(file) =>
+				file.includes("/assets/") ||
+				file.includes("/static/") ||
+				file.includes("/public/"),
+		);
+
+		if (hasAssetChanges) {
+			// Only copy assets if there are explicit asset-related changes
+			const assetFiles = emittedFiles.filter(
+				(file) =>
+					file.includes("assets/") ||
+					file.includes("static/") ||
+					file.includes("fonts/") ||
+					file.includes("images/"),
+			);
+			filesToCopy.push(...assetFiles);
+		}
+
+		// Remove duplicates and return
+		return [...new Set(filesToCopy)];
 	}
 
 	private notifyHMRClients(message: any) {
