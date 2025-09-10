@@ -76,7 +76,7 @@
     "jimp": "1.6.0",
     "lodash": "4.17.21",
     "log4js": "6.9.1",
-    "marked": "15.0.7",
+    "marked": "15.0.12",
     "marked-terminal": "7.3.0",
     "minimatch": "10.0.3",
     "mkdirp": "3.0.1",
