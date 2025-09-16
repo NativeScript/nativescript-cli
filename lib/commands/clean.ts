@@ -110,7 +110,6 @@ export class CleanCommand implements ICommand {
 			constants.HOOKS_DIR_NAME,
 			constants.PLATFORMS_DIR_NAME,
 			constants.NODE_MODULES_FOLDER_NAME,
-			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		];
 
 		try {
