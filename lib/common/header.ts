@@ -31,10 +31,10 @@ export function printHeader() {
 
 	console.info("  " + color.dim("┌" + "─".repeat(width - 1) + "┐"));
 	console.info(
-		"  " + header + " ".repeat(width - headerLength) + color.dim("│")
+		"  " + header + " ".repeat(width - headerLength) + color.dim("│"),
 	);
 	console.info(
-		"  " + tagLine + " ".repeat(width - tagLineLength) + color.dim("│")
+		"  " + tagLine + " ".repeat(width - tagLineLength) + color.dim("│"),
 	);
 	console.info("  " + color.dim("└" + "─".repeat(width - 1) + "┘"));
 }

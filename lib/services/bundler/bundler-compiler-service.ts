@@ -50,6 +50,9 @@ interface IBundlerCompilation {
 	staleAssets: string[];
 }
 
+/* for specific bundling debugging separate from logger */
+const debugLog = false;
+
 export class BundlerCompilerService
 	extends EventEmitter
 	implements IBundlerCompilerService
@@ -118,7 +121,9 @@ export class BundlerCompilerService
 						(message as IBundlerEmitMessage).emittedFiles
 					) {
 						message = message as IBundlerEmitMessage;
-						console.log("Received Vite IPC message:", message);
+						if (debugLog) {
+							console.log("Received Vite IPC message:", message);
+						}
 
 						// Copy Vite output files directly to platform destination
 						const distOutput = path.join(projectData.projectDir, "dist");
@@ -127,18 +132,19 @@ export class BundlerCompilerService
 							this.$options.hostProjectModuleName,
 						);
 
-						console.log(`🔥 Copying from ${distOutput} to ${destDir}`);
+						if (debugLog) {
+							console.log(`🔥 Copying from ${distOutput} to ${destDir}`);
+						}
 
-						// For HMR updates, only copy changed files; for full builds, copy everything
-						if (
-							message.isHMR &&
-							message.changedFiles &&
-							message.changedFiles.length > 0
-						) {
-							console.log(
-								"🔥 HMR update - copying only changed files for:",
-								message.changedFiles,
-							);
+						// Determine which files to copy based on build type and changes
+						if (message.isHMR) {
+							// HMR updates: only copy changed files
+							if (debugLog) {
+								console.log(
+									"🔥 HMR update - copying only changed files for:",
+									message.changedFiles,
+								);
+							}
 
 							// For HTML template changes, we need to copy the component files that were rebuilt
 							let filesToCopy = message.emittedFiles;
@@ -155,24 +161,55 @@ export class BundlerCompilerService
 										f === "bundle.mjs" ||
 										f === "bundle.mjs.map",
 								);
+								if (debugLog) {
+									console.log(
+										"🔥 HTML change detected - copying component files:",
+										filesToCopy,
+									);
+								}
+							}
+
+							this.copyViteBundleToNative(distOutput, destDir, filesToCopy);
+						} else if (
+							message.buildType === "incremental" &&
+							message.changedFiles &&
+							message.changedFiles.length > 0
+						) {
+							// Incremental builds: only copy files that are likely affected by the changes
+							if (debugLog) {
 								console.log(
-									"🔥 HTML change detected - copying component files:",
+									"🔥 Incremental build - copying only relevant files for:",
+									message.changedFiles,
+								);
+							}
+
+							const filesToCopy = this.getIncrementalFilesToCopy(
+								message.emittedFiles,
+								message.changedFiles,
+							);
+							if (debugLog) {
+								console.log(
+									"🔥 Incremental build - files to copy:",
 									filesToCopy,
 								);
 							}
 
 							this.copyViteBundleToNative(distOutput, destDir, filesToCopy);
 						} else {
-							console.log("🔥 Full build - copying all files");
+							if (debugLog) {
+								console.log("🔥 Full build - copying all files");
+							}
 							this.copyViteBundleToNative(distOutput, destDir);
 						}
 
 						// Resolve the promise on first build completion
 						if (isFirstBundlerWatchCompilation) {
 							isFirstBundlerWatchCompilation = false;
-							console.log(
-								"Vite first build completed, resolving compileWithWatch",
-							);
+							if (debugLog) {
+								console.log(
+									"Vite first build completed, resolving compileWithWatch",
+								);
+							}
 							resolve(childProcess);
 						}
 
@@ -209,15 +246,19 @@ export class BundlerCompilerService
 						});
 
 						if (message.isHMR) {
-							console.log(
-								"🔥 Skipping BUNDLER_COMPILATION_COMPLETE for HMR update - app will not restart",
-							);
+							if (debugLog) {
+								console.log(
+									"🔥 Skipping BUNDLER_COMPILATION_COMPLETE for HMR update - app will not restart",
+								);
+							}
 						} else {
 							// Only emit BUNDLER_COMPILATION_COMPLETE for non-HMR builds
 							// This prevents the CLI from restarting the app during HMR updates
-							console.log(
-								"🔥 Emitting BUNDLER_COMPILATION_COMPLETE for full build",
-							);
+							if (debugLog) {
+								console.log(
+									"🔥 Emitting BUNDLER_COMPILATION_COMPLETE for full build",
+								);
+							}
 							this.emit(BUNDLER_COMPILATION_COMPLETE, data);
 						}
 						return;
@@ -522,7 +563,9 @@ export class BundlerCompilerService
 			});
 		}
 
-		console.log("args:", args);
+		if (debugLog) {
+			console.log("args:", args);
+		}
 
 		const childProcess = this.$childProcess.spawn(
 			process.execPath,
@@ -866,14 +909,21 @@ export class BundlerCompilerService
 		specificFiles: string[] = null,
 	) {
 		// Clean and copy Vite output to native platform folder
-		console.log(`Copying Vite bundle from "${distOutput}" to "${destDir}"`);
+		if (debugLog) {
+			console.log(`Copying Vite bundle from "${distOutput}" to "${destDir}"`);
+		}
 
 		const fs = require("fs");
 
 		try {
 			if (specificFiles) {
-				// HMR mode: only copy specific files
-				console.log("🔥 HMR: Copying specific files:", specificFiles);
+				// Selective mode: only copy specific files (HMR or incremental)
+				if (debugLog) {
+					console.log(
+						"🔥 Selective copy - copying specific files:",
+						specificFiles,
+					);
+				}
 
 				// Ensure destination directory exists
 				fs.mkdirSync(destDir, { recursive: true });
@@ -890,11 +940,15 @@ export class BundlerCompilerService
 
 					fs.copyFileSync(srcPath, destPath);
 
-					console.log(`🔥 HMR: Copied ${file}`);
+					if (debugLog) {
+						console.log(`🔥 Copied ${file}`);
+					}
 				}
 			} else {
 				// Full build mode: clean and copy everything
-				console.log("🔥 Full build: Copying all files");
+				if (debugLog) {
+					console.log("🔥 Full build: Copying all files");
+				}
 
 				// Clean destination directory
 				if (fs.existsSync(destDir)) {
@@ -916,6 +970,58 @@ export class BundlerCompilerService
 		}
 	}
 
+	private getIncrementalFilesToCopy(
+		emittedFiles: string[],
+		changedFiles: string[],
+	): string[] {
+		// For incremental builds, we need to determine which emitted files are likely affected
+		// by the source file changes
+
+		const filesToCopy: string[] = [];
+
+		// Always copy bundle files as they contain the compiled source code
+		// ignoring vendor files as they are less likely to change frequently
+		const bundleFiles = emittedFiles.filter(
+			(file) =>
+				!file.includes("vendor") &&
+				(file.includes("bundle") ||
+					file.includes("main") ||
+					file.includes("app") ||
+					file.endsWith(".mjs") ||
+					file.endsWith(".js")),
+		);
+		filesToCopy.push(...bundleFiles);
+
+		// Always copy source maps for debugging
+		const sourceMapFiles = emittedFiles.filter(
+			(file) => !file.includes("vendor") && file.endsWith(".map"),
+		);
+		filesToCopy.push(...sourceMapFiles);
+
+		// Only handle assets if they're explicitly referenced in the changed files
+		const hasAssetChanges = changedFiles.some(
+			(file) =>
+				file.includes("/assets/") ||
+				file.includes("/static/") ||
+				file.includes("/public/"),
+		);
+
+		if (hasAssetChanges) {
+			// Only copy assets if there are explicit asset-related changes
+			const assetFiles = emittedFiles.filter(
+				(file) =>
+					file.includes("assets/") ||
+					file.includes("static/") ||
+					file.includes("fonts/") ||
+					file.includes("images/"),
+			);
+			filesToCopy.push(...assetFiles);
+		}
+
+		// Remove duplicates and return
+		return [...new Set(filesToCopy)];
+	}
+
 	private notifyHMRClients(message: any) {
 		// Send WebSocket notification to HMR clients
 		try {
@@ -925,18 +1031,26 @@ export class BundlerCompilerService
 			const ws = new WebSocket("ws://localhost:24678");
 
 			ws.on("open", () => {
-				console.log("🔥 Sending HMR notification to bridge:", message.type);
+				if (debugLog) {
+					console.log("🔥 Sending HMR notification to bridge:", message.type);
+				}
 				ws.send(JSON.stringify(message));
 				ws.close();
 			});
 
 			ws.on("error", () => {
 				// HMR bridge not available, which is fine
-				console.log("🔥 HMR bridge not available (this is normal without HMR)");
+				if (debugLog) {
+					console.log(
+						"🔥 HMR bridge not available (this is normal without HMR)",
+					);
+				}
 			});
 		} catch (error) {
 			// WebSocket not available, which is fine
-			console.log("🔥 WebSocket not available for HMR notifications");
+			if (debugLog) {
+				console.log("🔥 WebSocket not available for HMR notifications");
+			}
 		}
 	}
 

@@ -19,7 +19,7 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 		private $staticConfig: IStaticConfig,
 		private $hostInfo: IHostInfo,
 		private $osInfo: IOsInfo,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async canDoRequest(): Promise<boolean> {
@@ -33,7 +33,7 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 	@exported("analyticsSettingsService")
 	public getClientId(): Promise<string> {
 		return this.getSettingValueOrDefault(
-			this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME
+			this.$staticConfig.ANALYTICS_INSTALLATION_ID_SETTING_NAME,
 		);
 	}
 
@@ -54,11 +54,11 @@ class AnalyticsSettingsService implements IAnalyticsSettingsService {
 
 	public async setUserSessionsCount(
 		count: number,
-		projectName: string
+		projectName: string,
 	): Promise<void> {
 		return this.$userSettingsService.saveSetting<number>(
 			this.getSessionsProjectKey(projectName),
-			count
+			count,
 		);
 	}
 

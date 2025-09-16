@@ -115,18 +115,18 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 			[
 				"",
 				`  The CLI is ${color.underline(
-					`interactive`
+					`interactive`,
 				)}, you can press the following keys any time (make sure the terminal has focus).`,
 				"",
 				...commandHelp,
 				"",
-			].join("\n")
+			].join("\n"),
 		);
 	}
 
 	public attachKeyCommands(
 		platform: IKeyCommandPlatform,
-		processType: SupportedProcessType
+		processType: SupportedProcessType,
 	) {
 		this.processType = processType;
 		this.platform = platform;
