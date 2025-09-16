@@ -72,6 +72,10 @@ declare global {
 		emittedFiles: string[];
 		chunkFiles: string[];
 		hash: string;
+		changedFiles?: string[];
+		isHMR?: boolean;
+		filesToCopy?: string[];
+		buildType?: string;
 	}
 
 	interface IPlatformProjectService

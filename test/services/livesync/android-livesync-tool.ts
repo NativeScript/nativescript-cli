@@ -9,12 +9,12 @@ import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { FileSystem } from "../../../lib/common/file-system";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import * as path from "path";
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import * as crypto from "crypto";
 import { IInjector } from "../../../lib/common/definitions/yok";
 import { IDictionary } from "../../../lib/common/declarations";
 
-temp.track();
 const protocolVersion = "0.2.0";
 
 class TestSocket extends LiveSyncSocket {
@@ -58,7 +58,7 @@ const fileContents = {
 };
 
 const projectCreated = false;
-const testAppPath = temp.mkdirSync("testsyncapp");
+const testAppPath = mkdtempSync(path.join(tmpdir(), "testsyncapp-"));
 const testAppPlatformPath = path.join(
 	testAppPath,
 	"platforms",

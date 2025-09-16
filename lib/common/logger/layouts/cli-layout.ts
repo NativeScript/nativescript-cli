@@ -22,7 +22,7 @@ export function layout(config: any) {
 		}
 
 		if (logEvent.level.isEqualTo(LoggerLevel.ERROR)) {
-			return color.red.bold(msg);
+			return color.styleText(["red", "bold"], msg);
 		}
 
 		if (logEvent.level.isEqualTo(LoggerLevel.WARN)) {

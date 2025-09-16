@@ -1,6 +1,7 @@
 import { Yok } from "../../yok";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import * as path from "path";
-import * as temp from "temp";
 import * as hostInfoLib from "../../host-info";
 import { assert, use } from "chai";
 import "chai-as-promised";
@@ -28,7 +29,6 @@ function isOsCaseSensitive(testInjector: IInjector): boolean {
 	const hostInfo = testInjector.resolve("hostInfo");
 	return hostInfo.isLinux;
 }
-temp.track();
 
 function createWriteJsonTestCases(): {
 	exists: boolean;
@@ -125,7 +125,7 @@ describe("FileSystem", () => {
 
 			beforeEach(() => {
 				testInjector = createTestInjector();
-				tempDir = temp.mkdirSync("projectToUnzip");
+				tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				fs = testInjector.resolve("fs");
 				file = path.join(tempDir, unzippedFileName);
 				fs.writeFile(file, msg);
@@ -188,7 +188,7 @@ describe("FileSystem", () => {
 			const commandUnzipFailedMessage = "Command unzip failed with exit code 9";
 			it("is case sensitive when options is not defined", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
 					await assert.isRejected(
@@ -202,7 +202,7 @@ describe("FileSystem", () => {
 
 			it("is case sensitive when caseSensitive option is not defined", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
 					await assert.isRejected(
@@ -216,7 +216,7 @@ describe("FileSystem", () => {
 
 			it("is case sensitive when caseSensitive option is true", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
 					await assert.isRejected(
@@ -233,7 +233,7 @@ describe("FileSystem", () => {
 
 			it("is case insensitive when caseSensitive option is false", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				const file = path.join(tempDir, unzippedFileName);
 				await fs.unzip(
@@ -251,7 +251,7 @@ describe("FileSystem", () => {
 	describe("renameIfExists", () => {
 		it("returns true when file is renamed", () => {
 			const testInjector = createTestInjector();
-			const tempDir = temp.mkdirSync("renameIfExists");
+			const tempDir = mkdtempSync(path.join(tmpdir(), "renameIfExists-"));
 			const testFileName = path.join(tempDir, "testRenameIfExistsMethod");
 			const newFileName = path.join(tempDir, "newfilename");
 
@@ -287,7 +287,7 @@ describe("FileSystem", () => {
 
 		beforeEach(() => {
 			testInjector = createTestInjector();
-			tempDir = temp.mkdirSync("copyFile");
+			tempDir = mkdtempSync(path.join(tmpdir(), "copyFile-"));
 			testFileName = path.join(tempDir, "testCopyFile");
 			newFileName = path.join(tempDir, "newfilename");
 

@@ -1,12 +1,12 @@
-import { ChildProcess } from "./wrappers/child-process";
-import { FileSystem } from "./wrappers/file-system";
-import { HostInfo } from "./host-info";
-import { ExecOptions } from "child_process";
-import { WinReg } from "./winreg";
-import { Helpers } from "./helpers";
-import { platform, EOL, homedir } from "os";
+import type { ChildProcess } from "./wrappers/child-process";
+import type { FileSystem } from "./wrappers/file-system";
+import type { HostInfo } from "./host-info";
+import type { ExecOptions } from "child_process";
+import type { WinReg } from "./winreg";
+import type { Helpers } from "./helpers";
+import { platform, EOL, homedir, tmpdir } from "os";
 import * as path from "path";
-import * as temp from "temp";
+import * as fs from "fs";
 import * as semver from "semver";
 import { Constants } from "./constants";
 
@@ -58,8 +58,11 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		private helpers: Helpers,
 		private hostInfo: HostInfo,
 		private winReg: WinReg,
-		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo
-	) {}
+		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
+	) {
+		// keep reference to preserve constructor signature compatibility
+		void this.winReg;
+	}
 
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(
@@ -68,15 +71,15 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				const javacVersion = process.env["JAVA_HOME"]
 					? await this.getVersionOfJavaExecutableFromJavaHome(
 							Constants.JAVAC_EXECUTABLE_NAME,
-							SysInfo.JAVA_COMPILER_VERSION_REGEXP
-					  )
+							SysInfo.JAVA_COMPILER_VERSION_REGEXP,
+						)
 					: await this.getVersionOfJavaExecutableFromPath(
 							Constants.JAVAC_EXECUTABLE_NAME,
-							SysInfo.JAVA_COMPILER_VERSION_REGEXP
-					  );
+							SysInfo.JAVA_COMPILER_VERSION_REGEXP,
+						);
 
 				return javacVersion;
-			}
+			},
 		);
 	}
 
@@ -88,7 +91,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					(await this.getJavaVersionFromJavaHome()) ||
 					(await this.getJavaVersionFromPath());
 				return javaVersion;
-			}
+			},
 		);
 	}
 
@@ -98,13 +101,13 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			async (): Promise<string> => {
 				const javaPath =
 					(await this.getJavaExecutablePathFromJavaHome(
-						Constants.JAVA_EXECUTABLE_NAME
+						Constants.JAVA_EXECUTABLE_NAME,
 					)) ||
 					(await this.getJavaExecutablePathFromPath(
-						Constants.JAVA_EXECUTABLE_NAME
+						Constants.JAVA_EXECUTABLE_NAME,
 					));
 				return javaPath;
-			}
+			},
 		);
 	}
 
@@ -114,9 +117,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			(): Promise<string> => {
 				return this.getVersionOfJavaExecutableFromPath(
 					Constants.JAVA_EXECUTABLE_NAME,
-					SysInfo.JAVA_VERSION_REGEXP
+					SysInfo.JAVA_VERSION_REGEXP,
 				);
-			}
+			},
 		);
 	}
 
@@ -126,9 +129,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			(): Promise<string> => {
 				return this.getVersionOfJavaExecutableFromJavaHome(
 					Constants.JAVA_EXECUTABLE_NAME,
-					SysInfo.JAVA_VERSION_REGEXP
+					SysInfo.JAVA_VERSION_REGEXP,
 				);
-			}
+			},
 		);
 	}
 
@@ -145,7 +148,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 						return this.getVersionFromString(output);
 					}
 				}
-			}
+			},
 		);
 	}
 
@@ -160,7 +163,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				}
 
 				return null;
-			}
+			},
 		);
 	}
 
@@ -170,7 +173,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			async (): Promise<string> => {
 				const output = await this.execCommand("npm -v");
 				return output ? output.split("\n")[0] : null;
-			}
+			},
 		);
 	}
 
@@ -180,7 +183,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			async (): Promise<string> => {
 				const output = await this.execCommand("node-gyp -v");
 				return output ? this.getVersionFromString(output) : null;
-			}
+			},
 		);
 	}
 
@@ -190,7 +193,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			async (): Promise<string> => {
 				const output = await this.execCommand("which xcodeproj");
 				return output ? output.trim() : null;
-			}
+			},
 		);
 	}
 
@@ -212,12 +215,12 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					coreFoundationDir = path.join(
 						commonProgramFiles,
 						"Apple",
-						"Apple Application Support"
+						"Apple Application Support",
 					);
 					mobileDeviceDir = path.join(
 						commonProgramFiles,
 						"Apple",
-						"Mobile Device Support"
+						"Mobile Device Support",
 					);
 				} else if (this.hostInfo.isDarwin) {
 					coreFoundationDir =
@@ -230,7 +233,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					(await this.fileSystem.exists(coreFoundationDir)) &&
 					(await this.fileSystem.exists(mobileDeviceDir))
 				);
-			}
+			},
 		);
 	}
 
@@ -249,7 +252,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 						}
 					}
 				}
-			}
+			},
 		);
 	}
 
@@ -258,7 +261,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			() => this.osCache,
 			async (): Promise<string> => {
 				return await (this.hostInfo.isWindows ? this.winVer() : this.unixVer());
-			}
+			},
 		);
 	}
 
@@ -276,14 +279,14 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 						pathToAdb,
 						["version"],
 						"close",
-						{ ignoreError: true }
+						{ ignoreError: true },
 					);
 				}
 
 				return output && output.stdout
-					? this.getVersionFromString(output.stdout)
+					? this.getVersionFromString(output.stdout as string)
 					: null;
-			}
+			},
 		);
 	}
 
@@ -297,7 +300,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				} catch (err) {
 					return false;
 				}
-			}
+			},
 		);
 	}
 
@@ -309,11 +312,11 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					this.androidToolsInfo.getPathToEmulatorExecutable(),
 					["-help"],
 					"close",
-					{ ignoreError: true }
+					{ ignoreError: true },
 				);
 
 				return output && output.stdout.indexOf("usage: emulator") >= 0;
-			}
+			},
 		);
 	}
 
@@ -324,7 +327,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				const output = await this.execCommand("mono --version");
 				const match = this.monoVerRegExp.exec(output);
 				return match ? match[1] : null;
-			}
+			},
 		);
 	}
 
@@ -338,11 +341,11 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				}
 
 				const output = await this.execCommand(
-					`${this.helpers.quoteString(gitPath)} --version`
+					`${this.helpers.quoteString(gitPath)} --version`,
 				);
 				const matches = SysInfo.GIT_VERSION_REGEXP.exec(output);
 				return matches && matches[1];
-			}
+			},
 		);
 	}
 
@@ -354,12 +357,12 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				const matches = SysInfo.GRADLE_VERSION_REGEXP.exec(output);
 
 				return matches && matches[1];
-			}
+			},
 		);
 	}
 
 	public async getSysInfo(
-		config?: NativeScriptDoctor.ISysInfoConfig
+		config?: NativeScriptDoctor.ISysInfoConfig,
 	): Promise<NativeScriptDoctor.ISysInfoData> {
 		if (
 			config &&
@@ -370,7 +373,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			return <NativeScriptDoctor.ISysInfoData>(
 				Object.assign(
 					await this.getCommonSysInfo(),
-					await this.getAndroidSysInfo(config)
+					await this.getAndroidSysInfo(config),
 				)
 			);
 		}
@@ -389,7 +392,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		return Object.assign(
 			await this.getCommonSysInfo(),
 			await this.getAndroidSysInfo(),
-			await this.getiOSSysInfo()
+			await this.getiOSSysInfo(),
 		);
 	}
 
@@ -397,52 +400,43 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		return this.getValueForProperty(
 			() => this.isCocoaPodsWorkingCorrectlyCache,
 			async (): Promise<boolean> => {
-				if (this.hostInfo.isDarwin) {
-					if (!this.fileSystem.exists(path.join(homedir(), ".cocoapods"))) {
-						return true;
-					}
-					temp.track();
-					const tempDirectory = temp.mkdirSync("nativescript-check-cocoapods");
-					const pathToXCodeProjectZip = path.join(
-						__dirname,
-						"..",
-						"resources",
-						"cocoapods-verification",
-						"cocoapods.zip"
-					);
-
-					await this.fileSystem.extractZip(
-						pathToXCodeProjectZip,
-						tempDirectory
-					);
-
-					const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
-
-					try {
-						const spawnResult = await this.childProcess.spawnFromEvent(
-							"pod",
-							["install"],
-							"exit",
-							{ spawnOptions: { cwd: xcodeProjectDir } }
-						);
-						if (spawnResult.exitCode) {
-							this.fileSystem.deleteEntry(tempDirectory);
-							return false;
-						} else {
-							const exists = this.fileSystem.exists(
-								path.join(xcodeProjectDir, "cocoapods.xcworkspace")
-							);
-							this.fileSystem.deleteEntry(tempDirectory);
-							return exists;
-						}
-					} catch (err) {
-						this.fileSystem.deleteEntry(tempDirectory);
-						return null;
-					}
-				} else {
+				if (!this.hostInfo.isDarwin) {
 					return false;
 				}
-			}
+				if (!this.fileSystem.exists(path.join(homedir(), ".cocoapods"))) {
+					return true;
+				}
+
+				const tempDirectory = fs.mkdtempSync(
+					path.join(tmpdir(), "nativescript-check-cocoapods-"),
+				);
+				const pathToXCodeProjectZip = path.join(
+					__dirname,
+					"..",
+					"resources",
+					"cocoapods-verification",
+					"cocoapods.zip",
+				);
+
+				try {
+					await this.fileSystem.extractZip(
+						pathToXCodeProjectZip,
+						tempDirectory,
+					);
+					const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
+					const spawnResult = await this.childProcess.spawnFromEvent(
+						"pod",
+						["install"],
+						"exit",
+						{ spawnOptions: { cwd: xcodeProjectDir } },
+					);
+					return !spawnResult.exitCode;
+				} catch (err) {
+					return false;
+				} finally {
+					this.fileSystem.deleteEntry(tempDirectory);
+				}
+			},
 		);
 	}
 
@@ -452,7 +446,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			async (): Promise<string> => {
 				const output = await this.execCommand("tns --version");
 				return output ? this.getVersionFromCLIOutput(output.trim()) : output;
-			}
+			},
 		);
 	}
 
@@ -483,7 +477,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				}
 
 				return { shouldUseXcproj, xcprojAvailable };
-			}
+			},
 		);
 	}
 
@@ -505,7 +499,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				}
 
 				return null;
-			}
+			},
 		);
 	}
 
@@ -519,7 +513,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				} else {
 					return false;
 				}
-			}
+			},
 		);
 	}
 
@@ -563,7 +557,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		}
 
 		const children = this.fileSystem.readDirectory(github);
-		const git = children.filter((child) => /^PortableGit/.test(child))[0];
+		const git = children.filter((child: string) =>
+			/^PortableGit/.test(child),
+		)[0];
 		if (!this.fileSystem.exists(git)) {
 			return null;
 		}
@@ -585,9 +581,28 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		return result && result.split("\n")[0].trim();
 	}
 
+	private async winVer(): Promise<string> {
+		try {
+			// Using `ver` is sufficient for an OS string on Windows.
+			const output = await this.execCommand("ver");
+			return output ? output.trim() : null;
+		} catch {
+			return null;
+		}
+	}
+
+	private async unixVer(): Promise<string> {
+		try {
+			const output = await this.execCommand("uname -a");
+			return output ? output.trim() : null;
+		} catch {
+			return null;
+		}
+	}
+
 	private async getValueForProperty<T>(
 		property: Function,
-		getValueMethod: () => Promise<T>
+		getValueMethod: () => Promise<T>,
 	): Promise<T> {
 		if (this.shouldCache) {
 			const propertyName = this.helpers.getPropertyName(property);
@@ -607,7 +622,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	private async exec(
 		cmd: string,
-		execOptions?: ExecOptions
+		execOptions?: ExecOptions,
 	): Promise<IProcessInfo> {
 		if (cmd) {
 			try {
@@ -622,50 +637,31 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	private async execCommand(
 		cmd: string,
-		execOptions?: ExecOptions
+		execOptions?: ExecOptions,
 	): Promise<string> {
 		const output = await this.exec(cmd, execOptions);
-		return output && output.stdout;
+		return output && (output.stdout as string);
 	}
 
-	private getVersionFromString(versionString: string): string {
-		const matches = versionString.match(SysInfo.VERSION_REGEXP);
-		if (matches) {
-			return `${matches[1]}.${matches[2]}.${matches[3] || 0}`;
+	private getVersionFromString(output: string): string {
+		if (!output) {
+			return null;
 		}
+		const match = SysInfo.VERSION_REGEXP.exec(output);
+		return match && match[0] ? match[0].trim() : null;
+	}
 
+	private getVersionFromCLIOutput(output: string): string {
+		if (!output) {
+			return null;
+		}
+		const lines = output.split(/\r?\n/);
+		for (const line of lines) {
+			if (SysInfo.CLI_OUTPUT_VERSION_REGEXP.test(line)) {
+				return line.trim();
+			}
+		}
 		return null;
-	}
-
-	private getVersionFromCLIOutput(commandOutput: string): string {
-		const matches = commandOutput.match(SysInfo.CLI_OUTPUT_VERSION_REGEXP);
-		return matches && matches[0];
-	}
-
-	private async winVer(): Promise<string> {
-		let productName: string;
-		let currentVersion: string;
-		let currentBuild: string;
-		const hive = this.winReg.registryKeys.HKLM;
-		const key = "\\Software\\Microsoft\\Windows NT\\CurrentVersion";
-
-		productName = await this.winReg.getRegistryValue("ProductName", hive, key);
-		currentVersion = await this.winReg.getRegistryValue(
-			"CurrentVersion",
-			hive,
-			key
-		);
-		currentBuild = await this.winReg.getRegistryValue(
-			"CurrentBuild",
-			hive,
-			key
-		);
-
-		return `${productName} ${currentVersion}.${currentBuild}`;
-	}
-
-	private unixVer(): Promise<string> {
-		return this.execCommand("uname -a");
 	}
 
 	private getCommonSysInfo(): Promise<NativeScriptDoctor.ICommonSysInfoData> {
@@ -687,7 +683,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				result.gitVer = await this.getGitVersion();
 
 				return result;
-			}
+			},
 		);
 	}
 
@@ -708,12 +704,12 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				result.pythonInfo = await this.getPythonInfo();
 
 				return result;
-			}
+			},
 		);
 	}
 
 	private async getAndroidSysInfo(
-		config?: NativeScriptDoctor.ISysInfoConfig
+		config?: NativeScriptDoctor.ISysInfoConfig,
 	): Promise<NativeScriptDoctor.IAndroidSysInfoData> {
 		return this.getValueForProperty(
 			() => this.androidSysInfoCache,
@@ -726,7 +722,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				result.javaVersion = await this.getJavaVersion();
 				result.javaPath = await this.getJavaPath();
 				result.adbVer = await this.getAdbVersion(
-					config && config.androidToolsInfo && config.androidToolsInfo.pathToAdb
+					config &&
+						config.androidToolsInfo &&
+						config.androidToolsInfo.pathToAdb,
 				);
 				result.androidInstalled = await this.isAndroidInstalled();
 				result.monoVer = await this.getMonoVersion();
@@ -735,13 +733,13 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					await this.isAndroidSdkConfiguredCorrectly();
 
 				return result;
-			}
+			},
 		);
 	}
 
 	private async getVersionOfJavaExecutableFromJavaHome(
 		javaExecutableName: string,
-		regExp: RegExp
+		regExp: RegExp,
 	): Promise<string> {
 		let javaExecutableVersion: string = null;
 		const javaExecutablePath =
@@ -749,7 +747,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		if (javaExecutablePath) {
 			javaExecutableVersion = await this.getVersionOfJavaExecutable(
 				javaExecutablePath,
-				regExp
+				regExp,
 			);
 		}
 
@@ -757,7 +755,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	}
 
 	private getJavaExecutablePathFromJavaHome(
-		javaExecutableName: string
+		javaExecutableName: string,
 	): string {
 		let javaExecutablePath: string = null;
 
@@ -771,7 +769,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				const pathToJavaExecutable = path.join(
 					javaHome,
 					"bin",
-					javaExecutableFile
+					javaExecutableFile,
 				);
 				if (this.fileSystem.exists(pathToJavaExecutable)) {
 					javaExecutablePath = pathToJavaExecutable;
@@ -786,17 +784,16 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	private async getVersionOfJavaExecutableFromPath(
 		javaExecutableName: string,
-		regExp: RegExp
+		regExp: RegExp,
 	): Promise<string> {
 		let javaExecutableVersion: string = null;
 
-		const javaExecutablePath = await this.getJavaExecutablePathFromPath(
-			javaExecutableName
-		);
+		const javaExecutablePath =
+			await this.getJavaExecutablePathFromPath(javaExecutableName);
 		if (javaExecutablePath) {
 			javaExecutableVersion = await this.getVersionOfJavaExecutable(
 				javaExecutablePath,
-				regExp
+				regExp,
 			);
 		}
 
@@ -804,7 +801,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	}
 
 	private async getJavaExecutablePathFromPath(
-		javaExecutableName: string
+		javaExecutableName: string,
 	): Promise<string> {
 		let javaExecutablePath: string = null;
 
@@ -822,7 +819,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 
 	private async getVersionOfJavaExecutable(
 		executable: string,
-		regExp: RegExp
+		regExp: RegExp,
 	): Promise<string> {
 		try {
 			const output = await this.childProcess.exec(`"${executable}" -version`);

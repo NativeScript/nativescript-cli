@@ -24,7 +24,7 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 
 		private $logger: ILogger,
 		private $fs: IFileSystem,
-		private $projectConfigService: IProjectConfigService
+		private $projectConfigService: IProjectConfigService,
 	) {
 		super(
 			$options,
@@ -34,7 +34,7 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 			$platformCommandParameter,
 			$platformsDataService,
 			$prepareDataService,
-			$migrateController
+			$migrateController,
 		);
 	}
 
@@ -56,10 +56,11 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		if (!this.$fs.exists(resolvedHostProjectPath)) {
 			this.$logger.error(
 				`The host project path ${color.yellow(
-					hostProjectPath
-				)} (resolved to: ${color.yellow.dim(
-					resolvedHostProjectPath
-				)}) does not exist.`
+					hostProjectPath,
+				)} (resolved to: ${color.styleText(
+					["yellow", "dim"],
+					resolvedHostProjectPath,
+				)}) does not exist.`,
 			);
 			return;
 		}
@@ -89,7 +90,7 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		if (!args[1]) {
 			const hostProjectPath = this.getEmbedConfigForKey(
 				"hostProjectPath",
-				platform
+				platform,
 			);
 			if (hostProjectPath) {
 				args[1] = hostProjectPath;
@@ -99,7 +100,7 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		if (!args[2]) {
 			const hostProjectModuleName = this.getEmbedConfigForKey(
 				"hostProjectModuleName",
-				platform
+				platform,
 			);
 			if (hostProjectModuleName) {
 				args[2] = hostProjectModuleName;
@@ -119,7 +120,7 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 		// get the embed.<platform>.<key> value, or fallback to embed.<key> value
 		return this.$projectConfigService.getValue(
 			`embed.${platform}.${key}`,
-			this.$projectConfigService.getValue(`embed.${key}`)
+			this.$projectConfigService.getValue(`embed.${key}`),
 		);
 	}
 }

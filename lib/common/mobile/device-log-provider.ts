@@ -4,7 +4,7 @@ import { injector } from "../yok";
 
 import { LoggerConfigData } from "../../constants";
 import { IOptions } from "../../declarations";
-import { Color, color } from "../../color";
+import { color, StyleFormat } from "../../color";
 
 import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
 
@@ -14,7 +14,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		protected $logger: ILogger,
 		protected $logSourceMapService: Mobile.ILogSourceMapService,
 		protected $timelineProfilerService: ITimelineProfilerService,
-		protected $options: IOptions
+		protected $options: IOptions,
 	) {
 		super($logFilter, $logger, $logSourceMapService);
 	}
@@ -22,7 +22,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 	public logData(
 		lineText: string,
 		platform: string,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): void {
 		// console.log(lineText)
 		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
@@ -30,7 +30,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		data = this.$logSourceMapService.replaceWithOriginalFileLocations(
 			platform,
 			data,
-			loggingOptions
+			loggingOptions,
 		);
 
 		if (data) {
@@ -55,16 +55,15 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		time: color.greenBright,
 	};
 
-	private deviceColorMap = new Map<string, Color>();
+	private deviceColorMap = new Map<string, StyleFormat>();
 
-	private colorPool: Color[] = [
-		"bgBlackBright",
-		"bgMagentaBright",
+	private colorPool: StyleFormat[] = [
+		"bgGray",
 		"bgBlueBright",
 		"bgWhiteBright",
 		"bgCyanBright",
 		"bgYellowBright",
-		"bgGreenBright",
+		"bgMagentaBright",
 	];
 	private colorPoolIndex = 0;
 
@@ -73,7 +72,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 			return this.deviceColorMap.get(deviceIdentifier);
 		}
 
-		const color = this.colorPool[this.colorPoolIndex];
+		const color = this.colorPool[this.colorPoolIndex] as StyleFormat;
 		// wrap around if we have no more colors in the pool
 		this.colorPoolIndex =
 			this.colorPoolIndex === this.colorPool.length - 1
@@ -150,8 +149,8 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 			toLog.split("\n").forEach((actualLine) => {
 				this.printLine(
-					color[this.getDeviceColor(deviceIdentifier)](" "),
-					this.consoleLevelColor[level](actualLine)
+					color.styleText(this.getDeviceColor(deviceIdentifier), " "),
+					this.consoleLevelColor[level](actualLine),
 				);
 			});
 		}

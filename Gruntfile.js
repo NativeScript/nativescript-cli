@@ -2,7 +2,7 @@ const childProcess = require("child_process");
 const EOL = require("os").EOL;
 const path = require("path");
 const now = new Date().toISOString();
-const latestVersion = require('latest-version').default;
+const manifest = require('pacote').manifest;
 
 
 const ENVIRONMENTS = {
@@ -248,15 +248,38 @@ function registerTestingDependenciesTasks(grunt) {
 	const generatedVersionFilePath = path.join(configsBasePath, "test-deps-versions-generated.json");
 
 	grunt.registerTask("generate_unit_testing_dependencies", async function () {
-		var done = this.async();
+		const done = this.async();
+
 		const dependenciesVersions = {};
-		const testDependencies = grunt.file.readJSON(path.join(configsBasePath, "test-dependencies.json"));
-		for (var dependency of testDependencies) {
-			const dependencyVersion = dependency.version || await latestVersion(dependency.name);
-			dependenciesVersions[dependency.name] = dependencyVersion;
+		let testDependencies;
+
+		try {
+			testDependencies = grunt.file.readJSON(path.join(configsBasePath, "test-dependencies.json"));
+		} catch (err) {
+			grunt.log.error("Could not read test-dependencies.json:", err);
+			return done(false);
 		}
-		grunt.file.write(generatedVersionFilePath, JSON.stringify(dependenciesVersions));
-		done();
+
+		(async () => {
+			try {
+				for (const dep of testDependencies) {
+					if (dep.version) {
+						dependenciesVersions[dep.name] = dep.version;
+					} else {
+						dependenciesVersions[dep.name] = await latestVersion(dep.name);
+					}
+				}
+				grunt.file.write(
+					generatedVersionFilePath,
+					JSON.stringify(dependenciesVersions, null, 2)
+				);
+				grunt.log.writeln("Wrote", generatedVersionFilePath);
+				done();
+			} catch (err) {
+				grunt.log.error(err);
+				done(false);
+			}
+		})();
 	});
 
 	grunt.registerTask("verify_unit_testing_dependencies", function () {
@@ -264,5 +287,11 @@ function registerTestingDependenciesTasks(grunt) {
 			throw new Error("Unit testing dependencies are not configured.");
 		}
 	});
+}
+
+async function latestVersion(name) {
+  // only fetches the package.json for the latest dist-tag
+  const { version } = await manifest(name.toLowerCase(), { fullMetadata: false });
+  return version;
 }
 

@@ -1,4 +1,4 @@
-import { glob } from "glob";
+import { glob } from "node:fs/promises";
 import { homedir } from "os";
 import * as path from "path";
 import { PromptObject } from "prompts";
@@ -20,7 +20,7 @@ export class TypingsCommand implements ICommand {
 		private $childProcess: IChildProcess,
 		private $hostInfo: IHostInfo,
 		private $staticConfig: IStaticConfig,
-		private $prompter: IPrompter
+		private $prompter: IPrompter,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -35,7 +35,7 @@ export class TypingsCommand implements ICommand {
 		if (this.$options.copyTo) {
 			this.$fs.copyFile(
 				path.resolve(this.$projectData.projectDir, "typings"),
-				this.$options.copyTo
+				this.$options.copyTo,
 			);
 			typingsFolder = this.$options.copyTo;
 		}
@@ -43,7 +43,7 @@ export class TypingsCommand implements ICommand {
 		if (result !== false) {
 			this.$logger.info(
 				"Typings have been generated in the following directory:",
-				typingsFolder
+				typingsFolder,
 			);
 		}
 	}
@@ -56,7 +56,7 @@ export class TypingsCommand implements ICommand {
 
 	private async resolveGradleDependencies(target: string) {
 		const gradleHome = path.resolve(
-			process.env.GRADLE_USER_HOME ?? path.join(homedir(), `/.gradle`)
+			process.env.GRADLE_USER_HOME ?? path.join(homedir(), `/.gradle`),
 		);
 		const gradleFiles = path.resolve(gradleHome, "caches/modules-2/files-2.1/");
 
@@ -67,18 +67,12 @@ export class TypingsCommand implements ICommand {
 
 		const pattern = `${target.replaceAll(":", "/")}/**/*.{jar,aar}`;
 
-		const res = await glob(pattern, {
+		const items = [];
+		for await (const item of glob(pattern, {
 			cwd: gradleFiles,
-		});
-
-		if (!res || res.length === 0) {
-			this.$logger.warn("No files found");
-			return [];
-		}
-
-		const items = res.map((item) => {
+		})) {
 			const [group, artifact, version, sha1, file] = item.split(path.sep);
-			return {
+			items.push({
 				id: sha1 + version,
 				group,
 				artifact,
@@ -86,14 +80,19 @@ export class TypingsCommand implements ICommand {
 				sha1,
 				file,
 				path: path.resolve(gradleFiles, item),
-			};
-		});
+			});
+		}
+
+		if (items.length === 0) {
+			this.$logger.warn("No files found");
+			return [];
+		}
 
 		this.$logger.clearScreen();
 
 		const choices = await this.$prompter.promptForChoice(
 			`Select dependencies to generate typings for (${color.greenBright(
-				target
+				target,
 			)})`,
 			items
 				.sort((a, b) => {
@@ -108,9 +107,10 @@ export class TypingsCommand implements ICommand {
 				.map((item) => {
 					return {
 						title: `${color.white(item.group)}:${color.greenBright(
-							item.artifact
-						)}:${color.yellow(item.version)} - ${color.cyanBright.bold(
-							item.file
+							item.artifact,
+						)}:${color.yellow(item.version)} - ${color.styleText(
+							["cyanBright", "bold"],
+							item.file,
 						)}`,
 						value: item.id,
 					};
@@ -118,7 +118,7 @@ export class TypingsCommand implements ICommand {
 			true,
 			{
 				optionsPerPage: process.stdout.rows - 6, // 6 lines are taken up by the instructions
-			} as Partial<PromptObject>
+			} as Partial<PromptObject>,
 		);
 
 		this.$logger.clearScreen();
@@ -139,7 +139,7 @@ export class TypingsCommand implements ICommand {
 				} catch (err) {
 					this.$logger.trace(
 						`Failed to resolve gradle dependencies for target "${target}"`,
-						err
+						err,
 					);
 				}
 			}
@@ -151,13 +151,13 @@ export class TypingsCommand implements ICommand {
 					"No .jar or .aar file specified. Please specify at least one of the following:",
 					"  - path to .jar file with --jar <jar>",
 					"  - path to .aar file with --aar <aar>",
-				].join("\n")
+				].join("\n"),
 			);
 			return false;
 		}
 
 		this.$fs.ensureDirectoryExists(
-			path.resolve(this.$projectData.projectDir, "typings", "android")
+			path.resolve(this.$projectData.projectDir, "typings", "android"),
 		);
 
 		const dtsGeneratorPath = path.resolve(
@@ -165,7 +165,7 @@ export class TypingsCommand implements ICommand {
 			"platforms",
 			"android",
 			"build-tools",
-			"dts-generator.jar"
+			"dts-generator.jar",
 		);
 		if (!this.$fs.exists(dtsGeneratorPath)) {
 			this.$logger.warn("No platforms folder found, preparing project now...");
@@ -173,7 +173,7 @@ export class TypingsCommand implements ICommand {
 				this.$hostInfo.isWindows ? "ns.cmd" : "ns",
 				["prepare", "android"],
 				"exit",
-				{ stdio: "inherit", shell: this.$hostInfo.isWindows }
+				{ stdio: "inherit", shell: this.$hostInfo.isWindows },
 			);
 		}
 
@@ -206,7 +206,7 @@ export class TypingsCommand implements ICommand {
 				path.resolve(this.$projectData.projectDir, "typings", "android"),
 			],
 			"exit",
-			{ stdio: "inherit" }
+			{ stdio: "inherit" },
 		);
 	}
 
@@ -216,7 +216,7 @@ export class TypingsCommand implements ICommand {
 		}
 
 		this.$fs.ensureDirectoryExists(
-			path.resolve(this.$projectData.projectDir, "typings", "ios")
+			path.resolve(this.$projectData.projectDir, "typings", "ios"),
 		);
 
 		await this.$childProcess.spawnFromEvent(
@@ -229,11 +229,11 @@ export class TypingsCommand implements ICommand {
 					TNS_TYPESCRIPT_DECLARATIONS_PATH: path.resolve(
 						this.$projectData.projectDir,
 						"typings",
-						"ios"
+						"ios",
 					),
 				},
 				stdio: "inherit",
-			}
+			},
 		);
 	}
 }

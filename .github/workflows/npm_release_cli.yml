@@ -10,14 +10,23 @@ on:
 env:
   NPM_TAG: 'next'
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
+
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@ec9f2d5744a09debf3a187a3f4f675c53b671911 # v2.13.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@ee0669bd1cc54295c223e0bb666b733df41de1c5 # v2.7.0
       
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610 # v3.9.1
         with:
           node-version: 22.14.0
 
