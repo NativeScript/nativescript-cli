@@ -528,7 +528,7 @@ export class BundlerCompilerService
 		// Note: With Vite, we need `--` to prevent vite cli from erroring on unknown options.
 		const envParams = isVite
 			? [
-					`--mode=${platformData.platformNameLowerCase}`,
+					`--mode=${prepareData.release ? "production" : "development"}`,
 					`--watch`,
 					"--",
 					...cliArgs,
