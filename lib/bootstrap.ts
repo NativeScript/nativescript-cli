@@ -263,6 +263,15 @@ injector.requireCommand("plugin|update", "./commands/plugin/update-plugin");
 injector.requireCommand("plugin|build", "./commands/plugin/build-plugin");
 injector.requireCommand("plugin|create", "./commands/plugin/create-plugin");
 
+injector.requireCommand(
+	["hooks|*list", "hooks|install"],
+	"./commands/hooks/hooks",
+);
+injector.requireCommand(
+	["hooks|lock", "hooks|verify"],
+	"./commands/hooks/hooks-lock",
+);
+
 injector.require("doctorService", "./services/doctor-service");
 injector.require("xcprojService", "./services/xcproj-service");
 injector.require("versionsService", "./services/versions-service");
