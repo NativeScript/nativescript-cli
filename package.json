@@ -60,7 +60,7 @@
     "@rigor789/resolve-package-path": "1.0.7",
     "@nstudio/trapezedev-project": "7.2.3",
     "archiver": "^7.0.1",
-    "axios": "1.11.0",
+    "axios": "1.12.2",
     "byline": "5.0.0",
     "chokidar": "4.0.3",
     "cli-table3": "0.6.5",
