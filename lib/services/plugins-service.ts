@@ -67,7 +67,7 @@ export class PluginsService implements IPluginsService {
 				ignoreScripts: this.$options.ignoreScripts,
 				path: this.$options.path,
 			},
-			PluginsService.NPM_CONFIG,
+			PluginsService.NPM_CONFIG
 		);
 	}
 
@@ -80,7 +80,7 @@ export class PluginsService implements IPluginsService {
 		private $filesHashService: IFilesHashService,
 		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) {}
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
@@ -97,26 +97,26 @@ export class PluginsService implements IPluginsService {
 			await this.$packageManager.install(
 				plugin,
 				projectData.projectDir,
-				this.npmInstallOptions,
+				this.npmInstallOptions
 			)
 		).name;
 		const pathToRealNpmPackageJson = this.getPackageJsonFilePathForModule(
 			name,
-			projectData.projectDir,
+			projectData.projectDir
 		);
 		const realNpmPackageJson = this.$fs.readJson(pathToRealNpmPackageJson);
 
 		if (realNpmPackageJson.nativescript) {
 			const pluginData = this.convertToPluginData(
 				realNpmPackageJson,
-				projectData.projectDir,
+				projectData.projectDir
 			);
 
 			// Validate
 			const action = async (
 				pluginDestinationPath: string,
 				platform: constants.PlatformTypes,
-				platformData: IPlatformData,
+				platformData: IPlatformData
 			): Promise<void> => {
 				this.isPluginDataValidForPlatform(pluginData, platform, projectData);
 			};
@@ -124,61 +124,61 @@ export class PluginsService implements IPluginsService {
 			await this.executeForAllInstalledPlatforms(action, projectData);
 
 			this.$logger.info(
-				`Successfully installed plugin ${realNpmPackageJson.name}.`,
+				`Successfully installed plugin ${realNpmPackageJson.name}.`
 			);
 		} else {
 			await this.$packageManager.uninstall(
 				realNpmPackageJson.name,
 				{ save: true },
-				projectData.projectDir,
+				projectData.projectDir
 			);
 			this.$errors.fail(
-				`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`,
+				`${plugin} is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.`
 			);
 		}
 	}
 
 	public async remove(
 		pluginName: string,
-		projectData: IProjectData,
+		projectData: IProjectData
 	): Promise<void> {
 		const removePluginNativeCodeAction = async (
 			modulesDestinationPath: string,
 			platform: string,
-			platformData: IPlatformData,
+			platformData: IPlatformData
 		): Promise<void> => {
 			const pluginData = this.convertToPluginData(
 				this.getNodeModuleData(pluginName, projectData.projectDir),
-				projectData.projectDir,
+				projectData.projectDir
 			);
 
 			await platformData.platformProjectService.removePluginNativeCode(
 				pluginData,
-				projectData,
+				projectData
 			);
 		};
 
 		await this.executeForAllInstalledPlatforms(
 			removePluginNativeCodeAction,
-			projectData,
+			projectData
 		);
 
 		await this.executeNpmCommand(
 			PluginsService.UNINSTALL_COMMAND_NAME,
 			pluginName,
-			projectData,
+			projectData
 		);
 
 		let showMessage = true;
 		const action = async (
 			modulesDestinationPath: string,
 			platform: string,
-			platformData: IPlatformData,
+			platformData: IPlatformData
 		): Promise<void> => {
 			shelljs.rm("-rf", path.join(modulesDestinationPath, pluginName));
 
 			this.$logger.info(
-				`Successfully removed plugin ${pluginName} for ${platform}.`,
+				`Successfully removed plugin ${pluginName} for ${platform}.`
 			);
 			showMessage = false;
 		};
@@ -194,7 +194,7 @@ export class PluginsService implements IPluginsService {
 		plugin: string,
 		version: string,
 		isDev: boolean,
-		projectDir: string,
+		projectDir: string
 	) {
 		const packageJsonPath = this.getPackageJsonFilePath(projectDir);
 		let packageJsonContent = this.$fs.readJson(packageJsonPath);
@@ -206,7 +206,7 @@ export class PluginsService implements IPluginsService {
 		) {
 			const result = this.removeDependencyFromPackageJsonContent(
 				plugin,
-				packageJsonContent,
+				packageJsonContent
 			);
 			packageJsonContent = result.packageJsonContent;
 		}
@@ -222,7 +222,7 @@ export class PluginsService implements IPluginsService {
 		const packageJsonContent = this.$fs.readJson(packageJsonPath);
 		const result = this.removeDependencyFromPackageJsonContent(
 			plugin,
-			packageJsonContent,
+			packageJsonContent
 		);
 
 		if (result.hasModifiedPackageJson) {
@@ -237,7 +237,7 @@ export class PluginsService implements IPluginsService {
 	}: IPreparePluginNativeCodeData): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData,
+			projectData
 		);
 
 		const pluginPlatformsFolderPath =
@@ -245,31 +245,31 @@ export class PluginsService implements IPluginsService {
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			const pathToPluginsBuildFile = path.join(
 				platformData.projectRoot,
-				constants.PLUGINS_BUILD_DATA_FILENAME,
+				constants.PLUGINS_BUILD_DATA_FILENAME
 			);
 
 			const allPluginsNativeHashes = this.getAllPluginsNativeHashes(
-				pathToPluginsBuildFile,
+				pathToPluginsBuildFile
 			);
 			const oldPluginNativeHashes = allPluginsNativeHashes[pluginData.name];
 			const currentPluginNativeHashes = await this.getPluginNativeHashes(
-				pluginPlatformsFolderPath,
+				pluginPlatformsFolderPath
 			);
 
 			if (
 				!oldPluginNativeHashes ||
 				this.$filesHashService.hasChangesInShasums(
 					oldPluginNativeHashes,
-					currentPluginNativeHashes,
+					currentPluginNativeHashes
 				)
 			) {
 				await platformData.platformProjectService.preparePluginNativeCode(
 					pluginData,
-					projectData,
+					projectData
 				);
 
 				const updatedPluginNativeHashes = await this.getPluginNativeHashes(
-					pluginPlatformsFolderPath,
+					pluginPlatformsFolderPath
 				);
 
 				this.setPluginNativeHashes({
@@ -283,13 +283,13 @@ export class PluginsService implements IPluginsService {
 	}
 
 	public async ensureAllDependenciesAreInstalled(
-		projectData: IProjectData,
+		projectData: IProjectData
 	): Promise<void> {
 		const packageJsonContent = this.$fs.readJson(
-			this.getPackageJsonFilePath(projectData.projectDir),
+			this.getPackageJsonFilePath(projectData.projectDir)
 		);
 		const allDependencies = _.keys(packageJsonContent.dependencies).concat(
-			_.keys(packageJsonContent.devDependencies),
+			_.keys(packageJsonContent.devDependencies)
 		);
 
 		const notInstalledDependencies = allDependencies
@@ -316,7 +316,7 @@ export class PluginsService implements IPluginsService {
 				"Npm install will be called from CLI. Force option is: ",
 				this.$options.force,
 				" Not installed dependencies are: ",
-				notInstalledDependencies,
+				notInstalledDependencies
 			);
 			await this.$packageManager.install(
 				projectData.projectDir,
@@ -326,34 +326,34 @@ export class PluginsService implements IPluginsService {
 					frameworkPath: this.$options.frameworkPath,
 					ignoreScripts: this.$options.ignoreScripts,
 					path: this.$options.path,
-				},
+				}
 			);
 		}
 	}
 
 	public async getAllInstalledPlugins(
-		projectData: IProjectData,
+		projectData: IProjectData
 	): Promise<IPluginData[]> {
 		const nodeModules = (await this.getAllInstalledModules(projectData)).map(
 			(nodeModuleData) =>
-				this.convertToPluginData(nodeModuleData, projectData.projectDir),
+				this.convertToPluginData(nodeModuleData, projectData.projectDir)
 		);
 		return _.filter(
 			nodeModules,
-			(nodeModuleData) => nodeModuleData && nodeModuleData.isPlugin,
+			(nodeModuleData) => nodeModuleData && nodeModuleData.isPlugin
 		);
 	}
 
 	public getAllProductionPlugins(
 		projectData: IProjectData,
 		platform: string,
-		dependencies?: IDependencyData[],
+		dependencies?: IDependencyData[]
 	): IPluginData[] {
 		dependencies =
 			dependencies ||
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(
 				projectData.projectDir,
-				projectData.ignoredDependencies,
+				projectData.ignoredDependencies
 			);
 
 		if (_.isEmpty(dependencies)) {
@@ -361,12 +361,12 @@ export class PluginsService implements IPluginsService {
 		}
 
 		let productionPlugins: IDependencyData[] = dependencies.filter(
-			(d) => !!d.nativescript,
+			(d) => !!d.nativescript
 		);
 		productionPlugins = this.ensureValidProductionPlugins(
 			productionPlugins,
 			projectData.projectDir,
-			platform,
+			platform
 		);
 		return productionPlugins
 			.map((plugin) => this.convertToPluginData(plugin, projectData.projectDir))
@@ -379,17 +379,17 @@ export class PluginsService implements IPluginsService {
 	}
 
 	public getDependenciesFromPackageJson(
-		projectDir: string,
+		projectDir: string
 	): IPackageJsonDepedenciesResult {
 		const packageJson = this.$fs.readJson(
-			this.getPackageJsonFilePath(projectDir),
+			this.getPackageJsonFilePath(projectDir)
 		);
 		const dependencies: IBasePluginData[] = this.getBasicPluginInformation(
-			packageJson.dependencies,
+			packageJson.dependencies
 		);
 
 		const devDependencies: IBasePluginData[] = this.getBasicPluginInformation(
-			packageJson.devDependencies,
+			packageJson.devDependencies
 		);
 
 		return {
@@ -407,27 +407,27 @@ export class PluginsService implements IPluginsService {
 		(
 			productionDependencies: IDependencyData[],
 			projectDir: string,
-			platform: string,
+			platform: string
 		) => IDependencyData[]
 	>(
 		this._ensureValidProductionPlugins,
 		(
 			productionDependencies: IDependencyData[],
 			projectDir: string,
-			platform: string,
+			platform: string
 		) => {
 			let key = _.sortBy(productionDependencies, (p) => p.directory)
 				.map((d) => JSON.stringify(d, null, 2))
 				.join("\n");
 			key += projectDir + platform;
 			return key;
-		},
+		}
 	);
 
 	private _ensureValidProductionPlugins(
 		productionDependencies: IDependencyData[],
 		projectDir: string,
-		platform: string,
+		platform: string
 	): IDependencyData[] {
 		let clonedProductionDependencies = _.cloneDeep(productionDependencies);
 		platform = platform.toLowerCase();
@@ -438,7 +438,7 @@ export class PluginsService implements IPluginsService {
 			clonedProductionDependencies = this.ensureValidProductionPluginsForIOS(
 				clonedProductionDependencies,
 				projectDir,
-				platform,
+				platform
 			);
 		}
 
@@ -446,11 +446,11 @@ export class PluginsService implements IPluginsService {
 	}
 
 	private ensureValidProductionPluginsForAndroid(
-		productionDependencies: IDependencyData[],
+		productionDependencies: IDependencyData[]
 	): void {
 		const dependenciesGroupedByName = _.groupBy(
 			productionDependencies,
-			(p) => p.name,
+			(p) => p.name
 		);
 		_.each(
 			dependenciesGroupedByName,
@@ -459,36 +459,36 @@ export class PluginsService implements IPluginsService {
 					// the dependency exists multiple times in node_modules
 					const dependencyOccurrencesGroupedByVersion = _.groupBy(
 						dependencyOccurrences,
-						(g) => g.version,
+						(g) => g.version
 					);
 					const versions = _.keys(dependencyOccurrencesGroupedByVersion);
 					if (versions.length === 1) {
 						// all dependencies with this name have the same version
 						this.$logger.trace(
 							`Detected same versions (${_.first(
-								versions,
+								versions
 							)}) of the ${dependencyName} installed at locations: ${_.map(
 								dependencyOccurrences,
-								(d) => d.directory,
-							).join(", ")}`,
+								(d) => d.directory
+							).join(", ")}`
 						);
 					} else {
 						this.$logger.trace(
 							`Detected different versions of the ${dependencyName} installed at locations: ${_.map(
 								dependencyOccurrences,
-								(d) => d.directory,
-							).join(", ")}\nThis can cause build failures.`,
+								(d) => d.directory
+							).join(", ")}\nThis can cause build failures.`
 						);
 					}
 				}
-			},
+			}
 		);
 	}
 
 	private ensureValidProductionPluginsForIOS(
 		productionDependencies: IDependencyData[],
 		projectDir: string,
-		platform: string,
+		platform: string
 	): IDependencyData[] {
 		const dependenciesWithFrameworks: any[] = [];
 		_.each(productionDependencies, (d) => {
@@ -510,7 +510,7 @@ export class PluginsService implements IPluginsService {
 		if (dependenciesWithFrameworks.length > 0) {
 			const dependenciesGroupedByFrameworkName = _.groupBy(
 				dependenciesWithFrameworks,
-				(d) => d.frameworkName,
+				(d) => d.frameworkName
 			);
 			_.each(
 				dependenciesGroupedByFrameworkName,
@@ -519,16 +519,16 @@ export class PluginsService implements IPluginsService {
 						// A framework exists multiple times in node_modules
 						const groupedByName = _.groupBy(
 							dependencyOccurrences,
-							(d) => d.name,
+							(d) => d.name
 						);
 						const pluginsNames = _.keys(groupedByName);
 						if (pluginsNames.length > 1) {
 							// fail - the same framework is installed by different dependencies.
 							const locations = dependencyOccurrences.map(
-								(d) => d.frameworkLocation,
+								(d) => d.frameworkLocation
 							);
 							let msg = `Detected the framework ${frameworkName} is installed from multiple plugins at locations:\n${locations.join(
-								"\n",
+								"\n"
 							)}\n`;
 							msg += this.getHelpMessage(projectDir);
 							this.$errors.fail(msg);
@@ -537,33 +537,33 @@ export class PluginsService implements IPluginsService {
 						const dependencyName = _.first(pluginsNames);
 						const dependencyOccurrencesGroupedByVersion = _.groupBy(
 							dependencyOccurrences,
-							(g) => g.version,
+							(g) => g.version
 						);
 						const versions = _.keys(dependencyOccurrencesGroupedByVersion);
 						if (versions.length === 1) {
 							// all dependencies with this name have the same version
 							this.$logger.warn(
 								`Detected the framework ${frameworkName} is installed multiple times from the same versions of plugin (${_.first(
-									versions,
+									versions
 								)}) at locations: ${_.map(
 									dependencyOccurrences,
-									(d) => d.directory,
-								).join(", ")}`,
+									(d) => d.directory
+								).join(", ")}`
 							);
 							const selectedPackage = _.minBy(
 								dependencyOccurrences,
-								(d) => d.depth,
+								(d) => d.depth
 							);
 							this.$logger.info(
 								color.green(
-									`CLI will use only the native code from '${selectedPackage.directory}'.`,
-								),
+									`CLI will use only the native code from '${selectedPackage.directory}'.`
+								)
 							);
 							_.each(dependencyOccurrences, (dependency) => {
 								if (dependency !== selectedPackage) {
 									productionDependencies.splice(
 										productionDependencies.indexOf(dependency),
-										1,
+										1
 									);
 								}
 							});
@@ -573,12 +573,12 @@ export class PluginsService implements IPluginsService {
 									dependencyName,
 									frameworkName,
 									dependencyOccurrencesGroupedByVersion,
-									projectDir,
+									projectDir
 								);
 							this.$errors.fail(message);
 						}
 					}
-				},
+				}
 			);
 		}
 
@@ -589,13 +589,13 @@ export class PluginsService implements IPluginsService {
 		dependencyName: string,
 		frameworkName: string,
 		dependencyOccurrencesGroupedByVersion: IDictionary<IDependencyData[]>,
-		projectDir: string,
+		projectDir: string
 	): string {
 		let message = `Cannot use the same framework ${frameworkName} multiple times in your application.
 This framework comes from ${dependencyName} plugin, which is installed multiple times in node_modules:\n`;
 		_.each(dependencyOccurrencesGroupedByVersion, (dependencies, version) => {
 			message += dependencies.map(
-				(d) => `* Path: ${d.directory}, version: ${d.version}\n`,
+				(d) => `* Path: ${d.directory}, version: ${d.version}\n`
 			);
 		});
 
@@ -621,7 +621,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 
 	private convertToPluginData(
 		cacheData: IDependencyData | INodeModuleData,
-		projectDir: string,
+		projectDir: string
 	): IPluginData {
 		try {
 			const pluginData: IPluginData = <IPluginData>{};
@@ -630,7 +630,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			pluginData.fullPath =
 				(<IDependencyData>cacheData).directory ||
 				path.dirname(
-					this.getPackageJsonFilePathForModule(cacheData.name, projectDir),
+					this.getPackageJsonFilePathForModule(cacheData.name, projectDir)
 				);
 			pluginData.isPlugin = !!cacheData.nativescript;
 			pluginData.pluginPlatformsFolderPath = (platform: string) => {
@@ -640,7 +640,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 				return path.join(
 					pluginData.fullPath,
 					"platforms",
-					platform.toLowerCase(),
+					platform.toLowerCase()
 				);
 			};
 			const data = cacheData.nativescript;
@@ -654,7 +654,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		} catch (err) {
 			this.$logger.trace(
 				"NOTE: There appears to be a problem with this dependency:",
-				cacheData.name,
+				cacheData.name
 			);
 			this.$logger.trace(err);
 			return null;
@@ -663,7 +663,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 
 	private removeDependencyFromPackageJsonContent(
 		dependency: string,
-		packageJsonContent: any,
+		packageJsonContent: any
 	): { hasModifiedPackageJson: boolean; packageJsonContent: any } {
 		let hasModifiedPackageJson = false;
 
@@ -706,7 +706,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 
 	private getPackageJsonFilePathForModule(
 		moduleName: string,
-		projectDir: string,
+		projectDir: string
 	): string {
 		const pathToJsonFile = resolvePackageJSONPath(moduleName, {
 			paths: [projectDir],
@@ -721,7 +721,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 
 	private getNodeModuleData(
 		module: string,
-		projectDir: string,
+		projectDir: string
 	): INodeModuleData {
 		// module can be  modulePath or moduleName
 		if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
@@ -741,37 +741,37 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	private async ensure(projectData: IProjectData): Promise<void> {
 		await this.ensureAllDependenciesAreInstalled(projectData);
 		this.$fs.ensureDirectoryExists(
-			this.getNodeModulesPath(projectData.projectDir),
+			this.getNodeModulesPath(projectData.projectDir)
 		);
 	}
 
 	private async getAllInstalledModules(
-		projectData: IProjectData,
+		projectData: IProjectData
 	): Promise<INodeModuleData[]> {
 		await this.ensure(projectData);
 
 		const nodeModules = this.getDependencies(projectData.projectDir);
 		return _.map(nodeModules, (nodeModuleName) =>
-			this.getNodeModuleData(nodeModuleName, projectData.projectDir),
+			this.getNodeModuleData(nodeModuleName, projectData.projectDir)
 		);
 	}
 
 	private async executeNpmCommand(
 		npmCommandName: string,
 		npmCommandArguments: string,
-		projectData: IProjectData,
+		projectData: IProjectData
 	): Promise<string> {
 		if (npmCommandName === PluginsService.INSTALL_COMMAND_NAME) {
 			await this.$packageManager.install(
 				npmCommandArguments,
 				projectData.projectDir,
-				this.npmInstallOptions,
+				this.npmInstallOptions
 			);
 		} else if (npmCommandName === PluginsService.UNINSTALL_COMMAND_NAME) {
 			await this.$packageManager.uninstall(
 				npmCommandArguments,
 				PluginsService.NPM_CONFIG,
-				projectData.projectDir,
+				projectData.projectDir
 			);
 		}
 
@@ -786,31 +786,31 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		action: (
 			_pluginDestinationPath: string,
 			pl: string,
-			_platformData: IPlatformData,
+			_platformData: IPlatformData
 		) => Promise<void>,
-		projectData: IProjectData,
+		projectData: IProjectData
 	): Promise<void> {
 		const availablePlatforms = this.$mobileHelper.platformNames.map((p) =>
-			p.toLowerCase(),
+			p.toLowerCase()
 		);
 		for (const platform of availablePlatforms) {
 			const isPlatformInstalled = this.$fs.exists(
-				path.join(projectData.platformsDir, platform.toLowerCase()),
+				path.join(projectData.platformsDir, platform.toLowerCase())
 			);
 			if (isPlatformInstalled) {
 				const platformData = this.$platformsDataService.getPlatformData(
 					platform.toLowerCase(),
-					projectData,
+					projectData
 				);
 				const pluginDestinationPath = path.join(
 					platformData.appDestinationDirectoryPath,
 					this.$options.hostProjectModuleName,
-					"tns_modules",
+					"tns_modules"
 				);
 				await action(
 					pluginDestinationPath,
 					platform.toLowerCase(),
-					platformData,
+					platformData
 				);
 			}
 		}
@@ -818,11 +818,11 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 
 	private getInstalledFrameworkVersion(
 		platform: constants.PlatformTypes,
-		projectData: IProjectData,
+		projectData: IProjectData
 	): string {
 		const runtimePackage = this.$projectDataService.getRuntimePackage(
 			projectData.projectDir,
-			platform,
+			platform
 		);
 		// const platformData = this.$platformsDataService.getPlatformData(platform, projectData);
 		// const frameworkData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
@@ -832,27 +832,27 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	private isPluginDataValidForPlatform(
 		pluginData: IPluginData,
 		platform: constants.PlatformTypes,
-		projectData: IProjectData,
+		projectData: IProjectData
 	): boolean {
 		let isValid = true;
 
 		const installedFrameworkVersion = this.getInstalledFrameworkVersion(
 			platform,
-			projectData,
+			projectData
 		);
 		const pluginPlatformsData = pluginData.platformsData;
 		if (pluginPlatformsData) {
 			const versionRequiredByPlugin = (<any>pluginPlatformsData)[platform];
 			if (!versionRequiredByPlugin) {
 				this.$logger.warn(
-					`${pluginData.name} is not supported for ${platform}.`,
+					`${pluginData.name} is not supported for ${platform}.`
 				);
 				isValid = false;
 			} else if (
 				semver.gt(versionRequiredByPlugin, installedFrameworkVersion)
 			) {
 				this.$logger.warn(
-					`${pluginData.name} requires at least version ${versionRequiredByPlugin} of platform ${platform}. Currently installed version is ${installedFrameworkVersion}.`,
+					`${pluginData.name} requires at least version ${versionRequiredByPlugin} of platform ${platform}. Currently installed version is ${installedFrameworkVersion}.`
 				);
 				isValid = false;
 			}
@@ -862,7 +862,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	}
 
 	private async getPluginNativeHashes(
-		pluginPlatformsDir: string,
+		pluginPlatformsDir: string
 	): Promise<IStringDictionary> {
 		let data: IStringDictionary = {};
 		if (this.$fs.exists(pluginPlatformsDir)) {
@@ -875,7 +875,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	}
 
 	private getAllPluginsNativeHashes(
-		pathToPluginsBuildFile: string,
+		pathToPluginsBuildFile: string
 	): IDictionary<IStringDictionary> {
 		if (this.$options.hostProjectPath) {
 			// TODO: force rebuild plugins for now until we decide where to put .ns-plugins-build-data.json when embedding
@@ -904,7 +904,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			opts.currentPluginNativeHashes;
 		this.$fs.writeJson(
 			opts.pathToPluginsBuildFile,
-			opts.allPluginsNativeHashes,
+			opts.allPluginsNativeHashes
 		);
 	}
 }
