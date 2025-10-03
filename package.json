@@ -102,7 +102,7 @@
     "tar": "7.4.3",
     "ts-morph": "25.0.1",
     "tunnel": "0.0.6",
-    "typescript": "5.7.3",
+    "typescript": "5.9.3",
     "universal-analytics": "0.5.3",
     "uuid": "11.1.0",
     "winreg": "1.2.5",
