@@ -200,6 +200,7 @@ interface INsConfig {
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
 	projectName?: string;
+	corePackageName?: string;
 }
 
 interface IProjectData extends ICreateProjectData {
