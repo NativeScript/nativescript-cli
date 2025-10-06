@@ -31,8 +31,9 @@ import { ProjectFilesProvider } from "../lib/providers/project-files-provider";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import * as StaticConfigLib from "../lib/config";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import * as path from "path";
-import * as temp from "temp";
 import * as _ from "lodash";
 import {
 	PLATFORMS_DIR_NAME,
@@ -56,7 +57,6 @@ import { FileSystem } from "../lib/common/file-system";
 import { ProjectHelper } from "../lib/common/project-helper";
 import { LiveSyncProcessDataService } from "../lib/services/livesync-process-data-service";
 // import { basename } from 'path';
-temp.track();
 
 let isErrorThrown = false;
 
@@ -76,7 +76,7 @@ function createTestInjector() {
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register(
 		"projectConfigService",
-		stubs.PackageInstallationManagerStub
+		stubs.PackageInstallationManagerStub,
 	);
 	testInjector.register("npm", NodePackageManager);
 	testInjector.register("yarn", YarnPackageManager);
@@ -154,17 +154,17 @@ function createTestInjector() {
 			Promise.resolve(),
 		interpolatePluginVariables: (
 			pluginData: IPluginData,
-			pluginConfigurationFileContent: string
+			pluginConfigurationFileContent: string,
 		) => Promise.resolve(pluginConfigurationFileContent),
 	});
 	testInjector.register(
 		"packageInstallationManager",
-		PackageInstallationManager
+		PackageInstallationManager,
 	);
 
 	testInjector.register(
 		"localToDevicePathDataFactory",
-		LocalToDevicePathDataFactory
+		LocalToDevicePathDataFactory,
 	);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
@@ -181,19 +181,19 @@ function createTestInjector() {
 	testInjector.register("extensibilityService", {});
 	testInjector.register(
 		"androidPluginBuildService",
-		stubs.AndroidPluginBuildServiceStub
+		stubs.AndroidPluginBuildServiceStub,
 	);
 	testInjector.register("analyticsSettingsService", {});
 	testInjector.register(
 		"androidResourcesMigrationService",
-		stubs.AndroidResourcesMigrationServiceStub
+		stubs.AndroidResourcesMigrationServiceStub,
 	);
 
 	testInjector.register("platformEnvironmentRequirements", {});
 	testInjector.register("filesHashService", {
 		hasChangesInShasums: (
 			oldPluginNativeHashes: IStringDictionary,
-			currentPluginNativeHashes: IStringDictionary
+			currentPluginNativeHashes: IStringDictionary,
 		) => true,
 		generateHashes: async (files: string[]): Promise<IStringDictionary> => ({}),
 	});
@@ -213,7 +213,7 @@ function createTestInjector() {
 					projectData.projectDir,
 					"node_modules",
 					packageToInstall,
-					"package.json"
+					"package.json",
 				);
 			}
 
@@ -226,7 +226,7 @@ function createTestInjector() {
 		extractPackage: async (
 			packageName: string,
 			destinationDirectory: string,
-			options?: IPacoteExtractOptions
+			options?: IPacoteExtractOptions,
 		): Promise<void> => undefined,
 	});
 	testInjector.register("gradleCommandService", GradleCommandService);
@@ -241,7 +241,7 @@ function createTestInjector() {
 		"projectConfigService",
 		stubs.ProjectConfigServiceStub.initWithConfig({
 			id: "org.nativescript.Test",
-		})
+		}),
 	);
 	testInjector.register(
 		"liveSyncProcessDataService",
@@ -253,7 +253,7 @@ function createTestInjector() {
 
 function createProjectFile(testInjector: IInjector): string {
 	const fs = testInjector.resolve("fs") as FileSystem;
-	const tempFolder = temp.mkdirSync("pluginsService");
+	const tempFolder = mkdtempSync(path.join(tmpdir(), "pluginsService-"));
 	const options = testInjector.resolve("options");
 	options.path = tempFolder;
 
@@ -283,11 +283,11 @@ function createProjectFile(testInjector: IInjector): string {
 
 function mockBeginCommand(
 	testInjector: IInjector,
-	expectedErrorMessage: string
+	expectedErrorMessage: string,
 ) {
 	const errors = testInjector.resolve("errors");
 	errors.beginCommand = async (
-		action: () => Promise<boolean>
+		action: () => Promise<boolean>,
 	): Promise<boolean> => {
 		try {
 			return await action();
@@ -303,7 +303,7 @@ async function addPluginWhenExpectingToFail(
 	testInjector: IInjector,
 	plugin: string,
 	expectedErrorMessage: string,
-	command?: string
+	command?: string,
 ) {
 	createProjectFile(testInjector);
 
@@ -341,7 +341,7 @@ describe("Plugins service", () => {
 					testInjector,
 					null,
 					"You must specify plugin name.",
-					command
+					command,
 				);
 			});
 			it("fails when invalid nativescript plugin name is specified", async () => {
@@ -349,7 +349,7 @@ describe("Plugins service", () => {
 					testInjector,
 					"lodash",
 					"lodash is not a valid NativeScript plugin. Verify that the plugin package.json file contains a nativescript key and try again.",
-					command
+					command,
 				);
 			});
 			it("fails when the plugin is already installed", async () => {
@@ -367,14 +367,14 @@ describe("Plugins service", () => {
 				const pluginsService: IPluginsService =
 					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
-					projData: IProjectData
+					projData: IProjectData,
 				) => {
 					return <any[]>[{ name: "plugin1" }];
 				};
 
 				mockBeginCommand(
 					testInjector,
-					"Exception: " + 'Plugin "plugin1" is already installed.'
+					"Exception: " + 'Plugin "plugin1" is already installed.',
 				);
 
 				isErrorThrown = false;
@@ -406,16 +406,13 @@ describe("Plugins service", () => {
 				const fs = testInjector.resolve("fs");
 				fs.writeJson(
 					path.join(pluginFolderPath, "package.json"),
-					pluginJsonData
+					pluginJsonData,
 				);
 
 				// Adds android platform
 				fs.createDirectory(path.join(projectFolder, PLATFORMS_DIR_NAME));
 				fs.createDirectory(
-					path.join(projectFolder, PLATFORMS_DIR_NAME, "android")
-				);
-				fs.createDirectory(
-					path.join(projectFolder, PLATFORMS_DIR_NAME, "android", "app")
+					path.join(projectFolder,PLATFORMS_DIR_NAME, "android", "app"),
 				);
 
 				// Mock logger.warn
@@ -431,21 +428,21 @@ describe("Plugins service", () => {
 				const projectData: IProjectData = testInjector.resolve("projectData");
 				projectData.initializeProjectData();
 				pluginsService.getAllInstalledPlugins = async (
-					projData: IProjectData
+					projData: IProjectData,
 				) => {
 					return <any[]>[{ name: "" }];
 				};
 
 				// Mock platformsDataService
 				const platformsDataService = testInjector.resolve(
-					"platformsDataService"
+					"platformsDataService",
 				);
 				platformsDataService.getPlatformData = (platform: string) => {
 					return {
 						appDestinationDirectoryPath: path.join(
 							projectFolder,
 							PLATFORMS_DIR_NAME,
-							"android"
+							"android",
 						),
 						frameworkPackageName: "tns-android",
 						normalizedPlatformName: "Android",
@@ -454,7 +451,7 @@ describe("Plugins service", () => {
 				const projectDataService = testInjector.resolve("projectDataService");
 				projectDataService.getRuntimePackage = (
 					projectDir: string,
-					platform: PlatformTypes
+					platform: PlatformTypes,
 				) => {
 					return {
 						name: "tns-android",
@@ -473,7 +470,7 @@ describe("Plugins service", () => {
 				const pluginsService: IPluginsService =
 					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
-					projectData: IProjectData
+					projectData: IProjectData,
 				) => {
 					return <any[]>[{ name: "" }];
 				};
@@ -499,14 +496,14 @@ describe("Plugins service", () => {
 
 				// Asserts that the plugin is added in package.json file
 				const packageJsonContent = fs.readJson(
-					path.join(projectFolder, "package.json")
+					path.join(projectFolder, "package.json"),
 				);
 				const actualDependencies = packageJsonContent.dependencies;
 				const expectedDependencies = { plugin1: "^1.0.3" };
 				const expectedDependenciesExact = { plugin1: "1.0.3" };
 				assert.isTrue(
 					_.isEqual(actualDependencies, expectedDependencies) ||
-						_.isEqual(actualDependencies, expectedDependenciesExact)
+						_.isEqual(actualDependencies, expectedDependenciesExact),
 				);
 			});
 			it("adds plugin by name and version", async () => {
@@ -516,7 +513,7 @@ describe("Plugins service", () => {
 				const pluginsService: IPluginsService =
 					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
-					projectData: IProjectData
+					projectData: IProjectData,
 				) => {
 					return <any[]>[{ name: "" }];
 				};
@@ -542,14 +539,14 @@ describe("Plugins service", () => {
 
 				// Assert that the plugin is added in package.json file
 				const packageJsonContent = fs.readJson(
-					path.join(projectFolder, "package.json")
+					path.join(projectFolder, "package.json"),
 				);
 				const actualDependencies = packageJsonContent.dependencies;
 				const expectedDependencies = { plugin1: "^1.0.0" };
 				const expectedDependenciesExact = { plugin1: "1.0.0" };
 				assert.isTrue(
 					_.isEqual(actualDependencies, expectedDependencies) ||
-						_.isEqual(actualDependencies, expectedDependenciesExact)
+						_.isEqual(actualDependencies, expectedDependenciesExact),
 				);
 			});
 			it("adds plugin by local path", async () => {
@@ -567,13 +564,13 @@ describe("Plugins service", () => {
 				const fs = testInjector.resolve("fs");
 				fs.writeJson(
 					path.join(pluginFolderPath, "package.json"),
-					pluginJsonData
+					pluginJsonData,
 				);
 
 				const pluginsService: IPluginsService =
 					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
-					projectData: IProjectData
+					projectData: IProjectData,
 				) => {
 					return <any[]>[{ name: "" }];
 				};
@@ -591,7 +588,7 @@ describe("Plugins service", () => {
 				const pluginFiles = ["package.json"];
 				_.each(pluginFiles, (pluginFile) => {
 					assert.isTrue(
-						fs.exists(path.join(nodeModulesFolderPath, pluginName, pluginFile))
+						fs.exists(path.join(nodeModulesFolderPath, pluginName, pluginFile)),
 					);
 				});
 			});
@@ -616,13 +613,13 @@ describe("Plugins service", () => {
 				const fs = testInjector.resolve("fs");
 				fs.writeJson(
 					path.join(pluginFolderPath, "package.json"),
-					pluginJsonData
+					pluginJsonData,
 				);
 
 				const pluginsService: IPluginsService =
 					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
-					projectData: IProjectData
+					projectData: IProjectData,
 				) => {
 					return <any[]>[{ name: "" }];
 				};
@@ -643,9 +640,9 @@ describe("Plugins service", () => {
 							nodeModulesFolderPath,
 							pluginName,
 							"node_modules",
-							"grunt"
-						)
-					)
+							"grunt",
+						),
+					),
 				);
 			});
 			it("install dev dependencies when --production option is not specified", async () => {
@@ -669,13 +666,13 @@ describe("Plugins service", () => {
 				const fs = testInjector.resolve("fs");
 				fs.writeJson(
 					path.join(pluginFolderPath, "package.json"),
-					pluginJsonData
+					pluginJsonData,
 				);
 
 				const pluginsService: IPluginsService =
 					testInjector.resolve("pluginsService");
 				pluginsService.getAllInstalledPlugins = async (
-					projectData: IProjectData
+					projectData: IProjectData,
 				) => {
 					return <any[]>[{ name: "" }];
 				};
@@ -713,7 +710,7 @@ describe("Plugins service", () => {
 					platformProjectService: {
 						preparePluginNativeCode: async (
 							pluginData: IPluginData,
-							projData: IProjectData
+							projData: IProjectData,
 						) => {
 							testData.isPreparePluginNativeCodeCalled = true;
 						},
@@ -734,7 +731,7 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("filesHashService", {
 				hasChangesInShasums: (
 					oldPluginNativeHashes: IStringDictionary,
-					currentPluginNativeHashes: IStringDictionary
+					currentPluginNativeHashes: IStringDictionary,
 				) => !!opts.hasChangesInShasums,
 				generateHashes: async (files: string[]): Promise<IStringDictionary> =>
 					testData.isPreparePluginNativeCodeCalled &&
@@ -772,7 +769,7 @@ describe("Plugins service", () => {
 			unitTestsInjector.register("mobileHelper", MobileHelper);
 			unitTestsInjector.register(
 				"devicePlatformsConstants",
-				DevicePlatformsConstants
+				DevicePlatformsConstants,
 			);
 			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 			unitTestsInjector.register("tempService", stubs.TempServiceStub);
@@ -865,7 +862,7 @@ describe("Plugins service", () => {
 		unitTestsInjector.register("mobileHelper", MobileHelper);
 		unitTestsInjector.register(
 			"devicePlatformsConstants",
-			DevicePlatformsConstants
+			DevicePlatformsConstants,
 		);
 		unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 		unitTestsInjector.register("tempService", stubs.TempServiceStub);
@@ -896,7 +893,7 @@ describe("Plugins service", () => {
 				unitTestsInjector.resolve(PluginsService);
 			const pluginData = (<any>pluginsService).convertToPluginData(
 				dataFromPluginPackageJson,
-				"my project dir"
+				"my project dir",
 			);
 			// Remove the comparison of a function
 			delete pluginData["pluginPlatformsFolderPath"];
@@ -916,7 +913,7 @@ describe("Plugins service", () => {
 				unitTestsInjector.resolve(PluginsService);
 			const pluginData = (<any>pluginsService).convertToPluginData(
 				dataFromPluginPackageJson,
-				"my project dir"
+				"my project dir",
 			);
 
 			const expectediOSPath = path.join(pluginDir, PLATFORMS_DIR_NAME, "ios");
@@ -927,28 +924,28 @@ describe("Plugins service", () => {
 			);
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("iOS"),
-				expectediOSPath
+				expectediOSPath,
 			);
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("ios"),
-				expectediOSPath
+				expectediOSPath,
 			);
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("IOS"),
-				expectediOSPath
+				expectediOSPath,
 			);
 
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("Android"),
-				expectedAndroidPath
+				expectedAndroidPath,
 			);
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("android"),
-				expectedAndroidPath
+				expectedAndroidPath,
 			);
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("ANDROID"),
-				expectedAndroidPath
+				expectedAndroidPath,
 			);
 		});
 	});
@@ -1161,7 +1158,7 @@ describe("Plugins service", () => {
 This framework comes from nativescript-ui-core plugin, which is installed multiple times in node_modules:\n` +
 						"* Path: /Users/username/projectDir/node_modules/nativescript-ui-core, version: 3.0.0\n" +
 						"* Path: /Users/username/projectDir/node_modules/nativescript-ui-listview/node_modules/nativescript-ui-core, version: 4.0.0\n\n" +
-						`Probably you need to update your dependencies, remove node_modules and try again.`
+						`Probably you need to update your dependencies, remove node_modules and try again.`,
 				),
 			},
 			{
@@ -1201,13 +1198,13 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 					`Detected the framework a.framework is installed from multiple plugins at locations:\n` +
 						"/Users/username/projectDir/node_modules/nativescript-ui-core-forked/platforms/ios/a.framework\n".replace(
 							/\//g,
-							path.sep
+							path.sep,
 						) +
 						"/Users/username/projectDir/node_modules/nativescript-ui-core/platforms/ios/a.framework\n\n".replace(
 							/\//g,
-							path.sep
+							path.sep,
 						) +
-						`Probably you need to update your dependencies, remove node_modules and try again.`
+						`Probably you need to update your dependencies, remove node_modules and try again.`,
 				),
 			},
 		];
@@ -1224,15 +1221,15 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 							pluginsService.getAllProductionPlugins(
 								<any>{ projectDir: "projectDir" },
 								"ios",
-								testCase.inputDependencies
+								testCase.inputDependencies,
 							),
-						testCase.expectedOutput.message
+						testCase.expectedOutput.message,
 					);
 				} else {
 					const plugins = pluginsService.getAllProductionPlugins(
 						<any>{ projectDir: "projectDir" },
 						"ios",
-						testCase.inputDependencies
+						testCase.inputDependencies,
 					);
 
 					if (testCase.expectedWarning) {
@@ -1292,7 +1289,7 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 				pluginsService.getAllProductionPlugins(
 					<any>{ projectDir: "projectDir" },
 					"ios",
-					inputDependencies
+					inputDependencies,
 				);
 			});
 
@@ -1303,20 +1300,20 @@ This framework comes from nativescript-ui-core plugin, which is installed multip
 			assert.equal(
 				logger.warnOutput,
 				util.format(expectedWarnMessage, "6.3.0"),
-				"The warn message must be shown only once - the result of the private method must be cached as input dependencies have not changed"
+				"The warn message must be shown only once - the result of the private method must be cached as input dependencies have not changed",
 			);
 			inputDependencies[0].version = "1.0.0";
 			inputDependencies[1].version = "1.0.0";
 			pluginsService.getAllProductionPlugins(
 				<any>{ projectDir: "projectDir" },
 				"ios",
-				inputDependencies
+				inputDependencies,
 			);
 			assert.equal(
 				logger.warnOutput,
 				util.format(expectedWarnMessage, "6.3.0") +
 					util.format(expectedWarnMessage, "1.0.0"),
-				"When something in input dependencies change, the cached value shouldn't be taken into account"
+				"When something in input dependencies change, the cached value shouldn't be taken into account",
 			);
 		});
 	});

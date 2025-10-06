@@ -5,6 +5,7 @@ import { parseJson } from "./common/helpers";
 import { EOL } from "os";
 import { cache } from "./common/decorators";
 import {
+	BundlerType,
 	INsConfig,
 	IProjectConfigService,
 	IProjectData,
@@ -99,6 +100,8 @@ export class ProjectData implements IProjectData {
 	public podfilePath: string;
 	public isShared: boolean;
 	public webpackConfigPath: string;
+	public bundlerConfigPath: string;
+	public bundler: BundlerType;
 	public initialized: boolean;
 
 	constructor(
@@ -110,7 +113,7 @@ export class ProjectData implements IProjectData {
 		private $logger: ILogger,
 		private $injector: IInjector,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 	) {}
 
 	get projectConfig(): IProjectConfigService {
@@ -142,7 +145,7 @@ export class ProjectData implements IProjectData {
 
 	public initializeProjectDataFromContent(
 		packageJsonContent: string,
-		projectDir?: string
+		projectDir?: string,
 	): void {
 		projectDir = projectDir || this.$projectHelper.projectDir || "";
 		this.projectDir = projectDir;
@@ -157,7 +160,7 @@ export class ProjectData implements IProjectData {
 			this.$errors.fail(
 				`The project file ${this.projectFilePath} is corrupted. ${EOL}` +
 					`Consider restoring an earlier version from your source control or backup.${EOL}` +
-					`Additional technical info: ${err.toString()}`
+					`Additional technical info: ${err.toString()}`,
 			);
 		}
 
@@ -181,36 +184,43 @@ export class ProjectData implements IProjectData {
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
 			this.androidManifestPath = this.getPathToAndroidManifest(
-				this.appResourcesDirectoryPath
+				this.appResourcesDirectoryPath,
 			);
 			this.gradleFilesDirectoryPath = path.join(
 				this.appResourcesDirectoryPath,
-				this.$devicePlatformsConstants.Android
+				this.$devicePlatformsConstants.Android,
 			);
 			this.appGradlePath = path.join(
 				this.gradleFilesDirectoryPath,
-				constants.APP_GRADLE_FILE_NAME
+				constants.APP_GRADLE_FILE_NAME,
 			);
 			this.infoPlistPath = path.join(
 				this.appResourcesDirectoryPath,
 				this.$devicePlatformsConstants.iOS,
-				constants.INFO_PLIST_FILE_NAME
+				constants.INFO_PLIST_FILE_NAME,
 			);
 			this.buildXcconfigPath = path.join(
 				this.appResourcesDirectoryPath,
 				this.$devicePlatformsConstants.iOS,
-				constants.BUILD_XCCONFIG_FILE_NAME
+				constants.BUILD_XCCONFIG_FILE_NAME,
 			);
 			this.podfilePath = path.join(
 				this.appResourcesDirectoryPath,
 				this.$devicePlatformsConstants.iOS,
-				constants.PODFILE_NAME
+				constants.PODFILE_NAME,
 			);
 			this.isShared = !!(this.nsConfig && this.nsConfig.shared);
-			this.webpackConfigPath =
+
+			const webpackConfigPath =
 				this.nsConfig && this.nsConfig.webpackConfigPath
 					? path.resolve(this.projectDir, this.nsConfig.webpackConfigPath)
 					: path.join(this.projectDir, "webpack.config.js");
+			this.webpackConfigPath = webpackConfigPath;
+			this.bundlerConfigPath =
+				this.nsConfig && this.nsConfig.bundlerConfigPath
+					? path.resolve(this.projectDir, this.nsConfig.bundlerConfigPath)
+					: webpackConfigPath;
+			this.bundler = this?.nsConfig?.bundler ?? "webpack";
 			return;
 		}
 
@@ -220,7 +230,7 @@ export class ProjectData implements IProjectData {
 	private getPathToAndroidManifest(appResourcesDir: string): string {
 		const androidDirPath = path.join(
 			appResourcesDir,
-			this.$devicePlatformsConstants.Android
+			this.$devicePlatformsConstants.Android,
 		);
 		const androidManifestDir =
 			this.$androidResourcesMigrationService.hasMigrated(appResourcesDir)
@@ -233,13 +243,13 @@ export class ProjectData implements IProjectData {
 	private errorInvalidProject(projectDir: string): void {
 		const currentDir = path.resolve(".");
 		this.$logger.trace(
-			`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`
+			`Unable to find project. projectDir: ${projectDir}, options.path: ${this.$options.path}, ${currentDir}`,
 		);
 
 		// This is the case when no project file found
 		this.$errors.fail(
 			"No project found at or above '%s' and neither was a --path specified.",
-			projectDir || this.$options.path || currentDir
+			projectDir || this.$options.path || currentDir,
 		);
 	}
 
@@ -302,7 +312,7 @@ export class ProjectData implements IProjectData {
 
 	private resolveToProjectDir(
 		pathToResolve: string,
-		projectDir?: string
+		projectDir?: string,
 	): string {
 		if (!projectDir) {
 			projectDir = this.projectDir;
@@ -317,7 +327,7 @@ export class ProjectData implements IProjectData {
 
 	@cache()
 	private initializeProjectIdentifiers(
-		config: INsConfig
+		config: INsConfig,
 	): Mobile.IProjectIdentifier {
 		this.$logger.trace(`Initializing project identifiers. Config: `, config);
 
@@ -352,18 +362,18 @@ export class ProjectData implements IProjectData {
 	private getProjectType(): string {
 		let detectedProjectType = _.find(
 			ProjectData.PROJECT_TYPES,
-			(projectType) => projectType.isDefaultProjectType
+			(projectType) => projectType.isDefaultProjectType,
 		).type;
 
 		const deps: string[] = _.keys(this.dependencies).concat(
-			_.keys(this.devDependencies)
+			_.keys(this.devDependencies),
 		);
 
 		_.each(ProjectData.PROJECT_TYPES, (projectType) => {
 			if (
 				_.some(
 					projectType.requiredDependencies,
-					(requiredDependency) => deps.indexOf(requiredDependency) !== -1
+					(requiredDependency) => deps.indexOf(requiredDependency) !== -1,
 				)
 			) {
 				detectedProjectType = projectType.type;
@@ -377,7 +387,7 @@ export class ProjectData implements IProjectData {
 	@cache()
 	private warnProjectId(): void {
 		this.$logger.warn(
-			"[WARNING]: IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform]."
+			"[WARNING]: IProjectData.projectId is deprecated. Please use IProjectData.projectIdentifiers[platform].",
 		);
 	}
 }

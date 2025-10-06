@@ -13,6 +13,7 @@ import { hook } from "../common/helpers";
 import { injector } from "../common/yok";
 import {
 	AnalyticsEventLabelDelimiter,
+	BUNDLER_COMPILATION_COMPLETE,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
 	PACKAGE_JSON_FILE_NAME,
@@ -23,7 +24,6 @@ import {
 	SCOPED_IOS_RUNTIME_NAME,
 	SupportedPlatform,
 	TrackActionNames,
-	WEBPACK_COMPILATION_COMPLETE,
 } from "../constants";
 import { IOptions, IWatchIgnoreListService } from "../declarations";
 import {
@@ -71,7 +71,7 @@ export class PrepareController extends EventEmitter {
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
-		private $webpackCompilerService: IWebpackCompilerService,
+		private $bundlerCompilerService: IBundlerCompilerService,
 		private $watchIgnoreListService: IWatchIgnoreListService,
 		private $analyticsService: IAnalyticsService,
 		private $markingModeService: IMarkingModeService,
@@ -121,9 +121,9 @@ export class PrepareController extends EventEmitter {
 			this.watchersData[projectDir][platformLowerCase] &&
 			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess
 		) {
-			await this.$webpackCompilerService.stopWebpackCompiler(platformLowerCase);
-			this.$webpackCompilerService.removeListener(
-				WEBPACK_COMPILATION_COMPLETE,
+			await this.$bundlerCompilerService.stopBundlerCompiler(platformLowerCase);
+			this.$bundlerCompilerService.removeListener(
+				BUNDLER_COMPILATION_COMPLETE,
 				this.webpackCompilerHandler,
 			);
 			this.watchersData[projectDir][
@@ -181,7 +181,7 @@ export class PrepareController extends EventEmitter {
 				prepareData,
 			);
 		} else {
-			await this.$webpackCompilerService.compileWithoutWatch(
+			await this.$bundlerCompilerService.compileWithoutWatch(
 				platformData,
 				projectData,
 				prepareData,
@@ -304,15 +304,15 @@ export class PrepareController extends EventEmitter {
 			};
 
 			this.webpackCompilerHandler = handler.bind(this);
-			this.$webpackCompilerService.on(
-				WEBPACK_COMPILATION_COMPLETE,
+			this.$bundlerCompilerService.on(
+				BUNDLER_COMPILATION_COMPLETE,
 				this.webpackCompilerHandler,
 			);
 
 			this.watchersData[projectData.projectDir][
 				platformData.platformNameLowerCase
 			].hasWebpackCompilerProcess = true;
-			await this.$webpackCompilerService.compileWithWatch(
+			await this.$bundlerCompilerService.compileWithWatch(
 				platformData,
 				projectData,
 				prepareData,
@@ -610,7 +610,7 @@ export class PrepareController extends EventEmitter {
 		if (this.pausedFileWatch) {
 			for (const watcher of watchers) {
 				for (const platform in watcher) {
-					await this.$webpackCompilerService.stopWebpackCompiler(platform);
+					await this.$bundlerCompilerService.stopBundlerCompiler(platform);
 					watcher[platform].hasWebpackCompilerProcess = false;
 				}
 			}
@@ -619,7 +619,7 @@ export class PrepareController extends EventEmitter {
 				for (const platform in watcher) {
 					const args = watcher[platform].prepareArguments;
 					watcher[platform].hasWebpackCompilerProcess = true;
-					await this.$webpackCompilerService.compileWithWatch(
+					await this.$bundlerCompilerService.compileWithWatch(
 						args.platformData,
 						args.projectData,
 						args.prepareData,

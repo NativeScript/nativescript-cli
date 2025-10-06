@@ -98,7 +98,8 @@ export class ConfigSetCommand implements ICommand {
 		const convertedValue = this.getConvertedValue(value);
 		const existingKey = current !== undefined;
 		const keyDisplay = color.green(key);
-		const currentDisplay = color.yellow(current);
+		// when current is undefined, return empty string to avoid throw
+		const currentDisplay = current ? color.yellow(current) : "";
 		const updatedDisplay = color.cyan(convertedValue);
 
 		this.$logger.info(

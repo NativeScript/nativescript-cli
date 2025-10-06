@@ -112,7 +112,6 @@ export class CleanCommand implements ICommand {
 			constants.HOOKS_DIR_NAME,
 			this.$projectData.getBuildRelativeDirectoryPath(),
 			constants.NODE_MODULES_FOLDER_NAME,
-			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		];
 
 		try {
@@ -269,7 +268,8 @@ export class CleanCommand implements ICommand {
 		spinner.warn(
 			`This will run "${color.yellow(
 				`ns clean`,
-			)}" in all the selected projects and ${color.red.bold(
+			)}" in all the selected projects and ${color.styleText(
+				["red", "bold"],
 				"delete files from your system",
 			)}!`,
 		);

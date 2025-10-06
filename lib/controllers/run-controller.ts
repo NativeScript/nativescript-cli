@@ -97,7 +97,6 @@ export class RunController extends EventEmitter implements IRunController {
 						platformData,
 						projectData,
 						prepareData,
-						data,
 					);
 					if (changesInfo.hasChanges) {
 						await this.syncChangedDataOnDevices(

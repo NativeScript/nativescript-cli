@@ -1,6 +1,7 @@
-import * as path from "path";
 import { BaseServiceTest } from "./base-service-test";
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
+import * as path from "path";
 import * as _ from "lodash";
 import { assert } from "chai";
 import { PlatformsDataService } from "../lib/services/platforms-data-service";
@@ -17,7 +18,6 @@ import {
 } from "../lib/definitions/project-changes";
 
 // start tracking temporary folders/files
-temp.track();
 
 class ProjectChangesServiceTest extends BaseServiceTest {
 	public projectDir: string;
@@ -27,7 +27,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 	}
 
 	initInjector(): void {
-		this.projectDir = temp.mkdirSync("projectDir");
+		this.projectDir = mkdtempSync(path.join(tmpdir(), "projectDir-"));
 		this.injector.register("projectData", {
 			projectDir: this.projectDir,
 		});
@@ -72,7 +72,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 			projectRoot: path.join(
 				this.projectDir,
 				Constants.PLATFORMS_DIR_NAME,
-				platform.toLowerCase()
+				platform.toLowerCase(),
 			),
 			platformProjectService: {
 				checkForChanges: async (changesInfo: IProjectChangesInfo) => {
@@ -90,11 +90,11 @@ describe("Project Changes Service Tests", () => {
 
 		const platformsDir = path.join(
 			serviceTest.projectDir,
-			Constants.PLATFORMS_DIR_NAME
+			Constants.PLATFORMS_DIR_NAME,
 		);
 
 		serviceTest.getNativeProjectDataService.getPlatformData = (
-			platform: string
+			platform: string,
 		) => {
 			if (platform.toLowerCase() === "ios") {
 				return {
@@ -127,14 +127,14 @@ describe("Project Changes Service Tests", () => {
 			for (const platform of ["ios", "android"]) {
 				const actualPrepareInfoPath =
 					serviceTest.projectChangesService.getPrepareInfoFilePath(
-						serviceTest.getPlatformData(platform)
+						serviceTest.getPlatformData(platform),
 					);
 
 				const expectedPrepareInfoPath = path.join(
 					serviceTest.projectDir,
 					Constants.PLATFORMS_DIR_NAME,
 					platform,
-					".nsprepareinfo"
+					".nsprepareinfo",
 				);
 				assert.equal(actualPrepareInfoPath, expectedPrepareInfoPath);
 			}
@@ -145,7 +145,7 @@ describe("Project Changes Service Tests", () => {
 		it("Returns empty if file path doesn't exists", () => {
 			for (const platform of ["ios", "android"]) {
 				const projectInfo = serviceTest.projectChangesService.getPrepareInfo(
-					serviceTest.getPlatformData(platform)
+					serviceTest.getPlatformData(platform),
 				);
 
 				assert.isNull(projectInfo);
@@ -160,7 +160,7 @@ describe("Project Changes Service Tests", () => {
 					serviceTest.projectDir,
 					Constants.PLATFORMS_DIR_NAME,
 					platform,
-					".nsprepareinfo"
+					".nsprepareinfo",
 				);
 				const expectedPrepareInfo: IPrepareInfo = {
 					time: new Date().toString(),
@@ -179,7 +179,7 @@ describe("Project Changes Service Tests", () => {
 				// act
 				const actualPrepareInfo =
 					serviceTest.projectChangesService.getPrepareInfo(
-						serviceTest.getPlatformData(platform)
+						serviceTest.getPlatformData(platform),
 					);
 
 				// assert
@@ -197,11 +197,11 @@ describe("Project Changes Service Tests", () => {
 					<any>{
 						provision: undefined,
 						teamId: undefined,
-					}
+					},
 				);
 			assert.isTrue(
 				!!iOSChanges.signingChanged,
-				"iOS signingChanged expected to be true"
+				"iOS signingChanged expected to be true",
 			);
 		});
 	});
@@ -215,12 +215,12 @@ describe("Project Changes Service Tests", () => {
 					{
 						nativePlatformStatus:
 							Constants.NativePlatformStatus.requiresPrepare,
-					}
+					},
 				);
 
 				const actualPrepareInfo =
 					serviceTest.projectChangesService.getPrepareInfo(
-						serviceTest.getPlatformData(platform)
+						serviceTest.getPlatformData(platform),
 					);
 
 				assert.deepStrictEqual(actualPrepareInfo, {
@@ -234,15 +234,15 @@ describe("Project Changes Service Tests", () => {
 				await serviceTest.projectChangesService.checkForChanges(
 					serviceTest.getPlatformData(platform),
 					serviceTest.projectData,
-					<any>{}
+					<any>{},
 				);
 				await serviceTest.projectChangesService.savePrepareInfo(
 					serviceTest.getPlatformData(platform),
 					serviceTest.projectData,
-					null
+					null,
 				);
 				const prepareInfo = serviceTest.projectChangesService.getPrepareInfo(
-					serviceTest.getPlatformData(platform)
+					serviceTest.getPlatformData(platform),
 				);
 
 				await serviceTest.projectChangesService.setNativePlatformStatus(
@@ -251,12 +251,12 @@ describe("Project Changes Service Tests", () => {
 					{
 						nativePlatformStatus:
 							Constants.NativePlatformStatus.alreadyPrepared,
-					}
+					},
 				);
 
 				const actualPrepareInfo =
 					serviceTest.projectChangesService.getPrepareInfo(
-						serviceTest.getPlatformData(platform)
+						serviceTest.getPlatformData(platform),
 					);
 				prepareInfo.nativePlatformStatus =
 					Constants.NativePlatformStatus.alreadyPrepared;
@@ -275,24 +275,24 @@ describe("Project Changes Service Tests", () => {
 						await serviceTest.projectChangesService.checkForChanges(
 							serviceTest.getPlatformData(platform),
 							serviceTest.projectData,
-							<any>{}
+							<any>{},
 						);
 						await serviceTest.projectChangesService.setNativePlatformStatus(
 							serviceTest.getPlatformData(platform),
 							serviceTest.projectData,
-							{ nativePlatformStatus: nativePlatformStatus }
+							{ nativePlatformStatus: nativePlatformStatus },
 						);
 
 						const actualPrepareInfo =
 							serviceTest.projectChangesService.getPrepareInfo(
-								serviceTest.getPlatformData(platform)
+								serviceTest.getPlatformData(platform),
 							);
 						assert.deepStrictEqual(actualPrepareInfo, {
 							nativePlatformStatus: nativePlatformStatus,
 						});
 					}
 				});
-			}
+			},
 		);
 	});
 });

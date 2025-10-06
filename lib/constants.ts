@@ -16,6 +16,7 @@ export const SCOPED_TNS_CORE_MODULES = "@nativescript/core";
 export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
 export const WEBPACK_PLUGIN_NAME = "@nativescript/webpack";
+export const RSPACK_PLUGIN_NAME = "@nativescript/rspack";
 export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const UI_MOBILE_BASE_NAME = "@nativescript/ui-mobile-base";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
@@ -36,6 +37,7 @@ export const XML_FILE_EXTENSION = ".xml";
 export const PLATFORMS_DIR_NAME = "platforms";
 export const HOOKS_DIR_NAME = "hooks";
 export const WEBPACK_CONFIG_NAME = "webpack.config.js";
+export const RSPACK_CONFIG_NAME = "rspack.config.js";
 export const TSCCONFIG_TNS_JSON_NAME = "tsconfig.tns.json";
 export const KARMA_CONFIG_NAME = "karma.conf.js";
 export const LIB_DIR_NAME = "lib";
@@ -223,7 +225,7 @@ export const CACACHE_DIRECTORY_NAME = "_cacache";
 export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";
 export const INITIAL_SYNC_EVENT_NAME = "initialSyncEvent";
 export const PREPARE_READY_EVENT_NAME = "prepareReadyEvent";
-export const WEBPACK_COMPILATION_COMPLETE = "webpackCompilationComplete";
+export const BUNDLER_COMPILATION_COMPLETE = "bundlerCompilationComplete";
 
 export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR =

@@ -121,6 +121,7 @@ export interface IOSLocalSPMPackage extends IOSSPMPackageBase {
 }
 
 export type IOSSPMPackage = IOSRemoteSPMPackage | IOSLocalSPMPackage;
+export type BundlerType = "webpack" | "rspack" | "vite";
 
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
@@ -194,6 +195,8 @@ interface INsConfig {
 	overridePods?: string;
 	webpackPackageName?: string;
 	webpackConfigPath?: string;
+	bundlerConfigPath?: string;
+	bundler?: BundlerType;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
 	visionos?: INSConfigVisionOS;
@@ -228,13 +231,28 @@ interface IProjectData extends ICreateProjectData {
 	 * Value is true when project has nativescript.config and it has `shared: true` in it.
 	 */
 	isShared: boolean;
-
 	/**
+	 * Specifies the bundler used to build the application.
+	 *
+	 * - `"webpack"`: Uses Webpack for traditional bundling.
+	 * - `"rspack"`: Uses Rspack for fast bundling.
+	 * - `"vite"`: Uses Vite for fast bundling.
+	 *
+	 * @default "webpack"
+	 */
+	bundler: BundlerType;
+	/**
+	 * @deprecated Use bundlerConfigPath
 	 * Defines the path to the configuration file passed to webpack process.
 	 * By default this is the webpack.config.js at the root of the application.
 	 * The value can be changed by setting `webpackConfigPath` in nativescript.config.
 	 */
 	webpackConfigPath: string;
+	/**
+	 * Defines the path to the bundler configuration file passed to the compiler.
+	 * The value can be changed by setting `bundlerConfigPath` in nativescript.config.
+	 */
+	bundlerConfigPath: string;
 	projectName: string;
 
 	/**

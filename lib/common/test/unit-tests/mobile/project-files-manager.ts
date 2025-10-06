@@ -12,12 +12,12 @@ import * as path from "path";
 import { Yok } from "../../../yok";
 import { ProjectFilesProviderBase } from "../../../services/project-files-provider-base";
 
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import { LiveSyncPaths } from "../../../constants";
 import { TempServiceStub } from "../../../../../test/stubs";
 import { IInjector } from "../../../definitions/yok";
 import { IProjectFilesManager } from "../../../declarations";
-temp.track();
 
 const testedApplicationIdentifier = "com.telerik.myApp";
 const iOSDeviceProjectRootPath = "/Documents/AppBuilder/LiveSync/app";
@@ -44,7 +44,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("hostInfo", HostInfo);
 	testInjector.register(
 		"localToDevicePathDataFactory",
-		LocalToDevicePathDataFactory
+		LocalToDevicePathDataFactory,
 	);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProviderBase);
@@ -61,12 +61,14 @@ function createTestInjector(): IInjector {
 
 async function createFiles(
 	testInjector: IInjector,
-	filesToCreate: string[]
+	filesToCreate: string[],
 ): Promise<string> {
-	const directoryPath = temp.mkdirSync("Project Files Manager Tests");
+	const directoryPath = mkdtempSync(
+		path.join(tmpdir(), "Project Files Manager Tests-"),
+	);
 
 	_.each(filesToCreate, (file) =>
-		createFile(testInjector, file, "", directoryPath)
+		createFile(testInjector, file, "", directoryPath),
 	);
 
 	return directoryPath;
@@ -76,11 +78,11 @@ function createFile(
 	testInjector: IInjector,
 	fileToCreate: string,
 	fileContent: string,
-	directoryPath?: string
+	directoryPath?: string,
 ): string {
 	const fs = testInjector.resolve("fs");
 	directoryPath = !directoryPath
-		? temp.mkdirSync("Project Files Manager Tests")
+		? mkdtempSync(path.join(tmpdir(), "Project Files Manager Tests-"))
 		: directoryPath;
 
 	fs.writeFile(path.join(directoryPath, fileToCreate), fileContent);
@@ -100,50 +102,52 @@ describe("Project Files Manager Tests", () => {
 
 	it("maps non-platform specific files to device file paths for ios platform", async () => {
 		const files = ["~/TestApp/app/test.js", "~/TestApp/app/myfile.js"];
-		const localToDevicePaths = await projectFilesManager.createLocalToDevicePaths(
-			iOSDeviceAppData,
-			"~/TestApp/app",
-			files,
-			[]
-		);
+		const localToDevicePaths =
+			await projectFilesManager.createLocalToDevicePaths(
+				iOSDeviceAppData,
+				"~/TestApp/app",
+				files,
+				[],
+			);
 
 		_.each(localToDevicePaths, (localToDevicePathData, index) => {
 			assert.equal(files[index], localToDevicePathData.getLocalPath());
 			assert.equal(
 				mobileHelper.buildDevicePath(
 					iOSDeviceProjectRootPath,
-					path.basename(files[index])
+					path.basename(files[index]),
 				),
-				localToDevicePathData.getDevicePath()
+				localToDevicePathData.getDevicePath(),
 			);
 			assert.equal(
 				path.basename(files[index]),
-				localToDevicePathData.getRelativeToProjectBasePath()
+				localToDevicePathData.getRelativeToProjectBasePath(),
 			);
 		});
 	});
 
 	it("maps non-platform specific files to device file paths for android platform", async () => {
 		const files = ["~/TestApp/app/test.js", "~/TestApp/app/myfile.js"];
-		const localToDevicePaths = await projectFilesManager.createLocalToDevicePaths(
-			androidDeviceAppData,
-			"~/TestApp/app",
-			files,
-			[]
-		);
+		const localToDevicePaths =
+			await projectFilesManager.createLocalToDevicePaths(
+				androidDeviceAppData,
+				"~/TestApp/app",
+				files,
+				[],
+			);
 
 		_.each(localToDevicePaths, (localToDevicePathData, index) => {
 			assert.equal(files[index], localToDevicePathData.getLocalPath());
 			assert.equal(
 				mobileHelper.buildDevicePath(
 					androidDeviceProjectRootPath,
-					path.basename(files[index])
+					path.basename(files[index]),
 				),
-				localToDevicePathData.getDevicePath()
+				localToDevicePathData.getDevicePath(),
 			);
 			assert.equal(
 				path.basename(files[index]),
-				localToDevicePathData.getRelativeToProjectBasePath()
+				localToDevicePathData.getRelativeToProjectBasePath(),
 			);
 		});
 	});
@@ -155,18 +159,18 @@ describe("Project Files Manager Tests", () => {
 				iOSDeviceAppData,
 				"~/TestApp/app",
 				[filePath],
-				[]
+				[],
 			)
 		)[0];
 
 		assert.equal(filePath, localToDevicePathData.getLocalPath());
 		assert.equal(
 			mobileHelper.buildDevicePath(iOSDeviceProjectRootPath, "test.js"),
-			localToDevicePathData.getDevicePath()
+			localToDevicePathData.getDevicePath(),
 		);
 		assert.equal(
 			"test.ios.js",
-			localToDevicePathData.getRelativeToProjectBasePath()
+			localToDevicePathData.getRelativeToProjectBasePath(),
 		);
 	});
 
@@ -177,18 +181,18 @@ describe("Project Files Manager Tests", () => {
 				androidDeviceAppData,
 				"~/TestApp/app",
 				[filePath],
-				[]
+				[],
 			)
 		)[0];
 
 		assert.equal(filePath, localToDevicePathData.getLocalPath());
 		assert.equal(
 			mobileHelper.buildDevicePath(androidDeviceProjectRootPath, "test.js"),
-			localToDevicePathData.getDevicePath()
+			localToDevicePathData.getDevicePath(),
 		);
 		assert.equal(
 			"test.android.js",
-			localToDevicePathData.getRelativeToProjectBasePath()
+			localToDevicePathData.getRelativeToProjectBasePath(),
 		);
 	});
 
@@ -199,7 +203,7 @@ describe("Project Files Manager Tests", () => {
 		projectFilesManager.processPlatformSpecificFiles(
 			directoryPath,
 			"android",
-			{}
+			{},
 		);
 
 		const fs = testInjector.resolve("fs");
@@ -228,7 +232,7 @@ describe("Project Files Manager Tests", () => {
 			testInjector,
 			"test.release.x",
 			releaseFileContent,
-			directoryPath
+			directoryPath,
 		);
 
 		projectFilesManager.processPlatformSpecificFiles(directoryPath, "android", {
@@ -241,7 +245,7 @@ describe("Project Files Manager Tests", () => {
 		assert.isFalse(fs.exists(path.join(directoryPath, "test.release.x")));
 		assert.isTrue(
 			fs.readFile(path.join(directoryPath, "test.x")).toString() ===
-				releaseFileContent
+				releaseFileContent,
 		);
 	});
 
@@ -253,7 +257,7 @@ describe("Project Files Manager Tests", () => {
 		projectFilesManager.processPlatformSpecificFiles(
 			directoryPath,
 			"android",
-			{}
+			{},
 		);
 
 		const fs = testInjector.resolve("fs");
@@ -262,7 +266,7 @@ describe("Project Files Manager Tests", () => {
 		assert.isFalse(fs.exists(path.join(directoryPath, "test.release.x")));
 		assert.isTrue(
 			fs.readFile(path.join(directoryPath, "test.x")).toString() ===
-				debugFileContent
+				debugFileContent,
 		);
 	});
 

@@ -14,9 +14,8 @@ import * as FileSystemLib from "../../../file-system";
 import * as ChildProcessLib from "../../../child-process";
 import { IHooksService } from "../../../declarations";
 import { HooksService } from "../../../services/hooks-service";
-import * as temp from "temp";
-
-temp.track();
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 
 function createTestInjector(opts?: { projectDir?: string }): IInjector {
 	const testInjector = new Yok();
@@ -34,7 +33,7 @@ function createTestInjector(opts?: { projectDir?: string }): IInjector {
 	testInjector.register("projectConfigService", ProjectConfigServiceStub);
 	testInjector.register(
 		"projectHelper",
-		new ProjectHelperStub("", opts && opts.projectDir)
+		new ProjectHelperStub("", opts && opts.projectDir),
 	);
 	testInjector.register("performanceService", PerformanceService);
 	testInjector.register("hooksService", HooksService);
@@ -47,7 +46,7 @@ describe("hooks-service", () => {
 
 	it("should run hooks from hooks folder", async () => {
 		const projectName = "projectDirectory";
-		const projectPath = temp.mkdirSync(projectName);
+		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
 
 		const testInjector = createTestInjector({ projectDir: projectPath });
 
@@ -64,7 +63,7 @@ describe("hooks-service", () => {
 		fs.mkdirSync(path.join(projectPath, "hooks/after-prepare"));
 		fs.writeFileSync(
 			path.join(projectPath, "hooks/after-prepare/hook.js"),
-			script
+			script,
 		);
 
 		service = testInjector.resolve("$hooksService");
@@ -73,13 +72,13 @@ describe("hooks-service", () => {
 
 		assert.equal(
 			testInjector.resolve("$logger").output,
-			"after-prepare hook is running\n"
+			"after-prepare hook is running\n",
 		);
 	});
 
 	it("should run custom hooks from nativescript config", async () => {
 		const projectName = "projectDirectory";
-		const projectPath = temp.mkdirSync(projectName);
+		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
 
 		const testInjector = createTestInjector({ projectDir: projectPath });
 
@@ -99,7 +98,7 @@ describe("hooks-service", () => {
 			"projectConfigService",
 			ProjectConfigServiceStub.initWithConfig({
 				hooks: [{ type: "before-prepare", script: "scripts/custom-hook.js" }],
-			})
+			}),
 		);
 
 		service = testInjector.resolve("$hooksService");
@@ -108,13 +107,13 @@ describe("hooks-service", () => {
 
 		assert.equal(
 			testInjector.resolve("$logger").output,
-			"custom hook is running\n"
+			"custom hook is running\n",
 		);
 	});
 
 	it("skip when missing hook args", async () => {
 		const projectName = "projectDirectory";
-		const projectPath = temp.mkdirSync(projectName);
+		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
 
 		const testInjector = createTestInjector({ projectDir: projectPath });
 
@@ -131,7 +130,7 @@ describe("hooks-service", () => {
 		fs.mkdirSync(path.join(projectPath, "hooks/after-prepare"));
 		fs.writeFileSync(
 			path.join(projectPath, "hooks/after-prepare/hook.js"),
-			script
+			script,
 		);
 
 		service = testInjector.resolve("$hooksService");
@@ -140,13 +139,13 @@ describe("hooks-service", () => {
 
 		expect(testInjector.resolve("$logger").warnOutput).to.have.string(
 			"invalid arguments",
-			"$projectData should be missing"
+			"$projectData should be missing",
 		);
 	});
 
 	it("should run non-hook files", async () => {
 		const projectName = "projectDirectory";
-		const projectPath = temp.mkdirSync(projectName);
+		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
 
 		const testInjector = createTestInjector({ projectDir: projectPath });
 
@@ -160,7 +159,7 @@ describe("hooks-service", () => {
 		fs.mkdirSync(path.join(projectPath, "hooks/after-prepare"));
 		fs.writeFileSync(
 			path.join(projectPath, "hooks/after-prepare/script.js"),
-			script
+			script,
 		);
 
 		service = testInjector.resolve("$hooksService");
@@ -169,7 +168,7 @@ describe("hooks-service", () => {
 
 		assert(
 			fs.existsSync(path.join(projectPath, "js-test.txt")),
-			"javascript file did not run"
+			"javascript file did not run",
 		);
 	});
 });

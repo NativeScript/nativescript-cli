@@ -272,6 +272,13 @@ allprojects {
     }
 }
 
+
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 35 }
+def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 35 as int }
+def computeBuildToolsVersion = { ->
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "35.0.1"
+}
+
 android {
     namespace "{{pluginNamespace}}"
     def applyPluginGradleConfigurations = { ->
@@ -282,12 +289,6 @@ android {
                 apply from: includeGradlePath
             }
         }
-    }
-
-    def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? project.compileSdk as int : 31 }
-    def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? project.targetSdk as int : 31 as int }
-    def computeBuildToolsVersion = { ->
-        project.hasProperty("buildToolsVersion") ? project.buildToolsVersion : "31.0.0"
     }
 
     project.ext.applyBeforePluginGradleConfiguration()

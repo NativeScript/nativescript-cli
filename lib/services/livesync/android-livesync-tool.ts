@@ -475,7 +475,9 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 					this.pendingConnectionData.socketTimer = setTimeout(tryConnect, 1000);
 				};
 
-				this.pendingConnectionData.socket = socket;
+				if (this.pendingConnectionData) {
+					this.pendingConnectionData.socket = socket;
+				}
 
 				socket.once("data", (data) => {
 					socket.removeListener("close", tryConnectAfterTimeout);

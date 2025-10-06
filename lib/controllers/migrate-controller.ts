@@ -40,7 +40,8 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
-import * as temp from "temp";
+import * as fs from "fs";
+import { tmpdir } from "os";
 import { color } from "../color";
 import {
 	ITerminalSpinner,
@@ -1286,9 +1287,9 @@ export class MigrateController
 			return "./" + path.relative(projectDir, polyfillsPath);
 		}
 
-		const tempDir = temp.mkdirSync({
-			prefix: "migrate-angular-polyfills",
-		});
+		const tempDir = fs.mkdtempSync(
+			path.join(tmpdir(), "migrate-angular-polyfills-"),
+		);
 
 		// get from default angular template
 		await this.$pacoteService.extractPackage(
