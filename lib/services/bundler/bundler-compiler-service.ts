@@ -590,12 +590,14 @@ export class BundlerCompilerService
 		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();
 		const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+		const buildPath = projectData.getBuildRelativeDirectoryPath();
 
 		Object.assign(
 			envData,
 			appId && { appId },
 			appPath && { appPath },
 			appResourcesPath && { appResourcesPath },
+			buildPath && { buildPath },
 			{
 				nativescriptLibPath: path.resolve(
 					__dirname,
