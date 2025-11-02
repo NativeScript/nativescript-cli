@@ -20,7 +20,8 @@ import * as _ from "lodash";
 
 export class DebugPlatformCommand
 	extends ValidatePlatformCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	public allowedParameters: ICommandParameter[] = [];
 
 	constructor(
@@ -36,13 +37,13 @@ export class DebugPlatformCommand
 		private $debugDataService: IDebugDataService,
 		private $debugController: IDebugController,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
-		private $migrateController: IMigrateController
+		private $migrateController: IMigrateController,
 	) {
 		super(
 			$options,
 			$platformsDataService,
 			$platformValidationService,
-			$projectData
+			$projectData,
 		);
 		$cleanupService.setShouldDispose(false);
 	}
@@ -66,10 +67,10 @@ export class DebugPlatformCommand
 			const debugData = this.$debugDataService.getDebugData(
 				selectedDeviceForDebug.deviceInfo.identifier,
 				this.$projectData,
-				debugOptions
+				debugOptions,
 			);
 			await this.$debugController.printDebugInformation(
-				await this.$debugController.startDebug(debugData)
+				await this.$debugController.startDebug(debugData),
 			);
 			return;
 		}
@@ -83,7 +84,7 @@ export class DebugPlatformCommand
 				},
 				buildPlatform: undefined,
 				skipNativePrepare: false,
-			}
+			},
 		);
 	}
 
@@ -98,17 +99,17 @@ export class DebugPlatformCommand
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				this.platform,
-				this.$projectData
+				this.$projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.platform} can not be built on this OS`
+				`Applications for platform ${this.platform} can not be built on this OS`,
 			);
 		}
 
 		if (this.$options.release) {
 			this.$errors.failWithHelp(
-				"--release flag is not applicable to this command."
+				"--release flag is not applicable to this command.",
 			);
 		}
 
@@ -138,12 +139,12 @@ export class DebugIOSCommand implements ICommand {
 		private $sysInfo: ISysInfo,
 		private $projectData: IProjectData,
 		$iosDeviceOperations: IIOSDeviceOperations,
-		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider
+		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 	) {
 		this.$projectData.initializeProjectData();
 		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
-		// That's why the `$ tns debug ios --justlaunch` command will not release the terminal.
+		// That's why the `$ ns debug ios --justlaunch` command will not release the terminal.
 		// In case we do not set it to false, the dispose will be called once the command finishes its execution, which will prevent the debugging.
 		$iosDeviceOperations.setShouldDispose(false);
 		$iOSSimulatorLogProvider.setShouldDispose(false);
@@ -157,18 +158,18 @@ export class DebugIOSCommand implements ICommand {
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				this.$devicePlatformsConstants.iOS,
-				this.$projectData
+				this.$projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`
+				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`,
 			);
 		}
 
 		const isValidTimeoutOption = this.isValidTimeoutOption();
 		if (!isValidTimeoutOption) {
 			this.$errors.fail(
-				`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`
+				`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`,
 			);
 		}
 
@@ -179,7 +180,7 @@ export class DebugIOSCommand implements ICommand {
 				macOSWarning.severity === SystemWarningsSeverity.high
 			) {
 				this.$errors.fail(
-					`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`
+					`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`,
 				);
 			}
 		}
@@ -224,7 +225,7 @@ export class DebugAndroidCommand implements ICommand {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $injector: IInjector,
 		private $projectData: IProjectData,
-		private $options: IOptions
+		private $options: IOptions,
 	) {
 		this.$projectData.initializeProjectData();
 	}

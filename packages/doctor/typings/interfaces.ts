@@ -212,7 +212,7 @@ declare module NativeScriptDoctor {
 		canExecuteLocalBuild(
 			platform: string,
 			projectDir?: string,
-			runtimeVersion?: string
+			runtimeVersion?: string,
 		): Promise<boolean>;
 
 		/**
@@ -271,7 +271,7 @@ declare module NativeScriptDoctor {
 		 */
 		gitVer: string;
 		/**
-		 * NativeScript CLI version string, as returned by `tns --version`.
+		 * NativeScript CLI version string, as returned by `ns --version`.
 		 * @type {string}
 		 */
 		nativeScriptCliVersion: string;
@@ -492,7 +492,7 @@ declare module NativeScriptDoctor {
 		validateJavacVersion(
 			installedJavaVersion: string,
 			projectDir?: string,
-			runtimeVersion?: string
+			runtimeVersion?: string,
 		): NativeScriptDoctor.IWarning[];
 
 		/**
@@ -513,7 +513,7 @@ declare module NativeScriptDoctor {
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
 		validateMinSupportedTargetSdk(
-			options: ITargetValidationOptions
+			options: ITargetValidationOptions,
 		): NativeScriptDoctor.IWarning[];
 
 		/**
@@ -522,7 +522,7 @@ declare module NativeScriptDoctor {
 		 * @return {NativeScriptDoctor.IWarning[]} An array of errors from the validation checks. If there are no errors will return [].
 		 */
 		validataMaxSupportedTargetSdk(
-			options: ITargetValidationOptions
+			options: ITargetValidationOptions,
 		): NativeScriptDoctor.IWarning[];
 
 		/**
