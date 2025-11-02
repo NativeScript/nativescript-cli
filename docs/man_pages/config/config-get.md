@@ -1,6 +1,6 @@
 <% if (isJekyll) { %>---
 title: ns config get
-position: 1
+position: 2
 ---<% } %>
 
 # ns config get
