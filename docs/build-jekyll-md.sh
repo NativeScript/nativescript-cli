@@ -4,4 +4,4 @@ set -e
 rm -rf docs-cli
 npm install --ignore-scripts
 
-grunt docs-jekyll
+npx grunt docs-jekyll
