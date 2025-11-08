@@ -3,7 +3,6 @@ import * as child_process from "child_process";
 import * as semver from "semver";
 import * as _ from "lodash";
 // TODO: can switch to file-system service
-import { mkdirSync, readdirSync, existsSync, copyFileSync, rmSync } from "fs";
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import {
@@ -868,19 +867,19 @@ export class BundlerCompilerService
 				}
 
 				// Ensure destination directory exists
-				mkdirSync(destDir, { recursive: true });
+				this.$fs.createDirectory(destDir);
 
 				// Copy only the specified files
 				for (const file of specificFiles) {
 					const srcPath = path.join(distOutput, file);
 					const destPath = path.join(destDir, file);
 
-					if (!existsSync(srcPath)) continue;
+					if (!this.$fs.exists(srcPath)) continue;
 
 					// create parent dirs
-					mkdirSync(path.dirname(destPath), { recursive: true });
+					this.$fs.createDirectory(path.dirname(destPath));
 
-					copyFileSync(srcPath, destPath);
+					this.$fs.copyFile(srcPath, destPath);
 
 					if (debugLog) {
 						console.log(`Copied ${file}`);
@@ -893,13 +892,13 @@ export class BundlerCompilerService
 				}
 
 				// Clean destination directory
-				if (existsSync(destDir)) {
-					rmSync(destDir, { recursive: true, force: true });
+				if (this.$fs.exists(destDir)) {
+					this.$fs.deleteDirectory(destDir);
 				}
-				mkdirSync(destDir, { recursive: true });
+				this.$fs.createDirectory(destDir);
 
 				// Copy all files from dist to platform destination
-				if (existsSync(distOutput)) {
+				if (this.$fs.exists(distOutput)) {
 					this.copyRecursiveSync(distOutput, destDir);
 				} else {
 					this.$logger.warn(
@@ -945,15 +944,21 @@ export class BundlerCompilerService
 	}
 
 	private copyRecursiveSync(src: string, dest: string) {
-		for (const entry of readdirSync(src, { withFileTypes: true })) {
-			const srcPath = path.join(src, entry.name);
-			const destPath = path.join(dest, entry.name);
+		// Ensure destination exists
+		this.$fs.createDirectory(dest);
 
-			if (entry.isDirectory()) {
-				mkdirSync(destPath, { recursive: true });
+		const entries = this.$fs.readDirectory(src);
+		for (const name of entries) {
+			const srcPath = path.join(src, name);
+			const destPath = path.join(dest, name);
+			const lstats = this.$fs.getLsStats(srcPath);
+
+			if (lstats.isDirectory()) {
 				this.copyRecursiveSync(srcPath, destPath);
-			} else if (entry.isFile() || entry.isSymbolicLink()) {
-				copyFileSync(srcPath, destPath);
+			} else if (lstats.isFile() || lstats.isSymbolicLink()) {
+				// create parent directory (copyFile will also ensure it, but keep explicit)
+				this.$fs.createDirectory(path.dirname(destPath));
+				this.$fs.copyFile(srcPath, destPath);
 			}
 		}
 	}
