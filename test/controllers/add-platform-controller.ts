@@ -45,7 +45,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 	logger.info = (message: string) => (actualMessage = message);
 
 	const packageInstallationManager = injector.resolve(
-		"packageInstallationManager"
+		"packageInstallationManager",
 	);
 	packageInstallationManager.getLatestCompatibleVersion = async () => version;
 
@@ -68,11 +68,11 @@ const projectDir = "/my/test/dir";
 describe("PlatformController", () => {
 	const testCases = [
 		{
-			name: "should add the platform (tns platform add <platform>@7.0.0)",
+			name: "should add the platform (ns platform add <platform>@7.0.0)",
 			latestFrameworkVersion: "7.0.0",
 		},
 		{
-			name: "should add the latest compatible version (tns platform add <platform>)",
+			name: "should add the latest compatible version (ns platform add <platform>)",
 			latestFrameworkVersion,
 			getPlatformParam: (platform: string) =>
 				`${platform}@${latestFrameworkVersion}`,
@@ -117,7 +117,7 @@ describe("PlatformController", () => {
 			const frameworkPath = "invalidPath";
 			const errorMessage = format(
 				AddPlaformErrors.InvalidFrameworkPathStringFormat,
-				frameworkPath
+				frameworkPath,
 			);
 
 			const injector = createInjector();
@@ -129,7 +129,7 @@ describe("PlatformController", () => {
 
 			await assert.isRejected(
 				platformController.addPlatform({ projectDir, platform, frameworkPath }),
-				errorMessage
+				errorMessage,
 			);
 		});
 
@@ -185,7 +185,7 @@ describe("PlatformController", () => {
 		assert(writeFileCalled, "expected to write gradle.properties");
 		assert(
 			writeFileContents.includes("# App configuration"),
-			"expected gradle.properties to have the project data written to it"
+			"expected gradle.properties to have the project data written to it",
 		);
 	});
 });

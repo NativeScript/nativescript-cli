@@ -19,7 +19,7 @@ require(pathToBootstrap);
 
 const analyticsLoggingService = injector.resolve<IFileLogService>(
 	FileLogService,
-	{ logFile }
+	{ logFile },
 );
 analyticsLoggingService.logData({ message: "Initializing AnalyticsBroker." });
 
@@ -32,7 +32,7 @@ let trackingQueue: Promise<void> = Promise.resolve();
 
 const sendDataForTracking = async (data: ITrackingInformation) => {
 	trackingQueue = trackingQueue.then(() =>
-		analyticsBroker.sendDataForTracking(data)
+		analyticsBroker.sendDataForTracking(data),
 	);
 	await trackingQueue;
 };
@@ -55,7 +55,7 @@ const killCurrentProcessGracefully = () => {
 process.on("message", async (data: ITrackingInformation) => {
 	analyticsLoggingService.logData({
 		message: `analytics-broker-process received message of type: ${JSON.stringify(
-			data
+			data,
 		)}`,
 	});
 
@@ -66,12 +66,17 @@ process.on("message", async (data: ITrackingInformation) => {
 			analyticsLoggingService.logData({
 				message: `analytics-broker-process will send ${DetachedProcessMessages.ProcessFinishedTasks} message`,
 			});
-			process.send(DetachedProcessMessages.ProcessFinishedTasks, () => {
-				analyticsLoggingService.logData({
-					message: `analytics-broker-process sent ${DetachedProcessMessages.ProcessFinishedTasks} message and will exit gracefully now`,
-				});
-				killCurrentProcessGracefully();
-			});
+			process.send(
+				DetachedProcessMessages.ProcessFinishedTasks,
+				null,
+				null,
+				() => {
+					analyticsLoggingService.logData({
+						message: `analytics-broker-process sent ${DetachedProcessMessages.ProcessFinishedTasks} message and will exit gracefully now`,
+					});
+					killCurrentProcessGracefully();
+				},
+			);
 		}
 
 		return;
