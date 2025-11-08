@@ -624,7 +624,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		projectDir: string
 	): IPluginData {
 		try {
-			const pluginData: any = {};
+			const pluginData: IPluginData = <IPluginData>{};
 			pluginData.name = cacheData.name;
 			pluginData.version = cacheData.version;
 			pluginData.fullPath =
@@ -648,6 +648,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			if (pluginData.isPlugin) {
 				pluginData.platformsData = data.platforms;
 				pluginData.pluginVariables = data.variables;
+				pluginData.nativescript = data;
 			}
 			return pluginData;
 		} catch (err) {

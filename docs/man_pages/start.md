@@ -51,6 +51,7 @@ Command | Description
 [plugin](lib-management/plugin.html) | Lets you manage the plugins for your project.
 [open](project/configuration/open.md) | Opens the native project in Xcode/Android Studio.
 [widget ios](project/configuration/widget.md) | Adds a new iOS widget to the project.
+[hooks](project/hooks/hooks.html) | Installs lifecycle hooks from plugins.  
 ## Publishing Commands
 Command | Description
 ---|---
