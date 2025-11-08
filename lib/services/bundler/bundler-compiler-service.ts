@@ -2,7 +2,6 @@ import * as path from "path";
 import * as child_process from "child_process";
 import * as semver from "semver";
 import * as _ from "lodash";
-// TODO: can switch to file-system service
 import { EventEmitter } from "events";
 import { performanceLog } from "../../common/decorators";
 import {
