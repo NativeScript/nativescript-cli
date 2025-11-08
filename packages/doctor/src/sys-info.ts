@@ -444,7 +444,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		return this.getValueForProperty(
 			() => this.nativeScriptCliVersionCache,
 			async (): Promise<string> => {
-				const output = await this.execCommand("tns --version");
+				const output = await this.execCommand("ns --version");
 				return output ? this.getVersionFromCLIOutput(output.trim()) : output;
 			},
 		);

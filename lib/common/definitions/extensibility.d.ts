@@ -124,7 +124,7 @@ interface IExtensibilityService {
 	 * Gives the name of the extension that contains a required command.
 	 * The method finds all extensions from npm and checks the command property defined in the nativescript key of the package.json.
 	 * Based on specified input array, the method tries to find a suitable command that is defined in the extension.
-	 * @example In case the input is `tns execute this command now`, the array will be ["execute", "this", "command", "now"].
+	 * @example In case the input is `ns execute this command now`, the array will be ["execute", "this", "command", "now"].
 	 * There may be an extension that defines execute|this as a command. The method will check each extension for the following commands:
 	 * execute|this|command|now, execute|this|command, execute|this, execute
 	 * In case it finds any of this commands, the method will return the extension name and the command name.
@@ -132,7 +132,7 @@ interface IExtensibilityService {
 	 * @returns {IExtensionCommandInfo} Information about the extension and the registered command.
 	 */
 	getExtensionNameWhereCommandIsRegistered(
-		inputOpts: IGetExtensionCommandInfoParams
+		inputOpts: IGetExtensionCommandInfoParams,
 	): Promise<IExtensionCommandInfo>;
 
 	/**
