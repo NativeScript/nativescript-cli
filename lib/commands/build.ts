@@ -27,13 +27,13 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		protected $buildController: IBuildController,
 		$platformValidationService: IPlatformValidationService,
 		private $buildDataService: IBuildDataService,
-		protected $logger: ILogger
+		protected $logger: ILogger,
 	) {
 		super(
 			$options,
 			$platformsDataService,
 			$platformValidationService,
-			$projectData
+			$projectData,
 		);
 		this.$projectData.initializeProjectData();
 	}
@@ -52,7 +52,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		const buildData = this.$buildDataService.getBuildData(
 			this.$projectData.projectDir,
 			platform,
-			this.$options
+			this.$options,
 		);
 		const outputPath = await this.$buildController.prepareAndBuild(buildData);
 
@@ -63,24 +63,24 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				platform,
-				this.$projectData
+				this.$projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${platform} can not be built on this OS`
+				`Applications for platform ${platform} can not be built on this OS`,
 			);
 		}
 	}
 
 	protected async validateArgs(
 		args: string[],
-		platform: string
+		platform: string,
 	): Promise<boolean> {
 		if (args.length !== 0) {
 			this.$errors.failWithHelp(
 				`The arguments '${args.join(
-					" "
-				)}' are not valid for the current command.`
+					" ",
+				)}' are not valid for the current command.`,
 			);
 		}
 
@@ -88,7 +88,7 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 			this.$options.provision,
 			this.$options.teamId,
 			this.$projectData,
-			platform
+			platform,
 		);
 
 		return result;
@@ -108,7 +108,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$platformValidationService: IPlatformValidationService,
 		$logger: ILogger,
 		$buildDataService: IBuildDataService,
-		protected $migrateController: IMigrateController
+		protected $migrateController: IMigrateController,
 	) {
 		super(
 			$options,
@@ -119,7 +119,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 			$buildController,
 			$platformValidationService,
 			$buildDataService,
-			$logger
+			$logger,
 		);
 	}
 
@@ -163,7 +163,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
 		$buildDataService: IBuildDataService,
 		protected $logger: ILogger,
-		private $migrateController: IMigrateController
+		private $migrateController: IMigrateController,
 	) {
 		super(
 			$options,
@@ -174,7 +174,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 			$buildController,
 			$platformValidationService,
 			$buildDataService,
-			$logger
+			$logger,
 		);
 	}
 
@@ -185,12 +185,12 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 
 		if (this.$options.aab) {
 			this.$logger.info(
-				AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE
+				AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE,
 			);
 
 			if (this.$options.release) {
 				this.$logger.info(
-					AndroidAppBundleMessages.ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE
+					AndroidAppBundleMessages.ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE,
 				);
 			}
 		}
@@ -205,7 +205,7 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 			});
 		}
 		this.$androidBundleValidatorHelper.validateRuntimeVersion(
-			this.$projectData
+			this.$projectData,
 		);
 		let canExecute = await super.canExecuteCommandBase(platform);
 		if (canExecute) {
@@ -233,7 +233,7 @@ export class BuildVisionOsCommand extends BuildIosCommand implements ICommand {
 		$platformValidationService: IPlatformValidationService,
 		$logger: ILogger,
 		$buildDataService: IBuildDataService,
-		protected $migrateController: IMigrateController
+		protected $migrateController: IMigrateController,
 	) {
 		super(
 			$options,
@@ -245,15 +245,33 @@ export class BuildVisionOsCommand extends BuildIosCommand implements ICommand {
 			$platformValidationService,
 			$logger,
 			$buildDataService,
-			$migrateController
+			$migrateController,
 		);
 	}
 
+	public async execute(args: string[]): Promise<void> {
+		await this.executeCore([
+			this.$devicePlatformsConstants.visionOS.toLowerCase(),
+		]);
+	}
+
 	public async canExecute(args: string[]): Promise<boolean> {
-		this.$errors.fail(
-			'Building for "visionOS" platform is not supported via the CLI. Please open the project in Xcode and build it from there.'
-		);
-		return false;
+		const platform = this.$devicePlatformsConstants.visionOS;
+		if (!this.$options.force) {
+			await this.$migrateController.validate({
+				projectDir: this.$projectData.projectDir,
+				platforms: [platform],
+			});
+		}
+
+		super.validatePlatform(platform);
+
+		let canExecute = await super.canExecuteCommandBase(platform);
+		if (canExecute) {
+			canExecute = await super.validateArgs(args, platform);
+		}
+
+		return canExecute;
 	}
 }
 
