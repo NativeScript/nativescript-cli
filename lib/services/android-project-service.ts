@@ -47,6 +47,9 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+import { IProjectChangesInfo } from "../definitions/project-changes";
+import { AndroidPrepareData } from "../data/prepare-data";
+import { AndroidBuildData } from "../data/build-data";
 
 interface NativeDependency {
 	name: string;
@@ -148,6 +151,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $androidPluginBuildService: IAndroidPluginBuildService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+		private $liveSyncProcessDataService: ILiveSyncProcessDataService,
+		private $devicesService: Mobile.IDevicesService,
 		private $filesHashService: IFilesHashService,
 		private $gradleCommandService: IGradleCommandService,
 		private $gradleBuildService: IGradleBuildService,
@@ -355,7 +360,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			"*",
 			"-R"
 		);
-
+		if (this.$options.overrideRuntimeGradleFiles !== false) {
+			// override app build.gradle from cli vendor to allow updates faster than the runtime
+			const gradleTemplatePath = path.resolve(
+				path.join(__dirname, "../../vendor/gradle-app")
+			);
+			const allGradleTemplateFiles = path.join(gradleTemplatePath, "*");
+	
+			this.$fs.copyFile(allGradleTemplateFiles, path.join(this.getPlatformData(projectData).projectRoot));
+		}
 		// TODO: Check if we actually need this and if it should be targetSdk or compileSdk
 		this.cleanResValues(targetSdkVersion, projectData);
 	}
@@ -455,12 +468,40 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.getPlatformData(projectData).projectRoot,
 			"settings.gradle"
 		);
+		const relativePath = path.relative(
+			this.getPlatformData(projectData).projectRoot,
+			projectData.projectDir
+		);
+		shell.sed(
+			"-i",
+			/def USER_PROJECT_ROOT = \"\$rootDir\/..\/..\/\"/,
+			`def USER_PROJECT_ROOT = "$rootDir/${relativePath}"`,
+			gradleSettingsFilePath
+		);
+
 		shell.sed(
 			"-i",
 			/__PROJECT_NAME__/,
 			this.getProjectNameFromId(projectData),
 			gradleSettingsFilePath
 		);
+
+		const gradleVersion = projectData.nsConfig.android.gradleVersion;
+		if (gradleVersion) {
+			// user defined a custom gradle version, let's apply it
+			const gradleWrapperFilePath = path.join(
+				this.getPlatformData(projectData).projectRoot,
+				"gradle",
+				"wrapper",
+				"gradle-wrapper.properties"
+			);
+			shell.sed(
+				"-i",
+				/gradle-([0-9.]+)-bin.zip/,
+				`gradle-${gradleVersion}-bin.zip`,
+				gradleWrapperFilePath
+			);
+		}
 
 		try {
 			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
@@ -489,6 +530,31 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			/__PACKAGE__/,
 			projectData.projectIdentifiers.android,
 			manifestPath
+		);
+		const buildAppGradlePath = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			"app",
+			"build.gradle"
+		);
+		const buildGradlePath = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			"build.gradle"
+		);
+		shell.sed(
+			"-i",
+			/__PACKAGE__/,
+			projectData.projectIdentifiers.android,
+			buildAppGradlePath
+		);
+		const relativePath = path.relative(
+			this.getPlatformData(projectData).projectRoot,
+			projectData.projectDir
+		);
+		shell.sed(
+			"-i",
+			/project.ext.USER_PROJECT_ROOT = \"\$rootDir\/..\/..\"/,
+			`project.ext.USER_PROJECT_ROOT = "$rootDir/${relativePath}"`,
+			buildGradlePath
 		);
 	}
 
@@ -643,15 +709,25 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				projectAppResourcesPath
 			);
 		if (appResourcesDirStructureHasMigrated) {
+			const resourcesPath = path.join(
+				projectAppResourcesPath,
+				platformData.normalizedPlatformName
+			);
 			this.$fs.copyFile(
-				path.join(
-					projectAppResourcesPath,
-					platformData.normalizedPlatformName,
-					constants.SRC_DIR,
-					"*"
-				),
+				path.join(resourcesPath, constants.SRC_DIR, "*"),
 				platformsAppResourcesPath
 			);
+
+			const destinationFolder = this.getPlatformData(projectData).projectRoot;
+			const contents = this.$fs.readDirectory(resourcesPath);
+			_.each(contents, (fileName) => {
+				const filePath = path.join(resourcesPath, fileName);
+				const fsStat = this.$fs.getFsStats(filePath);
+				if (fsStat.isDirectory() && fileName !== constants.SRC_DIR) {
+					console.log("copying folder", filePath);
+					this.$fs.copyFile(filePath, destinationFolder);
+				}
+			});
 		} else {
 			this.$fs.copyFile(
 				path.join(
@@ -684,14 +760,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			AndroidProjectService.ANDROID_PLATFORM_NAME
 		);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+			const gradleArgs = (projectData.nsConfig.android.gradleArgs || []).concat(this.$options.gradleArgs || []);
+			const pluginOptions = (projectData.nsConfig.android.plugins || {})[pluginData.name] || {};
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
-				gradleArgs: this.$options.gradleArgs,
+				gradleArgs,
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
 				aarOutputDir: pluginPlatformsFolderPath,
 				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+				...pluginOptions
 			};
 
 			if (await this.$androidPluginBuildService.buildAar(options)) {
@@ -831,8 +910,53 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
-	public async checkForChanges(): Promise<void> {
-		// Nothing android specific to check yet.
+	public async checkForChanges(
+		changesInfo: IProjectChangesInfo,
+		prepareData: AndroidPrepareData,
+		projectData: IProjectData
+	): Promise<void> {
+		//we need to check for abi change in connected device vs last built
+		const deviceDescriptors =
+			this.$liveSyncProcessDataService.getDeviceDescriptors(
+				projectData.projectDir
+			);
+		const platformData = this.getPlatformData(projectData);
+		deviceDescriptors.forEach((deviceDescriptor) => {
+			const buildData = deviceDescriptor.buildData as AndroidBuildData;
+			if (buildData.buildFilterDevicesArch) {
+				const outputPath = platformData.getBuildOutputPath(
+					deviceDescriptor.buildData
+				);
+				const apkOutputPath = path.join(
+					outputPath,
+					prepareData.release ? "release" : "debug"
+				);
+				if (!this.$fs.exists(apkOutputPath)) {
+					return;
+				}
+				// check if we already build this arch
+				// if not we need to say native has changed
+
+				const directoryContent = this.$fs.readDirectory(apkOutputPath);
+				// if we are building for universal we should not check for missing abi apks
+				if (!directoryContent.find(f=>f.indexOf("universal") !== -1)) {
+					const device = this.$devicesService
+						.getDevicesForPlatform(deviceDescriptor.buildData.platform)
+						.filter(
+							(d) => d.deviceInfo.identifier === deviceDescriptor.identifier
+						)[0];
+					const abis = device.deviceInfo.abis.filter((a) => !!a && a.length)[0];
+					const regexp = new RegExp(`${abis}.*\.apk`);
+					const files = _.filter(directoryContent, (entry: string) => {
+						return regexp.test(entry);
+					});
+					if (files.length === 0) {
+						changesInfo.nativeChanged = true;
+					}
+				}
+				
+			}
+		});
 	}
 
 	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {

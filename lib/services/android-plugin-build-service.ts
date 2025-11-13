@@ -34,6 +34,7 @@ import {
 } from "../common/declarations";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import { IInjector } from "../common/definitions/yok";
+import { IAndroidToolsInfo } from "../declarations";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
 import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
@@ -47,6 +48,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	constructor(
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
+		private $androidToolsInfo: IAndroidToolsInfo,
 		private $hostInfo: IHostInfo,
 		private $options: IOptions,
 		private $logger: ILogger,
@@ -145,38 +147,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return promise;
 	}
 
-	private getIncludeGradleCompileDependenciesScope(
-		includeGradleFileContent: string
-	): Array<string> {
-		const indexOfDependenciesScope =
-			includeGradleFileContent.indexOf("dependencies");
-		const result: Array<string> = [];
-
-		if (indexOfDependenciesScope === -1) {
-			return result;
-		}
-
-		const indexOfRepositoriesScope =
-			includeGradleFileContent.indexOf("repositories");
-
-		let repositoriesScope = "";
-		if (indexOfRepositoriesScope >= 0) {
-			repositoriesScope = this.getScope(
-				"repositories",
-				includeGradleFileContent
-			);
-			result.push(repositoriesScope);
-		}
-
-		const dependenciesScope = this.getScope(
-			"dependencies",
-			includeGradleFileContent
-		);
-		result.push(dependenciesScope);
-
-		return result;
-	}
-
 	private getScope(scopeName: string, content: string): string {
 		const indexOfScopeName = content.indexOf(scopeName);
 		const openingBracket = "{";
@@ -226,7 +196,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(
 			options.platformsAndroidDirPath
 		);
-		const shortPluginName = getShortPluginName(options.pluginName);
+		const shortPluginName = getShortPluginName(options.pluginName + (options.aarSuffix || ''));
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
 		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(
 			options.platformsAndroidDirPath,
@@ -261,9 +231,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.projectDir,
 				options.pluginName
 			);
+			const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || []).concat(options.gradleArgs || []);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
-				gradleArgs: options.gradleArgs,
+				gradleArgs,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -390,12 +361,22 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		for (const dir of androidSourceSetDirectories) {
 			const dirName = path.basename(dir);
 			const destination = path.join(pluginTempMainSrcDir, dirName);
-
 			this.$fs.ensureDirectoryExists(destination);
 			this.$fs.copyFile(path.join(dir, "*"), destination);
 		}
 	}
-
+	private extractNamespaceFromManifest(manifestPath: string): string {
+		const fileContent = this.$fs.readText(manifestPath);
+		const contentRegex = new RegExp('package="(.*?)"');
+		const match = fileContent.match(contentRegex);
+		let namespace: string;
+		if (match) {
+			namespace = match[1];
+			const replacedFileContent = fileContent.replace(contentRegex, "");
+			this.$fs.writeFile(manifestPath, replacedFileContent);
+		}
+		return namespace;
+	}
 	private async setupGradle(
 		pluginTempDir: string,
 		platformsAndroidDirPath: string,
@@ -410,17 +391,35 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const settingsGradlePath = path.join(pluginTempDir, "settings.gradle");
 
 		this.$fs.copyFile(allGradleTemplateFiles, pluginTempDir);
-		this.addCompileDependencies(platformsAndroidDirPath, buildGradlePath);
 		const runtimeGradleVersions = await this.getRuntimeGradleVersions(
 			projectDir
 		);
-		this.replaceGradleVersion(
-			pluginTempDir,
-			runtimeGradleVersions.gradleVersion
-		);
+		let gradleVersion = runtimeGradleVersions.gradleVersion;
+		if (this.$projectData.nsConfig.android.gradleVersion) {
+			gradleVersion = this.$projectData.nsConfig.android.gradleVersion;
+		}
+		this.replaceGradleVersion(pluginTempDir, gradleVersion);
+
 		this.replaceGradleAndroidPluginVersion(
 			buildGradlePath,
 			runtimeGradleVersions.gradleAndroidPluginVersion
+		);
+
+		// In gradle 8 every android project must have a namespace in "android"
+		// and the package property in manifest is now forbidden
+		// let s replace it
+		const manifestFilePath = this.getManifest(
+			path.join(pluginTempDir, "src", "main")
+		);
+		let pluginNamespace = this.extractNamespaceFromManifest(manifestFilePath);
+		if (!pluginNamespace) {
+			pluginNamespace = pluginName.replace(/@/g, "").replace(/[/-]/g, ".");
+		}
+
+		this.replaceFileContent(
+			buildGradlePath,
+			"{{pluginNamespace}}",
+			pluginNamespace
 		);
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
@@ -490,10 +489,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	private async getLatestRuntimeVersion(): Promise<string> {
 		let runtimeVersion: string = null;
-
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		try {
 			let result = await this.$packageManager.view(
-				SCOPED_ANDROID_RUNTIME_NAME,
+				packageName,
 				{
 					"dist-tags": true,
 				}
@@ -505,7 +504,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				`Error while getting latest android runtime version from view command: ${err}`
 			);
 			const registryData = await this.$packageManager.getRegistryPackageData(
-				SCOPED_ANDROID_RUNTIME_NAME
+				packageName
 			);
 			runtimeVersion = registryData["dist-tags"].latest;
 		}
@@ -529,9 +528,10 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			};
 		}
 
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		// try reading from installed runtime first before reading from the npm registry...
 		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
-			SCOPED_ANDROID_RUNTIME_NAME,
+			packageName,
 			{
 				paths: [this.$projectData.projectDir],
 			}
@@ -584,10 +584,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			return localVersionInfo;
 		}
 
+		const packageName = this.$projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
 		// fallback to reading from npm...
 		try {
 			let output = await this.$packageManager.view(
-				`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
+				`${packageName}@${runtimeVersion}`,
 				{ version_info: true }
 			);
 			output = output?.["version_info"] ?? output;
@@ -602,7 +603,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				 *
 				 */
 				output = await this.$packageManager.view(
-					`${SCOPED_ANDROID_RUNTIME_NAME}@${runtimeVersion}`,
+					`${packageName}@${runtimeVersion}`,
 					{ gradle: true }
 				);
 				output = output?.["gradle"] ?? output;
@@ -622,7 +623,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				`Error while getting gradle data for android runtime from view command: ${err}`
 			);
 			const registryData = await this.$packageManager.getRegistryPackageData(
-				SCOPED_ANDROID_RUNTIME_NAME
+				packageName
 			);
 			runtimeGradleVersions = registryData.versions[runtimeVersion];
 		}
@@ -691,28 +692,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const contentRegex = new RegExp(content, "g");
 		const replacedFileContent = fileContent.replace(contentRegex, replacement);
 		this.$fs.writeFile(filePath, replacedFileContent);
-	}
-
-	private addCompileDependencies(
-		platformsAndroidDirPath: string,
-		buildGradlePath: string
-	): void {
-		const includeGradlePath = path.join(
-			platformsAndroidDirPath,
-			INCLUDE_GRADLE_NAME
-		);
-		if (this.$fs.exists(includeGradlePath)) {
-			const includeGradleContent = this.$fs.readText(includeGradlePath);
-			const compileDependencies =
-				this.getIncludeGradleCompileDependenciesScope(includeGradleContent);
-
-			if (compileDependencies.length) {
-				this.$fs.appendFile(
-					buildGradlePath,
-					"\n" + compileDependencies.join("\n")
-				);
-			}
-		}
 	}
 
 	private copyAar(
@@ -806,22 +785,36 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const gradlew =
 			pluginBuildSettings.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
-
+			const toolsInfo = this.$androidToolsInfo.getToolsInfo({
+				projectDir: this.$projectData.projectDir,
+			});
 		const localArgs = [
 			"-p",
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
 			`-PtempBuild=true`,
+			`-PcompileSdk=${toolsInfo.compileSdkVersion}`,
+			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
+			`-PprojectRoot=${this.$projectData.projectDir}`,
+			`-DprojectRoot=${this.$projectData.projectDir}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
+			`-PappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
+			`-DappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
 
 		if (pluginBuildSettings.gradleArgs) {
-			localArgs.push(pluginBuildSettings.gradleArgs);
+			const additionalArgs: string[] = [];
+			pluginBuildSettings.gradleArgs.forEach((arg) => {
+				additionalArgs.push(
+					...arg.split(" -P").map((a, i) => (i === 0 ? a : `-P${a}`))
+				);
+			});
+			localArgs.push(...additionalArgs);
 		}
 
 		if (this.$logger.getLevel() === "INFO") {
-			localArgs.push("--quiet");
+			localArgs.push("--info");
 		}
 
 		const opts: any = {

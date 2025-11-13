@@ -654,6 +654,8 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 }
 
 export class ProjectDataStub implements IProjectData {
+	ignoredDependencies?: string[];
+	initialized?: boolean;
 	packageJsonData: any;
 	projectDir: string;
 	projectName: string;
@@ -664,7 +666,8 @@ export class ProjectDataStub implements IProjectData {
 	get platformsDir(): string {
 		return (
 			this.platformsDirCache ||
-			(this.projectDir && join(this.projectDir, "platforms")) ||
+			(this.projectDir &&
+				join(this.projectDir, constants.PLATFORMS_DIR_NAME)) ||
 			""
 		);
 	}
@@ -699,6 +702,9 @@ export class ProjectDataStub implements IProjectData {
 		this.projectIdentifiers = { android: "", ios: "" };
 		this.projectId = "";
 		this.projectName = "";
+		this.nsConfig = {
+			android: {},
+		};
 	}
 
 	public initializeProjectDataFromContent(): void {
@@ -732,6 +738,10 @@ export class ProjectDataStub implements IProjectData {
 
 	public getAppDirectoryRelativePath(): string {
 		return "app";
+	}
+
+	getBuildRelativeDirectoryPath(): string {
+		return "platforms";
 	}
 }
 

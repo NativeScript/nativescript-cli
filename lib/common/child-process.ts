@@ -120,7 +120,7 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 			let isResolved = false;
 			let capturedOut = "";
 			let capturedErr = "";
-			let killTimer: NodeJS.Timer = null;
+			let killTimer: NodeJS.Timeout = null;
 
 			if (spawnFromEventOptions && spawnFromEventOptions.timeout) {
 				this.$logger.trace(

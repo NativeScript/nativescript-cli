@@ -139,7 +139,7 @@ export class AndroidDeviceSocketsLiveSyncService
 				operationId,
 			});
 
-			const syncInterval: NodeJS.Timer = setInterval(() => {
+			const syncInterval: NodeJS.Timeout = setInterval(() => {
 				if (this.livesyncTool.isOperationInProgress(operationId)) {
 					this.$logger.info("Sync operation in progress...");
 				}
