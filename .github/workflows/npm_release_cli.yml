@@ -1,43 +1,77 @@
 name: 'nativescript -> npm'
 
 on:
-  push:
-    branches: [ 'main' ]
-    paths-ignore:
-      - 'packages/**'
   workflow_dispatch:
+    inputs:
+      bump_version:
+        description: 'Bump Version'
+        required: true
+        default: true
+        type: boolean
+      next_version:
+        description: 'Next Version with Next tag'
+        required: true
+        default: false
+        type: boolean
 
-env:
-  NPM_TAG: 'next'
+permissions:
+  contents: read
 
 jobs:
   release:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
-      
-      - uses: actions/setup-node@v3
+
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
         with:
-          node-version: 18
+          egress-policy: audit
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 22.14.0
 
       - name: Setup
         run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
 
+      - name: Bump Standard Version
+        if: github.event.inputs.bump_version == 'true'
+        run: |
+          npm run release
+
       - name: Generate Version
         run: |
-          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);")-$NPM_TAG-$(date +"%m-%d-%Y")-$GITHUB_RUN_ID >> $GITHUB_ENV
+          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);") >> $GITHUB_ENV
 
       - name: Bump Version
+        if: github.event.inputs.next_version == 'true'
         run: npm version $NPM_VERSION
 
       - name: Build nativescript
         run: npm pack
-
-      - name: Publish nativescript
+      
+      - name: npm ENV
         env:
           NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+
+      - name: Publish next nativescript version
+        if: github.event.inputs.next_version == 'true'
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
           echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG..."
-          npm publish nativescript-$NPM_VERSION.tgz --tag $NPM_TAG
+          npm publish akylas-nativescript-cli-$NPM_VERSION.tgz --tag $NPM_TAG
+
+      - name: Publish nativescript
+        if: github.event.inputs.next_version == 'false'
+        run: |
+          echo "Publishing nativescript@$NPM_VERSION to NPM..."
+          npm publish akylas-nativescript-cli-$NPM_VERSION.tgz 
+
+      - name: Push to git
+        if: github.event.inputs.bump_version == 'true'
+        run: |
+          git push origin --tags
+          git push origin

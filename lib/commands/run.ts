@@ -83,7 +83,7 @@ injector.registerCommand("run|*all", RunCommandBase);
 
 export class RunIosCommand implements ICommand {
 	@cache()
-	private get runCommand(): RunCommandBase {
+	protected get runCommand(): RunCommandBase {
 		const runCommand = this.$injector.resolve<RunCommandBase>(RunCommandBase);
 		runCommand.platform = this.platform;
 		return runCommand;
@@ -95,12 +95,12 @@ export class RunIosCommand implements ICommand {
 	}
 
 	constructor(
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $errors: IErrors,
-		private $injector: IInjector,
-		private $options: IOptions,
-		private $platformValidationService: IPlatformValidationService,
-		private $projectDataService: IProjectDataService
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $errors: IErrors,
+		protected $injector: IInjector,
+		protected $options: IOptions,
+		protected $platformValidationService: IPlatformValidationService,
+		protected $projectDataService: IProjectDataService
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -112,12 +112,12 @@ export class RunIosCommand implements ICommand {
 
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
-				this.$devicePlatformsConstants.iOS,
+				this.platform,
 				projectData
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`
+				`Applications for platform ${this.platform} can not be built on this OS`
 			);
 		}
 
@@ -127,7 +127,7 @@ export class RunIosCommand implements ICommand {
 				this.$options.provision,
 				this.$options.teamId,
 				projectData,
-				this.$devicePlatformsConstants.iOS.toLowerCase()
+				this.platform.toLowerCase()
 			));
 		return result;
 	}
@@ -196,3 +196,30 @@ export class RunAndroidCommand implements ICommand {
 }
 
 injector.registerCommand("run|android", RunAndroidCommand);
+
+export class RunVisionOSCommand extends RunIosCommand {
+	public get platform(): string {
+		return this.$devicePlatformsConstants.visionOS;
+	}
+
+	constructor(
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $errors: IErrors,
+		protected $injector: IInjector,
+		protected $options: IOptions,
+		protected $platformValidationService: IPlatformValidationService,
+		protected $projectDataService: IProjectDataService
+	) {
+		super(
+			$devicePlatformsConstants,
+			$errors,
+			$injector,
+			$options,
+			$platformValidationService,
+			$projectDataService
+		);
+	}
+}
+
+injector.registerCommand("run|vision", RunVisionOSCommand);
+injector.registerCommand("run|visionos", RunVisionOSCommand);

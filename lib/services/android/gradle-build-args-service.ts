@@ -57,7 +57,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 
 		args.push(
 			`--stacktrace`,
-			`-PcompileSdk=android-${toolsInfo.compileSdkVersion}`,
+			`-PcompileSdk=${toolsInfo.compileSdkVersion}`,
 			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
 			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
 			`-PgenerateTypings=${toolsInfo.generateTypings}`,
@@ -69,9 +69,10 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
-		if (buildData.gradleArgs) {
+		const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || []).concat(buildData.gradleArgs || []);
+		if (gradleArgs) {
 			const additionalArgs: string[] = [];
-			buildData.gradleArgs.forEach((arg) => {
+			gradleArgs.forEach((arg) => {
 				additionalArgs.push(...arg.split(" ").map((a) => a.trim()));
 			});
 			args.push(...additionalArgs);
@@ -97,7 +98,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		if (logLevel === "TRACE") {
 			args.push("--debug");
 		} else if (logLevel === "INFO") {
-			args.push("--quiet");
+			args.push("--info");
 		}
 
 		return args;

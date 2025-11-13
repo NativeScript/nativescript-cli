@@ -272,6 +272,13 @@ allprojects {
     }
 }
 
+
+def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? compileSdk : 35 }
+def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? targetSdk : 35 as int }
+def computeBuildToolsVersion = { ->
+    project.hasProperty("buildToolsVersion") ? buildToolsVersion : "35.0.1"
+}
+
 android {
     namespace "{{pluginNamespace}}"
     def applyPluginGradleConfigurations = { ->
@@ -282,12 +289,6 @@ android {
                 apply from: includeGradlePath
             }
         }
-    }
-
-    def computeCompileSdkVersion = { -> project.hasProperty("compileSdk") ? project.compileSdk : 31 }
-    def computeTargetSdkVersion = { -> project.hasProperty("targetSdk") ? project.targetSdk : 31 as int }
-    def computeBuildToolsVersion = { ->
-        project.hasProperty("buildToolsVersion") ? project.buildToolsVersion : "31.0.0"
     }
 
     project.ext.applyBeforePluginGradleConfiguration()
@@ -317,7 +318,11 @@ android {
 
 task addDependenciesFromNativeScriptPlugins {
     nativescriptDependencies.each { dep ->
-        def aarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["**/*.aar"])
+        def aarFiles = fileTree(dir: getDepPlatformDir(dep)).matching {
+            include "**/*.aar"
+            exclude "cpp/**"
+            exclude project.hasProperty("aarIgnoreFilter") ? project.findProperty('aarIgnoreFilter').split(',').collect{it as String} : []
+        }
         def currentDirname = file(project.buildscript.sourceFile).getParentFile().getName()
         aarFiles.each { aarFile ->
             def length = aarFile.name.length() - 4
@@ -329,7 +334,11 @@ task addDependenciesFromNativeScriptPlugins {
             project.dependencies.add("implementation", [name: fileName, ext: "aar"])
         }
 
-        def jarFiles = fileTree(dir: getDepPlatformDir(dep), include: ["*.jar"])
+        def jarFiles = fileTree(dir: getDepPlatformDir(dep)).matching {
+            include "**/*.jar"
+            exclude "cpp/**"
+            exclude project.hasProperty("jarIgnoreFilter") ? project.findProperty('jarIgnoreFilter').split(',').collect{it as String} : []
+        }
         jarFiles.each { jarFile ->
             def jarFileAbsolutePath = jarFile.getAbsolutePath()
             outLogger.withStyle(Style.SuccessHeader).println "\t + adding jar plugin dependency: $jarFileAbsolutePath"

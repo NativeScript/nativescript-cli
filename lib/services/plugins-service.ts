@@ -255,7 +255,6 @@ export class PluginsService implements IPluginsService {
 			const currentPluginNativeHashes = await this.getPluginNativeHashes(
 				pluginPlatformsFolderPath
 			);
-
 			if (
 				!oldPluginNativeHashes ||
 				this.$filesHashService.hasChangesInShasums(
@@ -637,8 +636,16 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 					this.getPackageJsonFilePathForModule(cacheData.name, projectDir)
 				);
 			pluginData.isPlugin = !!cacheData.nativescript;
-			pluginData.pluginPlatformsFolderPath = (platform: string) =>
-				path.join(pluginData.fullPath, "platforms", platform.toLowerCase());
+			pluginData.pluginPlatformsFolderPath = (platform: string) => {
+				if (this.$mobileHelper.isvisionOSPlatform(platform)) {
+					platform = constants.PlatformTypes.ios;
+				}
+				return path.join(
+					pluginData.fullPath,
+					constants.PLATFORMS_DIR_NAME,
+					platform.toLowerCase()
+				);
+			};
 			const data = cacheData.nativescript;
 
 			if (pluginData.isPlugin) {
@@ -799,7 +806,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 				);
 				const pluginDestinationPath = path.join(
 					platformData.appDestinationDirectoryPath,
-					constants.APP_FOLDER_NAME,
+					this.$options.hostProjectModuleName,
 					"tns_modules"
 				);
 				await action(
@@ -872,6 +879,10 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	private getAllPluginsNativeHashes(
 		pathToPluginsBuildFile: string
 	): IDictionary<IStringDictionary> {
+		if (this.$options.hostProjectPath) {
+			// TODO: force rebuild plugins for now until we decide where to put .ns-plugins-build-data.json when embedding
+			return {};
+		}
 		let data: IDictionary<IStringDictionary> = {};
 		if (this.$fs.exists(pathToPluginsBuildFile)) {
 			data = this.$fs.readJson(pathToPluginsBuildFile);
@@ -886,6 +897,11 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		currentPluginNativeHashes: IStringDictionary;
 		allPluginsNativeHashes: IDictionary<IStringDictionary>;
 	}): void {
+		if (this.$options.hostProjectPath) {
+			// TODO: force rebuild plugins for now until we decide where to put .ns-plugins-build-data.json when embedding
+			return;
+		}
+
 		opts.allPluginsNativeHashes[opts.pluginData.name] =
 			opts.currentPluginNativeHashes;
 		this.$fs.writeJson(

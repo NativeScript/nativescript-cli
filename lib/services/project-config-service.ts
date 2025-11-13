@@ -41,7 +41,7 @@ export class ProjectConfigService implements IProjectConfigService {
 		private $logger: ILogger,
 		private $injector: IInjector,
 		private $options: IOptions,
-		private $cleanupService: ICleanupService
+		private $cleanupService: ICleanupService,
 	) {}
 
 	public setForceUsingNewConfig(force: boolean) {
@@ -66,7 +66,7 @@ export class ProjectConfigService implements IProjectConfigService {
 
 	public getDefaultTSConfig(
 		appId: string = "org.nativescript.app",
-		appPath: string = "app"
+		appPath: string = "app",
 	) {
 		return `import { NativeScriptConfig } from '@nativescript/core';
 
@@ -89,7 +89,7 @@ export default {
 			return;
 		}
 		this.$logger.warn(
-			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript now has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`
+			`You are using the deprecated ${CONFIG_NS_FILE_NAME} file. Just be aware that NativeScript now has an improved ${CONFIG_FILE_NAME_DISPLAY} file for when you're ready to upgrade this project.`,
 		);
 	}
 
@@ -136,19 +136,19 @@ export default {
 		const hasExistingConfig = !!existingConfigs.length;
 		if (!hasExistingConfig) {
 			this.$logger.trace(
-				`No config file found - falling back to ${possibleConfigPaths[0]}.`
+				`No config file found - falling back to ${possibleConfigPaths[0]}.`,
 			);
 			existingConfigs.push(possibleConfigPaths[0]);
 		}
 
 		const TSConfigPath = existingConfigs.find((config) =>
-			config.endsWith(".ts")
+			config.endsWith(".ts"),
 		);
 		const JSConfigPath = existingConfigs.find((config) =>
-			config.endsWith(".js")
+			config.endsWith(".js"),
 		);
 		const NSConfigPath = existingConfigs.find((config) =>
-			config.endsWith(".json")
+			config.endsWith(".json"),
 		);
 
 		const hasTSConfig = !!TSConfigPath && hasExistingConfig;
@@ -158,7 +158,7 @@ export default {
 
 		if (hasTSConfig && hasJSConfig) {
 			this.$logger.warn(
-				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.`
+				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.`,
 			);
 		}
 
@@ -182,7 +182,7 @@ export default {
 			(info.usingNSConfig && !this.forceUsingNewConfig)
 		) {
 			this.$logger.trace(
-				"Project Config Service using legacy configuration..."
+				"Project Config Service using legacy configuration...",
 			);
 			if (!this.forceUsingLegacyConfig && info.hasNSConfig) {
 				this.warnUsingLegacyNSConfig();
@@ -199,7 +199,7 @@ export default {
 			});
 			const result: any = this.requireFromString(
 				transpiledSource.outputText,
-				info.TSConfigPath
+				info.TSConfigPath,
 			);
 			config = result["default"] ? result["default"] : result;
 		} else if (info.hasJSConfig) {
@@ -218,7 +218,7 @@ export default {
 	@exported("projectConfigService")
 	public async setValue(
 		key: string,
-		value: SupportedConfigValues
+		value: SupportedConfigValues,
 	): Promise<boolean> {
 		const {
 			hasTSConfig,
@@ -236,7 +236,7 @@ export default {
 		) {
 			try {
 				this.$logger.trace(
-					"Project Config Service -> setValue writing to legacy config."
+					"Project Config Service -> setValue writing to legacy config.",
 				);
 				const NSConfig = hasNSConfig ? this.$fs.readJson(NSConfigPath) : {};
 				_.set(NSConfig, key, value);
@@ -245,7 +245,7 @@ export default {
 			} catch (error) {
 				this.$logger.trace(
 					`Failed to setValue on legacy config. Error is ${error.message}`,
-					error
+					error,
 				);
 				return false;
 			}
@@ -255,7 +255,7 @@ export default {
 			this.writeDefaultConfig(this.projectHelper.projectDir);
 		}
 
-		if (typeof value === "object") {
+		if (!Array.isArray(value) && typeof value === "object") {
 			let allSuccessful = true;
 
 			for (const prop of this.flattenObjectToPaths(value)) {
@@ -270,41 +270,44 @@ export default {
 
 		try {
 			const transformer: IConfigTransformer = new ConfigTransformer(
-				configContent
+				configContent,
 			);
 			const newContent = transformer.setValue(key, value);
 			const prettierOptions = (await resolvePrettierConfig(
 				this.projectHelper.projectDir,
-				{ editorconfig: true }
+				{ editorconfig: true },
 			)) || {
 				semi: false,
 				singleQuote: true,
 			};
 			this.$logger.trace(
 				"updating config, prettier options: ",
-				prettierOptions
+				prettierOptions,
 			);
 			this.$fs.writeFile(
 				configFilePath,
-				prettierFormat(newContent, {
+				await prettierFormat(newContent, {
 					...prettierOptions,
 					parser: "typescript",
-				})
+					// note: we don't use plugins here, since we are only formatting ts files, and they are supported by default
+					// and this also causes issues with certain plugins, like prettier-plugin-tailwindcss.
+					plugins: [],
+				}),
 			);
 		} catch (error) {
 			this.$logger.error(`Failed to update config.` + error);
 		} finally {
 			// verify config is updated correctly
-			if (this.getValue(key) !== value) {
+			if (!Array.isArray(this.getValue(key)) && this.getValue(key) !== value) {
 				this.$logger.error(
 					`${EOL}Failed to update ${
 						hasTSConfig ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
-					}.${EOL}`
+					}.${EOL}`,
 				);
 				this.$logger.printMarkdown(
 					`Please manually update \`${
 						hasTSConfig ? CONFIG_FILE_NAME_TS : CONFIG_FILE_NAME_JS
-					}\` and set \`${key}\` to \`${value}\`.${EOL}`
+					}\` and set \`${key}\` to \`${value}\`.${EOL}`,
 				);
 
 				// restore original content
@@ -328,7 +331,7 @@ export default {
 		];
 
 		let appPath = possibleAppPaths.find((possiblePath) =>
-			this.$fs.exists(possiblePath)
+			this.$fs.exists(possiblePath),
 		);
 		if (appPath) {
 			appPath = path.relative(projectDir, appPath).replace(path.sep, "/");
@@ -351,7 +354,7 @@ export default {
 			const embeddedPackageJsonPath = path.resolve(
 				this.projectHelper.projectDir,
 				projectData.getAppDirectoryRelativePath(),
-				constants.PACKAGE_JSON_FILE_NAME
+				constants.PACKAGE_JSON_FILE_NAME,
 			);
 			const embeddedPackageJson = this.$fs.readJson(embeddedPackageJsonPath);
 			// filter only the supported keys
@@ -363,19 +366,19 @@ export default {
 					"cssParser",
 					"discardUncaughtJsExceptions",
 					"main",
-				])
+				]),
 			);
 		} catch (err) {
 			this.$logger.trace(
 				"failed to add embedded package.json data to config",
-				err
+				err,
 			);
 			// ignore if the file doesn't exist
 		}
 
 		try {
 			const packageJson = this.$fs.readJson(
-				path.join(this.projectHelper.projectDir, "package.json")
+				path.join(this.projectHelper.projectDir, "package.json"),
 			);
 
 			// add app id to additionalData for backwards compatibility
@@ -411,7 +414,7 @@ export default {
 
 	public async writeLegacyNSConfigIfNeeded(
 		projectDir: string,
-		runtimePackage: IBasePluginData
+		runtimePackage: IBasePluginData,
 	) {
 		const { usingNSConfig } = this.detectProjectConfigs(projectDir);
 
@@ -440,7 +443,7 @@ You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as
 
 		const nsConfigPath = path.join(
 			projectDir || this.projectHelper.projectDir,
-			"nsconfig.json"
+			"nsconfig.json",
 		);
 
 		this.$fs.writeJson(nsConfigPath, {
@@ -458,11 +461,19 @@ You may add \`nsconfig.json\` to \`.gitignore\` as the CLI will regenerate it as
 	// todo: move into config manipulation
 	private flattenObjectToPaths(
 		obj: any,
-		basePath?: string
+		basePath?: string,
 	): Array<{ key: string; value: any }> {
 		const toPath = (key: any) => [basePath, key].filter(Boolean).join(".");
 		return Object.keys(obj).reduce((all: any, key) => {
-			if (typeof obj[key] === "object") {
+			if (Array.isArray(obj[key])) {
+				return [
+					...all,
+					{
+						key: toPath(key),
+						value: obj[key], // Preserve arrays as they are
+					},
+				];
+			} else if (typeof obj[key] === "object" && obj[key] !== null) {
 				return [...all, ...this.flattenObjectToPaths(obj[key], toPath(key))];
 			}
 			return [

@@ -50,6 +50,7 @@ export class ProjectDataService implements IProjectDataService {
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
 		private $logger: ILogger,
+		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 		private $injector: IInjector
@@ -246,9 +247,8 @@ export class ProjectDataService implements IProjectDataService {
 			// ignore
 		}
 
-		const content = this.getImageDefinitions()[
-			useLegacy ? "android_legacy" : "android"
-		];
+		const content =
+			this.getImageDefinitions()[useLegacy ? "android_legacy" : "android"];
 
 		return {
 			icons: this.getAndroidAssetSubGroup(content.icons, basePath),
@@ -625,20 +625,20 @@ export class ProjectDataService implements IProjectDataService {
 		projectDir: string,
 		platform: constants.SupportedPlatform
 	): IBasePluginData {
+		let packageName: string[] = [];
+		if (platform === constants.PlatformTypes.ios) {
+			packageName.push(this.$projectData.nsConfig.ios?.runtimePackageName, constants.SCOPED_IOS_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME);
+			
+		} else if (platform === constants.PlatformTypes.android) {
+			packageName.push(this.$projectData.nsConfig.android?.runtimePackageName, constants.SCOPED_ANDROID_RUNTIME_NAME, constants.TNS_IOS_RUNTIME_NAME);
+		} else if (platform === constants.PlatformTypes.visionos) {
+			packageName.push(constants.SCOPED_VISIONOS_RUNTIME_NAME);
+		}
 		const runtimePackage = this.$pluginsService
 			.getDependenciesFromPackageJson(projectDir)
 			.devDependencies.find((d) => {
-				if (platform === constants.PlatformTypes.ios) {
-					return [
-						constants.SCOPED_IOS_RUNTIME_NAME,
-						constants.TNS_IOS_RUNTIME_NAME,
-					].includes(d.name);
-				} else if (platform === constants.PlatformTypes.android) {
-					return [
-						constants.SCOPED_ANDROID_RUNTIME_NAME,
-						constants.TNS_ANDROID_RUNTIME_NAME,
-					].includes(d.name);
-				}
+				return packageName.includes(d.name);
+				
 			});
 
 		if (runtimePackage) {
@@ -686,12 +686,17 @@ export class ProjectDataService implements IProjectDataService {
 		);
 		if (platform === constants.PlatformTypes.ios) {
 			return {
-				name: constants.SCOPED_IOS_RUNTIME_NAME,
+				name: this.$projectData.nsConfig.ios?.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME,
 				version: null,
 			};
 		} else if (platform === constants.PlatformTypes.android) {
 			return {
-				name: constants.SCOPED_ANDROID_RUNTIME_NAME,
+				name: this.$projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME,
+				version: null,
+			};
+		} else if (platform === constants.PlatformTypes.visionos) {
+			return {
+				name: constants.SCOPED_VISIONOS_RUNTIME_NAME,
 				version: null,
 			};
 		}

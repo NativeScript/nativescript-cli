@@ -1,8 +1,11 @@
 import { Yok } from "../../yok";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import * as path from "path";
-import * as temp from "temp";
 import * as hostInfoLib from "../../host-info";
 import { assert, use } from "chai";
+import "chai-as-promised";
+import chaiAsPromised from "chai-as-promised";
 import * as fileSystemFile from "../../file-system";
 import * as childProcessLib from "../../child-process";
 import { CommonLoggerStub } from "./stubs";
@@ -10,23 +13,22 @@ import { IInjector } from "../../definitions/yok";
 import * as _ from "lodash";
 import { IFileSystem } from "../../declarations";
 
-use(require("chai-as-promised"));
+use(chaiAsPromised);
 
 const sampleZipFileTest = path.join(
 	__dirname,
-	"../resources/sampleZipFileTest.zip"
+	"../resources/sampleZipFileTest.zip",
 );
 const unzippedFileName = "sampleZipFileTest.txt";
 const sampleZipFileTestIncorrectName = path.join(
 	__dirname,
-	"../resources/sampleZipfileTest.zip"
+	"../resources/sampleZipfileTest.zip",
 );
 
 function isOsCaseSensitive(testInjector: IInjector): boolean {
 	const hostInfo = testInjector.resolve("hostInfo");
 	return hostInfo.isLinux;
 }
-temp.track();
 
 function createWriteJsonTestCases(): {
 	exists: boolean;
@@ -123,7 +125,7 @@ describe("FileSystem", () => {
 
 			beforeEach(() => {
 				testInjector = createTestInjector();
-				tempDir = temp.mkdirSync("projectToUnzip");
+				tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				fs = testInjector.resolve("fs");
 				file = path.join(tempDir, unzippedFileName);
 				fs.writeFile(file, msg);
@@ -133,13 +135,13 @@ describe("FileSystem", () => {
 					sampleZipFileTest,
 					tempDir,
 					{ overwriteExisitingFiles: false },
-					[unzippedFileName]
+					[unzippedFileName],
 				);
 				const data = fs.readFile(file);
 				assert.strictEqual(
 					msg,
 					data.toString(),
-					"When overwriteExistingFiles is false, we should not ovewrite files."
+					"When overwriteExistingFiles is false, we should not ovewrite files.",
 				);
 			});
 
@@ -148,13 +150,13 @@ describe("FileSystem", () => {
 					sampleZipFileTest,
 					tempDir,
 					{ overwriteExisitingFiles: true },
-					[unzippedFileName]
+					[unzippedFileName],
 				);
 				const data = fs.readFile(file);
 				assert.notEqual(
 					msg,
 					data.toString(),
-					"We must overwrite files when overwriteExisitingFiles is true."
+					"We must overwrite files when overwriteExisitingFiles is true.",
 				);
 			});
 
@@ -164,7 +166,7 @@ describe("FileSystem", () => {
 				assert.notEqual(
 					msg,
 					data.toString(),
-					"We must overwrite files when overwriteExisitingFiles is not set."
+					"We must overwrite files when overwriteExisitingFiles is not set.",
 				);
 			});
 
@@ -176,7 +178,7 @@ describe("FileSystem", () => {
 				assert.notEqual(
 					msg,
 					data.toString(),
-					"We must overwrite files when options is not defined."
+					"We must overwrite files when options is not defined.",
 				);
 			});
 		});
@@ -186,35 +188,35 @@ describe("FileSystem", () => {
 			const commandUnzipFailedMessage = "Command unzip failed with exit code 9";
 			it("is case sensitive when options is not defined", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
 					await assert.isRejected(
 						fs.unzip(sampleZipFileTestIncorrectName, tempDir, undefined, [
 							unzippedFileName,
 						]),
-						commandUnzipFailedMessage
+						commandUnzipFailedMessage,
 					);
 				}
 			});
 
 			it("is case sensitive when caseSensitive option is not defined", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
 					await assert.isRejected(
 						fs.unzip(sampleZipFileTestIncorrectName, tempDir, {}, [
 							unzippedFileName,
 						]),
-						commandUnzipFailedMessage
+						commandUnzipFailedMessage,
 					);
 				}
 			});
 
 			it("is case sensitive when caseSensitive option is true", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				if (isOsCaseSensitive(testInjector)) {
 					await assert.isRejected(
@@ -222,23 +224,23 @@ describe("FileSystem", () => {
 							sampleZipFileTestIncorrectName,
 							tempDir,
 							{ caseSensitive: true },
-							[unzippedFileName]
+							[unzippedFileName],
 						),
-						commandUnzipFailedMessage
+						commandUnzipFailedMessage,
 					);
 				}
 			});
 
 			it("is case insensitive when caseSensitive option is false", async () => {
 				const testInjector = createTestInjector();
-				const tempDir = temp.mkdirSync("projectToUnzip");
+				const tempDir = mkdtempSync(path.join(tmpdir(), "projectToUnzip-"));
 				const fs: IFileSystem = testInjector.resolve("fs");
 				const file = path.join(tempDir, unzippedFileName);
 				await fs.unzip(
 					sampleZipFileTestIncorrectName,
 					tempDir,
 					{ caseSensitive: false },
-					[unzippedFileName]
+					[unzippedFileName],
 				);
 				// This will throw error in case file is not extracted
 				fs.readFile(file);
@@ -249,7 +251,7 @@ describe("FileSystem", () => {
 	describe("renameIfExists", () => {
 		it("returns true when file is renamed", () => {
 			const testInjector = createTestInjector();
-			const tempDir = temp.mkdirSync("renameIfExists");
+			const tempDir = mkdtempSync(path.join(tmpdir(), "renameIfExists-"));
 			const testFileName = path.join(tempDir, "testRenameIfExistsMethod");
 			const newFileName = path.join(tempDir, "newfilename");
 
@@ -261,7 +263,7 @@ describe("FileSystem", () => {
 			assert.isTrue(fs.exists(newFileName), "Renamed file should exists.");
 			assert.isFalse(
 				fs.exists(testFileName),
-				"Original file should not exist."
+				"Original file should not exist.",
 			);
 		});
 
@@ -285,7 +287,7 @@ describe("FileSystem", () => {
 
 		beforeEach(() => {
 			testInjector = createTestInjector();
-			tempDir = temp.mkdirSync("copyFile");
+			tempDir = mkdtempSync(path.join(tmpdir(), "copyFile-"));
 			testFileName = path.join(tempDir, "testCopyFile");
 			newFileName = path.join(tempDir, "newfilename");
 
@@ -300,7 +302,7 @@ describe("FileSystem", () => {
 			assert.deepStrictEqual(
 				fs.getFsStats(testFileName).size,
 				fs.getFsStats(testFileName).size,
-				"Original file and copied file must have the same size."
+				"Original file and copied file must have the same size.",
 			);
 		});
 
@@ -310,13 +312,13 @@ describe("FileSystem", () => {
 			fs.copyFile(testFileName, newFileNameInSubDir);
 			assert.isTrue(
 				fs.exists(newFileNameInSubDir),
-				"Renamed file should exists."
+				"Renamed file should exists.",
 			);
 			assert.isTrue(fs.exists(testFileName), "Original file should exist.");
 			assert.deepStrictEqual(
 				fs.getFsStats(testFileName).size,
 				fs.getFsStats(testFileName).size,
-				"Original file and copied file must have the same size."
+				"Original file and copied file must have the same size.",
 			);
 		});
 
@@ -327,12 +329,12 @@ describe("FileSystem", () => {
 			assert.deepStrictEqual(
 				fs.getFsStats(testFileName).size,
 				originalSize,
-				"Original file and copied file must have the same size."
+				"Original file and copied file must have the same size.",
 			);
 			assert.deepStrictEqual(
 				fs.readText(testFileName),
 				fileContent,
-				"File content should not be changed."
+				"File content should not be changed.",
 			);
 		});
 	});
@@ -398,7 +400,7 @@ describe("FileSystem", () => {
 				(<any>JSON).stringify = (
 					value: any,
 					replacer: any[],
-					space: string | number
+					space: string | number,
 				) => {
 					actualIndentation = <string>space;
 				};

@@ -1,9 +1,6 @@
 import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
-import {
-	MobileProject,
-	IosSPMPackageDefinition,
-} from "@rigor789/trapezedev-project";
+import { MobileProject } from "@nstudio/trapezedev-project";
 import { IPlatformData } from "../../definitions/platform";
 import path = require("path");
 
@@ -12,28 +9,41 @@ export class SPMService implements ISPMService {
 		private $logger: ILogger,
 		private $projectConfigService: IProjectConfigService,
 		private $xcodebuildCommandService: IXcodebuildCommandService,
-		private $xcodebuildArgsService: IXcodebuildArgsService
+		private $xcodebuildArgsService: IXcodebuildArgsService,
 	) {}
 
-	public getSPMPackages(projectData: IProjectData): IosSPMPackageDefinition[] {
+	public getSPMPackages(
+		projectData: IProjectData,
+		platform: string,
+	): IosSPMPackage[] {
 		const spmPackages = this.$projectConfigService.getValue(
-			"ios.SPMPackages",
-			[]
+			`${platform}.SPMPackages`,
+			[],
 		);
 
 		return spmPackages;
 	}
 
-	public hasSPMPackages(projectData: IProjectData): boolean {
-		return this.getSPMPackages(projectData).length > 0;
-	}
+	// note: this is not used anywhere at the moment.
+	// public hasSPMPackages(projectData: IProjectData): boolean {
+	// 	return this.getSPMPackages(projectData).length > 0;
+	// }
 
 	public async applySPMPackages(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
+		pluginSpmPackages?: IosSPMPackage[],
 	) {
 		try {
-			const spmPackages = this.getSPMPackages(projectData);
+			const spmPackages = this.getSPMPackages(
+				projectData,
+				platformData.platformNameLowerCase,
+			);
+
+			if (pluginSpmPackages?.length) {
+				// include swift packages from plugin configs
+				spmPackages.push(...pluginSpmPackages);
+			}
 
 			if (!spmPackages.length) {
 				this.$logger.trace("SPM: no SPM packages to apply.");
@@ -48,6 +58,7 @@ export class SPMService implements ISPMService {
 			});
 			await project.load();
 
+			// note: in trapeze both visionOS and iOS are handled by the ios project.
 			if (!project.ios) {
 				this.$logger.trace("SPM: no iOS project found via trapeze.");
 				return;
@@ -62,6 +73,13 @@ export class SPMService implements ISPMService {
 				}
 				this.$logger.trace(`SPM: adding package ${pkg.name} to project.`, pkg);
 				await project.ios.addSPMPackage(projectData.projectName, pkg);
+
+				// Add to other Targets if specified (like widgets, etc.)
+				if (pkg.targets?.length) {
+					for (const target of pkg.targets) {
+						await project.ios.addSPMPackage(target, pkg);
+					}
+				}
 			}
 			await project.commit();
 
@@ -74,7 +92,7 @@ export class SPMService implements ISPMService {
 
 	public async resolveSPMDependencies(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	) {
 		await this.$xcodebuildCommandService.executeCommand(
 			this.$xcodebuildArgsService
@@ -87,7 +105,7 @@ export class SPMService implements ISPMService {
 			{
 				cwd: projectData.projectDir,
 				message: "Resolving SPM dependencies...",
-			}
+			},
 		);
 	}
 }

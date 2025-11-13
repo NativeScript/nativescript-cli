@@ -112,7 +112,7 @@ export class BuildIosCommand extends BuildCommandBase implements ICommand {
 		$platformValidationService: IPlatformValidationService,
 		$logger: ILogger,
 		$buildDataService: IBuildDataService,
-		private $migrateController: IMigrateController
+		protected $migrateController: IMigrateController
 	) {
 		super(
 			$options,
@@ -225,3 +225,41 @@ export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
 }
 
 injector.registerCommand("build|android", BuildAndroidCommand);
+
+export class BuildVisionOsCommand extends BuildIosCommand implements ICommand {
+	constructor(
+		protected $options: IOptions,
+		$errors: IErrors,
+		$projectData: IProjectData,
+		$platformsDataService: IPlatformsDataService,
+		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$buildController: IBuildController,
+		$platformValidationService: IPlatformValidationService,
+		$logger: ILogger,
+		$buildDataService: IBuildDataService,
+		protected $migrateController: IMigrateController
+	) {
+		super(
+			$options,
+			$errors,
+			$projectData,
+			$platformsDataService,
+			$devicePlatformsConstants,
+			$buildController,
+			$platformValidationService,
+			$logger,
+			$buildDataService,
+			$migrateController
+		);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		this.$errors.fail(
+			'Building for "visionOS" platform is not supported via the CLI. Please open the project in Xcode and build it from there.'
+		);
+		return false;
+	}
+}
+
+injector.registerCommand("build|vision", BuildVisionOsCommand);
+injector.registerCommand("build|visionos", BuildVisionOsCommand);

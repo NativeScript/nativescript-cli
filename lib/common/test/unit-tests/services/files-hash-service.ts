@@ -22,6 +22,7 @@ function createTestInjector(): IInjector {
 	injector.register("fs", FileSystemStub);
 	injector.register("logger", LoggerStub);
 	injector.register("filesHashService", FilesHashService);
+	injector.register("options", {});
 
 	return injector;
 }
@@ -74,8 +75,7 @@ describe("filesHashService", () => {
 			expectedChanges: { file7: "hash7" },
 		},
 		{
-			name:
-				"should return changes when a file is added and a file is removed from oldHashes",
+			name: "should return changes when a file is added and a file is removed from oldHashes",
 			newHashes: addFileHashes({ file9: "hash9" }),
 			oldHashes: removeFileHashes({ file1: "hash1" }),
 			expectedChanges: { file1: "hash1", file9: "hash9" },

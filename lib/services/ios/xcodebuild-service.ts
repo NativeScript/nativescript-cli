@@ -79,11 +79,12 @@ export class XcodebuildService implements IXcodebuildService {
 			platformData.getBuildOutputPath(buildConfig),
 			projectData.projectName + ".xcarchive"
 		);
-		const output = await this.$exportOptionsPlistService.createDevelopmentExportOptionsPlist(
-			archivePath,
-			projectData,
-			buildConfig
-		);
+		const output =
+			await this.$exportOptionsPlistService.createDevelopmentExportOptionsPlist(
+				archivePath,
+				projectData,
+				buildConfig
+			);
 		const args = [
 			"-exportArchive",
 			"-archivePath",
@@ -110,11 +111,14 @@ export class XcodebuildService implements IXcodebuildService {
 			platformData.getBuildOutputPath(buildConfig),
 			projectData.projectName + ".xcarchive"
 		);
-		const output = await this.$exportOptionsPlistService.createDistributionExportOptionsPlist(
-			archivePath,
-			projectData,
-			buildConfig
-		);
+		const output =
+			await this.$exportOptionsPlistService.createDistributionExportOptionsPlist(
+				archivePath,
+				projectData,
+				buildConfig
+			);
+		const provision =
+			buildConfig.provision || buildConfig.mobileProvisionIdentifier;
 		const args = [
 			"-exportArchive",
 			"-archivePath",
@@ -123,6 +127,7 @@ export class XcodebuildService implements IXcodebuildService {
 			output.exportFileDir,
 			"-exportOptionsPlist",
 			output.exportOptionsPlistFilePath,
+			provision ? "" : "-allowProvisioningUpdates", // no profiles specificed so let xcode decide.
 		];
 
 		await this.$xcodebuildCommandService.executeCommand(args, {

@@ -1,4 +1,5 @@
-import { color, stripColors } from "../color";
+import { color } from "../color";
+import { stripVTControlCharacters } from "node:util";
 import {
 	IKeyCommandHelper,
 	IKeyCommandPlatform,
@@ -62,7 +63,7 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 						const line = ` ${color.dim("→")} ${color.bold(keyCommand.key)} — ${
 							keyCommand.description
 						}`;
-						const lineLength = stripColors(line).length - 1;
+						const lineLength = stripVTControlCharacters(line).length - 1;
 						console.log(color.dim(` ┌${"─".repeat(lineLength)}┐`));
 						console.log(line + color.dim(" │"));
 						console.log(color.dim(` └${"─".repeat(lineLength)}┘`));
@@ -88,6 +89,7 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 
 	public printCommands(platform: IKeyCommandPlatform) {
 		const commands = injector.getRegisteredKeyCommandsNames();
+		const groupings: { [key: string]: boolean } = {};
 		const commandHelp = commands.reduce((arr, key) => {
 			const command = injector.resolveKeyCommand(key as IValidKeyName);
 
@@ -100,6 +102,10 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 			) {
 				return arr;
 			} else {
+				if (!groupings[command.group]) {
+					groupings[command.group] = true;
+					arr.push(` \n${color.underline(color.bold(command.group))}\n`);
+				}
 				arr.push(`   ${color.bold(command.key)} — ${command.description}`);
 				return arr;
 			}
@@ -109,18 +115,18 @@ export default class KeyCommandHelper implements IKeyCommandHelper {
 			[
 				"",
 				`  The CLI is ${color.underline(
-					`interactive`
+					`interactive`,
 				)}, you can press the following keys any time (make sure the terminal has focus).`,
 				"",
 				...commandHelp,
 				"",
-			].join("\n")
+			].join("\n"),
 		);
 	}
 
 	public attachKeyCommands(
 		platform: IKeyCommandPlatform,
-		processType: SupportedProcessType
+		processType: SupportedProcessType,
 	) {
 		this.processType = processType;
 		this.platform = platform;

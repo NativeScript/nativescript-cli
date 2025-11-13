@@ -10,6 +10,7 @@ import {
 	ISettingsService,
 } from "./common/declarations";
 import { injector } from "./common/yok";
+import { APP_FOLDER_NAME } from "./constants";
 export class Options {
 	private static DASHED_OPTION_REGEX = /(.+?)([A-Z])(.*)/;
 	private static NONDASHED_OPTION_REGEX = /(.+?)[-]([a-zA-Z])(.*)/;
@@ -132,6 +133,12 @@ export class Options {
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			svelte: { type: OptionType.Boolean, hasSensitiveValue: false },
+			vision: { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-ng": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-react": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-solid": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-svelte": { type: OptionType.Boolean, hasSensitiveValue: false },
+			"vision-vue": { type: OptionType.Boolean, hasSensitiveValue: false },
 			tsc: { type: OptionType.Boolean, hasSensitiveValue: false },
 			ts: { type: OptionType.Boolean, hasSensitiveValue: false },
 			typescript: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -207,7 +214,7 @@ export class Options {
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
 			count: { type: OptionType.Number, hasSensitiveValue: false },
 			analyticsLogFile: { type: OptionType.String, hasSensitiveValue: true },
-			disableAnalytics: { type: OptionType.Boolean, hasSensitiveValue: false },
+			disableAnalytics: { type: OptionType.Boolean, hasSensitiveValue: false, default: true },
 			cleanupLogFile: { type: OptionType.String, hasSensitiveValue: true },
 			hooks: {
 				type: OptionType.Boolean,
@@ -219,13 +226,21 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
+			overrideRuntimeGradleFiles: { type: OptionType.Boolean, hasSensitiveValue: false },
+			
+			gradleFlavor: { type: OptionType.String, hasSensitiveValue: false },
+			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			gradleArgs: {
 				type: OptionType.String,
 				hasSensitiveValue: false,
 				array: true,
 			},
-			gradleFlavor: { type: OptionType.String, hasSensitiveValue: false },
-			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
+			hostProjectPath: { type: OptionType.String, hasSensitiveValue: false },
+			hostProjectModuleName: {
+				type: OptionType.String,
+				hasSensitiveValue: false,
+				default: APP_FOLDER_NAME,
+			},
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			filterDevicesArch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
@@ -243,6 +258,7 @@ export class Options {
 				default: true,
 			},
 			dryRun: { type: OptionType.Boolean, hasSensitiveValue: false },
+			uniqueBundle: { type: OptionType.Boolean, hasSensitiveValue: false },
 		};
 	}
 

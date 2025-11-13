@@ -14,18 +14,19 @@ import {
 import { IDictionary } from "../declarations";
 import { injector } from "../yok";
 import { color } from "../../color";
-const TerminalRenderer = require("marked-terminal");
+import { markedTerminal } from "marked-terminal";
 
 export class Logger implements ILogger {
 	private log4jsLogger: log4js.Logger = null;
-	private passwordRegex = /(password=).*?(['&,]|$)|(password["']?\s*:\s*["']).*?(["'])/i;
+	private passwordRegex =
+		/(password=).*?(['&,]|$)|(password["']?\s*:\s*["']).*?(["'])/i;
 	private passwordReplacement = "$1$3*******$2$4";
 	private defaultLogLevel: LoggerLevel;
 
 	constructor(private $config: Config.IConfig) {
 		this.defaultLogLevel = this.$config.DEBUG
 			? LoggerLevel.TRACE
-			: LoggerLevel.INFO;
+			: LoggerLevel.WARN;
 	}
 
 	@cache()
@@ -61,7 +62,7 @@ export class Logger implements ILogger {
 		if (level === LoggerLevel.TRACE || level === LoggerLevel.ALL) {
 			this.warn(
 				`The "${level}" log level might print some sensitive data like secrets or access tokens in request URLs. Be careful when you share this output.`,
-				{ wrapMessageWithBorders: true }
+				{ wrapMessageWithBorders: true },
 			);
 		}
 	}
@@ -135,8 +136,8 @@ export class Logger implements ILogger {
 		const opts = {
 			unescape: true,
 			link: color.red,
-			strong: color.green.bold,
-			firstHeading: color.blue.bold,
+			strong: (str: string) => color.styleText(["green", "bold"], str),
+			firstHeading: (str: string) => color.styleText(["blue", "bold"], str),
 			tableOptions: {
 				chars: { mid: "", "left-mid": "", "mid-mid": "", "right-mid": "" },
 				style: {
@@ -149,9 +150,9 @@ export class Logger implements ILogger {
 			},
 		};
 
-		marked.setOptions({ renderer: new TerminalRenderer(opts) });
+		marked.use(markedTerminal(opts) as any);
 
-		const formattedMessage = marked(util.format.apply(null, args));
+		const formattedMessage = marked.parse(util.format.apply(null, args));
 		this.info(formattedMessage, { [LoggerConfigData.skipNewLine]: true });
 	}
 
@@ -180,7 +181,7 @@ export class Logger implements ILogger {
 
 		(<IDictionary<any>>this.log4jsLogger)[logMethod.toLowerCase()].apply(
 			this.log4jsLogger,
-			data
+			data,
 		);
 
 		for (const prop in logOpts) {
@@ -188,9 +189,10 @@ export class Logger implements ILogger {
 		}
 	}
 
-	private getLogOptionsForMessage(
-		data: any[]
-	): { data: any[]; [key: string]: any } {
+	private getLogOptionsForMessage(data: any[]): {
+		data: any[];
+		[key: string]: any;
+	} {
 		const loggerOptionKeys = _.keys(LoggerConfigData);
 		const dataToCheck = data.filter((el) => {
 			// objects created with Object.create(null) do not have `hasOwnProperty` function
@@ -238,7 +240,7 @@ export class Logger implements ILogger {
 			if (typeof argument === "string" && !!argument.match(/password/i)) {
 				argument = argument.replace(
 					this.passwordRegex,
-					this.passwordReplacement
+					this.passwordReplacement,
 				);
 			}
 

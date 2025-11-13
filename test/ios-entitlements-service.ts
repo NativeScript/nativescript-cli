@@ -1,4 +1,5 @@
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import { EOL } from "os";
 import { assert } from "chai";
 import { IOSEntitlementsService } from "../lib/services/ios-entitlements-service";
@@ -13,8 +14,7 @@ import { IProjectData } from "../lib/definitions/project";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IFileSystem } from "../lib/common/declarations";
 
-// start tracking temporary folders/files
-temp.track();
+// start temporary folders/files helpers
 
 describe("IOSEntitlements Service Tests", () => {
 	const createTestInjector = (): IInjector => {
@@ -29,7 +29,7 @@ describe("IOSEntitlements Service Tests", () => {
 		testInjector.register("mobileHelper", MobileHelperLib.MobileHelper);
 		testInjector.register(
 			"devicePlatformsConstants",
-			DevicePlatformsConstantsLib.DevicePlatformsConstants
+			DevicePlatformsConstantsLib.DevicePlatformsConstants,
 		);
 		testInjector.register("errors", ErrorsLib.Errors);
 
@@ -38,6 +38,8 @@ describe("IOSEntitlements Service Tests", () => {
 		});
 
 		testInjector.register("tempService", stubs.TempServiceStub);
+
+		testInjector.register("options", {});
 
 		return testInjector;
 	};
@@ -54,25 +56,28 @@ describe("IOSEntitlements Service Tests", () => {
 		projectData = injector.resolve<IProjectData>("projectData");
 		projectData.projectName = "testApp";
 
-		projectData.platformsDir = temp.mkdirSync("platformsDir");
-		projectData.projectDir = temp.mkdirSync("projectDir");
+		projectData.platformsDir = mkdtempSync(
+			path.join(tmpdir(), "platformsDir-"),
+		);
+		projectData.projectDir = mkdtempSync(path.join(tmpdir(), "projectDir-"));
 		projectData.appDirectoryPath = projectData.getAppDirectoryPath();
-		projectData.appResourcesDirectoryPath = projectData.getAppResourcesDirectoryPath();
+		projectData.appResourcesDirectoryPath =
+			projectData.getAppResourcesDirectoryPath();
 
 		fs = injector.resolve("$fs");
 
 		iOSEntitlementsService = injector.resolve("iOSEntitlementsService");
-		destinationFilePath = iOSEntitlementsService.getPlatformsEntitlementsPath(
-			projectData
-		);
+		destinationFilePath =
+			iOSEntitlementsService.getPlatformsEntitlementsPath(projectData);
 	});
 
 	describe("Ensure paths constructed are correct", () => {
 		it("Ensure destination entitlements relative path is calculated correctly.", () => {
 			const expected = path.join("testApp", "testApp.entitlements");
-			const actual = iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
-				projectData
-			);
+			const actual =
+				iOSEntitlementsService.getPlatformsEntitlementsRelativePath(
+					projectData,
+				);
 			assert.equal(actual, expected);
 		});
 
@@ -81,11 +86,10 @@ describe("IOSEntitlements Service Tests", () => {
 				projectData.platformsDir,
 				"ios",
 				"testApp",
-				"testApp.entitlements"
+				"testApp.entitlements",
 			);
-			const actual = iOSEntitlementsService.getPlatformsEntitlementsPath(
-				projectData
-			);
+			const actual =
+				iOSEntitlementsService.getPlatformsEntitlementsPath(projectData);
 			assert.equal(actual, expected);
 		});
 	});
@@ -147,7 +151,7 @@ describe("IOSEntitlements Service Tests", () => {
 			)).getDefaultAppEntitlementsPath(projectData);
 			fs.writeFile(
 				appResourcesEntitlement,
-				defaultAppResourcesEntitlementsContent
+				defaultAppResourcesEntitlementsContent,
 			);
 
 			// act
@@ -160,7 +164,9 @@ describe("IOSEntitlements Service Tests", () => {
 
 		it("Merge uses the entitlements file from a Plugin", async () => {
 			const pluginsService = injector.resolve("pluginsService");
-			const testPluginFolderPath = temp.mkdirSync("testPlugin");
+			const testPluginFolderPath = mkdtempSync(
+				path.join(tmpdir(), "testPlugin-"),
+			);
 			pluginsService.getAllInstalledPlugins = async () => [
 				{
 					pluginPlatformsFolderPath: (platform: string) => {
@@ -170,7 +176,7 @@ describe("IOSEntitlements Service Tests", () => {
 			];
 			const pluginAppEntitlementsPath = path.join(
 				testPluginFolderPath,
-				IOSEntitlementsService.DefaultEntitlementsName
+				IOSEntitlementsService.DefaultEntitlementsName,
 			);
 			fs.writeFile(pluginAppEntitlementsPath, defaultPluginEntitlementsContent);
 
@@ -189,12 +195,14 @@ describe("IOSEntitlements Service Tests", () => {
 			)).getDefaultAppEntitlementsPath(projectData);
 			fs.writeFile(
 				appResourcesEntitlement,
-				namedAppResourcesEntitlementsContent
+				namedAppResourcesEntitlementsContent,
 			);
 
 			// setup plugin entitlements
 			const pluginsService = injector.resolve("pluginsService");
-			const testPluginFolderPath = temp.mkdirSync("testPlugin");
+			const testPluginFolderPath = mkdtempSync(
+				path.join(tmpdir(), "testPlugin-"),
+			);
 			pluginsService.getAllInstalledPlugins = async () => [
 				{
 					pluginPlatformsFolderPath: (platform: string) => {
@@ -204,7 +212,7 @@ describe("IOSEntitlements Service Tests", () => {
 			];
 			const pluginAppEntitlementsPath = path.join(
 				testPluginFolderPath,
-				IOSEntitlementsService.DefaultEntitlementsName
+				IOSEntitlementsService.DefaultEntitlementsName,
 			);
 			fs.writeFile(pluginAppEntitlementsPath, defaultPluginEntitlementsContent);
 

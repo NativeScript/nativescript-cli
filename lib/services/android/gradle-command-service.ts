@@ -10,6 +10,7 @@ import {
 	IGradleCommandOptions,
 } from "../../definitions/gradle";
 import { injector } from "../../common/yok";
+import { quoteString } from "../../common/helpers";
 
 export class GradleCommandService implements IGradleCommandService {
 	constructor(
@@ -26,14 +27,21 @@ export class GradleCommandService implements IGradleCommandService {
 		const { message, cwd, stdio, spawnOptions } = options;
 		this.$logger.info(message);
 
-		const childProcessOptions = { cwd, stdio: stdio || "inherit" };
+		const childProcessOptions = {
+			cwd,
+			stdio: stdio || "inherit",
+			shell: this.$hostInfo.isWindows,
+		};
 		const gradleExecutable =
 			options.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
+		const sanitizedGradleArgs = this.$hostInfo.isWindows
+			? gradleArgs.map((arg) => quoteString(arg))
+			: gradleArgs;
 		const result = await this.executeCommandSafe(
 			gradleExecutable,
-			gradleArgs,
+			sanitizedGradleArgs,
 			childProcessOptions,
 			spawnOptions
 		);
@@ -44,7 +52,7 @@ export class GradleCommandService implements IGradleCommandService {
 	private async executeCommandSafe(
 		gradleExecutable: string,
 		gradleArgs: string[],
-		childProcessOptions: { cwd: string; stdio: string },
+		childProcessOptions: { cwd: string; stdio: string; shell: boolean },
 		spawnOptions: ISpawnFromEventOptions
 	): Promise<ISpawnResult> {
 		try {

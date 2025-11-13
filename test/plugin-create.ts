@@ -4,13 +4,13 @@ import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
 import { assert } from "chai";
 import * as helpers from "../lib/common/helpers";
 import * as sinon from "sinon";
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
 import * as path from "path";
 import * as util from "util";
 import { IOptions } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IDictionary } from "../lib/common/declarations";
-temp.track();
 
 interface IPacoteOutput {
 	packageName: string;
@@ -123,12 +123,10 @@ describe("Plugin create command tests", () => {
 			const confirmQuestions: IDictionary<boolean> = {};
 			strings[createPluginCommand.userMessage] = dummyUser;
 			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[
-				createPluginCommand.includeTypeScriptDemoMessage
-			] = createDemoProjectAnswer;
-			confirmQuestions[
-				createPluginCommand.includeAngularDemoMessage
-			] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+				createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
+				createDemoProjectAnswer;
 
 			prompter.expect({
 				strings: strings,
@@ -144,12 +142,10 @@ describe("Plugin create command tests", () => {
 			const strings: IDictionary<string> = {};
 			const confirmQuestions: IDictionary<boolean> = {};
 			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[
-				createPluginCommand.includeTypeScriptDemoMessage
-			] = createDemoProjectAnswer;
-			confirmQuestions[
-				createPluginCommand.includeAngularDemoMessage
-			] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+				createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
+				createDemoProjectAnswer;
 
 			prompter.expect({
 				strings: strings,
@@ -166,12 +162,10 @@ describe("Plugin create command tests", () => {
 			const confirmQuestions: IDictionary<boolean> = {};
 
 			strings[createPluginCommand.userMessage] = dummyUser;
-			confirmQuestions[
-				createPluginCommand.includeTypeScriptDemoMessage
-			] = createDemoProjectAnswer;
-			confirmQuestions[
-				createPluginCommand.includeAngularDemoMessage
-			] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+				createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
+				createDemoProjectAnswer;
 
 			prompter.expect({
 				strings,
@@ -188,9 +182,8 @@ describe("Plugin create command tests", () => {
 			const confirmQuestions: IDictionary<boolean> = {};
 			strings[createPluginCommand.userMessage] = dummyUser;
 			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[
-				createPluginCommand.includeAngularDemoMessage
-			] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
+				createDemoProjectAnswer;
 
 			prompter.expect({
 				strings: strings,
@@ -208,9 +201,8 @@ describe("Plugin create command tests", () => {
 
 			strings[createPluginCommand.userMessage] = dummyUser;
 			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[
-				createPluginCommand.includeTypeScriptDemoMessage
-			] = createDemoProjectAnswer;
+			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+				createDemoProjectAnswer;
 
 			prompter.expect({
 				strings: strings,
@@ -236,7 +228,7 @@ describe("Plugin create command tests", () => {
 
 			beforeEach(() => {
 				sandbox = sinon.createSandbox();
-				const workingPath = temp.mkdirSync("test_plugin");
+				const workingPath = mkdtempSync(path.join(tmpdir(), "test_plugin-"));
 				options.path = workingPath;
 				projectPath = path.join(workingPath, dummyProjectName);
 				const fsService = testInjector.resolve("fs");
@@ -285,8 +277,8 @@ describe("Plugin create command tests", () => {
 					executePromise,
 					util.format(
 						createPluginCommand.pathAlreadyExistsMessageTemplate,
-						projectPath
-					)
+						projectPath,
+					),
 				);
 				assert(fsSpy.notCalled);
 			});

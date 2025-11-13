@@ -1,7 +1,7 @@
 /* tslint:disable:no-empty */
 
 import * as util from "util";
-import * as chai from "chai";
+import { assert } from "chai";
 import { EventEmitter } from "events";
 import { join } from "path";
 import * as constants from "./../lib/constants";
@@ -9,7 +9,9 @@ import { Yok } from "./../lib/common/yok";
 import { HostInfo } from "./../lib/common/host-info";
 import { DevicePlatformsConstants } from "./../lib/common/mobile/device-platforms-constants";
 import { PrepareData } from "../lib/data/prepare-data";
-import * as temp from "temp";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
+import * as path from "path";
 import {
 	IPackageInstallationManager,
 	INpmInstallOptions,
@@ -38,6 +40,7 @@ import {
 	IProjectConfigInformation,
 	IProjectBackupService,
 	IBackup,
+	BundlerType,
 } from "../lib/definitions/project";
 import {
 	IPlatformData,
@@ -86,15 +89,12 @@ import {
 } from "../lib/common/definitions/google-analytics";
 import * as _ from "lodash";
 import { SupportedConfigValues } from "../lib/tools/config-manipulation/config-transformer";
-import { AffixOptions } from "temp";
-import { ITempService } from "../lib/definitions/temp-service";
+import { AffixOptions, ITempService } from "../lib/definitions/temp-service";
 import {
 	ITerminalSpinner,
 	ITerminalSpinnerOptions,
 	ITerminalSpinnerService,
 } from "../lib/definitions/terminal-spinner-service";
-
-temp.track();
 
 export class LoggerStub implements ILogger {
 	initialize(opts?: ILoggerOptions): void {}
@@ -159,7 +159,7 @@ export class FileSystemStub implements IFileSystem {
 	async zipFiles(
 		zipFile: string,
 		files: string[],
-		zipPathCallback: (path: string) => string
+		zipPathCallback: (path: string) => string,
 	): Promise<void> {
 		return undefined;
 	}
@@ -226,7 +226,7 @@ export class FileSystemStub implements IFileSystem {
 		filename: string,
 		data: any,
 		space?: string,
-		encoding?: string
+		encoding?: string,
 	): void {
 		return undefined;
 	}
@@ -245,14 +245,14 @@ export class FileSystemStub implements IFileSystem {
 			fd?: number;
 			mode?: number;
 			bufferSize?: number;
-		}
+		},
 	): any {
 		return undefined;
 	}
 
 	createWriteStream(
 		path: string,
-		options?: { flags?: string; encoding?: string; string?: string }
+		options?: { flags?: string; encoding?: string; string?: string },
 	): any {
 		return undefined;
 	}
@@ -309,7 +309,7 @@ export class FileSystemStub implements IFileSystem {
 
 	enumerateFilesInDirectorySync(
 		directoryPath: string,
-		filterCallback?: (file: string, stat: IFsStats) => boolean
+		filterCallback?: (file: string, stat: IFsStats) => boolean,
 	): string[] {
 		return [];
 	}
@@ -361,7 +361,7 @@ export class ErrorsStub implements IErrors {
 
 	async beginCommand(
 		action: () => Promise<boolean>,
-		printHelpCommand: () => Promise<void>
+		printHelpCommand: () => Promise<void>,
 	): Promise<boolean> {
 		throw new Error("not supported");
 	}
@@ -382,7 +382,7 @@ export class ErrorsStub implements IErrors {
 		parsed: any,
 		knownOpts: any,
 		shorthands: any,
-		clientName?: string
+		clientName?: string,
 	): void {}
 }
 
@@ -396,7 +396,7 @@ export class PackageInstallationManagerStub
 	async install(
 		packageName: string,
 		pathToSave?: string,
-		options?: INpmInstallOptions
+		options?: INpmInstallOptions,
 	): Promise<string> {
 		return Promise.resolve("");
 	}
@@ -404,7 +404,7 @@ export class PackageInstallationManagerStub
 	async uninstall(
 		packageName: string,
 		pathToSave?: string,
-		options?: INpmInstallOptions
+		options?: INpmInstallOptions,
 	): Promise<string> {
 		return Promise.resolve("");
 	}
@@ -427,7 +427,7 @@ export class PackageInstallationManagerStub
 
 	async getInspectorFromCache(
 		name: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<string> {
 		return Promise.resolve("");
 	}
@@ -438,14 +438,14 @@ export class PackageInstallationManagerStub
 
 	async getInstalledDependencyVersion(
 		packageName: string,
-		projectDir?: string
+		projectDir?: string,
 	): Promise<string> {
 		return Promise.resolve("");
 	}
 
 	async getMaxSatisfyingVersionSafe(
 		packageName: string,
-		versionIdentifier: string
+		versionIdentifier: string,
 	): Promise<string> {
 		return Promise.resolve(versionIdentifier);
 	}
@@ -457,7 +457,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo> {
 		return {
 			name: packageName,
@@ -468,7 +468,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 	public async uninstall(
 		packageName: string,
 		config?: any,
-		path?: string
+		path?: string,
 	): Promise<string> {
 		return "";
 	}
@@ -486,7 +486,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 	}
 
 	public async getPackageNameParts(
-		fullPackageName: string
+		fullPackageName: string,
 	): Promise<INpmPackageNameParts> {
 		return {
 			name: fullPackageName,
@@ -495,7 +495,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 	}
 
 	public async getPackageFullName(
-		packageNameParts: INpmPackageNameParts
+		packageNameParts: INpmPackageNameParts,
 	): Promise<string> {
 		return packageNameParts.version
 			? `${packageNameParts.name}@${packageNameParts.version}`
@@ -649,7 +649,7 @@ export class ProjectConfigServiceStub implements IProjectConfigService {
 
 	async writeLegacyNSConfigIfNeeded(
 		projectDir: string,
-		runtimePackage: IBasePluginData
+		runtimePackage: IBasePluginData,
 	): Promise<void> {}
 }
 
@@ -660,6 +660,8 @@ export class ProjectDataStub implements IProjectData {
 	projectDir: string;
 	projectName: string;
 	webpackConfigPath: string;
+	bundlerConfigPath: string;
+	bundler: BundlerType;
 
 	get platformsDir(): string {
 		return (
@@ -718,7 +720,7 @@ export class ProjectDataStub implements IProjectData {
 		return join(
 			projectDir,
 			constants.APP_FOLDER_NAME,
-			constants.APP_RESOURCES_FOLDER_NAME
+			constants.APP_RESOURCES_FOLDER_NAME,
 		);
 	}
 
@@ -795,7 +797,7 @@ export class PlatformProjectServiceStub
 
 	async createProject(
 		projectRoot: string,
-		frameworkDir: string
+		frameworkDir: string,
 	): Promise<void> {
 		return Promise.resolve();
 	}
@@ -831,7 +833,7 @@ export class PlatformProjectServiceStub
 	async updatePlatform(
 		currentVersion: string,
 		newVersion: string,
-		canUpdate: boolean
+		canUpdate: boolean,
 	): Promise<boolean> {
 		return Promise.resolve(true);
 	}
@@ -850,7 +852,7 @@ export class PlatformProjectServiceStub
 
 	async beforePrepareAllPlugins(
 		projectData: IProjectData,
-		dependencies?: IDependencyData[]
+		dependencies?: IDependencyData[],
 	): Promise<IDependencyData[]> {
 		return Promise.resolve(dependencies);
 	}
@@ -878,7 +880,7 @@ export class PlatformProjectServiceStub
 	async checkForChanges(
 		changesInfo: IProjectChangesInfo,
 		options: any,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		// Nothing yet.
 	}
@@ -889,7 +891,7 @@ export class PlatformProjectServiceStub
 
 	getPluginPlatformsFolderPath(
 		pluginData: IPluginData,
-		platform: string
+		platform: string,
 	): string {
 		return "";
 	}
@@ -907,7 +909,7 @@ export class NativeProjectDataStub
 
 	public getPlatformData(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): IPlatformData {
 		return {
 			frameworkPackageName: `tns-${platform.toLowerCase()}`,
@@ -969,7 +971,7 @@ export class ProjectDataServiceStub implements IProjectDataService {
 
 	getRuntimePackage(
 		projectDir: string,
-		platform: constants.SupportedPlatform
+		platform: constants.SupportedPlatform,
 	): IBasePluginData {
 		return {
 			name: `@nativescript/${platform}`,
@@ -983,7 +985,7 @@ export class ProjectDataServiceStub implements IProjectDataService {
 export class ProjectHelperStub implements IProjectHelper {
 	constructor(
 		public projectHelperErrorMsg?: string,
-		public customProjectDir?: string
+		public customProjectDir?: string,
 	) {}
 
 	public get projectDir(): string {
@@ -1049,9 +1051,9 @@ export class PrompterStub implements IPrompter {
 	}
 
 	async getPassword(message: string, options?: IAllowEmpty): Promise<string> {
-		chai.assert.ok(
+		assert.ok(
 			message in this.passwords,
-			`PrompterStub didn't expect to give password for: ${message}`
+			`PrompterStub didn't expect to give password for: ${message}`,
 		);
 		const result = this.passwords[message];
 		delete this.passwords[message];
@@ -1060,11 +1062,11 @@ export class PrompterStub implements IPrompter {
 
 	async getString(
 		message: string,
-		options?: IPrompterOptions
+		options?: IPrompterOptions,
 	): Promise<string> {
-		chai.assert.ok(
+		assert.ok(
 			message in this.strings,
-			`PrompterStub didn't expect to be asked for: ${message}`
+			`PrompterStub didn't expect to be asked for: ${message}`,
 		);
 		const result = this.strings[message];
 		delete this.strings[message];
@@ -1073,20 +1075,20 @@ export class PrompterStub implements IPrompter {
 
 	async promptForChoice(
 		promptMessage: string,
-		choices: any[]
+		choices: any[],
 	): Promise<string> {
 		throw unreachable();
 	}
 
 	async promptForDetailedChoice(
 		question: string,
-		choices: any[]
+		choices: any[],
 	): Promise<string> {
-		chai.assert.ok(
+		assert.ok(
 			question in this.answers,
-			`PrompterStub didn't expect to be asked: ${question}`
+			`PrompterStub didn't expect to be asked: ${question}`,
 		);
-		chai.assert.deepStrictEqual(choices, this.questionChoices[question]);
+		assert.deepStrictEqual(choices, this.questionChoices[question]);
 		const result = this.answers[question];
 		delete this.answers[question];
 		return result;
@@ -1094,11 +1096,11 @@ export class PrompterStub implements IPrompter {
 
 	async confirm(
 		message: string,
-		defaultAction?: () => boolean
+		defaultAction?: () => boolean,
 	): Promise<boolean> {
-		chai.assert.ok(
+		assert.ok(
 			message in this.confirmQuestions,
-			`PrompterStub didn't expect to be asked for: ${message}`
+			`PrompterStub didn't expect to be asked for: ${message}`,
 		);
 		const result = this.confirmQuestions[message];
 		delete this.confirmQuestions[message];
@@ -1112,30 +1114,28 @@ export class PrompterStub implements IPrompter {
 	assert() {
 		for (const key in this.strings) {
 			throw unexpected(
-				`PrompterStub was instructed to reply with "${this.strings[key]}" to a "${key}" question, but was never asked!`
+				`PrompterStub was instructed to reply with "${this.strings[key]}" to a "${key}" question, but was never asked!`,
 			);
 		}
 		for (const key in this.passwords) {
 			throw unexpected(
-				`PrompterStub was instructed to reply with "${this.passwords[key]}" to a "${key}" password request, but was never asked!`
+				`PrompterStub was instructed to reply with "${this.passwords[key]}" to a "${key}" password request, but was never asked!`,
 			);
 		}
 		for (const key in this.confirmQuestions) {
 			throw unexpected(
-				`PrompterStub was instructed to reply with "${this.confirmQuestions[key]}" to a "${key}" confirm question, but was never asked!`
+				`PrompterStub was instructed to reply with "${this.confirmQuestions[key]}" to a "${key}" confirm question, but was never asked!`,
 			);
 		}
 	}
 }
 
-function unreachable(): Error {
+function unreachable() {
 	return unexpected("Test case should not reach this point.");
 }
 
-function unexpected(msg: string): Error {
-	const err = new chai.AssertionError(msg);
-	err.showDiff = false;
-	return err;
+function unexpected(msg: string) {
+	return new Error(msg);
 }
 
 export class DebugServiceStub
@@ -1159,7 +1159,7 @@ export class LiveSyncServiceStub
 {
 	public async liveSync(
 		deviceDescriptors: ILiveSyncDeviceDescriptor[],
-		liveSyncData: ILiveSyncInfo
+		liveSyncData: ILiveSyncInfo,
 	): Promise<void> {
 		return;
 	}
@@ -1169,7 +1169,7 @@ export class LiveSyncServiceStub
 	}
 
 	public getLiveSyncDeviceDescriptors(
-		projectDir: string
+		projectDir: string,
 	): ILiveSyncDeviceDescriptor[] {
 		return [];
 	}
@@ -1194,7 +1194,7 @@ export class AndroidToolsInfoStub implements IAndroidToolsInfo {
 
 	public validateJavacVersion(
 		installedJavaVersion: string,
-		options?: { showWarningsAsErrors: boolean }
+		options?: { showWarningsAsErrors: boolean },
 	): boolean {
 		return true;
 	}
@@ -1232,7 +1232,7 @@ export class ChildProcessStub extends EventEmitter {
 	public async exec(
 		command: string,
 		options?: any,
-		execOptions?: any
+		execOptions?: any,
 	): Promise<any> {
 		this.execCount++;
 		this.lastCommand = command;
@@ -1252,7 +1252,7 @@ export class ChildProcessStub extends EventEmitter {
 		args: string[],
 		event: string,
 		options?: any,
-		spawnFromEventOptions?: ISpawnFromEventOptions
+		spawnFromEventOptions?: ISpawnFromEventOptions,
 	): Promise<ISpawnResult> {
 		this.spawnFromEventCount++;
 		this.lastCommand = command;
@@ -1265,7 +1265,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async checkForChanges(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: PrepareData
+		prepareData: PrepareData,
 	): Promise<IProjectChangesInfo> {
 		return <IProjectChangesInfo>{};
 	}
@@ -1277,7 +1277,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async savePrepareInfo(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<void> {}
 
 	public getPrepareInfoFilePath(platformData: IPlatformData): string {
@@ -1291,7 +1291,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async setNativePlatformStatus(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		addedPlatform: IAddedNativePlatform
+		addedPlatform: IAddedNativePlatform,
 	): Promise<void> {
 		return;
 	}
@@ -1306,14 +1306,14 @@ export class CommandsService implements ICommandsService {
 
 	public tryExecuteCommand(
 		commandName: string,
-		commandArguments: string[]
+		commandArguments: string[],
 	): Promise<void> {
 		return Promise.resolve();
 	}
 
 	public executeCommandUnchecked(
 		commandName: string,
-		commandArguments: string[]
+		commandArguments: string[],
 	): Promise<boolean> {
 		return Promise.resolve(true);
 	}
@@ -1365,14 +1365,14 @@ export class PerformanceService implements IPerformanceService {
 export class PacoteServiceStub implements IPacoteService {
 	public async manifest(
 		packageName: string,
-		options?: IPacoteManifestOptions
+		options?: IPacoteManifestOptions,
 	): Promise<any> {
 		return "";
 	}
 	public async extractPackage(
 		packageName: string,
 		destinationDirectory: string,
-		options?: IPacoteExtractOptions
+		options?: IPacoteExtractOptions,
 	): Promise<void> {}
 }
 
@@ -1409,13 +1409,13 @@ class TerminalSpinnerStub {
 
 export class TerminalSpinnerServiceStub implements ITerminalSpinnerService {
 	public createSpinner(
-		spinnerOptions?: ITerminalSpinnerOptions
+		spinnerOptions?: ITerminalSpinnerOptions,
 	): ITerminalSpinner {
 		return new TerminalSpinnerStub() as any;
 	}
 	public async execute<T>(
 		spinnerOptions: ITerminalSpinnerOptions,
-		action: () => Promise<T>
+		action: () => Promise<T>,
 	): Promise<T> {
 		return null;
 	}
@@ -1423,7 +1423,7 @@ export class TerminalSpinnerServiceStub implements ITerminalSpinnerService {
 
 export class MarkingModeServiceStub implements IMarkingModeService {
 	handleMarkingModeFullDeprecation(
-		options: IMarkingModeFullDeprecationOptions
+		options: IMarkingModeFullDeprecationOptions,
 	): Promise<void> {
 		return;
 	}
@@ -1445,7 +1445,7 @@ export class AnalyticsService implements IAnalyticsService {
 	async getStatusMessage(
 		settingName: string,
 		jsonFormat: boolean,
-		readableSettingName: string
+		readableSettingName: string,
 	): Promise<string> {
 		return "Fake message";
 	}
@@ -1480,7 +1480,9 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("androidToolsInfo", AndroidToolsInfoStub);
 		this.register("logger", LoggerStub);
 		this.register("errors", ErrorsStub);
-		this.register("options", {});
+		this.register("options", {
+			hostProjectModuleName: "app",
+		});
 		this.register("config", {});
 		this.register("staticConfig", {});
 		this.register("hooksService", HooksServiceStub);
@@ -1488,7 +1490,7 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("devicePlatformsConstants", DevicePlatformsConstants);
 		this.register(
 			"androidResourcesMigrationService",
-			AndroidResourcesMigrationServiceStub
+			AndroidResourcesMigrationServiceStub,
 		);
 		this.register("commandsService", CommandsService);
 		this.register("projectChangesService", ProjectChangesService);
@@ -1505,7 +1507,7 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("httpClient", {
 			httpRequest: async (
 				options: any,
-				proxySettings?: IProxySettings
+				proxySettings?: IProxySettings,
 			): Promise<Server.IResponse> => undefined,
 		});
 		this.register("pluginsService", {
@@ -1525,10 +1527,17 @@ export class InjectorStub extends Yok implements IInjector {
 
 export class TempServiceStub implements ITempService {
 	public async mkdirSync(affixes: string): Promise<string> {
-		return temp.mkdirSync(affixes);
+		const prefix = typeof affixes === "string" ? affixes : "tmp";
+		return mkdtempSync(path.join(tmpdir(), `${prefix}-`));
 	}
 
 	public async path(options: string | AffixOptions): Promise<string> {
-		return temp.path(options);
+		const opts: AffixOptions =
+			typeof options === "string" ? { prefix: options } : options || {};
+		const dir = opts.dir || tmpdir();
+		const prefix = opts.prefix || "tmp";
+		const suffix = opts.suffix || "";
+		const name = `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}${suffix}`;
+		return path.join(dir, name);
 	}
 }

@@ -48,7 +48,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 		private $childProcess: IChildProcess,
 		private $projectDataService: IProjectDataService,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $projectHelper: IProjectHelper
+		private $projectHelper: IProjectHelper,
 	) {}
 
 	public setShouldDispose(shouldDispose: boolean): void {
@@ -58,22 +58,22 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	public async checkConsent(): Promise<void> {
 		if (await this.$analyticsSettingsService.canDoRequest()) {
 			const initialTrackFeatureUsageStatus = await this.getStatus(
-				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 			);
 			let trackFeatureUsage =
 				initialTrackFeatureUsageStatus === AnalyticsStatus.enabled;
 
 			if (
 				(await this.isNotConfirmed(
-					this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+					this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 				)) &&
 				isInteractive()
 			) {
 				const message = `Do you want to help us improve ${this.$analyticsSettingsService.getClientName()} by automatically sending anonymous usage statistics? We will not use this information to identify or contact you.`;
-				trackFeatureUsage = await this.$prompter.confirm(message, () => true);
+				trackFeatureUsage = await this.$prompter.confirm(message, () => false);
 				await this.setStatus(
 					this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
-					trackFeatureUsage
+					trackFeatureUsage,
 				);
 
 				await this.trackAcceptFeatureUsage({
@@ -82,15 +82,15 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			}
 
 			const isErrorReportingUnset = await this.isNotConfirmed(
-				this.$staticConfig.ERROR_REPORT_SETTING_NAME
+				this.$staticConfig.ERROR_REPORT_SETTING_NAME,
 			);
 			const isUsageReportingConfirmed = !(await this.isNotConfirmed(
-				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 			));
 			if (isErrorReportingUnset && isUsageReportingConfirmed) {
 				await this.setStatus(
 					this.$staticConfig.ERROR_REPORT_SETTING_NAME,
-					trackFeatureUsage
+					trackFeatureUsage,
 				);
 			}
 		}
@@ -102,7 +102,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			: AnalyticsStatus.disabled;
 		await this.$userSettingsService.saveSetting(
 			settingName,
-			enabled.toString()
+			enabled.toString(),
 		);
 	}
 
@@ -114,7 +114,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	public getStatusMessage(
 		settingName: string,
 		jsonFormat: boolean,
-		readableSettingName: string
+		readableSettingName: string,
 	): Promise<string> {
 		if (jsonFormat) {
 			return this.getJsonStatusMessage(settingName);
@@ -137,7 +137,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	}
 
 	public async trackInGoogleAnalytics(
-		gaSettings: IGoogleAnalyticsData
+		gaSettings: IGoogleAnalyticsData,
 	): Promise<void> {
 		await this.initAnalyticsStatuses();
 
@@ -152,7 +152,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	}
 
 	public async trackEventActionInGoogleAnalytics(
-		data: IEventActionData
+		data: IEventActionData,
 	): Promise<void> {
 		const device = data.device;
 		const platform = device ? device.deviceInfo.platform : data.platform;
@@ -169,8 +169,8 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			const deviceType = isForDevice
 				? DeviceTypes.Device
 				: this.$mobileHelper.isAndroidPlatform(platform)
-				? DeviceTypes.Emulator
-				: DeviceTypes.Simulator;
+					? DeviceTypes.Emulator
+					: DeviceTypes.Simulator;
 			label = this.addDataToLabel(label, deviceType);
 		}
 
@@ -199,12 +199,12 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	public async finishTracking(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			if (this.brokerProcess && this.brokerProcess.connected) {
-				let timer: NodeJS.Timer;
+				let timer: NodeJS.Timeout;
 
 				const handler = (data: string) => {
 					if (data === DetachedProcessMessages.ProcessFinishedTasks) {
 						this.brokerProcess.removeListener("message", handler);
-						clearTimeout(timer);
+						clearTimeout(timer as unknown as number);
 						resolve();
 					}
 				};
@@ -218,7 +218,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 				const msg = { type: TrackingTypes.FinishTracking };
 				this.brokerProcess.send(msg, (err: Error) =>
-					this.$logger.trace(`Error while sending ${JSON.stringify(msg)}`)
+					this.$logger.trace(`Error while sending ${JSON.stringify(msg)}`),
 				);
 			} else {
 				resolve();
@@ -227,7 +227,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	}
 
 	private forcefullyTrackInGoogleAnalytics(
-		gaSettings: IGoogleAnalyticsData
+		gaSettings: IGoogleAnalyticsData,
 	): Promise<void> {
 		gaSettings.customDimensions = gaSettings.customDimensions || {};
 		gaSettings.customDimensions[GoogleAnalyticsCustomDimensions.client] =
@@ -240,18 +240,18 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 				type: TrackingTypes.GoogleAnalyticsData,
 				category: AnalyticsClients.Cli,
 			},
-			gaSettings
+			gaSettings,
 		);
 		this.$logger.trace(
 			"Will send the following information to Google Analytics:",
-			googleAnalyticsData
+			googleAnalyticsData,
 		);
 		return this.sendMessageToBroker(googleAnalyticsData);
 	}
 
 	private setProjectRelatedCustomDimensions(
 		customDimensions: IStringDictionary,
-		projectDir?: string
+		projectDir?: string,
 	): IStringDictionary {
 		if (!projectDir) {
 			try {
@@ -260,7 +260,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 				// In case there's no project dir here, the above getter will fail.
 				this.$logger.trace(
 					"Unable to get the projectDir from projectHelper",
-					err
+					err,
 				);
 			}
 		}
@@ -269,9 +269,8 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 			const projectData = this.$projectDataService.getProjectData(projectDir);
 			customDimensions[GoogleAnalyticsCustomDimensions.projectType] =
 				projectData.projectType;
-			customDimensions[
-				GoogleAnalyticsCustomDimensions.isShared
-			] = projectData.isShared.toString();
+			customDimensions[GoogleAnalyticsCustomDimensions.isShared] =
+				projectData.isShared.toString();
 		}
 
 		return customDimensions;
@@ -302,7 +301,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 				{
 					stdio: ["ignore", "ignore", "ignore", "ipc"],
 					detached: true,
-				}
+				},
 			);
 
 			broker.unref();
@@ -353,7 +352,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	private async sendInfoForTracking(
 		trackingInfo: ITrackingInformation,
-		settingName: string
+		settingName: string,
 	): Promise<void> {
 		await this.initAnalyticsStatuses();
 
@@ -366,7 +365,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 	}
 
 	private async sendMessageToBroker(
-		message: ITrackingInformation
+		message: ITrackingInformation,
 	): Promise<void> {
 		let broker: ChildProcess;
 		try {
@@ -383,7 +382,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 				} catch (err) {
 					this.$logger.trace(
 						"Error while trying to send message to broker:",
-						err
+						err,
 					);
 					resolve();
 				}
@@ -413,9 +412,8 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	private async getStatus(settingName: string): Promise<AnalyticsStatus> {
 		if (!_.has(this.analyticsStatuses, settingName)) {
-			const settingValue = await this.$userSettingsService.getSettingValue<
-				string
-			>(settingName);
+			const settingValue =
+				await this.$userSettingsService.getSettingValue<string>(settingName);
 
 			if (settingValue) {
 				const isEnabled = toBoolean(settingValue);
@@ -439,7 +437,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 	private async getHumanReadableStatusMessage(
 		settingName: string,
-		readableSettingName: string
+		readableSettingName: string,
 	): Promise<string> {
 		let status: string = null;
 
@@ -470,7 +468,7 @@ export class AnalyticsService implements IAnalyticsService, IDisposable {
 
 		return this.sendInfoForTracking(
 			data,
-			this.$staticConfig.ERROR_REPORT_SETTING_NAME
+			this.$staticConfig.ERROR_REPORT_SETTING_NAME,
 		);
 	}
 }

@@ -112,7 +112,9 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 `;
 		}
 		if (provision) {
-			plistTemplate += `    <key>provisioningProfiles</key>
+			plistTemplate += ` <key>signingStyle</key>
+    <string>manual</string>
+	   <key>provisioningProfiles</key>
     <dict>
         <key>${projectData.projectIdentifiers.ios}</key>
         <string>${provision}</string>
@@ -120,7 +122,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
     </dict>`;
 		}
 		plistTemplate += `    <key>method</key>
-    <string>app-store</string>
+    <string>app-store-connect</string>
     <key>uploadBitcode</key>
     <false/>
     <key>compileBitcode</key>

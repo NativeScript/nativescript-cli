@@ -1,4 +1,4 @@
-import * as choki from "chokidar";
+import { watch, ChokidarOptions, FSWatcher } from "chokidar";
 import { EventEmitter } from "events";
 import * as _ from "lodash";
 import * as path from "path";
@@ -13,16 +13,19 @@ import { hook } from "../common/helpers";
 import { injector } from "../common/yok";
 import {
 	AnalyticsEventLabelDelimiter,
+	BUNDLER_COMPILATION_COMPLETE,
 	CONFIG_FILE_NAME_JS,
 	CONFIG_FILE_NAME_TS,
 	PACKAGE_JSON_FILE_NAME,
 	PLATFORMS_DIR_NAME,
+	PlatformTypes,
 	PREPARE_READY_EVENT_NAME,
+	SCOPED_ANDROID_RUNTIME_NAME,
+	SCOPED_IOS_RUNTIME_NAME,
 	SupportedPlatform,
 	TrackActionNames,
-	WEBPACK_COMPILATION_COMPLETE,
 } from "../constants";
-import { IWatchIgnoreListService } from "../declarations";
+import { IOptions, IWatchIgnoreListService } from "../declarations";
 import {
 	INodeModulesDependenciesBuilder,
 	IPlatformController,
@@ -36,10 +39,11 @@ import {
 	IProjectDataService,
 	IProjectService,
 } from "../definitions/project";
+import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
-	nativeFilesWatcher: choki.FSWatcher;
+	nativeFilesWatcher: FSWatcher;
 	prepareArguments: {
 		prepareData: IPrepareData;
 		projectData: IProjectData;
@@ -59,6 +63,7 @@ export class PrepareController extends EventEmitter {
 		public $hooksService: IHooksService,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 		private $platformsDataService: IPlatformsDataService,
@@ -66,19 +71,19 @@ export class PrepareController extends EventEmitter {
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
-		private $webpackCompilerService: IWebpackCompilerService,
+		private $bundlerCompilerService: IBundlerCompilerService,
 		private $watchIgnoreListService: IWatchIgnoreListService,
 		private $analyticsService: IAnalyticsService,
 		private $markingModeService: IMarkingModeService,
 		private $projectConfigService: IProjectConfigService,
-		private $projectService: IProjectService
+		private $projectService: IProjectService,
 	) {
 		super();
 	}
 
 	public async prepare(prepareData: IPrepareData): Promise<IPrepareResultData> {
 		const projectData = this.$projectDataService.getProjectData(
-			prepareData.projectDir
+			prepareData.projectDir,
 		);
 		if (this.$mobileHelper.isAndroidPlatform(prepareData.platform)) {
 			await this.$markingModeService.handleMarkingModeFullDeprecation({
@@ -93,7 +98,7 @@ export class PrepareController extends EventEmitter {
 
 	public async stopWatchers(
 		projectDir: string,
-		platform: string
+		platform: string,
 	): Promise<void> {
 		const platformLowerCase = platform.toLowerCase();
 
@@ -116,10 +121,10 @@ export class PrepareController extends EventEmitter {
 			this.watchersData[projectDir][platformLowerCase] &&
 			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess
 		) {
-			await this.$webpackCompilerService.stopWebpackCompiler(platformLowerCase);
-			this.$webpackCompilerService.removeListener(
-				WEBPACK_COMPILATION_COMPLETE,
-				this.webpackCompilerHandler
+			await this.$bundlerCompilerService.stopBundlerCompiler(platformLowerCase);
+			this.$bundlerCompilerService.removeListener(
+				BUNDLER_COMPILATION_COMPLETE,
+				this.webpackCompilerHandler,
 			);
 			this.watchersData[projectDir][
 				platformLowerCase
@@ -131,13 +136,14 @@ export class PrepareController extends EventEmitter {
 	@hook("prepare")
 	private async prepareCore(
 		prepareData: IPrepareData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<IPrepareResultData> {
 		await this.$projectService.ensureAppResourcesExist(projectData.projectDir);
 		await this.$platformController.addPlatformIfNeeded(
 			prepareData,
-			projectData
+			projectData,
 		);
+
 		await this.trackRuntimeVersion(prepareData.platform, projectData);
 
 		this.$logger.info("Preparing project...");
@@ -156,8 +162,8 @@ export class PrepareController extends EventEmitter {
 				projectData.projectDir,
 				this.$projectDataService.getRuntimePackage(
 					projectData.projectDir,
-					prepareData.platform as SupportedPlatform
-				)
+					prepareData.platform as SupportedPlatform,
+				),
 			);
 		}
 
@@ -165,26 +171,26 @@ export class PrepareController extends EventEmitter {
 
 		const platformData = this.$platformsDataService.getPlatformData(
 			prepareData.platform,
-			projectData
+			projectData,
 		);
 
 		if (prepareData.watch) {
 			result = await this.startWatchersWithPrepare(
 				platformData,
 				projectData,
-				prepareData
+				prepareData,
 			);
 		} else {
-			await this.$webpackCompilerService.compileWithoutWatch(
+			await this.$bundlerCompilerService.compileWithoutWatch(
 				platformData,
 				projectData,
-				prepareData
+				prepareData,
 			);
 			const hasNativeChanges =
 				await this.$prepareNativePlatformService.prepareNativePlatform(
 					platformData,
 					projectData,
-					prepareData
+					prepareData,
 				);
 			result = {
 				hasNativeChanges,
@@ -192,16 +198,16 @@ export class PrepareController extends EventEmitter {
 			};
 		}
 
-		await this.writeRuntimePackageJson(projectData, platformData);
+		await this.writeRuntimePackageJson(projectData, platformData, prepareData);
 
 		await this.$projectChangesService.savePrepareInfo(
 			platformData,
 			projectData,
-			prepareData
+			prepareData,
 		);
 
 		this.$logger.info(
-			`Project successfully prepared (${prepareData.platform.toLowerCase()})`
+			`Project successfully prepared (${prepareData.platform.toLowerCase()})`,
 		);
 
 		return result;
@@ -211,7 +217,7 @@ export class PrepareController extends EventEmitter {
 	private async startWatchersWithPrepare(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<IPrepareResultData> {
 		if (!this.watchersData[projectData.projectDir]) {
 			this.watchersData[projectData.projectDir] = {};
@@ -238,12 +244,12 @@ export class PrepareController extends EventEmitter {
 		await this.startJSWatcherWithPrepare(
 			platformData,
 			projectData,
-			prepareData
+			prepareData,
 		); // -> start watcher + initial compilation
 		const hasNativeChanges = await this.startNativeWatcherWithPrepare(
 			platformData,
 			projectData,
-			prepareData
+			prepareData,
 		); // -> start watcher + initial prepare
 		const result = {
 			platform: platformData.platformNameLowerCase,
@@ -251,7 +257,7 @@ export class PrepareController extends EventEmitter {
 		};
 
 		const hasPersistedDataWithNativeChanges = this.persistedData.find(
-			(data) => data.platform === result.platform && data.hasNativeChanges
+			(data) => data.platform === result.platform && data.hasNativeChanges,
 		);
 		if (hasPersistedDataWithNativeChanges) {
 			result.hasNativeChanges = true;
@@ -277,7 +283,7 @@ export class PrepareController extends EventEmitter {
 	private async startJSWatcherWithPrepare(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<void> {
 		if (
 			!this.watchersData[projectData.projectDir][
@@ -298,18 +304,18 @@ export class PrepareController extends EventEmitter {
 			};
 
 			this.webpackCompilerHandler = handler.bind(this);
-			this.$webpackCompilerService.on(
-				WEBPACK_COMPILATION_COMPLETE,
-				this.webpackCompilerHandler
+			this.$bundlerCompilerService.on(
+				BUNDLER_COMPILATION_COMPLETE,
+				this.webpackCompilerHandler,
 			);
 
 			this.watchersData[projectData.projectDir][
 				platformData.platformNameLowerCase
 			].hasWebpackCompilerProcess = true;
-			await this.$webpackCompilerService.compileWithWatch(
+			await this.$bundlerCompilerService.compileWithWatch(
 				platformData,
 				projectData,
-				prepareData
+				prepareData,
 			);
 		}
 	}
@@ -317,7 +323,7 @@ export class PrepareController extends EventEmitter {
 	private async startNativeWatcherWithPrepare(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<boolean> {
 		let newNativeWatchStarted = false;
 		let hasNativeChanges = false;
@@ -325,7 +331,7 @@ export class PrepareController extends EventEmitter {
 		if (prepareData.watchNative) {
 			newNativeWatchStarted = await this.startNativeWatcher(
 				platformData,
-				projectData
+				projectData,
 			);
 		}
 
@@ -334,7 +340,7 @@ export class PrepareController extends EventEmitter {
 				await this.$prepareNativePlatformService.prepareNativePlatform(
 					platformData,
 					projectData,
-					prepareData
+					prepareData,
 				);
 		}
 
@@ -343,7 +349,7 @@ export class PrepareController extends EventEmitter {
 
 	private async startNativeWatcher(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<boolean> {
 		if (
 			this.watchersData[projectData.projectDir][
@@ -355,7 +361,7 @@ export class PrepareController extends EventEmitter {
 
 		const patterns = await this.getWatcherPatterns(platformData, projectData);
 
-		const watcherOptions: choki.WatchOptions = {
+		const watcherOptions: ChokidarOptions = {
 			ignoreInitial: true,
 			cwd: projectData.projectDir,
 			awaitWriteFinish: {
@@ -364,9 +370,9 @@ export class PrepareController extends EventEmitter {
 			},
 			ignored: ["**/.*", ".*"], // hidden files
 		};
-		const watcher = choki
-			.watch(patterns, watcherOptions)
-			.on("all", async (event: string, filePath: string) => {
+		const watcher = watch(patterns, watcherOptions).on(
+			"all",
+			async (event: string, filePath: string) => {
 				if (this.isFileWatcherPaused()) return;
 				filePath = path.join(projectData.projectDir, filePath);
 				if (this.$watchIgnoreListService.isFileInIgnoreList(filePath)) {
@@ -383,7 +389,8 @@ export class PrepareController extends EventEmitter {
 						platform: platformData.platformNameLowerCase,
 					});
 				}
-			});
+			},
+		);
 
 		this.watchersData[projectData.projectDir][
 			platformData.platformNameLowerCase
@@ -395,23 +402,23 @@ export class PrepareController extends EventEmitter {
 	@hook("watchPatterns")
 	public async getWatcherPatterns(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<string[]> {
 		const dependencies = this.$nodeModulesDependenciesBuilder
 			.getProductionDependencies(
 				projectData.projectDir,
-				projectData.ignoredDependencies
+				projectData.ignoredDependencies,
 			)
 			.filter((dep) => dep.nativescript);
 		const pluginsNativeDirectories = dependencies.map((dep) =>
 			path.join(
 				dep.directory,
 				PLATFORMS_DIR_NAME,
-				platformData.platformNameLowerCase
-			)
+				platformData.platformNameLowerCase,
+			),
 		);
 		const pluginsPackageJsonFiles = dependencies.map((dep) =>
-			path.join(dep.directory, PACKAGE_JSON_FILE_NAME)
+			path.join(dep.directory, PACKAGE_JSON_FILE_NAME),
 		);
 
 		const patterns = [
@@ -421,7 +428,7 @@ export class PrepareController extends EventEmitter {
 			path.join(projectData.getAppDirectoryPath(), PACKAGE_JSON_FILE_NAME),
 			path.join(
 				projectData.getAppResourcesRelativeDirectoryPath(),
-				platformData.normalizedPlatformName
+				platformData.normalizedPlatformName,
 			),
 		]
 			.concat(pluginsNativeDirectories)
@@ -430,62 +437,110 @@ export class PrepareController extends EventEmitter {
 		return patterns;
 	}
 
+	/**
+	 * TODO: move this logic to the webpack side of things - WIP and deprecate here with a webpack version check...
+	 */
 	public async writeRuntimePackageJson(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
+		prepareData: IPrepareData = null,
 	) {
 		const configInfo = this.$projectConfigService.detectProjectConfigs(
-			projectData.projectDir
+			projectData.projectDir,
 		);
 		if (configInfo.usingNSConfig) {
 			return;
 		}
 
 		this.$logger.info(
-			"Updating runtime package.json with configuration values..."
+			"Updating runtime package.json with configuration values...",
 		);
-		const nsConfig = this.$projectConfigService.readConfig(
+
+
+		const {hooks, ignoredNativeDependencies, webpackPackageName, webpackConfigPath, appResourcesPath, buildPath, appPath, ...nsConfig} = this.$projectConfigService.readConfig(
 			projectData.projectDir
 		);
+
+		const platform = platformData.platformNameLowerCase;
+		let installedRuntimePackageJSON;
+		let runtimePackageName: string;
+		if (platform === PlatformTypes.ios) {
+			runtimePackageName = projectData.nsConfig.ios?.runtimePackageName || SCOPED_IOS_RUNTIME_NAME;
+		} else if (platform === PlatformTypes.android) {
+			runtimePackageName = projectData.nsConfig.android?.runtimePackageName || SCOPED_ANDROID_RUNTIME_NAME;
+		}
+		// try reading from installed runtime first before reading from the npm registry...
+		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
+			runtimePackageName,
+			{
+				paths: [projectData.projectDir],
+			}
+		);
+
+		if (installedRuntimePackageJSONPath) {
+			installedRuntimePackageJSON = this.$fs.readJson(
+				installedRuntimePackageJSONPath
+			);
+		}
 		const packageData: any = {
 			..._.pick(projectData.packageJsonData, ["name"]),
 			...nsConfig,
 			main: "bundle",
+			...(installedRuntimePackageJSON? {}:{})
 		};
-
 		if (
-			platformData.platformNameLowerCase === "ios" &&
-			packageData.ios &&
-			packageData.ios.discardUncaughtJsExceptions
+			platform === PlatformTypes.ios
 		) {
-			packageData.discardUncaughtJsExceptions =
+			if (installedRuntimePackageJSON) {
+				packageData.ios = packageData.ios || {};
+				packageData.ios.runtime = {
+					version: installedRuntimePackageJSON.version
+				};
+			}
+			if (packageData.ios &&
+				packageData.ios.discardUncaughtJsExceptions) {
+				packageData.discardUncaughtJsExceptions =
 				packageData.ios.discardUncaughtJsExceptions;
+			}
+			delete packageData.android;
 		}
 		if (
-			platformData.platformNameLowerCase === "android" &&
-			packageData.android &&
-			packageData.android.discardUncaughtJsExceptions
+			platform === PlatformTypes.android
 		) {
-			packageData.discardUncaughtJsExceptions =
-				packageData.android.discardUncaughtJsExceptions;
+			if (installedRuntimePackageJSON) {
+				packageData.android = packageData.android || {};
+				packageData.android.runtime = {
+					version: installedRuntimePackageJSON.version,
+					version_info: installedRuntimePackageJSON.version_info,
+					gradle:installedRuntimePackageJSON.gradle
+				};
+			}
+			if (packageData.android &&
+				packageData.android.discardUncaughtJsExceptions) {
+				packageData.discardUncaughtJsExceptions =
+					packageData.android.discardUncaughtJsExceptions;
+			}
+			delete packageData.ios;
 		}
 		let packagePath: string;
-		if (platformData.platformNameLowerCase === "ios") {
+		if (
+			this.$mobileHelper.isApplePlatform(platformData.platformNameLowerCase)
+		) {
 			packagePath = path.join(
 				platformData.projectRoot,
 				projectData.projectName,
 				"app",
-				"package.json"
+				"package.json",
 			);
 		} else {
 			packagePath = path.join(
 				platformData.projectRoot,
-				"app",
+				this.$options.hostProjectModuleName,
 				"src",
-				"main",
+				this.$options.hostProjectPath ? "nativescript" : "main",
 				"assets",
 				"app",
-				"package.json"
+				"package.json",
 			);
 		}
 
@@ -502,8 +557,12 @@ export class PrepareController extends EventEmitter {
 		} catch (error) {
 			this.$logger.trace(
 				"Failed to read emitted package.json. Error is: ",
-				error
+				error,
 			);
+		}
+
+		if (prepareData?.uniqueBundle) {
+			packageData.main = `${packageData.main}.${prepareData.uniqueBundle}`;
 		}
 
 		this.$fs.writeJson(packagePath, packageData);
@@ -520,16 +579,16 @@ export class PrepareController extends EventEmitter {
 	@cache()
 	private async trackRuntimeVersion(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		const { version } = this.$projectDataService.getRuntimePackage(
 			projectData.projectDir,
-			platform as SupportedPlatform
+			platform as SupportedPlatform,
 		);
 
 		if (!version) {
 			this.$logger.trace(
-				`Unable to get runtime version for project directory: ${projectData.projectDir} and platform ${platform}.`
+				`Unable to get runtime version for project directory: ${projectData.projectDir} and platform ${platform}.`,
 			);
 			return;
 		}
@@ -551,7 +610,7 @@ export class PrepareController extends EventEmitter {
 		if (this.pausedFileWatch) {
 			for (const watcher of watchers) {
 				for (const platform in watcher) {
-					await this.$webpackCompilerService.stopWebpackCompiler(platform);
+					await this.$bundlerCompilerService.stopBundlerCompiler(platform);
 					watcher[platform].hasWebpackCompilerProcess = false;
 				}
 			}
@@ -560,10 +619,10 @@ export class PrepareController extends EventEmitter {
 				for (const platform in watcher) {
 					const args = watcher[platform].prepareArguments;
 					watcher[platform].hasWebpackCompilerProcess = true;
-					await this.$webpackCompilerService.compileWithWatch(
+					await this.$bundlerCompilerService.compileWithWatch(
 						args.platformData,
 						args.projectData,
-						args.prepareData
+						args.prepareData,
 					);
 				}
 			}

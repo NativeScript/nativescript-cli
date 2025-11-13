@@ -23,6 +23,7 @@ import {
 } from "../definitions/project-changes";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { IOptions } from "../declarations";
 
 const prepareInfoFileName = ".nsprepareinfo";
 
@@ -62,6 +63,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $options: IOptions,
 		public $hooksService: IHooksService,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
 	) {}
@@ -75,7 +77,6 @@ export class ProjectChangesService implements IProjectChangesService {
 		platformData: IPlatformData,
 		projectData: IProjectData,
 		prepareData: IPrepareData,
-		filesChangedData?: IFilesChangeEventData
 	): Promise<IProjectChangesInfo> {
 		this._changesInfo = new ProjectChangesInfo();
 		const isNewPrepareInfo = await this.ensurePrepareInfo(
@@ -84,10 +85,22 @@ export class ProjectChangesService implements IProjectChangesService {
 			prepareData
 		);
 		if (!isNewPrepareInfo) {
-			const platformResourcesDir = path.join(
+			let platformResourcesDir = path.join(
 				projectData.appResourcesDirectoryPath,
 				platformData.normalizedPlatformName
 			);
+
+			if (
+				!this.$fs.exists(platformResourcesDir) &&
+				platformData.platformNameLowerCase ===
+					this.$devicePlatformsConstants.visionOS.toLowerCase()
+			) {
+				platformResourcesDir = path.join(
+					projectData.appResourcesDirectoryPath,
+					this.$devicePlatformsConstants.iOS
+				);
+			}
+
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(
 				platformResourcesDir,
 				projectData
@@ -224,6 +237,11 @@ export class ProjectChangesService implements IProjectChangesService {
 	}
 
 	public getPrepareInfo(platformData: IPlatformData): IPrepareInfo {
+		if (this.$options.hostProjectPath) {
+			// TODO: always prepare for now until we decide where to keep the .nsprepareinfo file when embedding
+			return null;
+		}
+
 		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);
 		let prepareInfo: IPrepareInfo = null;
 		if (this.$fs.exists(prepareInfoFilePath)) {
@@ -244,6 +262,11 @@ export class ProjectChangesService implements IProjectChangesService {
 	): Promise<void> {
 		if (!this._prepareInfo) {
 			await this.ensurePrepareInfo(platformData, projectData, prepareData);
+		}
+
+		if (this.$options.hostProjectPath) {
+			// TODO: do not save for now until we decide where to keep the .nsprepareinfo file when embedding
+			return null;
 		}
 
 		const prepareInfoFilePath = this.getPrepareInfoFilePath(platformData);

@@ -10,7 +10,8 @@ import {
 } from "./definitions";
 
 export class ApplePortalApplicationService
-	implements IApplePortalApplicationService {
+	implements IApplePortalApplicationService
+{
 	constructor(
 		private $applePortalSessionService: IApplePortalSessionService,
 		private $errors: IErrors,
@@ -36,13 +37,12 @@ export class ApplePortalApplicationService
 	public async getApplicationsByProvider(
 		contentProviderId: number
 	): Promise<IApplePortalApplication> {
-		const webSessionCookie = await this.$applePortalSessionService.createWebSession(
-			contentProviderId
-		);
+		const webSessionCookie =
+			await this.$applePortalSessionService.createWebSession(contentProviderId);
 		const summaries: IApplePortalApplicationSummary[] = [];
 		await this.getApplicationsByUrl(
 			webSessionCookie,
-			"https://appstoreconnect.apple.com/iris/v1/apps?include=appStoreVersions,prices",
+			"https://appstoreconnect.apple.com/iris/v1/apps?include=appStoreVersions",
 			summaries
 		);
 

@@ -1,4 +1,3 @@
-import * as temp from "temp";
 import { assert } from "chai";
 import * as _ from "lodash";
 import { XcconfigService } from "../lib/services/xcconfig-service";
@@ -8,7 +7,6 @@ import { IInjector } from "../lib/common/definitions/yok";
 import { IReadFileOptions } from "../lib/common/declarations";
 
 // start tracking temporary folders/files
-temp.track();
 
 describe("XCConfig Service Tests", () => {
 	const createTestInjector = (): IInjector => {
@@ -62,7 +60,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `// You can add custom settings here
 						// for example you can uncomment the following line to force distribution code signing
@@ -87,7 +85,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `// You can add custom settings here
 						// for example you can uncomment the following line to force distribution code signing
@@ -112,7 +110,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `// DEVELOPMENT_TEAM = YOUR_TEAM_ID;
 						ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;`;
@@ -131,7 +129,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `
 						ASSETCATALOG_COMPILER_APPICON_NAME = ;
@@ -152,7 +150,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME`;
 			};
@@ -169,7 +167,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME=`;
 			};
@@ -186,7 +184,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME= `;
 			};
@@ -203,7 +201,7 @@ describe("XCConfig Service Tests", () => {
 			const fs = getFileSystemMock(injector);
 			fs.readText = (
 				filename: string,
-				options?: IReadFileOptions | string
+				options?: IReadFileOptions | string,
 			): string => {
 				return `ASSETCATALOG_COMPILER_APPICON_NAME= ;`;
 			};

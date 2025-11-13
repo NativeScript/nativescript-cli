@@ -16,12 +16,14 @@ export const SCOPED_TNS_CORE_MODULES = "@nativescript/core";
 export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
 export const WEBPACK_PLUGIN_NAME = "@nativescript/webpack";
+export const RSPACK_PLUGIN_NAME = "@nativescript/rspack";
 export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const UI_MOBILE_BASE_NAME = "@nativescript/ui-mobile-base";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
 export const TNS_IOS_RUNTIME_NAME = "tns-ios";
 export const SCOPED_ANDROID_RUNTIME_NAME = "@nativescript/android";
 export const SCOPED_IOS_RUNTIME_NAME = "@nativescript/ios";
+export const SCOPED_VISIONOS_RUNTIME_NAME = "@nativescript/visionos";
 export const PACKAGE_JSON_FILE_NAME = "package.json";
 export const PACKAGE_LOCK_JSON_FILE_NAME = "package-lock.json";
 export const ANDROID_DEVICE_APP_ROOT_TEMPLATE = `/data/data/%s/files`;
@@ -35,6 +37,7 @@ export const XML_FILE_EXTENSION = ".xml";
 export const PLATFORMS_DIR_NAME = "platforms";
 export const HOOKS_DIR_NAME = "hooks";
 export const WEBPACK_CONFIG_NAME = "webpack.config.js";
+export const RSPACK_CONFIG_NAME = "rspack.config.js";
 export const TSCCONFIG_TNS_JSON_NAME = "tsconfig.tns.json";
 export const KARMA_CONFIG_NAME = "karma.conf.js";
 export const LIB_DIR_NAME = "lib";
@@ -68,7 +71,7 @@ export const APK_EXTENSION_NAME = ".apk";
 export const AAB_EXTENSION_NAME = ".aab";
 export const APKS_EXTENSION_NAME = ".apks";
 export const HASHES_FILE_NAME = ".nshashes";
-export const TNS_NATIVE_SOURCE_GROUP_NAME = "TNSNativeSource";
+export const TNS_NATIVE_SOURCE_GROUP_NAME = "AppResourcesSrc";
 export const NATIVE_SOURCE_FOLDER = "src";
 export const APPLICATION_RESPONSE_TIMEOUT_SECONDS = 60;
 export const NATIVE_EXTENSION_FOLDER = "extensions";
@@ -144,7 +147,17 @@ export const RESERVED_TEMPLATE_NAMES: IStringDictionary = {
 	angular: "@nativescript/template-hello-world-ng",
 	react: "@nativescript/template-blank-react",
 	reactjs: "@nativescript/template-blank-react",
+	solid: "@nativescript/template-blank-solid",
+	solidjs: "@nativescript/template-blank-solid",
+	solidts: "@nativescript/template-blank-solid-ts",
 	svelte: "@nativescript/template-blank-svelte",
+	// vision templates
+	vision: "@nativescript/template-hello-world-ts-vision",
+	"vision-vue": "@nativescript/template-blank-vue-vision",
+	"vision-ng": "@nativescript/template-hello-world-ng-vision",
+	"vision-react": "@nativescript/template-blank-react-vision",
+	"vision-solid": "@nativescript/template-blank-solid-vision",
+	"vision-svelte": "@nativescript/template-blank-svelte-vision",
 };
 
 export const ANALYTICS_LOCAL_TEMPLATE_PREFIX = "localTemplate_";
@@ -161,7 +174,8 @@ export class ITMSConstants {
 }
 
 class ItunesConnectApplicationTypesClass
-	implements IiTunesConnectApplicationType {
+	implements IiTunesConnectApplicationType
+{
 	public iOS = "iOS App";
 	public Mac = "Mac OS X App";
 }
@@ -169,16 +183,19 @@ class ItunesConnectApplicationTypesClass
 export const iOSAppResourcesFolderName = "iOS";
 export const androidAppResourcesFolderName = "Android";
 
-export const ItunesConnectApplicationTypes = new ItunesConnectApplicationTypesClass();
+export const ItunesConnectApplicationTypes =
+	new ItunesConnectApplicationTypesClass();
 export const VUE_NAME = "vue";
 export const ANGULAR_NAME = "angular";
 export const JAVASCRIPT_NAME = "javascript";
 export const TYPESCRIPT_NAME = "typescript";
 export const REACT_NAME = "react";
+export const SOLID_NAME = "solid";
 export const SVELTE_NAME = "svelte";
 export const NgFlavorName = "Angular";
 export const VueFlavorName = "Vue.js";
 export const ReactFlavorName = "React";
+export const SolidFlavorName = "Solid";
 export const SvelteFlavorName = "Svelte";
 export const TsFlavorName = "Plain TypeScript";
 export const JsFlavorName = "Plain JavaScript";
@@ -188,6 +205,7 @@ export class ProjectTypes {
 	public static TsFlavorName = "Pure TypeScript";
 	public static JsFlavorName = "Pure JavaScript";
 	public static ReactFlavorName = "React";
+	public static SolidFlavorName = "Solid";
 	public static SvelteFlavorName = "Svelte";
 }
 export const BUILD_OUTPUT_EVENT_NAME = "buildOutput";
@@ -207,7 +225,7 @@ export const CACACHE_DIRECTORY_NAME = "_cacache";
 export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";
 export const INITIAL_SYNC_EVENT_NAME = "initialSyncEvent";
 export const PREPARE_READY_EVENT_NAME = "prepareReadyEvent";
-export const WEBPACK_COMPILATION_COMPLETE = "webpackCompilationComplete";
+export const BUNDLER_COMPILATION_COMPLETE = "bundlerCompilationComplete";
 
 export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR =
@@ -330,9 +348,13 @@ export const PLUGINS_BUILD_DATA_FILENAME = ".ns-plugins-build-data.json";
 export const enum PlatformTypes {
 	ios = "ios",
 	android = "android",
+	visionos = "visionos",
 }
 
-export type SupportedPlatform = PlatformTypes.ios | PlatformTypes.android;
+export type SupportedPlatform =
+	| PlatformTypes.ios
+	| PlatformTypes.android
+	| PlatformTypes.visionos;
 
 export const PODFILE_NAME = "Podfile";
 
@@ -394,7 +416,7 @@ const pathToLoggerAppendersDir = join(
 	__dirname,
 	"common",
 	"logger",
-	"appenders"
+	"appenders",
 );
 export const LoggerAppenders = {
 	emitAppender: join(pathToLoggerAppendersDir, "emit-appender"),
@@ -479,4 +501,5 @@ export enum PackageManagers {
 	pnpm = "pnpm",
 	yarn = "yarn",
 	yarn2 = "yarn2",
+	bun = "bun",
 }

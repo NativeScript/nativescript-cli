@@ -24,7 +24,10 @@ import { color } from "../../color";
 import { memoize } from "../decorators";
 
 class Hook implements IHook {
-	constructor(public name: string, public fullPath: string) {}
+	constructor(
+		public name: string,
+		public fullPath: string,
+	) {}
 }
 
 export class HooksService implements IHooksService {
@@ -45,7 +48,7 @@ export class HooksService implements IHooksService {
 		private $projectHelper: IProjectHelper,
 		private $options: IOptions,
 		private $performanceService: IPerformanceService,
-		private $projectConfigService: IProjectConfigService
+		private $projectConfigService: IProjectConfigService,
 	) {}
 
 	public get hookArgsName(): string {
@@ -69,12 +72,12 @@ export class HooksService implements IHooksService {
 
 		if (projectDir) {
 			this.hooksDirectories.push(
-				path.join(projectDir, HooksService.HOOKS_DIRECTORY_NAME)
+				path.join(projectDir, HooksService.HOOKS_DIRECTORY_NAME),
 			);
 		}
 
 		this.$logger.trace(
-			"Hooks directories: " + util.inspect(this.hooksDirectories)
+			"Hooks directories: " + util.inspect(this.hooksDirectories),
 		);
 
 		const customHooks = this.$projectConfigService.getValue("hooks", []);
@@ -91,7 +94,7 @@ export class HooksService implements IHooksService {
 
 	public executeBeforeHooks(
 		commandName: string,
-		hookArguments?: IDictionary<any>
+		hookArguments?: IDictionary<any>,
 	): Promise<void> {
 		const beforeHookName = `before-${HooksService.formatHookName(commandName)}`;
 		const traceMessage = `BeforeHookName for command ${commandName} is ${beforeHookName}`;
@@ -100,7 +103,7 @@ export class HooksService implements IHooksService {
 
 	public executeAfterHooks(
 		commandName: string,
-		hookArguments?: IDictionary<any>
+		hookArguments?: IDictionary<any>,
 	): Promise<void> {
 		const afterHookName = `after-${HooksService.formatHookName(commandName)}`;
 		const traceMessage = `AfterHookName for command ${commandName} is ${afterHookName}`;
@@ -110,7 +113,7 @@ export class HooksService implements IHooksService {
 	private async executeHooks(
 		hookName: string,
 		traceMessage: string,
-		hookArguments?: IDictionary<any>
+		hookArguments?: IDictionary<any>,
 	): Promise<any> {
 		if (this.$config.DISABLE_HOOKS || !this.$options.hooks) {
 			return;
@@ -135,8 +138,8 @@ export class HooksService implements IHooksService {
 					await this.executeHooksInDirectory(
 						hooksDirectory,
 						hookName,
-						hookArguments
-					)
+						hookArguments,
+					),
 				);
 			}
 
@@ -148,23 +151,28 @@ export class HooksService implements IHooksService {
 						this.$projectHelper.projectDir,
 						hookName,
 						hook,
-						hookArguments
-					)
+						hookArguments,
+					),
 				);
 			}
 		} catch (err) {
 			this.$logger.trace(`Failed during hook execution ${hookName}.`);
-			this.$errors.fail(err.message || err);
+			this.$errors.fail(err.stack || err.message || err);
 		}
 
 		return _.flatten(results);
+	}
+
+	private isESModule(hook: IHook): boolean {
+		const ext = path.extname(hook.fullPath).toLowerCase();
+		return ext === ".mjs";
 	}
 
 	private async executeHook(
 		directoryPath: string,
 		hookName: string,
 		hook: IHook,
-		hookArguments?: IDictionary<any>
+		hookArguments?: IDictionary<any>,
 	): Promise<any> {
 		hookArguments = hookArguments || {};
 
@@ -173,15 +181,22 @@ export class HooksService implements IHooksService {
 		const relativePath = path.relative(directoryPath, hook.fullPath);
 		const trackId = relativePath.replace(
 			new RegExp("\\" + path.sep, "g"),
-			AnalyticsEventLabelDelimiter
+			AnalyticsEventLabelDelimiter,
 		);
+		const isESM = this.isESModule(hook);
 		let command = this.getSheBangInterpreter(hook);
 		let inProc = false;
 		if (!command) {
 			command = hook.fullPath;
-			if (path.extname(hook.fullPath).toLowerCase() === ".js") {
+			if (
+				[".mjs", ".cjs", ".js"].includes(
+					path.extname(hook.fullPath).toLowerCase(),
+				)
+			) {
 				command = process.argv[0];
-				inProc = this.shouldExecuteInProcess(this.$fs.readText(hook.fullPath));
+				inProc = isESM
+					? true
+					: this.shouldExecuteInProcess(this.$fs.readText(hook.fullPath));
 			}
 		}
 
@@ -190,15 +205,21 @@ export class HooksService implements IHooksService {
 			this.$logger.trace(
 				"Executing %s hook at location %s in-process",
 				hookName,
-				hook.fullPath
+				hook.fullPath,
 			);
-			const hookEntryPoint = require(hook.fullPath);
+			let hookEntryPoint;
+			if (isESM) {
+				const { default: hookFn } = await import(hook.fullPath);
+				hookEntryPoint = hookFn;
+			} else {
+				hookEntryPoint = require(hook.fullPath);
+			}
 
 			this.$logger.trace(`Validating ${hookName} arguments.`);
 
 			const invalidArguments = this.validateHookArguments(
 				hookEntryPoint,
-				hook.fullPath
+				hook.fullPath,
 			);
 
 			if (invalidArguments.length) {
@@ -206,8 +227,8 @@ export class HooksService implements IHooksService {
 					`${
 						hook.fullPath
 					} will NOT be executed because it has invalid arguments - ${color.grey(
-						invalidArguments.join(", ")
-					)}.`
+						invalidArguments.join(", "),
+					)}.`,
 				);
 				return;
 			}
@@ -220,14 +241,13 @@ export class HooksService implements IHooksService {
 			const projectDataHookArg =
 				hookArguments["hookArgs"] && hookArguments["hookArgs"]["projectData"];
 			if (projectDataHookArg) {
-				hookArguments["projectData"] = hookArguments[
-					"$projectData"
-				] = projectDataHookArg;
+				hookArguments["projectData"] = hookArguments["$projectData"] =
+					projectDataHookArg;
 			}
 
 			const maybePromise = this.$injector.resolve(
 				hookEntryPoint,
-				hookArguments
+				hookArguments,
 			);
 			if (maybePromise) {
 				this.$logger.trace("Hook promises to signal completion");
@@ -255,7 +275,7 @@ export class HooksService implements IHooksService {
 				"Executing %s hook at location %s with environment ",
 				hookName,
 				hook.fullPath,
-				environment
+				environment,
 			);
 
 			const output = await this.$childProcess.spawnFromEvent(
@@ -263,7 +283,7 @@ export class HooksService implements IHooksService {
 				[hook.fullPath],
 				"close",
 				environment,
-				{ throwError: false }
+				{ throwError: false },
 			);
 			result = output;
 
@@ -275,7 +295,7 @@ export class HooksService implements IHooksService {
 				"Finished executing %s hook at location %s with environment ",
 				hookName,
 				hook.fullPath,
-				environment
+				environment,
 			);
 		}
 		const endTime = this.$performanceService.now();
@@ -289,7 +309,7 @@ export class HooksService implements IHooksService {
 	private async executeHooksInDirectory(
 		directoryPath: string,
 		hookName: string,
-		hookArguments?: IDictionary<any>
+		hookArguments?: IDictionary<any>,
 	): Promise<any[]> {
 		hookArguments = hookArguments || {};
 		const results: any[] = [];
@@ -301,7 +321,7 @@ export class HooksService implements IHooksService {
 				directoryPath,
 				hookName,
 				hook,
-				hookArguments
+				hookArguments,
 			);
 
 			if (result) {
@@ -316,14 +336,14 @@ export class HooksService implements IHooksService {
 		const hooks: IHook[] = [];
 		const customHooks: INsConfigHooks[] = this.$projectConfigService.getValue(
 			"hooks",
-			[]
+			[],
 		);
 
 		for (const cHook of customHooks) {
 			if (cHook.type === hookName) {
 				const fullPath = path.join(
 					this.$projectHelper.projectDir,
-					cHook.script
+					cHook.script,
 				);
 				const isFile = this.$fs.getFsStats(fullPath).isFile();
 
@@ -332,8 +352,8 @@ export class HooksService implements IHooksService {
 					hooks.push(
 						new Hook(
 							this.getBaseFilename(fileNameParts[fileNameParts.length - 1]),
-							fullPath
-						)
+							fullPath,
+						),
 					);
 				}
 			}
@@ -346,10 +366,10 @@ export class HooksService implements IHooksService {
 		const allBaseHooks = this.getHooksInDirectory(directoryPath);
 		const baseHooks = _.filter(
 			allBaseHooks,
-			(hook) => hook.name.toLowerCase() === hookName.toLowerCase()
+			(hook) => hook.name.toLowerCase() === hookName.toLowerCase(),
 		);
 		const moreHooks = this.getHooksInDirectory(
-			path.join(directoryPath, hookName)
+			path.join(directoryPath, hookName),
 		);
 		return baseHooks.concat(moreHooks);
 	}
@@ -385,13 +405,11 @@ export class HooksService implements IHooksService {
 		const clientName = this.$staticConfig.CLIENT_NAME.toUpperCase();
 
 		const environment: IStringDictionary = {};
-		environment[util.format("%s-COMMANDLINE", clientName)] = process.argv.join(
-			" "
-		);
+		environment[util.format("%s-COMMANDLINE", clientName)] =
+			process.argv.join(" ");
 		environment[util.format("%s-HOOK_FULL_PATH", clientName)] = hookFullPath;
-		environment[
-			util.format("%s-VERSION", clientName)
-		] = this.$staticConfig.version;
+		environment[util.format("%s-VERSION", clientName)] =
+			this.$staticConfig.version;
 
 		return {
 			cwd: this.$projectHelper.projectDir,
@@ -463,7 +481,7 @@ export class HooksService implements IHooksService {
 
 	private validateHookArguments(
 		hookConstructor: any,
-		hookFullPath: string
+		hookFullPath: string,
 	): string[] {
 		const invalidArguments: string[] = [];
 
@@ -477,7 +495,7 @@ export class HooksService implements IHooksService {
 				}
 			} catch (err) {
 				this.$logger.trace(
-					`Cannot resolve ${argument} of hook ${hookFullPath}, reason: ${err}`
+					`Cannot resolve ${argument} of hook ${hookFullPath}, reason: ${err}`,
 				);
 				invalidArguments.push(argument);
 			}

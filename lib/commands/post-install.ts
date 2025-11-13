@@ -18,7 +18,7 @@ export class PostInstallCliCommand implements ICommand {
 		private $settingsService: ISettingsService,
 		private $analyticsService: IAnalyticsService,
 		private $logger: ILogger,
-		private $hostInfo: IHostInfo
+		private $hostInfo: IHostInfo,
 	) {}
 
 	public disableAnalytics = true;
@@ -35,7 +35,7 @@ export class PostInstallCliCommand implements ICommand {
 				// TODO: Check if this is the correct place, probably we should set this at the end of the command.
 				await this.$fs.setCurrentUserAsOwner(
 					this.$settingsService.getProfileDir(),
-					process.env.SUDO_USER
+					process.env.SUDO_USER,
 				);
 			}
 		}
@@ -55,15 +55,18 @@ export class PostInstallCliCommand implements ICommand {
 	public async postCommandAction(args: string[]): Promise<void> {
 		this.$logger.info("");
 		this.$logger.info(
-			color.green.bold("You have successfully installed the NativeScript CLI!")
+			color.styleText(
+				["green", "bold"],
+				"You have successfully installed the NativeScript CLI!",
+			),
 		);
 		this.$logger.info("");
 		this.$logger.info("Your next step is to create a new project:");
-		this.$logger.info(color.green.bold("ns create"));
+		this.$logger.info(color.styleText(["green", "bold"], "ns create"));
 
 		this.$logger.info("");
 		this.$logger.printMarkdown(
-			"If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Discord channel: `https://nativescript.org/discord`"
+			"If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Discord channel: `https://nativescript.org/discord`",
 		);
 	}
 }

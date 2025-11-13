@@ -101,9 +101,40 @@ interface INsConfigPlaform {
 	id?: string;
 }
 
+interface IOSSPMPackageBase {
+	name: string;
+	libs: string[];
+	/**
+	 * Optional: If you have more targets (like widgets for example)
+	 * you can list their names here to include the Swift Package with them
+	 */
+	targets?: string[];
+}
+
+export interface IOSRemoteSPMPackage extends IOSSPMPackageBase {
+	repositoryURL: string;
+	version: string;
+}
+
+export interface IOSLocalSPMPackage extends IOSSPMPackageBase {
+	path: string;
+}
+
+export type IOSSPMPackage = IOSRemoteSPMPackage | IOSLocalSPMPackage;
+export type BundlerType = "webpack" | "rspack" | "vite";
+
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
+	runtimePackageName?: string
+	cocoapodUseBundleExec?: boolean
+	/**
+	 * Swift Package Manager
+	 * List packages to be included in the iOS build.
+	 */
+	SPMPackages?: Array<IOSSPMPackage>;
 }
+
+interface INSConfigVisionOS extends INsConfigIOS {}
 
 interface INsConfigAndroid extends INsConfigPlaform {
 	v8Flags?: string;
@@ -141,6 +172,12 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableMultithreadedJavascript?: boolean;
 
 	gradleVersion?: string;
+
+	gradleArgs?: string[];
+
+	plugins?:{ [k:string]: { aarSuffix?: string } }
+
+	runtimePackageName?: string
 }
 
 interface INsConfigHooks {
@@ -156,11 +193,17 @@ interface INsConfig {
 	buildPath?: string;
 	shared?: boolean;
 	overridePods?: string;
+	webpackPackageName?: string;
 	webpackConfigPath?: string;
+	bundlerConfigPath?: string;
+	bundler?: BundlerType;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
+	visionos?: INSConfigVisionOS;
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
+	projectName?: string;
+	corePackageName?: string;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -188,13 +231,29 @@ interface IProjectData extends ICreateProjectData {
 	 * Value is true when project has nativescript.config and it has `shared: true` in it.
 	 */
 	isShared: boolean;
-
 	/**
+	 * Specifies the bundler used to build the application.
+	 *
+	 * - `"webpack"`: Uses Webpack for traditional bundling.
+	 * - `"rspack"`: Uses Rspack for fast bundling.
+	 * - `"vite"`: Uses Vite for fast bundling.
+	 *
+	 * @default "webpack"
+	 */
+	bundler: BundlerType;
+	/**
+	 * @deprecated Use bundlerConfigPath
 	 * Defines the path to the configuration file passed to webpack process.
 	 * By default this is the webpack.config.js at the root of the application.
 	 * The value can be changed by setting `webpackConfigPath` in nativescript.config.
 	 */
 	webpackConfigPath: string;
+	/**
+	 * Defines the path to the bundler configuration file passed to the compiler.
+	 * The value can be changed by setting `bundlerConfigPath` in nativescript.config.
+	 */
+	bundlerConfigPath: string;
+	projectName: string;
 
 	/**
 	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
@@ -204,7 +263,7 @@ interface IProjectData extends ICreateProjectData {
 	initializeProjectData(projectDir?: string): void;
 	initializeProjectDataFromContent(
 		packageJsonContent: string,
-		projectDir?: string
+		projectDir?: string,
 	): void;
 	getAppDirectoryPath(projectDir?: string): string;
 	getAppDirectoryRelativePath(): string;
@@ -295,7 +354,7 @@ interface IProjectDataService {
 	 */
 	getRuntimePackage(
 		projectDir: string,
-		platform: SupportedPlatform
+		platform: SupportedPlatform,
 	): IBasePluginData;
 
 	/**
@@ -315,7 +374,7 @@ interface IProjectCleanupService {
 	 */
 	clean(
 		pathsToClean: string[],
-		options?: IProjectCleanupOptions
+		options?: IProjectCleanupOptions,
 	): Promise<IProjectCleanupResult>;
 
 	/**
@@ -324,7 +383,7 @@ interface IProjectCleanupService {
 	 */
 	cleanPath(
 		pathToClean: string,
-		options?: IProjectCleanupOptions
+		options?: IProjectCleanupOptions,
 	): Promise<IProjectCleanupResult>;
 }
 
@@ -426,7 +485,7 @@ interface IProjectConfigService {
 
 	writeLegacyNSConfigIfNeeded(
 		projectDir: string,
-		runtimePackage: IBasePluginData
+		runtimePackage: IBasePluginData,
 	): Promise<void>;
 }
 
@@ -529,14 +588,14 @@ interface IProjectTemplatesService {
 	 */
 	prepareTemplate(
 		templateName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<ITemplateData>;
 }
 
 interface IPlatformProjectServiceBase {
 	getPluginPlatformsFolderPath(
 		pluginData: IPluginData,
-		platform: string
+		platform: string,
 	): string;
 	getFrameworkVersion(projectData: IProjectData): string;
 }
@@ -562,6 +621,8 @@ interface IBuildConfig
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;
+	platform?: string;
+	_device?: Mobile.IDevice;
 }
 
 /**
@@ -596,7 +657,7 @@ interface ILocalBuildService {
 	 */
 	build(
 		platform: string,
-		platformBuildOptions: IPlatformBuildData
+		platformBuildOptions: IPlatformBuildData,
 	): Promise<string>;
 	/**
 	 * Removes build artifacts specific to the platform
@@ -616,7 +677,7 @@ interface ITestExecutionService {
 	startKarmaServer(
 		platform: string,
 		liveSyncInfo: ILiveSyncInfo,
-		deviceDescriptors: ILiveSyncDeviceDescriptor[]
+		deviceDescriptors: ILiveSyncDeviceDescriptor[],
 	): Promise<void>;
 	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
@@ -650,17 +711,17 @@ interface ICocoaPodsService {
 	 */
 	applyPodfileFromAppResources(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	applyPodfileArchExclusions(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	applyPodfileFromExtensions(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	/**
@@ -675,7 +736,7 @@ interface ICocoaPodsService {
 		moduleName: string,
 		podfilePath: string,
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void>;
 
 	/**
@@ -697,7 +758,7 @@ interface ICocoaPodsService {
 		moduleName: string,
 		podfilePath: string,
 		projectData: IProjectData,
-		nativeProjectPath: string
+		nativeProjectPath: string,
 	): void;
 
 	/**
@@ -715,7 +776,7 @@ interface ICocoaPodsService {
 	 */
 	executePodInstall(
 		projectRoot: string,
-		xcodeProjPath: string
+		xcodeProjPath: string,
 	): Promise<ISpawnResult>;
 
 	/**
@@ -727,7 +788,7 @@ interface ICocoaPodsService {
 	mergePodXcconfigFile(
 		projectData: IProjectData,
 		platformData: IPlatformData,
-		opts: IRelease
+		opts: IRelease,
 	): Promise<void>;
 }
 
@@ -735,16 +796,16 @@ interface ICocoaPodsPlatformManager {
 	addPlatformSection(
 		projectData: IProjectData,
 		podfilePlatformData: IPodfilePlatformData,
-		projectPodfileContent: string
+		projectPodfileContent: string,
 	): string;
 	removePlatformSection(
 		moduleName: string,
 		projectPodFileContent: string,
-		podfilePath: string
+		podfilePath: string,
 	): string;
 	replacePlatformRow(
 		podfileContent: string,
-		podfilePath: string
+		podfilePath: string,
 	): { replacedContent: string; podfilePlatformData: IPodfilePlatformData };
 }
 
@@ -769,24 +830,24 @@ interface IIOSNativeTargetService {
 		targetType: string,
 		project: IXcode.project,
 		platformData: IPlatformData,
-		parentTarget?: string
+		parentTarget?: string,
 	): IXcode.target;
 	prepareSigning(
 		targetUuids: string[],
 		projectData: IProjectData,
-		projectPath: string
+		projectPath: string,
 	): void;
 	getTargetDirectories(folderPath: string): string[];
 	setXcodeTargetBuildConfigurationProperties(
 		properties: IXcodeTargetBuildConfigurationProperty[],
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): void;
 	setConfigurationsFromJsonFile(
 		jsonPath: string,
 		targetUuid: string,
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): void;
 }
 
@@ -795,7 +856,7 @@ interface IIOSNativeTargetService {
  */
 interface IIOSExtensionsService {
 	addExtensionsFromPath(
-		options: IAddExtensionsFromPathOptions
+		options: IAddExtensionsFromPathOptions,
 	): Promise<boolean>;
 	removeExtensions(options: IRemoveExtensionsOptions): void;
 }

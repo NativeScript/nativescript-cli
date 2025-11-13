@@ -38,9 +38,9 @@ version of the {N} CLI install a previous version of the runtime package - 'tns 
 """)
         }
 
-        project.ext.extractedDependenciesDir = "${project.buildDir}/exploded-dependencies"
-        project.ext.cleanupAllJarsTimestamp = "${project.buildDir}/cleanupAllJars.timestamp"
-        project.ext.extractAllJarsTimestamp = "${project.buildDir}/extractAllJars.timestamp"
+        project.ext.extractedDependenciesDir = "${project.layout.buildDirectory.dir("exploded-dependencies").get().asFile}"
+        project.ext.cleanupAllJarsTimestamp = "${project.layout.buildDirectory.file("cleanupAllJars.timestamp").get().asFile}"
+        project.ext.extractAllJarsTimestamp = "${project.layout.buildDirectory.file("extractAllJars.timestamp").get().asFile}"
 
 
         project.ext.nativescriptDependencies = new JsonSlurper().parseText(dependenciesJson.text)
@@ -144,7 +144,7 @@ version of the {N} CLI install a previous version of the runtime package - 'tns 
     dependencies {
         classpath "com.android.tools.build:gradle:$androidBuildToolsVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
-        classpath "org.codehaus.groovy:groovy-all:3.0.8"
+        classpath "org.apache.groovy:groovy-all:4.0.21"
     }
 }
 
@@ -165,6 +165,6 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+task clean (type:Delete) {
+    delete rootProject.layout.buildDirectory.get().asFile
 }

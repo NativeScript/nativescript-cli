@@ -22,7 +22,8 @@ import { IOptions } from "../declarations";
 export class A implements IKeyCommand {
 	key: IValidKeyName = "a";
 	platform: IKeyCommandPlatform = "Android";
-	description: string = "Run android app";
+	description: string = "Run Android app";
+	group = "Android";
 
 	constructor(private $startService: IStartService) {}
 
@@ -38,7 +39,8 @@ export class A implements IKeyCommand {
 export class ShiftA implements IKeyCommand {
 	key: IValidKeyName = "A";
 	platform: IKeyCommandPlatform = "Android";
-	description: string = "Open android project in Android Studio";
+	description: string = "Open project in Android Studio";
+	group = "Android";
 	willBlockKeyCommandExecution: boolean = true;
 	protected isInteractive: boolean = true;
 	constructor(
@@ -47,6 +49,34 @@ export class ShiftA implements IKeyCommand {
 		private $childProcess: IChildProcess,
 		private $projectData: IProjectData
 	) {}
+
+	getAndroidStudioPath(): string | null {
+		const os = currentPlatform();
+
+		if (os === "darwin") {
+			const possibleStudioPaths = [
+				"/Applications/Android Studio.app",
+				`${process.env.HOME}/Applications/Android Studio.app`,
+			];
+
+			return possibleStudioPaths.find((p) => fs.existsSync(p)) || null;
+		} else if (os === "win32") {
+			const studioPath = path.join(
+				"C:",
+				"Program Files",
+				"Android",
+				"Android Studio",
+				"bin",
+				"studio64.exe"
+			);
+			return fs.existsSync(studioPath) ? studioPath : null;
+		} else if (os === "linux") {
+			const studioPath = "/usr/local/android-studio/bin/studio.sh";
+			return fs.existsSync(studioPath) ? studioPath : null;
+		}
+
+		return null;
+	}
 
 	async execute(): Promise<void> {
 		this.$liveSyncCommandHelper.validatePlatform(this.platform);
@@ -63,53 +93,32 @@ export class ShiftA implements IKeyCommand {
 			}
 		}
 
-		const os = currentPlatform();
+		let studioPath = null;
 
-		if (os === "darwin") {
-			const possibleStudioPaths = [
-				"/Applications/Android Studio.app",
-				`${process.env.HOME}/Applications/Android Studio.app`,
-			];
+		studioPath = process.env.NATIVESCRIPT_ANDROID_STUDIO_PATH;
 
-			const studioPath = possibleStudioPaths.find((p) => {
-				this.$logger.trace(`Checking for Android Studio at ${p}`);
-				return fs.existsSync(p);
-			});
+		if (!studioPath) {
+			studioPath = this.getAndroidStudioPath();
 
 			if (!studioPath) {
 				this.$logger.error(
-					"Android Studio is not installed, or not in a standard location."
+					"Android Studio is not installed, or is not in a standard location. Use NATIVESCRIPT_ANDROID_STUDIO_PATH."
 				);
 				return;
 			}
+		}
+
+		const os = currentPlatform();
+		if (os === "darwin") {
 			this.$childProcess.exec(`open -a "${studioPath}" ${androidDir}`);
 		} else if (os === "win32") {
-			const studioPath = path.join(
-				"C:",
-				"Program Files",
-				"Android",
-				"Android Studio",
-				"bin",
-				"studio64.exe"
-			);
-			if (!fs.existsSync(studioPath)) {
-				this.$logger.error("Android Studio is not installed");
-				return;
-			}
-
 			const child = this.$childProcess.spawn(studioPath, [androidDir], {
 				detached: true,
 				stdio: "ignore",
 			});
 			child.unref();
 		} else if (os === "linux") {
-			if (!fs.existsSync(`/usr/local/android-studio/bin/studio.sh`)) {
-				this.$logger.error("Android Studio is not installed");
-				return;
-			}
-			this.$childProcess.exec(
-				`/usr/local/android-studio/bin/studio.sh ${androidDir}`
-			);
+			this.$childProcess.exec(`${studioPath} ${androidDir}`);
 		}
 	}
 }
@@ -134,6 +143,7 @@ export class I implements IKeyCommand {
 	key: IValidKeyName = "i";
 	platform: IKeyCommandPlatform = "iOS";
 	description: string = "Run iOS app";
+	group = "iOS";
 
 	constructor(private $startService: IStartService) {}
 
@@ -149,7 +159,8 @@ export class I implements IKeyCommand {
 export class ShiftI implements IKeyCommand {
 	key: IValidKeyName = "I";
 	platform: IKeyCommandPlatform = "iOS";
-	description: string = "Open iOS project in Xcode";
+	description: string = "Open project in Xcode";
+	group = "iOS";
 	willBlockKeyCommandExecution: boolean = true;
 	protected isInteractive: boolean = true;
 
@@ -228,10 +239,118 @@ export class OpenIOSCommand extends ShiftI {
 	}
 }
 
+export class V implements IKeyCommand {
+	key: IValidKeyName = "v";
+	platform: IKeyCommandPlatform = "visionOS";
+	description: string = "Run visionOS app";
+	group = "visionOS";
+
+	constructor(private $startService: IStartService) {}
+
+	async execute(): Promise<void> {
+		this.$startService.runVisionOS();
+	}
+
+	canExecute(processType: SupportedProcessType) {
+		return processType === "start";
+	}
+}
+
+export class ShiftV implements IKeyCommand {
+	key: IValidKeyName = "V";
+	platform: IKeyCommandPlatform = "visionOS";
+	description: string = "Open project in Xcode";
+	group = "visionOS";
+	willBlockKeyCommandExecution: boolean = true;
+	protected isInteractive: boolean = true;
+
+	constructor(
+		private $iOSProjectService: IOSProjectService,
+		private $logger: ILogger,
+		private $childProcess: IChildProcess,
+		private $projectData: IProjectData,
+		private $xcodeSelectService: IXcodeSelectService,
+		private $xcodebuildArgsService: IXcodebuildArgsService,
+		protected $options: IOptions
+	) {}
+
+	async execute(): Promise<void> {
+		this.$options.platformOverride = "visionOS";
+		const os = currentPlatform();
+		if (os === "darwin") {
+			this.$projectData.initializeProjectData();
+			const visionOSDir = path.resolve(
+				this.$projectData.platformsDir,
+				"visionos"
+			);
+
+			if (!fs.existsSync(visionOSDir)) {
+				const prepareCommand = injector.resolveCommand(
+					"prepare"
+				) as PrepareCommand;
+
+				await prepareCommand.execute(["visionos"]);
+				if (this.isInteractive) {
+					process.stdin.resume();
+				}
+			}
+			const platformData = this.$iOSProjectService.getPlatformData(
+				this.$projectData
+			);
+			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
+				platformData,
+				this.$projectData
+			)[1];
+
+			if (fs.existsSync(xcprojectFile)) {
+				this.$xcodeSelectService
+					.getDeveloperDirectoryPath()
+					.then(() => this.$childProcess.exec(`open ${xcprojectFile}`, {}))
+					.catch((e) => {
+						this.$logger.error(e.message);
+					});
+			} else {
+				this.$logger.error(`Unable to open project file: ${xcprojectFile}`);
+			}
+		} else {
+			this.$logger.error("Opening a project in XCode requires macOS.");
+		}
+		this.$options.platformOverride = null;
+	}
+}
+
+export class OpenVisionOSCommand extends ShiftV {
+	constructor(
+		$iOSProjectService: IOSProjectService,
+		$logger: ILogger,
+		$childProcess: IChildProcess,
+		$projectData: IProjectData,
+		$xcodeSelectService: IXcodeSelectService,
+		$xcodebuildArgsService: IXcodebuildArgsService,
+		protected $options: IOptions
+	) {
+		super(
+			$iOSProjectService,
+			$logger,
+			$childProcess,
+			$projectData,
+			$xcodeSelectService,
+			$xcodebuildArgsService,
+			$options
+		);
+		this.isInteractive = false;
+	}
+	async execute(): Promise<void> {
+		this.$options.watch = false;
+		super.execute();
+	}
+}
+
 export class R implements IKeyCommand {
 	key: IValidKeyName = "r";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Rebuild native app if needed and restart";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
@@ -255,6 +374,7 @@ export class ShiftR implements IKeyCommand {
 	key: IValidKeyName = "R";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Force rebuild native app and restart";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
@@ -279,6 +399,7 @@ export class CtrlC implements IKeyCommand {
 	key: IValidKeyName = SpecialKeys.CtrlC;
 	platform: IKeyCommandPlatform = "all";
 	description: string;
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = false;
 
 	async execute(): Promise<void> {
@@ -290,6 +411,7 @@ export class W implements IKeyCommand {
 	key: IValidKeyName = "w";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Toggle file watcher";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $prepareController: IPrepareController) {}
@@ -310,6 +432,7 @@ export class C implements IKeyCommand {
 	key: IValidKeyName = "c";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Clean project";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(
@@ -337,6 +460,7 @@ export class N implements IKeyCommand {
 	key: IValidKeyName = "n";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Install dependencies";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	async execute(platform: string): Promise<void> {
@@ -350,6 +474,7 @@ export class QuestionMark implements IKeyCommand {
 	key: IValidKeyName = SpecialKeys.QuestionMark;
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Show this help";
+	group = "Development Workflow";
 	willBlockKeyCommandExecution: boolean = true;
 
 	constructor(private $keyCommandHelper: IKeyCommandHelper) {}
@@ -363,6 +488,10 @@ export class QuestionMark implements IKeyCommand {
 			case "ios":
 				platform = "iOS";
 				break;
+			case "visionOS":
+			case "vision":
+				platform = "visionOS";
+				break;
 			default:
 				platform = "all";
 				break;
@@ -373,9 +502,11 @@ export class QuestionMark implements IKeyCommand {
 }
 
 injector.registerKeyCommand("a", A);
-injector.registerKeyCommand("i", I);
 injector.registerKeyCommand("A", ShiftA);
+injector.registerKeyCommand("i", I);
 injector.registerKeyCommand("I", ShiftI);
+injector.registerKeyCommand("v", V);
+injector.registerKeyCommand("V", ShiftV);
 injector.registerKeyCommand("r", R);
 injector.registerKeyCommand("R", ShiftR);
 injector.registerKeyCommand("w", W);
@@ -386,4 +517,6 @@ injector.registerKeyCommand(SpecialKeys.QuestionMark, QuestionMark);
 injector.registerKeyCommand(SpecialKeys.CtrlC, CtrlC);
 
 injector.registerCommand("open|ios", OpenIOSCommand);
+injector.registerCommand("open|visionos", OpenVisionOSCommand);
+injector.registerCommand("open|vision", OpenVisionOSCommand);
 injector.registerCommand("open|android", OpenAndroidCommand);

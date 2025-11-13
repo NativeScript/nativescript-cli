@@ -10,15 +10,18 @@ export function printHeader() {
 
 	const header = [
 		color.dim("│ "),
-		color.cyanBright.bold("{N} NativeScript "),
-		color.whiteBright.bold("CLI"),
+		color.styleText(["cyanBright", "bold"], "{N} NativeScript "),
+		color.styleText(["whiteBright", "bold"], "CLI"),
 		color.dim(` [v${version}] `),
 		// color.dim("  │"),
 	].join("");
 	const tagLine = [
 		color.dim("│ "),
 		color.dim(" → "),
-		color.whiteBright.bold("Empower JavaScript with native APIs "),
+		color.styleText(
+			["whiteBright", "bold"],
+			"Empower JavaScript with native APIs ",
+		),
 		// color.dim("  │"),
 	].join("");
 
@@ -28,10 +31,10 @@ export function printHeader() {
 
 	console.info("  " + color.dim("┌" + "─".repeat(width - 1) + "┐"));
 	console.info(
-		"  " + header + " ".repeat(width - headerLength) + color.dim("│")
+		"  " + header + " ".repeat(width - headerLength) + color.dim("│"),
 	);
 	console.info(
-		"  " + tagLine + " ".repeat(width - tagLineLength) + color.dim("│")
+		"  " + tagLine + " ".repeat(width - tagLineLength) + color.dim("│"),
 	);
 	console.info("  " + color.dim("└" + "─".repeat(width - 1) + "┘"));
 }
