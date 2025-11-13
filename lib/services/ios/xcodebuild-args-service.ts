@@ -16,6 +16,7 @@ import * as _ from "lodash";
 import {
 	DevicePlatformSdkName,
 	SimulatorPlatformSdkName,
+	VisionDevicePlatformSdkName,
 	VisionSimulatorPlatformSdkName,
 } from "../ios-project-service";
 
@@ -26,13 +27,13 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		private $fs: IFileSystem,
 		private $iOSWatchAppService: IIOSWatchAppService,
 		private $logger: ILogger,
-		private $xcconfigService: IXcconfigService
+		private $xcconfigService: IXcconfigService,
 	) {}
 
 	public async getBuildForSimulatorArgs(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<string[]> {
 		let args = await this.getArchitecturesArgs(buildConfig);
 
@@ -45,11 +46,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		let destination = "generic/platform=iOS Simulator";
 
 		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
-			buildConfig.platform
+			buildConfig.platform,
 		);
 
 		if (isvisionOS) {
-			destination = "platform=visionOS Simulator";
+			destination = "generic/platform=visionOS Simulator";
 			if (buildConfig._device) {
 				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
 			}
@@ -67,8 +68,10 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				this.getBuildCommonArgs(
 					platformData,
 					projectData,
-					isvisionOS ? VisionSimulatorPlatformSdkName : SimulatorPlatformSdkName
-				)
+					isvisionOS
+						? VisionSimulatorPlatformSdkName
+						: SimulatorPlatformSdkName,
+				),
 			)
 			.concat(this.getBuildLoggingArgs())
 			.concat(this.getXcodeProjectArgs(platformData, projectData));
@@ -79,20 +82,20 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	public async getBuildForDeviceArgs(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<string[]> {
 		const architectures = await this.getArchitecturesArgs(buildConfig);
 		const archivePath = path.join(
 			platformData.getBuildOutputPath(buildConfig),
-			projectData.projectName + ".xcarchive"
+			projectData.projectName + ".xcarchive",
 		);
 		let destination = "generic/platform=iOS";
 		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
-			buildConfig.platform
+			buildConfig.platform,
 		);
 
 		if (isvisionOS) {
-			destination = "platform=visionOS";
+			destination = "generic/platform=visionOS";
 			if (buildConfig._device) {
 				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
 			}
@@ -113,8 +116,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				this.getBuildCommonArgs(
 					platformData,
 					projectData,
-					DevicePlatformSdkName
-				)
+					isvisionOS ? VisionDevicePlatformSdkName : DevicePlatformSdkName,
+				),
 			)
 			.concat(this.getBuildLoggingArgs());
 
@@ -122,12 +125,14 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	}
 
 	private async getArchitecturesArgs(
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<string[]> {
 		const args = [];
 
 		if (this.$devicePlatformsConstants.isvisionOS(buildConfig.platform)) {
-			args.push("ONLY_ACTIVE_ARCH=YES");
+			// visionOS builds (device/simulator) are arm64-only; rely on destination for arch
+			// and explicitly exclude x86_64 to avoid accidental selection
+			args.push("ONLY_ACTIVE_ARCH=YES", "EXCLUDED_ARCHS=x86_64");
 			return args;
 		}
 
@@ -143,11 +148,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 
 	public getXcodeProjectArgs(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string[] {
 		const xcworkspacePath = path.join(
 			platformData.projectRoot,
-			`${projectData.projectName}.xcworkspace`
+			`${projectData.projectName}.xcworkspace`,
 		);
 		// Introduced in Xcode 14+
 		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
@@ -162,7 +167,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		const BUILD_SETTINGS_FILE_PATH = path.join(
 			projectData.appResourcesDirectoryPath,
 			platformData.normalizedPlatformName,
-			constants.BUILD_XCCONFIG_FILE_NAME
+			constants.BUILD_XCCONFIG_FILE_NAME,
 		);
 
 		// Only include explicit properties from build.xcconfig
@@ -175,7 +180,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
 		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
-			deployTargetProperty
+			deployTargetProperty,
 		);
 		if (deployTargetVersion) {
 			extraArgs.push(`${deployTargetProperty}=${deployTargetVersion}`);
@@ -184,7 +189,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		const swiftUIBootProperty = "NS_SWIFTUI_BOOT";
 		const swiftUIBootValue = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
-			swiftUIBootProperty
+			swiftUIBootProperty,
 		);
 		if (swiftUIBootValue) {
 			extraArgs.push(`${swiftUIBootProperty}=${swiftUIBootValue}`);
@@ -196,7 +201,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 
 		const xcodeprojPath = path.join(
 			platformData.projectRoot,
-			`${projectData.projectName}.xcodeproj`
+			`${projectData.projectName}.xcodeproj`,
 		);
 		return ["-project", xcodeprojPath, ...extraArgs];
 	}
@@ -208,7 +213,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	private getBuildCommonArgs(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		platformSdkName: string
+		platformSdkName: string,
 	): string[] {
 		let args: string[] = [];
 
@@ -226,7 +231,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	}
 
 	private async getArchitecturesFromConnectedDevices(
-		buildConfig: IiOSBuildConfig
+		buildConfig: IiOSBuildConfig,
 	): Promise<string[]> {
 		const platform = this.$devicePlatformsConstants.iOS.toLowerCase();
 		await this.$devicesService.initialize({

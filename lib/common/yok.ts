@@ -70,7 +70,7 @@ export class Yok implements IInjector {
 	public requireCommand(names: any, file: string): void {
 		forEachName(names, (commandName) => {
 			const commands = commandName.split(
-				CommandsDelimiters.HierarchicalCommand
+				CommandsDelimiters.HierarchicalCommand,
 			);
 
 			if (commands.length > 1) {
@@ -79,7 +79,7 @@ export class Yok implements IInjector {
 					this.modules[this.createCommandName(commands[0])]
 				) {
 					throw new Error(
-						"Default commands should be required before child commands"
+						"Default commands should be required before child commands",
 					);
 				}
 
@@ -90,7 +90,7 @@ export class Yok implements IInjector {
 				}
 
 				this.hierarchicalCommands[parentCommandName].push(
-					_.tail(commands).join(CommandsDelimiters.HierarchicalCommand)
+					_.tail(commands).join(CommandsDelimiters.HierarchicalCommand),
 				);
 			}
 
@@ -164,7 +164,7 @@ export class Yok implements IInjector {
 		const relativePath = path.join("../", file);
 		const dependency: IDependency = {
 			require: require("fs").existsSync(
-				path.join(__dirname, relativePath + ".js")
+				path.join(__dirname, relativePath + ".js"),
 			)
 				? relativePath
 				: file,
@@ -197,8 +197,8 @@ export class Yok implements IInjector {
 		const subCommands = this.hierarchicalCommands[name];
 		const defaultCommand = _.find(subCommands, (command) =>
 			_.some(command.split(CommandsDelimiters.HierarchicalCommand), (c) =>
-				_.startsWith(c, CommandsDelimiters.DefaultCommandSymbol)
-			)
+				_.startsWith(c, CommandsDelimiters.DefaultCommandSymbol),
+			),
 		);
 
 		return defaultCommand;
@@ -206,7 +206,7 @@ export class Yok implements IInjector {
 
 	public buildHierarchicalCommand(
 		parentCommandName: string,
-		commandLineArguments: string[]
+		commandLineArguments: string[],
 	): any {
 		let currentSubCommandName: string,
 			finalSubCommandName: string,
@@ -226,7 +226,7 @@ export class Yok implements IInjector {
 					(sc) =>
 						sc === currentSubCommandName ||
 						sc ===
-							`${CommandsDelimiters.DefaultCommandSymbol}${currentSubCommandName}`
+							`${CommandsDelimiters.DefaultCommandSymbol}${currentSubCommandName}`,
 				))
 			) {
 				finalSubCommandName = matchingSubCommandName;
@@ -244,8 +244,8 @@ export class Yok implements IInjector {
 					.map((command) =>
 						_.startsWith(command, CommandsDelimiters.DefaultCommandSymbol)
 							? command.substr(1)
-							: command
-					)
+							: command,
+					),
 			);
 		}
 
@@ -253,7 +253,7 @@ export class Yok implements IInjector {
 			return {
 				commandName: this.getHierarchicalCommandName(
 					parentCommandName,
-					finalSubCommandName
+					finalSubCommandName,
 				),
 				remainingArguments: finalRemainingArguments,
 			};
@@ -274,7 +274,7 @@ export class Yok implements IInjector {
 					if (args.length > 0) {
 						const hierarchicalCommand = this.buildHierarchicalCommand(
 							name,
-							args
+							args,
 						);
 						if (hierarchicalCommand) {
 							commandName = hierarchicalCommand.commandName;
@@ -284,11 +284,11 @@ export class Yok implements IInjector {
 								? this.getHierarchicalCommandName(name, defaultCommand)
 								: "help";
 							// If we'll execute the default command, but it's full name had been written by the user
-							// for example "tns run ios", we have to remove the "ios" option from the arguments that we'll pass to the command.
+							// for example "ns run ios", we have to remove the "ios" option from the arguments that we'll pass to the command.
 							if (
 								_.includes(
 									this.hierarchicalCommands[name],
-									CommandsDelimiters.DefaultCommandSymbol + args[0]
+									CommandsDelimiters.DefaultCommandSymbol + args[0],
 								)
 							) {
 								commandArguments = _.tail(args);
@@ -301,7 +301,7 @@ export class Yok implements IInjector {
 						if (defaultCommand) {
 							commandName = this.getHierarchicalCommandName(
 								name,
-								defaultCommand
+								defaultCommand,
 							);
 						} else {
 							commandName = "help";
@@ -314,7 +314,7 @@ export class Yok implements IInjector {
 
 					await commandsService.tryExecuteCommand(
 						commandName,
-						commandName === "help" ? [name] : commandArguments
+						commandName === "help" ? [name] : commandArguments,
 					);
 				},
 			};
@@ -325,23 +325,23 @@ export class Yok implements IInjector {
 
 	private getHierarchicalCommandName(
 		parentCommandName: string,
-		subCommandName: string
+		subCommandName: string,
 	) {
 		return [parentCommandName, subCommandName].join(
-			CommandsDelimiters.HierarchicalCommand
+			CommandsDelimiters.HierarchicalCommand,
 		);
 	}
 
 	public async isValidHierarchicalCommand(
 		commandName: string,
-		commandArguments: string[]
+		commandArguments: string[],
 	): Promise<boolean> {
 		if (_.includes(Object.keys(this.hierarchicalCommands), commandName)) {
 			const subCommands = this.hierarchicalCommands[commandName];
 			if (subCommands) {
 				const fullCommandName = this.buildHierarchicalCommand(
 					commandName,
-					commandArguments
+					commandArguments,
 				);
 				if (!fullCommandName) {
 					// In case buildHierarchicalCommand doesn't find a valid command
@@ -449,7 +449,7 @@ export class Yok implements IInjector {
 
 	private resolveConstructor(
 		ctor: any,
-		ctorArguments?: { [key: string]: any }
+		ctorArguments?: { [key: string]: any },
 	): any {
 		annotate(ctor);
 
@@ -530,10 +530,10 @@ export class Yok implements IInjector {
 	public getRegisteredCommandsNames(includeDev: boolean): string[] {
 		const modulesNames: string[] = _.keys(this.modules);
 		const commandsNames: string[] = _.filter(modulesNames, (moduleName) =>
-			_.startsWith(moduleName, `${this.COMMANDS_NAMESPACE}.`)
+			_.startsWith(moduleName, `${this.COMMANDS_NAMESPACE}.`),
 		);
 		let commands = _.map(commandsNames, (commandName: string) =>
-			commandName.substr(this.COMMANDS_NAMESPACE.length + 1)
+			commandName.substr(this.COMMANDS_NAMESPACE.length + 1),
 		);
 		if (!includeDev) {
 			commands = _.reject(commands, (command) => _.startsWith(command, "dev-"));
@@ -544,10 +544,10 @@ export class Yok implements IInjector {
 	public getRegisteredKeyCommandsNames(): string[] {
 		const modulesNames: string[] = _.keys(this.modules);
 		const commandsNames: string[] = _.filter(modulesNames, (moduleName) =>
-			_.startsWith(moduleName, `${this.KEY_COMMANDS_NAMESPACE}.`)
+			_.startsWith(moduleName, `${this.KEY_COMMANDS_NAMESPACE}.`),
 		);
 		let commands = _.map(commandsNames, (commandName: string) =>
-			commandName.substr(this.KEY_COMMANDS_NAMESPACE.length + 1)
+			commandName.substr(this.KEY_COMMANDS_NAMESPACE.length + 1),
 		);
 		return commands;
 	}

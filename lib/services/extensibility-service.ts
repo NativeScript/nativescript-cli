@@ -41,11 +41,11 @@ export class ExtensibilityService implements IExtensibilityService {
 		private $logger: ILogger,
 		private $packageManager: INodePackageManager,
 		private $settingsService: ISettingsService,
-		private $requireService: IRequireService
+		private $requireService: IRequireService,
 	) {}
 
 	public async installExtension(
-		extensionName: string
+		extensionName: string,
 	): Promise<IExtensionData> {
 		this.$logger.trace(`Start installation of extension '${extensionName}'.`);
 
@@ -62,10 +62,10 @@ export class ExtensibilityService implements IExtensibilityService {
 		const installResultInfo = await this.$packageManager.install(
 			packageName,
 			this.pathToExtensions,
-			npmOpts
+			npmOpts,
 		);
 		this.$logger.trace(
-			`Finished installation of extension '${extensionName}'. Trying to load it now.`
+			`Finished installation of extension '${extensionName}'. Trying to load it now.`,
 		);
 
 		return this.getInstalledExtensionData(installResultInfo.name);
@@ -79,11 +79,11 @@ export class ExtensibilityService implements IExtensibilityService {
 		await this.$packageManager.uninstall(
 			extensionName,
 			{ save: true },
-			this.pathToExtensions
+			this.pathToExtensions,
 		);
 
 		this.$logger.trace(
-			`Finished uninstallation of extension '${extensionName}'.`
+			`Finished uninstallation of extension '${extensionName}'.`,
 		);
 	}
 
@@ -95,7 +95,7 @@ export class ExtensibilityService implements IExtensibilityService {
 	public getInstalledExtensionsData(): IExtensionData[] {
 		const installedExtensions = this.getInstalledExtensions();
 		return _.keys(installedExtensions).map((installedExtension) =>
-			this.getInstalledExtensionData(installedExtension)
+			this.getInstalledExtensionData(installedExtension),
 		);
 	}
 
@@ -108,7 +108,7 @@ export class ExtensibilityService implements IExtensibilityService {
 			dependencies = this.getInstalledExtensions();
 		} catch (err) {
 			this.$logger.trace(
-				`Error while getting installed dependencies: ${err.message}. No extensions will be loaded.`
+				`Error while getting installed dependencies: ${err.message}. No extensions will be loaded.`,
 			);
 		}
 
@@ -148,11 +148,11 @@ export class ExtensibilityService implements IExtensibilityService {
 			return this.getInstalledExtensionData(extensionName);
 		} catch (error) {
 			this.$logger.warn(
-				`Error while loading ${extensionName} is: ${error.message}`
+				`Error while loading ${extensionName} is: ${error.message}`,
 			);
 			const err = <IExtensionLoadingError>(
 				new Error(
-					`Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${error.message}`
+					`Unable to load extension ${extensionName}. You will not be able to use the functionality that it adds. Error: ${error.message}`,
 				)
 			);
 			err.extensionName = extensionName;
@@ -161,28 +161,28 @@ export class ExtensibilityService implements IExtensibilityService {
 	}
 
 	public async getExtensionNameWhereCommandIsRegistered(
-		inputOpts: IGetExtensionCommandInfoParams
+		inputOpts: IGetExtensionCommandInfoParams,
 	): Promise<IExtensionCommandInfo> {
 		let allExtensions: INpmsSingleResultData[] = [];
 
 		try {
 			const npmsResult = await this.$packageManager.searchNpms(
-				"nativescript:extension"
+				"nativescript:extension",
 			);
 			allExtensions = npmsResult.results || [];
 		} catch (err) {
 			this.$logger.trace(
-				`Unable to find extensions via npms. Error is: ${err}`
+				`Unable to find extensions via npms. Error is: ${err}`,
 			);
 			return null;
 		}
 
 		const defaultCommandRegExp = new RegExp(
-			`${regExpEscape(inputOpts.defaultCommandDelimiter)}.*`
+			`${regExpEscape(inputOpts.defaultCommandDelimiter)}.*`,
 		);
 		const commandDelimiterRegExp = createRegExp(
 			inputOpts.commandDelimiter,
-			"g"
+			"g",
 		);
 
 		for (const extensionData of allExtensions) {
@@ -190,9 +190,8 @@ export class ExtensibilityService implements IExtensibilityService {
 
 			try {
 				// now get full package.json for the latest version of the package
-				const registryData = await this.$packageManager.getRegistryPackageData(
-					extensionName
-				);
+				const registryData =
+					await this.$packageManager.getRegistryPackageData(extensionName);
 				const latestPackageData =
 					registryData.versions[registryData["dist-tags"].latest];
 				const commands: string[] =
@@ -202,12 +201,12 @@ export class ExtensibilityService implements IExtensibilityService {
 				if (commands && commands.length) {
 					// For each default command we need to add its short syntax in the array of commands.
 					// For example in case there's a default command called devices list, the commands array will contain devices|*list.
-					// However, in case the user executes just tns devices, CLI will still execute the tns devices list command.
+					// However, in case the user executes just ns devices, CLI will still execute the ns devices list command.
 					// So we need to add the devices command as well.
 					_.filter(
 						commands,
 						(command) =>
-							command.indexOf(inputOpts.defaultCommandDelimiter) !== -1
+							command.indexOf(inputOpts.defaultCommandDelimiter) !== -1,
 					).forEach((defaultCommand) => {
 						commands.push(defaultCommand.replace(defaultCommandRegExp, ""));
 					});
@@ -221,12 +220,12 @@ export class ExtensibilityService implements IExtensibilityService {
 						if (_.some(commands, (c) => c.toLowerCase() === currentCommand)) {
 							const beautifiedCommandName = currentCommand.replace(
 								commandDelimiterRegExp,
-								" "
+								" ",
 							);
 							return {
 								extensionName,
 								registeredCommandName: currentCommand,
-								installationMessage: `The command ${beautifiedCommandName} is registered in extension ${extensionName}. You can install it by executing 'tns extension install ${extensionName}'`,
+								installationMessage: `The command ${beautifiedCommandName} is registered in extension ${extensionName}. You can install it by executing 'ns extension install ${extensionName}'`,
 							};
 						}
 
@@ -236,7 +235,7 @@ export class ExtensibilityService implements IExtensibilityService {
 			} catch (err) {
 				// We do not want to stop the whole process in case we are unable to find data for one of the extensions.
 				this.$logger.trace(
-					`Unable to get data for ${extensionName}. Error is: ${err}`
+					`Unable to get data for ${extensionName}. Error is: ${err}`,
 				);
 			}
 		}
@@ -248,7 +247,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		return path.join(
 			this.pathToExtensions,
 			constants.NODE_MODULES_FOLDER_NAME,
-			extensionName
+			extensionName,
 		);
 	}
 
@@ -256,23 +255,23 @@ export class ExtensibilityService implements IExtensibilityService {
 		const pathToExtension = this.getPathToExtension(extensionName);
 		const pathToPackageJson = path.join(
 			pathToExtension,
-			constants.PACKAGE_JSON_FILE_NAME
+			constants.PACKAGE_JSON_FILE_NAME,
 		);
 		const jsonData = this.$fs.readJson(pathToPackageJson);
 		return jsonData;
 	}
 
 	private async assertExtensionIsInstalled(
-		extensionName: string
+		extensionName: string,
 	): Promise<void> {
 		this.$logger.trace(`Asserting extension ${extensionName} is installed.`);
 		const installedExtensions = this.$fs.readDirectory(
-			path.join(this.pathToExtensions, constants.NODE_MODULES_FOLDER_NAME)
+			path.join(this.pathToExtensions, constants.NODE_MODULES_FOLDER_NAME),
 		);
 
 		if (installedExtensions.indexOf(extensionName) === -1) {
 			this.$logger.trace(
-				`Extension ${extensionName} is not installed, starting installation.`
+				`Extension ${extensionName} is not installed, starting installation.`,
 			);
 			await this.installExtension(extensionName);
 		}

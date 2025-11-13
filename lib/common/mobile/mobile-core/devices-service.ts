@@ -567,7 +567,7 @@ export class DevicesService
 
 	/**
 	 * Returns device depending on the passed index.
-	 * The index refers to assigned number to listed devices by tns device command.
+	 * The index refers to assigned number to listed devices by ns device command.
 	 * @param index assigned device number
 	 */
 	private getDeviceByIndex(index: number): Mobile.IDevice {

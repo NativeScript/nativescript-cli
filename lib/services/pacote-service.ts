@@ -16,7 +16,7 @@ export class PacoteService implements IPacoteService {
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $npmConfigService: INpmConfigService,
-		private $proxyService: IProxyService
+		private $proxyService: IProxyService,
 	) {}
 
 	@cache()
@@ -27,11 +27,11 @@ export class PacoteService implements IPacoteService {
 
 	public async manifest(
 		packageName: string,
-		options?: IPacoteManifestOptions
+		options?: IPacoteManifestOptions,
 	): Promise<any> {
 		this.$logger.trace(
 			`Calling pacoteService.manifest for packageName: '${packageName}' and options: `,
-			options
+			options,
 		);
 		const manifestOptions: IPacoteBaseOptions =
 			await this.getPacoteBaseOptions();
@@ -43,7 +43,7 @@ export class PacoteService implements IPacoteService {
 		packageName = this.getRealPackageName(packageName);
 		this.$logger.trace(
 			`Calling pacote.manifest for packageName: ${packageName} and manifestOptions:`,
-			manifestOptions
+			manifestOptions,
 		);
 		const result = await pacote.manifest(packageName, manifestOptions);
 
@@ -55,12 +55,12 @@ export class PacoteService implements IPacoteService {
 	public async extractPackage(
 		packageName: string,
 		destinationDirectory: string,
-		options?: IPacoteExtractOptions
+		options?: IPacoteExtractOptions,
 	): Promise<void> {
 		// strip: Remove the specified number of leading path elements. Pathnames with fewer elements will be silently skipped. More info: https://github.com/npm/node-tar/blob/e89c4d37519b1c20133a9f49d5f6b85fa34c203b/README.md
 		// C: Create an archive
 		this.$logger.trace(
-			`Calling pacoteService.extractPackage for packageName: '${packageName}', destinationDir: '${destinationDirectory}' and options: ${options}`
+			`Calling pacoteService.extractPackage for packageName: '${packageName}', destinationDir: '${destinationDirectory}' and options: ${options}`,
 		);
 		const extractOptions = { strip: 1, C: destinationDirectory };
 		if (options) {
@@ -72,14 +72,14 @@ export class PacoteService implements IPacoteService {
 
 		return new Promise<void>(async (resolve, reject) => {
 			this.$logger.trace(
-				`Calling pacoteService.extractPackage for packageName: '${packageName}', destinationDir: '${destinationDirectory}' and options: ${options}`
+				`Calling pacoteService.extractPackage for packageName: '${packageName}', destinationDir: '${destinationDirectory}' and options: ${options}`,
 			);
 
 			const source = await pacote
 				.tarball(packageName, pacoteOptions)
 				.catch((err: Error) => {
 					this.$logger.trace(
-						`Error in source while trying to extract stream from ${packageName}. Error is ${err}`
+						`Error in source while trying to extract stream from ${packageName}. Error is ${err}`,
 					);
 					reject(err);
 				});
@@ -88,8 +88,8 @@ export class PacoteService implements IPacoteService {
 				`Creating extract tar stream with options: ${JSON.stringify(
 					extractOptions,
 					null,
-					2
-				)}`
+					2,
+				)}`,
 			);
 			const destination = tar.x(extractOptions);
 			// Initiate the source
@@ -99,14 +99,14 @@ export class PacoteService implements IPacoteService {
 
 			destination.on("error", (err: Error) => {
 				this.$logger.trace(
-					`Error in destination while trying to extract stream from ${packageName}. Error is ${err}`
+					`Error in destination while trying to extract stream from ${packageName}. Error is ${err}`,
 				);
 				reject(err);
 			});
 
 			destination.on("finish", () => {
 				this.$logger.trace(
-					`Successfully extracted '${packageName}' to ${destinationDirectory}`
+					`Successfully extracted '${packageName}' to ${destinationDirectory}`,
 				);
 				resolve();
 			});
@@ -114,7 +114,7 @@ export class PacoteService implements IPacoteService {
 	}
 
 	private async getPacoteBaseOptions(): Promise<IPacoteBaseOptions> {
-		// In case `tns create myapp --template https://github.com/NativeScript/template-hello-world.git` command is executed, pacote module throws an error if cache option is not provided.
+		// In case `ns create myapp --template https://github.com/NativeScript/template-hello-world.git` command is executed, pacote module throws an error if cache option is not provided.
 		const cachePath = await this.$packageManager.getCachePath();
 
 		// Add NPM Configuration to our Manifest options
@@ -131,7 +131,7 @@ export class PacoteService implements IPacoteService {
 	private getRealPackageName(packageName: string): string {
 		if (this.$fs.exists(packageName)) {
 			this.$logger.trace(
-				`Will resolve the full path to package ${packageName}.`
+				`Will resolve the full path to package ${packageName}.`,
 			);
 			packageName = path.resolve(packageName);
 		}

@@ -55,12 +55,12 @@ function getXcodeProjectArgs(data?: { hasProjectWorkspace: boolean }) {
 				"-workspace",
 				path.join(projectRoot, `${projectName}.xcworkspace`),
 				...extraArgs,
-		  ]
+			]
 		: [
 				"-project",
 				path.join(projectRoot, `${projectName}.xcodeproj`),
 				...extraArgs,
-		  ];
+			];
 }
 
 function getBuildLoggingArgs(logLevel: string): string[] {
@@ -89,21 +89,22 @@ describe("xcodebuildArgsService", () => {
 								platform,
 							};
 							const xcodebuildArgsService = injector.resolve(
-								"xcodebuildArgsService"
+								"xcodebuildArgsService",
 							);
 							const actualArgs =
 								await xcodebuildArgsService.getBuildForSimulatorArgs(
 									{ projectRoot, normalizedPlatformName },
 									{ projectName, appResourcesDirectoryPath },
-									buildConfig
+									buildConfig,
 								);
 
 							const expectedArgs = [
 								`ONLY_ACTIVE_ARCH=${platform === "visionOS" ? "YES" : "NO"}`,
+								...(platform === "visionOS" ? ["EXCLUDED_ARCHS=x86_64"] : []),
 								"CODE_SIGN_IDENTITY=",
 								"-destination",
 								platform === "visionOS"
-									? "platform=visionOS Simulator"
+									? "generic/platform=visionOS Simulator"
 									: "generic/platform=iOS Simulator",
 								"build",
 								"-configuration",
@@ -131,7 +132,7 @@ describe("xcodebuildArgsService", () => {
 					{ deviceInfo: { activeArchitecture: "armv7" } },
 				],
 				expectedArgs: ["ONLY_ACTIVE_ARCH=NO", "-sdk", "iphoneos"].concat(
-					getCommonArgs()
+					getCommonArgs(),
 				),
 			},
 			{
@@ -177,7 +178,7 @@ describe("xcodebuildArgsService", () => {
 								await xcodebuildArgsService.getBuildForDeviceArgs(
 									<any>platformData,
 									<any>projectData,
-									<any>buildConfig
+									<any>buildConfig,
 								);
 
 							const expectedArgs = [
