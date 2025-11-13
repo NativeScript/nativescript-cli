@@ -903,6 +903,7 @@ describe("Plugins service", () => {
 				fullPath: pluginDir,
 				isPlugin: true,
 				platformsData: { android: "6.0.0", ios: "6.0.0" },
+				nativescript: { platforms: { android: "6.0.0", ios: "6.0.0" } },
 				pluginVariables: undefined,
 			});
 		});
@@ -1016,6 +1017,12 @@ describe("Plugins service", () => {
 							android: "5.0.0",
 							ios: "5.0.0",
 						},
+						nativescript: {
+							platforms: {
+								android: "5.0.0",
+								ios: "5.0.0",
+							},
+						},
 						version: "6.3.2",
 					},
 					{
@@ -1026,6 +1033,12 @@ describe("Plugins service", () => {
 						platformsData: {
 							android: "6.2.0",
 							ios: "6.2.0",
+						},
+						nativescript: {
+							platforms: {
+								android: "6.2.0",
+								ios: "6.2.0",
+							},
 						},
 						version: "2.2.1",
 					},
@@ -1088,6 +1101,12 @@ describe("Plugins service", () => {
 							android: "6.0.0",
 							ios: "6.0.0",
 						},
+						nativescript: {
+							platforms: {
+								android: "6.0.0",
+								ios: "6.0.0",
+							},
+						},
 						version: "8.0.1",
 					},
 					{
@@ -1098,6 +1117,12 @@ describe("Plugins service", () => {
 						platformsData: {
 							android: "6.0.0",
 							ios: "6.0.0",
+						},
+						nativescript: {
+							platforms: {
+								android: "6.0.0",
+								ios: "6.0.0",
+							},
 						},
 						version: "4.0.0",
 					},

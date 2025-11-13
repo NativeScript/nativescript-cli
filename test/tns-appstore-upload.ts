@@ -55,26 +55,26 @@ class AppStore {
 				errors: {},
 				fs: {},
 				hostInfo: {},
-				itmsTransporterService: this.itmsTransporterService = {},
-				logger: this.loggerService = new LoggerStub(),
-				options: this.options = {},
-				prompter: this.prompter = new PrompterStub(),
-				projectData: this.projectData = new ProjectDataStub(),
+				itmsTransporterService: (this.itmsTransporterService = {}),
+				logger: (this.loggerService = new LoggerStub()),
+				options: (this.options = {}),
+				prompter: (this.prompter = new PrompterStub()),
+				projectData: (this.projectData = new ProjectDataStub()),
 				stringParameterBuilder: {},
 				devicePlatformsConstants: {
 					iOS: "iOS",
 				},
-				prepareNativePlatformService: this.prepareNativePlatformService = <
+				prepareNativePlatformService: (this.prepareNativePlatformService = <
 					any
-				>{},
-				platformCommandHelper: this.platformCommandHelper = {},
-				platformValidationService: this.platformValidationService = {},
-				buildController: this.buildController = <any>{
+				>{}),
+				platformCommandHelper: (this.platformCommandHelper = {}),
+				platformValidationService: (this.platformValidationService = {}),
+				buildController: (this.buildController = <any>{
 					buildPlatform: async () => {
 						this.archiveCalls++;
 						return "/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa";
 					},
-				},
+				}),
 				platformsDataService: {
 					getPlatformData: (platform: string) => {
 						chai.assert.equal(platform, "iOS");
@@ -117,12 +117,12 @@ class AppStore {
 		chai.assert.equal(
 			this.archiveCalls,
 			this.expectedArchiveCalls,
-			"Mismatched number of iOSProjectService.archive calls."
+			"Mismatched number of iOSProjectService.archive calls.",
 		);
 		chai.assert.equal(
 			this.itmsTransporterServiceUploadCalls,
 			this.expectedItmsTransporterServiceUploadCalls,
-			"Mismatched number of itmsTransporterService.upload calls."
+			"Mismatched number of itmsTransporterService.upload calls.",
 		);
 	}
 
@@ -140,7 +140,7 @@ class AppStore {
 			chai.assert.equal(iOSBuildData.projectDir, "/Users/person/git/MyProject");
 			chai.assert.isTrue(iOSBuildData.buildForAppStore);
 			return Promise.resolve(
-				"/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa"
+				"/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa",
 			);
 		};
 	}
@@ -152,15 +152,15 @@ class AppStore {
 			this.itmsTransporterServiceUploadCalls++;
 			chai.assert.equal(
 				options.ipaFilePath,
-				"/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa"
+				"/Users/person/git/MyProject/platforms/ios/archive/MyProject.ipa",
 			);
 			chai.assert.equal(
 				options.credentials.username,
-				AppStore.itunesconnect.user
+				AppStore.itunesconnect.user,
 			);
 			chai.assert.equal(
 				options.credentials.password,
-				AppStore.itunesconnect.pass
+				AppStore.itunesconnect.pass,
 			);
 			chai.assert.equal(options.verboseLogging, false);
 			return Promise.resolve();
@@ -202,7 +202,7 @@ class AppStore {
 	}
 }
 
-describe("tns appstore", () => {
+describe("ns appstore", () => {
 	it("without args, prompts for itunesconnect credentionals, prepares, archives and uploads", async () => {
 		const instance = new AppStore();
 		instance.before();

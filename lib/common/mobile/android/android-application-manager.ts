@@ -36,7 +36,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $errors: IErrors,
 		$logger: ILogger,
-		$hooksService: IHooksService
+		$hooksService: IHooksService,
 	) {
 		super($logger, $hooksService, $deviceLogProvider);
 	}
@@ -58,7 +58,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	public async installApplication(
 		packageFilePath: string,
 		appIdentifier?: string,
-		buildData?: IAndroidBuildData
+		buildData?: IAndroidBuildData,
 	): Promise<void> {
 		if (appIdentifier) {
 			const deviceRootPath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appIdentifier}`;
@@ -85,15 +85,15 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	}
 
 	public uninstallApplication(appIdentifier: string): Promise<void> {
-		// Need to set the treatErrorsAsWarnings to true because when using tns run command if the application is not installed on the device it will throw error
+		// Need to set the treatErrorsAsWarnings to true because when using `ns run` command if the application is not installed on the device it will throw error
 		return this.adb.executeShellCommand(
 			["pm", "uninstall", `${appIdentifier}`],
-			{ treatErrorsAsWarnings: true }
+			{ treatErrorsAsWarnings: true },
 		);
 	}
 
 	public async startApplication(
-		appData: Mobile.IStartApplicationData
+		appData: Mobile.IStartApplicationData,
 	): Promise<void> {
 		if (appData.waitForDebugger) {
 			await this.adb.executeShellCommand([
@@ -144,7 +144,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 			]);
 		} else {
 			this.$logger.trace(
-				`Tried starting activity for: ${appIdentifier}, using activity manager but failed.`
+				`Tried starting activity for: ${appIdentifier}, using activity manager but failed.`,
 			);
 			await this.adb.executeShellCommand([
 				"monkey",
@@ -165,22 +165,22 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 			const deviceIdentifier = this.identifier;
 			const processIdentifier = await this.getAppProcessId(
 				deviceIdentifier,
-				appIdentifier
+				appIdentifier,
 			);
 			if (processIdentifier) {
 				this.$deviceLogProvider.setApplicationPidForDevice(
 					deviceIdentifier,
-					processIdentifier
+					processIdentifier,
 				);
 
 				this.$deviceLogProvider.setApplicationIdForDevice(
 					deviceIdentifier,
-					appIdentifier
+					appIdentifier,
 				);
 
 				this.$deviceLogProvider.setProjectDirForDevice(
 					deviceIdentifier,
-					appData.projectDir
+					appData.projectDir,
 				);
 
 				await this.$logcatHelper.start({
@@ -196,7 +196,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 			} else {
 				await this.$logcatHelper.dump(this.identifier);
 				this.$errors.fail(
-					`Unable to find running "${appIdentifier}" application on device "${deviceIdentifier}".`
+					`Unable to find running "${appIdentifier}" application on device "${deviceIdentifier}".`,
 				);
 			}
 		}
@@ -204,7 +204,7 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 
 	private async getAppProcessId(
 		deviceIdentifier: string,
-		appIdentifier: string
+		appIdentifier: string,
 	) {
 		const appIdCheckStartTime = new Date().getTime();
 		let processIdentifier = "";
@@ -213,11 +213,11 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		while (!processIdentifier && !hasTimedOut) {
 			processIdentifier = await this.$androidProcessService.getAppProcessId(
 				deviceIdentifier,
-				appIdentifier
+				appIdentifier,
 			);
 			if (!processIdentifier) {
 				this.$logger.trace(
-					`Wasn't able to get pid of the app. Sleeping for "${this.PID_CHECK_INTERVAL}ms".`
+					`Wasn't able to get pid of the app. Sleeping for "${this.PID_CHECK_INTERVAL}ms".`,
 				);
 				await sleep(this.PID_CHECK_INTERVAL);
 				hasTimedOut =
@@ -244,13 +244,13 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async getDebuggableAppViews(
-		appIdentifiers: string[]
+		appIdentifiers: string[],
 	): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> {
 		const mappedAppIdentifierPorts =
 				await this.$androidProcessService.getMappedAbstractToTcpPorts(
 					this.identifier,
 					appIdentifiers,
-					TARGET_FRAMEWORK_IDENTIFIERS.Cordova
+					TARGET_FRAMEWORK_IDENTIFIERS.Cordova,
 				),
 			applicationViews: IDictionary<Mobile.IDebugWebViewInfo[]> = {};
 
@@ -269,11 +269,11 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 						}
 					} catch (err) {
 						this.$logger.trace(
-							`Error while checking ${localAddress}. Error is: ${err.message}`
+							`Error while checking ${localAddress}. Error is: ${err.message}`,
 						);
 					}
-				}
-			)
+				},
+			),
 		);
 
 		return applicationViews;
@@ -286,9 +286,9 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 
 		return new RegExp(
 			`${regExpEscape(
-				appIdentifier
+				appIdentifier,
 			)}${packageActivitySeparator}${fullJavaClassName}`,
-			`m`
+			`m`,
 		);
 	}
 

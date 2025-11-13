@@ -966,7 +966,7 @@ describe("extensibilityService", () => {
 				.replace(
 					/\|/g,
 					" ",
-				)} is registered in extension ${extensionName}. You can install it by executing 'tns extension install ${extensionName}'`;
+				)} is registered in extension ${extensionName}. You can install it by executing 'ns extension install ${extensionName}'`;
 		};
 
 		const testData: ITestData[] = [
