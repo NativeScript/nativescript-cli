@@ -936,21 +936,25 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				}
 				// check if we already build this arch
 				// if not we need to say native has changed
-				const device = this.$devicesService
-					.getDevicesForPlatform(deviceDescriptor.buildData.platform)
-					.filter(
-						(d) => d.deviceInfo.identifier === deviceDescriptor.identifier
-					)[0];
-				const abis = device.deviceInfo.abis.filter((a) => !!a && a.length)[0];
 
 				const directoryContent = this.$fs.readDirectory(apkOutputPath);
-				const regexp = new RegExp(`${abis}.*\.apk`);
-				const files = _.filter(directoryContent, (entry: string) => {
-					return regexp.test(entry);
-				});
-				if (files.length === 0) {
-					changesInfo.nativeChanged = true;
+				// if we are building for universal we should not check for missing abi apks
+				if (!directoryContent.find(f=>f.indexOf("universal") !== -1)) {
+					const device = this.$devicesService
+						.getDevicesForPlatform(deviceDescriptor.buildData.platform)
+						.filter(
+							(d) => d.deviceInfo.identifier === deviceDescriptor.identifier
+						)[0];
+					const abis = device.deviceInfo.abis.filter((a) => !!a && a.length)[0];
+					const regexp = new RegExp(`${abis}.*\.apk`);
+					const files = _.filter(directoryContent, (entry: string) => {
+						return regexp.test(entry);
+					});
+					if (files.length === 0) {
+						changesInfo.nativeChanged = true;
+					}
 				}
+				
 			}
 		});
 	}
