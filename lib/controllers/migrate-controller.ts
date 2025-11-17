@@ -122,7 +122,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~8.9.0",
+			desiredVersion: "~9.0.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -132,7 +132,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.9.0",
+			desiredVersion: "~9.0.0",
 			isDev: true,
 		},
 		{
@@ -165,7 +165,7 @@ export class MigrateController
 		{
 			packageName: "nativescript-vue",
 			minVersion: "2.7.0",
-			desiredVersion: "~2.9.3",
+			desiredVersion: "~3.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -191,7 +191,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "^19.0.0",
+			desiredVersion: "^20.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -263,7 +263,7 @@ export class MigrateController
 			packageName: "typescript",
 			isDev: true,
 			minVersion: "3.7.0",
-			desiredVersion: "~5.7.0",
+			desiredVersion: "~5.8.0",
 		},
 		{
 			packageName: "node-sass",
@@ -296,13 +296,13 @@ export class MigrateController
 		{
 			packageName: "@nativescript/ios",
 			minVersion: "6.5.3",
-			desiredVersion: "~8.9.0",
+			desiredVersion: "~9.0.0",
 			isDev: true,
 		},
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~8.9.0",
+			desiredVersion: "~9.0.0",
 			isDev: true,
 		},
 	];
@@ -1238,7 +1238,7 @@ export class MigrateController
 			configContents.compilerOptions = configContents.compilerOptions || {};
 			configContents.compilerOptions.target = "es2020";
 			configContents.compilerOptions.module = "esnext";
-			configContents.compilerOptions.moduleResolution = "node";
+			configContents.compilerOptions.moduleResolution = "bundler";
 			configContents.compilerOptions.experimentalDecorators = true;
 			configContents.compilerOptions.removeComments = false;
 
@@ -1311,7 +1311,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~19.1.0";
+		const desiredVersion = "~20.2.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
