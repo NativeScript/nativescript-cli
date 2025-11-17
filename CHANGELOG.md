@@ -1,3 +1,34 @@
+# [9.0.0](https://github.com/NativeScript/nativescript-cli/compare/v8.9.3...v9.0.0) (2025-11-17)
+
+
+### Bug Fixes
+
+* **android:** livesync tool connect race condition ([#5857](https://github.com/NativeScript/nativescript-cli/issues/5857)) ([1daa553](https://github.com/NativeScript/nativescript-cli/commit/1daa5533d72408b2bba6773ddbd012f5284dc41f))
+* clear all deprecated dependencies ([#5858](https://github.com/NativeScript/nativescript-cli/issues/5858)) ([d9bced3](https://github.com/NativeScript/nativescript-cli/commit/d9bced3427f620f78ca7da62066f836e4961b084))
+* **config:** using set with undefined ([#5883](https://github.com/NativeScript/nativescript-cli/issues/5883)) ([b09510f](https://github.com/NativeScript/nativescript-cli/commit/b09510f5c994226030097332b6f0996c21d1d96c))
+* remove lock from default clean ([#5881](https://github.com/NativeScript/nativescript-cli/issues/5881)) ([a1c39f6](https://github.com/NativeScript/nativescript-cli/commit/a1c39f6d7e9912b74c913a793adc3b6edf125574))
+* **security:** axios 1.11.0 ([#5847](https://github.com/NativeScript/nativescript-cli/issues/5847)) ([0b08cb2](https://github.com/NativeScript/nativescript-cli/commit/0b08cb29bda03495a1e9a99e4bef100bc2d88838))
+* **security:** xml2js and braces ([#5848](https://github.com/NativeScript/nativescript-cli/issues/5848)) ([debc85a](https://github.com/NativeScript/nativescript-cli/commit/debc85a584cdb305ff329bca12c255750e8a9658))
+* update ios-sim-portable to version 4.5.1 ([#5850](https://github.com/NativeScript/nativescript-cli/issues/5850)) ([f575bdc](https://github.com/NativeScript/nativescript-cli/commit/f575bdcc39a1a749788aa04e4cc33d2d26f92489))
+* **visionos:** build/prepare ([e40a1b8](https://github.com/NativeScript/nativescript-cli/commit/e40a1b8d6cfd055016ac2612ecccb771176766b0))
+
+
+### Features
+
+* add config to help menu ([#5916](https://github.com/NativeScript/nativescript-cli/issues/5916)) ([f81499d](https://github.com/NativeScript/nativescript-cli/commit/f81499d4092426a801ac2a4bf9579a03c463a2b9))
+* add Dependabot configuration ([#5859](https://github.com/NativeScript/nativescript-cli/issues/5859)) ([93a214c](https://github.com/NativeScript/nativescript-cli/commit/93a214c093c3aa5d47df6b19371c12b26d3c97ed))
+* add Dependency Review Action workflow ([#5860](https://github.com/NativeScript/nativescript-cli/issues/5860)) ([1478ba9](https://github.com/NativeScript/nativescript-cli/commit/1478ba9b8d6cd987833dbd7108a19ed37c0f041f))
+* android upgrades, bundletool to 1.18.2, kotlin to 2.2.20 ([#5917](https://github.com/NativeScript/nativescript-cli/issues/5917)) ([cc94b80](https://github.com/NativeScript/nativescript-cli/commit/cc94b80328ac22828509e71313848bb10d444150))
+* **android:** api level 36 + start up emulator with unknown target versions ([#5842](https://github.com/NativeScript/nativescript-cli/issues/5842)) ([de2cb8c](https://github.com/NativeScript/nativescript-cli/commit/de2cb8c1e68bfbf0c7651a440bbaff72de27cf50))
+* **android:** update default compileSdkVersion and buildToolsVersion to 35 ([#5849](https://github.com/NativeScript/nativescript-cli/issues/5849)) ([cca32f9](https://github.com/NativeScript/nativescript-cli/commit/cca32f99d644c176f61383866cd45979d6e1f6b2))
+* config settings to use different bundlers ([#5837](https://github.com/NativeScript/nativescript-cli/issues/5837)) ([27e94e8](https://github.com/NativeScript/nativescript-cli/commit/27e94e8bececb837ce901e37e9b1c0d4581603dd))
+* hooks command ([#5918](https://github.com/NativeScript/nativescript-cli/issues/5918)) ([87cbca9](https://github.com/NativeScript/nativescript-cli/commit/87cbca902f8a30f27b8db524d307fd40d808216a))
+* **hooks:** support ES Modules ([#5843](https://github.com/NativeScript/nativescript-cli/issues/5843)) ([23c07aa](https://github.com/NativeScript/nativescript-cli/commit/23c07aa097750147432a8a823a4673c328df76fc))
+* migration updates ([52e5749](https://github.com/NativeScript/nativescript-cli/commit/52e57499806431ee5e3919e9a7cd631e030481ac))
+* replace chalk/ansi-colors/glob with Node.js built-ins ([#5853](https://github.com/NativeScript/nativescript-cli/issues/5853)) ([e562267](https://github.com/NativeScript/nativescript-cli/commit/e562267ce6a7d5cf2172679d6498b2ab79a9aff7))
+
+
+
 ## [8.9.3](https://github.com/NativeScript/nativescript-cli/compare/v8.9.2...v8.9.3) (2025-07-16)
 
 
