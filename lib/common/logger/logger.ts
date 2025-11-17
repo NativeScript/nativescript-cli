@@ -26,7 +26,7 @@ export class Logger implements ILogger {
 	constructor(private $config: Config.IConfig) {
 		this.defaultLogLevel = this.$config.DEBUG
 			? LoggerLevel.TRACE
-			: LoggerLevel.WARN;
+			: LoggerLevel.INFO;
 	}
 
 	@cache()
