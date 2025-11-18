@@ -1,3 +1,12 @@
+## [9.0.1](https://github.com/NativeScript/nativescript-cli/compare/v9.0.0...v9.0.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* prevent error if nativescript.config entry is undefined ([#5919](https://github.com/NativeScript/nativescript-cli/issues/5919)) ([bfad89e](https://github.com/NativeScript/nativescript-cli/commit/bfad89ead225c881c46e2a6a4de042a1cb434323))
+
+
+
 # [9.0.0](https://github.com/NativeScript/nativescript-cli/compare/v8.9.3...v9.0.0) (2025-11-17)
 
 
