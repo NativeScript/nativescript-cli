@@ -116,7 +116,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		);
 
 		if (buildData.copyTo) {
-			this.$buildArtifactsService.copyLatestAppPackage(
+			this.$buildArtifactsService.copyAppPackages(
 				buildData.copyTo,
 				platformData,
 				buildData
@@ -165,9 +165,8 @@ export class BuildController extends EventEmitter implements IBuildController {
 			return true;
 		}
 
-		const validBuildOutputData = platformData.getValidBuildOutputData(
-			buildData
-		);
+		const validBuildOutputData =
+			platformData.getValidBuildOutputData(buildData);
 		const packages = this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
 			validBuildOutputData
@@ -176,9 +175,8 @@ export class BuildController extends EventEmitter implements IBuildController {
 			return true;
 		}
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		const buildInfo = this.$buildInfoFileService.getLocalBuildInfo(
 			platformData,
 			buildData

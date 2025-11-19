@@ -40,8 +40,8 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 	private socketConnection: ILiveSyncSocket;
 	private configuration: IAndroidLivesyncToolConfiguration;
 	private pendingConnectionData: {
-		connectionTimer?: NodeJS.Timer;
-		socketTimer?: NodeJS.Timer;
+		connectionTimer?: NodeJS.Timeout;
+		socketTimer?: NodeJS.Timeout;
 		rejectHandler?: Function;
 		socket?: INetSocket;
 	} = null;

@@ -20,6 +20,9 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 		initializeProjectData: () => {
 			/* empty */
 		},
+		getBuildRelativeDirectoryPath: () => {
+			/* empty */
+		},
 		dependencies: {
 			"@nativescript/core": "next",
 		},
@@ -154,9 +157,8 @@ describe("update controller method tests", () => {
 	it("handles exact versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -175,9 +177,8 @@ describe("update controller method tests", () => {
 	it("handles range versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -196,9 +197,8 @@ describe("update controller method tests", () => {
 	it("handles range versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -217,9 +217,8 @@ describe("update controller method tests", () => {
 	it("handles latest tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -238,9 +237,8 @@ describe("update controller method tests", () => {
 	it("handles existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -259,9 +257,8 @@ describe("update controller method tests", () => {
 	it("handles non-existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -276,9 +273,8 @@ describe("update controller method tests", () => {
 	it("handles partially existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -294,9 +290,8 @@ describe("update controller method tests", () => {
 	it("handles no version - falls back to latest", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 

@@ -532,12 +532,14 @@ export class BundlerCompilerService
 		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();
 		const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+		const buildPath = projectData.getBuildRelativeDirectoryPath();
 
 		Object.assign(
 			envData,
 			appId && { appId },
 			appPath && { appPath },
 			appResourcesPath && { appResourcesPath },
+			buildPath && { buildPath },
 			{
 				nativescriptLibPath: path.resolve(
 					__dirname,
@@ -797,7 +799,9 @@ export class BundlerCompilerService
 				return path.resolve(packagePath, "bin", "vite.js");
 			}
 		} else if (this.isModernBundler(projectData)) {
-			const packagePath = resolvePackagePath(`@nativescript/${bundler}`, {
+
+			const webpackPluginName = this.$projectConfigService.getValue(`webpackPackageName`, WEBPACK_PLUGIN_NAME);
+			const packagePath = resolvePackagePath(webpackPluginName, {
 				paths: [projectData.projectDir],
 			});
 
@@ -805,16 +809,7 @@ export class BundlerCompilerService
 				return path.resolve(packagePath, "dist", "bin", "index.js");
 			}
 		}
-
-		const packagePath = resolvePackagePath("webpack", {
-			paths: [projectData.projectDir],
-		});
-
-		if (!packagePath) {
-			return "";
-		}
-
-		return path.resolve(packagePath, "bin", "webpack.js");
+		throw new Error('could not find bundler executable');
 	}
 
 	private isModernBundler(projectData: IProjectData): boolean {
@@ -823,7 +818,8 @@ export class BundlerCompilerService
 			case "rspack":
 				return true;
 			default:
-				const packageJSONPath = resolvePackageJSONPath(WEBPACK_PLUGIN_NAME, {
+				const webpackPluginName = this.$projectConfigService.getValue(`webpackPackageName`, WEBPACK_PLUGIN_NAME);
+				const packageJSONPath = resolvePackageJSONPath(webpackPluginName, {
 					paths: [projectData.projectDir],
 				});
 

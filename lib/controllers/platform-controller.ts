@@ -69,10 +69,8 @@ export class PlatformController implements IPlatformController {
 				packageToInstall,
 				addPlatformData
 			);
-
-		this.$fs.ensureDirectoryExists(
-			path.join(projectData.platformsDir, platform)
-		);
+		const buildPath = projectData.platformsDir;
+		this.$fs.ensureDirectoryExists(path.join(buildPath, platform));
 
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			const gradlePropertiesPath = path.resolve(
@@ -98,6 +96,7 @@ export class PlatformController implements IPlatformController {
 					commentHeader,
 					`appPath = ${appPath}`,
 					`appResourcesPath = ${appResourcesPath}`,
+					`buildPath = ${buildPath}`,
 					"",
 				].join("\n");
 

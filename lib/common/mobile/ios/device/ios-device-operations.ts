@@ -89,7 +89,7 @@ export class IOSDeviceOperations
 				let iterationsCount = 0;
 				const maxIterationsCount = 3;
 
-				const intervalHandle: NodeJS.Timer = setInterval(() => {
+				const intervalHandle: NodeJS.Timeout = setInterval(() => {
 					if (foundDevice && !options.fullDiscovery) {
 						resolve();
 						return clearInterval(intervalHandle as unknown as number);

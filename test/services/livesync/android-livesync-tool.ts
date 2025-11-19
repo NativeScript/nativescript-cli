@@ -14,6 +14,7 @@ import { tmpdir } from "os";
 import * as crypto from "crypto";
 import { IInjector } from "../../../lib/common/definitions/yok";
 import { IDictionary } from "../../../lib/common/declarations";
+import { PLATFORMS_DIR_NAME } from "../../../lib/constants";
 
 const protocolVersion = "0.2.0";
 
@@ -61,7 +62,7 @@ const projectCreated = false;
 const testAppPath = mkdtempSync(path.join(tmpdir(), "testsyncapp-"));
 const testAppPlatformPath = path.join(
 	testAppPath,
-	"platforms",
+	PLATFORMS_DIR_NAME,
 	"android",
 	"app",
 	"src",

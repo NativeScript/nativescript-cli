@@ -585,7 +585,9 @@ interface IEmbedOptions {
 
 interface IAndroidOptions extends IEmbedOptions {
 	gradlePath: string;
-	gradleArgs: string;
+	gradleFlavor: string;
+	gradleArgs: string[];
+	overrideRuntimeGradleFiles: boolean;
 }
 
 interface IIOSOptions extends IEmbedOptions {}

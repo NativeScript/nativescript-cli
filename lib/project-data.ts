@@ -169,14 +169,17 @@ export class ProjectData implements IProjectData {
 				nsConfig && nsConfig.projectName
 					? nsConfig.projectName
 					: this.$projectHelper.sanitizeName(path.basename(projectDir));
-			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
+			this.nsConfig = nsConfig;
+			this.platformsDir = path.join(
+				projectDir,
+				this.getBuildRelativeDirectoryPath()
+			);
 			this.projectFilePath = projectFilePath;
 			this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
 			this.packageJsonData = packageJsonData;
 			this.dependencies = packageJsonData.dependencies;
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
-			this.nsConfig = nsConfig;
 			this.ignoredDependencies = nsConfig?.ignoredNativeDependencies;
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
@@ -280,6 +283,14 @@ export class ProjectData implements IProjectData {
 		const appRelativePath = this.getAppDirectoryRelativePath();
 
 		return this.resolveToProjectDir(appRelativePath, projectDir);
+	}
+
+	public getBuildRelativeDirectoryPath(): string {
+		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]) {
+			return this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY];
+		}
+
+		return constants.PLATFORMS_DIR_NAME;
 	}
 
 	public getAppDirectoryRelativePath(): string {

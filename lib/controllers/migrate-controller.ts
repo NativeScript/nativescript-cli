@@ -68,6 +68,7 @@ export class MigrateController
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $projectConfigService: IProjectConfigService,
+		private $projectData: IProjectData,
 		private $options: IOptions,
 		private $resources: IResourceLoader,
 		private $injector: IInjector,
@@ -147,7 +148,7 @@ export class MigrateController
 		},
 		{
 			packageName: "nativescript-dev-webpack",
-			replaceWith: "@nativescript/webpack",
+			replaceWith: constants.WEBPACK_PLUGIN_NAME,
 			shouldRemove: true,
 			isDev: true,
 			async shouldMigrateAction() {
@@ -156,7 +157,7 @@ export class MigrateController
 			migrateAction: this.migrateWebpack.bind(this),
 		},
 		{
-			packageName: "@nativescript/webpack",
+			packageName: constants.WEBPACK_PLUGIN_NAME,
 			minVersion: "3.0.0",
 			desiredVersion: "~5.0.0",
 			shouldAddIfMissing: true,
@@ -722,7 +723,7 @@ export class MigrateController
 	private async cleanUpProject(projectData: IProjectData): Promise<void> {
 		await this.$projectCleanupService.clean([
 			constants.HOOKS_DIR_NAME,
-			constants.PLATFORMS_DIR_NAME,
+			this.$projectData.getBuildRelativeDirectoryPath(),
 			constants.NODE_MODULES_FOLDER_NAME,
 			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		]);
@@ -1566,7 +1567,7 @@ export class MigrateController
 		);
 
 		try {
-			const scopedWebpackPackage = `@nativescript/webpack`;
+			const scopedWebpackPackage = constants.WEBPACK_PLUGIN_NAME;
 			const resolvedVersion =
 				await this.$packageInstallationManager.getMaxSatisfyingVersion(
 					scopedWebpackPackage,
