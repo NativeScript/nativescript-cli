@@ -255,7 +255,6 @@ export class PluginsService implements IPluginsService {
 			const currentPluginNativeHashes = await this.getPluginNativeHashes(
 				pluginPlatformsFolderPath
 			);
-
 			if (
 				!oldPluginNativeHashes ||
 				this.$filesHashService.hasChangesInShasums(
@@ -492,7 +491,11 @@ export class PluginsService implements IPluginsService {
 	): IDependencyData[] {
 		const dependenciesWithFrameworks: any[] = [];
 		_.each(productionDependencies, (d) => {
-			const pathToPlatforms = path.join(d.directory, "platforms", platform);
+			const pathToPlatforms = path.join(
+				d.directory,
+				constants.PLATFORMS_DIR_NAME,
+				platform
+			);
 			if (this.$fs.exists(pathToPlatforms)) {
 				const contents = this.$fs.readDirectory(pathToPlatforms);
 				_.each(contents, (file) => {
@@ -639,7 +642,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 				}
 				return path.join(
 					pluginData.fullPath,
-					"platforms",
+					constants.PLATFORMS_DIR_NAME,
 					platform.toLowerCase()
 				);
 			};

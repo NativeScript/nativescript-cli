@@ -1,14 +1,14 @@
 {
-  "name": "nativescript",
+  "name": "@akylas/nativescript-cli",
   "main": "./lib/nativescript-cli-lib.js",
   "version": "9.0.1",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
-    "tns": "./bin/tns",
     "nativescript": "./bin/tns",
+    "ns": "./bin/tns",
     "nsc": "./bin/tns",
-    "ns": "./bin/tns"
+    "tns": "./bin/tns"
   },
   "files": [
     "bin/*",
@@ -21,6 +21,7 @@
     "!lib/**/*.js.map",
     "!lib/common/test",
     "!lib/common/docs/fonts",
+    "!node_modules",
     "resources",
     "setup",
     "vendor",
@@ -37,16 +38,17 @@
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
     "prepack": "grunt prepare",
-    "postpack": "grunt set_dev_ga_id",
+    "pack": "grunt pack",
     "mocha": "mocha",
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
+    "release": "standard-version",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NativeScript/nativescript-cli.git"
+    "url": "https://github.com/farfromrefug/nativescript-cli.git"
   },
   "keywords": [
     "nativescript",
@@ -176,5 +178,6 @@
   },
   "lint-staged": {
     "*.ts": "prettier --write"
-  }
+  },
+  "packageManager": "yarn@4.10.3"
 }

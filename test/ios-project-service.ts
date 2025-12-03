@@ -30,7 +30,7 @@ import { YarnPackageManager } from "../lib/yarn-package-manager";
 
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
-import { BUILD_XCCONFIG_FILE_NAME } from "../lib/constants";
+import { BUILD_XCCONFIG_FILE_NAME, PLATFORMS_DIR_NAME } from "../lib/constants";
 import {
 	ProjectDataStub,
 	TempServiceStub,
@@ -90,7 +90,7 @@ function createTestInjector(
 	testInjector.register("options", OptionsLib.Options);
 	testInjector.register("cocoaPodsPlatformManager", CocoaPodsPlatformManager);
 	const projectData = Object.assign({}, ProjectDataStub, {
-		platformsDir: join(projectPath, "platforms"),
+		platformsDir: join(projectPath, PLATFORMS_DIR_NAME),
 		projectName: projectName,
 		projectPath: projectPath,
 		projectFilePath: join(projectPath, "package.json"),
@@ -311,7 +311,7 @@ describe("Cocoapods support", () => {
 			// fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 			createPackageJson(testInjector, projectPath, "myProject");
 
-			const platformsFolderPath = join(projectPath, "platforms", "ios");
+			const platformsFolderPath = join(projectPath, PLATFORMS_DIR_NAME, "ios");
 			fs.createDirectory(platformsFolderPath);
 
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
@@ -413,7 +413,7 @@ describe("Cocoapods support", () => {
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
-			const platformsFolderPath = join(projectPath, "platforms", "ios");
+			const platformsFolderPath = join(projectPath, PLATFORMS_DIR_NAME, "ios");
 			fs.createDirectory(platformsFolderPath);
 
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
@@ -444,7 +444,7 @@ describe("Cocoapods support", () => {
 			const pluginPath = mkdtempSync(path.join(tmpdir(), "pluginDirectory-"));
 			const samplePluginPlatformsFolderPath = join(
 				pluginPath,
-				"platforms",
+				PLATFORMS_DIR_NAME,
 				"ios",
 			);
 			const pluginPodfilePath = join(
@@ -523,7 +523,7 @@ describe("Cocoapods support", () => {
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
-			const platformsFolderPath = join(projectPath, "platforms", "ios");
+			const platformsFolderPath = join(projectPath, PLATFORMS_DIR_NAME, "ios");
 			fs.createDirectory(platformsFolderPath);
 
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
@@ -572,7 +572,7 @@ describe("Cocoapods support", () => {
 			const pluginPath = mkdtempSync(path.join(tmpdir(), "pluginDirectory-"));
 			const samplePluginPlatformsFolderPath = join(
 				pluginPath,
-				"platforms",
+				PLATFORMS_DIR_NAME,
 				"ios",
 			);
 			const pluginPodfilePath = join(
@@ -681,7 +681,7 @@ describe("Source code support", () => {
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
-			const platformsFolderPath = join(projectPath, "platforms", "ios");
+			const platformsFolderPath = join(projectPath, PLATFORMS_DIR_NAME, "ios");
 			fs.createDirectory(platformsFolderPath);
 
 			const xcprojService = testInjector.resolve("xcprojService");
@@ -740,7 +740,7 @@ describe("Source code support", () => {
 			};
 			fs.writeJson(join(projectPath, "package.json"), packageJsonData);
 
-			const platformsFolderPath = join(projectPath, "platforms", "ios");
+			const platformsFolderPath = join(projectPath, PLATFORMS_DIR_NAME, "ios");
 			fs.createDirectory(platformsFolderPath);
 
 			const iOSProjectService = testInjector.resolve("iOSProjectService");
@@ -777,7 +777,7 @@ describe("Source code support", () => {
 			const pluginPath = mkdtempSync(path.join(tmpdir(), "pluginDirectory-"));
 			const samplePluginPlatformsFolderPath = join(
 				pluginPath,
-				"platforms",
+				PLATFORMS_DIR_NAME,
 				"ios",
 			);
 			files.forEach((file) => {
@@ -822,7 +822,7 @@ describe("Source code support", () => {
 			const testInjector = createTestInjector(projectPath, projectName, xcode);
 			const fs: IFileSystem = testInjector.resolve("fs");
 
-			const platformsFolderPath = join(projectPath, "platforms", "ios");
+			const platformsFolderPath = join(projectPath, PLATFORMS_DIR_NAME, "ios");
 			fs.createDirectory(platformsFolderPath);
 
 			const pbxProj = await await getProjectWithoutPlugins(sourceFileNames);
@@ -992,7 +992,7 @@ describe("Static libraries support", () => {
 	const staticLibraryPath = join(
 		join(
 			mkdtempSync(path.join(tmpdir(), "pluginDirectory-")),
-			"platforms",
+			PLATFORMS_DIR_NAME,
 			"ios",
 		),
 	);

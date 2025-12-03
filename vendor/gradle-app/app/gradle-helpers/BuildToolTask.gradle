@@ -1,0 +1,50 @@
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
+
+class BuildToolTask extends JavaExec {
+    void setOutputs(def logger) {
+        def logFile = new File("$workingDir/${name}.log")
+        if(logFile.exists()) {
+            logFile.delete()
+        }
+        standardOutput new FileOutputStream(logFile)
+        errorOutput new FailureOutputStream(logger, logFile)
+    }
+}
+
+class FailureOutputStream extends OutputStream {
+    private logger
+    private File logFile
+    private currentLine = ""
+    private firstWrite = true
+    FailureOutputStream(inLogger, inLogFile) {
+        logger = inLogger
+        logFile = inLogFile
+    }
+
+    @Override
+    void write(int i) throws IOException {
+        if(firstWrite) {
+            println ""
+            firstWrite = false
+        }
+        currentLine += String.valueOf((char) i)
+    }
+
+    @Override
+    void flush() {
+        if(currentLine?.trim()) {
+            logger.withStyle(Style.Failure).println currentLine.trim()
+            currentLine = ""
+        }
+    }
+
+    @Override
+    void close() {
+        if(!firstWrite && logFile.exists()) {
+            logger.withStyle(Style.Info).println "Detailed log here: ${logFile.getAbsolutePath()}\n"
+        }
+        super.close()
+    }
+}
+
+ext.BuildToolTask = BuildToolTask

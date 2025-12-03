@@ -157,7 +157,7 @@ export class HooksService implements IHooksService {
 			}
 		} catch (err) {
 			this.$logger.trace(`Failed during hook execution ${hookName}.`);
-			this.$errors.fail(err.message || err);
+			this.$errors.fail(err.stack || err.message || err);
 		}
 
 		return _.flatten(results);

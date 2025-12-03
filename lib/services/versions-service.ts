@@ -67,9 +67,11 @@ class VersionsService implements IVersionsService {
 				this.projectData.projectDir,
 				constants.NODE_MODULES_FOLDER_NAME
 			);
+			const packageName = this.projectData.nsConfig.corePackageName || constants.SCOPED_TNS_CORE_MODULES;
+			
 			const scopedPackagePath = path.join(
 				nodeModulesPath,
-				constants.SCOPED_TNS_CORE_MODULES
+				packageName
 			);
 			const tnsCoreModulesPath = path.join(
 				nodeModulesPath,

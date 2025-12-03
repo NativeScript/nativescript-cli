@@ -60,10 +60,20 @@ async function executeTests(
 }
 const ksDir = mkdtempSync(path.join(tmpdir(), "ksPath-"));
 const ksPath = path.join(ksDir, "keystore.jks");
-const expectedInfoLoggingArgs = ["--quiet"];
-const expectedTraceLoggingArgs = ["--stacktrace", "--debug"];
+const expectedInfoLoggingArgs = ["--info"];
+const expectedTraceLoggingArgs = ["--debug"];
 const expectedDebugBuildArgs = [
+	"--stacktrace",
+	"-PcompileSdk=28",
+	"-PtargetSdk=26",
+	"-PbuildToolsVersion=my-build-tools-version",
+	"-PgenerateTypings=true",
+	"-PprojectRoot=/path/to/projectDir",
+	"-DprojectRoot=/path/to/projectDir",
 	"-PappPath=/path/to/projectDir/app".replace(/\//g, path.sep),
+	"-PappBuildPath=platforms",
+	"-DappBuildPath=platforms",
+	"-PappPath=/path/to/projectDir/app",
 	"-PappResourcesPath=/path/to/projectDir/app/App_Resources".replace(
 		/\//g,
 		path.sep,

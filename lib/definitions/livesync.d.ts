@@ -18,7 +18,7 @@ import {
 
 declare global {
 	interface ILiveSyncProcessData {
-		timer: NodeJS.Timer;
+		timer: NodeJS.Timeout;
 		actionsChain: Promise<any>;
 		isStopped: boolean;
 		deviceDescriptors: ILiveSyncDeviceDescriptor[];

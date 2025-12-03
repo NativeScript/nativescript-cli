@@ -1,6 +1,7 @@
 import * as path from "path";
 import { Configurations } from "../../common/constants";
 import { IGradleBuildArgsService } from "../../definitions/gradle";
+import { IAndroidToolsInfo } from "../../declarations";
 import { IAndroidBuildData } from "../../definitions/build";
 import { IHooksService, IAnalyticsService } from "../../common/declarations";
 import { injector } from "../../common/yok";
@@ -8,6 +9,7 @@ import { IProjectData } from "../../definitions/project";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(
+		private $androidToolsInfo: IAndroidToolsInfo,
 		private $hooksService: IHooksService,
 		private $analyticsService: IAnalyticsService,
 		private $staticConfig: Config.IStaticConfig,
@@ -28,7 +30,6 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		) {
 			args.push("-PgatherAnalyticsData=true");
 		}
-
 		// allow modifying gradle args from a `before-build-task-args` hook
 		await this.$hooksService.executeBeforeHooks("build-task-args", {
 			hookArgs: { args },
@@ -47,15 +48,34 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 	private getBaseTaskArgs(buildData: IAndroidBuildData): string[] {
 		const args = this.getBuildLoggingArgs();
 
+		const toolsInfo = this.$androidToolsInfo.getToolsInfo({
+			projectDir: buildData.projectDir,
+		});
+
 		// ensure we initialize project data
 		this.$projectData.initializeProjectData(buildData.projectDir);
 
 		args.push(
+			`--stacktrace`,
+			`-PcompileSdk=${toolsInfo.compileSdkVersion}`,
+			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
+			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
+			`-PgenerateTypings=${toolsInfo.generateTypings}`,
+			`-PprojectRoot=${this.$projectData.projectDir}`,
+			`-DprojectRoot=${this.$projectData.projectDir}`, // we need it as a -D to be able to read it from settings.gradle
+			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
+			`-PappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
+			`-DappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`, // we need it as a -D to be able to read it from settings.gradle
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
-		if (buildData.gradleArgs) {
-			args.push(buildData.gradleArgs);
+		const gradleArgs = (this.$projectData.nsConfig.android.gradleArgs || []).concat(buildData.gradleArgs || []);
+		if (gradleArgs) {
+			const additionalArgs: string[] = [];
+			gradleArgs.forEach((arg) => {
+				additionalArgs.push(...arg.split(" ").map((a) => a.trim()));
+			});
+			args.push(...additionalArgs);
 		}
 
 		if (buildData.release) {
@@ -76,16 +96,21 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 
 		const logLevel = this.$logger.getLevel();
 		if (logLevel === "TRACE") {
-			args.push("--stacktrace", "--debug");
+			args.push("--debug");
 		} else if (logLevel === "INFO") {
-			args.push("--quiet");
+			args.push("--info");
 		}
 
 		return args;
 	}
 
 	private getBuildTaskName(buildData: IAndroidBuildData): string {
-		const baseTaskName = buildData.androidBundle ? "bundle" : "assemble";
+		let baseTaskName = buildData.androidBundle ? "bundle" : "assemble";
+		if (buildData.gradleFlavor) {
+			baseTaskName +=
+				buildData.gradleFlavor[0].toUpperCase() +
+				buildData.gradleFlavor.slice(1);
+		}
 		const buildTaskName = buildData.release
 			? `${baseTaskName}${Configurations.Release}`
 			: `${baseTaskName}${Configurations.Debug}`;

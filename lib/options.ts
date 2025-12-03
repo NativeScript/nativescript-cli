@@ -214,7 +214,7 @@ export class Options {
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
 			count: { type: OptionType.Number, hasSensitiveValue: false },
 			analyticsLogFile: { type: OptionType.String, hasSensitiveValue: true },
-			disableAnalytics: { type: OptionType.Boolean, hasSensitiveValue: false },
+			disableAnalytics: { type: OptionType.Boolean, hasSensitiveValue: false, default: true },
 			cleanupLogFile: { type: OptionType.String, hasSensitiveValue: true },
 			hooks: {
 				type: OptionType.Boolean,
@@ -226,8 +226,15 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
+			overrideRuntimeGradleFiles: { type: OptionType.Boolean, hasSensitiveValue: false },
+			
+			gradleFlavor: { type: OptionType.String, hasSensitiveValue: false },
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
-			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
+			gradleArgs: {
+				type: OptionType.String,
+				hasSensitiveValue: false,
+				array: true,
+			},
 			hostProjectPath: { type: OptionType.String, hasSensitiveValue: false },
 			hostProjectModuleName: {
 				type: OptionType.String,
@@ -235,6 +242,7 @@ export class Options {
 				default: APP_FOLDER_NAME,
 			},
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
+			filterDevicesArch: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
 			appleApplicationSpecificPassword: {
 				type: OptionType.String,

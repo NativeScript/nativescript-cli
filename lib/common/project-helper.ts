@@ -4,9 +4,12 @@ import { IErrors, IFileSystem, IProjectHelper } from "./declarations";
 import { IOptions } from "../declarations";
 import { injector } from "./yok";
 import { SCOPED_TNS_CORE_MODULES, TNS_CORE_MODULES_NAME } from "../constants";
+import { IProjectData } from "../definitions/project";
+import { IInjector } from "./definitions/yok";
 
 export class ProjectHelper implements IProjectHelper {
 	constructor(
+		private $injector: IInjector,
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $staticConfig: Config.IStaticConfig,
@@ -76,8 +79,10 @@ export class ProjectHelper implements IProjectHelper {
 	private isProjectFileCorrect(projectFilePath: string): boolean {
 		try {
 			const fileContent = this.$fs.readText(projectFilePath);
+			const packageName = this.getProjectData(path.dirname(projectFilePath)).nsConfig.corePackageName || SCOPED_TNS_CORE_MODULES;
+			
 			return (
-				fileContent.includes(SCOPED_TNS_CORE_MODULES) ||
+				fileContent.includes(packageName) ||
 				fileContent.includes(TNS_CORE_MODULES_NAME)
 			);
 		} catch (err) {
@@ -88,6 +93,16 @@ export class ProjectHelper implements IProjectHelper {
 		}
 
 		return false;
+	}
+	private getProjectData(projectFilePath: string): IProjectData {
+		try {
+			const projectData: IProjectData = this.$injector.resolve("projectData");
+			projectData.initializeProjectData(projectFilePath);
+			return projectData;
+		} catch (error) {
+			console.error(error)
+			return null;
+		}
 	}
 }
 
