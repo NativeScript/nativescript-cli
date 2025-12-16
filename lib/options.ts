@@ -120,7 +120,11 @@ export class Options {
 				hasSensitiveValue: true,
 			},
 			ignoreScripts: { type: OptionType.Boolean, hasSensitiveValue: false },
-			legacyPeerDeps: { type: OptionType.Boolean, hasSensitiveValue: false },
+			legacyPeerDeps: {
+				type: OptionType.Boolean,
+				alias: "legacyPeers",
+				hasSensitiveValue: false,
+			},
 			disableNpmInstall: { type: OptionType.Boolean, hasSensitiveValue: false },
 			compileSdk: { type: OptionType.Number, hasSensitiveValue: false },
 			port: { type: OptionType.Number, hasSensitiveValue: false },

@@ -104,6 +104,7 @@ export class ProjectService implements IProjectService {
 			template: projectOptions.template,
 			projectDir,
 			ignoreScripts: projectOptions.ignoreScripts,
+			legacyPeerDeps: projectOptions.legacyPeerDeps,
 			appId: appId,
 			projectName,
 		});

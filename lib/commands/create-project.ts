@@ -134,6 +134,9 @@ export class CreateProjectCommand implements ICommand {
 			);
 		}
 
+		const legacyPeerDeps =
+			this.$options.legacyPeerDeps || (this.$options as any).legacyPeers;
+
 		this.createdProjectData = await this.$projectService.createProject({
 			projectName: projectName,
 			template: selectedTemplate,
@@ -142,7 +145,7 @@ export class CreateProjectCommand implements ICommand {
 			// its already validated above
 			force: true,
 			ignoreScripts: this.$options.ignoreScripts,
-			legacyPeerDeps: this.$options.legacyPeerDeps,
+			legacyPeerDeps,
 		});
 	}
 
