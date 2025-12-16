@@ -26,7 +26,7 @@ export class PnpmPackageManager extends BasePackageManager {
 		$hostInfo: IHostInfo,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
-		$pacoteService: IPacoteService
+		$pacoteService: IPacoteService,
 	) {
 		super($childProcess, $fs, $hostInfo, $pacoteService, "pnpm");
 	}
@@ -35,11 +35,12 @@ export class PnpmPackageManager extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo> {
 		if (config.disableNpmInstall) {
 			return;
 		}
+		delete (config as any).legacyPeers;
 		delete config.dev; // temporary fix for unsupported yarn flag
 		if (config.ignoreScripts) {
 			config["ignore-scripts"] = true;
@@ -63,7 +64,7 @@ export class PnpmPackageManager extends BasePackageManager {
 			const result = await this.processPackageManagerInstall(
 				packageName,
 				params,
-				{ cwd, isInstallingAllDependencies }
+				{ cwd, isInstallingAllDependencies },
 			);
 			return result;
 		} catch (e) {
@@ -76,7 +77,7 @@ export class PnpmPackageManager extends BasePackageManager {
 	public uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
-		cwd?: string
+		cwd?: string,
 	): Promise<string> {
 		// pnpm does not want save option in remove. It saves it by default
 		delete config["save"];
@@ -94,7 +95,7 @@ export class PnpmPackageManager extends BasePackageManager {
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(
-				`pnpm info ${packageName} ${flags}`
+				`pnpm info ${packageName} ${flags}`,
 			);
 		} catch (e) {
 			this.$errors.fail(e.message);
@@ -110,7 +111,7 @@ export class PnpmPackageManager extends BasePackageManager {
 	@exported("pnpm")
 	public search(
 		filter: string[],
-		config: IDictionary<string | boolean>
+		config: IDictionary<string | boolean>,
 	): Promise<string> {
 		const flags = this.getFlagsString(config, false);
 		return this.$childProcess.exec(`pnpm search ${filter.join(" ")} ${flags}`);
@@ -118,7 +119,7 @@ export class PnpmPackageManager extends BasePackageManager {
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
 		const httpRequestResult = await this.$httpClient.httpRequest(
-			`https://api.npms.io/v2/search?q=keywords:${keyword}`
+			`https://api.npms.io/v2/search?q=keywords:${keyword}`,
 		);
 		const result: INpmsResult = JSON.parse(httpRequestResult.body);
 		return result;
@@ -129,15 +130,15 @@ export class PnpmPackageManager extends BasePackageManager {
 		const registry = await this.$childProcess.exec(`pnpm config get registry`);
 		const url = `${registry.trim()}/${packageName}`;
 		this.$logger.trace(
-			`Trying to get data from pnpm registry for package ${packageName}, url is: ${url}`
+			`Trying to get data from pnpm registry for package ${packageName}, url is: ${url}`,
 		);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
 		this.$logger.trace(
-			`Successfully received data from pnpm registry for package ${packageName}. Response data is: ${responseData}`
+			`Successfully received data from pnpm registry for package ${packageName}. Response data is: ${responseData}`,
 		);
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(
-			`Successfully parsed data from pnpm registry for package ${packageName}.`
+			`Successfully parsed data from pnpm registry for package ${packageName}.`,
 		);
 		return jsonData;
 	}
