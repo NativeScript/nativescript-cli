@@ -129,7 +129,7 @@
     "@types/qr-image": "3.2.9",
     "@types/retry": "0.12.5",
     "@types/semver": "7.7.1",
-    "@types/shelljs": "^0.8.11",
+    "@types/shelljs": "^0.10.0",
     "@types/sinon": "^17.0.3",
     "@types/tabtab": "^3.0.2",
     "@types/tar": "6.1.13",
