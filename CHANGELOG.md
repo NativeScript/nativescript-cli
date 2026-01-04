@@ -1,3 +1,12 @@
+## [9.0.2](https://github.com/NativeScript/nativescript-cli/compare/v9.0.1...v9.0.2) (2026-01-04)
+
+
+### Bug Fixes
+
+* vite build and prepare ([#5948](https://github.com/NativeScript/nativescript-cli/issues/5948)) ([e892f48](https://github.com/NativeScript/nativescript-cli/commit/e892f48ea86510b1aafbb739a42bfd834fbdc12e))
+
+
+
 ## [9.0.1](https://github.com/NativeScript/nativescript-cli/compare/v9.0.0...v9.0.1) (2025-11-18)
 
 
