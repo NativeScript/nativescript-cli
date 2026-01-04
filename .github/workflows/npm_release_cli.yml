@@ -2,7 +2,10 @@ name: 'nativescript -> npm'
 
 on:
   push:
-    branches: [ 'main' ]
+    branches:
+      - main
+    tags:
+      - "v*"
     paths-ignore:
       - 'packages/**'
   workflow_dispatch:
@@ -10,22 +13,132 @@ on:
 env:
   NPM_TAG: 'next'
 
-permissions:
-  contents: read
-
 jobs:
-  release:
+  build:
+    name: Build
     runs-on: macos-latest
+    outputs:
+      npm_version: ${{ steps.npm_version_output.outputs.NPM_VERSION }}
+      npm_tag: ${{ steps.npm_version_output.outputs.NPM_TAG }}
 
     steps:
-
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.14.0
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Setup
+        run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
+
+      - name: Get Current Version
+        run: |
+          NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+
+      - name: Bump version for dev release
+        if: ${{ !contains(github.ref, 'refs/tags/') }}
+        run: |
+          NPM_VERSION=$(node ./scripts/get-next-version.js)
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+          npm version $NPM_VERSION --no-git-tag-version
+
+      - name: Output NPM Version and tag
+        id: npm_version_output
+        run: |
+          NPM_TAG=$(node ./scripts/get-npm-tag.js)
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_OUTPUT
+          echo NPM_TAG=$NPM_TAG >> $GITHUB_OUTPUT
+
+      - name: Build nativescript
+        run: npm pack
+
+      - name: Upload npm package artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: npm-package
+          path: nativescript-${{steps.npm_version_output.outputs.NPM_VERSION}}.tgz
+
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    needs:
+      - build
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NPM_VERSION: ${{needs.build.outputs.npm_version}}
+      NPM_TAG: ${{needs.build.outputs.npm_tag}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.14.0
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          name: npm-package
+          path: dist
+
+      - name: Update npm (required for OIDC trusted publishing)
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
+
+      - name: Publish package (OIDC trusted publishing)
+        if: ${{ vars.USE_NPM_TOKEN != 'true' }}
+        run: |
+          echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG via OIDC trusted publishing..."
+          unset NODE_AUTH_TOKEN
+          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ]; then
+            rm -f "$NPM_CONFIG_USERCONFIG"
+          fi
+          npm publish ./dist/nativescript-${{env.NPM_VERSION}}.tgz --tag $NPM_TAG --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ""
+
+      - name: Publish package (granular token)
+        if: ${{ vars.USE_NPM_TOKEN == 'true' }}
+        run: |
+          echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG via granular token..."
+          npm publish ./dist/nativescript-${{env.NPM_VERSION}}.tgz --tag $NPM_TAG --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+  github-release:
+    runs-on: ubuntu-latest
+    # only runs on tagged commits
+    if: ${{ contains(github.ref, 'refs/tags/') }}
+    permissions:
+      contents: write
+    needs:
+      - build
+    env:
+      NPM_VERSION: ${{needs.build.outputs.npm_version}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: 22.14.0
@@ -33,20 +146,17 @@ jobs:
       - name: Setup
         run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
 
-      - name: Generate Version
-        run: |
-          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);")-$NPM_TAG-$(date +"%m-%d-%Y")-$GITHUB_RUN_ID >> $GITHUB_ENV
+      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          name: npm-package
+          path: dist
 
-      - name: Bump Version
-        run: npm version $NPM_VERSION
+      - name: Partial Changelog
+        run: npx conventional-changelog -p angular -r2 > body.md
 
-      - name: Build nativescript
-        run: npm pack
-
-      - name: Publish nativescript
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG..."
-          npm publish nativescript-$NPM_VERSION.tgz --tag $NPM_TAG
+      - uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
+        with:
+          artifacts: "dist/nativescript-*.tgz"
+          bodyFile: "body.md"
+          prerelease: ${{needs.build.outputs.npm_tag != 'latest'}}
+          allowUpdates: true
