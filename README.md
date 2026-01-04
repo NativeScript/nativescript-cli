@@ -1,11 +1,6 @@
 
 <h1 id="nativescript-command-line-interface" align="center">
-  <br>
-  <a href="https://www.npmjs.com/package/nativescript"><img src="https://art.nativescript.org/logo/export/NativeScript_Logo_Wide_White_Blue_Rounded_Blue.svg" alt="Nativescript Logo" width="200"></a>
-  <br>
-	  <br>
-   NativeScript Command-Line Interface
-  <br>
+  <a href="https://www.npmjs.com/package/nativescript"><img src="https://raw.githubusercontent.com/NativeScript/artwork/main/logo/export/NativeScript_Logo_Dark_Transparent.png" alt="Nativescript Logo" width="200"></a>
 </h1>
 
 <h4 align="center">The NativeScript CLI lets you create, build, and deploy <a href="https://docs.nativescript.org/" target="_blank">NativeScript</a> apps.</h4>
@@ -14,7 +9,11 @@
 
 ---
 
-[![nativescript -> npm](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release_cli.yml/badge.svg)](https://github.com/NativeScript/nativescript-cli/actions/workflows/npm_release_cli.yml)
+<p align="center">
+  <a href="https://www.npmjs.com/package/nativescript"><img src="https://img.shields.io/npm/v/nativescript.svg" alt="npm version"></a>
+  <a href="https://github.com/NativeScript/NativeScript/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"></a>
+  <a href="https://www.npmjs.com/package/nativescript"><img src="https://img.shields.io/npm/dm/nativescript.svg" alt="downloads"></a>
+</p>
 
 Get it using: `npm install -g nativescript`
 
@@ -67,10 +66,7 @@ Some popular use cases:
 To learn more about NativeScript, you can check the following resources:
 
 * [The NativeScript web page][2]
-* [NativeScript - a Technical Overview][7]
-* [Announcing NativeScript - cross-platform framework for building native mobile applications][8]
-* The NativeScript [Documentation repo][3] and [Documentation portal][4]
-* [The NativeScript FAQ][6]
+* The NativeScript [Documentation][4] and contributing to [docs via the repo](https://github.com/NativeScript/docs)
 
 [Back to Top][1]
 
@@ -104,9 +100,9 @@ System Requirements
 
 You can install and run the NativeScript CLI on Windows, macOS or Linux.
 
-* [Windows](https://docs.nativescript.org/start/ns-setup-win)
-* [macOS](https://docs.nativescript.org/start/ns-setup-os-x)
-* [Linux](https://docs.nativescript.org/start/ns-setup-linux)
+* [Windows](https://docs.nativescript.org/setup/windows)
+* [macOS](https://docs.nativescript.org/setup/macos)
+* [Linux](https://docs.nativescript.org/setup/linux)
 
 Installation
 ===
@@ -224,14 +220,14 @@ The CLI places the project in a new directory in the current directory. The newl
 
 ```
 MyApp/
-├── app
-│   ├── App_Resources
+├── App_Resources
+├── src
 │   └── ...
 └── platforms
     └── ...
 ```
 
-* The `app` directory is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI prepares relevant content to the platform-specific folders for each target platform.
+* The `src` directory (or sometimes `app` folder) is the **development space for your application**. You should modify all common and platform-specific code within this directory. When you run `prepare <Platform>`, the NativeScript CLI prepares relevant content to the platform-specific folders for each target platform.
 * The `platforms` directory is created empty. When you add a target platform to your project, the NativeScript CLI creates a new subdirectory with the platform name. The subdirectory contains the ready-to-build resources of your app. When you run `prepare <Platform>`, the NativeScript CLI prepares relevant content from the `app` directory to the platform-specific subdirectory for each target platform.
 
 [Back to Top][1]
@@ -263,13 +259,13 @@ You can develop shared functionality or design in common files. To indicate that
 
 ### Modifying Configuration Files
 
-The NativeScript CLI respects any platform configuration files placed inside `app/App_Resources`.
+The NativeScript CLI respects any platform configuration files placed inside `App_Resources`.
 
 ### Modifying Entitlements File (iOS only)
 
-To specify which capabilities are required by your App - Maps, Push Notifications, Wallet etc. you can add or edit the `app.entitlements` file placed inside `app/App_Resources/iOS`. When building the project, the default `app/App_Resources/iOS/app.entitlements` file gets merged with all Plugins entitlement files and a new `yourAppName.entitlements` is created in the platforms directory. The path would be `app/platforms/ios/<application name>/<application name>.entitlements` and will be linked in the `build.xcconfig` file.
+To specify which capabilities are required by your App - Maps, Push Notifications, Wallet etc. you can add or edit the `app.entitlements` file placed inside `App_Resources/iOS`. When building the project, the default `App_Resources/iOS/app.entitlements` file gets merged with all Plugins entitlement files and a new `yourAppName.entitlements` is created in the platforms directory. The path would be `platforms/ios/<application name>/<application name>.entitlements` and will be linked in the `build.xcconfig` file.
 
-You can always override the generated entitlements file, by pointing to your own entitlements file by setting the `CODE_SIGN_ENTITLEMENTS` property in the `app/App_Resources/iOS/build.xcconfig` file.
+You can always override the generated entitlements file, by pointing to your own entitlements file by setting the `CODE_SIGN_ENTITLEMENTS` property in the `App_Resources/iOS/build.xcconfig` file.
 
 [Back to Top][1]
 
@@ -314,11 +310,11 @@ ns run ios
 Extending the CLI
 ===
 
-The NativeScript CLI lets you extend its behavior and customize it to fit your needs by using [hooks](https://en.wikipedia.org/wiki/Hooking).
+The NativeScript CLI lets you extend its behavior and customize it to fit your needs by using [hooks](https://docs.nativescript.org/guide/hooks).
 
 When you run one of the extendable commands (for example, `ns build`), the CLI checks for hooks and executes them. Plugins can also use hooks to control the compilation of the application package.
 
-For more information, see the [Extending the CLI document](https://github.com/NativeScript/nativescript-cli/blob/master/extending-cli.md)
+For more information, see the [Extending the CLI document](https://github.com/NativeScript/nativescript-cli/blob/main/extending-cli.md)
 
 [Back to Top][1]
 
@@ -354,6 +350,7 @@ How to Build
 git clone https://github.com/NativeScript/nativescript-cli
 cd nativescript-cli
 npm run setup
+npm run build
 ```
 
 To use the locally built CLI instead of `ns` you can call `PATH_TO_CLI_FOLDER/bin/ns`. For example:
@@ -379,7 +376,4 @@ This software is licensed under the Apache 2.0 license, quoted <a href="LICENSE"
 [2]: https://nativescript.org
 [3]: https://github.com/nativescript/docs
 [4]: https://docs.nativescript.org/
-[5]: https://docs.nativescript.org/api-reference
-[6]: https://www.nativescript.org/faq
-[7]: https://docs.nativescript.org/core-concepts/technical-overview
-[8]: https://www.telerik.com/blogs/announcing-nativescript---cross-platform-framework-for-building-native-mobile-applications
+[5]: https://docs.nativescript.org/api/
