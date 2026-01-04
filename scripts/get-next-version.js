@@ -1,6 +1,5 @@
 const semver = require("semver");
 const child_process = require("child_process");
-const dayjs = require("dayjs");
 const fs = require("fs");
 
 const currentVersion =
@@ -25,7 +24,11 @@ if (currentTag === "pr" && process.env.GITHUB_EVENT_PATH) {
   }
 }
 
-const preRelease = `${currentTag}.${prPrerelease}${dayjs().format("YYYY-MM-DD")}-${runID}`;
+// Format date as YYYY-MM-DD using native Date
+const now = new Date();
+const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+const preRelease = `${currentTag}.${prPrerelease}${dateStr}-${runID}`;
 
 let lastTagVersion = (
   process.env.LAST_TAGGED_VERSION ||
