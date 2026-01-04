@@ -453,7 +453,7 @@ export class BundlerCompilerService
 		const envParams = isVite
 			? [
 					`--mode=${prepareData.release ? "production" : "development"}`,
-					`--watch`,
+					...(prepareData.watch ? [`--watch`] : []),
 					"--",
 					...cliArgs,
 				]
@@ -483,7 +483,7 @@ export class BundlerCompilerService
 			}
 		}
 
-		const stdio = prepareData.watch || isVite ? ["ipc"] : "inherit";
+		const stdio = prepareData.watch ? ["ipc"] : "inherit";
 		const options: { [key: string]: any } = {
 			cwd: projectData.projectDir,
 			stdio,
