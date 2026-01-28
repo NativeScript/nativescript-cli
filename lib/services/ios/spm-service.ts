@@ -24,6 +24,29 @@ export class SPMService implements ISPMService {
 		return spmPackages;
 	}
 
+	/**
+	 * Merges plugin SPM packages with app SPM packages.
+	 * App packages take precedence over plugin packages with the same name.
+	 * @param appPackages - Array of app SPM packages (modified in place)
+	 * @param pluginPackages - Array of plugin SPM packages to merge
+	 */
+	private mergePluginSPMPackages(
+		appPackages: IosSPMPackage[],
+		pluginPackages: IosSPMPackage[],
+	): void {
+		// include swift packages from plugin configs
+		// but allow app packages to override plugin packages with the same name
+		const appPackageNames = new Set(appPackages.map(pkg => pkg.name));
+		
+		for (const pluginPkg of pluginPackages) {
+			if (appPackageNames.has(pluginPkg.name)) {
+				this.$logger.trace(`SPM: app package overrides plugin package: ${pluginPkg.name}`);
+			} else {
+				appPackages.push(pluginPkg);
+			}
+		}
+	}
+
 	// note: this is not used anywhere at the moment.
 	// public hasSPMPackages(projectData: IProjectData): boolean {
 	// 	return this.getSPMPackages(projectData).length > 0;
@@ -41,8 +64,7 @@ export class SPMService implements ISPMService {
 			);
 
 			if (pluginSpmPackages?.length) {
-				// include swift packages from plugin configs
-				spmPackages.push(...pluginSpmPackages);
+				this.mergePluginSPMPackages(spmPackages, pluginSpmPackages);
 			}
 
 			if (!spmPackages.length) {
