@@ -42,7 +42,7 @@ export class Options {
 	public options: IDictionary<IDashedOption>;
 
 	public setupOptions(
-		commandSpecificDashedOptions?: IDictionary<IDashedOption>
+		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
 	): void {
 		if (commandSpecificDashedOptions) {
 			_.extend(this.options, commandSpecificDashedOptions);
@@ -54,7 +54,7 @@ export class Options {
 		// Check if the user has explicitly provide --hmr and --release options from command line
 		if (this.initialArgv.release && this.initialArgv.hmr) {
 			this.$errors.fail(
-				"The options --release and --hmr cannot be used simultaneously."
+				"The options --release and --hmr cannot be used simultaneously.",
 			);
 		}
 
@@ -75,7 +75,7 @@ export class Options {
 
 	constructor(
 		private $errors: IErrors,
-		private $settingsService: ISettingsService
+		private $settingsService: ISettingsService,
 	) {
 		this.options = _.extend({}, this.commonOptions, this.globalOptions);
 		this.setArgv();
@@ -120,6 +120,11 @@ export class Options {
 				hasSensitiveValue: true,
 			},
 			ignoreScripts: { type: OptionType.Boolean, hasSensitiveValue: false },
+			legacyPeerDeps: {
+				type: OptionType.Boolean,
+				alias: "legacyPeers",
+				hasSensitiveValue: false,
+			},
 			disableNpmInstall: { type: OptionType.Boolean, hasSensitiveValue: false },
 			compileSdk: { type: OptionType.Number, hasSensitiveValue: false },
 			port: { type: OptionType.Number, hasSensitiveValue: false },
@@ -264,7 +269,7 @@ export class Options {
 	}
 
 	public validateOptions(
-		commandSpecificDashedOptions?: IDictionary<IDashedOption>
+		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
 	): void {
 		this.setupOptions(commandSpecificDashedOptions);
 		const parsed: any = {};
@@ -284,7 +289,7 @@ export class Options {
 			if (!_.includes(this.optionsWhiteList, optionName)) {
 				if (!this.isOptionSupported(optionName)) {
 					this.$errors.failWithHelp(
-						`The option '${originalOptionName}' is not supported.`
+						`The option '${originalOptionName}' is not supported.`,
 					);
 				}
 
@@ -294,7 +299,7 @@ export class Options {
 				if (_.isArray(optionValue) && optionType !== OptionType.Array) {
 					this.$errors.failWithHelp(
 						"The '%s' option requires a single value.",
-						originalOptionName
+						originalOptionName,
 					);
 				} else if (
 					optionType === OptionType.String &&
@@ -302,14 +307,14 @@ export class Options {
 				) {
 					this.$errors.failWithHelp(
 						"The option '%s' requires non-empty value.",
-						originalOptionName
+						originalOptionName,
 					);
 				} else if (
 					optionType === OptionType.Array &&
 					optionValue.length === 0
 				) {
 					this.$errors.failWithHelp(
-						`The option '${originalOptionName}' requires one or more values, separated by a space.`
+						`The option '${originalOptionName}' requires one or more values, separated by a space.`,
 					);
 				}
 			}
@@ -350,7 +355,7 @@ export class Options {
 	// This way your code will work in case "$ <cli name> emulate android --profile-dir" or "$ <cli name> emulate android --profileDir" is used by user.
 	private getNonDashedOptionName(optionName: string): string {
 		const matchUpperCaseLetters = optionName.match(
-			Options.NONDASHED_OPTION_REGEX
+			Options.NONDASHED_OPTION_REGEX,
 		);
 		if (matchUpperCaseLetters) {
 			// get here if option with upperCase letter is specified, for example profileDir
@@ -410,7 +415,7 @@ export class Options {
 							.map((match) => {
 								return match[currentDepth];
 							})
-							.filter(Boolean)
+							.filter(Boolean),
 					),
 				];
 
