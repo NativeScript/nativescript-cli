@@ -1,3 +1,14 @@
+## [9.0.3](https://github.com/NativeScript/nativescript-cli/compare/v9.0.2...v9.0.3) (2026-02-01)
+
+
+### Bug Fixes
+
+* allow app spm to "override" plugin spm packages ([#5951](https://github.com/NativeScript/nativescript-cli/issues/5951)) ([33d44b5](https://github.com/NativeScript/nativescript-cli/commit/33d44b58af3f267168544b3f80719d4a1c607672))
+* **vite:** incremental build file changes ([#5952](https://github.com/NativeScript/nativescript-cli/issues/5952)) ([9013634](https://github.com/NativeScript/nativescript-cli/commit/90136342348e9009d9f71ddab99c05a3d9e86775))
+* **workspaces:** duplicate added frameworks ([#5949](https://github.com/NativeScript/nativescript-cli/issues/5949)) ([768a97c](https://github.com/NativeScript/nativescript-cli/commit/768a97cafeefc414a56697d1a4550115cb9cfc51))
+
+
+
 ## [9.0.2](https://github.com/NativeScript/nativescript-cli/compare/v9.0.1...v9.0.2) (2026-01-04)
 
 
