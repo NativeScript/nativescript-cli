@@ -42,7 +42,7 @@
   "homepage": "https://github.com/NativeScript/nativescript-doctor#readme",
   "devDependencies": {
     "@types/chai": "5.2.2",
-    "@types/lodash": "4.17.21",
+    "@types/lodash": "4.17.23",
     "@types/mocha": "10.0.10",
     "@types/semver": "7.7.1",
     "@types/shelljs": "0.8.17",
@@ -65,7 +65,7 @@
     "typescript": "~5.9.2"
   },
   "dependencies": {
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "semver": "7.7.3",
     "shelljs": "0.10.0",
     "winreg": "1.2.5",
