@@ -130,6 +130,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private _platformsDirCache: string = null;
+	private _platformOverrideCache: string = null;
 	private _platformData: IPlatformData = null;
 
 	public getPlatformData(projectData: IProjectData): IPlatformData {
@@ -139,10 +140,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 		}
 
+		const currentOverride = this.$options.platformOverride ?? null;
 		if (
 			projectData &&
 			projectData.platformsDir &&
-			this._platformsDirCache !== projectData.platformsDir
+			(this._platformsDirCache !== projectData.platformsDir ||
+				this._platformOverrideCache !== currentOverride)
 		) {
 			const platform = this.$mobileHelper.normalizePlatformName(
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
@@ -231,6 +234,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					".xbm",
 				], // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIImage_Class/
 			};
+			this._platformsDirCache = projectData.platformsDir;
+			this._platformOverrideCache = currentOverride;
 		}
 
 		return this._platformData;
@@ -659,13 +664,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 		prepareData: IOSPrepareData,
 	): Promise<void> {
+		const platformData = this.getPlatformData(projectData);
 		const projectRoot = this.$options.hostProjectPath
 			? this.$options.hostProjectPath
-			: path.join(
-					projectData.platformsDir,
-					this.$devicePlatformsConstants.iOS.toLowerCase(),
-				);
-		const platformData = this.getPlatformData(projectData);
+			: platformData.projectRoot;
 
 		const pluginsData = this.getAllProductionPlugins(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);

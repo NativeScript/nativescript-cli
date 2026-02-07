@@ -13,7 +13,7 @@ export class IOSEntitlementsService {
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $pluginsService: IPluginsService
+		private $pluginsService: IPluginsService,
 	) {}
 
 	public static readonly DefaultEntitlementsName: string = "app.entitlements";
@@ -23,9 +23,9 @@ export class IOSEntitlementsService {
 		const entitlementsPath = path.join(
 			projectData.appResourcesDirectoryPath,
 			this.$mobileHelper.normalizePlatformName(
-				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS
+				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
 			),
-			entitlementsName
+			entitlementsName,
 		);
 		return entitlementsPath;
 	}
@@ -33,18 +33,21 @@ export class IOSEntitlementsService {
 	public getPlatformsEntitlementsPath(projectData: IProjectData): string {
 		return path.join(
 			projectData.platformsDir,
-			this.$options.platformOverride ??
-				this.$devicePlatformsConstants.iOS.toLowerCase(),
+			this.$mobileHelper
+				.normalizePlatformName(
+					this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
+				)
+				.toLowerCase(),
 			projectData.projectName,
-			projectData.projectName + ".entitlements"
+			projectData.projectName + ".entitlements",
 		);
 	}
 	public getPlatformsEntitlementsRelativePath(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		return path.join(
 			projectData.projectName,
-			projectData.projectName + ".entitlements"
+			projectData.projectName + ".entitlements",
 		);
 	}
 
@@ -71,7 +74,7 @@ export class IOSEntitlementsService {
 		for (const plugin of allPlugins) {
 			const pluginInfoPlistPath = path.join(
 				plugin.pluginPlatformsFolderPath(this.$devicePlatformsConstants.iOS),
-				IOSEntitlementsService.DefaultEntitlementsName
+				IOSEntitlementsService.DefaultEntitlementsName,
 			);
 			makePatch(pluginInfoPlistPath);
 		}
@@ -85,17 +88,17 @@ export class IOSEntitlementsService {
 			const plistContent = session.build();
 			this.$logger.trace(
 				"App.entitlements: Write to: " +
-					this.getPlatformsEntitlementsPath(projectData)
+					this.getPlatformsEntitlementsPath(projectData),
 			);
 			this.$fs.writeFile(
 				this.getPlatformsEntitlementsPath(projectData),
-				plistContent
+				plistContent,
 			);
 		}
 	}
 
 	private getAllInstalledPlugins(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<IPluginData[]> {
 		return this.$pluginsService.getAllInstalledPlugins(projectData);
 	}
