@@ -9,6 +9,7 @@ import * as helpers from "../../common/helpers";
 import { IOSProvisionService } from "../ios-provision-service";
 import { IOSBuildData } from "../../data/build-data";
 import {
+	IOptions,
 	IProvisioningJSON,
 	IXcconfigService,
 	IXcprojService,
@@ -25,19 +26,20 @@ export class IOSSigningService implements IiOSSigningService {
 		private $fs: IFileSystem,
 		private $iOSProvisionService: IOSProvisionService,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $pbxprojDomXcode: IPbxprojDomXcode,
 		private $prompter: IPrompter,
 		private $xcconfigService: IXcconfigService,
-		private $xcprojService: IXcprojService
+		private $xcprojService: IXcprojService,
 	) {}
 
 	public async setupSigningForDevice(
 		projectRoot: string,
 		projectData: IProjectData,
-		iOSBuildData: IOSBuildData
+		iOSBuildData: IOSBuildData,
 	): Promise<void> {
 		const xcode = this.$pbxprojDomXcode.Xcode.open(
-			this.getPbxProjPath(projectData, projectRoot)
+			this.getPbxProjPath(projectData, projectRoot),
 		);
 		const signing = xcode.getSigning(projectData.projectName);
 
@@ -63,7 +65,7 @@ export class IOSSigningService implements IiOSSigningService {
 			const teamId = await this.getDevelopmentTeam(
 				projectData,
 				projectRoot,
-				iOSBuildData.teamId
+				iOSBuildData.teamId,
 			);
 			await this.setupSigningFromTeam(projectRoot, projectData, teamId);
 		}
@@ -72,10 +74,10 @@ export class IOSSigningService implements IiOSSigningService {
 	public async setupSigningFromTeam(
 		projectRoot: string,
 		projectData: IProjectData,
-		teamId: string
+		teamId: string,
 	): Promise<void> {
 		const xcode = this.$pbxprojDomXcode.Xcode.open(
-			this.getPbxProjPath(projectData, projectRoot)
+			this.getPbxProjPath(projectData, projectRoot),
 		);
 		const signing = xcode.getSigning(projectData.projectName);
 
@@ -94,12 +96,11 @@ export class IOSSigningService implements IiOSSigningService {
 		}
 
 		if (shouldUpdateXcode) {
-			const teamIdsForName = await this.$iOSProvisionService.getTeamIdsWithName(
-				teamId
-			);
+			const teamIdsForName =
+				await this.$iOSProvisionService.getTeamIdsWithName(teamId);
 			if (teamIdsForName.length > 0) {
 				this.$logger.trace(
-					`Team id ${teamIdsForName[0]} will be used for team name "${teamId}".`
+					`Team id ${teamIdsForName[0]} will be used for team name "${teamId}".`,
 				);
 				teamId = teamIdsForName[0];
 			}
@@ -111,7 +112,7 @@ export class IOSSigningService implements IiOSSigningService {
 					IOSNativeTargetProductTypes.watchApp,
 					IOSNativeTargetProductTypes.watchExtension,
 				],
-				teamId
+				teamId,
 			);
 			this.getExtensionNames(projectData).forEach((name) => {
 				xcode.setAutomaticSigningStyle(name, teamId);
@@ -122,7 +123,7 @@ export class IOSSigningService implements IiOSSigningService {
 			this.$logger.trace(`Set Automatic signing style and team id ${teamId}.`);
 		} else {
 			this.$logger.trace(
-				`The specified ${teamId} is already set in the Xcode.`
+				`The specified ${teamId} is already set in the Xcode.`,
 			);
 		}
 	}
@@ -131,7 +132,7 @@ export class IOSSigningService implements IiOSSigningService {
 		projectRoot: string,
 		projectData: IProjectData,
 		provision?: string,
-		mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision
+		mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision,
 	): Promise<void> {
 		if (!provision) {
 			// read uuid from Xcode an cache...
@@ -139,7 +140,7 @@ export class IOSSigningService implements IiOSSigningService {
 		}
 
 		const xcode = this.$pbxprojDomXcode.Xcode.open(
-			this.getPbxProjPath(projectData, projectRoot)
+			this.getPbxProjPath(projectData, projectRoot),
 		);
 		const signing = xcode.getSigning(projectData.projectName);
 
@@ -160,11 +161,11 @@ export class IOSSigningService implements IiOSSigningService {
 			const projectSigningConfig = await this.getManualSigningConfiguration(
 				projectData,
 				provision,
-				mobileProvisionData
+				mobileProvisionData,
 			);
 			xcode.setManualSigningStyle(
 				projectData.projectName,
-				projectSigningConfig
+				projectSigningConfig,
 			);
 			xcode.setManualSigningStyleByTargetProductTypesList(
 				[
@@ -172,20 +173,20 @@ export class IOSSigningService implements IiOSSigningService {
 					IOSNativeTargetProductTypes.watchApp,
 					IOSNativeTargetProductTypes.watchExtension,
 				],
-				projectSigningConfig
+				projectSigningConfig,
 			);
 
 			this.$logger.trace(
-				`Set Manual signing style and provisioning profile: ${projectSigningConfig.name} (${projectSigningConfig.uuid})`
+				`Set Manual signing style and provisioning profile: ${projectSigningConfig.name} (${projectSigningConfig.uuid})`,
 			);
 
 			const extensionSigningConfig = await Promise.all(
-				this.getExtensionsManualSigningConfiguration(projectData)
+				this.getExtensionsManualSigningConfiguration(projectData),
 			);
 			extensionSigningConfig.forEach(({ name, configuration }) => {
 				xcode.setManualSigningStyle(name, configuration);
 				this.$logger.trace(
-					`Set Manual signing style and provisioning profile: ${configuration.name} (${configuration.uuid})`
+					`Set Manual signing style and provisioning profile: ${configuration.name} (${configuration.uuid})`,
 				);
 			});
 
@@ -193,7 +194,7 @@ export class IOSSigningService implements IiOSSigningService {
 			// this.cache(uuid);
 		} else {
 			this.$logger.trace(
-				`The specified provisioning profile is already set in the Xcode: ${provision}`
+				`The specified provisioning profile is already set in the Xcode: ${provision}`,
 			);
 		}
 	}
@@ -202,7 +203,7 @@ export class IOSSigningService implements IiOSSigningService {
 		const extensionFolderPath = path.join(
 			projectData.getAppResourcesDirectoryPath(),
 			constants.iOSAppResourcesFolderName,
-			constants.NATIVE_EXTENSION_FOLDER
+			constants.NATIVE_EXTENSION_FOLDER,
 		);
 
 		if (this.$fs.exists(extensionFolderPath)) {
@@ -223,12 +224,12 @@ export class IOSSigningService implements IiOSSigningService {
 			projectData.getAppResourcesDirectoryPath(),
 			constants.iOSAppResourcesFolderName,
 			constants.NATIVE_EXTENSION_FOLDER,
-			constants.EXTENSION_PROVISIONING_FILENAME
+			constants.EXTENSION_PROVISIONING_FILENAME,
 		);
 
 		if (this.$fs.exists(provisioningJSONPath)) {
 			const provisioningJSON = this.$fs.readJson(
-				provisioningJSONPath
+				provisioningJSONPath,
 			) as IProvisioningJSON;
 
 			const extensionNames = this.getExtensionNames(projectData);
@@ -239,12 +240,12 @@ export class IOSSigningService implements IiOSSigningService {
 					if (extensionNames.includes(name)) {
 						const configuration = await this.getManualSigningConfiguration(
 							projectData,
-							provision
+							provision,
 						);
 						return { name, configuration };
 					}
 					return null;
-				}
+				},
 			);
 
 			return provisioning;
@@ -256,14 +257,14 @@ export class IOSSigningService implements IiOSSigningService {
 	private async getManualSigningConfiguration(
 		projectData: IProjectData,
 		provision: string,
-		mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision
+		mobileProvisionData?: mobileProvisionFinder.provision.MobileProvision,
 	) {
 		const pickStart = Date.now();
 		const mobileprovision =
 			mobileProvisionData ||
 			(await this.$iOSProvisionService.pick(
 				provision,
-				projectData.projectIdentifiers.ios
+				projectData.projectIdentifiers.ios,
 			));
 		const pickEnd = Date.now();
 		this.$logger.trace(
@@ -271,13 +272,15 @@ export class IOSSigningService implements IiOSSigningService {
 				(mobileprovision ? "found" : "failed to find ") +
 				" matching provisioning profile. (" +
 				(pickEnd - pickStart) +
-				"ms.)"
+				"ms.)",
 		);
 		if (!mobileprovision) {
 			this.$errors.fail(
-				"Failed to find mobile provision with UUID or Name: " + provision
+				"Failed to find mobile provision with UUID or Name: " + provision,
 			);
 		}
+		const isVisionOS =
+			this.$options.platformOverride?.toLowerCase() === "visionos";
 		const configuration = {
 			team:
 				mobileprovision.TeamIdentifier &&
@@ -288,8 +291,12 @@ export class IOSSigningService implements IiOSSigningService {
 			name: mobileprovision.Name,
 			identity:
 				mobileprovision.Type === "Development"
-					? "iPhone Developer"
-					: "iPhone Distribution",
+					? isVisionOS
+						? "Apple Development"
+						: "iPhone Developer"
+					: isVisionOS
+						? "Apple Distribution"
+						: "iPhone Distribution",
 		};
 		return configuration;
 	}
@@ -298,17 +305,17 @@ export class IOSSigningService implements IiOSSigningService {
 		return path.join(
 			projectData.appResourcesDirectoryPath,
 			iOSAppResourcesFolderName,
-			BUILD_XCCONFIG_FILE_NAME
+			BUILD_XCCONFIG_FILE_NAME,
 		);
 	}
 
 	private getPbxProjPath(
 		projectData: IProjectData,
-		projectRoot: string
+		projectRoot: string,
 	): string {
 		return path.join(
 			this.$xcprojService.getXcodeprojPath(projectData, projectRoot),
-			"project.pbxproj"
+			"project.pbxproj",
 		);
 	}
 	private readTeamIdFromFile(projectRoot: string): string | undefined {
@@ -325,17 +332,17 @@ export class IOSSigningService implements IiOSSigningService {
 	private async getDevelopmentTeam(
 		projectData: IProjectData,
 		projectRoot: string,
-		teamId?: string
+		teamId?: string,
 	): Promise<string> {
 		teamId = teamId || this.readXCConfigDevelopmentTeam(projectData);
 
 		if (!teamId) {
 			const teams = await this.$iOSProvisionService.getDevelopmentTeams();
 			this.$logger.warn(
-				"Xcode requires a team id to be specified when building for device."
+				"Xcode requires a team id to be specified when building for device.",
 			);
 			this.$logger.warn(
-				"You can specify the team id by setting the DEVELOPMENT_TEAM setting in build.xcconfig file located in App_Resources folder of your app, or by using the --teamId option when calling run, debug or livesync commands."
+				"You can specify the team id by setting the DEVELOPMENT_TEAM setting in build.xcconfig file located in App_Resources folder of your app, or by using the --teamId option when calling run, debug or livesync commands.",
 			);
 			if (teams.length === 1) {
 				teamId = teams[0].id;
@@ -344,15 +351,15 @@ export class IOSSigningService implements IiOSSigningService {
 						teams[0].name +
 						" (" +
 						teams[0].id +
-						")"
+						")",
 				);
 			} else if (teams.length > 0) {
 				if (!helpers.isInteractive()) {
 					this.$errors.fail(
 						`Unable to determine default development team. Available development teams are: ${_.map(
 							teams,
-							(team) => team.id
-						)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`
+							(team) => team.id,
+						)}. Specify team in app/App_Resources/iOS/build.xcconfig file in the following way: DEVELOPMENT_TEAM = <team id>`,
 					);
 				}
 				const fromFile = this.readTeamIdFromFile(projectRoot);
@@ -370,7 +377,7 @@ export class IOSSigningService implements IiOSSigningService {
 					}
 					const choice = await this.$prompter.promptForChoice(
 						"Found multiple development teams, select one:",
-						choices
+						choices,
 					);
 					teamId = teams[choices.indexOf(choice)].id;
 
@@ -383,18 +390,18 @@ export class IOSSigningService implements IiOSSigningService {
 						"Do you want to make teamId: " +
 							teamId +
 							" a persistent choice for your app?",
-						choicesPersist
+						choicesPersist,
 					);
 					switch (choicesPersist.indexOf(choicePersist)) {
 						case 0:
 							const xcconfigFile = path.join(
 								projectData.appResourcesDirectoryPath,
 								"iOS",
-								BUILD_XCCONFIG_FILE_NAME
+								BUILD_XCCONFIG_FILE_NAME,
 							);
 							this.$fs.appendFile(
 								xcconfigFile,
-								"\nDEVELOPMENT_TEAM = " + teamId + "\n"
+								"\nDEVELOPMENT_TEAM = " + teamId + "\n",
 							);
 							break;
 						case 1:
@@ -415,41 +422,41 @@ export class IOSSigningService implements IiOSSigningService {
 	private readXCConfigDevelopmentTeam(projectData: IProjectData): string {
 		return this.$xcconfigService.readPropertyValue(
 			this.getBuildXCConfigFilePath(projectData),
-			"DEVELOPMENT_TEAM"
+			"DEVELOPMENT_TEAM",
 		);
 	}
 
 	private readXCConfigProvisioningProfile(projectData: IProjectData): string {
 		return this.$xcconfigService.readPropertyValue(
 			this.getBuildXCConfigFilePath(projectData),
-			"PROVISIONING_PROFILE"
+			"PROVISIONING_PROFILE",
 		);
 	}
 
 	private readXCConfigProvisioningProfileForIPhoneOs(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		return this.$xcconfigService.readPropertyValue(
 			this.getBuildXCConfigFilePath(projectData),
-			"PROVISIONING_PROFILE[sdk=iphoneos*]"
+			"PROVISIONING_PROFILE[sdk=iphoneos*]",
 		);
 	}
 
 	private readXCConfigProvisioningProfileSpecifier(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		return this.$xcconfigService.readPropertyValue(
 			this.getBuildXCConfigFilePath(projectData),
-			"PROVISIONING_PROFILE_SPECIFIER"
+			"PROVISIONING_PROFILE_SPECIFIER",
 		);
 	}
 
 	private readXCConfigProvisioningProfileSpecifierForIPhoneOs(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		return this.$xcconfigService.readPropertyValue(
 			this.getBuildXCConfigFilePath(projectData),
-			"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]"
+			"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]",
 		);
 	}
 }
