@@ -134,6 +134,10 @@ class VersionsService implements IVersionsService {
 			this.projectData.projectDir,
 			constants.PlatformTypes.android
 		);
+		const macOSRuntime = this.$projectDataService.getRuntimePackage(
+			this.projectData.projectDir,
+			constants.PlatformTypes.macos
+		);
 		let runtimes: IBasePluginData[] = [];
 
 		if (!platform) {
@@ -142,6 +146,8 @@ class VersionsService implements IVersionsService {
 			runtimes.push(iosRuntime);
 		} else if (platform === PlatformTypes.android) {
 			runtimes.push(androidRuntime);
+		} else if (platform === PlatformTypes.macos) {
+			runtimes.push(macOSRuntime);
 		}
 
 		const runtimesVersions: IVersionInformation[] = await Promise.all(

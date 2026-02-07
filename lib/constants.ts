@@ -24,6 +24,7 @@ export const TNS_IOS_RUNTIME_NAME = "tns-ios";
 export const SCOPED_ANDROID_RUNTIME_NAME = "@nativescript/android";
 export const SCOPED_IOS_RUNTIME_NAME = "@nativescript/ios";
 export const SCOPED_VISIONOS_RUNTIME_NAME = "@nativescript/visionos";
+export const SCOPED_MACOS_RUNTIME_NAME = "@nativescript/macos";
 export const PACKAGE_JSON_FILE_NAME = "package.json";
 export const PACKAGE_LOCK_JSON_FILE_NAME = "package-lock.json";
 export const ANDROID_DEVICE_APP_ROOT_TEMPLATE = `/data/data/%s/files`;
@@ -348,12 +349,14 @@ export const enum PlatformTypes {
 	ios = "ios",
 	android = "android",
 	visionos = "visionos",
+	macos = "macos",
 }
 
 export type SupportedPlatform =
 	| PlatformTypes.ios
 	| PlatformTypes.android
-	| PlatformTypes.visionos;
+	| PlatformTypes.visionos
+	| PlatformTypes.macos;
 
 export const PODFILE_NAME = "Podfile";
 
