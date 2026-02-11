@@ -13,9 +13,14 @@ import {
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 } from "../constants";
-import { IOptions, IPlatformValidationService } from "../declarations";
+import {
+	IOpener,
+	IOptions,
+	IPlatformValidationService,
+} from "../declarations";
 import { IMigrateController } from "../definitions/migrate";
 import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IBuildController, IBuildDataService } from "../definitions/build";
 
 export class RunCommandBase implements ICommand {
 	private liveSyncCommandHelperAdditionalOptions: ILiveSyncCommandHelperAdditionalOptions =
@@ -223,3 +228,65 @@ export class RunVisionOSCommand extends RunIosCommand {
 
 injector.registerCommand("run|vision", RunVisionOSCommand);
 injector.registerCommand("run|visionos", RunVisionOSCommand);
+
+export class RunMacOSCommand implements ICommand {
+	public allowedParameters: ICommandParameter[] = [];
+
+	public get platform(): string {
+		return this.$devicePlatformsConstants.macOS || "macOS";
+	}
+
+	constructor(
+		private $buildController: IBuildController,
+		private $buildDataService: IBuildDataService,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
+		private $migrateController: IMigrateController,
+		private $opener: IOpener,
+		private $options: IOptions,
+		private $platformValidationService: IPlatformValidationService,
+		private $projectDataService: IProjectDataService,
+	) {}
+
+	public async execute(args: string[]): Promise<void> {
+		const projectData = this.$projectDataService.getProjectData();
+		const buildData = this.$buildDataService.getBuildData(
+			projectData.projectDir,
+			this.platform.toLowerCase(),
+			this.$options,
+		);
+		const outputPath = await this.$buildController.prepareAndBuild(buildData);
+		await this.$opener.open(outputPath, projectData.projectName);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		const projectData = this.$projectDataService.getProjectData();
+
+		if (
+			!this.$platformValidationService.isPlatformSupportedForOS(
+				this.platform,
+				projectData,
+			)
+		) {
+			this.$errors.fail(
+				`Applications for platform ${this.platform} can not be built on this OS`,
+			);
+		}
+
+		if (!this.$options.force) {
+			await this.$migrateController.validate({
+				projectDir: projectData.projectDir,
+				platforms: [this.platform],
+			});
+		}
+
+		return this.$platformValidationService.validateOptions(
+			this.$options.provision,
+			this.$options.teamId,
+			projectData,
+			this.platform.toLowerCase(),
+		);
+	}
+}
+
+injector.registerCommand("run|macos", RunMacOSCommand);

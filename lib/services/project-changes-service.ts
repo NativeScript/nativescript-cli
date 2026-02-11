@@ -89,22 +89,37 @@ export class ProjectChangesService implements IProjectChangesService {
 				projectData.appResourcesDirectoryPath,
 				platformData.normalizedPlatformName
 			);
+			const visionOSPlatformName =
+				this.$devicePlatformsConstants.visionOS &&
+				this.$devicePlatformsConstants.visionOS.toLowerCase();
+			const macOSPlatformName =
+				this.$devicePlatformsConstants.macOS &&
+				this.$devicePlatformsConstants.macOS.toLowerCase();
+			const iOSPlatformName =
+				this.$devicePlatformsConstants.iOS || "iOS";
 
 			if (
 				!this.$fs.exists(platformResourcesDir) &&
-				platformData.platformNameLowerCase ===
-					this.$devicePlatformsConstants.visionOS.toLowerCase()
+				(platformData.platformNameLowerCase === visionOSPlatformName ||
+					platformData.platformNameLowerCase === macOSPlatformName)
 			) {
 				platformResourcesDir = path.join(
 					projectData.appResourcesDirectoryPath,
-					this.$devicePlatformsConstants.iOS
+					iOSPlatformName
 				);
 			}
 
-			this._changesInfo.appResourcesChanged = this.containsNewerFiles(
-				platformResourcesDir,
-				projectData
-			);
+			if (this.$fs.exists(platformResourcesDir)) {
+				this._changesInfo.appResourcesChanged = this.containsNewerFiles(
+					platformResourcesDir,
+					projectData
+				);
+			} else {
+				this.$logger.trace(
+					`App resources path does not exist: ${platformResourcesDir}`
+				);
+				this._changesInfo.appResourcesChanged = false;
+			}
 
 			this.$nodeModulesDependenciesBuilder
 				.getProductionDependencies(

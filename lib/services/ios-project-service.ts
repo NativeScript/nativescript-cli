@@ -69,6 +69,7 @@ export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
 export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
+export const MacOSPlatformSdkName = "macosx";
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
@@ -78,11 +79,18 @@ const getPlatformSdkName = (buildData: IBuildData): string => {
 	const isvisionOS = injector
 		.resolve("devicePlatformsConstants")
 		.isvisionOS(buildData.platform);
+	const ismacOS = injector
+		.resolve("devicePlatformsConstants")
+		.ismacOS(buildData.platform);
 
 	if (isvisionOS) {
 		return forDevice
 			? VisionDevicePlatformSdkName
 			: VisionSimulatorPlatformSdkName;
+	}
+
+	if (ismacOS) {
+		return MacOSPlatformSdkName;
 	}
 
 	return forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
@@ -155,6 +163,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				platform.toLowerCase() as constants.SupportedPlatform,
 			);
 
+			const isMacOSPlatform = this.$devicePlatformsConstants.ismacOS(platform);
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
 				normalizedPlatformName: platform,
@@ -167,6 +176,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				projectRoot: projectRoot,
 				getBuildOutputPath: (options: IBuildData): string => {
 					const config = getConfigurationName(!options || options.release);
+					if (isMacOSPlatform) {
+						return path.join(projectRoot, constants.BUILD_DIR, config);
+					}
 					return path.join(
 						projectRoot,
 						constants.BUILD_DIR,
@@ -176,6 +188,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				getValidBuildOutputData: (
 					buildOptions: IBuildData,
 				): IValidBuildOutputData => {
+					const isMacOS =
+						!!buildOptions &&
+						this.$devicePlatformsConstants.ismacOS(buildOptions.platform);
+					if (isMacOS) {
+						return {
+							packageNames: [
+								`${projectData.projectName}.app`,
+								`${projectData.projectName}.zip`,
+							],
+						};
+					}
 					const forDevice =
 						!buildOptions ||
 						!!buildOptions.buildForDevice ||
@@ -942,6 +965,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.deleteDirectory(
 			path.join(platformsAppResourcesPath, "watchextension"),
 		);
+
+		const macOSPlatformName =
+			this.$devicePlatformsConstants.macOS &&
+			this.$devicePlatformsConstants.macOS.toLowerCase();
+		if (
+			macOSPlatformName &&
+			platformData.platformNameLowerCase === macOSPlatformName
+		) {
+			// macOS apps do not use iOS launch storyboards.
+			this.$fs.deleteFile(
+				path.join(platformsAppResourcesPath, "LaunchScreen.storyboard"),
+			);
+		}
 	}
 
 	public async processConfigurationFilesFromAppResources(

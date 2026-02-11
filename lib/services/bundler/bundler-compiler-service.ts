@@ -502,6 +502,7 @@ export class BundlerCompilerService
 				USER_PROJECT_PLATFORMS_ANDROID_MODULE:
 					this.$options.hostProjectModuleName,
 				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
+				USER_PROJECT_PLATFORMS_MACOS: this.$options.hostProjectPath,
 			});
 		}
 
@@ -528,6 +529,9 @@ export class BundlerCompilerService
 	) {
 		const { env } = prepareData;
 		const envData = Object.assign({}, env, { [platform.toLowerCase()]: true });
+		if (platform.toLowerCase() === "macos") {
+			envData.platform = "macos";
+		}
 
 		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();
