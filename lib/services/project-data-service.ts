@@ -647,6 +647,7 @@ export class ProjectDataService implements IProjectDataService {
 			});
 
 		if (runtimePackage) {
+			const originalVersion = runtimePackage.version;
 			const coerced = semver.coerce(runtimePackage.version);
 			const isRange = !!coerced && coerced.version !== runtimePackage.version;
 			const isTag = !coerced;
@@ -669,11 +670,18 @@ export class ProjectDataService implements IProjectDataService {
 					runtimePackage.version = this.$fs.readJson(
 						runtimePackageJsonPath
 					).version;
-				} catch (err) {
-					if (isRange) {
-						runtimePackage.version = semver.coerce(
-							runtimePackage.version
-						).version;
+					} catch (err) {
+						// Keep local file/tgz runtime specs even if the package is not yet
+						// installed in node_modules. `npm install <name>@<file:...>` works.
+						if (
+							originalVersion?.startsWith("file:") ||
+							originalVersion?.includes("tgz")
+						) {
+							runtimePackage.version = originalVersion;
+						} else if (isRange) {
+							runtimePackage.version = semver.coerce(
+								runtimePackage.version
+							).version;
 
 						(runtimePackage as any)._coerced = true;
 					} else {
