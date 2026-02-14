@@ -16,6 +16,7 @@ export class PlatformsDataService implements IPlatformsDataService {
 			ios: $iOSProjectService,
 			android: $androidProjectService,
 			visionos: $iOSProjectService,
+			macos: $iOSProjectService,
 		};
 	}
 

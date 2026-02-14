@@ -242,7 +242,12 @@ export class PluginsService implements IPluginsService {
 
 		const pluginPlatformsFolderPath =
 			pluginData.pluginPlatformsFolderPath(platform);
-		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+		const pluginNativeFilesPath = this.getPluginNativeFilesPath(
+			pluginData,
+			platform,
+			pluginPlatformsFolderPath
+		);
+		if (pluginNativeFilesPath) {
 			const pathToPluginsBuildFile = path.join(
 				platformData.projectRoot,
 				constants.PLUGINS_BUILD_DATA_FILENAME
@@ -253,7 +258,7 @@ export class PluginsService implements IPluginsService {
 			);
 			const oldPluginNativeHashes = allPluginsNativeHashes[pluginData.name];
 			const currentPluginNativeHashes = await this.getPluginNativeHashes(
-				pluginPlatformsFolderPath
+				pluginNativeFilesPath
 			);
 
 			if (
@@ -269,7 +274,7 @@ export class PluginsService implements IPluginsService {
 				);
 
 				const updatedPluginNativeHashes = await this.getPluginNativeHashes(
-					pluginPlatformsFolderPath
+					pluginNativeFilesPath
 				);
 
 				this.setPluginNativeHashes({
@@ -280,6 +285,30 @@ export class PluginsService implements IPluginsService {
 				});
 			}
 		}
+	}
+
+	private getPluginNativeFilesPath(
+		pluginData: IPluginData,
+		platform: string,
+		pluginPlatformsFolderPath: string
+	): string | null {
+		if (this.$fs.exists(pluginPlatformsFolderPath)) {
+			return pluginPlatformsFolderPath;
+		}
+
+		if (this.$mobileHelper.ismacOSPlatform(platform)) {
+			const iosSourcePath = path.join(
+				pluginData.pluginPlatformsFolderPath(constants.PlatformTypes.ios),
+				"src"
+			);
+			if (this.$fs.exists(iosSourcePath)) {
+				// For macOS, allow iOS native source fallback only.
+				// Binary framework/static library discovery remains strict to `platforms/macos`.
+				return iosSourcePath;
+			}
+		}
+
+		return null;
 	}
 
 	public async ensureAllDependenciesAreInstalled(
@@ -637,6 +666,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 				if (this.$mobileHelper.isvisionOSPlatform(platform)) {
 					platform = constants.PlatformTypes.ios;
 				}
+
 				return path.join(
 					pluginData.fullPath,
 					"platforms",
@@ -842,7 +872,16 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		);
 		const pluginPlatformsData = pluginData.platformsData;
 		if (pluginPlatformsData) {
-			const versionRequiredByPlugin = (<any>pluginPlatformsData)[platform];
+			let versionRequiredByPlugin = (<any>pluginPlatformsData)[platform];
+			if (
+				!versionRequiredByPlugin &&
+				this.$mobileHelper.ismacOSPlatform(platform)
+			) {
+				// Keep macOS compatible with existing iOS plugin declarations.
+				versionRequiredByPlugin = (<any>pluginPlatformsData)[
+					constants.PlatformTypes.ios
+				];
+			}
 			if (!versionRequiredByPlugin) {
 				this.$logger.warn(
 					`${pluginData.name} is not supported for ${platform}.`

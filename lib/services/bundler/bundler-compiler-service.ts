@@ -407,7 +407,16 @@ export class BundlerCompilerService
 		}
 	}
 
-	private async shouldUsePreserveSymlinksOption(): Promise<boolean> {
+	private async shouldUsePreserveSymlinksOption(
+		projectData: IProjectData,
+	): Promise<boolean> {
+		// Modern bundlers (webpack v5+ and rspack) are more sensitive to
+		// duplicate module identities when symlink paths are preserved.
+		// In local file-linked setups this can load webpack internals twice.
+		if (this.isModernBundler(projectData)) {
+			return false;
+		}
+
 		// pnpm does not require symlink (https://github.com/nodejs/node-eps/issues/46#issuecomment-277373566)
 		// and it also does not work in some cases.
 		// Check https://github.com/NativeScript/nativescript-cli/issues/5259 for more information
@@ -461,7 +470,7 @@ export class BundlerCompilerService
 		const additionalNodeArgs =
 			semver.major(process.version) <= 8 ? ["--harmony"] : [];
 
-		if (await this.shouldUsePreserveSymlinksOption()) {
+		if (await this.shouldUsePreserveSymlinksOption(projectData)) {
 			additionalNodeArgs.push("--preserve-symlinks");
 		}
 
@@ -502,6 +511,7 @@ export class BundlerCompilerService
 				USER_PROJECT_PLATFORMS_ANDROID_MODULE:
 					this.$options.hostProjectModuleName,
 				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
+				USER_PROJECT_PLATFORMS_MACOS: this.$options.hostProjectPath,
 			});
 		}
 
@@ -528,6 +538,9 @@ export class BundlerCompilerService
 	) {
 		const { env } = prepareData;
 		const envData = Object.assign({}, env, { [platform.toLowerCase()]: true });
+		if (platform.toLowerCase() === "macos") {
+			envData.platform = "macos";
+		}
 
 		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();

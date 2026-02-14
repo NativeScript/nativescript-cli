@@ -116,12 +116,19 @@ export class SPMService implements ISPMService {
 		platformData: IPlatformData,
 		projectData: IProjectData,
 	) {
+		let destination = "generic/platform=iOS";
+		if (platformData.platformNameLowerCase === "visionos") {
+			destination = "generic/platform=visionOS";
+		} else if (platformData.platformNameLowerCase === "macos") {
+			destination = "generic/platform=macOS";
+		}
+
 		await this.$xcodebuildCommandService.executeCommand(
 			this.$xcodebuildArgsService
 				.getXcodeProjectArgs(platformData, projectData)
 				.concat([
 					"-destination",
-					"generic/platform=iOS",
+					destination,
 					"-resolvePackageDependencies",
 				]),
 			{

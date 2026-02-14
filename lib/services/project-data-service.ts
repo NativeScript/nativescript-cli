@@ -586,7 +586,9 @@ export class ProjectDataService implements IProjectDataService {
 		const runtimeName =
 			platform === PlatformTypes.android
 				? constants.TNS_ANDROID_RUNTIME_NAME
-				: constants.TNS_IOS_RUNTIME_NAME;
+				: platform === PlatformTypes.macos
+					? constants.SCOPED_MACOS_RUNTIME_NAME
+					: constants.TNS_IOS_RUNTIME_NAME;
 
 		if (
 			packageJson &&
@@ -639,10 +641,13 @@ export class ProjectDataService implements IProjectDataService {
 					].includes(d.name);
 				} else if (platform === constants.PlatformTypes.visionos) {
 					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
+				} else if (platform === constants.PlatformTypes.macos) {
+					return d.name === constants.SCOPED_MACOS_RUNTIME_NAME;
 				}
 			});
 
 		if (runtimePackage) {
+			const originalVersion = runtimePackage.version;
 			const coerced = semver.coerce(runtimePackage.version);
 			const isRange = !!coerced && coerced.version !== runtimePackage.version;
 			const isTag = !coerced;
@@ -665,11 +670,18 @@ export class ProjectDataService implements IProjectDataService {
 					runtimePackage.version = this.$fs.readJson(
 						runtimePackageJsonPath
 					).version;
-				} catch (err) {
-					if (isRange) {
-						runtimePackage.version = semver.coerce(
-							runtimePackage.version
-						).version;
+					} catch (err) {
+						// Keep local file/tgz runtime specs even if the package is not yet
+						// installed in node_modules. `npm install <name>@<file:...>` works.
+						if (
+							originalVersion?.startsWith("file:") ||
+							originalVersion?.includes("tgz")
+						) {
+							runtimePackage.version = originalVersion;
+						} else if (isRange) {
+							runtimePackage.version = semver.coerce(
+								runtimePackage.version
+							).version;
 
 						(runtimePackage as any)._coerced = true;
 					} else {
@@ -698,6 +710,11 @@ export class ProjectDataService implements IProjectDataService {
 		} else if (platform === constants.PlatformTypes.visionos) {
 			return {
 				name: constants.SCOPED_VISIONOS_RUNTIME_NAME,
+				version: null,
+			};
+		} else if (platform === constants.PlatformTypes.macos) {
+			return {
+				name: constants.SCOPED_MACOS_RUNTIME_NAME,
 				version: null,
 			};
 		}

@@ -69,6 +69,7 @@ export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
 export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
+export const MacOSPlatformSdkName = "macosx";
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
@@ -78,11 +79,18 @@ const getPlatformSdkName = (buildData: IBuildData): string => {
 	const isvisionOS = injector
 		.resolve("devicePlatformsConstants")
 		.isvisionOS(buildData.platform);
+	const ismacOS = injector
+		.resolve("devicePlatformsConstants")
+		.ismacOS(buildData.platform);
 
 	if (isvisionOS) {
 		return forDevice
 			? VisionDevicePlatformSdkName
 			: VisionSimulatorPlatformSdkName;
+	}
+
+	if (ismacOS) {
+		return MacOSPlatformSdkName;
 	}
 
 	return forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
@@ -94,7 +102,6 @@ const getConfigurationName = (release: boolean): string => {
 
 export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
-	private static IOS_PLATFORM_NAME = "ios";
 
 	constructor(
 		$fs: IFileSystem,
@@ -158,6 +165,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				platform.toLowerCase() as constants.SupportedPlatform,
 			);
 
+			const isMacOSPlatform = this.$devicePlatformsConstants.ismacOS(platform);
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
 				normalizedPlatformName: platform,
@@ -170,6 +178,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				projectRoot: projectRoot,
 				getBuildOutputPath: (options: IBuildData): string => {
 					const config = getConfigurationName(!options || options.release);
+					if (isMacOSPlatform) {
+						return path.join(projectRoot, constants.BUILD_DIR, config);
+					}
 					return path.join(
 						projectRoot,
 						constants.BUILD_DIR,
@@ -179,6 +190,17 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				getValidBuildOutputData: (
 					buildOptions: IBuildData,
 				): IValidBuildOutputData => {
+					const isMacOS =
+						!!buildOptions &&
+						this.$devicePlatformsConstants.ismacOS(buildOptions.platform);
+					if (isMacOS) {
+						return {
+							packageNames: [
+								`${projectData.projectName}.app`,
+								`${projectData.projectName}.zip`,
+							],
+						};
+					}
 					const forDevice =
 						!buildOptions ||
 						!!buildOptions.buildForDevice ||
@@ -239,6 +261,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		return this._platformData;
+	}
+
+	private getPluginPlatform(projectData: IProjectData): string {
+		const platformData = this.getPlatformData(projectData);
+		return (
+			platformData.normalizedPlatformName?.toLowerCase() ||
+			platformData.platformNameLowerCase
+		);
 	}
 
 	public async validateOptions(
@@ -944,6 +974,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.$fs.deleteDirectory(
 			path.join(platformsAppResourcesPath, "watchextension"),
 		);
+
+		const macOSPlatformName =
+			this.$devicePlatformsConstants.macOS &&
+			this.$devicePlatformsConstants.macOS.toLowerCase();
+		if (
+			macOSPlatformName &&
+			platformData.platformNameLowerCase === macOSPlatformName
+		) {
+			// macOS apps do not use iOS launch storyboards.
+			this.$fs.deleteFile(
+				path.join(platformsAppResourcesPath, "LaunchScreen.storyboard"),
+			);
+		}
 	}
 
 	public async processConfigurationFilesFromAppResources(
@@ -994,9 +1037,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		};
 
 		const allPlugins = this.getAllProductionPlugins(projectData);
+		const pluginPlatform = this.getPluginPlatform(projectData);
 		for (const plugin of allPlugins) {
 			const pluginInfoPlistPath = path.join(
-				plugin.pluginPlatformsFolderPath(IOSProjectService.IOS_PLATFORM_NAME),
+				plugin.pluginPlatformsFolderPath(pluginPlatform),
 				this.getPlatformData(projectData).configurationFileName,
 			);
 			makePatch(pluginInfoPlistPath);
@@ -1137,10 +1181,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		opts?: any,
 	): Promise<void> {
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
-			IOSProjectService.IOS_PLATFORM_NAME,
+			this.getPluginPlatform(projectData),
 		);
 
-		const sourcePath = path.join(pluginPlatformsFolderPath, "src");
+		const sourcePath = this.getPluginNativeSourcePath(
+			pluginData,
+			projectData,
+			pluginPlatformsFolderPath
+		);
 		await this.prepareNativeSourceCode(
 			pluginData.name,
 			sourcePath,
@@ -1169,11 +1217,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 	): Promise<void> {
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
-			IOSProjectService.IOS_PLATFORM_NAME,
+			this.getPluginPlatform(projectData),
+		);
+		const sourcePath = this.getPluginNativeSourcePath(
+			pluginData,
+			projectData,
+			pluginPlatformsFolderPath
 		);
 
 		this.removeNativeSourceCode(
-			pluginPlatformsFolderPath,
+			sourcePath,
 			pluginData,
 			projectData,
 		);
@@ -1350,6 +1403,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private getAllLibsForPluginWithFileExtension(
 		pluginData: IPluginData,
 		fileExtension: string | string[],
+		projectData: IProjectData,
 	): string[] {
 		const fileExtensions = _.isArray(fileExtension)
 			? fileExtension
@@ -1360,7 +1414,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		) => fileExtensions.indexOf(path.extname(fileName)) !== -1;
 		return this.getAllNativeLibrariesForPlugin(
 			pluginData,
-			IOSProjectService.IOS_PLATFORM_NAME,
+			this.getPluginPlatform(projectData),
 			filterCallback,
 		);
 	}
@@ -1442,6 +1496,36 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.savePbxProj(project, projectData);
 	}
 
+	private getPluginNativeSourcePath(
+		pluginData: IPluginData,
+		projectData: IProjectData,
+		pluginPlatformsFolderPath: string
+	): string {
+		const sourcePath = path.join(pluginPlatformsFolderPath, "src");
+
+		if (this.$fs.exists(sourcePath)) {
+			return sourcePath;
+		}
+
+		// For macOS only, allow reusing plugin native source code from iOS.
+		// Framework/static library discovery remains strict to `platforms/macos`.
+		if (
+			this.$devicePlatformsConstants.ismacOS(
+				this.getPlatformData(projectData).normalizedPlatformName
+			)
+		) {
+			const iosSourcePath = path.join(
+				pluginData.pluginPlatformsFolderPath(constants.PlatformTypes.ios),
+				"src"
+			);
+			if (this.$fs.exists(iosSourcePath)) {
+				return iosSourcePath;
+			}
+		}
+
+		return sourcePath;
+	}
+
 	private async addExtensions(
 		projectData: IProjectData,
 		pluginsData: IPluginData[],
@@ -1464,7 +1548,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		for (const pluginIndex in pluginsData) {
 			const pluginData = pluginsData[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
-				IOSProjectService.IOS_PLATFORM_NAME,
+				this.getPluginPlatform(projectData),
 			);
 
 			const extensionPath = path.join(
@@ -1543,6 +1627,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		for (const fileName of this.getAllLibsForPluginWithFileExtension(
 			pluginData,
 			FRAMEWORK_EXTENSIONS,
+			projectData,
 		)) {
 			await this.addFramework(
 				path.join(pluginPlatformsFolderPath, fileName),
@@ -1559,6 +1644,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		for (const fileName of this.getAllLibsForPluginWithFileExtension(
 			pluginData,
 			".a",
+			projectData,
 		)) {
 			await this.addStaticLibrary(
 				path.join(pluginPlatformsFolderPath, fileName),
@@ -1568,14 +1654,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async removeNativeSourceCode(
-		pluginPlatformsFolderPath: string,
+		sourceFolderPath: string,
 		pluginData: IPluginData,
 		projectData: IProjectData,
 	) {
 		const project = this.createPbxProj(projectData);
 		const group = await this.getRootGroup(
 			pluginData.name,
-			pluginPlatformsFolderPath,
+			sourceFolderPath,
 		);
 		project.removePbxGroup(group.name, group.path);
 		project.removeFromHeaderSearchPaths(group.path);
@@ -1592,6 +1678,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			this.getAllLibsForPluginWithFileExtension(
 				pluginData,
 				FRAMEWORK_EXTENSIONS,
+				projectData,
 			),
 			(fileName) => {
 				const relativeFrameworkPath = this.getLibSubpathRelativeToProjectPath(
@@ -1616,7 +1703,11 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		const project = this.createPbxProj(projectData);
 
 		_.each(
-			this.getAllLibsForPluginWithFileExtension(pluginData, ".a"),
+			this.getAllLibsForPluginWithFileExtension(
+				pluginData,
+				".a",
+				projectData,
+			),
 			(fileName) => {
 				const staticLibPath = path.join(pluginPlatformsFolderPath, fileName);
 				const relativeStaticLibPath = this.getLibSubpathRelativeToProjectPath(
@@ -1684,9 +1775,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 
 		const allPlugins: IPluginData[] = this.getAllProductionPlugins(projectData);
+		const pluginPlatform = this.getPluginPlatform(projectData);
 		for (const plugin of allPlugins) {
 			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(
-				IOSProjectService.IOS_PLATFORM_NAME,
+				pluginPlatform,
 			);
 			const pluginXcconfigFilePath = path.join(
 				pluginPlatformsFolderPath,

@@ -182,6 +182,7 @@ injector.requireCommand("run|ios", "./commands/run");
 injector.requireCommand("run|android", "./commands/run");
 injector.requireCommand("run|vision", "./commands/run");
 injector.requireCommand("run|visionos", "./commands/run");
+injector.requireCommand("run|macos", "./commands/run");
 injector.requireCommand("typings", "./commands/typings");
 
 injector.requireCommand("preview", "./commands/preview");
@@ -197,6 +198,7 @@ injector.requireCommand("build|ios", "./commands/build");
 injector.requireCommand("build|android", "./commands/build");
 injector.requireCommand("build|vision", "./commands/build");
 injector.requireCommand("build|visionos", "./commands/build");
+injector.requireCommand("build|macos", "./commands/build");
 injector.requireCommand("deploy", "./commands/deploy");
 
 injector.requireCommand("embed", "./commands/embedding/embed");
