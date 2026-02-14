@@ -347,6 +347,7 @@ export class OpenVisionOSCommand extends ShiftV {
 }
 
 export class OpenMacOSCommand implements IKeyCommand {
+	key: IValidKeyName = "M";
 	platform: IKeyCommandPlatform = "all";
 	description: string = "Open project in Xcode";
 	group = "macOS";
