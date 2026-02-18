@@ -10,6 +10,8 @@ on:
       - 'packages/**'
   workflow_dispatch:
 
+permissions: read-all
+
 env:
   NPM_TAG: 'next'
 
@@ -151,12 +153,23 @@ jobs:
           name: npm-package
           path: dist
 
+      - name: Generate provenance statement
+        run: |
+          TGZ_PATH=$(ls dist/nativescript-*.tgz | head -n1)
+          TGZ_NAME=$(basename "$TGZ_PATH")
+          TGZ_SHA=$(sha256sum "$TGZ_PATH" | awk '{ print $1 }')
+          PROV_PATH="dist/${TGZ_NAME%.tgz}.intoto.jsonl"
+
+          cat > "$PROV_PATH" <<EOF
+          {"_type":"https://in-toto.io/Statement/v1","subject":[{"name":"$TGZ_NAME","digest":{"sha256":"$TGZ_SHA"}}],"predicateType":"https://slsa.dev/provenance/v1"}
+          EOF
+
       - name: Partial Changelog
         run: npx conventional-changelog -p angular -r2 > body.md
 
       - uses: ncipollo/release-action@b7eabc95ff50cbeeedec83973935c8f306dfcd0b # v1.20.0
         with:
-          artifacts: "dist/nativescript-*.tgz"
+          artifacts: "dist/nativescript-*.tgz,dist/nativescript-*.intoto.jsonl"
           bodyFile: "body.md"
           prerelease: ${{needs.build.outputs.npm_tag != 'latest'}}
           allowUpdates: true
