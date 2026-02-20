@@ -1,19 +1,19 @@
 <% if (isJekyll) { %>---
-title: ns widget ios
+title: ns widget
 position: 11
 ---<% } %>
 
-# ns widget ios
+# ns widget
 
 ### Description
 
-Interactively adds a new iOS widget based on a predefined template.
+Interactively adds a new iOS/Android widget based on a predefined template.
 
 ### Commands
 
 Usage | Synopsis
 ------|-------
-General | `$ ns widget ios`
+General | `$ ns widget <Platform>`
 
 <% if(isHtml) { %>
 
