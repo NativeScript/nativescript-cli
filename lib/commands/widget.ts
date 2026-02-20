@@ -937,6 +937,335 @@ declare class AppleWidgetUtils extends NSObject {
 		}
 	}
 }
+export class WidgetAndroidCommand extends WidgetCommand {
+	constructor(
+		$projectData: IProjectData,
+		$projectConfigService: IProjectConfigService,
+		$logger: ILogger,
+		$errors: IErrors,
+	) {
+		super($projectData, $projectConfigService, $logger, $errors);
+	}
+	public async canExecute(args: string[]): Promise<boolean> {
+		return true;
+	}
 
+	public async execute(args: string[]): Promise<void> {
+		this.startPrompt(args);
+	}
+
+	private toAndroidFriendlyResourceName(name: string): string {
+		return name
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9_]/g, "_") // replace anything not a-z, 0-9, or _ with _
+			.replace(/_{2,}/g, "_") // collapse multiple underscores
+			.replace(/^[0-9_]+/, ""); // strip leading digits or underscores
+	}
+
+	private toAndroidClassName(name: string): string {
+		return name
+			.trim()
+			.toLowerCase()
+			.replace(/[^a-z0-9_]/g, "_") // normalize to resource name first
+			.replace(/_{2,}/g, "_")
+			.replace(/^[0-9_]+/, "")
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join("");
+	}
+
+	private async startPrompt(args: string[]) {
+		let result = await prompts.prompt({
+			type: "text",
+			name: "name",
+			message: `What name would you like for this widget? (Default is 'widget')`,
+		});
+
+		const rawName = (result.name || "widget").toLowerCase();
+
+		const name = this.toAndroidFriendlyResourceName(rawName);
+
+		result = await prompts.prompt({
+			type: "text",
+			name: "description",
+			message: `What description would you like for this widget? (Default is '')`,
+		});
+
+		const description = result.description || "";
+
+		result = await prompts.prompt({
+			type: "number",
+			name: "updateInterval",
+			message: `What update interval would you like for this widget? (Default is 900000 ms or 15 mins)`,
+		});
+
+		const updateInterval = result.updateInterval || 900000;
+
+		result = await prompts.prompt({
+			type: "select",
+			name: "resizeMode",
+			message: `What type of resizing would you like for this widget?`,
+			choices: [
+				{
+					title: "Horizontal",
+					description:
+						"This will allow the widget to resize horizontally on the Home Screen",
+					value: 0,
+				},
+				{
+					title: "Vertical",
+					description:
+						"This will allow the widget to resize vertically on the Home Screen",
+					value: 1,
+				},
+				{
+					title: "Horizontal and Vertical",
+					description:
+						"This will allow the widget to resize both horizontally and vertically on the Home Screen",
+					value: 2,
+				},
+			],
+			initial: 2,
+		});
+
+		let resizeMode = "horizontal|vertical";
+
+		switch (result.resizeMode) {
+			case 0:
+				resizeMode = "horizontal";
+				break;
+			case 1:
+				resizeMode = "vertical";
+				break;
+			case 2:
+				resizeMode = "horizontal|vertical";
+				break;
+		}
+
+		result = await prompts.prompt({
+			type: "text",
+			name: "minWidth",
+			message: `What minimum width would you like for this widget? (Default is '50dp')`,
+		});
+
+		const minWidth = result.minWidth || "50dp";
+
+		result = await prompts.prompt({
+			type: "text",
+			name: "minHeight",
+			message: `What minimum height would you like for this widget? (Default is '50dp')`,
+		});
+
+		const minHeight = result.minHeight || "50dp";
+
+		result = await prompts.prompt({
+			type: "text",
+			name: "initialLayout",
+			message: `What initial layout would you like for this widget? (Default is 'ns_remote_views_linear_layout' which is an empty linear layout. You can customize this with your own custom layout)`,
+		});
+
+		const initialLayout =
+			result.initialLayout || "ns_remote_views_linear_layout";
+
+		const bundleId = this.$projectConfigService.getValue(`id`, "");
+
+		result = await prompts.prompt({
+			type: "text",
+			name: "widgetPackageName",
+			message: `What package name would you like to use for this widget? (Default is ${bundleId})`,
+		});
+
+		const widgetPackageName = result.widgetPackageName || bundleId;
+
+		result = await prompts.prompt({
+			type: "text",
+			name: "widgetClassName",
+			message: `What class name would you like to use for this widget? (Default is ${this.toAndroidClassName(name)}WidgetProvider)`,
+		});
+
+		const widgetClassName =
+			result.widgetClassName ||
+			`${this.toAndroidClassName(rawName)}WidgetProvider`;
+
+		await this.generateWidgetDescriptionResource(name, description);
+
+		await this.generateWidgetInfo(
+			name,
+			resizeMode,
+			minWidth,
+			minHeight,
+			initialLayout,
+		);
+
+		await this.generateWidget(
+			widgetPackageName,
+			widgetClassName,
+			updateInterval,
+		);
+
+		await this.generateAndroidManifest(
+			name,
+			widgetPackageName,
+			widgetClassName,
+		);
+	}
+
+	private async generateWidgetDescriptionResource(
+		name: string,
+		description: string,
+	) {
+		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
+		const widgetsStringsInfoPath = path.join(
+			appResourcePath,
+			"Android",
+			"src",
+			"main",
+			"res",
+			"values",
+			`ns_widgets_strings_info.xml`,
+		);
+
+		if (!fs.existsSync(widgetsStringsInfoPath)) {
+			fs.mkdirSync(path.dirname(widgetsStringsInfoPath), { recursive: true });
+
+			const content = `<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="${name}_widget_description">${description}</string>
+</resources>${EOL}`;
+
+			fs.writeFileSync(widgetsStringsInfoPath, content);
+		} else {
+			const content = fs.readFileSync(widgetsStringsInfoPath).toString();
+			if (content.indexOf(`${name}_widget_description`) === -1) {
+				const updatedContent = content.replace(
+					"</resources>",
+					`	<string name="${name}_widget_description">${description}</string>\n</resources>`,
+				);
+				fs.writeFileSync(widgetsStringsInfoPath, updatedContent);
+			}
+		}
+	}
+
+	private async generateWidgetInfo(
+		name: string,
+		resizeMode: string,
+		minWidth: string,
+		minHeight: string,
+		initialLayout: string,
+	) {
+		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
+		const widgetInfoPath = path.join(
+			appResourcePath,
+			"Android",
+			"src",
+			"main",
+			"res",
+			"xml",
+			`ns_${name}_widget_info.xml`,
+		);
+
+		if (!fs.existsSync(widgetInfoPath)) {
+			fs.mkdirSync(path.dirname(widgetInfoPath), { recursive: true });
+
+			const content = `<?xml version="1.0" encoding="utf-8"?>
+<appwidget-provider
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:description="@string/${name}_widget_description"
+	android:initialLayout="@layout/${initialLayout}"
+	android:minWidth="${minWidth}"
+	android:minHeight="${minHeight}"
+	android:resizeMode="${resizeMode}"
+	android:updatePeriodMillis="0"
+	android:widgetCategory="home_screen" />${EOL}`;
+
+			fs.writeFileSync(widgetInfoPath, content);
+		}
+	}
+
+	private async generateWidget(
+		packageName: string,
+		widgetClassName: string,
+		updateInterval: number,
+	) {
+		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
+		const widgetPath = path.join(
+			appResourcePath,
+			"Android",
+			"src",
+			"main",
+			"kotlin",
+			packageName.replace(/\./g, "/"),
+			`${widgetClassName}.kt`,
+		);
+
+		if (!fs.existsSync(widgetPath)) {
+			fs.mkdirSync(path.dirname(widgetPath), { recursive: true });
+
+			const content = `
+			package ${packageName}
+			import org.nativescript.widgets.AppWidgetProvider
+
+			class ${widgetClassName} : AppWidgetProvider() {
+				override val interval = ${updateInterval}L
+			}${EOL}`;
+
+			fs.writeFileSync(widgetPath, content);
+		}
+	}
+
+	private async generateAndroidManifest(
+		name: string,
+		packageName: string,
+		widgetClassName: string,
+	) {
+		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
+		const mainManifestPath = path.join(
+			appResourcePath,
+			"Android",
+			"src",
+			"main",
+			"AndroidManifest.xml",
+		);
+
+		if (!fs.existsSync(mainManifestPath)) {
+			throw new Error("Main AndroidManifest.xml not found");
+		}
+
+		let manifestContent = fs.readFileSync(mainManifestPath, "utf-8");
+
+		const widgetMarkerStart = `<!-- BEGIN NativeScript Widget: ${name} -->`;
+		const widgetMarkerEnd = `<!-- END NativeScript Widget: ${name} -->`;
+
+		// Check if widget already exists
+		if (manifestContent.includes(widgetMarkerStart)) {
+			console.log(`Widget ${name} already exists in manifest, skipping...`);
+			return;
+		}
+
+		const widgetXml = `
+    ${widgetMarkerStart}
+    <receiver
+        android:name="${packageName}.${widgetClassName}"
+        android:exported="true">
+        <intent-filter>
+            <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+        </intent-filter>
+        <meta-data
+            android:name="android.appwidget.provider"
+            android:resource="@xml/ns_${name}_widget_info" />
+    </receiver>
+    ${widgetMarkerEnd}`;
+
+		// Insert before </application>
+		manifestContent = manifestContent.replace(
+			"</application>",
+			`${widgetXml}\n    </application>`,
+		);
+
+		fs.writeFileSync(mainManifestPath, manifestContent);
+	}
+}
 injector.registerCommand(["widget"], WidgetCommand);
 injector.registerCommand(["widget|ios"], WidgetIOSCommand);
+injector.registerCommand(["widget|android"], WidgetAndroidCommand);
