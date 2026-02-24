@@ -1212,13 +1212,13 @@ export class WidgetAndroidCommand extends WidgetCommand {
 		if (!fs.existsSync(widgetPath)) {
 			fs.mkdirSync(path.dirname(widgetPath), { recursive: true });
 
-			const content = `
-			package ${packageName}
-			import org.nativescript.widgets.AppWidgetProvider
+			const content = `package ${packageName}
+import org.nativescript.widgets.AppWidgetProvider
 
-			class ${widgetClassName} : AppWidgetProvider() {
-				override val interval = ${updateInterval}L
-			}${EOL}`;
+class ${widgetClassName} : AppWidgetProvider() {
+	override val interval = ${updateInterval}L
+}
+${EOL}`;
 
 			fs.writeFileSync(widgetPath, content);
 		}
