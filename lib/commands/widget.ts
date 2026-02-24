@@ -1062,11 +1062,18 @@ export class WidgetAndroidCommand extends WidgetCommand {
 		result = await prompts.prompt({
 			type: "text",
 			name: "initialLayout",
-			message: `What initial layout would you like for this widget? (Default is 'ns_remote_views_linear_layout' which is an empty linear layout. You can customize this with your own custom layout)`,
+			message: `What initial layout would you like for this widget? (Default is 'ns_remote_views_root_layout' which is an empty linear layout. You can customize this with your own custom layout)`,
 		});
 
-		const initialLayout =
-			result.initialLayout || "ns_remote_views_linear_layout";
+		result = await prompts.prompt({
+			type: "text",
+			name: "widgetFeatures",
+			message: `Enable responsive layout features for this widget? (Default is 'Y')`,
+		});
+
+		const widgetFeatures = result.widgetFeatures || "Y";
+
+		const initialLayout = result.initialLayout || "ns_remote_views_root_layout";
 
 		const bundleId = this.$projectConfigService.getValue(`id`, "");
 
@@ -1096,6 +1103,7 @@ export class WidgetAndroidCommand extends WidgetCommand {
 			minWidth,
 			minHeight,
 			initialLayout,
+			widgetFeatures === "N" ? false : true,
 		);
 
 		await this.generateWidget(
@@ -1153,6 +1161,7 @@ export class WidgetAndroidCommand extends WidgetCommand {
 		minWidth: string,
 		minHeight: string,
 		initialLayout: string,
+		enableWidgetFeatures: boolean,
 	) {
 		const appResourcePath = this.$projectData.appResourcesDirectoryPath;
 		const widgetInfoPath = path.join(
@@ -1177,7 +1186,8 @@ export class WidgetAndroidCommand extends WidgetCommand {
 	android:minHeight="${minHeight}"
 	android:resizeMode="${resizeMode}"
 	android:updatePeriodMillis="0"
-	android:widgetCategory="home_screen" />${EOL}`;
+	android:widgetCategory="home_screen"
+	${enableWidgetFeatures ? ' android:widgetFeatures="reconfigurable|configuration_optional"' : ""} />${EOL}`;
 
 			fs.writeFileSync(widgetInfoPath, content);
 		}
@@ -1194,7 +1204,7 @@ export class WidgetAndroidCommand extends WidgetCommand {
 			"Android",
 			"src",
 			"main",
-			"kotlin",
+			"java",
 			packageName.replace(/\./g, "/"),
 			`${widgetClassName}.kt`,
 		);
