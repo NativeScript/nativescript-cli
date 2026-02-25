@@ -1187,7 +1187,11 @@ export class WidgetAndroidCommand extends WidgetCommand {
 	android:resizeMode="${resizeMode}"
 	android:updatePeriodMillis="0"
 	android:widgetCategory="home_screen"
-	${enableWidgetFeatures ? ' android:widgetFeatures="reconfigurable|configuration_optional"' : ""} />${EOL}`;
+	${enableWidgetFeatures ? 'android:widgetFeatures="reconfigurable|configuration_optional"' : ""}>
+	<meta-data
+        android:name="org.nativescript.widgets.MANAGED_WIDGET"
+        android:value="true"/>
+	</appwidget-provider>${EOL}`;
 
 			fs.writeFileSync(widgetInfoPath, content);
 		}
@@ -1264,9 +1268,6 @@ ${EOL}`;
         <intent-filter>
             <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
         </intent-filter>
-		 <intent-filter>
-        	<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-    	</intent-filter>
         <meta-data
             android:name="android.appwidget.provider"
             android:resource="@xml/ns_${name}_widget_info" />
