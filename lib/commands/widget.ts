@@ -1258,9 +1258,15 @@ ${EOL}`;
     <receiver
         android:name="${packageName}.${widgetClassName}"
         android:exported="true">
+		<intent-filter>
+			 <action android:name="android.intent.action.BOOT_COMPLETED" />
+        </intent-filter>
         <intent-filter>
             <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
         </intent-filter>
+		 <intent-filter>
+        	<action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+    	</intent-filter>
         <meta-data
             android:name="android.appwidget.provider"
             android:resource="@xml/ns_${name}_widget_info" />
