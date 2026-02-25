@@ -18,6 +18,7 @@ import {
 	SimulatorPlatformSdkName,
 	VisionDevicePlatformSdkName,
 	VisionSimulatorPlatformSdkName,
+	MacOSPlatformSdkName,
 } from "../ios-project-service";
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
@@ -37,7 +38,13 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	): Promise<string[]> {
 		let args = await this.getArchitecturesArgs(buildConfig);
 
-		if (this.$iOSWatchAppService.hasWatchApp(platformData, projectData)) {
+		const isMacOS = this.$devicePlatformsConstants.ismacOS(
+			buildConfig.platform,
+		);
+
+		if (isMacOS) {
+			args = args.concat(["CODE_SIGNING_ALLOWED=NO"]);
+		} else if (this.$iOSWatchAppService.hasWatchApp(platformData, projectData)) {
 			args = args.concat(["CODE_SIGNING_ALLOWED=NO"]);
 		} else {
 			args = args.concat(["CODE_SIGN_IDENTITY="]);
@@ -48,6 +55,10 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
 			buildConfig.platform,
 		);
+
+		if (isMacOS) {
+			destination = "generic/platform=macOS";
+		}
 
 		if (isvisionOS) {
 			destination = "generic/platform=visionOS Simulator";
@@ -68,9 +79,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				this.getBuildCommonArgs(
 					platformData,
 					projectData,
-					isvisionOS
-						? VisionSimulatorPlatformSdkName
-						: SimulatorPlatformSdkName,
+					isMacOS
+						? MacOSPlatformSdkName
+						: isvisionOS
+							? VisionSimulatorPlatformSdkName
+							: SimulatorPlatformSdkName,
 				),
 			)
 			.concat(this.getBuildLoggingArgs())
@@ -93,6 +106,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
 			buildConfig.platform,
 		);
+		const isMacOS = this.$devicePlatformsConstants.ismacOS(buildConfig.platform);
+
+		if (isMacOS) {
+			destination = "generic/platform=macOS";
+		}
 
 		if (isvisionOS) {
 			destination = "generic/platform=visionOS";
@@ -116,7 +134,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				this.getBuildCommonArgs(
 					platformData,
 					projectData,
-					isvisionOS ? VisionDevicePlatformSdkName : DevicePlatformSdkName,
+					isMacOS
+						? MacOSPlatformSdkName
+						: isvisionOS
+							? VisionDevicePlatformSdkName
+							: DevicePlatformSdkName,
 				),
 			)
 			.concat(this.getBuildLoggingArgs());
@@ -143,6 +165,14 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			// visionOS builds (device/simulator) are arm64-only; rely on destination for arch
 			// and explicitly exclude x86_64 to avoid accidental selection
 			args.push("ONLY_ACTIVE_ARCH=YES", "EXCLUDED_ARCHS=x86_64");
+			return args;
+		}
+
+		if (this.$devicePlatformsConstants.ismacOS(buildConfig.platform)) {
+			if (process.arch === "arm64") {
+				// Avoid attempting x86_64 builds against arm64-only frameworks.
+				args.push("ONLY_ACTIVE_ARCH=YES", "EXCLUDED_ARCHS=x86_64");
+			}
 			return args;
 		}
 

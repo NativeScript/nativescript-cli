@@ -44,7 +44,7 @@ describe("AddPlatformService", () => {
 			projectData = injector.resolve("projectData");
 		});
 
-		_.each(["ios", "android"], (platform) => {
+		_.each(["ios", "android", "macos"], (platform) => {
 			it(`should fail if unable to install runtime package for ${platform}`, async () => {
 				const errorMessage = "Pacote service unable to extract package";
 

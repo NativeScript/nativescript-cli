@@ -346,6 +346,67 @@ export class OpenVisionOSCommand extends ShiftV {
 	}
 }
 
+export class OpenMacOSCommand implements IKeyCommand {
+	key: IValidKeyName = "M";
+	platform: IKeyCommandPlatform = "all";
+	description: string = "Open project in Xcode";
+	group = "macOS";
+	willBlockKeyCommandExecution: boolean = true;
+	protected isInteractive: boolean = false;
+
+	constructor(
+		private $iOSProjectService: IOSProjectService,
+		private $logger: ILogger,
+		private $childProcess: IChildProcess,
+		private $projectData: IProjectData,
+		private $xcodeSelectService: IXcodeSelectService,
+		private $xcodebuildArgsService: IXcodebuildArgsService,
+		private $options: IOptions
+	) {}
+
+	async execute(): Promise<void> {
+		this.$options.watch = false;
+		this.$options.platformOverride = "macOS";
+		const os = currentPlatform();
+		if (os === "darwin") {
+			this.$projectData.initializeProjectData();
+			const macOSDir = path.resolve(this.$projectData.platformsDir, "macos");
+
+			if (!fs.existsSync(macOSDir)) {
+				const prepareCommand = injector.resolveCommand(
+					"prepare"
+				) as PrepareCommand;
+
+				await prepareCommand.execute(["macos"]);
+				if (this.isInteractive) {
+					process.stdin.resume();
+				}
+			}
+			const platformData = this.$iOSProjectService.getPlatformData(
+				this.$projectData
+			);
+			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
+				platformData,
+				this.$projectData
+			)[1];
+
+			if (fs.existsSync(xcprojectFile)) {
+				this.$xcodeSelectService
+					.getDeveloperDirectoryPath()
+					.then(() => this.$childProcess.exec(`open ${xcprojectFile}`, {}))
+					.catch((e) => {
+						this.$logger.error(e.message);
+					});
+			} else {
+				this.$logger.error(`Unable to open project file: ${xcprojectFile}`);
+			}
+		} else {
+			this.$logger.error("Opening a project in XCode requires macOS.");
+		}
+		this.$options.platformOverride = null;
+	}
+}
+
 export class R implements IKeyCommand {
 	key: IValidKeyName = "r";
 	platform: IKeyCommandPlatform = "all";
@@ -520,3 +581,4 @@ injector.registerCommand("open|ios", OpenIOSCommand);
 injector.registerCommand("open|visionos", OpenVisionOSCommand);
 injector.registerCommand("open|vision", OpenVisionOSCommand);
 injector.registerCommand("open|android", OpenAndroidCommand);
+injector.registerCommand("open|macos", OpenMacOSCommand);

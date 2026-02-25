@@ -21,3 +21,4 @@ injector.requireCommand("open|ios", path);
 injector.requireCommand("open|android", path);
 injector.requireCommand("open|visionos", path);
 injector.requireCommand("open|vision", path);
+injector.requireCommand("open|macos", path);

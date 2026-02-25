@@ -194,6 +194,8 @@ export class PrepareController extends EventEmitter {
 			};
 		}
 
+		this.syncMacOSBundleArtifacts(projectData, platformData);
+
 		await this.writeRuntimePackageJson(projectData, platformData, prepareData);
 
 		await this.$projectChangesService.savePrepareInfo(
@@ -516,6 +518,55 @@ export class PrepareController extends EventEmitter {
 		}
 
 		this.$fs.writeJson(packagePath, packageData);
+	}
+
+	private syncMacOSBundleArtifacts(
+		projectData: IProjectData,
+		platformData: IPlatformData,
+	): void {
+		if (platformData.platformNameLowerCase !== "macos") {
+			return;
+		}
+		if (process.env.NS_MACOS_IOS_BUNDLE_FALLBACK !== "1") {
+			return;
+		}
+
+		const macosAppPath = path.join(
+			platformData.projectRoot,
+			projectData.projectName,
+			"app",
+		);
+		const hasMacBundle =
+			this.$fs.exists(path.join(macosAppPath, "bundle.js")) ||
+			this.$fs.exists(path.join(macosAppPath, "bundle.mjs"));
+
+		if (hasMacBundle) {
+			return;
+		}
+
+		const iosAppPath = path.join(
+			projectData.platformsDir,
+			"ios",
+			projectData.projectName,
+			"app",
+		);
+		if (!this.$fs.exists(iosAppPath)) {
+			return;
+		}
+
+		this.$logger.trace(
+			`Copying bundle artifacts from ${iosAppPath} to ${macosAppPath} for macOS prepare.`,
+		);
+
+		this.$fs.ensureDirectoryExists(macosAppPath);
+		const emittedFiles = this.$fs.enumerateFilesInDirectorySync(iosAppPath);
+
+		emittedFiles.forEach((sourcePath) => {
+			const relativePath = path.relative(iosAppPath, sourcePath);
+			const destinationPath = path.join(macosAppPath, relativePath);
+			this.$fs.ensureDirectoryExists(path.dirname(destinationPath));
+			this.$fs.copyFile(sourcePath, destinationPath);
+		});
 	}
 
 	private emitPrepareEvent(filesChangeEventData: IFilesChangeEventData) {

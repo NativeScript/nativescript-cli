@@ -21,6 +21,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			this.$devicePlatformsConstants.iOS,
 			this.$devicePlatformsConstants.Android,
 			this.$devicePlatformsConstants.visionOS,
+			this.$devicePlatformsConstants.macOS || "macOS",
 		];
 	}
 
@@ -48,8 +49,20 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		);
 	}
 
+	public ismacOSPlatform(platform: string): boolean {
+		const macOSPlatformName = this.$devicePlatformsConstants.macOS || "macOS";
+		return !!(
+			platform &&
+			macOSPlatformName.toLowerCase() === platform.toLowerCase()
+		);
+	}
+
 	public isApplePlatform(platform: string): boolean {
-		return this.isiOSPlatform(platform) || this.isvisionOSPlatform(platform);
+		return (
+			this.isiOSPlatform(platform) ||
+			this.isvisionOSPlatform(platform) ||
+			this.ismacOSPlatform(platform)
+		);
 	}
 
 	public normalizePlatformName(platform: string): string {
@@ -59,6 +72,8 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			return "iOS";
 		} else if (this.isvisionOSPlatform(platform)) {
 			return "visionOS";
+		} else if (this.ismacOSPlatform(platform)) {
+			return "macOS";
 		}
 
 		return undefined;
