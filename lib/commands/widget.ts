@@ -8,7 +8,6 @@ import * as plist from "plist";
 import { injector } from "../common/yok";
 import { capitalizeFirstLetter } from "../common/utils";
 import { EOL } from "os";
-import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 
 export class WidgetCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -219,10 +218,7 @@ public struct ${capitalizeFirstLetter(name)}Model: ActivityAttributes {
 			}
 
 			configData.ios.SPMPackages = spmPackages;
-			await this.$projectConfigService.setValue(
-				"", // root
-				configData as { [key: string]: SupportedConfigValues },
-			);
+			await this.$projectConfigService.setValue("ios.SPMPackages", spmPackages);
 
 			if (fs.existsSync(gitIgnorePath)) {
 				const gitIgnore = fs.readFileSync(gitIgnorePath, {

@@ -184,24 +184,54 @@ export class ConfigTransformer implements IConfigTransformer {
 		return `{}`;
 	}
 
+	private isBooleanLiteralNode(initializer: any): boolean {
+		return (
+			initializer?.getKind() === SyntaxKind.TrueKeyword ||
+			initializer?.getKind() === SyntaxKind.FalseKeyword
+		);
+	}
+
+	private replaceInitializer(
+		initializer: any,
+		newValue: SupportedConfigValues,
+	) {
+		return initializer.replaceWithText(this.createInitializer(newValue));
+	}
+
 	private setInitializerValue(
 		initializer: any,
 		newValue: SupportedConfigValues,
 	) {
 		if (Node.isStringLiteral(initializer)) {
+			if (typeof newValue !== "string") {
+				return this.replaceInitializer(initializer, newValue);
+			}
 			return (initializer as StringLiteral).setLiteralValue(newValue as string);
 		}
 
 		if (Node.isNumericLiteral(initializer)) {
+			if (typeof newValue !== "number") {
+				return this.replaceInitializer(initializer, newValue);
+			}
 			return (initializer as NumericLiteral).setLiteralValue(
 				newValue as number,
 			);
 		}
 
-		if (Node.isBooleanKeyword(initializer)) {
+		if (this.isBooleanLiteralNode(initializer)) {
+			if (typeof newValue !== "boolean") {
+				return this.replaceInitializer(initializer, newValue);
+			}
 			return (initializer as BooleanLiteral).setLiteralValue(
 				newValue as boolean,
 			);
+		}
+
+		if (
+			Node.isArrayLiteralExpression(initializer) ||
+			Node.isObjectLiteralExpression(initializer)
+		) {
+			return this.replaceInitializer(initializer, newValue);
 		}
 
 		if (Node.isIdentifier(initializer)) {
@@ -211,7 +241,7 @@ export class ConfigTransformer implements IConfigTransformer {
 		throw new Error("Unsupported value type: " + initializer.getKindName());
 	}
 
-	private getInitializerValue(initializer: any) {
+	private getInitializerValue(initializer: any): any {
 		if (Node.isStringLiteral(initializer)) {
 			return (initializer as StringLiteral).getLiteralValue();
 		}
@@ -220,8 +250,28 @@ export class ConfigTransformer implements IConfigTransformer {
 			return (initializer as NumericLiteral).getLiteralValue();
 		}
 
-		if (Node.isBooleanKeyword(initializer)) {
+		if (this.isBooleanLiteralNode(initializer)) {
 			return (initializer as BooleanLiteral).getLiteralValue();
+		}
+
+		if (Node.isArrayLiteralExpression(initializer)) {
+			return initializer
+				.getElements()
+				.map((element: any) => this.getInitializerValue(element));
+		}
+
+		if (Node.isObjectLiteralExpression(initializer)) {
+			const result: Record<string, SupportedConfigValues> = {};
+			for (const property of initializer.getProperties()) {
+				if (!Node.isPropertyAssignment(property)) {
+					continue;
+				}
+				const name = property.getNameNode().getText().replace(/['\"]/g, "");
+				result[name] = this.getInitializerValue(
+					property.getInitializerOrThrow(),
+				);
+			}
+			return result;
 		}
 
 		if (Node.isIdentifier(initializer)) {
@@ -278,8 +328,28 @@ export class ConfigTransformer implements IConfigTransformer {
 			return (initializer as NumericLiteral).getLiteralValue();
 		}
 
-		if (Node.isBooleanKeyword(initializer)) {
+		if (this.isBooleanLiteralNode(initializer)) {
 			return (initializer as BooleanLiteral).getLiteralValue();
+		}
+
+		if (Node.isArrayLiteralExpression(initializer)) {
+			return initializer
+				.getElements()
+				.map((element: any) => this.getInitializerValue(element));
+		}
+
+		if (Node.isObjectLiteralExpression(initializer)) {
+			const result: Record<string, SupportedConfigValues> = {};
+			for (const property of initializer.getProperties()) {
+				if (!Node.isPropertyAssignment(property)) {
+					continue;
+				}
+				const name = property.getNameNode().getText().replace(/['\"]/g, "");
+				result[name] = this.getInitializerValue(
+					property.getInitializerOrThrow(),
+				);
+			}
+			return result;
 		}
 
 		if (Node.isIdentifier(initializer)) {
