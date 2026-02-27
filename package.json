@@ -163,6 +163,7 @@
     "fsevents": "*"
   },
   "overrides": {
+    "@conventional-changelog/git-client": "2.5.1",
     "jimp": {
       "xml2js": "0.6.2"
     },
