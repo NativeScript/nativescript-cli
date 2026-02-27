@@ -1,4 +1,4 @@
-import { watch, ChokidarOptions, FSWatcher } from "chokidar";
+import { watch, WatchOptions, FSWatcher } from "chokidar";
 import { EventEmitter } from "events";
 import * as _ from "lodash";
 import * as path from "path";
@@ -353,7 +353,7 @@ export class PrepareController extends EventEmitter {
 
 		const patterns = await this.getWatcherPatterns(platformData, projectData);
 
-		const watcherOptions: ChokidarOptions = {
+		const watcherOptions: WatchOptions = {
 			ignoreInitial: true,
 			cwd: projectData.projectDir,
 			awaitWriteFinish: {
