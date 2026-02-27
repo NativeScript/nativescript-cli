@@ -1,3 +1,14 @@
+## [9.0.4](https://github.com/NativeScript/nativescript-cli/compare/v9.0.3...v9.0.4) (2026-02-27)
+
+
+### Bug Fixes
+
+* file watcher with chokidar ([#5973](https://github.com/NativeScript/nativescript-cli/issues/5973)) ([92ec091](https://github.com/NativeScript/nativescript-cli/commit/92ec091d54d4621e0685ea119527f02111f72056))
+* **security:** CVE-2025-13465, CVE-2026-27904, CVE-2026-26996, CVE-2025-59433 ([#5974](https://github.com/NativeScript/nativescript-cli/issues/5974)) ([c4064c9](https://github.com/NativeScript/nativescript-cli/commit/c4064c9d52bbc2b7faff35e2bea8d109b1c170be))
+* visionos overrides for build flags ([#5967](https://github.com/NativeScript/nativescript-cli/issues/5967)) ([895ceb8](https://github.com/NativeScript/nativescript-cli/commit/895ceb8567ee139147643c43760487d46882f717))
+* **widget:** handle configs with other SPMPackages ([#5972](https://github.com/NativeScript/nativescript-cli/issues/5972)) ([03ff1dc](https://github.com/NativeScript/nativescript-cli/commit/03ff1dcaf98b917cbd65c6739871a7be7a224c4b))
+
+
 ## [9.0.3](https://github.com/NativeScript/nativescript-cli/compare/v9.0.2...v9.0.3) (2026-02-01)
 
 
