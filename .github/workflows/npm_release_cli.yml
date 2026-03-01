@@ -91,7 +91,7 @@ jobs:
           node-version: 22.14.0
           registry-url: "https://registry.npmjs.org"
 
-      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: npm-package
           path: dist
@@ -148,7 +148,7 @@ jobs:
       - name: Setup
         run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
 
-      - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+      - uses: actions/download-artifact@70fc10c6e5e1ce46ad2ea6f2b72d43f7d47b13c3 # v8.0.0
         with:
           name: npm-package
           path: dist
