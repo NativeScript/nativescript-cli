@@ -6,7 +6,7 @@ import { IInjector } from "../lib/common/definitions/yok";
 
 function createTestInjector(configuration: {} = {}): IInjector {
 	const injector = new Yok();
-	injector.register("hostInfo", {});
+	injector.register("hostInfo", { isWindows: false });
 	injector.register("errors", stubs.ErrorsStub);
 	injector.register("logger", stubs.LoggerStub);
 	injector.register("childProcess", stubs.ChildProcessStub);
@@ -30,15 +30,13 @@ describe("node-package-manager", () => {
 				expectedName: "some-template",
 			},
 			{
-				name:
-					"should return both name and version when valid fullName with scope passed",
+				name: "should return both name and version when valid fullName with scope passed",
 				templateFullName: "@nativescript/some-template@1.0.0",
 				expectedVersion: "1.0.0",
 				expectedName: "@nativescript/some-template",
 			},
 			{
-				name:
-					"should return only name when version is not specified and the template is scoped",
+				name: "should return only name when version is not specified and the template is scoped",
 				templateFullName: "@nativescript/some-template",
 				expectedVersion: "",
 				expectedName: "@nativescript/some-template",
@@ -54,7 +52,7 @@ describe("node-package-manager", () => {
 				const testInjector = createTestInjector();
 				const npm = testInjector.resolve<NodePackageManager>("npm");
 				const templateNameParts = await npm.getPackageNameParts(
-					testCase.templateFullName
+					testCase.templateFullName,
 				);
 				assert.strictEqual(templateNameParts.name, testCase.expectedName);
 				assert.strictEqual(templateNameParts.version, testCase.expectedVersion);
@@ -94,6 +92,25 @@ describe("node-package-manager", () => {
 				});
 				assert.strictEqual(templateFullName, testCase.expectedFullName);
 			});
+		});
+	});
+
+	describe("install", () => {
+		it("passes --legacy-peer-deps when legacyPeers is set", async () => {
+			const testInjector = createTestInjector();
+			const npm = testInjector.resolve<NodePackageManager>("npm");
+			const childProcess =
+				testInjector.resolve<stubs.ChildProcessStub>("childProcess");
+
+			await npm.install("/tmp/project", "/tmp/project", {
+				disableNpmInstall: false,
+				frameworkPath: null,
+				ignoreScripts: false,
+				legacyPeers: true,
+			});
+
+			assert.include(childProcess.lastCommandArgs, "--legacy-peer-deps");
+			assert.notInclude(childProcess.lastCommandArgs, "--legacyPeers");
 		});
 	});
 });

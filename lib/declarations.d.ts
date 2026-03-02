@@ -31,7 +31,7 @@ interface INodePackageManager {
 	install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 
 	/**
@@ -44,7 +44,7 @@ interface INodePackageManager {
 	uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
-		path?: string
+		path?: string,
 	): Promise<string>;
 
 	/**
@@ -84,7 +84,7 @@ interface INodePackageManager {
 	 */
 	search(
 		filter: string[],
-		config: IDictionary<string | boolean>
+		config: IDictionary<string | boolean>,
 	): Promise<string>;
 
 	/**
@@ -130,7 +130,7 @@ interface IPerformanceService {
 		methodInfo: string,
 		startTime: number,
 		endTime: number,
-		args: any[]
+		args: any[],
 	): void;
 
 	// Will return a reference time in milliseconds
@@ -141,39 +141,39 @@ interface IPackageInstallationManager {
 	install(
 		packageName: string,
 		packageDir: string,
-		options?: INpmInstallOptions
+		options?: INpmInstallOptions,
 	): Promise<any>;
 	uninstall(
 		packageName: string,
 		packageDir: string,
-		options?: IDictionary<string | boolean>
+		options?: IDictionary<string | boolean>,
 	): Promise<any>;
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
 	getLatestCompatibleVersion(
 		packageName: string,
-		referenceVersion?: string
+		referenceVersion?: string,
 	): Promise<string>;
 	getMaxSatisfyingVersion(
 		packageName: string,
-		versionRange: string
+		versionRange: string,
 	): Promise<string>;
 	getLatestCompatibleVersionSafe(
 		packageName: string,
-		referenceVersion?: string
+		referenceVersion?: string,
 	): Promise<string>;
 	getInspectorFromCache(
 		inspectorNpmPackageName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<string>;
 	clearInspectorCache(): void;
 	getInstalledDependencyVersion(
 		packageName: string,
-		projectDir?: string
+		projectDir?: string,
 	): Promise<string>;
 	getMaxSatisfyingVersionSafe(
 		packageName: string,
-		versionIdentifier: string
+		versionIdentifier: string,
 	): Promise<string>;
 }
 
@@ -183,6 +183,12 @@ interface IPackageInstallationManager {
 interface INodePackageManagerInstallOptions
 	extends INpmInstallConfigurationOptions,
 		IDictionary<string | boolean> {
+	/**
+	 * When true and the active package manager is npm, execute installs with `--legacy-peer-deps`.
+	 * Other package managers should ignore this option.
+	 */
+	legacyPeers?: boolean;
+
 	/**
 	 * Destination of the installation.
 	 * @type {string}
@@ -266,7 +272,7 @@ interface INpmPeerDependencyInfo {
 				 * @type {string}
 				 */
 				requires: string;
-			}
+			},
 		];
 		/**
 		 * Dependencies of the dependency.
@@ -548,6 +554,7 @@ interface IAndroidReleaseOptions {
 interface INpmInstallConfigurationOptionsBase {
 	frameworkPath: string;
 	ignoreScripts: boolean; //npm flag
+	legacyPeerDeps?: boolean; //npm flag (--legacy-peer-deps)
 }
 
 interface INpmInstallConfigurationOptions
@@ -622,7 +629,7 @@ interface IOptions
 	argv: IYargArgv;
 	validateOptions(
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
-		projectData?: IProjectData
+		projectData?: IProjectData,
 	): void;
 	options: IDictionary<IDashedOption>;
 	shorthands: string[];
@@ -834,7 +841,7 @@ interface IAndroidToolsInfo {
 	 */
 	validateJavacVersion(
 		installedJavaVersion: string,
-		options?: IAndroidToolsInfoOptions
+		options?: IAndroidToolsInfoOptions,
 	): boolean;
 
 	/**
@@ -913,14 +920,14 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 		device: Mobile.IiOSDevice,
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<any>;
 
 	ensureWebSocketProxy(
 		device: Mobile.IiOSDevice,
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<any>;
 
 	removeAllProxies(): void;
@@ -939,12 +946,12 @@ interface IiOSSocketRequestExecutor {
 	executeAttachRequest(
 		device: Mobile.IiOSDevice,
 		timeout: number,
-		projectId: string
+		projectId: string,
 	): Promise<void>;
 	executeRefreshRequest(
 		device: Mobile.IiOSDevice,
 		timeout: number,
-		appId: string
+		appId: string,
 	): Promise<boolean>;
 }
 
@@ -995,7 +1002,7 @@ interface IProjectNameService {
 	 */
 	ensureValidName(
 		projectName: string,
-		validateOptions?: { force: boolean }
+		validateOptions?: { force: boolean },
 	): Promise<string>;
 }
 
@@ -1089,7 +1096,7 @@ interface IBundleValidatorHelper {
 	 */
 	getBundlerDependencyVersion(
 		projectData: IProjectData,
-		bundlerName?: string
+		bundlerName?: string,
 	): string;
 }
 
@@ -1171,7 +1178,7 @@ interface IAssetsGenerationService {
 	 * @returns {Promise<void>}
 	 */
 	generateSplashScreens(
-		splashesGenerationData: IResourceGenerationData
+		splashesGenerationData: IResourceGenerationData,
 	): Promise<void>;
 }
 
@@ -1207,7 +1214,7 @@ interface IPlatformValidationService {
 		provision: true | string,
 		teamId: true | string,
 		projectData: IProjectData,
-		platform?: string
+		platform?: string,
 	): Promise<boolean>;
 
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
@@ -1220,7 +1227,7 @@ interface IPlatformValidationService {
 	 */
 	isPlatformSupportedForOS(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean;
 }
 
@@ -1228,27 +1235,27 @@ interface IPlatformCommandHelper {
 	addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath?: string
+		frameworkPath?: string,
 	): Promise<void>;
 	cleanPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath: string
+		frameworkPath: string,
 	): Promise<void>;
 	removePlatforms(
 		platforms: string[],
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void>;
 	updatePlatforms(
 		platforms: string[],
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void>;
 	getInstalledPlatforms(projectData: IProjectData): string[];
 	getAvailablePlatforms(projectData: IProjectData): string[];
 	getPreparedPlatforms(projectData: IProjectData): string[];
 	getCurrentPlatformVersion(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string;
 }
 
