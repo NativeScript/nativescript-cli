@@ -1,3 +1,12 @@
+## [9.0.5](https://github.com/NativeScript/nativescript-cli/compare/v9.0.4...v9.0.5) (2026-03-06)
+
+
+### Security
+
+* CWE-1333, CWE-78 ([#5976](https://github.com/NativeScript/nativescript-cli/issues/5976)) ([3942566](https://github.com/NativeScript/nativescript-cli/commit/3942566f78d2d21fccae2ec6f313f29cec92ea11))
+
+
+
 ## [9.0.4](https://github.com/NativeScript/nativescript-cli/compare/v9.0.3...v9.0.4) (2026-02-27)
 
 
