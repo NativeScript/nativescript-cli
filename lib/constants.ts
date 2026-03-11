@@ -409,6 +409,7 @@ export enum IOSNativeTargetTypes {
 	watchApp = "watch_app",
 	watchExtension = "watch_extension",
 	appExtension = "app_extension",
+	application = 'application',
 }
 
 const pathToLoggerAppendersDir = join(
