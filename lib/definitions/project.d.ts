@@ -34,6 +34,11 @@ interface IProjectSettingsBase extends IProjectName {
 	ignoreScripts?: boolean;
 
 	/**
+	 * Defines whether `npm install` should be executed with `--legacy-peer-deps`.
+	 */
+	legacyPeerDeps?: boolean;
+
+	/**
 	 * Selected template from which to create the project. If not specified, defaults to hello-world template.
 	 * Template can be any npm package, local dir, github url, .tgz file.
 	 * If it is set to `angular` or `ng`, default NativeScript Angular Hello World template will be used.
