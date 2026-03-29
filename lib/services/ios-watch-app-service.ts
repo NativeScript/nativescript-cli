@@ -23,41 +23,77 @@ import { MobileProject } from "@nstudio/trapezedev-project";
 import { Minimatch } from "minimatch";
 
 const sourceExtensions = [
-	'.swift', '.m', '.mm', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp'
+	".swift",
+	".m",
+	".mm",
+	".c",
+	".cpp",
+	".cc",
+	".cxx",
+	".h",
+	".hpp",
 ];
 const resourceExtensions = [
-	'.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf',  // Images
-	'.ttf', '.otf', '.woff', '.woff2',                 // Fonts
-	'.xcassets',                                        // Asset catalogs
-	'.storyboard', '.xib',                             // Interface files
-	'.strings', '.stringsdict',                        // Localization
-	'.json', '.xml', '.plist',                         // Data files
-	'.m4a', '.mp3', '.wav', '.caf',                    // Audio
-	'.mp4', '.mov',                                     // Video
-	'.bundle',                                          // Resource bundles
+	".png",
+	".jpg",
+	".jpeg",
+	".gif",
+	".svg",
+	".pdf", // Images
+	".ttf",
+	".otf",
+	".woff",
+	".woff2", // Fonts
+	".xcassets", // Asset catalogs
+	".storyboard",
+	".xib", // Interface files
+	".strings",
+	".stringsdict", // Localization
+	".json",
+	".xml",
+	".plist", // Data files
+	".m4a",
+	".mp3",
+	".wav",
+	".caf", // Audio
+	".mp4",
+	".mov", // Video
+	".bundle", // Resource bundles
 ];
 const WATCH_APP_IDENTIFIER = "watchkitapp";
 const WACTCH_EXTENSION_IDENTIFIER = "watchkitextension";
 const CONFIG_FILE_WATCHAPP = "watchapp.json";
 const CONFIG_FILE_EXTENSION = "extension.json";
-const RESOURCES_TO_IGNORE = [CONFIG_FILE_WATCHAPP, CONFIG_FILE_EXTENSION, 'node_modules'];
+const RESOURCES_TO_IGNORE = [
+	CONFIG_FILE_WATCHAPP,
+	CONFIG_FILE_EXTENSION,
+	"node_modules",
+];
 
 export class IOSWatchAppService implements IIOSWatchAppService {
-
 	constructor(
 		protected $fs: IFileSystem,
 		protected $pbxprojDomXcode: IPbxprojDomXcode,
 		protected $xcode: IXcode,
 		private $iOSNativeTargetService: IIOSNativeTargetService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
-	private addResourceFile(project: IXcode.project, path: string, opt: Record<string, string>, group = 'WatchResources') {
-		
+	private addResourceFile(
+		project: IXcode.project,
+		path: string,
+		opt: Record<string, string>,
+		group = "WatchResources",
+	) {
 		const file = (project as any).addResourceFile(path, opt, group);
 		(project as any).addToResourcesPbxGroup(file, group);
 	}
-	private addSourceFile(project: IXcode.project, path: string, opt: Record<string, string>, group = 'WatchSrc') {
+	private addSourceFile(
+		project: IXcode.project,
+		path: string,
+		opt: Record<string, string>,
+		group = "WatchSrc",
+	) {
 		const file = (project as any).addSourceFile(path, opt, group);
 		(project as any).addToResourcesPbxGroup(file, group);
 	}
@@ -77,18 +113,19 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			return false;
 		}
 
-		const appFolder = this.$iOSNativeTargetService.getTargetDirectories(
-			appPath
-		)[0];
+		const appFolder =
+			this.$iOSNativeTargetService.getTargetDirectories(appPath)[0];
 
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
 
 		const configPath = path.join(
 			path.join(appPath, appFolder),
-			"watchapp.json"
+			"watchapp.json",
 		);
-		const config: IWatchAppJSONConfig = this.$fs.exists(configPath) ? this.$fs.readJson(configPath): null;
+		const config: IWatchAppJSONConfig = this.$fs.exists(configPath)
+			? this.$fs.readJson(configPath)
+			: null;
 
 		const targetType = config?.targetType ?? IOSNativeTargetTypes.watchApp;
 		project.removeTargetsByProductType(IOSNativeTargetProductTypes.watchApp);
@@ -103,7 +140,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			project,
 			platformData,
 			parentTargetUuid,
-			IOSNativeTargetTypes.watchApp
+			IOSNativeTargetTypes.watchApp,
 		);
 
 		await this.configureTarget(
@@ -116,29 +153,33 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			project,
 			projectData,
 			platformData,
-			pbxProjPath
+			pbxProjPath,
 		);
 		targetUuids.push(watchApptarget.uuid);
 		targetNames.push(appFolder);
 
 		const extensionPath = path.join(
 			watchAppFolderPath,
-			IOS_WATCHAPP_EXTENSION_FOLDER
+			IOS_WATCHAPP_EXTENSION_FOLDER,
 		);
 		// Extension is optional (Xcode 14+ supports single target)
 		if (this.$fs.exists(extensionPath)) {
-			const extensionFolder = this.$iOSNativeTargetService.getTargetDirectories(
-				extensionPath
-			)[0];
+			const extensionFolder =
+				this.$iOSNativeTargetService.getTargetDirectories(extensionPath)[0];
 			const configPath = path.join(
 				path.join(extensionPath, extensionFolder),
-				"extension.json"
+				"extension.json",
 			);
 
-			const config = this.$fs.exists(configPath) ? this.$fs.readJson(configPath): null;
+			const config = this.$fs.exists(configPath)
+				? this.$fs.readJson(configPath)
+				: null;
 
-			const targetType = config?.targetType ?? IOSNativeTargetTypes.watchExtension;
-			project.removeTargetsByProductType(IOSNativeTargetProductTypes.watchExtension);
+			const targetType =
+				config?.targetType ?? IOSNativeTargetTypes.watchExtension;
+			project.removeTargetsByProductType(
+				IOSNativeTargetProductTypes.watchExtension,
+			);
 			project.removeTargetsByProductType(targetType);
 
 			const watchExtensionTarget = this.addTarget(
@@ -147,7 +188,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				targetType,
 				project,
 				platformData,
-				watchApptarget.uuid
+				watchApptarget.uuid,
 			);
 
 			await this.configureTarget(
@@ -160,19 +201,19 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				project,
 				projectData,
 				platformData,
-				pbxProjPath
+				pbxProjPath,
 			);
 			targetUuids.push(watchExtensionTarget.uuid);
 			targetNames.push(extensionFolder);
 		} else {
 			this.$logger.debug(
-				"No watch extension found - using single target mode (Xcode 14+)"
+				"No watch extension found - using single target mode (Xcode 14+)",
 			);
 		}
 
 		this.$fs.writeFile(
 			pbxProjPath,
-			project.writeSync({ omitEmptyValues: true })
+			project.writeSync({ omitEmptyValues: true }),
 		);
 
 		// Add SPM packages (file needs to be saved first)
@@ -182,14 +223,14 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			targetNames,
 			platformData,
 			projectData.projectDir,
-			watchSPMPackages
+			watchSPMPackages,
 		);
 		// nothing done after we dont need to reload project
 
 		this.$iOSNativeTargetService.prepareSigning(
 			targetUuids,
 			projectData,
-			pbxProjPath
+			pbxProjPath,
 		);
 
 		return true;
@@ -202,33 +243,49 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project: IXcode.project,
 		platformData: IPlatformData,
 		parentTarget?: string,
-		productTargetType?: string
+		productTargetType?: string,
 	): IXcode.target {
 		const targetPath = path.join(targetRootPath, targetFolder);
 		const targetRelativePath = path.relative(
 			platformData.projectRoot,
-			targetPath
+			targetPath,
 		);
-		
+
 		const target = project.addTarget(
 			targetFolder,
 			targetType,
 			targetRelativePath,
 			parentTarget,
-			productTargetType
+			productTargetType,
 		);
-		
+
 		// Add build phases
 		project.addBuildPhase([], "PBXSourcesBuildPhase", "Sources", target.uuid);
-		project.addBuildPhase([], "PBXResourcesBuildPhase", "Resources", target.uuid);
-		project.addBuildPhase([], "PBXFrameworksBuildPhase", "Frameworks", target.uuid);
-		project.addBuildPhase([], "PBXCopyFilesBuildPhase", "Embed Frameworks", target.uuid);
-		
+		project.addBuildPhase(
+			[],
+			"PBXResourcesBuildPhase",
+			"Resources",
+			target.uuid,
+		);
+		project.addBuildPhase(
+			[],
+			"PBXFrameworksBuildPhase",
+			"Frameworks",
+			target.uuid,
+		);
+		project.addBuildPhase(
+			[],
+			"PBXCopyFilesBuildPhase",
+			"Embed Frameworks",
+			target.uuid,
+			"frameworks",
+		);
+
 		project.addToHeaderSearchPaths(
 			targetPath,
-			target.pbxNativeTarget.productName
+			target.pbxNativeTarget.productName,
 		);
-		
+
 		return target;
 	}
 
@@ -241,10 +298,13 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project: IXcode.project,
 		platformData: IPlatformData,
 		groupName: string,
-		excludePatterns?: string[]
+		excludePatterns?: string[],
 	): void {
-
-		const items = this.getFolderFiles(dirPath, platformData.projectRoot, excludePatterns)
+		const items = this.getFolderFiles(
+			dirPath,
+			platformData.projectRoot,
+			excludePatterns,
+		);
 
 		for (const item of items) {
 			const relativePath = path.relative(platformData.projectRoot, item);
@@ -252,7 +312,12 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			const ext = path.extname(item).toLowerCase();
 			if (sourceExtensions.includes(ext)) {
 				this.$logger.debug(`Adding source file: ${relativePath}`);
-				this.addSourceFile(project, relativePath, {target: targetUuid}, groupName);
+				this.addSourceFile(
+					project,
+					relativePath,
+					{ target: targetUuid },
+					groupName,
+				);
 			}
 		}
 	}
@@ -263,7 +328,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project: IXcode.project,
 		platformData: IPlatformData,
 		groupName: string,
-		excludePatterns?: string[]
+		excludePatterns?: string[],
 	): Promise<void> {
 		try {
 			if (!this.$fs.exists(watchAppFolderPath)) {
@@ -277,7 +342,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					project,
 					platformData,
 					groupName,
-					excludePatterns
+					excludePatterns,
 				);
 			}
 
@@ -296,14 +361,13 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project: IXcode.project,
 		platformData: IPlatformData,
 		groupName: string,
-		excludePatterns?: string[]
+		excludePatterns?: string[],
 	): void {
-
 		const items = this.$fs.readDirectory(dirPath);
 
 		for (const item of items) {
 			// Skip hidden files and excluded files/directories
-			if (item.startsWith('.') || RESOURCES_TO_IGNORE.indexOf(item) !== -1) {
+			if (item.startsWith(".") || RESOURCES_TO_IGNORE.indexOf(item) !== -1) {
 				continue;
 			}
 
@@ -312,16 +376,24 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			const relativePath = path.relative(platformData.projectRoot, itemPath);
 
 			// Check if file/directory should be excluded based on patterns
-			if (excludePatterns && this.shouldExclude(relativePath, excludePatterns)) {
+			if (
+				excludePatterns &&
+				this.shouldExclude(relativePath, excludePatterns)
+			) {
 				this.$logger.debug(`Excluding from resources: ${relativePath}`);
 				continue;
 			}
 
 			if (stats.isDirectory()) {
 				// Special handling for .xcassets, .bundle, and other resource bundles
-				if (item.endsWith('.xcassets') || item.endsWith('.bundle')) {
+				if (item.endsWith(".xcassets") || item.endsWith(".bundle")) {
 					this.$logger.debug(`Adding resource bundle: ${relativePath}`);
-					this.addResourceFile(project, relativePath, { target: targetUuid }, groupName);
+					this.addResourceFile(
+						project,
+						relativePath,
+						{ target: targetUuid },
+						groupName,
+					);
 				} else {
 					// Recursively scan subdirectories
 					this.addResourcesFromDirectory(
@@ -330,7 +402,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 						project,
 						platformData,
 						groupName,
-						excludePatterns
+						excludePatterns,
 					);
 				}
 			} else {
@@ -338,7 +410,12 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				const ext = path.extname(item).toLowerCase();
 				if (resourceExtensions.includes(ext)) {
 					this.$logger.debug(`Adding resource file: ${relativePath}`);
-					this.addResourceFile(project, relativePath, { target: targetUuid }, groupName);
+					this.addResourceFile(
+						project,
+						relativePath,
+						{ target: targetUuid },
+						groupName,
+					);
 				}
 			}
 		}
@@ -349,22 +426,22 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project.parseSync();
 		project.removeTargetsByProductType(IOSNativeTargetProductTypes.watchApp);
 		project.removeTargetsByProductType(
-			IOSNativeTargetProductTypes.watchExtension
+			IOSNativeTargetProductTypes.watchExtension,
 		);
 		this.$fs.writeFile(
 			pbxProjPath,
-			project.writeSync({ omitEmptyValues: true })
+			project.writeSync({ omitEmptyValues: true }),
 		);
 	}
 
 	public hasWatchApp(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean {
 		const watchAppPath = path.join(
 			projectData.getAppResourcesDirectoryPath(),
 			platformData.normalizedPlatformName,
-			IOS_WATCHAPP_FOLDER
+			IOS_WATCHAPP_FOLDER,
 		);
 
 		return this.$fs.exists(watchAppPath);
@@ -380,7 +457,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project: IXcode.project,
 		projectData: IProjectData,
 		platformData: IPlatformData,
-		pbxProjPath: string
+		pbxProjPath: string,
 	) {
 		const identifierParts = identifier.split(".");
 		identifierParts.pop();
@@ -407,12 +484,13 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			filesRelativeToProject: true,
 		});
 
-
 		let basedir: string | undefined;
 		if (config?.basedir) {
 			basedir = path.resolve(path.dirname(configPath), config.basedir);
 			if (!this.$fs.exists(basedir)) {
-				this.$logger.warn(`Basedir not found, using config directory: ${basedir}`);
+				this.$logger.warn(
+					`Basedir not found, using config directory: ${basedir}`,
+				);
 				basedir = path.dirname(configPath);
 			}
 		} else {
@@ -426,12 +504,15 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		if (config?.infoPlistPath) {
 			const infoPlistPath = path.resolve(basedir, config.infoPlistPath);
 			if (this.$fs.exists(infoPlistPath)) {
-				const relativeInfoPlistPath = path.relative(platformData.projectRoot, infoPlistPath);
+				const relativeInfoPlistPath = path.relative(
+					platformData.projectRoot,
+					infoPlistPath,
+				);
 				buildConfigProperties.push({
 					name: "INFOPLIST_FILE",
-					value: `"${infoPlistPath}"`
+					value: `"${infoPlistPath}"`,
 				});
-				resourcesExclude.push(relativeInfoPlistPath)
+				resourcesExclude.push(relativeInfoPlistPath);
 			} else {
 				this.$logger.warn(`Custom Info.plist not found at: ${infoPlistPath}`);
 			}
@@ -441,29 +522,39 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		if (config?.xcprivacyPath) {
 			const xcprivacyPath = path.resolve(basedir, config.xcprivacyPath);
 			if (this.$fs.exists(xcprivacyPath)) {
-				const relativeXcprivacyPath = path.relative(platformData.projectRoot, xcprivacyPath);
-				this.addResourceFile(project, xcprivacyPath, { target: target.uuid }, targetName + "Resources");
-				resourcesExclude.push(relativeXcprivacyPath)
+				const relativeXcprivacyPath = path.relative(
+					platformData.projectRoot,
+					xcprivacyPath,
+				);
+				this.addResourceFile(
+					project,
+					xcprivacyPath,
+					{ target: target.uuid },
+					targetName + "Resources",
+				);
+				resourcesExclude.push(relativeXcprivacyPath);
 			} else {
-				this.$logger.warn(`Custom xcprivacy file not found at: ${xcprivacyPath}`);
+				this.$logger.warn(
+					`Custom xcprivacy file not found at: ${xcprivacyPath}`,
+				);
 			}
 		}
 
 		this.$iOSNativeTargetService.setXcodeTargetBuildConfigurationProperties(
 			buildConfigProperties,
 			targetName,
-			project
+			project,
 		);
 
 		this.$iOSNativeTargetService.setConfigurationsFromJsonFile(
 			configPath,
 			target.uuid,
 			targetName,
-			project
+			project,
 		);
 		project.addToHeaderSearchPaths(
 			targetPath,
-			target.pbxNativeTarget.productName
+			target.pbxNativeTarget.productName,
 		);
 
 		if (config?.importSourcesFromMainFolder !== false) {
@@ -472,8 +563,8 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				target.uuid,
 				project,
 				platformData,
-				targetName + 'Src',
-				srcExclude
+				targetName + "Src",
+				srcExclude,
 			);
 		}
 
@@ -484,10 +575,9 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				project,
 				platformData,
 				resourcesGroup,
-				resourcesExclude
+				resourcesExclude,
 			);
 		}
-
 
 		if (config) {
 			// Process additional configurations
@@ -501,7 +591,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				platformData,
 				pbxProjPath,
 				srcExclude,
-				resourcesExclude
+				resourcesExclude,
 			);
 		}
 	}
@@ -516,14 +606,16 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		platformData: IPlatformData,
 		pbxProjPath: string,
 		srcExclude: string[],
-		resourcesExclude: string[]
+		resourcesExclude: string[],
 	): Promise<void> {
-		this.$logger.debug(`processWatchAppConfiguration ${JSON.stringify(config)}`);
+		this.$logger.debug(
+			`processWatchAppConfiguration ${JSON.stringify(config)}`,
+		);
 
 		// Handle custom resources
 		if (config.resources && Array.isArray(config.resources)) {
 			this.$logger.debug(
-				`Processing ${config.resources.length} custom resource(s) for watch target: ${targetName}`
+				`Processing ${config.resources.length} custom resource(s) for watch target: ${targetName}`,
 			);
 			for (const resourcePath of config.resources) {
 				this.addCustomResource(
@@ -534,14 +626,14 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					platformData,
 					targetName + "Resources",
 					resourcesExclude,
-					basedir
+					basedir,
 				);
 			}
 		}
 
 		if (config.src && Array.isArray(config.src)) {
 			this.$logger.debug(
-				`Processing ${config.src.length} custom source file(s) for watch target: ${targetName}`
+				`Processing ${config.src.length} custom source file(s) for watch target: ${targetName}`,
 			);
 			for (const srcPath of config.src) {
 				this.addCustomSourceFile(
@@ -551,8 +643,8 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					projectData,
 					platformData,
 					srcExclude,
-					targetName + 'Src',
-					basedir
+					targetName + "Src",
+					basedir,
 				);
 			}
 		}
@@ -562,20 +654,20 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			// but it means we need to reload it again after spm packages addition
 			this.$fs.writeFile(
 				pbxProjPath,
-				project.writeSync({ omitEmptyValues: true })
+				project.writeSync({ omitEmptyValues: true }),
 			);
 			await this.applySPMPackagesToTargets(
 				[targetName],
 				platformData,
 				basedir,
-				config.SPMPackages
+				config.SPMPackages,
 			);
 			project.parseSync();
 		}
 
 		if (config.modules && Array.isArray(config.modules)) {
 			this.$logger.debug(
-				`Processing ${config.modules.length} module(s) for watch target: ${targetName}`
+				`Processing ${config.modules.length} module(s) for watch target: ${targetName}`,
 			);
 			for (const moduleDef of config.modules) {
 				await this.addModuleDependency(
@@ -588,7 +680,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					platformData,
 					srcExclude,
 					resourcesExclude,
-					basedir
+					basedir,
 				);
 			}
 		}
@@ -602,14 +694,16 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		platformData: IPlatformData,
 		groupName: string,
 		excludePatterns: string[],
-		basedir?: string
+		basedir?: string,
 	): void {
-		const resolvedPath = this.resolvePathWithBasedir(resourcePath, basedir, projectData.projectDir);
+		const resolvedPath = this.resolvePathWithBasedir(
+			resourcePath,
+			basedir,
+			projectData.projectDir,
+		);
 
 		if (!this.$fs.exists(resolvedPath)) {
-			this.$logger.warn(
-				`Custom resource not found, skipping: ${resourcePath}`
-			);
+			this.$logger.warn(`Custom resource not found, skipping: ${resourcePath}`);
 			return;
 		}
 
@@ -623,11 +717,21 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 
 		if (stats.isDirectory()) {
 			this.$logger.debug(
-				`Recursively adding files from resource directory: ${resourcePath}`
+				`Recursively adding files from resource directory: ${resourcePath}`,
 			);
-			if (relativePath.endsWith('.xcassets') || relativePath.endsWith('.bundle')) {
-				this.$logger.debug(`Adding resource bundle: ${relativePath} for target:${targetUuid}`);
-				this.addResourceFile(project, relativePath, { target: targetUuid }, groupName);
+			if (
+				relativePath.endsWith(".xcassets") ||
+				relativePath.endsWith(".bundle")
+			) {
+				this.$logger.debug(
+					`Adding resource bundle: ${relativePath} for target:${targetUuid}`,
+				);
+				this.addResourceFile(
+					project,
+					relativePath,
+					{ target: targetUuid },
+					groupName,
+				);
 			} else {
 				this.addAllResourcesRecursively(
 					resolvedPath,
@@ -635,12 +739,17 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					project,
 					platformData,
 					groupName,
-					excludePatterns
+					excludePatterns,
 				);
 			}
 		} else {
 			this.$logger.debug(`Adding custom resource file: ${relativePath}`);
-			this.addResourceFile(project, relativePath, { target: targetUuid }, groupName);
+			this.addResourceFile(
+				project,
+				relativePath,
+				{ target: targetUuid },
+				groupName,
+			);
 		}
 	}
 
@@ -654,15 +763,18 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		groupName: string,
 		basedir?: string,
 	): void {
-		const resolvedPath = this.resolvePathWithBasedir(srcPath, basedir, projectData.projectDir);
+		const resolvedPath = this.resolvePathWithBasedir(
+			srcPath,
+			basedir,
+			projectData.projectDir,
+		);
 
 		if (!this.$fs.exists(resolvedPath)) {
 			this.$logger.warn(
-				`Custom source file/folder not found, skipping: ${srcPath}`
+				`Custom source file/folder not found, skipping: ${srcPath}`,
 			);
 			return;
 		}
-
 
 		const relativePath = path.relative(platformData.projectRoot, resolvedPath);
 
@@ -674,27 +786,30 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		const stats = this.$fs.getFsStats(resolvedPath);
 
 		if (stats.isDirectory()) {
-			this.$logger.debug(
-				`Adding custom source directory: ${relativePath}`
-			);
+			this.$logger.debug(`Adding custom source directory: ${relativePath}`);
 			this.addAllSourceFilesFromDirectory(
 				resolvedPath,
 				targetUuid,
 				project,
 				platformData,
 				groupName,
-				excludePatterns
+				excludePatterns,
 			);
 		} else {
 			this.$logger.debug(`Adding custom source file: ${relativePath}`);
-			this.addSourceFile(project, relativePath, {target: targetUuid}, groupName);
+			this.addSourceFile(
+				project,
+				relativePath,
+				{ target: targetUuid },
+				groupName,
+			);
 		}
 	}
 
 	private resolvePathWithBasedir(
 		relativePath: string,
 		basedir: string | undefined,
-		fallbackDir: string
+		fallbackDir: string,
 	): string {
 		return basedir
 			? path.resolve(basedir, relativePath)
@@ -707,10 +822,13 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project: IXcode.project,
 		platformData: IPlatformData,
 		groupName: string,
-		excludePatterns: string[]
+		excludePatterns: string[],
 	): void {
-
-		const items = this.getFolderFiles(dirPath, platformData.projectRoot, excludePatterns)
+		const items = this.getFolderFiles(
+			dirPath,
+			platformData.projectRoot,
+			excludePatterns,
+		);
 
 		for (const item of items) {
 			const relativePath = path.relative(platformData.projectRoot, item);
@@ -718,7 +836,12 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			const ext = path.extname(item).toLowerCase();
 			if (sourceExtensions.includes(ext)) {
 				this.$logger.debug(`Adding source file: ${relativePath}`);
-				this.addSourceFile(project, relativePath, {target: targetUuid}, groupName);
+				this.addSourceFile(
+					project,
+					relativePath,
+					{ target: targetUuid },
+					groupName,
+				);
 			}
 		}
 	}
@@ -729,12 +852,12 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		project: IXcode.project,
 		platformData: IPlatformData,
 		groupName: string,
-		excludePatterns: string[]
+		excludePatterns: string[],
 	): void {
 		const items = this.$fs.readDirectory(dirPath);
 
 		for (const item of items) {
-			if (item.startsWith('.')) {
+			if (item.startsWith(".")) {
 				continue;
 			}
 
@@ -742,22 +865,44 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			const stats = this.$fs.getFsStats(itemPath);
 			const relativePath = path.relative(platformData.projectRoot, itemPath);
 
-			if (excludePatterns && this.shouldExclude(relativePath, excludePatterns)) {
+			if (
+				excludePatterns &&
+				this.shouldExclude(relativePath, excludePatterns)
+			) {
 				this.$logger.debug(`Excluding from resources: ${relativePath}`);
 				return;
 			}
 
 			if (stats.isDirectory()) {
 				// Special handling for .xcassets, .bundle - add as bundles, not recursively
-				if (item.endsWith('.xcassets') || item.endsWith('.bundle')) {
-					this.$logger.debug(`Adding resource bundle: ${relativePath} for target:${targetUuid}`);
-					this.addResourceFile(project, relativePath, { target: targetUuid }, groupName);
+				if (item.endsWith(".xcassets") || item.endsWith(".bundle")) {
+					this.$logger.debug(
+						`Adding resource bundle: ${relativePath} for target:${targetUuid}`,
+					);
+					this.addResourceFile(
+						project,
+						relativePath,
+						{ target: targetUuid },
+						groupName,
+					);
 				} else {
-					this.addAllResourcesRecursively(itemPath, targetUuid, project, platformData, groupName, excludePatterns);
+					this.addAllResourcesRecursively(
+						itemPath,
+						targetUuid,
+						project,
+						platformData,
+						groupName,
+						excludePatterns,
+					);
 				}
 			} else {
 				this.$logger.debug(`Adding resource file: ${relativePath}`);
-				this.addResourceFile(project, relativePath, { target: targetUuid }, groupName);
+				this.addResourceFile(
+					project,
+					relativePath,
+					{ target: targetUuid },
+					groupName,
+				);
 			}
 		}
 	}
@@ -775,35 +920,69 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		basedir?: string,
 	): Promise<void> {
 		const modulePath = moduleDef.path
-			? this.resolvePathWithBasedir(moduleDef.path, basedir, projectData.projectDir)
+			? this.resolvePathWithBasedir(
+					moduleDef.path,
+					basedir,
+					projectData.projectDir,
+				)
 			: null;
 
-
 		if (!modulePath || !this.$fs.exists(modulePath)) {
-			this.$logger.warn(`Module path not found, skipping module: ${modulePath}`);
+			this.$logger.warn(
+				`Module path not found, skipping module: ${modulePath}`,
+			);
 			return;
 		}
 
 		const relativePath = path.relative(platformData.projectRoot, modulePath);
 		const stats = this.$fs.getFsStats(modulePath);
 
-		const isFramework = modulePath.endsWith('.framework') || modulePath.endsWith('.xcframework');
+		const isFramework =
+			modulePath.endsWith(".framework") || modulePath.endsWith(".xcframework");
 		const isFolder = stats.isDirectory() && !isFramework;
-		this.$logger.debug(`Adding module dependency: ${JSON.stringify(moduleDef)} to ${targetName}, basedir:${basedir}, isFramework:${isFramework} isFolder:${isFolder}`);
+		this.$logger.debug(
+			`Adding module dependency: ${JSON.stringify(moduleDef)} to ${targetName}, basedir:${basedir}, isFramework:${isFramework} isFolder:${isFolder}`,
+		);
 
 		if (isFramework) {
 			// Handle compiled frameworks (xcframework, framework)
-			this.addCompiledFramework(moduleDef, relativePath, targetName, target, project);
+			this.addCompiledFramework(
+				moduleDef,
+				relativePath,
+				targetName,
+				target,
+				project,
+			);
 		} else if (isFolder) {
 			// Handle folder-based modules
-			await this.addFolderModule(moduleDef, modulePath, relativePath, targetName, target, config, project, basedir, srcExclude, resourcesExclude, projectData, platformData);
+			await this.addFolderModule(
+				moduleDef,
+				modulePath,
+				relativePath,
+				targetName,
+				target,
+				config,
+				project,
+				basedir,
+				srcExclude,
+				resourcesExclude,
+				projectData,
+				platformData,
+			);
 		} else {
 			this.$logger.warn(`Unknown module type for: ${modulePath}`);
 		}
 
-		if (moduleDef.headerSearchPaths && Array.isArray(moduleDef.headerSearchPaths)) {
+		if (
+			moduleDef.headerSearchPaths &&
+			Array.isArray(moduleDef.headerSearchPaths)
+		) {
 			for (const headerPath of moduleDef.headerSearchPaths) {
-				const resolvedPath = this.resolvePathWithBasedir(headerPath, basedir, projectData.projectDir);
+				const resolvedPath = this.resolvePathWithBasedir(
+					headerPath,
+					basedir,
+					projectData.projectDir,
+				);
 				const relPath = path.relative(platformData.projectRoot, resolvedPath);
 				project.addToHeaderSearchPaths(relPath, targetName);
 				this.$logger.debug(`Added header search path: ${relPath}`);
@@ -820,7 +999,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		relativePath: string,
 		targetName: string,
 		target: IXcode.target,
-		project: IXcode.project
+		project: IXcode.project,
 	): void {
 		const moduleName = moduleDef.name;
 
@@ -835,35 +1014,52 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			"FRAMEWORK_SEARCH_PATHS",
 			`"$(inherited)" "${frameworkDir}"`,
 			null,
-			targetName
+			targetName,
 		);
 
-		this.$logger.debug(`Added compiled framework ${moduleName} at ${relativePath}`);
+		this.$logger.debug(
+			`Added compiled framework ${moduleName} at ${relativePath}`,
+		);
 	}
 
-	private getFolderFiles(dirPath: string, rootPath: string, excludePatterns?: string[]) {
+	private getFolderFiles(
+		dirPath: string,
+		rootPath: string,
+		excludePatterns?: string[],
+	) {
 		const result: string[] = [];
-		const files = this.$fs.readDirectory(dirPath).filter((fileName) => !fileName.startsWith("."));
+		const files = this.$fs
+			.readDirectory(dirPath)
+			.filter((fileName) => !fileName.startsWith("."));
 		for (const item of files) {
 			const itemPath = path.join(dirPath, item);
 			const stats = this.$fs.getFsStats(itemPath);
 			const relativePath = path.relative(rootPath, itemPath);
 
-			if (excludePatterns && this.shouldExclude(relativePath, excludePatterns)) {
+			if (
+				excludePatterns &&
+				this.shouldExclude(relativePath, excludePatterns)
+			) {
 				this.$logger.debug(`Excluding from src: ${relativePath}`);
 				continue;
 			}
 			if (stats.isDirectory()) {
-				result.push(...this.getFolderFiles(itemPath, rootPath, excludePatterns))
+				result.push(
+					...this.getFolderFiles(itemPath, rootPath, excludePatterns),
+				);
 			} else {
-				result.push(itemPath)
-
+				result.push(itemPath);
 			}
 		}
 		return result;
 	}
 
-	addBuildPhaseIfNotExisting(project: IXcode.project, buildPhaseType: string, comment: string, target: string) {
+	addBuildPhaseIfNotExisting(
+		project: IXcode.project,
+		buildPhaseType: string,
+		comment: string,
+		target: string,
+	) {
 		let buildPhase = project.buildPhaseObject(buildPhaseType, comment, target);
 		if (!buildPhase) {
 			project.addBuildPhase([], buildPhaseType, comment, target);
@@ -882,39 +1078,76 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		srcExclude: string[],
 		resourcesExclude: string[],
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void> {
 		const moduleName = moduleDef.name || path.basename(modulePath);
 
 		const targetRelativePath = path.relative(
 			platformData.projectRoot,
-			modulePath
+			modulePath,
 		);
 		const moduleTarget = project.addTarget(
 			moduleName,
-			moduleDef.targetType ?? 'framework',
+			moduleDef.targetType ?? "framework",
 			targetRelativePath,
-			target.uuid
+			target.uuid,
 		);
-		this.$logger.debug(`Adding folder module ${moduleName} with path ${modulePath} with target uuid:${moduleTarget.uuid}`);
+		this.$logger.debug(
+			`Adding folder module ${moduleName} with path ${modulePath} with target uuid:${moduleTarget.uuid}`,
+		);
 
-		const {path: filePath, name, dependencies, frameworks, buildConfigurationProperties, src, resources, SPMPackages, ...otherProps} = moduleDef
-		project.addFramework(moduleName + '.framework', {
+		const {
+			path: filePath,
+			name,
+			dependencies,
+			frameworks,
+			buildConfigurationProperties,
+			src,
+			resources,
+			SPMPackages,
+			...otherProps
+		} = moduleDef;
+		project.addFramework(moduleName + ".framework", {
 			target: target.uuid,
 			basename: moduleName,
-			path: moduleName + '.framework',
+			path: moduleName + ".framework",
 			customFramework: true,
-			explicitFileType: 'wrapper.framework',
-			...otherProps
+			explicitFileType: "wrapper.framework",
+			...otherProps,
 		});
 
 		// Add build phases
-		project.addBuildPhase([], "PBXSourcesBuildPhase", "Sources", moduleTarget.uuid);
-		project.addBuildPhase([], "PBXResourcesBuildPhase", "Resources", moduleTarget.uuid);
-		project.addBuildPhase([], "PBXFrameworksBuildPhase", "Frameworks", moduleTarget.uuid);
-		project.addBuildPhase([], "PBXCopyFilesBuildPhase", "Embed Frameworks", moduleTarget.uuid);
+		project.addBuildPhase(
+			[],
+			"PBXSourcesBuildPhase",
+			"Sources",
+			moduleTarget.uuid,
+		);
+		project.addBuildPhase(
+			[],
+			"PBXResourcesBuildPhase",
+			"Resources",
+			moduleTarget.uuid,
+		);
+		project.addBuildPhase(
+			[],
+			"PBXFrameworksBuildPhase",
+			"Frameworks",
+			moduleTarget.uuid,
+		);
+		project.addBuildPhase(
+			[],
+			"PBXCopyFilesBuildPhase",
+			"Embed Frameworks",
+			moduleTarget.uuid,
+			"frameworks",
+		);
 
-		const files = this.getFolderFiles(modulePath, platformData.projectRoot, srcExclude);
+		const files = this.getFolderFiles(
+			modulePath,
+			platformData.projectRoot,
+			srcExclude,
+		);
 		this.$logger.debug(`module ${moduleName} has  ${files.length} files`);
 		if (files.length > 0) {
 			project.addPbxGroup(files, moduleName, modulePath, null, {
@@ -925,13 +1158,20 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		}
 
 		if (moduleDef.frameworks && Array.isArray(moduleDef.frameworks)) {
-			this.$logger.debug(`Adding ${moduleDef.frameworks.length} framework(s) for module ${JSON.stringify(moduleDef)}`);
+			this.$logger.debug(
+				`Adding ${moduleDef.frameworks.length} framework(s) for module ${JSON.stringify(moduleDef)}`,
+			);
 			for (const framework of moduleDef.frameworks) {
-				this.$logger.debug(`Adding framework ${JSON.stringify(framework)} for module ${JSON.stringify(moduleDef)}`);
-				if (typeof framework === 'string') {
-					project.addFramework(framework, { target: moduleTarget.uuid});
+				this.$logger.debug(
+					`Adding framework ${JSON.stringify(framework)} for module ${JSON.stringify(moduleDef)}`,
+				);
+				if (typeof framework === "string") {
+					project.addFramework(framework, { target: moduleTarget.uuid });
 				} else {
-					project.addFramework(framework.path, { target: moduleTarget.uuid, ...framework});
+					project.addFramework(framework.path, {
+						target: moduleTarget.uuid,
+						...framework,
+					});
 				}
 				this.$logger.debug(`Added framework dependency: ${framework}`);
 			}
@@ -939,7 +1179,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 
 		if (moduleDef.src && Array.isArray(moduleDef.src)) {
 			this.$logger.debug(
-				`Processing ${config.src.length} custom source file(s) for target: ${moduleName}`
+				`Processing ${config.src.length} custom source file(s) for target: ${moduleName}`,
 			);
 			for (const srcPath of moduleDef.src) {
 				this.addCustomSourceFile(
@@ -949,15 +1189,15 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					projectData,
 					platformData,
 					srcExclude,
-					moduleName + 'Src',
-					basedir
+					moduleName + "Src",
+					basedir,
 				);
 			}
 		}
 
 		if (moduleDef.resources && Array.isArray(moduleDef.resources)) {
 			this.$logger.debug(
-				`Processing ${moduleDef.resources.length} custom resource(s) for target: ${moduleName}/${moduleTarget.uuid}`
+				`Processing ${moduleDef.resources.length} custom resource(s) for target: ${moduleName}/${moduleTarget.uuid}`,
 			);
 			for (const resourcePath of moduleDef.resources) {
 				this.addCustomResource(
@@ -968,18 +1208,33 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					platformData,
 					targetName + "Resources",
 					resourcesExclude,
-					basedir
+					basedir,
 				);
 			}
 		}
 
 		if (moduleDef.dependencies && Array.isArray(moduleDef.dependencies)) {
 			const currentTargets = project.pbxNativeTargetSection();
-			const currentTargetsArray = Object.keys(currentTargets).map(k=>currentTargets[k]['name']?({uuid:k, name: currentTargets[k]['name']}): null).filter(t => !!t)
-			const targets = moduleDef.dependencies.map(dependency => currentTargetsArray.find(t=>t.name === `\"${dependency}\"`)).filter(s => !!s);
+			const currentTargetsArray = Object.keys(currentTargets)
+				.map((k) =>
+					currentTargets[k]["name"]
+						? { uuid: k, name: currentTargets[k]["name"] }
+						: null,
+				)
+				.filter((t) => !!t);
+			const targets = moduleDef.dependencies
+				.map((dependency) =>
+					currentTargetsArray.find((t) => t.name === `\"${dependency}\"`),
+				)
+				.filter((s) => !!s);
 			if (targets.length) {
-				this.$logger.debug(`Adding target dependencies ${moduleDef.dependencies} with uuids:${targets.map(t => t.uuid)} for module ${moduleDef.name}`);
-				project.addTargetDependency(moduleTarget.uuid, targets.map(t => t.uuid));
+				this.$logger.debug(
+					`Adding target dependencies ${moduleDef.dependencies} with uuids:${targets.map((t) => t.uuid)} for module ${moduleDef.name}`,
+				);
+				project.addTargetDependency(
+					moduleTarget.uuid,
+					targets.map((t) => t.uuid),
+				);
 			}
 		}
 
@@ -988,32 +1243,43 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			// but it means we need to reload it again after spm packages addition
 			this.$fs.writeFile(
 				project.filepath,
-				project.writeSync({ omitEmptyValues: true })
+				project.writeSync({ omitEmptyValues: true }),
 			);
 			await this.applySPMPackagesToTargets(
 				[moduleName],
 				platformData,
 				basedir,
-				moduleDef.SPMPackages.map(t => {
-					if (typeof t === 'string') {
-						return config.SPMPackages.find(s => s.name === t)
+				moduleDef.SPMPackages.map((t) => {
+					if (typeof t === "string") {
+						return config.SPMPackages.find((s) => s.name === t);
 					}
 					return t;
- 				})
+				}),
 			);
 			project.parseSync();
 		}
 
-		if (moduleDef.buildConfigurationProperties || config.sharedModulesBuildConfigurationProperties) {
-			const configurationProperties = {...(config.sharedModulesBuildConfigurationProperties || {}), ...(moduleDef.buildConfigurationProperties || {})};
+		if (
+			moduleDef.buildConfigurationProperties ||
+			config.sharedModulesBuildConfigurationProperties
+		) {
+			const configurationProperties = {
+				...(config.sharedModulesBuildConfigurationProperties || {}),
+				...(moduleDef.buildConfigurationProperties || {}),
+			};
 			this.$iOSNativeTargetService.setXcodeTargetBuildConfigurationProperties(
-				Object.keys(configurationProperties).map(k => ({name: k, value: configurationProperties[k]})),
+				Object.keys(configurationProperties).map((k) => ({
+					name: k,
+					value: configurationProperties[k],
+				})),
 				moduleName,
-				project
+				project,
 			);
 		}
 
-		this.$logger.debug(`Added folder-based module ${moduleName} at ${relativePath}`);
+		this.$logger.debug(
+			`Added folder-based module ${moduleName} at ${relativePath}`,
+		);
 	}
 
 	/**
@@ -1022,18 +1288,24 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 	private addLinkerFlags(
 		flags: string[],
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): void {
 		for (const flag of flags) {
-			const currentFlags = this.getBuildProperty("OTHER_LDFLAGS", targetName, project);
-			const flagsArray = currentFlags 
-				? (Array.isArray(currentFlags) ? currentFlags : [currentFlags])
+			const currentFlags = this.getBuildProperty(
+				"OTHER_LDFLAGS",
+				targetName,
+				project,
+			);
+			const flagsArray = currentFlags
+				? Array.isArray(currentFlags)
+					? currentFlags
+					: [currentFlags]
 				: ['"$(inherited)"'];
-			
+
 			if (!flagsArray.includes(flag)) {
 				flagsArray.push(flag);
 			}
-			
+
 			project.addBuildProperty("OTHER_LDFLAGS", flagsArray, null, targetName);
 			this.$logger.debug(`Added linker flag: ${flag}`);
 		}
@@ -1045,7 +1317,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 	private getBuildProperty(
 		propertyName: string,
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): any {
 		// Access the project hash to read build settings
 		const projectHash = (project as any).hash;
@@ -1060,9 +1332,12 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 
 		for (const key in configurations) {
 			const config = configurations[key];
-			if (config && config.buildSettings && 
-				(config.buildSettings.PRODUCT_NAME === targetName || 
-				 config.buildSettings.PRODUCT_NAME === `"${targetName}"`)) {
+			if (
+				config &&
+				config.buildSettings &&
+				(config.buildSettings.PRODUCT_NAME === targetName ||
+					config.buildSettings.PRODUCT_NAME === `"${targetName}"`)
+			) {
 				return config.buildSettings[propertyName];
 			}
 		}
@@ -1090,16 +1365,18 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		targetNames: string[],
 		platformData: IPlatformData,
 		basedir: string,
-		watchSPMPackages: any[]
+		watchSPMPackages: any[],
 	): Promise<void> {
 		try {
-			this.$logger.debug(`applySPMPackagesToTargets ${JSON.stringify(watchSPMPackages)}`);
+			this.$logger.debug(
+				`applySPMPackagesToTargets ${JSON.stringify(watchSPMPackages)}`,
+			);
 			if (watchSPMPackages.length === 0) {
 				return;
 			}
 
 			this.$logger.debug(
-				`Applying ${watchSPMPackages.length} SPM package(s) to targets:${targetNames}`
+				`Applying ${watchSPMPackages.length} SPM package(s) to targets:${targetNames}`,
 			);
 
 			const project = new MobileProject(platformData.projectRoot, {
@@ -1121,31 +1398,36 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					pkg.path = path.resolve(basedir, pkg.path);
 				}
 
-				this.$logger.debug(`Adding SPM package ${JSON.stringify(pkg)} to targets ${targetNames}`);
+				this.$logger.debug(
+					`Adding SPM package ${JSON.stringify(pkg)} to targets ${targetNames}`,
+				);
 				for (const targetName of targetNames) {
 					project.ios.addSPMPackage(targetName, pkg);
 				}
 			}
 
 			await project.commit();
-			this.$logger.debug(`Successfully applied SPM packages to targets ${targetNames}`);
+			this.$logger.debug(
+				`Successfully applied SPM packages to targets ${targetNames}`,
+			);
 		} catch (err) {
-			this.$logger.debug(`Error applying SPM packages to targets ${targetNames} "`, err);
+			this.$logger.debug(
+				`Error applying SPM packages to targets ${targetNames} "`,
+				err,
+			);
 		}
 	}
 
 	/**
 	 * Get SPM packages configured for watch app targets
 	 */
-	private getWatchSPMPackages(
-		platformData: IPlatformData
-	): IosSPMPackage[] {
+	private getWatchSPMPackages(platformData: IPlatformData): IosSPMPackage[] {
 		const $projectConfigService = injector.resolve("projectConfigService");
-		
+
 		// Check for watch-specific SPM packages in config
 		const watchPackages = $projectConfigService.getValue(
 			`${platformData.platformNameLowerCase}.watchApp.SPMPackages`,
-			[]
+			[],
 		);
 
 		return watchPackages;
