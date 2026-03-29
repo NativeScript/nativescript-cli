@@ -107,6 +107,11 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		const targetUuids: string[] = [];
 		const targetNames: string[] = [];
 		const appPath = path.join(watchAppFolderPath, IOS_WATCHAPP_FOLDER);
+		const extensionPath = path.join(
+			watchAppFolderPath,
+			IOS_WATCHAPP_EXTENSION_FOLDER,
+		);
+		const hasWatchExtension = this.$fs.exists(extensionPath);
 
 		// Check if watchapp exists - it's required
 		if (!this.$fs.exists(appPath)) {
@@ -154,16 +159,13 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			projectData,
 			platformData,
 			pbxProjPath,
+			!hasWatchExtension,
 		);
 		targetUuids.push(watchApptarget.uuid);
 		targetNames.push(appFolder);
 
-		const extensionPath = path.join(
-			watchAppFolderPath,
-			IOS_WATCHAPP_EXTENSION_FOLDER,
-		);
 		// Extension is optional (Xcode 14+ supports single target)
-		if (this.$fs.exists(extensionPath)) {
+		if (hasWatchExtension) {
 			const extensionFolder =
 				this.$iOSNativeTargetService.getTargetDirectories(extensionPath)[0];
 			const configPath = path.join(
@@ -458,6 +460,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		projectData: IProjectData,
 		platformData: IPlatformData,
 		pbxProjPath: string,
+		disableStubBinary = false,
 	) {
 		const identifierParts = identifier.split(".");
 		identifierParts.pop();
@@ -471,6 +474,13 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			{ name: "WATCHOS_DEPLOYMENT_TARGET", value: 5.2 },
 			{ name: "WK_APP_BUNDLE_IDENTIFIER", value: wkAppBundleIdentifier },
 		];
+
+		if (disableStubBinary) {
+			buildConfigProperties.push(
+				{ name: "PRODUCT_BINARY_SOURCE_PATH", value: '""' },
+				{ name: "PRODUCT_TYPE_HAS_STUB_BINARY", value: "NO" },
+			);
+		}
 		const resourcesGroup = targetName + "Resources";
 		project.addPbxGroup([], resourcesGroup, project.filepath, null, {
 			isMain: true,
