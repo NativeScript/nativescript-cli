@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "9.0.2",
+  "version": "9.0.5",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -56,14 +56,13 @@
   "dependencies": {
     "@foxt/js-srp": "0.0.3-patch2",
     "@nativescript/doctor": "2.0.17",
-    "@nativescript/hook": "3.0.4",
+    "@nativescript/hook": "3.0.5",
     "@npmcli/arborist": "9.1.8",
-    "@rigor789/resolve-package-path": "1.0.7",
     "@nstudio/trapezedev-project": "7.2.3",
-    "archiver": "7.0.1",
-    "axios": "1.13.2",
+    "@rigor789/resolve-package-path": "1.0.7",
+    "axios": "1.13.5",
     "byline": "5.0.0",
-    "chokidar": "4.0.3",
+    "chokidar": "^3.6.0",
     "cli-table3": "0.6.5",
     "color": "4.2.3",
     "convert-source-map": "2.0.0",
@@ -75,11 +74,11 @@
     "ios-mobileprovision-finder": "1.2.1",
     "ios-sim-portable": "4.5.1",
     "jimp": "1.6.0",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "log4js": "6.9.1",
     "marked": "15.0.12",
     "marked-terminal": "7.3.0",
-    "minimatch": "10.1.1",
+    "minimatch": "10.2.4",
     "mkdirp": "3.0.1",
     "mute-stream": "2.0.0",
     "nativescript-dev-xcode": "0.8.1",
@@ -100,7 +99,7 @@
     "simple-git": "3.30.0",
     "simple-plist": "1.4.0",
     "source-map": "0.7.6",
-    "tar": "7.5.2",
+    "tar": "7.5.9",
     "ts-morph": "25.0.1",
     "tunnel": "0.0.6",
     "typescript": "5.7.3",
@@ -109,16 +108,16 @@
     "winreg": "1.2.5",
     "ws": "8.18.3",
     "xml2js": "0.6.2",
-    "yargs": "17.7.2"
+    "yargs": "17.7.2",
+    "yazl": "^3.3.1"
   },
   "devDependencies": {
-    "@types/archiver": "^6.0.3",
     "@types/byline": "^4.2.36",
     "@types/chai": "5.2.2",
     "@types/chai-as-promised": "8.0.2",
     "@types/color": "4.2.0",
     "@types/convert-source-map": "2.0.3",
-    "@types/lodash": "4.17.21",
+    "@types/lodash": "4.17.23",
     "@types/marked-terminal": "^6.1.1",
     "@types/node": "^22.0.0",
     "@types/npmcli__arborist": "^6.3.0",
@@ -139,10 +138,12 @@
     "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
     "@types/yargs": "17.0.33",
+    "@types/yazl": "^3.3.0",
     "braces": ">=3.0.3",
     "chai": "5.3.3",
     "chai-as-promised": "8.0.2",
     "conventional-changelog-cli": "^5.0.0",
+    "fast-check": "3.23.2",
     "grunt": "1.6.1",
     "grunt-contrib-clean": "2.0.1",
     "grunt-contrib-copy": "1.0.0",
@@ -162,11 +163,21 @@
     "fsevents": "*"
   },
   "overrides": {
+    "@conventional-changelog/git-client": "2.5.1",
     "jimp": {
       "xml2js": "0.6.2"
     },
     "npm-watch": {
       "nodemon": "3.0.3"
+    },
+    "grunt": {
+      "minimatch": "3.1.5"
+    },
+    "globule": {
+      "minimatch": "3.1.5"
+    },
+    "replace": {
+      "minimatch": "3.1.5"
     }
   },
   "analyze": true,

@@ -18,7 +18,7 @@ import { EOL } from "os";
 import * as detectNewline from "detect-newline";
 import { IFileSystem, IReadFileOptions, IFsStats } from "./declarations";
 import { IInjector } from "./definitions/yok";
-import { create as createArchiver } from "archiver";
+import * as yazl from "yazl";
 
 // TODO: Add .d.ts for mkdirp module (or use it from @types repo).
 const mkdirp = require("mkdirp");
@@ -37,28 +37,24 @@ export class FileSystem implements IFileSystem {
 	): Promise<void> {
 		//we are resolving it here instead of in the constructor, because config has dependency on file system and config shouldn't require logger
 		const $logger = this.$injector.resolve("logger");
-		const zip = createArchiver("zip", {
-			zlib: {
-				level: 9,
-			},
-		});
+		const zip = new yazl.ZipFile();
 		const outFile = fs.createWriteStream(zipFile);
-		zip.pipe(outFile);
+
+		for (const file of files) {
+			let relativePath = zipPathCallback(file);
+			relativePath = relativePath.replace(/\\/g, "/");
+			$logger.trace("zipping as '%s' file '%s'", relativePath, file);
+			zip.addFile(file, relativePath, { compress: true });
+		}
+		zip.end();
 
 		return new Promise<void>((resolve, reject) => {
 			outFile.on("error", (err: Error) => reject(err));
+			zip.outputStream.on("error", (err: Error) => reject(err));
+			zip.outputStream.pipe(outFile);
 			outFile.on("close", () => {
-				$logger.trace("zip: %d bytes written", zip.pointer());
 				resolve();
 			});
-
-			for (const file of files) {
-				let relativePath = zipPathCallback(file);
-				relativePath = relativePath.replace(/\\/g, "/");
-				$logger.trace("zipping as '%s' file '%s'", relativePath, file);
-				zip.append(fs.createReadStream(file), { name: relativePath });
-			}
-			zip.finalize();
 		});
 	}
 

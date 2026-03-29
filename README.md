@@ -44,6 +44,12 @@ Get it using: `npm install -g nativescript`
 - [Extending the CLI](#extending-the-cli)
 - [Troubleshooting](#troubleshooting)
 - [How to Contribute](#how-to-contribute)
+- [Scorecard Maintenance](#scorecard-maintenance)
+    - [1) Branch-Protection check (`?`) in Scorecard workflow](#1-branch-protection-check--in-scorecard-workflow)
+    - [2) Required branch/ruleset settings for higher Branch-Protection and Code-Review](#2-required-branchruleset-settings-for-higher-branch-protection-and-code-review)
+    - [3) Keep Token-Permissions high](#3-keep-token-permissions-high)
+    - [4) Signed-Releases check](#4-signed-releases-check)
+    - [5) Vulnerabilities check](#5-vulnerabilities-check)
 - [How to Build](#how-to-build)
 - [Get Help](#get-help)
 - [License](#license)
@@ -341,6 +347,49 @@ To learn how to log a bug that you just discovered, click [here](https://github.
 To learn how to suggest a new feature or improvement, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#request-a-feature).
 
 To learn how to contribute to the code base, click [here](https://github.com/NativeScript/nativescript-cli/blob/master/CONTRIBUTING.md#contribute-to-the-code-base).
+
+[Back to Top][1]
+
+Scorecard Maintenance
+===
+
+This repository tracks OpenSSF Scorecard. Use this checklist when score drops or checks become inconclusive.
+
+### 1) Branch-Protection check (`?`) in Scorecard workflow
+
+- Ensure `.github/workflows/scorecard.yml` uses `repo_token: ${{ secrets.SCORECARD_TOKEN }}`.
+- Set `SCORECARD_TOKEN` as a repository Actions secret.
+- If using a fine-grained PAT, set expiration to **366 days or less** (NativeScript org policy).
+- If Branch-Protection still reports token incompatibility, use a PAT type compatible with Scorecard's Branch-Protection query path.
+
+### 2) Required branch/ruleset settings for higher Branch-Protection and Code-Review
+
+Apply to `main` and release branches:
+
+- Prevent force push and prevent branch deletion.
+- Require pull request before merge.
+- Require status checks to pass before merge.
+- Require at least 2 approvals.
+- Require code owner review.
+- Dismiss stale approvals when new commits are pushed.
+- Include administrators.
+
+### 3) Keep Token-Permissions high
+
+- Set top-level workflow permissions to read-only (for example `permissions: read-all`).
+- Grant write permissions only at job level and only when needed (for example publish/release jobs).
+- Keep GitHub Actions pinned to full commit SHAs.
+
+### 4) Signed-Releases check
+
+- Publish release assets with provenance/signature files.
+- Keep release workflow attaching `*.intoto.jsonl` artifacts alongside release bundles.
+
+### 5) Vulnerabilities check
+
+- Keep runtime dependency vulnerabilities near zero.
+- Run `npm audit --omit=dev` before release PRs.
+- Update vulnerable dependencies quickly; for non-applicable findings, document and track mitigation clearly.
 
 [Back to Top][1]
 

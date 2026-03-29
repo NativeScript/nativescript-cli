@@ -130,6 +130,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private _platformsDirCache: string = null;
+	private _platformOverrideCache: string = null;
 	private _platformData: IPlatformData = null;
 
 	public getPlatformData(projectData: IProjectData): IPlatformData {
@@ -139,10 +140,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			);
 		}
 
+		const currentOverride = this.$options.platformOverride ?? null;
 		if (
 			projectData &&
 			projectData.platformsDir &&
-			this._platformsDirCache !== projectData.platformsDir
+			(this._platformsDirCache !== projectData.platformsDir ||
+				this._platformOverrideCache !== currentOverride)
 		) {
 			const platform = this.$mobileHelper.normalizePlatformName(
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
@@ -231,6 +234,8 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					".xbm",
 				], // https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIImage_Class/
 			};
+			this._platformsDirCache = projectData.platformsDir;
+			this._platformOverrideCache = currentOverride;
 		}
 
 		return this._platformData;
@@ -545,6 +550,18 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		}
 	}
 
+	// Track added frameworks by name to prevent duplicates in monorepo/workspace setups
+	// where the same plugin may exist in multiple node_modules paths
+	private _addedFrameworks: Set<string> = new Set();
+
+	/**
+	 * Clears the framework and static library tracking sets. Should be called at the start of a new prepare cycle.
+	 */
+	public clearFrameworksCache(): void {
+		this._addedFrameworks.clear();
+		this._addedStaticLibs.clear();
+	}
+
 	private async addFramework(
 		frameworkPath: string,
 		projectData: IProjectData,
@@ -552,6 +569,16 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		if (this.$hostInfo.isWindows) {
 			return;
 		}
+
+		// Check if framework with same name already added (prevents duplicate output errors in monorepos)
+		const frameworkName = path.basename(frameworkPath);
+		if (this._addedFrameworks.has(frameworkName)) {
+			this.$logger.trace(
+				`Framework ${frameworkName} already added, skipping duplicate from ${frameworkPath}`,
+			);
+			return;
+		}
+		this._addedFrameworks.add(frameworkName);
 
 		this.validateFramework(frameworkPath);
 
@@ -592,12 +619,24 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		this.savePbxProj(project, projectData);
 	}
 
+	// Track added static libraries by name to prevent duplicates in monorepo/workspace setups
+	private _addedStaticLibs: Set<string> = new Set();
+
 	private async addStaticLibrary(
 		staticLibPath: string,
 		projectData: IProjectData,
 	): Promise<void> {
-		// Copy files to lib folder.
+		// Check if static library with same name already added (prevents duplicate errors in monorepos)
 		const libraryName = path.basename(staticLibPath, ".a");
+		if (this._addedStaticLibs.has(libraryName)) {
+			this.$logger.trace(
+				`Static library ${libraryName} already added, skipping duplicate from ${staticLibPath}`,
+			);
+			return;
+		}
+		this._addedStaticLibs.add(libraryName);
+
+		// Copy files to lib folder.
 		const headersSubpath = path.join(
 			path.dirname(staticLibPath),
 			"include",
@@ -625,13 +664,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 		prepareData: IOSPrepareData,
 	): Promise<void> {
+		const platformData = this.getPlatformData(projectData);
 		const projectRoot = this.$options.hostProjectPath
 			? this.$options.hostProjectPath
-			: path.join(
-					projectData.platformsDir,
-					this.$devicePlatformsConstants.iOS.toLowerCase(),
-				);
-		const platformData = this.getPlatformData(projectData);
+			: platformData.projectRoot;
 
 		const pluginsData = this.getAllProductionPlugins(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
@@ -1156,6 +1192,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		projectData: IProjectData,
 		opts: IRelease,
 	): Promise<void> {
+		// Clear framework tracking for fresh duplicate detection
+		this.clearFrameworksCache();
+
 		const platformData = this.getPlatformData(projectData);
 		const pluginsData = this.getAllProductionPlugins(projectData);
 		this.setProductBundleIdentifier(projectData);

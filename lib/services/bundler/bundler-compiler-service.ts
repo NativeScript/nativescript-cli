@@ -916,13 +916,9 @@ export class BundlerCompilerService
 
 		const filesToCopy: string[] = [];
 
-		// default to ignoring vendor files as they are less likely to change during live reloads
 		const bundleFiles = emittedFiles.filter(
 			(file) =>
-				!file.includes("vendor") &&
-				(file.endsWith(".mjs") ||
-					file.endsWith(".js") ||
-					file.endsWith(".map")),
+				file.endsWith(".mjs") || file.endsWith(".js") || file.endsWith(".map"),
 		);
 		filesToCopy.push(...bundleFiles);
 
