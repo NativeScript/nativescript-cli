@@ -235,6 +235,10 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			pbxProjPath,
 		);
 
+		if (disableStubBinary) {
+			this.applyWatchAppStubBinaryOverrides(appFolder, pbxProjPath);
+		}
+
 		return true;
 	}
 
@@ -604,6 +608,28 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				resourcesExclude,
 			);
 		}
+	}
+
+	private applyWatchAppStubBinaryOverrides(
+		targetName: string,
+		pbxProjPath: string,
+	): void {
+		const project = new this.$xcode.project(pbxProjPath);
+		project.parseSync();
+
+		this.$iOSNativeTargetService.setXcodeTargetBuildConfigurationProperties(
+			[
+				{ name: "PRODUCT_BINARY_SOURCE_PATH", value: '""' },
+				{ name: "PRODUCT_TYPE_HAS_STUB_BINARY", value: "NO" },
+			],
+			targetName,
+			project,
+		);
+
+		this.$fs.writeFile(
+			pbxProjPath,
+			project.writeSync({ omitEmptyValues: true }),
+		);
 	}
 
 	private async processWatchAppConfiguration(
