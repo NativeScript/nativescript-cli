@@ -60,7 +60,7 @@
     "@npmcli/arborist": "9.1.8",
     "@nstudio/trapezedev-project": "7.2.3",
     "@rigor789/resolve-package-path": "1.0.7",
-    "axios": "1.13.5",
+    "axios": "1.14.0",
     "byline": "5.0.0",
     "chokidar": "^3.6.0",
     "cli-table3": "0.6.5",
