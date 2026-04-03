@@ -479,5 +479,8 @@ injector.requireCommand(
 	],
 	"./commands/native-add",
 );
-injector.requireCommand(["widget", "widget|ios"], "./commands/widget");
+injector.requireCommand(
+	["widget", "widget|ios", "widget|android"],
+	"./commands/widget",
+);
 require("./key-commands/bootstrap");
