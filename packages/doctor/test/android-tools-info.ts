@@ -119,6 +119,10 @@ describe("androidToolsInfo", () => {
 			const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
 			const supportedTargets = androidToolsInfo.getSupportedTargets("test");
 			assert.deepEqual(supportedTargets, expectedTargets);
+			assert.equal(
+				supportedTargets[supportedTargets.length - 1],
+				expectedTargets[expectedTargets.length - 1],
+			);
 		};
 
 		it("runtime 6.0.0 should support android-17 - android-28", () => {
