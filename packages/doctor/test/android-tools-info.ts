@@ -135,7 +135,7 @@ describe("androidToolsInfo", () => {
 			);
 		});
 
-		it("runtime 8.2.0 should support android-17 - android-36.1", () => {
+		it("runtime 8.2.0 should support android-17 through android-36 and android-36.1", () => {
 			const expectedTargets = [
 				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
 				"android-36.1",
@@ -143,7 +143,7 @@ describe("androidToolsInfo", () => {
 			assertSupportedTargets("8.2.0", expectedTargets);
 		});
 
-		it("runtime 8.3.0 should support android-17 - android-36.1", () => {
+		it("runtime 8.3.0 should support android-17 through android-36 and android-36.1", () => {
 			const expectedTargets = [
 				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
 				"android-36.1",
