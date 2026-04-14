@@ -1,9 +1,13 @@
 import { Yok } from "../../../lib/common/yok";
 import { BundlerCompilerService } from "../../../lib/services/bundler/bundler-compiler-service";
 import { assert } from "chai";
+import { EventEmitter } from "events";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
-import { CONFIG_FILE_NAME_DISPLAY } from "../../../lib/constants";
+import {
+	BUNDLER_COMPILATION_COMPLETE,
+	CONFIG_FILE_NAME_DISPLAY,
+} from "../../../lib/constants";
 
 const iOSPlatformName = "ios";
 const androidPlatformName = "android";
@@ -28,11 +32,18 @@ function createTestInjector(): IInjector {
 	testInjector.register("hooksService", {});
 	testInjector.register("hostInfo", {});
 	testInjector.register("options", {});
-	testInjector.register("logger", {});
+	testInjector.register("logger", {
+		info: () => ({}),
+		trace: () => ({}),
+		warn: () => ({}),
+	});
 	testInjector.register("errors", ErrorsStub);
 	testInjector.register("packageInstallationManager", {});
 	testInjector.register("mobileHelper", {});
-	testInjector.register("cleanupService", {});
+	testInjector.register("cleanupService", {
+		addKillProcess: async () => ({}),
+		removeKillProcess: async () => ({}),
+	});
 	testInjector.register("projectConfigService", {
 		getValue: (key: string, defaultValue?: string) => defaultValue,
 	});
@@ -217,6 +228,74 @@ describe("BundlerCompilerService", () => {
 				),
 				`The bundler configuration file ${bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`,
 			);
+		});
+
+		it("does not emit a live sync event for the initial Vite watch build", async () => {
+			const platformData = <any>{
+				platformNameLowerCase: "ios",
+				appDestinationDirectoryPath: "/platform/app",
+			};
+			const projectData = <any>{
+				projectDir: "/project",
+				bundler: "vite",
+				bundlerConfigPath: "/project/vite.config.ts",
+			};
+			const prepareData = <any>{ hmr: false };
+			const childProcess = new EventEmitter() as EventEmitter & {
+				stdout: EventEmitter;
+				stderr: EventEmitter;
+				pid: number;
+			};
+
+			childProcess.stdout = new EventEmitter();
+			childProcess.stderr = new EventEmitter();
+			childProcess.pid = 123;
+
+			testInjector.resolve("options").hostProjectModuleName = "app";
+			(<any>bundlerCompilerService).getBundler = () => "vite";
+			(<any>bundlerCompilerService).startBundleProcess = async () =>
+				childProcess;
+			(<any>bundlerCompilerService).copyViteBundleToNative = () => ({});
+
+			const emittedEvents: any[] = [];
+			bundlerCompilerService.on(BUNDLER_COMPILATION_COMPLETE, (data) => {
+				emittedEvents.push(data);
+			});
+
+			const compilePromise = bundlerCompilerService.compileWithWatch(
+				platformData,
+				projectData,
+				prepareData,
+			);
+			await new Promise((resolve) => setImmediate(resolve));
+
+			childProcess.emit("message", {
+				emittedFiles: ["bundle.mjs"],
+				buildType: "initial",
+				hash: "hash-1",
+				isHMR: false,
+			});
+
+			await compilePromise;
+			assert.lengthOf(emittedEvents, 0);
+
+			childProcess.emit("message", {
+				emittedFiles: ["bundle.mjs"],
+				buildType: "incremental",
+				hash: "hash-2",
+				isHMR: false,
+			});
+
+			assert.lengthOf(emittedEvents, 1);
+			assert.deepStrictEqual(emittedEvents[0], {
+				files: ["/platform/app/app/bundle.mjs"],
+				hasOnlyHotUpdateFiles: false,
+				hmrData: {
+					hash: "hash-2",
+					fallbackFiles: [],
+				},
+				platform: "ios",
+			});
 		});
 	});
 
