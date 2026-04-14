@@ -119,10 +119,6 @@ describe("androidToolsInfo", () => {
 			const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
 			const supportedTargets = androidToolsInfo.getSupportedTargets("test");
 			assert.deepEqual(supportedTargets, expectedTargets);
-			assert.equal(
-				supportedTargets[supportedTargets.length - 1],
-				expectedTargets[expectedTargets.length - 1],
-			);
 		};
 
 		it("runtime 6.0.0 should support android-17 - android-28", () => {
@@ -139,12 +135,19 @@ describe("androidToolsInfo", () => {
 			);
 		});
 
-		it("runtime 8.2.0 and 8.3.0 should support android-17 - android-36.1", () => {
+		it("runtime 8.2.0 should support android-17 - android-36.1", () => {
 			const expectedTargets = [
 				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
 				"android-36.1",
 			];
 			assertSupportedTargets("8.2.0", expectedTargets);
+		});
+
+		it("runtime 8.3.0 should support android-17 - android-36.1", () => {
+			const expectedTargets = [
+				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
+				"android-36.1",
+			];
 			assertSupportedTargets("8.3.0", expectedTargets);
 		});
 	});
