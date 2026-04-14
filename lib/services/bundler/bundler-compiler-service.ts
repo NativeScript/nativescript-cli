@@ -170,6 +170,7 @@ export class BundlerCompilerService
 								);
 							}
 							resolve(childProcess);
+							return;
 						}
 
 						// Transform Vite message to match webpack format
