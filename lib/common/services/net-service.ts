@@ -18,7 +18,7 @@ export class Net implements INet {
 		private $errors: IErrors,
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
-		private $osInfo: IOsInfo
+		private $osInfo: IOsInfo,
 	) {}
 
 	public async getFreePort(): Promise<number> {
@@ -76,13 +76,13 @@ export class Net implements INet {
 				server.close();
 			});
 
-			server.listen(port, "localhost");
+			server.listen(port, "127.0.0.1");
 		});
 	}
 
 	public async getAvailablePortInRange(
 		startPort: number,
-		endPort?: number
+		endPort?: number,
 	): Promise<number> {
 		endPort = endPort || 65534;
 		while (!(await this.isPortAvailable(startPort))) {
@@ -96,7 +96,7 @@ export class Net implements INet {
 	}
 
 	public async waitForPortToListen(
-		waitForPortListenData: IWaitForPortListenData
+		waitForPortListenData: IWaitForPortListenData,
 	): Promise<boolean> {
 		if (!waitForPortListenData) {
 			this.$errors.fail("You must pass port and timeout for check.");
@@ -126,8 +126,8 @@ export class Net implements INet {
 		if (!currentPlatformData) {
 			this.$errors.fail(
 				`Unable to check for free ports on ${platform}. Supported platforms are: ${_.keys(
-					platformData
-				).join(", ")}`
+					platformData,
+				).join(", ")}`,
 			);
 		}
 
