@@ -1,7 +1,7 @@
 {
   "name": "@akylas/nativescript-cli",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "8.11.2",
+  "version": "8.11.3",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {

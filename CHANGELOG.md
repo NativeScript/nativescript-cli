@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [8.11.3](https://github.com/farfromrefug/nativescript-cli/compare/v8.11.2...v8.11.3) (2026-04-17)
+
+
+### Bug Fixes
+
+* all per platform ignoredNativeDependencies ([179209d](https://github.com/farfromrefug/nativescript-cli/commit/179209d1094a0931f1c8912aa5340db8b4768dd7))
+* ios extensions configuration like watchapp ([b670f14](https://github.com/farfromrefug/nativescript-cli/commit/b670f144a0037e8be80f3a34b86e9784a5e2f850))
+* logging fix ([4c8000e](https://github.com/farfromrefug/nativescript-cli/commit/4c8000e4492a0c87ff1f61a39bb2125c605ca367))
+
 ### [8.11.2](https://github.com/farfromrefug/nativescript-cli/compare/v8.11.1...v8.11.2) (2026-02-28)
 
 
