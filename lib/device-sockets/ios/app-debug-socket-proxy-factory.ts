@@ -156,7 +156,6 @@ export class AppDebugSocketProxyFactory
 		let currentAppSocket: net.Socket = null;
 		let currentWebSocket: ws = null;
 		const server = new ws.Server(<any>{
-			host: "127.0.0.1",
 			port: localPort,
 			verifyClient: async (
 				info: any,
