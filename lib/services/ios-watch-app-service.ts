@@ -103,6 +103,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		projectData,
 		platformData,
 		pbxProjPath,
+		disableStubBinary = false,
 	}: IAddWatchAppFromPathOptions): Promise<boolean> {
 		const targetUuids: string[] = [];
 		const targetNames: string[] = [];

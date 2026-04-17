@@ -601,9 +601,7 @@ interface INativePrepare {
 }
 
 interface IBuildConfig
-	extends IAndroidBuildOptionsSettings,
-		IiOSBuildConfig,
-		IProjectDir {
+	extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IProjectDir {
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;
@@ -615,7 +613,8 @@ interface IBuildConfig
  * Describes iOS-specific build configuration properties
  */
 interface IiOSBuildConfig
-	extends IBuildForDevice,
+	extends
+		IBuildForDevice,
 		IiCloudContainerEnvironment,
 		IDeviceIdentifier,
 		IProvision,
@@ -865,6 +864,7 @@ interface IAddExtensionsFromPathOptions extends IAddTargetFromPathOptions {
 
 interface IAddWatchAppFromPathOptions extends IAddTargetFromPathOptions {
 	watchAppFolderPath: string;
+	disableStubBinary?: boolean;
 }
 
 interface IRemoveExtensionsOptions {
@@ -903,7 +903,6 @@ interface IWatchAppJSONConfig {
 	modules: IWatchAppConfigModule[];
 	SPMPackages?: Array<IOSSPMPackage>;
 }
-
 
 interface IRubyFunction {
 	functionName: string;
