@@ -71,6 +71,7 @@ describe("androidToolsInfo", () => {
 						"android-34",
 						"android-35",
 						"android-36",
+						"android-36.1",
 					];
 				}
 			},
@@ -111,38 +112,43 @@ describe("androidToolsInfo", () => {
 	});
 
 	describe("supportedAndroidSdks", () => {
-		const assertSupportedRange = (
+		const assertSupportedTargets = (
 			runtimeVersion: string,
-			min: number,
-			max: number,
+			expectedTargets: string[],
 		) => {
-			let cnt = 0;
 			const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
 			const supportedTargets = androidToolsInfo.getSupportedTargets("test");
-			for (let i = 0; i < supportedTargets.length; i++) {
-				assert.equal(supportedTargets[i], `android-${min + i}`);
-				cnt = min + i;
-			}
-			assert.equal(cnt, max);
+			assert.deepEqual(supportedTargets, expectedTargets);
 		};
 
 		it("runtime 6.0.0 should support android-17 - android-28", () => {
-			const min = 17;
-			const max = 28;
-			assertSupportedRange("6.0.0", min, max);
+			assertSupportedTargets(
+				"6.0.0",
+				Array.from({ length: 12 }, (_, index) => `android-${17 + index}`),
+			);
 		});
 
 		it("runtime 8.1.0 should support android-17 - android-30", () => {
-			const min = 17;
-			const max = 30;
-			assertSupportedRange("8.1.0", min, max);
+			assertSupportedTargets(
+				"8.1.0",
+				Array.from({ length: 14 }, (_, index) => `android-${17 + index}`),
+			);
 		});
 
-		it("runtime 8.2.0 should support android-17 - android-34", () => {
-			const min = 17;
-			const max = 36;
-			assertSupportedRange("8.2.0", min, max);
-			assertSupportedRange("8.3.0", min, max);
+		it("runtime 8.2.0 should support android-17 through android-36 and android-36.1", () => {
+			const expectedTargets = [
+				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
+				"android-36.1",
+			];
+			assertSupportedTargets("8.2.0", expectedTargets);
+		});
+
+		it("runtime 8.3.0 should support android-17 through android-36 and android-36.1", () => {
+			const expectedTargets = [
+				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
+				"android-36.1",
+			];
+			assertSupportedTargets("8.3.0", expectedTargets);
 		});
 	});
 
