@@ -319,6 +319,12 @@ describe("options", () => {
 				expectedError:
 					"The options --release and --hmr cannot be used simultaneously.",
 			},
+			{
+				name: "--release --env.hmr",
+				args: ["--release", "--env.hmr"],
+				expectedError:
+					"The options --release and --hmr cannot be used simultaneously.",
+			},
 		];
 
 		_.each(testCasesExpectingToThrow, (testCase) => {
@@ -341,12 +347,27 @@ describe("options", () => {
 		describe("hmr option", () => {
 			const testCases = [
 				{
-					name: "should set hmr to true by default",
+					name: "should set hmr to false by default",
+					expectedHmrValue: false,
+				},
+				{
+					name: "should set hmr to true when --hmr is provided",
+					args: ["--hmr"],
 					expectedHmrValue: true,
 				},
 				{
 					name: "should set hmr to false when --no-hmr is provided",
 					args: ["--no-hmr"],
+					expectedHmrValue: false,
+				},
+				{
+					name: "should set hmr to true when --env.hmr is provided",
+					args: ["--env.hmr"],
+					expectedHmrValue: true,
+				},
+				{
+					name: "should keep hmr disabled when --no-hmr and --env.hmr are provided",
+					args: ["--no-hmr", "--env.hmr"],
 					expectedHmrValue: false,
 				},
 				{

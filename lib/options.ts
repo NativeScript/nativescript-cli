@@ -50,17 +50,16 @@ export class Options {
 		}
 
 		this.argv.bundle = "webpack";
+		const isHmrEnabled = this.isHmrEnabled();
 
 		// Check if the user has explicitly provide --hmr and --release options from command line
-		if (this.initialArgv.release && this.initialArgv.hmr) {
+		if (this.argv.release && isHmrEnabled) {
 			this.$errors.fail(
 				"The options --release and --hmr cannot be used simultaneously."
 			);
 		}
 
-		if (this.argv.hmr) {
-			this.argv.hmr = !this.argv.release;
-		}
+		this.argv.hmr = isHmrEnabled && !this.argv.release;
 
 		if (this.argv.debugBrk) {
 			// we cannot use HMR along with debug-brk because we have to restart the app
@@ -168,7 +167,7 @@ export class Options {
 			hmr: {
 				type: OptionType.Boolean,
 				hasSensitiveValue: false,
-				default: true,
+				default: false,
 			},
 			collection: {
 				type: OptionType.String,
@@ -377,6 +376,21 @@ export class Options {
 		}
 
 		return optionName;
+	}
+
+	private isHmrEnabled(): boolean {
+		if (process.argv.includes("--no-hmr")) {
+			return false;
+		}
+
+		return (
+			this.isTruthyBooleanValue(this.argv.hmr) ||
+			this.isTruthyBooleanValue(_.get(this.argv, "env.hmr"))
+		);
+	}
+
+	private isTruthyBooleanValue(value: unknown): boolean {
+		return value === true || value === "true";
 	}
 
 	private setArgv(): void {
