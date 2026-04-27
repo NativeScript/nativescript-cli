@@ -37,7 +37,6 @@ export class Options {
 		_: { type: OptionType.String, hasSensitiveValue: false },
 	};
 
-	private initialArgv: yargs.Arguments;
 	public argv: yargs.Arguments;
 	public options: IDictionary<IDashedOption>;
 
@@ -52,7 +51,7 @@ export class Options {
 		this.argv.bundle = "webpack";
 		const isHmrEnabled = this.isHmrEnabled();
 
-		// Check if the user has explicitly provide --hmr and --release options from command line
+		// Check if the user has explicitly enabled HMR together with --release.
 		if (this.argv.release && isHmrEnabled) {
 			this.$errors.fail(
 				"The options --release and --hmr cannot be used simultaneously."
@@ -441,7 +440,6 @@ export class Options {
 				// autocomplete matched completions
 				return completions;
 			});
-		this.initialArgv = parsed.argv as any;
 		this.argv = parsed.options(<any>opts).argv as any;
 
 		// For backwards compatibility
