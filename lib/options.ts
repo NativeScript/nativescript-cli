@@ -37,7 +37,6 @@ export class Options {
 		_: { type: OptionType.String, hasSensitiveValue: false },
 	};
 
-	private initialArgv: yargs.Arguments;
 	public argv: yargs.Arguments;
 	public options: IDictionary<IDashedOption>;
 
@@ -50,17 +49,16 @@ export class Options {
 		}
 
 		this.argv.bundle = "webpack";
+		const isHmrEnabled = this.isHmrEnabled();
 
-		// Check if the user has explicitly provide --hmr and --release options from command line
-		if (this.initialArgv.release && this.initialArgv.hmr) {
+		// Check if the user has explicitly enabled HMR together with --release.
+		if (this.argv.release && isHmrEnabled) {
 			this.$errors.fail(
 				"The options --release and --hmr cannot be used simultaneously."
 			);
 		}
 
-		if (this.argv.hmr) {
-			this.argv.hmr = !this.argv.release;
-		}
+		this.argv.hmr = isHmrEnabled && !this.argv.release;
 
 		if (this.argv.debugBrk) {
 			// we cannot use HMR along with debug-brk because we have to restart the app
@@ -168,7 +166,7 @@ export class Options {
 			hmr: {
 				type: OptionType.Boolean,
 				hasSensitiveValue: false,
-				default: true,
+				default: false,
 			},
 			collection: {
 				type: OptionType.String,
@@ -379,6 +377,31 @@ export class Options {
 		return optionName;
 	}
 
+	private isHmrEnabled(): boolean {
+		if (this.isHmrExplicitlyDisabled()) {
+			return false;
+		}
+
+		return (
+			this.isTruthyBooleanValue(this.argv.hmr) ||
+			this.isTruthyBooleanValue(_.get(this.argv, "env.hmr"))
+		);
+	}
+
+	private isHmrExplicitlyDisabled(): boolean {
+		return hideBin(process.argv).some(
+			(arg) =>
+				arg === "--no-hmr" ||
+				arg === "--noHmr" ||
+				arg === "--no-hmr=true" ||
+				arg === "--noHmr=true"
+		);
+	}
+
+	private isTruthyBooleanValue(value: unknown): boolean {
+		return value === true || value === "true";
+	}
+
 	private setArgv(): void {
 		const opts: IDictionary<IDashedOption> = <IDictionary<IDashedOption>>{};
 		_.each(this.options, (value: IDashedOption, key: string) => {
@@ -427,7 +450,6 @@ export class Options {
 				// autocomplete matched completions
 				return completions;
 			});
-		this.initialArgv = parsed.argv as any;
 		this.argv = parsed.options(<any>opts).argv as any;
 
 		// For backwards compatibility

@@ -2,6 +2,10 @@ import { IOptions } from "../declarations";
 import { ControllerDataBase } from "./controller-data-base";
 import * as _ from "lodash";
 
+function isTruthyBooleanValue(value: unknown): boolean {
+	return value === true || value === "true";
+}
+
 export class PrepareData extends ControllerDataBase {
 	public release: boolean;
 	public hmr: boolean;
@@ -33,11 +37,16 @@ export class PrepareData extends ControllerDataBase {
 			Object.assign(env, data.env);
 		}
 
+		const hmr =
+			isTruthyBooleanValue(data.hmr) ||
+			isTruthyBooleanValue(data.useHotModuleReload) ||
+			isTruthyBooleanValue(env.hmr);
+
 		this.release = data.release;
-		this.hmr = data.hmr || data.useHotModuleReload;
+		this.hmr = hmr;
 		this.env = {
 			...env,
-			hmr: data.hmr || data.useHotModuleReload,
+			hmr,
 		};
 		this.watch = data.watch;
 		if (_.isBoolean(data.watchNative)) {
