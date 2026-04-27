@@ -378,7 +378,7 @@ export class Options {
 	}
 
 	private isHmrEnabled(): boolean {
-		if (process.argv.includes("--no-hmr")) {
+		if (this.isHmrExplicitlyDisabled()) {
 			return false;
 		}
 
@@ -386,6 +386,19 @@ export class Options {
 			this.isTruthyBooleanValue(this.argv.hmr) ||
 			this.isTruthyBooleanValue(_.get(this.argv, "env.hmr"))
 		);
+	}
+
+	private isHmrExplicitlyDisabled(): boolean {
+		return hideBin(process.argv).some((arg) => {
+			if (arg !== "--no-hmr" && arg !== "--noHmr") {
+				return (
+					arg === "--no-hmr=true" ||
+					arg === "--noHmr=true"
+				);
+			}
+
+			return true;
+		});
 	}
 
 	private isTruthyBooleanValue(value: unknown): boolean {
