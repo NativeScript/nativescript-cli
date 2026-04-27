@@ -389,16 +389,13 @@ export class Options {
 	}
 
 	private isHmrExplicitlyDisabled(): boolean {
-		return hideBin(process.argv).some((arg) => {
-			if (arg !== "--no-hmr" && arg !== "--noHmr") {
-				return (
-					arg === "--no-hmr=true" ||
-					arg === "--noHmr=true"
-				);
-			}
-
-			return true;
-		});
+		return hideBin(process.argv).some(
+			(arg) =>
+				arg === "--no-hmr" ||
+				arg === "--noHmr" ||
+				arg === "--no-hmr=true" ||
+				arg === "--noHmr=true"
+		);
 	}
 
 	private isTruthyBooleanValue(value: unknown): boolean {
