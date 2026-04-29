@@ -131,12 +131,6 @@ function createTestInjector() {
 	injector.register("debugController", {});
 	injector.register("liveSyncProcessDataService", LiveSyncProcessDataService);
 	injector.register("tempService", TempServiceStub);
-	injector.register("devtoolsHostService", {
-		start: async (): Promise<null> => null,
-		stop: async (): Promise<void> => {},
-		stopAll: async (): Promise<void> => {},
-		getOrigin: (): null => null,
-	});
 
 	const devicesService = injector.resolve("devicesService");
 	devicesService.getDevicesForPlatform = () =>

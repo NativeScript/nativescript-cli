@@ -39,9 +39,6 @@ function createTestInjector(): IInjector {
 	testInjector.register("fs", {
 		exists: (filePath: string) => true,
 	});
-	testInjector.register("devtoolsHostService", {
-		getOrigin: (_platform: string): null => null,
-	});
 
 	return testInjector;
 }

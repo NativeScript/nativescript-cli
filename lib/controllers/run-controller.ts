@@ -12,7 +12,6 @@ import * as util from "util";
 import * as _ from "lodash";
 import { IProjectDataService, IProjectData } from "../definitions/project";
 import { IBuildController } from "../definitions/build";
-import { IDevtoolsHostService } from "../definitions/devtools-host-service";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IDebugController } from "../definitions/debug";
 import { IPluginsService } from "../definitions/plugins";
@@ -49,7 +48,6 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		protected $projectDataService: IProjectDataService,
-		private $devtoolsHostService: IDevtoolsHostService,
 	) {
 		super();
 	}
@@ -182,8 +180,6 @@ export class RunController extends EventEmitter implements IRunController {
 				}
 
 				liveSyncProcessInfo.deviceDescriptors = [];
-
-				await this.$devtoolsHostService.stopAll();
 
 				if (this.prepareReadyEventHandler) {
 					this.$prepareController.removeListener(

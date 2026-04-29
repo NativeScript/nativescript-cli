@@ -31,7 +31,6 @@ import {
 	IHostInfo,
 } from "../../common/declarations";
 import { ICleanupService } from "../../definitions/cleanup-service";
-import { IDevtoolsHostService } from "../../definitions/devtools-host-service";
 import { injector } from "../../common/yok";
 import {
 	resolvePackagePath,
@@ -74,7 +73,6 @@ export class BundlerCompilerService
 		private $packageManager: IPackageManager,
 		private $packageInstallationManager: IPackageInstallationManager, // private $sharedEventBus: ISharedEventBus
 		private $projectConfigService: IProjectConfigService,
-		private $devtoolsHostService: IDevtoolsHostService,
 	) {
 		super();
 	}
@@ -585,11 +583,6 @@ export class BundlerCompilerService
 
 		if (prepareData.uniqueBundle > 0) {
 			envData.uniqueBundle = prepareData.uniqueBundle;
-		}
-
-		const devtoolsOrigin = this.$devtoolsHostService.getOrigin(platform);
-		if (devtoolsOrigin) {
-			envData.devtoolsHost = devtoolsOrigin;
 		}
 
 		return envData;

@@ -12,7 +12,6 @@ import { DeployController } from "../controllers/deploy-controller";
 import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
 import { IBuildController, IBuildDataService } from "../definitions/build";
 import { ICleanupService } from "../definitions/cleanup-service";
-import { IDevtoolsHostService } from "../definitions/devtools-host-service";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
 
@@ -33,7 +32,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		private $cleanupService: ICleanupService,
 		private $runController: IRunController,
-		private $devtoolsHostService: IDevtoolsHostService,
 	) {}
 
 	private get $platformsDataService(): IPlatformsDataService {
@@ -191,7 +189,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			});
 			return;
 		} else {
-			await this.startDevtoolsHostIfDebugging(deviceDescriptors);
 			await this.$runController.run({
 				liveSyncInfo,
 				deviceDescriptors,
@@ -238,21 +235,6 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		}
 
 		return result;
-	}
-
-	private async startDevtoolsHostIfDebugging(
-		deviceDescriptors: ILiveSyncDeviceDescriptor[],
-	): Promise<void> {
-		const platforms = _.uniq(
-			deviceDescriptors
-				.filter((d) => d.debuggingEnabled && d.buildData?.platform)
-				.map((d) => d.buildData.platform.toLowerCase()),
-		);
-		for (const platform of platforms) {
-			// DevtoolsHostService swallows port/bind failures and returns null;
-			// a missing source-map origin degrades DevTools gracefully.
-			await this.$devtoolsHostService.start(this.$projectData, platform);
-		}
 	}
 
 	private async executeLiveSyncOperationCore(
