@@ -12,6 +12,7 @@ import { DeployController } from "../controllers/deploy-controller";
 import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
 import { IBuildController, IBuildDataService } from "../definitions/build";
 import { ICleanupService } from "../definitions/cleanup-service";
+import { IDevtoolsHostService } from "../definitions/devtools-host-service";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
 
@@ -31,7 +32,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		private $errors: IErrors,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
 		private $cleanupService: ICleanupService,
-		private $runController: IRunController
+		private $runController: IRunController,
+		private $devtoolsHostService: IDevtoolsHostService,
 	) {}
 
 	private get $platformsDataService(): IPlatformsDataService {
@@ -56,7 +58,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	}
 
 	public async getDeviceInstances(
-		platform?: string
+		platform?: string,
 	): Promise<Mobile.IDevice[]> {
 		await this.$devicesService.initialize({
 			platform,
@@ -71,7 +73,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			.filter(
 				(d) =>
 					!platform ||
-					d.deviceInfo.platform.toLowerCase() === platform.toLowerCase()
+					d.deviceInfo.platform.toLowerCase() === platform.toLowerCase(),
 			);
 
 		return devices;
@@ -80,7 +82,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public async createDeviceDescriptors(
 		devices: Mobile.IDevice[],
 		platform: string,
-		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions,
 	): Promise<ILiveSyncDeviceDescriptor[]> {
 		// Now let's take data for each device:
 		const deviceDescriptors: ILiveSyncDeviceDescriptor[] = devices.map((d) => {
@@ -105,7 +107,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 						forceRebuildNativeApp: additionalOptions.forceRebuildNativeApp,
 					},
 					_device: d,
-				}
+				},
 			);
 			this.$androidBundleValidatorHelper.validateDeviceApiLevel(d, buildData);
 
@@ -115,8 +117,8 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 							additionalOptions.buildPlatform,
 							d.deviceInfo.platform,
 							buildData,
-							this.$projectData
-					  )
+							this.$projectData,
+						)
 					: this.$buildController.build.bind(this.$buildController, buildData);
 
 			const info: ILiveSyncDeviceDescriptor = {
@@ -142,14 +144,14 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const availablePlatforms = platform
 			? [platform]
 			: _.values<string>(
-					this.$mobileHelper.platformNames.map((p) => p.toLowerCase())
-			  );
+					this.$mobileHelper.platformNames.map((p) => p.toLowerCase()),
+				);
 		return availablePlatforms;
 	}
 
 	public async executeCommandLiveSync(
 		platform?: string,
-		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions,
 	) {
 		const devices = await this.getDeviceInstances(platform);
 		await this.executeLiveSyncOperation(devices, platform, additionalOptions);
@@ -158,13 +160,13 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	public async executeLiveSyncOperation(
 		devices: Mobile.IDevice[],
 		platform: string,
-		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions,
 	): Promise<void> {
 		const { liveSyncInfo, deviceDescriptors } =
 			await this.executeLiveSyncOperationCore(
 				devices,
 				platform,
-				additionalOptions
+				additionalOptions,
 			);
 
 		if (this.$options.release) {
@@ -189,6 +191,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			});
 			return;
 		} else {
+			await this.startDevtoolsHostIfDebugging(deviceDescriptors);
 			await this.$runController.run({
 				liveSyncInfo,
 				deviceDescriptors,
@@ -204,19 +207,19 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 			}) => {
 				const devices = await this.getDeviceInstances(platform);
 				const remainingDevicesToSync = devices.map(
-					(d) => d.deviceInfo.identifier
+					(d) => d.deviceInfo.identifier,
 				);
 
 				_.remove(remainingDevicesToSync, (d) => d === data.deviceIdentifier);
 				if (remainingDevicesToSync.length === 0 && !data.keepProcessAlive) {
 					process.exit(ErrorCodes.ALL_DEVICES_DISCONNECTED);
 				}
-			}
+			},
 		);
 	}
 
 	public async validatePlatform(
-		platform: string
+		platform: string,
 	): Promise<IDictionary<IValidatePlatformOutput>> {
 		const result: IDictionary<IValidatePlatformOutput> = {};
 
@@ -224,12 +227,12 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		for (const availablePlatform of availablePlatforms) {
 			const platformData = this.$platformsDataService.getPlatformData(
 				availablePlatform,
-				this.$projectData
+				this.$projectData,
 			);
 			const platformProjectService = platformData.platformProjectService;
 			const validateOutput = await platformProjectService.validate(
 				this.$projectData,
-				this.$options
+				this.$options,
 			);
 			result[availablePlatform.toLowerCase()] = validateOutput;
 		}
@@ -237,10 +240,25 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		return result;
 	}
 
+	private async startDevtoolsHostIfDebugging(
+		deviceDescriptors: ILiveSyncDeviceDescriptor[],
+	): Promise<void> {
+		const platforms = _.uniq(
+			deviceDescriptors
+				.filter((d) => d.debuggingEnabled && d.buildData?.platform)
+				.map((d) => d.buildData.platform.toLowerCase()),
+		);
+		for (const platform of platforms) {
+			// DevtoolsHostService swallows port/bind failures and returns null;
+			// a missing source-map origin degrades DevTools gracefully.
+			await this.$devtoolsHostService.start(this.$projectData, platform);
+		}
+	}
+
 	private async executeLiveSyncOperationCore(
 		devices: Mobile.IDevice[],
 		platform: string,
-		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions,
 	): Promise<{
 		liveSyncInfo: ILiveSyncInfo;
 		deviceDescriptors: ILiveSyncDeviceDescriptor[];
@@ -248,11 +266,11 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		if (!devices || !devices.length) {
 			if (platform) {
 				this.$errors.fail(
-					"Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again."
+					"Unable to find applicable devices to execute operation. Ensure connected devices are trusted and try again.",
 				);
 			} else {
 				this.$errors.fail(
-					"Unable to find applicable devices to execute operation and unable to start emulator when platform is not specified."
+					"Unable to find applicable devices to execute operation and unable to start emulator when platform is not specified.",
 				);
 			}
 		}
@@ -273,7 +291,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 		const deviceDescriptors = await this.createDeviceDescriptors(
 			devices,
 			platform,
-			additionalOptions
+			additionalOptions,
 		);
 		const liveSyncInfo = this.getLiveSyncData(this.$projectData.projectDir);
 
@@ -282,7 +300,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 	private async runInRelease(
 		platform: string,
-		deviceDescriptors: ILiveSyncDeviceDescriptor[]
+		deviceDescriptors: ILiveSyncDeviceDescriptor[],
 	): Promise<void> {
 		await this.$devicesService.initialize({
 			platform,
@@ -296,7 +314,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		for (const deviceDescriptor of deviceDescriptors) {
 			const device = this.$devicesService.getDeviceByIdentifier(
-				deviceDescriptor.identifier
+				deviceDescriptor.identifier,
 			);
 			await device.applicationManager.startApplication({
 				appId:

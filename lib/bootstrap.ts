@@ -427,6 +427,8 @@ injector.require(
 	"./services/bundler/bundler-compiler-service",
 );
 
+injector.require("devtoolsHostService", "./services/devtools-host-service");
+
 injector.require(
 	"applePortalSessionService",
 	"./services/apple-portal/apple-portal-session-service",
