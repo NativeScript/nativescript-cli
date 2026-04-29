@@ -9,6 +9,17 @@ on:
     paths-ignore:
       - 'packages/**'
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type. "dev" publishes a -next prerelease without bumping package.json. patch/minor/major/prerelease bump package.json, commit + tag to main, then publish as a stable release.'
+        type: choice
+        options:
+          - dev
+          - patch
+          - minor
+          - major
+          - prerelease
+        default: patch
 
 permissions: read-all
 
@@ -19,9 +30,12 @@ jobs:
   build:
     name: Build
     runs-on: macos-latest
+    permissions:
+      contents: write
     outputs:
       npm_version: ${{ steps.npm_version_output.outputs.NPM_VERSION }}
       npm_tag: ${{ steps.npm_version_output.outputs.NPM_TAG }}
+      is_release: ${{ steps.npm_version_output.outputs.IS_RELEASE }}
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
@@ -32,6 +46,7 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
@@ -46,8 +61,18 @@ jobs:
           NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
           echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
 
+      - name: Bump, commit and tag stable release (manual dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != 'dev' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm version ${{ inputs.release_type }} -m "chore: release v%s"
+          NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+          git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
+
       - name: Bump version for dev release
-        if: ${{ !contains(github.ref, 'refs/tags/') }}
+        if: ${{ !contains(github.ref, 'refs/tags/') && (github.event_name != 'workflow_dispatch' || inputs.release_type == 'dev') }}
         run: |
           NPM_VERSION=$(node ./scripts/get-next-version.js)
           echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
@@ -57,8 +82,14 @@ jobs:
         id: npm_version_output
         run: |
           NPM_TAG=$(node ./scripts/get-npm-tag.js)
+          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.release_type }}" != "dev" ]]; then
+            IS_RELEASE=true
+          else
+            IS_RELEASE=false
+          fi
           echo NPM_VERSION=$NPM_VERSION >> $GITHUB_OUTPUT
           echo NPM_TAG=$NPM_TAG >> $GITHUB_OUTPUT
+          echo IS_RELEASE=$IS_RELEASE >> $GITHUB_OUTPUT
 
       - name: Build nativescript
         run: npm pack
@@ -123,8 +154,8 @@ jobs:
 
   github-release:
     runs-on: ubuntu-latest
-    # only runs on tagged commits
-    if: ${{ contains(github.ref, 'refs/tags/') }}
+    # runs for tag pushes and for manual dispatches that bumped a stable release
+    if: ${{ needs.build.outputs.is_release == 'true' }}
     permissions:
       contents: write
     needs:
@@ -140,6 +171,7 @@ jobs:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           fetch-depth: 0
+          ref: v${{needs.build.outputs.npm_version}}
 
       - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
@@ -169,6 +201,7 @@ jobs:
 
       - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         with:
+          tag: v${{needs.build.outputs.npm_version}}
           artifacts: "dist/nativescript-*.tgz,dist/nativescript-*.intoto.jsonl"
           bodyFile: "body.md"
           prerelease: ${{needs.build.outputs.npm_tag != 'latest'}}
