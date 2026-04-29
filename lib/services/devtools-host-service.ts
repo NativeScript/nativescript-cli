@@ -3,6 +3,7 @@ import * as path from "path";
 import * as fs from "fs";
 import { AddressInfo } from "net";
 import { INet } from "../common/declarations";
+import { APP_FOLDER_NAME } from "../constants";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectData } from "../definitions/project";
 import {
@@ -53,7 +54,13 @@ export class DevtoolsHostService implements IDevtoolsHostService {
 			platform,
 			projectData,
 		);
-		const rootDir = platformData?.appDestinationDirectoryPath;
+		// Webpack writes to <appDestinationDirectoryPath>/app on both iOS
+		// (platforms/ios/<appName>/app) and Android
+		// (platforms/android/app/src/main/assets/app). Match that exactly so
+		// requests for /bundle.mjs.map resolve to the actual emitted file.
+		const rootDir = platformData?.appDestinationDirectoryPath
+			? path.join(platformData.appDestinationDirectoryPath, APP_FOLDER_NAME)
+			: null;
 		if (!rootDir) {
 			this.$logger.warn(
 				`DevTools host: unable to resolve output directory for ${platform}.`,
