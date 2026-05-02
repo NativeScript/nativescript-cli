@@ -73,7 +73,7 @@
     "ios-device-lib": "0.9.4",
     "ios-mobileprovision-finder": "1.2.1",
     "ios-sim-portable": "4.5.1",
-    "jimp": "1.6.0",
+    "jimp": "1.6.1",
     "lodash": "4.17.23",
     "log4js": "6.9.1",
     "marked": "15.0.12",
