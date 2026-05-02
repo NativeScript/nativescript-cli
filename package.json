@@ -144,7 +144,7 @@
     "chai-as-promised": "8.0.2",
     "conventional-changelog-cli": "^5.0.0",
     "fast-check": "3.23.2",
-    "grunt": "1.6.1",
+    "grunt": "1.6.2",
     "grunt-contrib-clean": "2.0.1",
     "grunt-contrib-copy": "1.0.0",
     "grunt-contrib-watch": "1.1.0",
