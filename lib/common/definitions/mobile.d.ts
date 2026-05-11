@@ -258,8 +258,7 @@ declare global {
 		 * Describes different options for filtering device logs.
 		 */
 		interface IDeviceLogOptions
-			extends IDictionary<string | boolean>,
-				Partial<IProjectDir> {
+			extends IDictionary<string | boolean>, Partial<IProjectDir> {
 			/**
 			 * Process id of the application on the device.
 			 */
@@ -284,8 +283,7 @@ declare global {
 		 * Describes required methods for getting iOS Simulator's logs.
 		 */
 		interface IiOSSimulatorLogProvider
-			extends NodeJS.EventEmitter,
-				IShouldDispose {
+			extends NodeJS.EventEmitter, IShouldDispose {
 			/**
 			 * Starts the process for getting simulator logs and emits and DEVICE_LOG_EVENT_NAME event.
 			 * @param {string} deviceId The unique identifier of the device.
@@ -533,8 +531,7 @@ declare global {
 		/**
 		 * Describes options that can be passed to devices service's initialization method.
 		 */
-		interface IDevicesServicesInitializationOptions
-			extends Partial<IDeviceLookingOptions> {
+		interface IDevicesServicesInitializationOptions extends Partial<IDeviceLookingOptions> {
 			/**
 			 * If passed will start an emulator if necesasry.
 			 */
@@ -1197,6 +1194,7 @@ declare global {
 			isAndroidPlatform(platform: string): boolean;
 			isiOSPlatform(platform: string): boolean;
 			isvisionOSPlatform(platform: string): boolean;
+			isWindowsPlatform(platform: string): boolean;
 			isApplePlatform(platform: string): boolean;
 			normalizePlatformName(platform: string): string;
 			validatePlatformName(platform: string): string;
@@ -1241,10 +1239,12 @@ declare global {
 			iOS: string;
 			Android: string;
 			visionOS: string;
+			Windows: string;
 
 			isiOS(value: string): boolean;
 			isAndroid(value: string): boolean;
 			isvisionOS(value: string): boolean;
+			isWindows(value: string): boolean;
 		}
 
 		interface IDeviceApplication {
@@ -1261,8 +1261,7 @@ declare global {
 		}
 
 		interface IDeviceLookingOptions
-			extends IHasEmulatorOption,
-				IHasDetectionInterval {
+			extends IHasEmulatorOption, IHasDetectionInterval {
 			shouldReturnImmediateResult: boolean;
 			platform: string;
 			fullDiscovery?: boolean;
@@ -1388,8 +1387,7 @@ declare global {
 		/**
 		 * Describes information about application on device.
 		 */
-		interface IDeviceApplicationInformation
-			extends IDeviceApplicationInformationBase {
+		interface IDeviceApplicationInformation extends IDeviceApplicationInformationBase {
 			/**
 			 * The framework of the project (Cordova or NativeScript).
 			 */

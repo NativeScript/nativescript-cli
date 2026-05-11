@@ -248,3 +248,35 @@ export class DebugAndroidCommand implements ICommand {
 }
 
 injector.registerCommand("debug|android", DebugAndroidCommand);
+
+export class DebugWindowsCommand implements ICommand {
+	@cache()
+	private get debugPlatformCommand(): DebugPlatformCommand {
+		return this.$injector.resolve<DebugPlatformCommand>(DebugPlatformCommand, {
+			platform: this.$devicePlatformsConstants.Windows,
+		});
+	}
+
+	public allowedParameters: ICommandParameter[] = [];
+
+	constructor(
+		protected $errors: IErrors,
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $injector: IInjector,
+		private $projectData: IProjectData,
+	) {
+		this.$projectData.initializeProjectData();
+	}
+
+	public async execute(args: string[]): Promise<void> {
+		return this.debugPlatformCommand.execute(args);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		return this.debugPlatformCommand.canExecute(args);
+	}
+
+	public platform = this.$devicePlatformsConstants.Windows;
+}
+
+injector.registerCommand("debug|windows", DebugWindowsCommand);

@@ -56,6 +56,7 @@ injector.require(
 injector.require("iOSExtensionsService", "./services/ios-extensions-service");
 injector.require("iOSWatchAppService", "./services/ios-watch-app-service");
 injector.require("iOSProjectService", "./services/ios-project-service");
+injector.require("windowsProjectService", "./services/windows-project-service");
 injector.require("iOSProvisionService", "./services/ios-provision-service");
 injector.require("xcconfigService", "./services/xcconfig-service");
 injector.require("iOSSigningService", "./services/ios/ios-signing-service");
@@ -182,6 +183,7 @@ injector.requireCommand("run|ios", "./commands/run");
 injector.requireCommand("run|android", "./commands/run");
 injector.requireCommand("run|vision", "./commands/run");
 injector.requireCommand("run|visionos", "./commands/run");
+injector.requireCommand("run|windows", "./commands/run");
 injector.requireCommand("typings", "./commands/typings");
 
 injector.requireCommand("preview", "./commands/preview");
@@ -190,6 +192,7 @@ injector.requireCommand("debug|ios", "./commands/debug");
 injector.requireCommand("debug|android", "./commands/debug");
 injector.requireCommand("debug|vision", "./commands/debug");
 injector.requireCommand("debug|visionos", "./commands/debug");
+injector.requireCommand("debug|windows", "./commands/debug");
 injector.requireCommand("fonts", "./commands/fonts");
 
 injector.requireCommand("prepare", "./commands/prepare");
@@ -197,6 +200,7 @@ injector.requireCommand("build|ios", "./commands/build");
 injector.requireCommand("build|android", "./commands/build");
 injector.requireCommand("build|vision", "./commands/build");
 injector.requireCommand("build|visionos", "./commands/build");
+injector.requireCommand("build|windows", "./commands/build");
 injector.requireCommand("deploy", "./commands/deploy");
 
 injector.requireCommand("embed", "./commands/embedding/embed");
@@ -320,6 +324,10 @@ injector.require(
 injector.require(
 	"iOSLiveSyncService",
 	"./services/livesync/ios-livesync-service",
+);
+injector.require(
+	"windowsLiveSyncService",
+	"./services/livesync/windows-livesync-service",
 );
 injector.require("usbLiveSyncService", "./services/livesync/livesync-service"); // The name is used in https://github.com/NativeScript/nativescript-dev-typescript
 injector.requirePublic("sysInfo", "./sys-info");

@@ -22,9 +22,10 @@ Usage | Synopsis
 <% if((isConsole && isMacOS) || isHtml) { %>General | `$ ns build <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ ns build android`<% } %>
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments
-`<Platform>` is the target mobile platform for which you want to build your project. You can set the following target platforms.
+`<Platform>` is the target platform for which you want to build your project. You can set the following target platforms.
 * `android` - Build the project for Android and produces an `APK` that you can manually deploy on a device or in the native emulator.
-* `ios` - Build the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on a device.<% } %>
+* `ios` - Build the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on a device.
+* `windows` - Build the project for Windows and produces an `MSIX` package (Windows only).<% } %>
 
 ### Options
 
@@ -53,6 +54,7 @@ Command | Description
 [appstore upload](../../publishing/appstore-upload.html) | Uploads project to iTunes Connect.
 [build android](build-android.html) | Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
 [build ios](build-ios.html) | Builds the project for iOS and produces an APP or IPA that you can manually deploy in the iOS Simulator or on device, respectively.
+[build windows](build-windows.html) | Builds the project for Windows and produces an MSIX package.
 [debug android](debug-android.html) | Debugs your project on a connected Android device or in a native emulator.
 [debug ios](debug-ios.html) | Debugs your project on a connected iOS device or in a native emulator.
 [debug](debug.html) | Debugs your project on a connected device or in a native emulator.

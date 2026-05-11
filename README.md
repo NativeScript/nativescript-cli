@@ -61,7 +61,7 @@ NativeScript provides platform APIs directly to the JavaScript runtime (_with st
 
 Some popular use cases:
 
-- Building Web, iOS, Android and Vision Pro apps with a shared codebase (aka, cross platform apps)
+- Building Web, iOS, Android, Windows and Vision Pro apps with a shared codebase (aka, cross platform apps)
 - Building native platform apps with portable JavaScript skills
 - Augmenting JavaScript projects with platform API capabilities
 - AndroidTV and Watch development
@@ -84,20 +84,21 @@ The NativeScript CLI is the command-line interface for interacting with NativeSc
 ![NativeScript CLI diagram](https://github.com/NativeScript/nativescript-cli/raw/release/ns-cli.png)
 
 * **Commands** - pretty much what every CLI does - support of different command options, input validation and help  
-* **Devices Service** - provides the communication between NativeScript and devices/emulators/simulators used to run/debug the app. Uses iTunes to talk to iOS and adb for Android
+* **Devices Service** - provides the communication between NativeScript and devices/emulators/simulators used to run/debug the app. Uses iTunes to talk to iOS, adb for Android, and local MSIX deployment for Windows.
 * **LiveSync Service** - redeploys applications when code changes during development
 * **Hooks Service** - executes custom-written hooks in developed application, thus modifying the build process
-* **Platforms Service** - provides app build functionalities, uses Gradle to build Android packages and Xcode for iOS. 
+* **Platforms Service** - provides app build functionalities, uses Gradle to build Android packages, Xcode for iOS, and MSBuild for Windows.
 
 [Back to Top][1]
 
 Supported Platforms
 ===
 
-With the NativeScript CLI, you can target the following mobile platforms.
+With the NativeScript CLI, you can target the following platforms.
 
 * Android 4.2 or a later stable official release
 * iOS 9.0 or later stable official release
+* Windows 10 version 1809 (build 17763) or later — via `@nativescript/windows`
 
 [Back to Top][1]
 
@@ -277,11 +278,12 @@ You can always override the generated entitlements file, by pointing to your own
 
 ## Build Your Project
 
-You can build it for your target mobile platforms.
+You can build it for your target platforms.
 
 ```Shell
 ns build android
 ns build ios
+ns build windows
 ```
 
 The NativeScript CLI calls the SDK for the selected target platform and uses it to build your app locally.
@@ -290,11 +292,13 @@ When you build for iOS, the NativeScript CLI will either build for a device, if 
 
 > **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](https://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
+To build for Windows, you need the [.NET 10 SDK](https://dotnet.microsoft.com/download) with the Windows App SDK workload (`dotnet workload install windows`) and Developer Mode enabled. `ns build windows` produces an MSIX package.
+
 [Back to Top][1]
 
 ## Run Your Project
 
-You can test your work in progress on connected Android or iOS devices.
+You can test your work in progress on connected Android or iOS devices, or on the local Windows machine.
 
 To verify that the NativeScript CLI recognizes your connected devices, run the following command.
 
@@ -302,13 +306,14 @@ To verify that the NativeScript CLI recognizes your connected devices, run the f
 ns devices
 ```
 
-The NativeScript CLI lists all connected physical devices and running emulators/simulators.
+The NativeScript CLI lists all connected physical devices and running emulators/simulators. On Windows, the local machine is also listed as a Windows device.
 
-After you have listed the available devices, you can quickly run your app on connected devices by executing:
+After you have listed the available devices, you can quickly run your app by executing:
 
 ```Shell
 ns run android
 ns run ios
+ns run windows   # Windows only — runs on the local machine
 ```
 
 [Back to Top][1]

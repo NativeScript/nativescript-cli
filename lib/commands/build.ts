@@ -277,3 +277,57 @@ export class BuildVisionOsCommand extends BuildIosCommand implements ICommand {
 
 injector.registerCommand("build|vision", BuildVisionOsCommand);
 injector.registerCommand("build|visionos", BuildVisionOsCommand);
+
+export class BuildWindowsCommand extends BuildCommandBase implements ICommand {
+	public allowedParameters: ICommandParameter[] = [];
+
+	constructor(
+		protected $options: IOptions,
+		$errors: IErrors,
+		$projectData: IProjectData,
+		$platformsDataService: IPlatformsDataService,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$buildController: IBuildController,
+		$platformValidationService: IPlatformValidationService,
+		$buildDataService: IBuildDataService,
+		protected $logger: ILogger,
+		private $migrateController: IMigrateController,
+	) {
+		super(
+			$options,
+			$errors,
+			$projectData,
+			$platformsDataService,
+			$devicePlatformsConstants,
+			$buildController,
+			$platformValidationService,
+			$buildDataService,
+			$logger,
+		);
+	}
+
+	public async execute(args: string[]): Promise<void> {
+		await this.executeCore([
+			this.$devicePlatformsConstants.Windows.toLowerCase(),
+		]);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		const platform = this.$devicePlatformsConstants.Windows;
+		if (!this.$options.force) {
+			await this.$migrateController.validate({
+				projectDir: this.$projectData.projectDir,
+				platforms: [platform],
+			});
+		}
+
+		let canExecute = await super.canExecuteCommandBase(platform);
+		if (canExecute) {
+			canExecute = await super.validateArgs(args, platform);
+		}
+
+		return canExecute;
+	}
+}
+
+injector.registerCommand("build|windows", BuildWindowsCommand);
