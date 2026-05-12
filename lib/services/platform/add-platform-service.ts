@@ -25,7 +25,7 @@ export class AddPlatformService implements IAddPlatformService {
 		// private $projectDataService: IProjectDataService,
 		private $packageManager: IPackageManager,
 		private $terminalSpinnerService: ITerminalSpinnerService,
-		private $analyticsService: IAnalyticsService // private $tempService: ITempService
+		private $analyticsService: IAnalyticsService, // private $tempService: ITempService
 	) {}
 
 	public async addProjectHost() {}
@@ -34,7 +34,7 @@ export class AddPlatformService implements IAddPlatformService {
 		projectData: IProjectData,
 		platformData: IPlatformData,
 		packageToInstall: string,
-		addPlatformData: IAddPlatformData
+		addPlatformData: IAddPlatformData,
 	): Promise<string> {
 		const spinner = this.$terminalSpinnerService.createSpinner();
 
@@ -46,11 +46,34 @@ export class AddPlatformService implements IAddPlatformService {
 			// 	: await this.installPackage(projectData.projectDir, packageToInstall);
 			const frameworkDirPath = await this.installPackage(
 				projectData.projectDir,
-				packageToInstall
+				packageToInstall,
 			);
+
+			const frameworkPackageJsonPath = path.join(
+				frameworkDirPath || "",
+				"..",
+				"package.json",
+			);
+
+			if (!frameworkDirPath || !this.$fs.exists(frameworkPackageJsonPath)) {
+				throw new Error(
+					`Installed framework package.json not found at ${frameworkPackageJsonPath}`,
+				);
+			}
+
 			const frameworkPackageJsonContent = this.$fs.readJson(
-				path.join(frameworkDirPath, "..", "package.json")
+				frameworkPackageJsonPath,
 			);
+
+			if (
+				!frameworkPackageJsonContent ||
+				!frameworkPackageJsonContent.version
+			) {
+				throw new Error(
+					`Installed framework package.json at ${frameworkPackageJsonPath} does not contain a version`,
+				);
+			}
+
 			const frameworkVersion = frameworkPackageJsonContent.version;
 
 			// await this.setPlatformVersion(platformData, projectData, frameworkVersion);
@@ -64,7 +87,7 @@ export class AddPlatformService implements IAddPlatformService {
 					platformData,
 					projectData,
 					frameworkDirPath,
-					frameworkVersion
+					frameworkVersion,
 				);
 			}
 
@@ -72,7 +95,7 @@ export class AddPlatformService implements IAddPlatformService {
 		} catch (err) {
 			const platformPath = path.join(
 				projectData.platformsDir,
-				platformData.platformNameLowerCase
+				platformData.platformNameLowerCase,
 			);
 			this.$fs.deleteDirectory(platformPath);
 			throw err;
@@ -84,11 +107,11 @@ export class AddPlatformService implements IAddPlatformService {
 	public async setPlatformVersion(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		frameworkVersion: string
+		frameworkVersion: string,
 	): Promise<void> {
 		await this.installPackage(
 			projectData.projectDir,
-			`${platformData.frameworkPackageName}@${frameworkVersion}`
+			`${platformData.frameworkPackageName}@${frameworkVersion}`,
 		);
 	}
 
@@ -106,7 +129,7 @@ export class AddPlatformService implements IAddPlatformService {
 
 	private async installPackage(
 		projectDir: string,
-		packageName: string
+		packageName: string,
 	): Promise<string> {
 		const frameworkDir = this.resolveFrameworkDir(projectDir, packageName);
 		if (frameworkDir && this.$fs.exists(frameworkDir)) {
@@ -122,7 +145,7 @@ export class AddPlatformService implements IAddPlatformService {
 				dev: true,
 				"save-dev": true,
 				"save-exact": true,
-			} as any
+			} as any,
 		);
 
 		if (!installedPackage.name) {
@@ -172,7 +195,7 @@ export class AddPlatformService implements IAddPlatformService {
 		} catch (err) {
 			this.$logger.trace(
 				`Couldn't resolve installed framework. Continuing with install...`,
-				err
+				err,
 			);
 		}
 		return null;
@@ -183,14 +206,14 @@ export class AddPlatformService implements IAddPlatformService {
 		platformData: IPlatformData,
 		projectData: IProjectData,
 		frameworkDirPath: string,
-		frameworkVersion: string
+		frameworkVersion: string,
 	): Promise<void> {
 		// here we should use ios OR android
 		const platformDir =
 			this.$options.hostProjectPath ??
 			path.join(
 				projectData.platformsDir,
-				platformData.normalizedPlatformName.toLowerCase()
+				platformData.normalizedPlatformName.toLowerCase(),
 			);
 
 		this.$fs.deleteDirectory(platformDir);
@@ -198,21 +221,21 @@ export class AddPlatformService implements IAddPlatformService {
 		await platformData.platformProjectService.createProject(
 			path.resolve(frameworkDirPath),
 			frameworkVersion,
-			projectData
+			projectData,
 		);
 		platformData.platformProjectService.ensureConfigurationFileInAppResources(
-			projectData
+			projectData,
 		);
 		await platformData.platformProjectService.interpolateData(projectData);
 		platformData.platformProjectService.afterCreateProject(
 			platformData.projectRoot,
-			projectData
+			projectData,
 		);
 	}
 
 	private async trackPlatformVersion(
 		frameworkVersion: string,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void> {
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.AddPlatform,

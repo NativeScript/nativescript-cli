@@ -482,6 +482,16 @@ export class PrepareController extends EventEmitter {
 				"app",
 				"package.json",
 			);
+		} else if (
+			this.$mobileHelper.isWindowsPlatform(platformData.platformNameLowerCase)
+		) {
+			// Windows apps place the packaged app under <projectRoot>/<projectName>/App
+			packagePath = path.join(
+				platformData.projectRoot,
+				projectData.projectName,
+				"app",
+				"package.json",
+			);
 		} else {
 			packagePath = path.join(
 				platformData.projectRoot,

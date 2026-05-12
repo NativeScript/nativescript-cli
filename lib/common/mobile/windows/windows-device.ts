@@ -21,7 +21,7 @@ export class WindowsDevice implements Mobile.IDevice {
 		errorHelp: null,
 		isTablet: false,
 		type: DeviceTypes.Device,
-		platform: "windows",
+		platform: "Windows",
 		connectionTypes: [DeviceConnectionType.Local],
 	};
 
