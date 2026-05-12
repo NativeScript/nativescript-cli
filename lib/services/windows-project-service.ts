@@ -24,6 +24,7 @@ import {
 } from "../common/declarations";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+import { IProjectChangesInfo } from "../definitions/project-changes";
 
 export class WindowsProjectService
 	extends projectServiceBaseLib.PlatformProjectServiceBase
