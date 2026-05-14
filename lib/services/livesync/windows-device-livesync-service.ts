@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { IPlatformsDataService } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
@@ -18,10 +19,19 @@ export class WindowsDeviceLiveSyncService
 		projectData: IProjectData,
 		_liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<void> {
-		// TODO: kill the running Windows app process and relaunch it
 		this.$logger.info(
-			`[Windows LiveSync] Restart required for ${projectData.projectName}`,
+			`[Windows LiveSync] Restarting application ${projectData.projectName}`,
 		);
+
+		const appId =
+			projectData.projectIdentifiers?.["windows"] ?? projectData.projectId;
+
+		await this.device.applicationManager.restartApplication({
+			appId,
+			projectName: projectData.projectName,
+			projectDir: projectData.projectDir,
+			waitForDebugger: _liveSyncInfo?.waitForDebugger,
+		} as Mobile.IStartApplicationData);
 	}
 
 	public async shouldRestart(
@@ -45,8 +55,8 @@ export class WindowsDeviceLiveSyncService
 	): Promise<void> {
 		for (const localToDevicePathData of localToDevicePaths) {
 			const devicePath = localToDevicePathData.getDevicePath();
-			if (require("fs").existsSync(devicePath)) {
-				require("fs").unlinkSync(devicePath);
+			if (fs.existsSync(devicePath)) {
+				fs.unlinkSync(devicePath);
 			}
 		}
 	}

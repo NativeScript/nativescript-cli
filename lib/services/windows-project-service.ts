@@ -42,7 +42,7 @@ export class WindowsProjectService
 		super($fs, $projectDataService);
 	}
 
-	private _platformData: IPlatformData = null;
+	private _platformData: IPlatformData | null = null;
 
 	public getPlatformData(projectData: IProjectData): IPlatformData {
 		if (!projectData && !this._platformData) {
@@ -86,6 +86,7 @@ export class WindowsProjectService
 						packageNames: [
 							`${projectData.projectName}.msix`,
 							`${projectData.projectName}.appx`,
+							`${projectData.projectName}.exe`,
 						],
 					};
 				},
@@ -97,7 +98,7 @@ export class WindowsProjectService
 			};
 		}
 
-		return this._platformData;
+		return this._platformData as IPlatformData;
 	}
 
 	public async validateOptions(
@@ -434,12 +435,11 @@ export class WindowsProjectService
 	}
 
 	public async preparePluginNativeCode(
-		_pluginData: IPluginData,
-		_options?: any,
+		pluginData: IPluginData,
+		projectData: IProjectData,
 	): Promise<void> {
-		const pluginData = _pluginData;
-
-		// stage native files found under plugin's platforms/windows folder into the app's plugins dir
+		// Stage native files found under the plugin's platforms/windows folder into
+		// the app's plugins directory so the csproj can import them.
 		const platformFolder = path.join(
 			pluginData.fullPath,
 			"platforms",
@@ -452,13 +452,10 @@ export class WindowsProjectService
 				? fallbackFolder
 				: null;
 		if (!sourcesFolder) {
-			// Nothing to stage for this plugin
 			return;
 		}
 
-		const projectData = arguments.length >= 2 ? arguments[1] : null;
 		if (!projectData) {
-			// attempt to find a projectData by walking up (best-effort); otherwise skip
 			return;
 		}
 
@@ -471,7 +468,7 @@ export class WindowsProjectService
 		this.$fs.ensureDirectoryExists(pluginStageDir);
 
 		// recursively copy native files (exclude JS/TS/JSON)
-		const walk = (dir: string, out: string) => {
+		const walk = (dir: string) => {
 			const entries = fs.readdirSync(dir, { withFileTypes: true });
 			for (const e of entries) {
 				const src = path.join(dir, e.name);
@@ -479,7 +476,7 @@ export class WindowsProjectService
 				const dest = path.join(pluginStageDir, rel);
 				if (e.isDirectory()) {
 					this.$fs.ensureDirectoryExists(dest);
-					walk(src, dest);
+					walk(src);
 				} else if (e.isFile()) {
 					const ext = path.extname(e.name).toLowerCase();
 					if (
@@ -496,7 +493,7 @@ export class WindowsProjectService
 			}
 		};
 
-		walk(sourcesFolder, pluginStageDir);
+		walk(sourcesFolder);
 
 		// copy provided plugin.props/targets if present in plugin root
 		const providedProps = path.join(pluginData.fullPath, "plugin.props");
