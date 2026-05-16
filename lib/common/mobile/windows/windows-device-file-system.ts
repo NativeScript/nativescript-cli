@@ -48,11 +48,7 @@ export class WindowsDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		_deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<Mobile.ILocalToDevicePathData[]> {
-		for (const item of localToDevicePaths) {
-			const dest = item.getDevicePath();
-			fs.mkdirSync(path.dirname(dest), { recursive: true });
-			fs.copyFileSync(item.getLocalPath(), dest);
-		}
+		this._syncPaths(localToDevicePaths);
 		return localToDevicePaths;
 	}
 
@@ -61,7 +57,29 @@ export class WindowsDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		_projectFilesPath: string,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
-		return this.transferFiles(_deviceAppData, localToDevicePaths);
+		this._syncPaths(localToDevicePaths);
+		return localToDevicePaths;
+	}
+
+	private _syncPaths(localToDevicePaths: Mobile.ILocalToDevicePathData[]): void {
+		for (const pathData of localToDevicePaths) {
+			const src = pathData.getLocalPath();
+			const dest = pathData.getDevicePath();
+			if (src === dest) {
+				continue;
+			}
+			try {
+				const stat = fs.statSync(src);
+				if (stat.isDirectory()) {
+					fs.mkdirSync(dest, { recursive: true });
+				} else {
+					fs.mkdirSync(path.dirname(dest), { recursive: true });
+					fs.copyFileSync(src, dest);
+				}
+			} catch {
+				// skip entries that disappeared between detection and sync
+			}
+		}
 	}
 
 	public async transferFile(

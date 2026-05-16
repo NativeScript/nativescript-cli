@@ -508,6 +508,7 @@ declare global {
 		appIdentifier: string;
 		getDirname?: boolean;
 		watch?: boolean;
+		projectData?: IProjectData;
 	}
 
 	interface IDevicePathProvider {

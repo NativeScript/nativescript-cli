@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import { spawn } from "child_process";
 import { ApplicationManagerBase } from "../application-manager-base";
@@ -81,6 +82,19 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		}
 
 		this.$logger.info(`[Windows] Installing MSIX/APPX from: ${packageFilePath}`);
+		// If we have an app identifier, try to remove any existing package first to
+		// avoid the "package is already installed" HRESULT (0x80073CFB) which
+		// blocks re-registration in development flows.
+		if (appIdentifier) {
+			try {
+				this.$logger.info(`[Windows] Attempting to remove existing package: ${appIdentifier}`);
+				// uninstallApplication handles EXE cleanup and runs the Remove-AppxPackage
+				// command for UWP packages. Ignore errors and proceed to install.
+				await this.uninstallApplication(appIdentifier);
+			} catch (err) {
+				this.$logger.warn(`[Windows] Pre-install uninstall failed: ${err}`);
+			}
+		}
 		await this.$childProcess.spawnFromEvent(
 			"powershell.exe",
 			[
@@ -128,9 +142,33 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		await this.startApplication(appData);
 	}
 
+	/**
+	 * Returns the path of the runtime's trace log for the most recently started app.
+	 * For UWP-packaged apps the runtime DLL writes inside the app container's TempState,
+	 * not the global system temp directory. Falls back to the system temp path used when
+	 * the app is launched as an unpackaged EXE.
+	 */
+	public getLogFilePath(): string {
+		const systemTempLog = path.join(os.tmpdir(), "ns_trace.log");
+		if (this._packageFamilyNames.size > 0) {
+			const pfn = this._packageFamilyNames.values().next().value as string;
+			const localAppData = process.env.LOCALAPPDATA;
+			if (localAppData && pfn) {
+				return path.join(localAppData, "Packages", pfn, "TempState", "ns_trace.log");
+			}
+		}
+		return systemTempLog;
+	}
+
 	public async startApplication(
 		appData: Mobile.IStartApplicationData,
 	): Promise<void> {
+		// Truncate the trace log so the streamer starts from a clean state each run.
+		try {
+			const logPath = this.getLogFilePath();
+			fs.writeFileSync(logPath, "", "utf8");
+		} catch { /* ignore — log dir may not exist yet */ }
+
 		const exeCandidate =
 			(appData.appId && this._installedExePaths[appData.appId]) ||
 			(appData.projectName && this._installedExePaths[appData.projectName]);
@@ -159,8 +197,11 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		if (appData.waitForDebugger) {
 			this._writeDebugBreakMarker(pfn);
 		}
-		this.$logger.info(`[Windows] Launching UWP: ${pfn}`);
-		const proc = spawn("explorer.exe", [`ms-windows-app://${pfn}`], {
+		// UWP apps are launched via shell:AppsFolder\<PFN>!<ApplicationId>.
+		// The ApplicationId comes from the <Application Id="..."> attribute in the manifest.
+		const appId = "App";
+		this.$logger.info(`[Windows] Launching UWP: ${pfn}!${appId}`);
+		const proc = spawn("explorer.exe", [`shell:AppsFolder\\${pfn}!${appId}`], {
 			detached: true,
 			stdio: "ignore",
 		});

@@ -52,13 +52,18 @@ export class DevicePathProvider implements IDevicePathProvider {
 		} else if (
 			this.$mobileHelper.isWindowsPlatform(device.deviceInfo.platform)
 		) {
-			const projectData = (options as any).projectData;
+			const projectData = options.projectData;
 			if (projectData) {
 				const platformData = this.$platformsDataService.getPlatformData(
 					device.deviceInfo.platform,
 					projectData,
 				);
-				return platformData.appDestinationDirectoryPath;
+				// Sync into bin\app — the registered package root — so the running app
+				// picks up changes without a rebuild.
+				return path.join(
+					platformData.getBuildOutputPath({} as never),
+					APP_FOLDER_NAME,
+				);
 			}
 		}
 

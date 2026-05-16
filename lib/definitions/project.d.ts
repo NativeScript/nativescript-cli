@@ -134,6 +134,8 @@ interface INsConfigIOS extends INsConfigPlaform {
 
 interface INSConfigVisionOS extends INsConfigIOS {}
 
+interface INsConfigWindows extends INsConfigPlaform {}
+
 interface INsConfigAndroid extends INsConfigPlaform {
 	v8Flags?: string;
 
@@ -188,6 +190,7 @@ interface INsConfig {
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
 	visionos?: INSConfigVisionOS;
+	windows?: INsConfigWindows;
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
 	projectName?: string;

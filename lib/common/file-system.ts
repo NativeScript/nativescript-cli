@@ -135,12 +135,18 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public deleteDirectory(directory: string): void {
-		shelljs.rm("-rf", directory);
-
-		const err = shelljs.error();
-
-		if (err !== null) {
-			throw new Error(err);
+		// fs.rmSync handles Windows edge cases (read-only attributes, long paths)
+		// more reliably than shelljs.rm on Node.js 20+.
+		try {
+			fs.rmSync(directory, { recursive: true, force: true });
+		} catch (e: any) {
+			// If rmSync itself fails (e.g., files locked by another process on Windows),
+			// fall back to shelljs so behaviour on other platforms is unchanged.
+			shelljs.rm("-rf", directory);
+			const err = shelljs.error();
+			if (err !== null) {
+				throw new Error(e?.message ?? err);
+			}
 		}
 	}
 

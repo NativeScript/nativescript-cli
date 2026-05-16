@@ -644,6 +644,8 @@ export class ProjectDataService implements IProjectDataService {
 					].includes(d.name);
 				} else if (platform === constants.PlatformTypes.visionos) {
 					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
+				} else if (platform === constants.PlatformTypes.windows) {
+					return d.name === constants.SCOPED_WINDOWS_RUNTIME_NAME;
 				}
 			});
 

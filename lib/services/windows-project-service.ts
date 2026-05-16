@@ -71,25 +71,24 @@ export class WindowsProjectService
 				appDestinationDirectoryPath: path.join(
 					projectRoot,
 					projectData.projectName,
-					"App",
 				),
 				platformProjectService: <any>this,
 				projectRoot: projectRoot,
-				getBuildOutputPath: (options: any): string => {
-					const config = options?.release
-						? Configurations.Release
-						: Configurations.Debug;
-					return path.join(projectRoot, constants.BUILD_DIR, config);
+				getBuildOutputPath: (_options?: any): string => {
+					return path.join(projectRoot, projectData.projectName, "bin");
 				},
 				getValidBuildOutputData: (): IValidBuildOutputData => {
 					return {
+						// AppxManifest.xml triggers Add-AppxPackage -Register (dev flow).
+						// msix/appx handle release builds.
 						packageNames: [
+							"AppxManifest.xml",
 							`${projectData.projectName}.msix`,
 							`${projectData.projectName}.appx`,
-							`${projectData.projectName}.exe`,
 						],
 					};
 				},
+				configurationFileName: "Package.appxmanifest",
 				frameworkDirectoriesExtensions: [],
 				frameworkDirectoriesNames: ["metadata", "NativeScript", "internal"],
 				targetedOS: ["win32"],
@@ -245,18 +244,50 @@ export class WindowsProjectService
 			projectData.projectName,
 			`${projectData.projectName}.csproj`,
 		);
+		const outputPath = path.join(projectRoot, projectData.projectName, "bin");
 
 		this.$logger.info(
 			`Building Windows project: ${csproj} [${config}|${arch}]`,
 		);
 
-		await this.$childProcess.spawnFromEvent(
-			"msbuild",
-			[csproj, `/p:Configuration=${config}`, `/p:Platform=${arch}`],
+		const result = await this.$childProcess.spawnFromEvent(
+			"dotnet",
+			[
+				"build",
+				csproj,
+				"-c",
+				config,
+				`-p:Platform=${arch}`,
+				"--output",
+				outputPath,
+			],
 			"close",
 			{ cwd: path.join(projectRoot, projectData.projectName) },
-			{ throwError: true },
+			{ throwError: false },
 		);
+
+		if (result.stdout) {
+			this.$logger.info(result.stdout);
+		}
+		if (result.exitCode !== 0) {
+			throw new Error(
+				`dotnet build failed (exit ${result.exitCode}):\n${result.stdout || result.stderr}`,
+			);
+		}
+
+		// Add-AppxPackage -Register requires the manifest to be named AppxManifest.xml
+		// with $targetnametoken$ expanded to the actual EXE name.
+		const manifestSrc = path.join(
+			projectRoot,
+			projectData.projectName,
+			"Package.appxmanifest",
+		);
+		const manifestDest = path.join(outputPath, "AppxManifest.xml");
+		if (this.$fs.exists(manifestSrc)) {
+			const raw = fs.readFileSync(manifestSrc, "utf8");
+			const expanded = raw.split("$targetnametoken$").join(projectData.projectName);
+			fs.writeFileSync(manifestDest, expanded, "utf8");
+		}
 	}
 
 	public async prepareProject<T>(
