@@ -92,7 +92,9 @@ const getConfigurationName = (release: boolean): string => {
 	return release ? Configurations.Release : Configurations.Debug;
 };
 
-export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
+export class IOSProjectService
+	extends projectServiceBaseLib.PlatformProjectServiceBase
+{
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
 
@@ -1162,6 +1164,52 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			pluginData,
 			projectData,
 		);
+	}
+
+	public shouldRepreparePlugin(
+		pluginData: IPluginData,
+		projectData: IProjectData,
+	): boolean {
+		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
+			IOSProjectService.IOS_PLATFORM_NAME,
+		);
+
+		for (const fileName of this.getAllLibsForPluginWithFileExtension(
+			pluginData,
+			".a",
+		)) {
+			const staticLibPath = path.join(pluginPlatformsFolderPath, fileName);
+			const libraryName = path.basename(staticLibPath, ".a");
+			const headersSubpath = path.join(
+				path.dirname(staticLibPath),
+				"include",
+				libraryName,
+			);
+
+			if (!this.$fs.exists(headersSubpath)) {
+				continue;
+			}
+
+			const headerFiles = this.$fs
+				.readDirectory(headersSubpath)
+				.filter(
+					(f) =>
+						path.extname(f) === ".h" &&
+						this.$fs.getFsStats(path.join(headersSubpath, f)).isFile(),
+				);
+
+			if (
+				headerFiles.length > 0 &&
+				!this.$fs.exists(path.join(headersSubpath, "module.modulemap"))
+			) {
+				this.$logger.trace(
+					`Plugin ${pluginData.name}: modulemap missing at ${headersSubpath}, will re-prepare`,
+				);
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public async removePluginNativeCode(
