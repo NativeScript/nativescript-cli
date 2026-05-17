@@ -147,7 +147,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		// Collect exe names from the directory that might be running.
 		const exeNames: string[] = [];
 		try {
-			for (const entry of fs.readdirSync(dirPath, { withFileTypes: true, recursive: true } as any)) {
+			for (const entry of fs.readdirSync(dirPath, { withFileTypes: true, recursive: true } as any) as unknown as fs.Dirent[]) {
 				if (!entry.isFile()) continue;
 				const name: string = (entry as any).name ?? "";
 				if (name.toLowerCase().endsWith(".exe")) {

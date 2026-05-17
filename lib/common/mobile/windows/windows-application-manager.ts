@@ -19,6 +19,7 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		$hooksService: IHooksService,
 		$deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $childProcess: IChildProcess,
+		private _restartLogStream?: () => Promise<void>,
 	) {
 		super($logger, $hooksService, $deviceLogProvider);
 	}
@@ -144,9 +145,10 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 
 	/**
 	 * Returns the path of the runtime's trace log for the most recently started app.
-	 * For UWP-packaged apps the runtime DLL writes inside the app container's TempState,
-	 * not the global system temp directory. Falls back to the system temp path used when
-	 * the app is launched as an unpackaged EXE.
+	 * Inside a UWP process, Win32 GetTempPathW() virtualises to AC\Temp (the app
+	 * container's isolated temp folder) — NOT the WinRT TemporaryFolder (TempState).
+	 * Rust's std::env::temp_dir() calls GetTempPathW(), so the DLL writes to AC\Temp.
+	 * Falls back to the system temp path when no PFN is known (unpackaged EXE).
 	 */
 	public getLogFilePath(): string {
 		const systemTempLog = path.join(os.tmpdir(), "ns_trace.log");
@@ -154,33 +156,56 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 			const pfn = this._packageFamilyNames.values().next().value as string;
 			const localAppData = process.env.LOCALAPPDATA;
 			if (localAppData && pfn) {
-				return path.join(localAppData, "Packages", pfn, "TempState", "ns_trace.log");
+				return path.join(localAppData, "Packages", pfn, "AC", "Temp", "ns_trace.log");
 			}
 		}
 		return systemTempLog;
 	}
 
+	/**
+	 * Returns the path of the C# crash/exception log written by CrashDiagnostics.
+	 * Lives in LocalState (persistent app data).
+	 * Returns null when no PFN is known (e.g. unpackaged EXE targets).
+	 */
+	public getCrashLogPath(): string | null {
+		if (this._packageFamilyNames.size > 0) {
+			const pfn = this._packageFamilyNames.values().next().value as string;
+			const localAppData = process.env.LOCALAPPDATA;
+			if (localAppData && pfn) {
+				return path.join(localAppData, "Packages", pfn, "LocalState", "nativescript-crash.log");
+			}
+		}
+		return null;
+	}
+
 	public async startApplication(
 		appData: Mobile.IStartApplicationData,
 	): Promise<void> {
-		// Truncate the trace log so the streamer starts from a clean state each run.
-		try {
-			const logPath = this.getLogFilePath();
-			fs.writeFileSync(logPath, "", "utf8");
-		} catch { /* ignore — log dir may not exist yet */ }
-
 		const exeCandidate =
 			(appData.appId && this._installedExePaths[appData.appId]) ||
 			(appData.projectName && this._installedExePaths[appData.projectName]);
+		const isExe = !!(exeCandidate && fs.existsSync(exeCandidate));
 
-		if (exeCandidate && fs.existsSync(exeCandidate)) {
+		// For UWP, pre-populate the PFN cache before calling getLogFilePath() so
+		// that the truncation and the subsequent log stream restart both target the
+		// correct container TempState path instead of the system temp fallback.
+		if (!isExe) {
+			await this._resolvePackageFamilyName(appData.appId);
+		}
+
+		// Truncate the trace log so the streamer starts from a clean state each run.
+		try {
+			fs.writeFileSync(this.getLogFilePath(), "", "utf8");
+		} catch { /* ignore — log dir may not exist yet */ }
+
+		if (isExe) {
 			if (appData.waitForDebugger) {
 				this.$logger.info(
 					`[Windows] --debug-brk is not supported for EXE targets.`,
 				);
 			}
 			this.$logger.info(`[Windows] Launching EXE: ${exeCandidate}`);
-			const proc = spawn(exeCandidate, [], { detached: true, stdio: "ignore" });
+			const proc = spawn(exeCandidate as string, [], { detached: true, stdio: "ignore" });
 			proc.unref();
 			this._runningPid = proc.pid ?? null;
 			// Clear stale PID when the process exits so stopApplication falls back to
@@ -190,22 +215,30 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 					this._runningPid = null;
 				}
 			});
-			return;
+		} else {
+			// PFN already cached from the pre-resolve above; no extra round-trip.
+			const pfn = this._packageFamilyNames.get(appData.appId) ?? appData.appId;
+			if (appData.waitForDebugger) {
+				this._writeDebugBreakMarker(pfn);
+			}
+			// UWP apps are launched via shell:AppsFolder\<PFN>!<ApplicationId>.
+			// The ApplicationId comes from the <Application Id="..."> attribute in the manifest.
+			const appId = "App";
+			this.$logger.info(`[Windows] Launching UWP: ${pfn}!${appId}`);
+			const proc = spawn("explorer.exe", [`shell:AppsFolder\\${pfn}!${appId}`], {
+				detached: true,
+				stdio: "ignore",
+			});
+			proc.unref();
 		}
 
-		const pfn = await this._resolvePackageFamilyName(appData.appId);
-		if (appData.waitForDebugger) {
-			this._writeDebugBreakMarker(pfn);
+		// Restart the log stream so the tailer picks up the correct path (UWP
+		// container TempState vs. system temp) and resets its offset to 0. Without
+		// this the tailer keeps the stale offset from device-discovery time and
+		// skips every log line written after the file was truncated above.
+		if (this._restartLogStream) {
+			await this._restartLogStream();
 		}
-		// UWP apps are launched via shell:AppsFolder\<PFN>!<ApplicationId>.
-		// The ApplicationId comes from the <Application Id="..."> attribute in the manifest.
-		const appId = "App";
-		this.$logger.info(`[Windows] Launching UWP: ${pfn}!${appId}`);
-		const proc = spawn("explorer.exe", [`shell:AppsFolder\\${pfn}!${appId}`], {
-			detached: true,
-			stdio: "ignore",
-		});
-		proc.unref();
 	}
 
 	public async stopApplication(
