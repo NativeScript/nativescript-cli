@@ -304,6 +304,72 @@ export class WindowsProjectService
 			platformData.projectRoot,
 			projectData.projectName,
 		);
+
+		// Attempt to run dotnet-tool to publish/copy DotNetBridge and app projects if available
+		try {
+			const marker = path.join(appProjectDir, "dotnet-bridge", "publish", ".dotnet_tool_done");
+			if (fs.existsSync(marker)) {
+				this.$logger.info("DotNetBridge publish marker found; skipping dotnet-tool");
+			}
+			else {
+				const arch = process.arch === "arm64" ? "arm64" : "x64";
+				const exeCandidates = [
+					process.env.DOTNET_TOOL_PATH,
+					path.join(platformData.projectRoot, "tools", `dotnet-tool-${arch}.exe`),
+					path.join(platformData.projectRoot, "tools", "dotnet-tool.exe"),
+				].filter(Boolean as any);
+				let exePath: string | null = null;
+				for (const p of exeCandidates) {
+					if (p && fs.existsSync(p)) { exePath = p as string; break; }
+				}
+				if (exePath) {
+					this.$logger.info(`Running dotnet-tool: ${exePath}`);
+					try {
+
+						const result = await this.$childProcess.spawnFromEvent(exePath, ["--app-root", platformData.projectRoot, "--dir", "app", "--force"], "close", { cwd: platformData.projectRoot }, { throwError: false });
+						if (result && result.stdout) { this.$logger.info(result.stdout); }
+					}
+					catch (err) {
+						this.$logger.warn(`dotnet-tool execution failed: ${err}`);
+					}
+
+					// Ensure sentinel exists: if publish/ contains DotNetBridge.dll, write marker so MSBuild waits succeed
+					try {
+						const markerPath = path.join(appProjectDir, "dotnet-bridge", "publish", ".dotnet_tool_done");
+						if (!fs.existsSync(markerPath)) {
+							const publishDir = path.join(appProjectDir, "dotnet-bridge", "publish");
+							if (fs.existsSync(publishDir)) {
+								const files = fs.readdirSync(publishDir);
+								if (files && files.length > 0) {
+									const bridgeDll = path.join(publishDir, "DotNetBridge.dll");
+									if (fs.existsSync(bridgeDll)) {
+										try {
+											fs.writeFileSync(markerPath, "done", "utf8");
+											this.$logger.info(`Created dotnet-tool marker at ${markerPath}`);
+										}
+										catch (werr) {
+											this.$logger.warn(`Failed creating dotnet-tool marker: ${werr}`);
+										}
+									}
+									else {
+										this.$logger.info(`[NativeScript] publish directory exists but DotNetBridge.dll missing; files=${files.join(',')}`);
+									}
+								}
+							}
+							else {
+								this.$logger.info(`[NativeScript] publish directory not found at ${publishDir}`);
+							}
+						}
+					}
+					catch (e) {
+						this.$logger.warn(`dotnet-tool sentinel check failed: ${e}`);
+					}
+				}
+			}
+		}
+		catch (err) {
+			this.$logger.warn(`dotnet-tool check failed: ${err}`);
+		}
 		const pluginsDir = path.join(appProjectDir, "plugins");
 
 		// Ensure plugins directory exists inside the platform app folder (where csproj expects it)
@@ -360,13 +426,14 @@ export class WindowsProjectService
 			"<Project>",
 		];
 		for (const p of stagedPlugins) {
-			const importPathProps = `plugins\\${p.name}\\plugin.props`;
-			const importPathTargets = `plugins\\${p.name}\\plugin.targets`;
+			const pluginRelDir = p.name.split("/").join("\\");
+			const importPathProps = `$(MSBuildThisFileDirectory)${pluginRelDir}\\plugin.props`;
+			const importPathTargets = `$(MSBuildThisFileDirectory)${pluginRelDir}\\plugin.targets`;
 			propsLines.push(
-				`  <Import Project=\"${importPathProps}\" Condition=\"Exists('${importPathProps.replace(/'/g, "''")}')\" />`,
+				`  <Import Project="${importPathProps}" Condition="Exists('${importPathProps}')" />`,
 			);
 			targetsLines.push(
-				`  <Import Project=\"${importPathTargets}\" Condition=\"Exists('${importPathTargets.replace(/'/g, "''")}')\" />`,
+				`  <Import Project="${importPathTargets}" Condition="Exists('${importPathTargets}')" />`,
 			);
 		}
 		propsLines.push("</Project>");
@@ -542,22 +609,23 @@ export class WindowsProjectService
 			);
 		}
 
+		const collectStagedFiles = (root: string): string[] => {
+			const out: string[] = [];
+			if (!this.$fs.exists(root)) return out;
+			const walk = (dir: string) => {
+				for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+					const full = path.join(dir, e.name);
+					if (e.isDirectory()) walk(full);
+					else out.push(path.relative(root, full).split(path.sep).join("\\"));
+				}
+			};
+			walk(root);
+			return out;
+		};
+
 		// generate plugin.props if not provided
 		if (!this.$fs.exists(path.join(pluginStageDir, "plugin.props"))) {
-			const collect = (root: string) => {
-				const out: string[] = [];
-				if (!this.$fs.exists(root)) return out;
-				const walk = (dir: string) => {
-					for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-						const full = path.join(dir, e.name);
-						if (e.isDirectory()) walk(full);
-						else out.push(path.relative(root, full).split(path.sep).join("\\"));
-					}
-				};
-				walk(root);
-				return out;
-			};
-			const stagedFiles = collect(pluginStageDir);
+			const stagedFiles = collectStagedFiles(pluginStageDir);
 			const lines: string[] = [
 				'<?xml version="1.0" encoding="utf-8"?>',
 				"<Project>",
@@ -579,6 +647,38 @@ export class WindowsProjectService
 				path.join(pluginStageDir, "plugin.props"),
 				lines.join("\n"),
 			);
+		}
+
+		// generate plugin.targets if not provided — uses an explicit Copy task so
+		// that DLLs reach bin/ even when EnableMsixTooling=true intercepts Content items.
+		if (!this.$fs.exists(path.join(pluginStageDir, "plugin.targets"))) {
+			const stagedFiles = collectStagedFiles(pluginStageDir);
+			if (stagedFiles.length > 0) {
+				const safeName = pluginData.name.replace(/[^a-zA-Z0-9]/g, "_");
+				const pluginOutDir = `plugins\\${pluginData.name.split("/").join("\\")}`;
+				const lines: string[] = [
+					'<?xml version="1.0" encoding="utf-8"?>',
+					"<Project>",
+					`  <Target Name="CopyPlugin_${safeName}" AfterTargets="Build">`,
+					`    <MakeDir Directories="$(OutDir)${pluginOutDir}" />`,
+				];
+				for (const f of stagedFiles) {
+					const rel = f.split(path.sep).join("\\");
+					lines.push(
+						`    <Copy SourceFiles="$(MSBuildThisFileDirectory)${rel}"`,
+					);
+					lines.push(
+						`          DestinationFiles="$(OutDir)${pluginOutDir}\\${rel}"`,
+					);
+					lines.push(`          SkipUnchangedFiles="true" />`);
+				}
+				lines.push("  </Target>");
+				lines.push("</Project>");
+				this.$fs.writeFile(
+					path.join(pluginStageDir, "plugin.targets"),
+					lines.join("\n"),
+				);
+			}
 		}
 	}
 
