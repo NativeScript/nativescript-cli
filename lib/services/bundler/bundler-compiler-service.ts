@@ -9,6 +9,7 @@ import {
 	BUNDLER_COMPILATION_COMPLETE,
 	PackageManagers,
 	CONFIG_FILE_NAME_DISPLAY,
+	VITE_DIST_FOLDER_NAME,
 } from "../../constants";
 import {
 	IPackageManager,
@@ -128,7 +129,7 @@ export class BundlerCompilerService
 						// Copy Vite output files directly to platform destination
 						const distOutput = path.join(
 							projectData.projectDir,
-							".ns-vite-build",
+							VITE_DIST_FOLDER_NAME,
 						);
 						const destDir = path.join(
 							platformData.appDestinationDirectoryPath,
@@ -373,6 +374,8 @@ export class BundlerCompilerService
 					reject(err);
 				});
 
+				const isVite = this.getBundler() === "vite";
+
 				childProcess.on("close", async (arg: any) => {
 					await this.$cleanupService.removeKillProcess(
 						childProcess.pid.toString(),
@@ -381,6 +384,34 @@ export class BundlerCompilerService
 					delete this.bundlerProcesses[platformData.platformNameLowerCase];
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					if (exitCode === 0) {
+						// Non-watch Vite builds spawn the child with stdio:"inherit"
+						// (no IPC channel), so the emittedFiles message handler in
+						// compileWithWatch never fires and the Vite output is never
+						// copied to the platforms app folder. Mirror that copy step
+						// here so release/CI prepare and build flows actually deploy
+						// the freshly built bundle. Without this, the deploy folder
+						// is left empty (or worse, runs stale dev/HMR artifacts from
+						// a previous `ns debug` run) and the runtime crashes on
+						// launch with `Check failed: has_pending_exception()`.
+						if (isVite) {
+							try {
+								const distOutput = path.join(
+									projectData.projectDir,
+									VITE_DIST_FOLDER_NAME,
+								);
+								const destDir = path.join(
+									platformData.appDestinationDirectoryPath,
+									this.$options.hostProjectModuleName,
+								);
+								this.copyViteBundleToNative(distOutput, destDir);
+							} catch (copyErr) {
+								this.$logger.warn(
+									`Failed to copy Vite output to platform destination: ${
+										(copyErr as Error).message
+									}`,
+								);
+							}
+						}
 						resolve();
 					} else {
 						const error: any = new Error(
