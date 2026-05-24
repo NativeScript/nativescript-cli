@@ -26,6 +26,46 @@ import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 import { IProjectChangesInfo } from "../definitions/project-changes";
 
+function isGuid(s: string): boolean {
+	return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+}
+
+function generateGuid(): string {
+	try {
+		// prefer crypto.randomUUID when available
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const crypto = require("crypto");
+		if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+		const b: Buffer = crypto.randomBytes(16);
+		b[6] = (b[6] & 0x0f) | 0x40;
+		b[8] = (b[8] & 0x3f) | 0x80;
+		const hex = Array.from(b).map((n) => n.toString(16).padStart(2, "0")).join("");
+		return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+	} catch (e) {
+		const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+		return `${s4() + s4()}-${s4()}-${s4()}-${s4()}-${s4() + s4() + s4()}`;
+	}
+}
+
+function generateDeterministicGuidFromString(s: string): string {
+	try {
+ 		// Use SHA-1 digest of the string to produce a deterministic 16-byte value
+ 		// and format it as a RFC4122 v5-style UUID (version 5, variant RFC4122).
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const crypto = require("crypto");
+		const hash = crypto.createHash("sha1").update(s).digest();
+		const b = Buffer.from(hash.slice(0, 16));
+		// set version to 5
+		b[6] = (b[6] & 0x0f) | 0x50;
+		// set variant to RFC4122
+		b[8] = (b[8] & 0x3f) | 0x80;
+		const hex = Array.from(b).map((n) => n.toString(16).padStart(2, "0")).join("");
+		return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+	} catch (e) {
+		return generateGuid();
+	}
+}
+
 export class WindowsProjectService
 	extends projectServiceBaseLib.PlatformProjectServiceBase
 {
@@ -250,17 +290,55 @@ export class WindowsProjectService
 			`Building Windows project: ${csproj} [${config}|${arch}]`,
 		);
 
+		// If the app project provides an App_Resources/Windows/Package.appxmanifest,
+		// pass its path to MSBuild so Directory.Build.targets in the template can
+		// merge app-level manifest fragments at build time. We prefer the first
+		// candidate that exists in the app project layout. Also honor
+		// `nsConfig.appResourcesPath` and the manifest prepared into the
+		// platform project by `prepareAppResources` so custom paths are respected.
+		const appManifestCandidates: string[] = [];
+		// Prefer the manifest that was staged into the platform project (prepare step)
+		appManifestCandidates.push(path.join(projectRoot, projectData.projectName, "Package.appxmanifest"));
+		const cfgAppResources = projectData?.nsConfig?.appResourcesPath ?? null;
+		if (cfgAppResources) {
+			const resolved = path.isAbsolute(cfgAppResources)
+				? cfgAppResources
+				: path.join(projectData.projectDir, cfgAppResources);
+			appManifestCandidates.push(path.join(resolved, "Windows", "Package.appxmanifest"));
+			appManifestCandidates.push(path.join(resolved, "windows", "Package.appxmanifest"));
+		}
+		// Fallback to default locations inside the app project
+		appManifestCandidates.push(path.join(projectData.projectDir, "App_Resources", "Windows", "Package.appxmanifest"));
+		appManifestCandidates.push(path.join(projectData.projectDir, "App_Resources", "windows", "Package.appxmanifest"));
+		appManifestCandidates.push(path.join(projectData.projectDir, "app", "App_Resources", "Windows", "Package.appxmanifest"));
+		appManifestCandidates.push(path.join(projectData.projectDir, "app", "App_Resources", "windows", "Package.appxmanifest"));
+
+		let appResourcesManifestArg: string | null = null;
+		for (const candidate of appManifestCandidates) {
+			if (this.$fs.exists(candidate)) {
+				// dotnet/msbuild accepts -p:Property=Value syntax; quote the value
+				// to handle paths that contain spaces.
+				appResourcesManifestArg = `-p:AppResourcesManifestPath=\"${candidate}\"`;
+				break;
+			}
+		}
+
+		const dotnetArgs = [
+			"build",
+			csproj,
+			"-c",
+			config,
+			`-p:Platform=${arch}`,
+			"--output",
+			outputPath,
+		];
+		if (appResourcesManifestArg) {
+			dotnetArgs.push(appResourcesManifestArg);
+		}
+
 		const result = await this.$childProcess.spawnFromEvent(
 			"dotnet",
-			[
-				"build",
-				csproj,
-				"-c",
-				config,
-				`-p:Platform=${arch}`,
-				"--output",
-				outputPath,
-			],
+			dotnetArgs,
 			"close",
 			{ cwd: path.join(projectRoot, projectData.projectName) },
 			{ throwError: false },
@@ -463,12 +541,21 @@ export class WindowsProjectService
 		// `Assets` subfolder into the project `Assets` directory (where the
 		// manifest expects images).
 		const projectRoot = projectData.projectDir;
-		const candidates = [
-			path.join(projectRoot, "App_Resources", "Windows"),
-			path.join(projectRoot, "App_Resources", "windows"),
-			path.join(projectRoot, "app", "App_Resources", "Windows"),
-			path.join(projectRoot, "app", "App_Resources", "windows"),
-		];
+		// Respect project-level `appResourcesPath` from nativescript.config.ts if present
+		const candidates: string[] = [];
+		const cfgAppResources = projectData && projectData.nsConfig && projectData.nsConfig.appResourcesPath ? projectData.nsConfig.appResourcesPath : null;
+		if (cfgAppResources) {
+			const resolved = path.isAbsolute(cfgAppResources)
+				? cfgAppResources
+				: path.join(projectData.projectDir, cfgAppResources);
+			candidates.push(path.join(resolved, "Windows"));
+			candidates.push(path.join(resolved, "windows"));
+		}
+		// Fallback to default locations
+		candidates.push(path.join(projectRoot, "App_Resources", "Windows"));
+		candidates.push(path.join(projectRoot, "App_Resources", "windows"));
+		candidates.push(path.join(projectRoot, "app", "App_Resources", "Windows"));
+		candidates.push(path.join(projectRoot, "app", "App_Resources", "windows"));
 		let srcRoot: string | null = null;
 		for (const c of candidates) {
 			if (this.$fs.exists(c)) {
@@ -520,7 +607,210 @@ export class WindowsProjectService
 		const manifestInSrc = path.join(srcRoot, "Package.appxmanifest");
 		if (this.$fs.exists(manifestInSrc)) {
 			const destManifest = path.join(platformAppDir, "Package.appxmanifest");
-			this.$fs.copyFile(manifestInSrc, destManifest);
+			// Read and potentially patch the manifest using windows config from nativescript config or CLI flags
+			let manifestContent = fs.readFileSync(manifestInSrc, "utf8");
+			const windowsCfg: any = projectData?.nsConfig?.windows ?? null;
+			const phoneProductIdArg = (this.$options && (this.$options as any).phoneProductId) || (windowsCfg && (windowsCfg.PhoneProductId || windowsCfg.phoneProductId)) || null;
+			const phonePublisherIdArg = (this.$options && (this.$options as any).phonePublisherId) || (windowsCfg && (windowsCfg.PhonePublisherId || windowsCfg.phonePublisherId)) || null;
+			const regenGuid = !!(this.$options && (this.$options as any).regenGuid);
+			const noAutoGuid = !!(this.$options && (this.$options as any).noAutoGuid);
+			const allowZeroGuid = !!(this.$options && (this.$options as any).allowZeroGuid);
+
+			let modified = manifestContent;
+			const phoneIdentityRegex = /<mp:PhoneIdentity\b([^>]*)\/>/i;
+			if (phoneIdentityRegex.test(modified)) {
+				if (phoneProductIdArg) {
+					if (/(PhoneProductId\s*=\s*")[^"]*(")/i.test(modified)) {
+						modified = modified.replace(/(PhoneProductId\s*=\s*")([^\"]*)(\")/i, `$1${phoneProductIdArg}$3`);
+					} else {
+						modified = modified.replace(phoneIdentityRegex, `<mp:PhoneIdentity$1 PhoneProductId="${phoneProductIdArg}" />`);
+					}
+				} else {
+					const prodMatch = modified.match(/PhoneProductId\s*=\s*"([^\"]*)"/i);
+					const prodValue = prodMatch ? prodMatch[1] : null;
+					const prodIsZero = prodValue === zeroGuid;
+					// Derive an app-specific identifier if available
+					let appIdentifier = projectData && projectData.projectIdentifiers && projectData.projectIdentifiers["windows"] ? projectData.projectIdentifiers["windows"] : projectData.projectId;
+					// try to discover id from nativescript.config/package.json if not present on projectData
+					if (!appIdentifier) {
+						try {
+							const cfgCandidates = [
+								path.join(projectData.projectDir, "nativescript.config.ts"),
+								path.join(projectData.projectDir, "nativescript.config.js"),
+								path.join(projectData.projectDir, "app", "nativescript.config.ts"),
+								path.join(projectData.projectDir, "app", "nativescript.config.js"),
+							];
+							for (const c of cfgCandidates) {
+								if (this.$fs.exists(c)) {
+									try {
+										const raw = fs.readFileSync(c, "utf8");
+										const m = raw.match(/id\s*:\s*['\"]([^'\"]+)['\"]/i);
+										if (m && m[1]) { appIdentifier = m[1]; break; }
+									}
+									catch (e) { }
+								}
+							}
+						}
+						catch (e) { }
+					}
+					if (allowZeroGuid) {
+						if (prodMatch) {
+							modified = modified.replace(/(PhoneProductId\s*=\s*")([^\"]*)(\")/i, `$1${zeroGuid}$3`);
+						} else {
+							modified = modified.replace(phoneIdentityRegex, `<mp:PhoneIdentity$1 PhoneProductId="${zeroGuid}" />`);
+						}
+						if (this.$logger && typeof (this.$logger.warn) === "function") {
+							this.$logger.warn("Using zero PhoneProductId because --allow-zero-guid was provided.");
+						}
+					} else if (regenGuid) {
+						const newGuid = generateGuid();
+						if (prodMatch) {
+							modified = modified.replace(/(PhoneProductId\s*=\s*")([^\"]*)(\")/i, `$1${newGuid}$3`);
+						} else {
+							modified = modified.replace(phoneIdentityRegex, `<mp:PhoneIdentity$1 PhoneProductId="${newGuid}" />`);
+						}
+					} else if (!prodValue || !isGuid(prodValue) || prodIsZero) {
+						// treat missing, non-GUID, or all-zero GUID as placeholders
+						if (!noAutoGuid) {
+							let newGuid: string;
+							if (appIdentifier) {
+								newGuid = generateDeterministicGuidFromString(appIdentifier);
+							} else {
+								newGuid = generateGuid();
+							}
+							if (prodMatch) {
+								modified = modified.replace(/(PhoneProductId\s*=\s*")([^\"]*)(\")/i, `$1${newGuid}$3`);
+							} else {
+								modified = modified.replace(phoneIdentityRegex, `<mp:PhoneIdentity$1 PhoneProductId="${newGuid}" />`);
+							}
+						}
+					}
+				}
+
+				if (phonePublisherIdArg) {
+					if (/(PhonePublisherId\s*=\s*")[^"]*(")/i.test(modified)) {
+						modified = modified.replace(/(PhonePublisherId\s*=\s*")([^\"]*)(\")/i, `$1${phonePublisherIdArg}$3`);
+					} else {
+						modified = modified.replace(phoneIdentityRegex, `<mp:PhoneIdentity$1 PhonePublisherId="${phonePublisherIdArg}" />`);
+					}
+				}
+			} else {
+				// No PhoneIdentity tag - insert one only if we have values or auto-generation allowed
+				if (noAutoGuid && !phoneProductIdArg && !phonePublisherIdArg && !allowZeroGuid) {
+					// write original manifest unchanged
+					fs.writeFileSync(destManifest, manifestContent, "utf8");
+					this.interpolateConfigurationFile(projectData);
+					return;
+				}
+				const zeroGuid = "00000000-0000-0000-0000-000000000000";
+				const appIdentifier = projectData && projectData.projectIdentifiers && projectData.projectIdentifiers["windows"] ? projectData.projectIdentifiers["windows"] : projectData.projectId;
+				const chosenProd = phoneProductIdArg || (allowZeroGuid ? zeroGuid : (noAutoGuid ? null : (appIdentifier ? generateDeterministicGuidFromString(appIdentifier) : generateGuid())));
+				const chosenPub = phonePublisherIdArg || "00000000-0000-0000-0000-000000000000";
+				if (chosenProd) {
+					if (allowZeroGuid && !phoneProductIdArg && this.$logger && typeof (this.$logger.warn) === "function") {
+						this.$logger.warn("Using zero PhoneProductId because --allow-zero-guid was provided.");
+					}
+					const identityTag = `  <mp:PhoneIdentity PhoneProductId="${chosenProd}" PhonePublisherId="${chosenPub}" />\n\n`;
+					modified = manifestContent.replace(/<\/Package>/i, `${identityTag}</Package>`);
+				} else if (phonePublisherIdArg) {
+					const identityTag = `  <mp:PhoneIdentity PhonePublisherId="${phonePublisherIdArg}" />\n\n`;
+					modified = manifestContent.replace(/<\/Package>/i, `${identityTag}</Package>`);
+				} else {
+					fs.writeFileSync(destManifest, manifestContent, "utf8");
+					this.interpolateConfigurationFile(projectData);
+					return;
+				}
+			}
+
+			// Ensure the manifest Identity element has required attributes
+			try {
+				const identityRegex = /<Identity\b([^>]*)\/>/i;
+				const idMatch = modified.match(identityRegex);
+				if (idMatch) {
+					const attrs = idMatch[1] || "";
+					let newAttrs = attrs;
+					if (!/Name\s*=\s*\"/i.test(attrs)) {
+						newAttrs = ` Name="${projectData.projectId}"` + newAttrs;
+					}
+					if (!/Publisher\s*=\s*\"/i.test(attrs)) {
+						const publisherVal = phonePublisherIdArg && typeof phonePublisherIdArg === "string" ? phonePublisherIdArg : "CN=ui";
+						newAttrs = newAttrs + ` Publisher="${publisherVal}"`;
+					}
+					modified = modified.replace(identityRegex, `<Identity${newAttrs} />`);
+				}
+			}
+			catch (e) {
+				// ignore and continue
+			}
+
+			// Ensure the Properties element contains DisplayName and PublisherDisplayName
+			try {
+				const propsRegex = /<Properties\b[^>]*>([\s\S]*?)<\/Properties>/i;
+				const propsMatch = modified.match(propsRegex);
+				if (propsMatch) {
+					let inner = propsMatch[1];
+					if (!/\<DisplayName\b/i.test(inner)) {
+						inner = `\n    <DisplayName>${projectData.projectName}<\/DisplayName>` + inner;
+					}
+					if (!/\<PublisherDisplayName\b/i.test(inner)) {
+						inner = `\n    <PublisherDisplayName>${projectData.projectName}<\/PublisherDisplayName>` + inner;
+					}
+					modified = modified.replace(propsRegex, `<Properties>${inner}\n  <\/Properties>`);
+				}
+				else {
+					const propsTag = `  <Properties>\n    <DisplayName>${projectData.projectName}<\/DisplayName>\n    <PublisherDisplayName>${projectData.projectName}<\/PublisherDisplayName>\n    <Logo>Assets\\StoreLogo.png<\/Logo>\n  <\/Properties>\n\n`;
+					if (/\<Dependencies\s*\>/i.test(modified)) {
+						modified = modified.replace(/\<Dependencies\s*\>/i, `${propsTag}<Dependencies>`);
+					}
+					else {
+						modified = modified.replace(/<\/Identity>/i, `</Identity>\n\n${propsTag}`);
+					}
+				}
+			}
+			catch (e) {
+				// ignore
+			}
+
+			// Ensure the Application element has required Id, Executable and EntryPoint
+			try {
+				const appRegex = /<Application\b([^>]*)>/i;
+				const appMatch = modified.match(appRegex);
+				if (appMatch) {
+					const attrs = appMatch[1] || "";
+					let newAttrs = attrs;
+					if (!/\bId\s*=\s*\"/i.test(attrs)) {
+						newAttrs = ` Id=\"App\"` + newAttrs;
+					}
+					if (!/\bExecutable\s*=\s*\"/i.test(attrs)) {
+						newAttrs = newAttrs + ` Executable=\"$targetnametoken$.exe\"`;
+					}
+					if (!/\bEntryPoint\s*=\s*\"/i.test(attrs)) {
+						newAttrs = newAttrs + ` EntryPoint=\"${projectData.projectName}.App\"`;
+					}
+					modified = modified.replace(appRegex, `<Application${newAttrs}>`);
+				}
+			}
+			catch (e) {
+				// ignore
+			}
+
+			// Ensure the uap:VisualElements element has a DisplayName attribute
+			try {
+				const visRegex = /<uap:VisualElements\b([^>]*)>/i;
+				const visMatch = modified.match(visRegex);
+				if (visMatch) {
+					const visAttrs = visMatch[1] || "";
+					if (!/\bDisplayName\s*=\s*\"/i.test(visAttrs)) {
+						const newVisAttrs = ` DisplayName=\"${projectData.projectName}\"` + visAttrs;
+						modified = modified.replace(visRegex, `<uap:VisualElements${newVisAttrs}>`);
+					}
+				}
+			}
+			catch (e) {
+				// ignore
+			}
+
+			fs.writeFileSync(destManifest, modified, "utf8");
 			this.interpolateConfigurationFile(projectData);
 		}
 	}

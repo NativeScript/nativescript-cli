@@ -234,6 +234,11 @@ export class Options {
 				hasSensitiveValue: false,
 				default: APP_FOLDER_NAME,
 			},
+		phoneProductId: { type: OptionType.String, hasSensitiveValue: false },
+		phonePublisherId: { type: OptionType.String, hasSensitiveValue: false },
+		regenGuid: { type: OptionType.Boolean, hasSensitiveValue: false },
+		noAutoGuid: { type: OptionType.Boolean, hasSensitiveValue: false },
+			allowZeroGuid: { type: OptionType.Boolean, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
 			appleApplicationSpecificPassword: {

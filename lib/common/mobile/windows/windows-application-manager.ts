@@ -145,21 +145,30 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 
 	/**
 	 * Returns the path of the runtime's trace log for the most recently started app.
-	 * Inside a UWP process, Win32 GetTempPathW() virtualises to AC\Temp (the app
-	 * container's isolated temp folder) — NOT the WinRT TemporaryFolder (TempState).
-	 * Rust's std::env::temp_dir() calls GetTempPathW(), so the DLL writes to AC\Temp.
+	 * Inside a UWP process, Win32 GetTempPathW() virtualises
+	 * to AC\Temp (the app container's isolated temp folder). Rust's
+	 * std::env::temp_dir() calls GetTempPathW(), so the DLL writes to AC\Temp.
 	 * Falls back to the system temp path when no PFN is known (unpackaged EXE).
 	 */
 	public getLogFilePath(): string {
-		const systemTempLog = path.join(os.tmpdir(), "ns_trace.log");
+		const systemConsoleLog = path.join(os.tmpdir(), "console.log");
+		const systemLegacyLog = path.join(os.tmpdir(), "ns_trace.log");
+
 		if (this._packageFamilyNames.size > 0) {
 			const pfn = this._packageFamilyNames.values().next().value as string;
 			const localAppData = process.env.LOCALAPPDATA;
 			if (localAppData && pfn) {
-				return path.join(localAppData, "Packages", pfn, "AC", "Temp", "ns_trace.log");
+				const consolePath = path.join(localAppData, "Packages", pfn, "AC", "Temp", "console.log");
+				const legacyPath = path.join(localAppData, "Packages", pfn, "AC", "Temp", "ns_trace.log");
+				if (fs.existsSync(consolePath)) return consolePath;
+				if (fs.existsSync(legacyPath)) return legacyPath;
+				return consolePath;
 			}
 		}
-		return systemTempLog;
+
+		if (fs.existsSync(systemConsoleLog)) return systemConsoleLog;
+		if (fs.existsSync(systemLegacyLog)) return systemLegacyLog;
+		return systemConsoleLog;
 	}
 
 	/**
