@@ -2,6 +2,7 @@ import { Yok } from "../../../lib/common/yok";
 import { BundlerCompilerService } from "../../../lib/services/bundler/bundler-compiler-service";
 import { assert } from "chai";
 import { EventEmitter } from "events";
+import * as path from "path";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
 import {
@@ -212,6 +213,42 @@ describe("BundlerCompilerService", () => {
 				"bundle.hash6.hot-update.js",
 				"hash6.hot-update.json",
 			]);
+		});
+	});
+
+	describe("getViteDistOutputPath", () => {
+		it("uses the current default directory when NS_VITE_DIST_DIR is unset", () => {
+			const previous = process.env.NS_VITE_DIST_DIR;
+			try {
+				delete process.env.NS_VITE_DIST_DIR;
+				assert.strictEqual(
+					(<any>bundlerCompilerService).getViteDistOutputPath("/project"),
+					path.join("/project", ".ns-vite-build"),
+				);
+			} finally {
+				if (previous === undefined) {
+					delete process.env.NS_VITE_DIST_DIR;
+				} else {
+					process.env.NS_VITE_DIST_DIR = previous;
+				}
+			}
+		});
+
+		it("uses NS_VITE_DIST_DIR for platform-isolated output", () => {
+			const previous = process.env.NS_VITE_DIST_DIR;
+			try {
+				process.env.NS_VITE_DIST_DIR = ".ns-vite-build/android";
+				assert.strictEqual(
+					(<any>bundlerCompilerService).getViteDistOutputPath("/project"),
+					path.join("/project", ".ns-vite-build", "android"),
+				);
+			} finally {
+				if (previous === undefined) {
+					delete process.env.NS_VITE_DIST_DIR;
+				} else {
+					process.env.NS_VITE_DIST_DIR = previous;
+				}
+			}
 		});
 	});
 
