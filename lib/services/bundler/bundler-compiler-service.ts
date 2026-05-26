@@ -78,6 +78,13 @@ export class BundlerCompilerService
 		super();
 	}
 
+	private getViteDistOutputPath(projectDir: string): string {
+		return path.join(
+			projectDir,
+			process.env.NS_VITE_DIST_DIR || VITE_DIST_FOLDER_NAME,
+		);
+	}
+
 	public async compileWithWatch(
 		platformData: IPlatformData,
 		projectData: IProjectData,
@@ -127,9 +134,8 @@ export class BundlerCompilerService
 						}
 
 						// Copy Vite output files directly to platform destination
-						const distOutput = path.join(
+						const distOutput = this.getViteDistOutputPath(
 							projectData.projectDir,
-							VITE_DIST_FOLDER_NAME,
 						);
 						const destDir = path.join(
 							platformData.appDestinationDirectoryPath,
@@ -395,9 +401,8 @@ export class BundlerCompilerService
 						// launch with `Check failed: has_pending_exception()`.
 						if (isVite) {
 							try {
-								const distOutput = path.join(
+								const distOutput = this.getViteDistOutputPath(
 									projectData.projectDir,
-									VITE_DIST_FOLDER_NAME,
 								);
 								const destDir = path.join(
 									platformData.appDestinationDirectoryPath,
