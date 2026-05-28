@@ -615,6 +615,7 @@ export class WindowsProjectService
 			const regenGuid = !!(this.$options && (this.$options as any).regenGuid);
 			const noAutoGuid = !!(this.$options && (this.$options as any).noAutoGuid);
 			const allowZeroGuid = !!(this.$options && (this.$options as any).allowZeroGuid);
+			const zeroGuid = "00000000-0000-0000-0000-000000000000";
 
 			let modified = manifestContent;
 			const phoneIdentityRegex = /<mp:PhoneIdentity\b([^>]*)\/>/i;
@@ -702,7 +703,6 @@ export class WindowsProjectService
 					this.interpolateConfigurationFile(projectData);
 					return;
 				}
-				const zeroGuid = "00000000-0000-0000-0000-000000000000";
 				const appIdentifier = projectData && projectData.projectIdentifiers && projectData.projectIdentifiers["windows"] ? projectData.projectIdentifiers["windows"] : projectData.projectId;
 				const chosenProd = phoneProductIdArg || (allowZeroGuid ? zeroGuid : (noAutoGuid ? null : (appIdentifier ? generateDeterministicGuidFromString(appIdentifier) : generateGuid())));
 				const chosenPub = phonePublisherIdArg || "00000000-0000-0000-0000-000000000000";
