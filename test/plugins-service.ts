@@ -109,6 +109,7 @@ function createTestInjector() {
 	testInjector.register("sysInfo", {});
 	testInjector.register("androidProjectService", AndroidProjectService);
 	testInjector.register("iOSProjectService", {});
+	testInjector.register("windowsProjectService", {});
 	testInjector.register("devicesService", {});
 	testInjector.register("projectDataService", ProjectDataService);
 	testInjector.register("prompter", {});

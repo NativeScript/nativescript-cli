@@ -55,7 +55,7 @@ export class AddPlatformService implements IAddPlatformService {
 				"package.json",
 			);
 
-			if (!frameworkDirPath || !this.$fs.exists(frameworkPackageJsonPath)) {
+			if (!this.$fs.exists(frameworkPackageJsonPath)) {
 				throw new Error(
 					`Installed framework package.json not found at ${frameworkPackageJsonPath}`,
 				);

@@ -327,7 +327,12 @@ export class FileSystem implements IFileSystem {
 
 		// MobileApplication.app is resolved as a directory on Mac,
 		// therefore we need to copy it recursively as it's not a single file.
-		shelljs.cp("-rf", sourceFileName, destinationFileName);
+		// On Windows, shelljs glob expansion requires forward slashes.
+		const normalizedSource =
+			process.platform === "win32"
+				? sourceFileName.replace(/\\/g, "/")
+				: sourceFileName;
+		shelljs.cp("-rf", normalizedSource, destinationFileName);
 
 		const err = shelljs.error();
 

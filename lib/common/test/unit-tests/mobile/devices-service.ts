@@ -201,6 +201,10 @@ function createTestInjector(): IInjector {
 	testInjector.register("iOSDeviceDiscovery", IOSDeviceDiscoveryStub);
 	testInjector.register("iOSSimulatorDiscovery", IOSSimulatorDiscoveryStub);
 	testInjector.register("androidDeviceDiscovery", AndroidDeviceDiscoveryStub);
+	class WindowsDeviceDiscoveryStub extends EventEmitter {
+		public async startLookingForDevices(): Promise<void> {}
+	}
+	testInjector.register("windowsDeviceDiscovery", WindowsDeviceDiscoveryStub);
 	testInjector.register("staticConfig", { CLIENT_NAME: "unit-tests" });
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("androidEmulatorServices", AndroidEmulatorServices);
