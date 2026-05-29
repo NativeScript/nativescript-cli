@@ -92,7 +92,9 @@ const getConfigurationName = (release: boolean): string => {
 	return release ? Configurations.Release : Configurations.Debug;
 };
 
-export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
+export class IOSProjectService
+	extends projectServiceBaseLib.PlatformProjectServiceBase
+{
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
 
@@ -500,12 +502,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async isDynamicFramework(frameworkPath: string): Promise<boolean> {
-		const isDynamicFrameworkBundle = async (
-			bundlePath: string,
-			frameworkName: string,
-		) => {
-			const frameworkBinaryPath = path.join(bundlePath, frameworkName);
-
+		const isDynamicFrameworkBundle = async (frameworkBinaryPath: string) => {
 			const fileResult = (
 				await this.$childProcess.spawnFromEvent(
 					"file",
@@ -533,10 +530,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						singlePlatformFramework,
 						path.extname(singlePlatformFramework),
 					);
-					isDynamic = await isDynamicFrameworkBundle(
-						singlePlatformFramework,
-						frameworkName,
-					);
+					let frameworkBinaryPath = path.join(singlePlatformFramework, frameworkName)
+					if (library.BinaryPath) {
+						frameworkBinaryPath = path.join(
+							frameworkPath,
+							library.LibraryIdentifier,
+							library.BinaryPath,
+						);
+					}
+					isDynamic = await isDynamicFrameworkBundle(frameworkBinaryPath);
 					break;
 				}
 			}
@@ -546,7 +548,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				frameworkPath,
 				path.extname(frameworkPath),
 			);
-			return await isDynamicFrameworkBundle(frameworkPath, frameworkName);
+			return await isDynamicFrameworkBundle(path.join(frameworkPath, frameworkName));
 		}
 	}
 
@@ -1161,6 +1163,52 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			pluginData,
 			projectData,
 		);
+	}
+
+	public shouldRepreparePlugin(
+		pluginData: IPluginData,
+		projectData: IProjectData,
+	): boolean {
+		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
+			IOSProjectService.IOS_PLATFORM_NAME,
+		);
+
+		for (const fileName of this.getAllLibsForPluginWithFileExtension(
+			pluginData,
+			".a",
+		)) {
+			const staticLibPath = path.join(pluginPlatformsFolderPath, fileName);
+			const libraryName = path.basename(staticLibPath, ".a");
+			const headersSubpath = path.join(
+				path.dirname(staticLibPath),
+				"include",
+				libraryName,
+			);
+
+			if (!this.$fs.exists(headersSubpath)) {
+				continue;
+			}
+
+			const headerFiles = this.$fs
+				.readDirectory(headersSubpath)
+				.filter(
+					(f) =>
+						path.extname(f) === ".h" &&
+						this.$fs.getFsStats(path.join(headersSubpath, f)).isFile(),
+				);
+
+			if (
+				headerFiles.length > 0 &&
+				!this.$fs.exists(path.join(headersSubpath, "module.modulemap"))
+			) {
+				this.$logger.trace(
+					`Plugin ${pluginData.name}: modulemap missing at ${headersSubpath}, will re-prepare`,
+				);
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	public async removePluginNativeCode(

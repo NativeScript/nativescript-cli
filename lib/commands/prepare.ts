@@ -22,7 +22,11 @@ export class PrepareCommand
 			hasSensitiveValue: false,
 		},
 		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
-
+		skipNative: {
+			type: OptionType.Boolean,
+			default: false,
+			hasSensitiveValue: false,
+		},
 		whatever: {
 			type: OptionType.Boolean,
 			default: false,
@@ -38,13 +42,13 @@ export class PrepareCommand
 		public $platformCommandParameter: ICommandParameter,
 		public $platformsDataService: IPlatformsDataService,
 		public $prepareDataService: PrepareDataService,
-		public $migrateController: IMigrateController
+		public $migrateController: IMigrateController,
 	) {
 		super(
 			$options,
 			$platformsDataService,
 			$platformValidationService,
-			$projectData
+			$projectData,
 		);
 		this.$projectData.initializeProjectData();
 	}
@@ -55,7 +59,7 @@ export class PrepareCommand
 		const prepareData = this.$prepareDataService.getPrepareData(
 			this.$projectData.projectDir,
 			platform,
-			this.$options
+			this.$options,
 		);
 		await this.$prepareController.prepare(prepareData);
 	}
@@ -68,7 +72,7 @@ export class PrepareCommand
 				this.$options.provision,
 				this.$options.teamId,
 				this.$projectData,
-				platform
+				platform,
 			));
 
 		if (!this.$options.force) {
