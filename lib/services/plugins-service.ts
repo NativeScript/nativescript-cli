@@ -256,13 +256,19 @@ export class PluginsService implements IPluginsService {
 				pluginPlatformsFolderPath,
 			);
 
-			if (
+			const needsReprepare =
 				!oldPluginNativeHashes ||
 				this.$filesHashService.hasChangesInShasums(
 					oldPluginNativeHashes,
 					currentPluginNativeHashes,
-				)
-			) {
+				) ||
+				(platformData.platformProjectService.shouldRepreparePlugin?.(
+					pluginData,
+					projectData,
+				) ??
+					false);
+
+			if (needsReprepare) {
 				await platformData.platformProjectService.preparePluginNativeCode(
 					pluginData,
 					projectData,

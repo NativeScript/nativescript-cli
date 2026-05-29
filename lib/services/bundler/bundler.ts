@@ -79,8 +79,7 @@ declare global {
 	}
 
 	interface IPlatformProjectService
-		extends NodeJS.EventEmitter,
-			IPlatformProjectServiceBase {
+		extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
 		getPlatformData(projectData: IProjectData): IPlatformData;
 		validate(
 			projectData: IProjectData,
@@ -152,6 +151,11 @@ declare global {
 			pluginData: IPluginData,
 			options?: any,
 		): Promise<void>;
+
+		shouldRepreparePlugin?(
+			pluginData: IPluginData,
+			projectData: IProjectData,
+		): boolean;
 
 		/**
 		 * Removes native code of a plugin (CocoaPods, jars, libs, src).
