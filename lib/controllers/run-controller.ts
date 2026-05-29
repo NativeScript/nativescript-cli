@@ -506,7 +506,12 @@ export class RunController extends EventEmitter implements IRunController {
 			// spawns the Vite bundler that inherits `process.env`) so the
 			// bundler trusts the tunnel instead of racing us to spawn its
 			// own adb during config-load. See packages/vite hardening.
-			await this.setupAndroidViteHmrReverse(device, projectData, liveSyncInfo);
+			await this.setupAndroidViteHmrReverse(
+				device,
+				projectData,
+				liveSyncInfo,
+				"pre-build",
+			);
 
 			const prepareResultData =
 				await this.$prepareController.prepare(prepareData);
@@ -581,6 +586,17 @@ export class RunController extends EventEmitter implements IRunController {
 					watch: !skipWatcher,
 					liveSyncDeviceData: deviceDescriptor,
 				});
+
+				// Re-establish the adb reverse on the CURRENT transport right
+				// before launch — the transport can change during build/install
+				// and drop the mapping set in `pre-build`, which would leave the
+				// app unable to reach the Vite dev server at 127.0.0.1.
+				await this.setupAndroidViteHmrReverse(
+					device,
+					projectData,
+					liveSyncInfo,
+					"pre-launch",
+				);
 
 				await this.refreshApplication(
 					projectData,
@@ -660,6 +676,7 @@ export class RunController extends EventEmitter implements IRunController {
 		device: Mobile.IDevice,
 		projectData: IProjectData,
 		liveSyncInfo: ILiveSyncInfo,
+		phase: "pre-build" | "pre-launch",
 	): Promise<void> {
 		try {
 			if (!this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
@@ -687,36 +704,94 @@ export class RunController extends EventEmitter implements IRunController {
 
 			const serial = device.deviceInfo.identifier;
 			const port = this.getViteHmrPort();
-			// Safe after the `isAndroidPlatform` guard above — only Android
-			// devices carry the `adb` bridge.
-			const adb = (device as Mobile.IAndroidDevice).adb;
 
-			// Don't `reverse` against a device whose adbd isn't accepting
-			// yet (emulators report a `device` transport before adbd is
-			// fully up). `wait-for-device` returns immediately once ready.
-			await adb.executeCommand(["wait-for-device"], {
-				deviceIdentifier: serial,
-			});
-			await adb.executeCommand(["reverse", `tcp:${port}`, `tcp:${port}`], {
-				deviceIdentifier: serial,
-			});
+			if (phase === "pre-build") {
+				// Decide the origin baked into bundle.mjs. Hand the bundler our
+				// exact adb (so any self-managed fallback can't version-mismatch
+				// the daemon) and, if the tunnel comes up, tell it to emit
+				// `127.0.0.1` and skip adb entirely.
+				process.env.NS_ADB_PATH = await this.$staticConfig.getAdbFilePath();
+				process.env.NS_DEVICE_SERIAL = serial;
 
-			// Hand the exact adb the CLI used to the bundler so, in any
-			// fallback path, it drives the same version-matched client and
-			// can't trigger a server-version-mismatch daemon kill.
-			const adbPath = await this.$staticConfig.getAdbFilePath();
-			process.env.NS_ADB_PATH = adbPath;
-			process.env.NS_DEVICE_SERIAL = serial;
-			process.env.NS_ADB_REVERSE_READY = "1";
+				const ok = await this.ensureAndroidReverse(device, serial, port);
+				if (ok) {
+					process.env.NS_ADB_REVERSE_READY = "1";
+					this.$logger.info(
+						`Set up adb reverse tcp:${port} tcp:${port} for ${serial} (Vite HMR routes device-side 127.0.0.1:${port} through ADB).`,
+					);
+				} else {
+					this.$logger.warn(
+						`Could not confirm 'adb reverse tcp:${port}' on ${serial} (device adbd slow/unresponsive). Vite HMR will fall back to 10.0.2.2. If this persists, cold-boot/wipe the emulator, or set NS_HMR_NO_ADB_REVERSE=1.`,
+					);
+				}
+				return;
+			}
 
-			this.$logger.info(
-				`Set up adb reverse tcp:${port} tcp:${port} for ${serial} (Vite HMR routes device-side 127.0.0.1:${port} through ADB).`,
-			);
+			// phase === "pre-launch": re-establish the mapping right before the
+			// app boots. `adb reverse` mappings are bound to the device's adb
+			// transport, and that transport can change during the (long) build
+			// + install (fresh emulators reconnect as they settle), silently
+			// dropping the early mapping. We only bother when we actually told
+			// the bundle to use `127.0.0.1` (READY set during pre-build).
+			if (!this.isTruthyEnvFlag(process.env.NS_ADB_REVERSE_READY)) {
+				return;
+			}
+			const ok = await this.ensureAndroidReverse(device, serial, port);
+			if (!ok) {
+				this.$logger.warn(
+					`adb reverse tcp:${port} was not active before launch on ${serial}; the app may fail to reach the Vite dev server at 127.0.0.1:${port}.`,
+				);
+			}
 		} catch (err) {
 			this.$logger.trace(
-				`Setting up adb reverse for Vite HMR failed; leaving it to the bundler fallback. Error: ${err}`,
+				`Setting up adb reverse for Vite HMR (${phase}) failed; leaving it to the bundler fallback. Error: ${err}`,
 			);
 		}
+	}
+
+	/**
+	 * Apply `adb reverse tcp:<port> tcp:<port>` to the device and confirm
+	 * via `adb reverse --list` that it actually landed, retrying a few
+	 * times. Every device-side call is bounded with a Node `spawn` timeout
+	 * + `SIGKILL` so a wedged/slow adbd (observed blocking 90s+ on some
+	 * fresh-boot / API-36 arm64 emulators) can never hang the run — the
+	 * hung adb child is reaped, not orphaned. Returns whether the mapping
+	 * is confirmed present.
+	 */
+	private async ensureAndroidReverse(
+		device: Mobile.IDevice,
+		serial: string,
+		port: number,
+	): Promise<boolean> {
+		const adb = (device as Mobile.IAndroidDevice).adb;
+		const ADB_WAIT_MS = 15000;
+		const ADB_REVERSE_MS = 20000;
+		const bounded = (timeout: number) => ({
+			deviceIdentifier: serial,
+			treatErrorsAsWarnings: true,
+			childProcessOptions: { timeout, killSignal: "SIGKILL" },
+		});
+
+		// `wait-for-device` only blocks until the transport is up; bounded so a
+		// never-ready device can't stall us.
+		await adb.executeCommand(["wait-for-device"], bounded(ADB_WAIT_MS));
+
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			await adb.executeCommand(
+				["reverse", `tcp:${port}`, `tcp:${port}`],
+				bounded(ADB_REVERSE_MS),
+			);
+			// Verify it landed (a SIGKILL'd-on-timeout reverse resolves rather
+			// than throws, so success of the call isn't proof).
+			const list =
+				(
+					await adb.executeCommand(["reverse", "--list"], bounded(ADB_WAIT_MS))
+				)?.toString?.() ?? "";
+			if (list.includes(`tcp:${port}`)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private getViteHmrPort(): number {
