@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as child_process from "child_process";
+import * as net from "net";
 import * as semver from "semver";
 import * as _ from "lodash";
 import { EventEmitter } from "events";
@@ -59,6 +60,10 @@ export class BundlerCompilerService
 	implements IBundlerCompilerService
 {
 	private bundlerProcesses: IDictionary<child_process.ChildProcess> = {};
+	// Vite-only: the long-lived `vite serve` dev server the device fetches
+	// modules and HMR updates from. Keyed by platform, managed by this CLI
+	// so users no longer need a separate `concurrently`/`wait-on` process.
+	private viteServeProcesses: IDictionary<child_process.ChildProcess> = {};
 	private expectedHashes: IStringDictionary = {};
 
 	constructor(
@@ -98,6 +103,16 @@ export class BundlerCompilerService
 
 			let isFirstBundlerWatchCompilation = true;
 			prepareData.watch = true;
+
+			// Bring up the Vite HMR dev server the device fetches modules /
+			// HMR updates from. No-op unless bundler is vite + hmr + watch.
+			// Fired in parallel with the build watcher; both child processes
+			// inherit the adb-reverse env the run-controller set before
+			// prepare, so neither one spawns adb on its own. Intentionally not
+			// awaited — the device only connects to it at app launch, well
+			// after the first build.
+			this.startViteDevServer(platformData, projectData, prepareData);
+
 			try {
 				const childProcess = await this.startBundleProcess(
 					platformData,
@@ -558,6 +573,179 @@ export class BundlerCompilerService
 		return childProcess;
 	}
 
+	private getViteHmrPort(): number {
+		const fromEnv = Number(process.env.NS_HMR_PORT);
+		return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 5173;
+	}
+
+	/**
+	 * Spawn and manage the Vite dev server (`vite serve`) for HMR.
+	 *
+	 * Why the CLI owns this. With Vite, HMR needs a long-lived dev server
+	 * (HTTP + the `/ns-hmr` websocket on port 5173) that the device fetches
+	 * modules and hot updates from — it is SEPARATE from the
+	 * `vite build --watch` process that emits the `bundle.mjs` bootstrap
+	 * baked into the app. Historically users wired this up themselves with
+	 * `concurrently`/`wait-on`, which left two uncoordinated processes both
+	 * touching adb during cold start (the source of the Android
+	 * "Searching for devices…" freeze). By spawning it here as a child of
+	 * the CLI, the dev server inherits the CLI's environment — crucially
+	 * `NS_ADB_REVERSE_READY`/`NS_DEVICE_SERIAL`/`NS_ADB_PATH` set by the
+	 * run-controller — so the CLI is the single adb owner and the dev
+	 * server never spawns adb itself.
+	 *
+	 * No-op unless bundler is vite, HMR is on, watch mode, and not release.
+	 * Best-effort: failures are logged, never thrown — a dev-server hiccup
+	 * must not fail the run.
+	 */
+	private async startViteDevServer(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		prepareData: IPrepareData,
+	): Promise<void> {
+		try {
+			if (this.getBundler() !== "vite") {
+				return;
+			}
+			if (!prepareData.watch || !prepareData.hmr || prepareData.release) {
+				return;
+			}
+			const key = platformData.platformNameLowerCase;
+			if (this.viteServeProcesses[key]) {
+				return;
+			}
+
+			const port = this.getViteHmrPort();
+			// One dev server per port. Simultaneous multi-platform HMR in a
+			// single CLI invocation would collide on 5173 — that case still
+			// needs a distinct NS_HMR_PORT per platform, so skip + warn rather
+			// than fail to bind.
+			const collidingPlatform = Object.keys(this.viteServeProcesses)[0];
+			if (collidingPlatform) {
+				this.$logger.warn(
+					`Vite dev server already running for '${collidingPlatform}' on port ${port}; skipping a second server for '${key}'. For simultaneous multi-platform HMR, set a distinct NS_HMR_PORT per platform.`,
+				);
+				return;
+			}
+
+			const envData = this.buildEnvData(
+				platformData.platformNameLowerCase,
+				projectData,
+				prepareData,
+			);
+			const cliArgs = await this.buildEnvCommandLineParams(
+				envData,
+				platformData,
+				projectData,
+				prepareData,
+			);
+
+			const additionalNodeArgs =
+				semver.major(process.version) <= 8 ? ["--harmony"] : [];
+			if (await this.shouldUsePreserveSymlinksOption()) {
+				additionalNodeArgs.push("--preserve-symlinks");
+			}
+
+			// `vite serve` (not `build`): runs the dev server and watches on
+			// its own — no `--watch`. Env flags (`--env.android --env.hmr …`)
+			// go after `--` so vite's CLI doesn't choke on unknown options.
+			const args = [
+				...additionalNodeArgs,
+				this.getBundlerExecutablePath(projectData),
+				"serve",
+				`--config=${projectData.bundlerConfigPath}`,
+				`--mode=development`,
+				"--",
+				...cliArgs,
+			].filter(Boolean);
+
+			const options: { [key: string]: any } = {
+				cwd: projectData.projectDir,
+				// Inherit so the dev server's URLs/logs stream to the user as
+				// before. No IPC needed here — the build watcher provides the
+				// bundle-complete IPC; the dev server is fetched over HTTP/ws.
+				stdio: "inherit",
+				env: {
+					...process.env,
+					NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
+				},
+			};
+			if (this.$hostInfo.isWindows) {
+				Object.assign(options.env, { APPDATA: process.env.appData });
+			}
+
+			this.$logger.info(
+				`Starting Vite dev server (HMR) for ${key} on port ${port}…`,
+			);
+
+			const childProcess = this.$childProcess.spawn(
+				process.execPath,
+				args,
+				options,
+			);
+			this.viteServeProcesses[key] = childProcess;
+			await this.$cleanupService.addKillProcess(childProcess.pid.toString());
+
+			childProcess.once("exit", (code: number) => {
+				delete this.viteServeProcesses[key];
+				if (code) {
+					this.$logger.warn(
+						`Vite dev server for ${key} exited with code ${code}.`,
+					);
+				}
+			});
+
+			// Bounded readiness probe so we can surface a clear log once the
+			// device can actually reach modules.
+			const ready = await this.waitForPort(port, 30000);
+			if (ready) {
+				this.$logger.info(
+					`Vite dev server ready on port ${port} (HMR for ${key}).`,
+				);
+			} else {
+				this.$logger.trace(
+					`Vite dev server port ${port} not observed open within the readiness probe window; continuing (it may bind shortly).`,
+				);
+			}
+		} catch (err) {
+			this.$logger.warn(
+				`Failed to start the Vite dev server: ${err}. HMR may be unavailable.`,
+			);
+		}
+	}
+
+	/**
+	 * Resolve true once `127.0.0.1:<port>` accepts a TCP connection, or
+	 * false after `timeoutMs`. Used to detect the Vite dev server is up.
+	 */
+	private waitForPort(port: number, timeoutMs: number): Promise<boolean> {
+		const deadline = Date.now() + timeoutMs;
+		return new Promise<boolean>((resolve) => {
+			const attempt = () => {
+				const socket = net.connect({ port, host: "127.0.0.1" });
+				let settled = false;
+				const done = (ok: boolean) => {
+					if (settled) {
+						return;
+					}
+					settled = true;
+					socket.destroy();
+					if (ok) {
+						resolve(true);
+					} else if (Date.now() >= deadline) {
+						resolve(false);
+					} else {
+						setTimeout(attempt, 250);
+					}
+				};
+				socket.once("connect", () => done(true));
+				socket.once("error", () => done(false));
+				socket.setTimeout(1000, () => done(false));
+			};
+			attempt();
+		});
+	}
+
 	private buildEnvData(
 		platform: string,
 		projectData: IProjectData,
@@ -750,6 +938,16 @@ export class BundlerCompilerService
 		if (bundlerProcess) {
 			bundlerProcess.kill("SIGINT");
 			delete this.bundlerProcesses[platform];
+		}
+
+		// Tear down the Vite dev server we manage alongside the build watcher.
+		const viteServeProcess = this.viteServeProcesses[platform];
+		if (viteServeProcess) {
+			await this.$cleanupService.removeKillProcess(
+				viteServeProcess.pid.toString(),
+			);
+			viteServeProcess.kill("SIGINT");
+			delete this.viteServeProcesses[platform];
 		}
 	}
 
