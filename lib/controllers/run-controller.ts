@@ -26,6 +26,15 @@ import { injector } from "../common/yok";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
+	private _syncInProgress = false;
+	private _pendingSyncs: Map<
+		string,
+		{
+			data: IFilesChangeEventData;
+			projectData: IProjectData;
+			liveSyncInfo: ILiveSyncInfo;
+		}
+	> = new Map();
 
 	constructor(
 		protected $analyticsService: IAnalyticsService,
@@ -97,16 +106,11 @@ export class RunController extends EventEmitter implements IRunController {
 						projectData,
 						prepareData,
 					);
-					if (changesInfo.hasChanges) {
-						await this.syncChangedDataOnDevices(
-							data,
-							projectData,
-							liveSyncInfo,
-						);
+					if (!changesInfo.hasChanges) {
+						return;
 					}
-				} else {
-					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
 				}
+				this.scheduleSyncOnDevices(data, projectData, liveSyncInfo);
 			};
 
 			this.prepareReadyEventHandler = handler.bind(this);
@@ -840,11 +844,11 @@ export class RunController extends EventEmitter implements IRunController {
 					watchInfo.connectTimeout = null;
 					await watchAction();
 				}
-			} catch (err) {
+			} catch (err: any) {
 				this.$logger.warn(
 					`Unable to apply changes for device: ${
 						device.deviceInfo.identifier
-					}. Error is: ${err && err.message}.`,
+					}. Error is: ${err && err.message}. Will retry on next change.`,
 				);
 
 				this.emitCore(RunOnDeviceEvents.runOnDeviceError, {
@@ -855,12 +859,6 @@ export class RunController extends EventEmitter implements IRunController {
 							device.deviceInfo.platform.toLowerCase()
 						],
 					error: err,
-				});
-
-				await this.stop({
-					projectDir: projectData.projectDir,
-					deviceIdentifiers: [device.deviceInfo.identifier],
-					stopOptions: { shouldAwaitAllActions: false },
 				});
 			}
 		};
@@ -885,6 +883,67 @@ export class RunController extends EventEmitter implements IRunController {
 		);
 	}
 
+	private scheduleSyncOnDevices(
+		data: IFilesChangeEventData,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncInfo,
+	): void {
+		if (this._syncInProgress) {
+			const platform = data.platform;
+			const existing = this._pendingSyncs.get(platform);
+			if (existing) {
+				existing.data = this.mergeFilesChangeEvents(existing.data, data);
+			} else {
+				this._pendingSyncs.set(platform, { data, projectData, liveSyncInfo });
+			}
+			return;
+		}
+
+		this.executeSyncOnDevices(data, projectData, liveSyncInfo);
+	}
+
+	private async executeSyncOnDevices(
+		data: IFilesChangeEventData,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncInfo,
+	): Promise<void> {
+		this._syncInProgress = true;
+		try {
+			await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+		} catch (err: any) {
+			this.$logger.trace(`Error during sync on devices: ${err.message || err}`);
+		} finally {
+			const nextEntry = this._pendingSyncs.entries().next();
+			if (!nextEntry.done) {
+				const [platform, pending] = nextEntry.value;
+				this._pendingSyncs.delete(platform);
+				this.executeSyncOnDevices(
+					pending.data,
+					pending.projectData,
+					pending.liveSyncInfo,
+				);
+			} else {
+				this._syncInProgress = false;
+			}
+		}
+	}
+
+	private mergeFilesChangeEvents(
+		a: IFilesChangeEventData,
+		b: IFilesChangeEventData,
+	): IFilesChangeEventData {
+		return {
+			files: [...new Set([...a.files, ...b.files])],
+			staleFiles: [
+				...new Set([...(a.staleFiles || []), ...(b.staleFiles || [])]),
+			],
+			hasOnlyHotUpdateFiles: a.hasOnlyHotUpdateFiles && b.hasOnlyHotUpdateFiles,
+			hasNativeChanges: a.hasNativeChanges || b.hasNativeChanges,
+			hmrData: b.hmrData,
+			platform: b.platform,
+		};
+	}
+
 	private async addActionToChain<T>(
 		projectDir: string,
 		action: () => Promise<T>,
@@ -892,13 +951,17 @@ export class RunController extends EventEmitter implements IRunController {
 		const liveSyncInfo =
 			this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		if (liveSyncInfo) {
-			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain.then(async () => {
-				if (!liveSyncInfo.isStopped) {
-					liveSyncInfo.currentSyncAction = action();
-					const res = await liveSyncInfo.currentSyncAction;
-					return res;
-				}
-			});
+			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain
+				.then(async () => {
+					if (!liveSyncInfo.isStopped) {
+						liveSyncInfo.currentSyncAction = action();
+						const res = await liveSyncInfo.currentSyncAction;
+						return res;
+					}
+				})
+				.catch((err: any) => {
+					this.$logger.warn(`Error in action chain: ${err.message || err}`);
+				});
 
 			const result = await liveSyncInfo.actionsChain;
 			return result;
