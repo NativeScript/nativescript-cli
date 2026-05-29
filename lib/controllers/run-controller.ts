@@ -57,6 +57,7 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		protected $projectDataService: IProjectDataService,
+		private $staticConfig: Config.IStaticConfig,
 	) {
 		super();
 	}
@@ -498,6 +499,15 @@ export class RunController extends EventEmitter implements IRunController {
 				},
 			);
 
+			// For Android + Vite HMR, own the `adb reverse` ourselves —
+			// with our SDK-resolved adb, scoped to this exact serial, and
+			// only after the device is up — then hand the bundler the
+			// result via env vars. This MUST run before `prepare` (which
+			// spawns the Vite bundler that inherits `process.env`) so the
+			// bundler trusts the tunnel instead of racing us to spawn its
+			// own adb during config-load. See packages/vite hardening.
+			await this.setupAndroidViteHmrReverse(device, projectData, liveSyncInfo);
+
 			const prepareResultData =
 				await this.$prepareController.prepare(prepareData);
 
@@ -624,6 +634,105 @@ export class RunController extends EventEmitter implements IRunController {
 				),
 			),
 		);
+	}
+
+	/**
+	 * Set up `adb reverse tcp:<port> tcp:<port>` for an Android device
+	 * when the project bundles with Vite in HMR/watch mode, then export
+	 * the result to the bundler subprocess via environment variables.
+	 *
+	 * The Vite dev-host helper prefers an ADB tunnel (device-side
+	 * `127.0.0.1:<port>` → host) over the emulator's flaky slirp NAT
+	 * (`10.0.2.2`). Historically the bundler tried to wire that tunnel
+	 * itself at config-load time, racing this CLI's device discovery
+	 * over the single global adb daemon and intermittently freezing the
+	 * run at "Searching for devices…". The CLI is the right owner: it
+	 * knows the exact target serial and when the device is ready, and it
+	 * already drives a single, version-matched adb. We do the reverse
+	 * here and signal the bundler with `NS_ADB_REVERSE_READY=1` so it
+	 * never spawns adb on its own.
+	 *
+	 * Best-effort: any failure is logged at trace level and swallowed.
+	 * The bundler then falls back to its own (now hardened) adb path, or
+	 * ultimately to `10.0.2.2`, so a reverse hiccup never fails the run.
+	 */
+	private async setupAndroidViteHmrReverse(
+		device: Mobile.IDevice,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncInfo,
+	): Promise<void> {
+		try {
+			if (!this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
+				return;
+			}
+			if (projectData.bundler !== "vite") {
+				return;
+			}
+			// HMR over the tunnel only matters for a live watch session.
+			if (liveSyncInfo.skipWatcher || !liveSyncInfo.useHotModuleReload) {
+				return;
+			}
+			// Respect the user's explicit opt-out — they want the
+			// `10.0.2.2` / LAN path, so don't create a tunnel or claim one
+			// exists.
+			if (this.isTruthyEnvFlag(process.env.NS_HMR_NO_ADB_REVERSE)) {
+				return;
+			}
+			// `NS_HMR_PREFER_LAN_HOST` means the dev wants LAN routing
+			// (physical device over Wi-Fi); the dev-host resolver suppresses
+			// the adb-reverse path for it, so don't bother wiring one.
+			if (this.isTruthyEnvFlag(process.env.NS_HMR_PREFER_LAN_HOST)) {
+				return;
+			}
+
+			const serial = device.deviceInfo.identifier;
+			const port = this.getViteHmrPort();
+			// Safe after the `isAndroidPlatform` guard above — only Android
+			// devices carry the `adb` bridge.
+			const adb = (device as Mobile.IAndroidDevice).adb;
+
+			// Don't `reverse` against a device whose adbd isn't accepting
+			// yet (emulators report a `device` transport before adbd is
+			// fully up). `wait-for-device` returns immediately once ready.
+			await adb.executeCommand(["wait-for-device"], {
+				deviceIdentifier: serial,
+			});
+			await adb.executeCommand(["reverse", `tcp:${port}`, `tcp:${port}`], {
+				deviceIdentifier: serial,
+			});
+
+			// Hand the exact adb the CLI used to the bundler so, in any
+			// fallback path, it drives the same version-matched client and
+			// can't trigger a server-version-mismatch daemon kill.
+			const adbPath = await this.$staticConfig.getAdbFilePath();
+			process.env.NS_ADB_PATH = adbPath;
+			process.env.NS_DEVICE_SERIAL = serial;
+			process.env.NS_ADB_REVERSE_READY = "1";
+
+			this.$logger.info(
+				`Set up adb reverse tcp:${port} tcp:${port} for ${serial} (Vite HMR routes device-side 127.0.0.1:${port} through ADB).`,
+			);
+		} catch (err) {
+			this.$logger.trace(
+				`Setting up adb reverse for Vite HMR failed; leaving it to the bundler fallback. Error: ${err}`,
+			);
+		}
+	}
+
+	private getViteHmrPort(): number {
+		// The Vite dev server defaults to 5173; the bundler reads the same
+		// default. If a project runs Vite on a different port, the dev sets
+		// `NS_HMR_PORT` so the CLI reverses the matching port.
+		const fromEnv = Number(process.env.NS_HMR_PORT);
+		return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 5173;
+	}
+
+	private isTruthyEnvFlag(value: string | undefined): boolean {
+		if (typeof value !== "string") {
+			return false;
+		}
+		const v = value.trim().toLowerCase();
+		return !!v && v !== "0" && v !== "false" && v !== "off" && v !== "no";
 	}
 
 	private async syncChangedDataOnDevices(
