@@ -500,12 +500,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	}
 
 	private async isDynamicFramework(frameworkPath: string): Promise<boolean> {
-		const isDynamicFrameworkBundle = async (
-			bundlePath: string,
-			frameworkName: string,
-		) => {
-			const frameworkBinaryPath = path.join(bundlePath, frameworkName);
-
+		const isDynamicFrameworkBundle = async (frameworkBinaryPath: string) => {
 			const fileResult = (
 				await this.$childProcess.spawnFromEvent(
 					"file",
@@ -533,10 +528,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						singlePlatformFramework,
 						path.extname(singlePlatformFramework),
 					);
-					isDynamic = await isDynamicFrameworkBundle(
-						singlePlatformFramework,
-						frameworkName,
-					);
+					let frameworkBinaryPath = path.join(singlePlatformFramework, frameworkName)
+					if (library.BinaryPath) {
+						frameworkBinaryPath = path.join(
+							frameworkPath,
+							library.LibraryIdentifier,
+							library.BinaryPath,
+						);
+					}
+					isDynamic = await isDynamicFrameworkBundle(frameworkBinaryPath);
 					break;
 				}
 			}
@@ -546,7 +546,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				frameworkPath,
 				path.extname(frameworkPath),
 			);
-			return await isDynamicFrameworkBundle(frameworkPath, frameworkName);
+			return await isDynamicFrameworkBundle(path.join(frameworkPath, frameworkName));
 		}
 	}
 
