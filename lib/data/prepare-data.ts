@@ -14,7 +14,7 @@ export class PrepareData extends ControllerDataBase {
 	constructor(
 		public projectDir: string,
 		public platform: string,
-		data: IOptions
+		data: IOptions,
 	) {
 		super(projectDir, platform, data);
 
@@ -44,6 +44,11 @@ export class PrepareData extends ControllerDataBase {
 			this.watchNative = data.watchNative;
 		}
 		this.hostProjectPath = data.hostProjectPath;
+
+		if (data.skipNative) {
+			this.nativePrepare = { skipNativePrepare: true };
+			this.watchNative = false;
+		}
 
 		this.uniqueBundle = !this.watch && data.uniqueBundle ? Date.now() : 0;
 	}

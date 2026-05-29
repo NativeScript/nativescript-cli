@@ -10,7 +10,8 @@
 		"skipLibCheck": true,
 		"alwaysStrict": true,
 		"noUnusedLocals": true,
-		"lib": ["ESNext"]
+		"lib": ["ESNext"],
+		"strict": false
 	},
 	"include": ["lib/", "test/"]
 }
