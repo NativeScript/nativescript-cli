@@ -731,7 +731,17 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 	): INodeModuleData {
 		// module can be  modulePath or moduleName
 		if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
-			module = this.getPackageJsonFilePathForModule(module, projectDir);
+			const resolvedPath = this.getPackageJsonFilePathForModule(
+				module,
+				projectDir,
+			);
+			if (!resolvedPath) {
+				this.$logger.warn(
+					`Could not find module ${color.yellow(module)}. It may have been removed or is not installed. Skipping.`,
+				);
+				return null;
+			}
+			module = resolvedPath;
 		}
 
 		const data = this.$fs.readJson(module);
@@ -759,7 +769,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		const nodeModules = this.getDependencies(projectData.projectDir);
 		return _.map(nodeModules, (nodeModuleName) =>
 			this.getNodeModuleData(nodeModuleName, projectData.projectDir),
-		);
+		).filter(Boolean);
 	}
 
 	private async executeNpmCommand(
