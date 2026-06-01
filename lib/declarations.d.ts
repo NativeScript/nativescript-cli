@@ -594,6 +594,11 @@ interface ITypingsOptions {
 	jar: string;
 	aar: string;
 	filter: string;
+	root: string;
+	roots: string;
+	input: string;
+	lib: string;
+	libs: string;
 }
 
 interface IOptions

@@ -249,6 +249,11 @@ export class Options {
 			jar: { type: OptionType.String, hasSensitiveValue: true },
 			aar: { type: OptionType.String, hasSensitiveValue: true },
 			filter: { type: OptionType.String, hasSensitiveValue: true },
+			root: { type: OptionType.String, hasSensitiveValue: true },
+			roots: { type: OptionType.String, hasSensitiveValue: true },
+			input: { type: OptionType.String, hasSensitiveValue: true },
+			lib: { type: OptionType.String, hasSensitiveValue: true },
+			libs: { type: OptionType.String, hasSensitiveValue: true },
 			git: {
 				type: OptionType.Boolean,
 				hasSensitiveValue: false,
