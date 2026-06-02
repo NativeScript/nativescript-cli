@@ -3,7 +3,7 @@ import { getCurrentEpochTime, sleep } from "../../helpers";
 import { EOL } from "os";
 import * as _ from "lodash";
 import { LoggerConfigData } from "../../../constants";
-import { IChildProcess, IUtils } from "../../declarations";
+import { IChildProcess, IUserSettingsService, IUtils } from "../../declarations";
 import { injector } from "../../yok";
 import * as semver from "semver";
 
@@ -18,6 +18,7 @@ export class AndroidEmulatorServices
 		private $emulatorHelper: Mobile.IEmulatorHelper,
 		private $logger: ILogger,
 		private $utils: IUtils,
+		private $userSettingsService: IUserSettingsService,
 	) {}
 
 	public async getEmulatorImages(): Promise<Mobile.IEmulatorImagesOutput> {
@@ -154,7 +155,7 @@ export class AndroidEmulatorServices
 			};
 		}
 
-		this.spawnEmulator(emulator);
+		await this.spawnEmulator(emulator);
 
 		const isInfiniteWait = this.$utils.getMilliSecondsTimeout(timeout) === 0;
 		let hasTimeLeft = getCurrentEpochTime() < endTimeEpoch;
@@ -186,7 +187,7 @@ export class AndroidEmulatorServices
 		}
 	}
 
-	private spawnEmulator(emulator: Mobile.IDeviceInfo): void {
+	private async spawnEmulator(emulator: Mobile.IDeviceInfo) {
 		let pathToEmulatorExecutable = null;
 		let startEmulatorArgs = null;
 		if (emulator.vendor === AndroidVirtualDevice.AVD_VENDOR_NAME) {
@@ -195,6 +196,12 @@ export class AndroidEmulatorServices
 			startEmulatorArgs = this.$androidVirtualDeviceService.startEmulatorArgs(
 				emulator.imageIdentifier,
 			);
+			try {
+				const additionalArgs = await this.$userSettingsService.getSettingValue<string[]>("androidEmulatorStartArgs");
+				if (additionalArgs?.length) {
+					startEmulatorArgs.push(...additionalArgs);
+				}
+			} catch (error) {}
 		} else if (
 			emulator.vendor === AndroidVirtualDevice.GENYMOTION_VENDOR_NAME
 		) {
