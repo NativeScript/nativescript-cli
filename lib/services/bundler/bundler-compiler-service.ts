@@ -453,7 +453,7 @@ export class BundlerCompilerService
 		const envParams = isVite
 			? [
 					`--mode=${prepareData.release ? "production" : "development"}`,
-					`--watch`,
+					...(prepareData.watch ? [`--watch`] : []),
 					"--",
 					...cliArgs,
 				]
@@ -483,7 +483,7 @@ export class BundlerCompilerService
 			}
 		}
 
-		const stdio = prepareData.watch || isVite ? ["ipc"] : "inherit";
+		const stdio = prepareData.watch ? ["ipc"] : "inherit";
 		const options: { [key: string]: any } = {
 			cwd: projectData.projectDir,
 			stdio,
@@ -912,13 +912,9 @@ export class BundlerCompilerService
 
 		const filesToCopy: string[] = [];
 
-		// default to ignoring vendor files as they are less likely to change during live reloads
 		const bundleFiles = emittedFiles.filter(
 			(file) =>
-				!file.includes("vendor") &&
-				(file.endsWith(".mjs") ||
-					file.endsWith(".js") ||
-					file.endsWith(".map")),
+				file.endsWith(".mjs") || file.endsWith(".js") || file.endsWith(".map"),
 		);
 		filesToCopy.push(...bundleFiles);
 

@@ -3,42 +3,81 @@ name: 'nativescript -> npm'
 on:
   workflow_dispatch:
     inputs:
-      bump_version:
-        description: 'Bump Version'
-        required: true
-        default: true
-        type: boolean
+      release_type:
+        description: 'Release type. "dev" publishes a -next prerelease without bumping package.json. patch/minor/major/prerelease bump package.json, commit + tag to main, then publish as a stable release.'
+        type: choice
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+          - prerelease
+        default: auto
       next_version:
         description: 'Next Version with Next tag'
         required: true
         default: false
         type: boolean
 
-permissions:
-  contents: read
+permissions: read-all
+
+env:
+  NPM_TAG: 'next'
 
 jobs:
-  release:
+  build:
+    name: Build
     runs-on: macos-latest
+    permissions:
+      contents: write
+    outputs:
+      npm_version: ${{ steps.npm_version_output.outputs.NPM_VERSION }}
+      npm_tag: ${{ steps.npm_version_output.outputs.NPM_TAG }}
+      is_release: ${{ steps.npm_version_output.outputs.IS_RELEASE }}
 
     steps:
-
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@f4a75cfd619ee5ce8d5b864b0d183aff3c69b55a # v2.13.1
+        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-      
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: 22.14.0
+          registry-url: "https://registry.npmjs.org"
 
       - name: Setup
         run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
 
+      - name: Get Current Version
+        run: |
+          NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+
+      - name: Bump, commit and tag stable release (manual dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != 'auto' && inputs.release_type != 'dev' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          npm version ${{ inputs.release_type }} -m "chore: release v%s"
+          NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+          git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
+
+      - name: Bump version for dev release
+        if: ${{ !contains(github.ref, 'refs/tags/') && (github.event_name != 'workflow_dispatch' || inputs.release_type == 'dev') }}
+        run: |
+          NPM_VERSION=$(node ./scripts/get-next-version.js)
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+          npm version $NPM_VERSION --no-git-tag-version
+
       - name: Bump Standard Version
-        if: github.event.inputs.bump_version == 'true'
+        if: inputs.release_type == 'auto'
         run: |
           npm run release
 
@@ -46,32 +85,131 @@ jobs:
         run: |
           echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);") >> $GITHUB_ENV
 
-      - name: Bump Version
-        if: github.event.inputs.next_version == 'true'
-        run: npm version $NPM_VERSION
+      - name: Output NPM Version and tag
+        id: npm_version_output
+        run: |
+          NPM_TAG=$(node ./scripts/get-npm-tag.js)
+          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.release_type }}" != "dev" && "${{ inputs.release_type }}" != "auto" ]]; then
+            IS_RELEASE=true
+          else
+            IS_RELEASE=false
+          fi
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_OUTPUT
+          echo NPM_TAG=$NPM_TAG >> $GITHUB_OUTPUT
+          echo IS_RELEASE=$IS_RELEASE >> $GITHUB_OUTPUT
 
       - name: Build nativescript
         run: npm pack
-      
-      - name: npm ENV
+
+      - name: Upload npm package artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: npm-package
+          path: akylas-nativescript-cli-${{steps.npm_version_output.outputs.NPM_VERSION}}.tgz
+
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    needs:
+      - build
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NPM_VERSION: ${{needs.build.outputs.npm_version}}
+      NPM_TAG: ${{needs.build.outputs.npm_tag}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.14.0
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-package
+          path: dist
+
+      - name: Update npm (required for OIDC trusted publishing)
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
+
+      - name: Publish package (OIDC trusted publishing)
+        if: ${{ vars.USE_NPM_TOKEN != 'true' }}
+        run: |
+          echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG via OIDC trusted publishing..."
+          unset NODE_AUTH_TOKEN
+          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ]; then
+            rm -f "$NPM_CONFIG_USERCONFIG"
+          fi
+          npm publish ./dist/akylas-nativescript-cli-${{env.NPM_VERSION}}.tgz --tag $NPM_TAG --access public --provenance
         env:
-          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
-        run: echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+          NODE_AUTH_TOKEN: ""
 
-      - name: Publish next nativescript version
-        if: github.event.inputs.next_version == 'true'
+      - name: Publish package (granular token)
+        if: ${{ vars.USE_NPM_TOKEN == 'true' }}
         run: |
-          echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG..."
-          npm publish akylas-nativescript-cli-$NPM_VERSION.tgz --tag $NPM_TAG
+          echo "Publishing nativescript@$NPM_VERSION to NPM with tag $NPM_TAG via granular token..."
+          npm publish ./dist/nativescript-${{env.NPM_VERSION}}.tgz --tag $NPM_TAG --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
 
-      - name: Publish nativescript
-        if: github.event.inputs.next_version == 'false'
-        run: |
-          echo "Publishing nativescript@$NPM_VERSION to NPM..."
-          npm publish akylas-nativescript-cli-$NPM_VERSION.tgz 
+  github-release:
+    runs-on: ubuntu-latest
+    # runs for tag pushes and for manual dispatches that bumped a stable release
+    if: ${{ needs.build.outputs.is_release == 'true' }}
+    permissions:
+      contents: write
+    needs:
+      - build
+    env:
+      NPM_VERSION: ${{needs.build.outputs.npm_version}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
+        with:
+          egress-policy: audit
 
-      - name: Push to git
-        if: github.event.inputs.bump_version == 'true'
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-depth: 0
+          ref: v${{needs.build.outputs.npm_version}}
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.14.0
+
+      - name: Setup
+        run: npm i --ignore-scripts --legacy-peer-deps --no-package-lock
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-package
+          path: dist
+
+      - name: Generate provenance statement
         run: |
-          git push origin --tags
-          git push origin
+          TGZ_PATH=$(ls dist/nativescript-*.tgz | head -n1)
+          TGZ_NAME=$(basename "$TGZ_PATH")
+          TGZ_SHA=$(sha256sum "$TGZ_PATH" | awk '{ print $1 }')
+          PROV_PATH="dist/${TGZ_NAME%.tgz}.intoto.jsonl"
+
+          cat > "$PROV_PATH" <<EOF
+          {"_type":"https://in-toto.io/Statement/v1","subject":[{"name":"$TGZ_NAME","digest":{"sha256":"$TGZ_SHA"}}],"predicateType":"https://slsa.dev/provenance/v1"}
+          EOF
+
+      - name: Partial Changelog
+        run: npx conventional-changelog -p angular -r2 > body.md
+
+      - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
+        with:
+          tag: v${{needs.build.outputs.npm_version}}
+          artifacts: "dist/nativescript-*.tgz,dist/nativescript-*.intoto.jsonl"
+          bodyFile: "body.md"
+          prerelease: ${{needs.build.outputs.npm_tag != 'latest'}}
+          allowUpdates: true

@@ -87,3 +87,5 @@ lib/common/test-reports.xml
 !lib/common/test-scripts/**
 !lib/common/scripts/**
 config/test-deps-versions-generated.json
+!scripts/get-next-version.js
+!scripts/get-npm-tag.js

@@ -1,9 +1,20 @@
-# Changelog
+## [9.0.5](https://github.com/NativeScript/nativescript-cli/compare/v9.0.4...v9.0.5) (2026-03-06)
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### Security
+
+* CWE-1333, CWE-78 ([#5976](https://github.com/NativeScript/nativescript-cli/issues/5976)) ([3942566](https://github.com/NativeScript/nativescript-cli/commit/3942566f78d2d21fccae2ec6f313f29cec92ea11))
+
+
+
+## [9.0.4](https://github.com/NativeScript/nativescript-cli/compare/v9.0.3...v9.0.4) (2026-02-27)
+
+* file watcher with chokidar ([#5973](https://github.com/NativeScript/nativescript-cli/issues/5973)) ([92ec091](https://github.com/NativeScript/nativescript-cli/commit/92ec091d54d4621e0685ea119527f02111f72056))
+* **security:** CVE-2025-13465, CVE-2026-27904, CVE-2026-26996, CVE-2025-59433 ([#5974](https://github.com/NativeScript/nativescript-cli/issues/5974)) ([c4064c9](https://github.com/NativeScript/nativescript-cli/commit/c4064c9d52bbc2b7faff35e2bea8d109b1c170be))
+* visionos overrides for build flags ([#5967](https://github.com/NativeScript/nativescript-cli/issues/5967)) ([895ceb8](https://github.com/NativeScript/nativescript-cli/commit/895ceb8567ee139147643c43760487d46882f717))
+* **widget:** handle configs with other SPMPackages ([#5972](https://github.com/NativeScript/nativescript-cli/issues/5972)) ([03ff1dc](https://github.com/NativeScript/nativescript-cli/commit/03ff1dcaf98b917cbd65c6739871a7be7a224c4b))
 
 ### [8.11.3](https://github.com/farfromrefug/nativescript-cli/compare/v8.11.0...v8.11.3) (2026-04-01)
-
 
 ### Bug Fixes
 
@@ -14,370 +25,69 @@ All notable changes to this project will be documented in this file. See [standa
 * using patch-packages for patches for now as yarn patches wont install with `npm i -g` ([6f0ea67](https://github.com/farfromrefug/nativescript-cli/commit/6f0ea6740abe886ad4fcbd16af9280c826f4c447))
 
 ### [8.11.2](https://github.com/farfromrefug/nativescript-cli/compare/v8.11.1...v8.11.2) (2026-02-28)
+* file watcher with chokidar ([#5973](https://github.com/NativeScript/nativescript-cli/issues/5973)) ([92ec091](https://github.com/NativeScript/nativescript-cli/commit/92ec091d54d4621e0685ea119527f02111f72056))
+* **security:** CVE-2025-13465, CVE-2026-27904, CVE-2026-26996, CVE-2025-59433 ([#5974](https://github.com/NativeScript/nativescript-cli/issues/5974)) ([c4064c9](https://github.com/NativeScript/nativescript-cli/commit/c4064c9d52bbc2b7faff35e2bea8d109b1c170be))
+* visionos overrides for build flags ([#5967](https://github.com/NativeScript/nativescript-cli/issues/5967)) ([895ceb8](https://github.com/NativeScript/nativescript-cli/commit/895ceb8567ee139147643c43760487d46882f717))
+* **widget:** handle configs with other SPMPackages ([#5972](https://github.com/NativeScript/nativescript-cli/issues/5972)) ([03ff1dc](https://github.com/NativeScript/nativescript-cli/commit/03ff1dcaf98b917cbd65c6739871a7be7a224c4b))
+
+
+## [9.0.3](https://github.com/NativeScript/nativescript-cli/compare/v9.0.2...v9.0.3) (2026-02-01)
 
 
 ### Bug Fixes
 
-* patch-package need to be a prod dep ([4b11f07](https://github.com/farfromrefug/nativescript-cli/commit/4b11f073bf296bad7e67a0c4ca41d69aaf1285d1))
+* allow app spm to "override" plugin spm packages ([#5951](https://github.com/NativeScript/nativescript-cli/issues/5951)) ([33d44b5](https://github.com/NativeScript/nativescript-cli/commit/33d44b58af3f267168544b3f80719d4a1c607672))
+* **vite:** incremental build file changes ([#5952](https://github.com/NativeScript/nativescript-cli/issues/5952)) ([9013634](https://github.com/NativeScript/nativescript-cli/commit/90136342348e9009d9f71ddab99c05a3d9e86775))
+* **workspaces:** duplicate added frameworks ([#5949](https://github.com/NativeScript/nativescript-cli/issues/5949)) ([768a97c](https://github.com/NativeScript/nativescript-cli/commit/768a97cafeefc414a56697d1a4550115cb9cfc51))
 
-### [8.11.1](https://github.com/farfromrefug/nativescript-cli/compare/v8.10.0...v8.11.1) (2026-02-28)
+
+
+## [9.0.2](https://github.com/NativeScript/nativescript-cli/compare/v9.0.1...v9.0.2) (2026-01-04)
 
 
 ### Bug Fixes
 
-* using patch-packages for patches for now as yarn patches wont install with `npm i -g` ([6f0ea67](https://github.com/farfromrefug/nativescript-cli/commit/6f0ea6740abe886ad4fcbd16af9280c826f4c447))
+* vite build and prepare ([#5948](https://github.com/NativeScript/nativescript-cli/issues/5948)) ([e892f48](https://github.com/NativeScript/nativescript-cli/commit/e892f48ea86510b1aafbb739a42bfd834fbdc12e))
 
-## [8.11.0](https://github.com/farfromrefug/nativescript-cli/compare/v8.9.3...v8.11.0) (2026-02-14)
+
+
+## [9.0.1](https://github.com/NativeScript/nativescript-cli/compare/v9.0.0...v9.0.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* prevent error if nativescript.config entry is undefined ([#5919](https://github.com/NativeScript/nativescript-cli/issues/5919)) ([bfad89e](https://github.com/NativeScript/nativescript-cli/commit/bfad89ead225c881c46e2a6a4de042a1cb434323))
+
+
+
+# [9.0.0](https://github.com/NativeScript/nativescript-cli/compare/v8.9.3...v9.0.0) (2025-11-17)
+
+
+### Bug Fixes
+
+* **android:** livesync tool connect race condition ([#5857](https://github.com/NativeScript/nativescript-cli/issues/5857)) ([1daa553](https://github.com/NativeScript/nativescript-cli/commit/1daa5533d72408b2bba6773ddbd012f5284dc41f))
+* clear all deprecated dependencies ([#5858](https://github.com/NativeScript/nativescript-cli/issues/5858)) ([d9bced3](https://github.com/NativeScript/nativescript-cli/commit/d9bced3427f620f78ca7da62066f836e4961b084))
+* **config:** using set with undefined ([#5883](https://github.com/NativeScript/nativescript-cli/issues/5883)) ([b09510f](https://github.com/NativeScript/nativescript-cli/commit/b09510f5c994226030097332b6f0996c21d1d96c))
+* remove lock from default clean ([#5881](https://github.com/NativeScript/nativescript-cli/issues/5881)) ([a1c39f6](https://github.com/NativeScript/nativescript-cli/commit/a1c39f6d7e9912b74c913a793adc3b6edf125574))
+* **security:** axios 1.11.0 ([#5847](https://github.com/NativeScript/nativescript-cli/issues/5847)) ([0b08cb2](https://github.com/NativeScript/nativescript-cli/commit/0b08cb29bda03495a1e9a99e4bef100bc2d88838))
+* **security:** xml2js and braces ([#5848](https://github.com/NativeScript/nativescript-cli/issues/5848)) ([debc85a](https://github.com/NativeScript/nativescript-cli/commit/debc85a584cdb305ff329bca12c255750e8a9658))
+* update ios-sim-portable to version 4.5.1 ([#5850](https://github.com/NativeScript/nativescript-cli/issues/5850)) ([f575bdc](https://github.com/NativeScript/nativescript-cli/commit/f575bdcc39a1a749788aa04e4cc33d2d26f92489))
+* **visionos:** build/prepare ([e40a1b8](https://github.com/NativeScript/nativescript-cli/commit/e40a1b8d6cfd055016ac2612ecccb771176766b0))
 
 
 ### Features
 
-* add config to help menu ([#5916](https://github.com/farfromrefug/nativescript-cli/issues/5916)) ([f81499d](https://github.com/farfromrefug/nativescript-cli/commit/f81499d4092426a801ac2a4bf9579a03c463a2b9))
-* add Dependabot configuration ([#5859](https://github.com/farfromrefug/nativescript-cli/issues/5859)) ([93a214c](https://github.com/farfromrefug/nativescript-cli/commit/93a214c093c3aa5d47df6b19371c12b26d3c97ed))
-* add Dependency Review Action workflow ([#5860](https://github.com/farfromrefug/nativescript-cli/issues/5860)) ([1478ba9](https://github.com/farfromrefug/nativescript-cli/commit/1478ba9b8d6cd987833dbd7108a19ed37c0f041f))
-* allow much more complex watchapp projects ([ea84aee](https://github.com/farfromrefug/nativescript-cli/commit/ea84aeee4d161d1e71c7b704ec50abdba54474c6))
-* android upgrades, bundletool to 1.18.2, kotlin to 2.2.20 ([#5917](https://github.com/farfromrefug/nativescript-cli/issues/5917)) ([cc94b80](https://github.com/farfromrefug/nativescript-cli/commit/cc94b80328ac22828509e71313848bb10d444150))
-* **android:** api level 36 + start up emulator with unknown target versions ([#5842](https://github.com/farfromrefug/nativescript-cli/issues/5842)) ([de2cb8c](https://github.com/farfromrefug/nativescript-cli/commit/de2cb8c1e68bfbf0c7651a440bbaff72de27cf50))
-* **android:** update default compileSdkVersion and buildToolsVersion to 35 ([#5849](https://github.com/farfromrefug/nativescript-cli/issues/5849)) ([cca32f9](https://github.com/farfromrefug/nativescript-cli/commit/cca32f99d644c176f61383866cd45979d6e1f6b2))
-* config settings to use different bundlers ([#5837](https://github.com/farfromrefug/nativescript-cli/issues/5837)) ([27e94e8](https://github.com/farfromrefug/nativescript-cli/commit/27e94e8bececb837ce901e37e9b1c0d4581603dd))
-* hooks command ([#5918](https://github.com/farfromrefug/nativescript-cli/issues/5918)) ([87cbca9](https://github.com/farfromrefug/nativescript-cli/commit/87cbca902f8a30f27b8db524d307fd40d808216a))
-* **hooks:** support ES Modules ([#5843](https://github.com/farfromrefug/nativescript-cli/issues/5843)) ([23c07aa](https://github.com/farfromrefug/nativescript-cli/commit/23c07aa097750147432a8a823a4673c328df76fc))
-* replace chalk/ansi-colors/glob with Node.js built-ins ([#5853](https://github.com/farfromrefug/nativescript-cli/issues/5853)) ([e562267](https://github.com/farfromrefug/nativescript-cli/commit/e562267ce6a7d5cf2172679d6498b2ab79a9aff7))
-
-
-### Bug Fixes
-
-* allow to enforce corePackageName to use custom ([5d807ce](https://github.com/farfromrefug/nativescript-cli/commit/5d807ce741d9a82aa7c6a03f7d9d71a515c28545))
-* **android:** allow to sign debug builds (for example for system apps development) ([ea46b7e](https://github.com/farfromrefug/nativescript-cli/commit/ea46b7e2af172aeb47139489097dfed8bc7120e0))
-* **android:** livesync tool connect race condition ([#5857](https://github.com/farfromrefug/nativescript-cli/issues/5857)) ([1daa553](https://github.com/farfromrefug/nativescript-cli/commit/1daa5533d72408b2bba6773ddbd012f5284dc41f))
-* clear all deprecated dependencies ([#5858](https://github.com/farfromrefug/nativescript-cli/issues/5858)) ([d9bced3](https://github.com/farfromrefug/nativescript-cli/commit/d9bced3427f620f78ca7da62066f836e4961b084))
-* **config:** using set with undefined ([#5883](https://github.com/farfromrefug/nativescript-cli/issues/5883)) ([b09510f](https://github.com/farfromrefug/nativescript-cli/commit/b09510f5c994226030097332b6f0996c21d1d96c))
-* default log level to WARN. Fix for INFO log level not showing actual info (was quiet) ([da64b1a](https://github.com/farfromrefug/nativescript-cli/commit/da64b1a286fd8ff4c83d4f71f027b8015dfb0861))
-* more android typings options ([c481e45](https://github.com/farfromrefug/nativescript-cli/commit/c481e45609b673e8ba1a0a75cd1ca311bb1c6a7c))
-* ns typings android supports `dtsGeneratorPath` and now uses `-per-library` ([61d4b77](https://github.com/farfromrefug/nativescript-cli/commit/61d4b778c08a2832be8e8d40f75d0f74e42c4b1f))
-* remove lock from default clean ([#5881](https://github.com/farfromrefug/nativescript-cli/issues/5881)) ([a1c39f6](https://github.com/farfromrefug/nativescript-cli/commit/a1c39f6d7e9912b74c913a793adc3b6edf125574))
-* **security:** axios 1.11.0 ([#5847](https://github.com/farfromrefug/nativescript-cli/issues/5847)) ([0b08cb2](https://github.com/farfromrefug/nativescript-cli/commit/0b08cb29bda03495a1e9a99e4bef100bc2d88838))
-* **security:** xml2js and braces ([#5848](https://github.com/farfromrefug/nativescript-cli/issues/5848)) ([debc85a](https://github.com/farfromrefug/nativescript-cli/commit/debc85a584cdb305ff329bca12c255750e8a9658))
-* update ios-sim-portable to version 4.5.1 ([#5850](https://github.com/farfromrefug/nativescript-cli/issues/5850)) ([f575bdc](https://github.com/farfromrefug/nativescript-cli/commit/f575bdcc39a1a749788aa04e4cc33d2d26f92489))
-* **visionos:** build/prepare ([e40a1b8](https://github.com/farfromrefug/nativescript-cli/commit/e40a1b8d6cfd055016ac2612ecccb771176766b0))
-
-### [8.8.7](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.6...v8.8.7) (2025-01-24)
-
-### [8.8.6](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.5...v8.8.6) (2024-11-04)
-
-
-### Bug Fixes
-
-* regression fix after deps update ([4bf3ba6](https://github.com/farfromrefug/nativescript-cli/commit/4bf3ba64c0c10ada186e4ab93deb3e14239b5247))
-
-### [8.8.5](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.4...v8.8.5) (2024-10-18)
-
-
-### Bug Fixes
-
-* regression fix ([d7041a8](https://github.com/farfromrefug/nativescript-cli/commit/d7041a85258428d0fda5dcf69ac73be907f05517))
-
-### [8.8.4](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.3...v8.8.4) (2024-10-17)
-
-
-### Bug Fixes
-
-* regression fix ([fd25a26](https://github.com/farfromrefug/nativescript-cli/commit/fd25a26de1b81036a7c53842f5955264e387af13))
-
-### [8.8.3](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.2...v8.8.3) (2024-10-17)
-
-
-### Bug Fixes
-
-* add webpack env data so that scripts can read it (like svelte-preprocessor) ([144d775](https://github.com/farfromrefug/nativescript-cli/commit/144d775d2adde5ad7299e42354f8d49991d22007))
-* android fix when passing compileSdk as gradle arg ([ee31dd4](https://github.com/farfromrefug/nativescript-cli/commit/ee31dd464055f5b6fc657500b5238e1af6b2a11d))
-* deps update ([fbb6b86](https://github.com/farfromrefug/nativescript-cli/commit/fbb6b86e59e323036b46c94ff047b6baaf156a1f))
-* updated bundletool.jar to support 16 KB page size. remove vendor adb ([db7f7f4](https://github.com/farfromrefug/nativescript-cli/commit/db7f7f4fa3411374b23b6a118c18dfdffc1c0459))
-
-### [8.8.2](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.1...v8.8.2) (2024-09-11)
-
-
-### Features
-
-* `--gradle` option to specify custom gradle binary ([0b55d42](https://github.com/farfromrefug/nativescript-cli/commit/0b55d42d74618d245851148669e30b042ac291bf))
-* `aarIgnoreFilter`, `jarIgnoreFilter` and `nsConfig.android.plugins` support (for now to add suffix to generated aar using `aarSuffix` on a per plugin bases) ([12df250](https://github.com/farfromrefug/nativescript-cli/commit/12df2500a01762dce4267df8e3a46b3f6f68fc37))
-* `filterDevicesArch` option to build only abi of connected devices for `run|debug` ([dc28cf7](https://github.com/farfromrefug/nativescript-cli/commit/dc28cf7e144f9c90cf9ad791b6d901faae956d8f))
-* `overrideRuntimeGradleFiles` option ([a369715](https://github.com/farfromrefug/nativescript-cli/commit/a369715ac56adfd33f0c2b357dcb6fe2470a7621))
-* add --json option to `ns config` ([d8bd6e9](https://github.com/farfromrefug/nativescript-cli/commit/d8bd6e9009d7c94514ec45564d79e94ac46572b7))
-* added `gradleArgs` in `config.android` ([a3721b1](https://github.com/farfromrefug/nativescript-cli/commit/a3721b1e045f9808d150de85f0f0df67d0ef4339))
-* allow plugin blacklist metadata ([68e541c](https://github.com/farfromrefug/nativescript-cli/commit/68e541c74aa7d00a2b83311f45c5bb14e0b548ee))
-* allow to ignore native dependencies ([cb695e6](https://github.com/farfromrefug/nativescript-cli/commit/cb695e65664e34a058ff77e841c2965a88fa595f))
-* android plugin build will use its own plugin dependencies to build ([8365318](https://github.com/farfromrefug/nativescript-cli/commit/8365318e3dd4de922140c7432a27c8025f5b5dd9))
-* **android:** add gradle 7+ support ([e0c1824](https://github.com/farfromrefug/nativescript-cli/commit/e0c1824cdcb3e36323fa1e9c8db9d0dd2c691ecf))
-* **android:** allow app to define `ndkVersion` to be used for plugins and app ([ed2b84a](https://github.com/farfromrefug/nativescript-cli/commit/ed2b84a23e309af72fd23095e4dbbbe832daf60a))
-* **android:** allow to force gradle version throught nativescript-config (`android.gradleVersion`). ([7c6dc40](https://github.com/farfromrefug/nativescript-cli/commit/7c6dc4013732633b181483d0ec0b8a39baddaf96))
-* **android:** app gradle files now coming from CLI to prevent dependency on runtime update ([bd5263d](https://github.com/farfromrefug/nativescript-cli/commit/bd5263d1c30f71f10291a066f19b3bb2fac6112d))
-* **android:** custom `buildPath` from `nativescript.config` ([06dfc73](https://github.com/farfromrefug/nativescript-cli/commit/06dfc73e57862075751ccd3369a5b22fbe98d835))
-* **android:** flavor support ([ded3485](https://github.com/farfromrefug/nativescript-cli/commit/ded3485e04fa628915e59772517a61c19bac4c4b))
-* implemented `--gradle` option to pass gradle parameters ([78e88eb](https://github.com/farfromrefug/nativescript-cli/commit/78e88eb7359dee942a58e3d9d7e841cd7dee744c))
-* new `syncChangedDataOnDevices`. also send the changed files in `IFilesChangeEventData` so that hooks can know what files have changed ([c17417b](https://github.com/farfromrefug/nativescript-cli/commit/c17417bea41ac81b26fc184e51c2da03a690d4a3))
-* only install corresponding abi package when possible ([9333c31](https://github.com/farfromrefug/nativescript-cli/commit/9333c317a06b8c44b2869f7b96087e83f20dbbb6))
-* **profiling:** generate chrome compatible timeline data ([d3396e8](https://github.com/farfromrefug/nativescript-cli/commit/d3396e81cda7290ba1616cc186778c66076b40ee))
-* yarn2+ support ([b35af16](https://github.com/farfromrefug/nativescript-cli/commit/b35af166c344df0e1941342b74bcaaa14d50abe1))
-
-
-### Bug Fixes
-
-* add runtime infos in app package.json. Cleanup that package.json ([8223062](https://github.com/farfromrefug/nativescript-cli/commit/8223062c58769dd557eb5de7fadd1d10d8f87828))
-* allow cpp in android plugins ([51ca951](https://github.com/farfromrefug/nativescript-cli/commit/51ca9518c429b406e275edf4276431235fd7f5ff))
-* android plugins now built using same “gradle” as apps ([8195d22](https://github.com/farfromrefug/nativescript-cli/commit/8195d22e5d1c4f8b4bc48a05f7ad3cdfb5545a5b))
-* **android:** add `--stacktrace` to any gradle build ([54ed89d](https://github.com/farfromrefug/nativescript-cli/commit/54ed89dd0eb0269c3160fc2aba9657dcd9d49c6f))
-* **android:** copy all other directories from App_Resources/Android to platforms/android. Those must be modules like AndroidTest or benchmark ([5560853](https://github.com/farfromrefug/nativescript-cli/commit/556085364031e4f8a173426de12b94c6ca436664))
-* **android:** going recursive is pretty dangerous and should not be needed ([dc50c28](https://github.com/farfromrefug/nativescript-cli/commit/dc50c2864eb2fcdba0203fb38549ee1badc41213))
-* **android:** in case we use `buildFilterDevicesArch` check if we need to rebuild for devices we are building for ([7c010fe](https://github.com/farfromrefug/nativescript-cli/commit/7c010fe5cb793a8482f03a0e0e2e70129f2fb094))
-* **android:** non eager namespace replace in manifest ([a10c9b5](https://github.com/farfromrefug/nativescript-cli/commit/a10c9b52e254ea4fe10e7ac74281744fe9322295))
-* **android:** non eager namespace replace in manifest ([71c2484](https://github.com/farfromrefug/nativescript-cli/commit/71c24847c96945b19f25c59043d8c770b712dd92))
-* **android:** support unsigned apks ([93c17d8](https://github.com/farfromrefug/nativescript-cli/commit/93c17d845ee86fcbb5f80456e416fe64e6809620))
-* **android:** use absolute path to ensure it is good from every android module ([4abb7d9](https://github.com/farfromrefug/nativescript-cli/commit/4abb7d9f40c28f124b3bee133fbe8c14bda0ffd1))
-* another gradle 8 fix to make the sentry plugin work. Should not be needed ([0793d44](https://github.com/farfromrefug/nativescript-cli/commit/0793d4480dfce35a9db34f314c86ddfa0c7ac50b))
-* another yarn 2+ fix ([1c5d2cc](https://github.com/farfromrefug/nativescript-cli/commit/1c5d2cc4a53560b91ef0deeef6b9cb7cc2ca7559))
-* better `copyAppPackages` handle ([2ee8e48](https://github.com/farfromrefug/nativescript-cli/commit/2ee8e4829a3e5ea79d0802b7b2905e919981ad2a))
-* better fix for custom build folder so that it works too in android studio. (i still pass `projectRoot` in gradle in case we need it). This fix is not used with plugins build though as it seems better to use `projectRoot` ([48e603d](https://github.com/farfromrefug/nativescript-cli/commit/48e603db535fe2b07f6dee4a3edaa7a6ab32e2f7))
-* correctly allow plugins build to detect before-plugins.gradle ([e8e39b4](https://github.com/farfromrefug/nativescript-cli/commit/e8e39b404649a86d9af1f4b5f5b83b115412a713))
-* correctly get device abi ([0b2d85c](https://github.com/farfromrefug/nativescript-cli/commit/0b2d85ce9bdd42077b3786ac029510566b5dd2a5))
-* default USER_PROJECT_ROOT path fix ([ae96032](https://github.com/farfromrefug/nativescript-cli/commit/ae960327b32275841ba49f1f9a5a4d3db4e5c812))
-* edge case for runtimePackageName ([f23a4bf](https://github.com/farfromrefug/nativescript-cli/commit/f23a4bf19071b7c3dcd7f516cd15809f7a7e67f7))
-* filter for emulator only ([d68e529](https://github.com/farfromrefug/nativescript-cli/commit/d68e529ef36e914db62c76ac1a9ac28195cbc856))
-* fix plugin build after merge ([654542b](https://github.com/farfromrefug/nativescript-cli/commit/654542b49843a5bd7da2794f67f04502ed999639))
-* fix source map path ([8ca0889](https://github.com/farfromrefug/nativescript-cli/commit/8ca0889dd5cc37a3f4e18da984175c86d60320a6))
-* get framework name from Info.plist ([713be65](https://github.com/farfromrefug/nativescript-cli/commit/713be658e30ee83ca4f942b92b654d2562b40216))
-* gradle methods order fix ([f1b1269](https://github.com/farfromrefug/nativescript-cli/commit/f1b1269314b041f3de97d4203438461c3fb54f47))
-* gradle script replace fix ([b15679a](https://github.com/farfromrefug/nativescript-cli/commit/b15679a3ea5b37e15538f71033dd2c17484a6df4))
-* handle `gradleArgs` as an array option ([cbd37d1](https://github.com/farfromrefug/nativescript-cli/commit/cbd37d1a34f883a9bf7acb5535b9ad940e530f39))
-* **ios:** bump nativescript-dev-xcode ([367b3b8](https://github.com/farfromrefug/nativescript-cli/commit/367b3b837d0db8709fa6ed560475dba7674bd0b4))
-* kotlin version fix ([2fa7722](https://github.com/farfromrefug/nativescript-cli/commit/2fa77227419db404e175e0d5e2293dabb7433185))
-* makes libs smaller and build faster ([29439ca](https://github.com/farfromrefug/nativescript-cli/commit/29439cad8c3acc3f9860ac844c4e2f8d1020c1f3))
-* more android app gradle file fixes ([094372d](https://github.com/farfromrefug/nativescript-cli/commit/094372d4c84942cdb86bcb91aedd7e766c6e99bf))
-* more android env build fixes ([b72ffaa](https://github.com/farfromrefug/nativescript-cli/commit/b72ffaa0fb2b7eef05248c74da80ae55e79be81e))
-* now supports custom webpack package through `config.webpackPackageName` ([f5fb601](https://github.com/farfromrefug/nativescript-cli/commit/f5fb6013deeaef90ca6719e15d82513ccbc5a8f9))
-* pass gradlePath to plugin build ([2128946](https://github.com/farfromrefug/nativescript-cli/commit/2128946744151a3a4fe7cd51db28abff62090772))
-* prevent error with `pnpm` which can put `+` in plugin path ([e548004](https://github.com/farfromrefug/nativescript-cli/commit/e548004817d2f245585586bf0ce618ade844a57c))
-* refactor to be compatible with older runtimers ([c2200a3](https://github.com/farfromrefug/nativescript-cli/commit/c2200a353e49fbd231e34cae5cc3391bbc20ddea))
-* regression after merge from N main ([681765c](https://github.com/farfromrefug/nativescript-cli/commit/681765c619d72b08529d14278c62b4a6178a3dc1))
-* remove plugins duplicates ([5c8db12](https://github.com/farfromrefug/nativescript-cli/commit/5c8db121e4324a87b3886e6c626e0998e7128f20))
-* remove unneeded R.class and BuildConfig.class for plugins ([aa56395](https://github.com/farfromrefug/nativescript-cli/commit/aa563950d4a24b9ff792be4b710beb2f6c60486a))
-* rename gradle option to gradlePath ([8d1eba9](https://github.com/farfromrefug/nativescript-cli/commit/8d1eba99f97a1b9eeefcc88c71f5086803e63c8e))
-* report hooks error with stack for easier debugging ([d14ded8](https://github.com/farfromrefug/nativescript-cli/commit/d14ded8a8761ae388ff9b6756278dbe387633b4c))
-* require.resolve for packages with exports field in package.json ([bafc35f](https://github.com/farfromrefug/nativescript-cli/commit/bafc35f4dc0df0c71c0ce824b63ba47bdf5fe60f))
-* some yarn2 fixes ([f4a986f](https://github.com/farfromrefug/nativescript-cli/commit/f4a986f212a41efa1a3593d9a36b37c6d9df5272))
-* support `@akylas/nativescript-webpack` ([c5e32a0](https://github.com/farfromrefug/nativescript-cli/commit/c5e32a0b2399afa0cf845807b8ed0855b2c7d4f5))
-* timeline profile format fix to be compatible with firefox profiler ([cbbda1c](https://github.com/farfromrefug/nativescript-cli/commit/cbbda1cfaa9bb14027d4cd8b459a4a359e9d2106))
-* try multiple ways to get Info.plist from framework ([3628490](https://github.com/farfromrefug/nativescript-cli/commit/3628490347b1f294ffa3c669314ce508d7da9ac2))
-* update plugin gradle script ([e019098](https://github.com/farfromrefug/nativescript-cli/commit/e019098fa98b1781e597ab828c30020f46098cf6))
-* vendor build.gradle fix ([e39c3d3](https://github.com/farfromrefug/nativescript-cli/commit/e39c3d342546e27984e6c021819b8816159a90d5))
-
-## [8.10.0](https://github.com/farfromrefug/nativescript-cli/compare/v8.9.3...v8.10.0) (2026-01-28)
-
-
-### Features
-
-* add config to help menu ([#5916](https://github.com/farfromrefug/nativescript-cli/issues/5916)) ([f81499d](https://github.com/farfromrefug/nativescript-cli/commit/f81499d4092426a801ac2a4bf9579a03c463a2b9))
-* add Dependabot configuration ([#5859](https://github.com/farfromrefug/nativescript-cli/issues/5859)) ([93a214c](https://github.com/farfromrefug/nativescript-cli/commit/93a214c093c3aa5d47df6b19371c12b26d3c97ed))
-* add Dependency Review Action workflow ([#5860](https://github.com/farfromrefug/nativescript-cli/issues/5860)) ([1478ba9](https://github.com/farfromrefug/nativescript-cli/commit/1478ba9b8d6cd987833dbd7108a19ed37c0f041f))
-* allow much more complex watchapp projects ([ea84aee](https://github.com/farfromrefug/nativescript-cli/commit/ea84aeee4d161d1e71c7b704ec50abdba54474c6))
-* android upgrades, bundletool to 1.18.2, kotlin to 2.2.20 ([#5917](https://github.com/farfromrefug/nativescript-cli/issues/5917)) ([cc94b80](https://github.com/farfromrefug/nativescript-cli/commit/cc94b80328ac22828509e71313848bb10d444150))
-* **android:** api level 36 + start up emulator with unknown target versions ([#5842](https://github.com/farfromrefug/nativescript-cli/issues/5842)) ([de2cb8c](https://github.com/farfromrefug/nativescript-cli/commit/de2cb8c1e68bfbf0c7651a440bbaff72de27cf50))
-* **android:** update default compileSdkVersion and buildToolsVersion to 35 ([#5849](https://github.com/farfromrefug/nativescript-cli/issues/5849)) ([cca32f9](https://github.com/farfromrefug/nativescript-cli/commit/cca32f99d644c176f61383866cd45979d6e1f6b2))
-* config settings to use different bundlers ([#5837](https://github.com/farfromrefug/nativescript-cli/issues/5837)) ([27e94e8](https://github.com/farfromrefug/nativescript-cli/commit/27e94e8bececb837ce901e37e9b1c0d4581603dd))
-* hooks command ([#5918](https://github.com/farfromrefug/nativescript-cli/issues/5918)) ([87cbca9](https://github.com/farfromrefug/nativescript-cli/commit/87cbca902f8a30f27b8db524d307fd40d808216a))
-* **hooks:** support ES Modules ([#5843](https://github.com/farfromrefug/nativescript-cli/issues/5843)) ([23c07aa](https://github.com/farfromrefug/nativescript-cli/commit/23c07aa097750147432a8a823a4673c328df76fc))
-* replace chalk/ansi-colors/glob with Node.js built-ins ([#5853](https://github.com/farfromrefug/nativescript-cli/issues/5853)) ([e562267](https://github.com/farfromrefug/nativescript-cli/commit/e562267ce6a7d5cf2172679d6498b2ab79a9aff7))
-
-
-### Bug Fixes
-
-* allow to enforce corePackageName to use custom ([5d807ce](https://github.com/farfromrefug/nativescript-cli/commit/5d807ce741d9a82aa7c6a03f7d9d71a515c28545))
-* **android:** allow to sign debug builds (for example for system apps development) ([ea46b7e](https://github.com/farfromrefug/nativescript-cli/commit/ea46b7e2af172aeb47139489097dfed8bc7120e0))
-* **android:** livesync tool connect race condition ([#5857](https://github.com/farfromrefug/nativescript-cli/issues/5857)) ([1daa553](https://github.com/farfromrefug/nativescript-cli/commit/1daa5533d72408b2bba6773ddbd012f5284dc41f))
-* clear all deprecated dependencies ([#5858](https://github.com/farfromrefug/nativescript-cli/issues/5858)) ([d9bced3](https://github.com/farfromrefug/nativescript-cli/commit/d9bced3427f620f78ca7da62066f836e4961b084))
-* **config:** using set with undefined ([#5883](https://github.com/farfromrefug/nativescript-cli/issues/5883)) ([b09510f](https://github.com/farfromrefug/nativescript-cli/commit/b09510f5c994226030097332b6f0996c21d1d96c))
-* default log level to WARN. Fix for INFO log level not showing actual info (was quiet) ([da64b1a](https://github.com/farfromrefug/nativescript-cli/commit/da64b1a286fd8ff4c83d4f71f027b8015dfb0861))
-* more android typings options ([c481e45](https://github.com/farfromrefug/nativescript-cli/commit/c481e45609b673e8ba1a0a75cd1ca311bb1c6a7c))
-* ns typings android supports `dtsGeneratorPath` and now uses `-per-library` ([61d4b77](https://github.com/farfromrefug/nativescript-cli/commit/61d4b778c08a2832be8e8d40f75d0f74e42c4b1f))
-* remove lock from default clean ([#5881](https://github.com/farfromrefug/nativescript-cli/issues/5881)) ([a1c39f6](https://github.com/farfromrefug/nativescript-cli/commit/a1c39f6d7e9912b74c913a793adc3b6edf125574))
-* **security:** axios 1.11.0 ([#5847](https://github.com/farfromrefug/nativescript-cli/issues/5847)) ([0b08cb2](https://github.com/farfromrefug/nativescript-cli/commit/0b08cb29bda03495a1e9a99e4bef100bc2d88838))
-* **security:** xml2js and braces ([#5848](https://github.com/farfromrefug/nativescript-cli/issues/5848)) ([debc85a](https://github.com/farfromrefug/nativescript-cli/commit/debc85a584cdb305ff329bca12c255750e8a9658))
-* update ios-sim-portable to version 4.5.1 ([#5850](https://github.com/farfromrefug/nativescript-cli/issues/5850)) ([f575bdc](https://github.com/farfromrefug/nativescript-cli/commit/f575bdcc39a1a749788aa04e4cc33d2d26f92489))
-* **visionos:** build/prepare ([e40a1b8](https://github.com/farfromrefug/nativescript-cli/commit/e40a1b8d6cfd055016ac2612ecccb771176766b0))
-
-### [8.8.7](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.3...v8.8.7) (2025-01-24)
-
-### [8.8.6](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.2...v8.8.6) (2024-11-04)
-
-
-### Features
-
-* `--gradle` option to specify custom gradle binary ([0b55d42](https://github.com/farfromrefug/nativescript-cli/commit/0b55d42d74618d245851148669e30b042ac291bf))
-* `aarIgnoreFilter`, `jarIgnoreFilter` and `nsConfig.android.plugins` support (for now to add suffix to generated aar using `aarSuffix` on a per plugin bases) ([12df250](https://github.com/farfromrefug/nativescript-cli/commit/12df2500a01762dce4267df8e3a46b3f6f68fc37))
-* `filterDevicesArch` option to build only abi of connected devices for `run|debug` ([dc28cf7](https://github.com/farfromrefug/nativescript-cli/commit/dc28cf7e144f9c90cf9ad791b6d901faae956d8f))
-* `overrideRuntimeGradleFiles` option ([a369715](https://github.com/farfromrefug/nativescript-cli/commit/a369715ac56adfd33f0c2b357dcb6fe2470a7621))
-* add --json option to `ns config` ([d8bd6e9](https://github.com/farfromrefug/nativescript-cli/commit/d8bd6e9009d7c94514ec45564d79e94ac46572b7))
-* added `gradleArgs` in `config.android` ([a3721b1](https://github.com/farfromrefug/nativescript-cli/commit/a3721b1e045f9808d150de85f0f0df67d0ef4339))
-* allow plugin blacklist metadata ([68e541c](https://github.com/farfromrefug/nativescript-cli/commit/68e541c74aa7d00a2b83311f45c5bb14e0b548ee))
-* allow to ignore native dependencies ([cb695e6](https://github.com/farfromrefug/nativescript-cli/commit/cb695e65664e34a058ff77e841c2965a88fa595f))
-* android plugin build will use its own plugin dependencies to build ([8365318](https://github.com/farfromrefug/nativescript-cli/commit/8365318e3dd4de922140c7432a27c8025f5b5dd9))
-* **android:** add gradle 7+ support ([e0c1824](https://github.com/farfromrefug/nativescript-cli/commit/e0c1824cdcb3e36323fa1e9c8db9d0dd2c691ecf))
-* **android:** allow app to define `ndkVersion` to be used for plugins and app ([ed2b84a](https://github.com/farfromrefug/nativescript-cli/commit/ed2b84a23e309af72fd23095e4dbbbe832daf60a))
-* **android:** allow to force gradle version throught nativescript-config (`android.gradleVersion`). ([7c6dc40](https://github.com/farfromrefug/nativescript-cli/commit/7c6dc4013732633b181483d0ec0b8a39baddaf96))
-* **android:** app gradle files now coming from CLI to prevent dependency on runtime update ([bd5263d](https://github.com/farfromrefug/nativescript-cli/commit/bd5263d1c30f71f10291a066f19b3bb2fac6112d))
-* **android:** custom `buildPath` from `nativescript.config` ([06dfc73](https://github.com/farfromrefug/nativescript-cli/commit/06dfc73e57862075751ccd3369a5b22fbe98d835))
-* **android:** flavor support ([ded3485](https://github.com/farfromrefug/nativescript-cli/commit/ded3485e04fa628915e59772517a61c19bac4c4b))
-* implemented `--gradle` option to pass gradle parameters ([78e88eb](https://github.com/farfromrefug/nativescript-cli/commit/78e88eb7359dee942a58e3d9d7e841cd7dee744c))
-* new `syncChangedDataOnDevices`. also send the changed files in `IFilesChangeEventData` so that hooks can know what files have changed ([c17417b](https://github.com/farfromrefug/nativescript-cli/commit/c17417bea41ac81b26fc184e51c2da03a690d4a3))
-* only install corresponding abi package when possible ([9333c31](https://github.com/farfromrefug/nativescript-cli/commit/9333c317a06b8c44b2869f7b96087e83f20dbbb6))
-* **profiling:** generate chrome compatible timeline data ([d3396e8](https://github.com/farfromrefug/nativescript-cli/commit/d3396e81cda7290ba1616cc186778c66076b40ee))
-* yarn2+ support ([b35af16](https://github.com/farfromrefug/nativescript-cli/commit/b35af166c344df0e1941342b74bcaaa14d50abe1))
-
-
-### Bug Fixes
-
-* add runtime infos in app package.json. Cleanup that package.json ([8223062](https://github.com/farfromrefug/nativescript-cli/commit/8223062c58769dd557eb5de7fadd1d10d8f87828))
-* add webpack env data so that scripts can read it (like svelte-preprocessor) ([144d775](https://github.com/farfromrefug/nativescript-cli/commit/144d775d2adde5ad7299e42354f8d49991d22007))
-* allow cpp in android plugins ([51ca951](https://github.com/farfromrefug/nativescript-cli/commit/51ca9518c429b406e275edf4276431235fd7f5ff))
-* android fix when passing compileSdk as gradle arg ([ee31dd4](https://github.com/farfromrefug/nativescript-cli/commit/ee31dd464055f5b6fc657500b5238e1af6b2a11d))
-* android plugins now built using same “gradle” as apps ([8195d22](https://github.com/farfromrefug/nativescript-cli/commit/8195d22e5d1c4f8b4bc48a05f7ad3cdfb5545a5b))
-* **android:** add `--stacktrace` to any gradle build ([54ed89d](https://github.com/farfromrefug/nativescript-cli/commit/54ed89dd0eb0269c3160fc2aba9657dcd9d49c6f))
-* **android:** copy all other directories from App_Resources/Android to platforms/android. Those must be modules like AndroidTest or benchmark ([5560853](https://github.com/farfromrefug/nativescript-cli/commit/556085364031e4f8a173426de12b94c6ca436664))
-* **android:** going recursive is pretty dangerous and should not be needed ([dc50c28](https://github.com/farfromrefug/nativescript-cli/commit/dc50c2864eb2fcdba0203fb38549ee1badc41213))
-* **android:** in case we use `buildFilterDevicesArch` check if we need to rebuild for devices we are building for ([7c010fe](https://github.com/farfromrefug/nativescript-cli/commit/7c010fe5cb793a8482f03a0e0e2e70129f2fb094))
-* **android:** non eager namespace replace in manifest ([a10c9b5](https://github.com/farfromrefug/nativescript-cli/commit/a10c9b52e254ea4fe10e7ac74281744fe9322295))
-* **android:** non eager namespace replace in manifest ([71c2484](https://github.com/farfromrefug/nativescript-cli/commit/71c24847c96945b19f25c59043d8c770b712dd92))
-* **android:** support unsigned apks ([93c17d8](https://github.com/farfromrefug/nativescript-cli/commit/93c17d845ee86fcbb5f80456e416fe64e6809620))
-* **android:** use absolute path to ensure it is good from every android module ([4abb7d9](https://github.com/farfromrefug/nativescript-cli/commit/4abb7d9f40c28f124b3bee133fbe8c14bda0ffd1))
-* another gradle 8 fix to make the sentry plugin work. Should not be needed ([0793d44](https://github.com/farfromrefug/nativescript-cli/commit/0793d4480dfce35a9db34f314c86ddfa0c7ac50b))
-* another yarn 2+ fix ([1c5d2cc](https://github.com/farfromrefug/nativescript-cli/commit/1c5d2cc4a53560b91ef0deeef6b9cb7cc2ca7559))
-* better `copyAppPackages` handle ([2ee8e48](https://github.com/farfromrefug/nativescript-cli/commit/2ee8e4829a3e5ea79d0802b7b2905e919981ad2a))
-* better fix for custom build folder so that it works too in android studio. (i still pass `projectRoot` in gradle in case we need it). This fix is not used with plugins build though as it seems better to use `projectRoot` ([48e603d](https://github.com/farfromrefug/nativescript-cli/commit/48e603db535fe2b07f6dee4a3edaa7a6ab32e2f7))
-* correctly allow plugins build to detect before-plugins.gradle ([e8e39b4](https://github.com/farfromrefug/nativescript-cli/commit/e8e39b404649a86d9af1f4b5f5b83b115412a713))
-* correctly get device abi ([0b2d85c](https://github.com/farfromrefug/nativescript-cli/commit/0b2d85ce9bdd42077b3786ac029510566b5dd2a5))
-* default USER_PROJECT_ROOT path fix ([ae96032](https://github.com/farfromrefug/nativescript-cli/commit/ae960327b32275841ba49f1f9a5a4d3db4e5c812))
-* deps update ([fbb6b86](https://github.com/farfromrefug/nativescript-cli/commit/fbb6b86e59e323036b46c94ff047b6baaf156a1f))
-* edge case for runtimePackageName ([f23a4bf](https://github.com/farfromrefug/nativescript-cli/commit/f23a4bf19071b7c3dcd7f516cd15809f7a7e67f7))
-* filter for emulator only ([d68e529](https://github.com/farfromrefug/nativescript-cli/commit/d68e529ef36e914db62c76ac1a9ac28195cbc856))
-* fix plugin build after merge ([654542b](https://github.com/farfromrefug/nativescript-cli/commit/654542b49843a5bd7da2794f67f04502ed999639))
-* fix source map path ([8ca0889](https://github.com/farfromrefug/nativescript-cli/commit/8ca0889dd5cc37a3f4e18da984175c86d60320a6))
-* get framework name from Info.plist ([713be65](https://github.com/farfromrefug/nativescript-cli/commit/713be658e30ee83ca4f942b92b654d2562b40216))
-* gradle methods order fix ([f1b1269](https://github.com/farfromrefug/nativescript-cli/commit/f1b1269314b041f3de97d4203438461c3fb54f47))
-* gradle script replace fix ([b15679a](https://github.com/farfromrefug/nativescript-cli/commit/b15679a3ea5b37e15538f71033dd2c17484a6df4))
-* handle `gradleArgs` as an array option ([cbd37d1](https://github.com/farfromrefug/nativescript-cli/commit/cbd37d1a34f883a9bf7acb5535b9ad940e530f39))
-* **ios:** bump nativescript-dev-xcode ([367b3b8](https://github.com/farfromrefug/nativescript-cli/commit/367b3b837d0db8709fa6ed560475dba7674bd0b4))
-* kotlin version fix ([2fa7722](https://github.com/farfromrefug/nativescript-cli/commit/2fa77227419db404e175e0d5e2293dabb7433185))
-* makes libs smaller and build faster ([29439ca](https://github.com/farfromrefug/nativescript-cli/commit/29439cad8c3acc3f9860ac844c4e2f8d1020c1f3))
-* more android app gradle file fixes ([094372d](https://github.com/farfromrefug/nativescript-cli/commit/094372d4c84942cdb86bcb91aedd7e766c6e99bf))
-* more android env build fixes ([b72ffaa](https://github.com/farfromrefug/nativescript-cli/commit/b72ffaa0fb2b7eef05248c74da80ae55e79be81e))
-* now supports custom webpack package through `config.webpackPackageName` ([f5fb601](https://github.com/farfromrefug/nativescript-cli/commit/f5fb6013deeaef90ca6719e15d82513ccbc5a8f9))
-* pass gradlePath to plugin build ([2128946](https://github.com/farfromrefug/nativescript-cli/commit/2128946744151a3a4fe7cd51db28abff62090772))
-* prevent error with `pnpm` which can put `+` in plugin path ([e548004](https://github.com/farfromrefug/nativescript-cli/commit/e548004817d2f245585586bf0ce618ade844a57c))
-* refactor to be compatible with older runtimers ([c2200a3](https://github.com/farfromrefug/nativescript-cli/commit/c2200a353e49fbd231e34cae5cc3391bbc20ddea))
-* regression after merge from N main ([681765c](https://github.com/farfromrefug/nativescript-cli/commit/681765c619d72b08529d14278c62b4a6178a3dc1))
-* regression fix ([d7041a8](https://github.com/farfromrefug/nativescript-cli/commit/d7041a85258428d0fda5dcf69ac73be907f05517))
-* regression fix ([fd25a26](https://github.com/farfromrefug/nativescript-cli/commit/fd25a26de1b81036a7c53842f5955264e387af13))
-* regression fix after deps update ([4bf3ba6](https://github.com/farfromrefug/nativescript-cli/commit/4bf3ba64c0c10ada186e4ab93deb3e14239b5247))
-* remove plugins duplicates ([5c8db12](https://github.com/farfromrefug/nativescript-cli/commit/5c8db121e4324a87b3886e6c626e0998e7128f20))
-* remove unneeded R.class and BuildConfig.class for plugins ([aa56395](https://github.com/farfromrefug/nativescript-cli/commit/aa563950d4a24b9ff792be4b710beb2f6c60486a))
-* rename gradle option to gradlePath ([8d1eba9](https://github.com/farfromrefug/nativescript-cli/commit/8d1eba99f97a1b9eeefcc88c71f5086803e63c8e))
-* report hooks error with stack for easier debugging ([d14ded8](https://github.com/farfromrefug/nativescript-cli/commit/d14ded8a8761ae388ff9b6756278dbe387633b4c))
-* require.resolve for packages with exports field in package.json ([bafc35f](https://github.com/farfromrefug/nativescript-cli/commit/bafc35f4dc0df0c71c0ce824b63ba47bdf5fe60f))
-* some yarn2 fixes ([f4a986f](https://github.com/farfromrefug/nativescript-cli/commit/f4a986f212a41efa1a3593d9a36b37c6d9df5272))
-* support `@akylas/nativescript-webpack` ([c5e32a0](https://github.com/farfromrefug/nativescript-cli/commit/c5e32a0b2399afa0cf845807b8ed0855b2c7d4f5))
-* timeline profile format fix to be compatible with firefox profiler ([cbbda1c](https://github.com/farfromrefug/nativescript-cli/commit/cbbda1cfaa9bb14027d4cd8b459a4a359e9d2106))
-* try multiple ways to get Info.plist from framework ([3628490](https://github.com/farfromrefug/nativescript-cli/commit/3628490347b1f294ffa3c669314ce508d7da9ac2))
-* update plugin gradle script ([e019098](https://github.com/farfromrefug/nativescript-cli/commit/e019098fa98b1781e597ab828c30020f46098cf6))
-* updated bundletool.jar to support 16 KB page size. remove vendor adb ([db7f7f4](https://github.com/farfromrefug/nativescript-cli/commit/db7f7f4fa3411374b23b6a118c18dfdffc1c0459))
-* vendor build.gradle fix ([e39c3d3](https://github.com/farfromrefug/nativescript-cli/commit/e39c3d342546e27984e6c021819b8816159a90d5))
-
-## [8.8.7](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.3...v8.8.7) (2025-01-24)
-
-
-
-## [8.8.6](https://github.com/farfromrefug/nativescript-cli/compare/v8.8.2...v8.8.6) (2024-11-04)
-
-
-### Bug Fixes
-
-* add runtime infos in app package.json. Cleanup that package.json ([8223062](https://github.com/farfromrefug/nativescript-cli/commit/8223062c58769dd557eb5de7fadd1d10d8f87828))
-* add webpack env data so that scripts can read it (like svelte-preprocessor) ([144d775](https://github.com/farfromrefug/nativescript-cli/commit/144d775d2adde5ad7299e42354f8d49991d22007))
-* allow cpp in android plugins ([51ca951](https://github.com/farfromrefug/nativescript-cli/commit/51ca9518c429b406e275edf4276431235fd7f5ff))
-* android fix when passing compileSdk as gradle arg ([ee31dd4](https://github.com/farfromrefug/nativescript-cli/commit/ee31dd464055f5b6fc657500b5238e1af6b2a11d))
-* android plugins now built using same “gradle” as apps ([8195d22](https://github.com/farfromrefug/nativescript-cli/commit/8195d22e5d1c4f8b4bc48a05f7ad3cdfb5545a5b))
-* **android:** add `--stacktrace` to any gradle build ([54ed89d](https://github.com/farfromrefug/nativescript-cli/commit/54ed89dd0eb0269c3160fc2aba9657dcd9d49c6f))
-* **android:** copy all other directories from App_Resources/Android to platforms/android. Those must be modules like AndroidTest or benchmark ([5560853](https://github.com/farfromrefug/nativescript-cli/commit/556085364031e4f8a173426de12b94c6ca436664))
-* **android:** going recursive is pretty dangerous and should not be needed ([dc50c28](https://github.com/farfromrefug/nativescript-cli/commit/dc50c2864eb2fcdba0203fb38549ee1badc41213))
-* **android:** in case we use `buildFilterDevicesArch` check if we need to rebuild for devices we are building for ([7c010fe](https://github.com/farfromrefug/nativescript-cli/commit/7c010fe5cb793a8482f03a0e0e2e70129f2fb094))
-* **android:** non eager namespace replace in manifest ([a10c9b5](https://github.com/farfromrefug/nativescript-cli/commit/a10c9b52e254ea4fe10e7ac74281744fe9322295))
-* **android:** non eager namespace replace in manifest ([71c2484](https://github.com/farfromrefug/nativescript-cli/commit/71c24847c96945b19f25c59043d8c770b712dd92))
-* **android:** support unsigned apks ([93c17d8](https://github.com/farfromrefug/nativescript-cli/commit/93c17d845ee86fcbb5f80456e416fe64e6809620))
-* **android:** use absolute path to ensure it is good from every android module ([4abb7d9](https://github.com/farfromrefug/nativescript-cli/commit/4abb7d9f40c28f124b3bee133fbe8c14bda0ffd1))
-* another gradle 8 fix to make the sentry plugin work. Should not be needed ([0793d44](https://github.com/farfromrefug/nativescript-cli/commit/0793d4480dfce35a9db34f314c86ddfa0c7ac50b))
-* another yarn 2+ fix ([1c5d2cc](https://github.com/farfromrefug/nativescript-cli/commit/1c5d2cc4a53560b91ef0deeef6b9cb7cc2ca7559))
-* better `copyAppPackages` handle ([2ee8e48](https://github.com/farfromrefug/nativescript-cli/commit/2ee8e4829a3e5ea79d0802b7b2905e919981ad2a))
-* better fix for custom build folder so that it works too in android studio. (i still pass `projectRoot` in gradle in case we need it). This fix is not used with plugins build though as it seems better to use `projectRoot` ([48e603d](https://github.com/farfromrefug/nativescript-cli/commit/48e603db535fe2b07f6dee4a3edaa7a6ab32e2f7))
-* correctly allow plugins build to detect before-plugins.gradle ([e8e39b4](https://github.com/farfromrefug/nativescript-cli/commit/e8e39b404649a86d9af1f4b5f5b83b115412a713))
-* correctly get device abi ([0b2d85c](https://github.com/farfromrefug/nativescript-cli/commit/0b2d85ce9bdd42077b3786ac029510566b5dd2a5))
-* default USER_PROJECT_ROOT path fix ([ae96032](https://github.com/farfromrefug/nativescript-cli/commit/ae960327b32275841ba49f1f9a5a4d3db4e5c812))
-* deps update ([fbb6b86](https://github.com/farfromrefug/nativescript-cli/commit/fbb6b86e59e323036b46c94ff047b6baaf156a1f))
-* edge case for runtimePackageName ([f23a4bf](https://github.com/farfromrefug/nativescript-cli/commit/f23a4bf19071b7c3dcd7f516cd15809f7a7e67f7))
-* filter for emulator only ([d68e529](https://github.com/farfromrefug/nativescript-cli/commit/d68e529ef36e914db62c76ac1a9ac28195cbc856))
-* fix plugin build after merge ([654542b](https://github.com/farfromrefug/nativescript-cli/commit/654542b49843a5bd7da2794f67f04502ed999639))
-* fix source map path ([8ca0889](https://github.com/farfromrefug/nativescript-cli/commit/8ca0889dd5cc37a3f4e18da984175c86d60320a6))
-* get framework name from Info.plist ([713be65](https://github.com/farfromrefug/nativescript-cli/commit/713be658e30ee83ca4f942b92b654d2562b40216))
-* gradle methods order fix ([f1b1269](https://github.com/farfromrefug/nativescript-cli/commit/f1b1269314b041f3de97d4203438461c3fb54f47))
-* gradle script replace fix ([b15679a](https://github.com/farfromrefug/nativescript-cli/commit/b15679a3ea5b37e15538f71033dd2c17484a6df4))
-* handle `gradleArgs` as an array option ([cbd37d1](https://github.com/farfromrefug/nativescript-cli/commit/cbd37d1a34f883a9bf7acb5535b9ad940e530f39))
-* **ios:** bump nativescript-dev-xcode ([367b3b8](https://github.com/farfromrefug/nativescript-cli/commit/367b3b837d0db8709fa6ed560475dba7674bd0b4))
-* kotlin version fix ([2fa7722](https://github.com/farfromrefug/nativescript-cli/commit/2fa77227419db404e175e0d5e2293dabb7433185))
-* makes libs smaller and build faster ([29439ca](https://github.com/farfromrefug/nativescript-cli/commit/29439cad8c3acc3f9860ac844c4e2f8d1020c1f3))
-* more android app gradle file fixes ([094372d](https://github.com/farfromrefug/nativescript-cli/commit/094372d4c84942cdb86bcb91aedd7e766c6e99bf))
-* more android env build fixes ([b72ffaa](https://github.com/farfromrefug/nativescript-cli/commit/b72ffaa0fb2b7eef05248c74da80ae55e79be81e))
-* now supports custom webpack package through `config.webpackPackageName` ([f5fb601](https://github.com/farfromrefug/nativescript-cli/commit/f5fb6013deeaef90ca6719e15d82513ccbc5a8f9))
-* pass gradlePath to plugin build ([2128946](https://github.com/farfromrefug/nativescript-cli/commit/2128946744151a3a4fe7cd51db28abff62090772))
-* prevent error with `pnpm` which can put `+` in plugin path ([e548004](https://github.com/farfromrefug/nativescript-cli/commit/e548004817d2f245585586bf0ce618ade844a57c))
-* refactor to be compatible with older runtimers ([c2200a3](https://github.com/farfromrefug/nativescript-cli/commit/c2200a353e49fbd231e34cae5cc3391bbc20ddea))
-* regression after merge from N main ([681765c](https://github.com/farfromrefug/nativescript-cli/commit/681765c619d72b08529d14278c62b4a6178a3dc1))
-* regression fix ([d7041a8](https://github.com/farfromrefug/nativescript-cli/commit/d7041a85258428d0fda5dcf69ac73be907f05517))
-* regression fix ([fd25a26](https://github.com/farfromrefug/nativescript-cli/commit/fd25a26de1b81036a7c53842f5955264e387af13))
-* regression fix after deps update ([4bf3ba6](https://github.com/farfromrefug/nativescript-cli/commit/4bf3ba64c0c10ada186e4ab93deb3e14239b5247))
-* remove plugins duplicates ([5c8db12](https://github.com/farfromrefug/nativescript-cli/commit/5c8db121e4324a87b3886e6c626e0998e7128f20))
-* remove unneeded R.class and BuildConfig.class for plugins ([aa56395](https://github.com/farfromrefug/nativescript-cli/commit/aa563950d4a24b9ff792be4b710beb2f6c60486a))
-* rename gradle option to gradlePath ([8d1eba9](https://github.com/farfromrefug/nativescript-cli/commit/8d1eba99f97a1b9eeefcc88c71f5086803e63c8e))
-* report hooks error with stack for easier debugging ([d14ded8](https://github.com/farfromrefug/nativescript-cli/commit/d14ded8a8761ae388ff9b6756278dbe387633b4c))
-* require.resolve for packages with exports field in package.json ([bafc35f](https://github.com/farfromrefug/nativescript-cli/commit/bafc35f4dc0df0c71c0ce824b63ba47bdf5fe60f))
-* some yarn2 fixes ([f4a986f](https://github.com/farfromrefug/nativescript-cli/commit/f4a986f212a41efa1a3593d9a36b37c6d9df5272))
-* support `@akylas/nativescript-webpack` ([c5e32a0](https://github.com/farfromrefug/nativescript-cli/commit/c5e32a0b2399afa0cf845807b8ed0855b2c7d4f5))
-* timeline profile format fix to be compatible with firefox profiler ([cbbda1c](https://github.com/farfromrefug/nativescript-cli/commit/cbbda1cfaa9bb14027d4cd8b459a4a359e9d2106))
-* try multiple ways to get Info.plist from framework ([3628490](https://github.com/farfromrefug/nativescript-cli/commit/3628490347b1f294ffa3c669314ce508d7da9ac2))
-* update plugin gradle script ([e019098](https://github.com/farfromrefug/nativescript-cli/commit/e019098fa98b1781e597ab828c30020f46098cf6))
-* updated bundletool.jar to support 16 KB page size. remove vendor adb ([db7f7f4](https://github.com/farfromrefug/nativescript-cli/commit/db7f7f4fa3411374b23b6a118c18dfdffc1c0459))
-* vendor build.gradle fix ([e39c3d3](https://github.com/farfromrefug/nativescript-cli/commit/e39c3d342546e27984e6c021819b8816159a90d5))
-
-
-### Features
-
-* `--gradle` option to specify custom gradle binary ([0b55d42](https://github.com/farfromrefug/nativescript-cli/commit/0b55d42d74618d245851148669e30b042ac291bf))
-* `aarIgnoreFilter`, `jarIgnoreFilter` and `nsConfig.android.plugins` support (for now to add suffix to generated aar using `aarSuffix` on a per plugin bases) ([12df250](https://github.com/farfromrefug/nativescript-cli/commit/12df2500a01762dce4267df8e3a46b3f6f68fc37))
-* `filterDevicesArch` option to build only abi of connected devices for `run|debug` ([dc28cf7](https://github.com/farfromrefug/nativescript-cli/commit/dc28cf7e144f9c90cf9ad791b6d901faae956d8f))
-* `overrideRuntimeGradleFiles` option ([a369715](https://github.com/farfromrefug/nativescript-cli/commit/a369715ac56adfd33f0c2b357dcb6fe2470a7621))
-* add --json option to `ns config` ([d8bd6e9](https://github.com/farfromrefug/nativescript-cli/commit/d8bd6e9009d7c94514ec45564d79e94ac46572b7))
-* added `gradleArgs` in `config.android` ([a3721b1](https://github.com/farfromrefug/nativescript-cli/commit/a3721b1e045f9808d150de85f0f0df67d0ef4339))
-* allow plugin blacklist metadata ([68e541c](https://github.com/farfromrefug/nativescript-cli/commit/68e541c74aa7d00a2b83311f45c5bb14e0b548ee))
-* allow to ignore native dependencies ([cb695e6](https://github.com/farfromrefug/nativescript-cli/commit/cb695e65664e34a058ff77e841c2965a88fa595f))
-* android plugin build will use its own plugin dependencies to build ([8365318](https://github.com/farfromrefug/nativescript-cli/commit/8365318e3dd4de922140c7432a27c8025f5b5dd9))
-* **android:** add gradle 7+ support ([e0c1824](https://github.com/farfromrefug/nativescript-cli/commit/e0c1824cdcb3e36323fa1e9c8db9d0dd2c691ecf))
-* **android:** allow app to define `ndkVersion` to be used for plugins and app ([ed2b84a](https://github.com/farfromrefug/nativescript-cli/commit/ed2b84a23e309af72fd23095e4dbbbe832daf60a))
-* **android:** allow to force gradle version throught nativescript-config (`android.gradleVersion`). ([7c6dc40](https://github.com/farfromrefug/nativescript-cli/commit/7c6dc4013732633b181483d0ec0b8a39baddaf96))
-* **android:** app gradle files now coming from CLI to prevent dependency on runtime update ([bd5263d](https://github.com/farfromrefug/nativescript-cli/commit/bd5263d1c30f71f10291a066f19b3bb2fac6112d))
-* **android:** custom `buildPath` from `nativescript.config` ([06dfc73](https://github.com/farfromrefug/nativescript-cli/commit/06dfc73e57862075751ccd3369a5b22fbe98d835))
-* **android:** flavor support ([ded3485](https://github.com/farfromrefug/nativescript-cli/commit/ded3485e04fa628915e59772517a61c19bac4c4b))
-* implemented `--gradle` option to pass gradle parameters ([78e88eb](https://github.com/farfromrefug/nativescript-cli/commit/78e88eb7359dee942a58e3d9d7e841cd7dee744c))
-* new `syncChangedDataOnDevices`. also send the changed files in `IFilesChangeEventData` so that hooks can know what files have changed ([c17417b](https://github.com/farfromrefug/nativescript-cli/commit/c17417bea41ac81b26fc184e51c2da03a690d4a3))
-* only install corresponding abi package when possible ([9333c31](https://github.com/farfromrefug/nativescript-cli/commit/9333c317a06b8c44b2869f7b96087e83f20dbbb6))
-* **profiling:** generate chrome compatible timeline data ([d3396e8](https://github.com/farfromrefug/nativescript-cli/commit/d3396e81cda7290ba1616cc186778c66076b40ee))
-* yarn2+ support ([b35af16](https://github.com/farfromrefug/nativescript-cli/commit/b35af166c344df0e1941342b74bcaaa14d50abe1))
+* add config to help menu ([#5916](https://github.com/NativeScript/nativescript-cli/issues/5916)) ([f81499d](https://github.com/NativeScript/nativescript-cli/commit/f81499d4092426a801ac2a4bf9579a03c463a2b9))
+* add Dependabot configuration ([#5859](https://github.com/NativeScript/nativescript-cli/issues/5859)) ([93a214c](https://github.com/NativeScript/nativescript-cli/commit/93a214c093c3aa5d47df6b19371c12b26d3c97ed))
+* add Dependency Review Action workflow ([#5860](https://github.com/NativeScript/nativescript-cli/issues/5860)) ([1478ba9](https://github.com/NativeScript/nativescript-cli/commit/1478ba9b8d6cd987833dbd7108a19ed37c0f041f))
+* android upgrades, bundletool to 1.18.2, kotlin to 2.2.20 ([#5917](https://github.com/NativeScript/nativescript-cli/issues/5917)) ([cc94b80](https://github.com/NativeScript/nativescript-cli/commit/cc94b80328ac22828509e71313848bb10d444150))
+* **android:** api level 36 + start up emulator with unknown target versions ([#5842](https://github.com/NativeScript/nativescript-cli/issues/5842)) ([de2cb8c](https://github.com/NativeScript/nativescript-cli/commit/de2cb8c1e68bfbf0c7651a440bbaff72de27cf50))
+* **android:** update default compileSdkVersion and buildToolsVersion to 35 ([#5849](https://github.com/NativeScript/nativescript-cli/issues/5849)) ([cca32f9](https://github.com/NativeScript/nativescript-cli/commit/cca32f99d644c176f61383866cd45979d6e1f6b2))
+* config settings to use different bundlers ([#5837](https://github.com/NativeScript/nativescript-cli/issues/5837)) ([27e94e8](https://github.com/NativeScript/nativescript-cli/commit/27e94e8bececb837ce901e37e9b1c0d4581603dd))
+* hooks command ([#5918](https://github.com/NativeScript/nativescript-cli/issues/5918)) ([87cbca9](https://github.com/NativeScript/nativescript-cli/commit/87cbca902f8a30f27b8db524d307fd40d808216a))
+* **hooks:** support ES Modules ([#5843](https://github.com/NativeScript/nativescript-cli/issues/5843)) ([23c07aa](https://github.com/NativeScript/nativescript-cli/commit/23c07aa097750147432a8a823a4673c328df76fc))
+* migration updates ([52e5749](https://github.com/NativeScript/nativescript-cli/commit/52e57499806431ee5e3919e9a7cd631e030481ac))
+* replace chalk/ansi-colors/glob with Node.js built-ins ([#5853](https://github.com/NativeScript/nativescript-cli/issues/5853)) ([e562267](https://github.com/NativeScript/nativescript-cli/commit/e562267ce6a7d5cf2172679d6498b2ab79a9aff7))
 
 
 

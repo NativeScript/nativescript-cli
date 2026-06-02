@@ -8,10 +8,11 @@ import {
 
 export abstract class DebugServiceBase
 	extends EventEmitter
-	implements IDeviceDebugService {
+	implements IDeviceDebugService
+{
 	constructor(
 		protected device: Mobile.IDevice,
-		protected $devicesService: Mobile.IDevicesService
+		protected $devicesService: Mobile.IDevicesService,
 	) {
 		super();
 	}
@@ -20,20 +21,21 @@ export abstract class DebugServiceBase
 
 	public abstract debug(
 		debugData: IDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugResultInfo>;
 
 	public abstract debugStop(): Promise<void>;
 
 	protected getCanExecuteAction(
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): (device: Mobile.IDevice) => boolean {
 		return (device: Mobile.IDevice): boolean => {
 			if (deviceIdentifier) {
 				let isSearchedDevice =
 					device.deviceInfo.identifier === deviceIdentifier;
 				if (!isSearchedDevice) {
-					const deviceByDeviceOption = this.$devicesService.getDeviceByDeviceOption();
+					const deviceByDeviceOption =
+						this.$devicesService.getDeviceByDeviceOption();
 					isSearchedDevice =
 						deviceByDeviceOption &&
 						device.deviceInfo.identifier ===
@@ -49,7 +51,7 @@ export abstract class DebugServiceBase
 
 	protected getChromeDebugUrl(
 		debugOptions: IDebugOptions,
-		port: number
+		port: number,
 	): string {
 		// corresponds to 55.0.2883 Chrome version
 		// SHA is taken from https://chromium.googlesource.com/chromium/src/+/55.0.2883.100
@@ -74,7 +76,7 @@ export abstract class DebugServiceBase
 			chromeDevToolsPrefix = `https://chrome-devtools-frontend.appspot.com/serve_file/@${commitSHA}`;
 		}
 
-		const chromeUrl = `${chromeDevToolsPrefix}/inspector.html?ws=localhost:${port}`;
+		const chromeUrl = `${chromeDevToolsPrefix}/inspector.html?ws=127.0.0.1:${port}`;
 		return chromeUrl;
 	}
 }

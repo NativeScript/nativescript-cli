@@ -121,6 +121,16 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			)
 			.concat(this.getBuildLoggingArgs());
 
+		// pbxproj-dom sets CODE_SIGN_IDENTITY[sdk=iphoneos*] which doesn't match
+		// the xros SDK used by visionOS builds — pass it explicitly as an override
+		if (isvisionOS) {
+			args.push(
+				`CODE_SIGN_IDENTITY=${
+					buildConfig.release ? "Apple Distribution" : "Apple Development"
+				}`,
+			);
+		}
+
 		return args;
 	}
 
