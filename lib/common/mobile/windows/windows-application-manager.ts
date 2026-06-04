@@ -145,27 +145,24 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 
 	/**
 	 * Returns the path of the runtime's trace log for the most recently started app.
-	 * Inside a UWP process, Win32 GetTempPathW() virtualises
-	 * to AC\Temp (the app container's isolated temp folder). Rust's
-	 * std::env::temp_dir() calls GetTempPathW(), so the DLL writes to AC\Temp.
+	 * The runtime writes console.log to ApplicationData.LocalFolder (LocalState), alongside the
+	 * crash/panic/lastcalls logs. NOTE: earlier builds assumed a UWP app's GetTempPathW() virtualises
+	 * to AC\Temp, but the app is `runFullTrust` (not an app container), so GetTempPathW() resolves to
+	 * the *system* temp — which is neither AC\Temp nor a path the CLI could reliably find. The runtime
+	 * now targets LocalState explicitly (runtime_set_local_folder → set_log_dir), so pin that here.
 	 * Falls back to the system temp path when no PFN is known (unpackaged EXE).
 	 */
 	public getLogFilePath(): string {
-		const systemConsoleLog = path.join(os.tmpdir(), "console.log");
-		const systemLegacyLog = path.join(os.tmpdir(), "ns_trace.log");
-
 		if (this._packageFamilyNames.size > 0) {
 			const pfn = this._packageFamilyNames.values().next().value as string;
 			const localAppData = process.env.LOCALAPPDATA;
 			if (localAppData && pfn) {
-				const consolePath = path.join(localAppData, "Packages", pfn, "AC", "Temp", "console.log");
-				const legacyPath = path.join(localAppData, "Packages", pfn, "AC", "Temp", "ns_trace.log");
-				if (fs.existsSync(consolePath)) return consolePath;
-				if (fs.existsSync(legacyPath)) return legacyPath;
-				return consolePath;
+				return path.join(localAppData, "Packages", pfn, "LocalState", "console.log");
 			}
 		}
 
+		const systemConsoleLog = path.join(os.tmpdir(), "console.log");
+		const systemLegacyLog = path.join(os.tmpdir(), "ns_trace.log");
 		if (fs.existsSync(systemConsoleLog)) return systemConsoleLog;
 		if (fs.existsSync(systemLegacyLog)) return systemLegacyLog;
 		return systemConsoleLog;
