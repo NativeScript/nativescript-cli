@@ -380,6 +380,25 @@ export class BundlerCompilerService
 					delete this.bundlerProcesses[platformData.platformNameLowerCase];
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					if (exitCode === 0) {
+						// In watch mode the Vite output is copied into the native
+						// project from the `emittedFiles` IPC message. A non-watch
+						// build (`ns build`, `ns run --justlaunch`) has no IPC
+						// channel — `startBundleProcess` sets `stdio: "inherit"`
+						// when `prepareData.watch` is false — so that copy never
+						// runs and `<platform>/.../assets/app` stays empty, leaving
+						// the Static Binding Generator with no input. Copy the full
+						// Vite bundle here instead.
+						if (this.getBundler() === "vite") {
+							const distOutput = path.join(
+								projectData.projectDir,
+								".ns-vite-build",
+							);
+							const destDir = path.join(
+								platformData.appDestinationDirectoryPath,
+								this.$options.hostProjectModuleName,
+							);
+							this.copyViteBundleToNative(distOutput, destDir);
+						}
 						resolve();
 					} else {
 						const error: any = new Error(
