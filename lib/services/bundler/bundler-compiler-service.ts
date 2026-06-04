@@ -126,13 +126,9 @@ export class BundlerCompilerService
 						}
 
 						// Copy Vite output files directly to platform destination
-						const distOutput = path.join(
-							projectData.projectDir,
-							".ns-vite-build",
-						);
-						const destDir = path.join(
-							platformData.appDestinationDirectoryPath,
-							this.$options.hostProjectModuleName,
+						const { distOutput, destDir } = this.getVitePaths(
+							platformData,
+							projectData,
 						);
 
 						if (debugLog) {
@@ -389,13 +385,9 @@ export class BundlerCompilerService
 						// the Static Binding Generator with no input. Copy the full
 						// Vite bundle here instead.
 						if (this.getBundler() === "vite") {
-							const distOutput = path.join(
-								projectData.projectDir,
-								".ns-vite-build",
-							);
-							const destDir = path.join(
-								platformData.appDestinationDirectoryPath,
-								this.$options.hostProjectModuleName,
+							const { distOutput, destDir } = this.getVitePaths(
+								platformData,
+								projectData,
 							);
 							this.copyViteBundleToNative(distOutput, destDir);
 						}
@@ -862,6 +854,21 @@ export class BundlerCompilerService
 
 	public getBundler(): BundlerType {
 		return this.$projectConfigService.getValue(`bundler`, "webpack");
+	}
+
+	// The Vite output directory and its destination in the native project —
+	// shared by the watch-mode `emittedFiles` copy and the non-watch copy.
+	private getVitePaths(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+	): { distOutput: string; destDir: string } {
+		return {
+			distOutput: path.join(projectData.projectDir, ".ns-vite-build"),
+			destDir: path.join(
+				platformData.appDestinationDirectoryPath,
+				this.$options.hostProjectModuleName,
+			),
+		};
 	}
 
 	private copyViteBundleToNative(
