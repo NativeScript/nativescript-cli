@@ -5,6 +5,7 @@ import * as fs from "fs";
 import { mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import * as _ from "lodash";
+import * as fc from "fast-check";
 import { ICliGlobal } from "../../definitions/cli-global";
 import { ICommandParameter } from "../../definitions/commands";
 import { IInjector } from "../../definitions/yok";
@@ -1095,6 +1096,85 @@ $injector.register("a", A);
 					);
 				});
 			});
+		});
+
+		it("fuzzes one-level hierarchical command parsing with mixed casing", () => {
+			fc.assert(
+				fc.property(
+					fc
+						.stringMatching(/^[a-z][a-z0-9-]{0,15}$/)
+						.filter((value) => value.indexOf("|") === -1),
+					fc.array(fc.string(), { maxLength: 6 }),
+					fc.array(fc.boolean(), { minLength: 1, maxLength: 16 }),
+					(
+						rawSubCommand: string,
+						remainingArguments: string[],
+						mixedCaseFlags: boolean[],
+					) => {
+						setGlobalInjector(new Yok());
+						const subCommand = rawSubCommand.slice(0, 16);
+						const commandName = `sample|${subCommand}`;
+						injector.requireCommand(commandName, "sampleFileName");
+
+						const commandTokenCharacters = subCommand.split("");
+						const mixedCaseToken = commandTokenCharacters
+							.map((character, index) => {
+								const useUpperCase =
+									mixedCaseFlags[index % mixedCaseFlags.length];
+								return useUpperCase
+									? character.toUpperCase()
+									: character.toLowerCase();
+							})
+							.join("");
+
+						const result = injector.buildHierarchicalCommand("sample", [
+							mixedCaseToken,
+							...remainingArguments,
+						]);
+
+						assert.isDefined(result);
+						assert.deepStrictEqual(result.commandName, commandName);
+						assert.deepStrictEqual(
+							result.remainingArguments,
+							remainingArguments,
+						);
+					},
+				),
+				{ numRuns: 120 },
+			);
+		});
+
+		it("fuzzes two-level hierarchical command parsing and trailing args", () => {
+			fc.assert(
+				fc.property(
+					fc
+						.tuple(
+							fc.stringMatching(/^[a-z][a-z0-9]{0,10}$/),
+							fc.stringMatching(/^[a-z][a-z0-9]{0,10}$/),
+						)
+						.filter(([firstToken, secondToken]) => firstToken !== secondToken),
+					fc.array(fc.string(), { maxLength: 5 }),
+					([firstToken, secondToken], trailingArguments: string[]) => {
+						setGlobalInjector(new Yok());
+						const commandName = `sample|${firstToken}|${secondToken}`;
+						injector.requireCommand(commandName, "sampleFileName");
+
+						const result = injector.buildHierarchicalCommand("sample", [
+							firstToken,
+							secondToken,
+							...trailingArguments,
+						]);
+
+						assert.isDefined(result);
+						assert.deepStrictEqual(result.commandName, commandName);
+						assert.deepStrictEqual(
+							result.remainingArguments,
+							trailingArguments,
+						);
+					},
+				),
+				{ numRuns: 120 },
+			);
 		});
 	});
 

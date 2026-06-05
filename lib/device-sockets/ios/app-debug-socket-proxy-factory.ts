@@ -21,14 +21,14 @@ export class AppDebugSocketProxyFactory
 		private $lockService: ILockService,
 		private $options: IOptions,
 		private $tempService: ITempService,
-		private $net: INet
+		private $net: INet,
 	) {
 		super();
 	}
 
 	public getTCPSocketProxy(
 		deviceIdentifier: string,
-		appId: string
+		appId: string,
 	): net.Server {
 		return this.deviceTcpServers[`${deviceIdentifier}-${appId}`];
 	}
@@ -37,18 +37,18 @@ export class AppDebugSocketProxyFactory
 		device: Mobile.IiOSDevice,
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<net.Server> {
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceTcpServers[cacheKey];
 		if (existingServer) {
 			this.$errors.fail(
-				`TCP socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`
+				`TCP socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`,
 			);
 		}
 
 		this.$logger.info(
-			"\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n"
+			"\nSetting up proxy...\nPress Ctrl + C to terminate, or disconnect.\n",
 		);
 
 		const server = net.createServer({
@@ -69,7 +69,7 @@ export class AppDebugSocketProxyFactory
 			const appDebugSocket = await device.getDebugSocket(
 				appId,
 				projectName,
-				projectDir
+				projectDir,
 			);
 			this.$logger.info("Backend socket created.");
 
@@ -112,7 +112,7 @@ export class AppDebugSocketProxyFactory
 		device: Mobile.IiOSDevice,
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<ws.Server> {
 		const existingWebProxy =
 			this.deviceWebServers[`${device.deviceInfo.identifier}-${appId}`];
@@ -130,14 +130,14 @@ export class AppDebugSocketProxyFactory
 		device: Mobile.IiOSDevice,
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<ws.Server> {
 		let clientConnectionLockRelease: () => void;
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
 			this.$errors.fail(
-				`Web socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`
+				`Web socket proxy is already running for device '${device.deviceInfo.identifier}' and app '${appId}'`,
 			);
 		}
 
@@ -145,7 +145,7 @@ export class AppDebugSocketProxyFactory
 		const localPort = await this.$net.getAvailablePortInRange(41000);
 
 		this.$logger.info(
-			"\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n"
+			"\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n",
 		);
 
 		// NB: When the inspector frontend connects we might not have connected to the inspector backend yet.
@@ -159,14 +159,14 @@ export class AppDebugSocketProxyFactory
 			port: localPort,
 			verifyClient: async (
 				info: any,
-				callback: (res: boolean, code?: number, message?: string) => void
+				callback: (res: boolean, code?: number, message?: string) => void,
 			) => {
 				let acceptHandshake = true;
 				clientConnectionLockRelease = null;
 
 				try {
 					clientConnectionLockRelease = await this.$lockService.lock(
-						`debug-connection-${device.deviceInfo.identifier}-${appId}.lock`
+						`debug-connection-${device.deviceInfo.identifier}-${appId}.lock`,
 					);
 
 					this.$logger.info("Frontend client connected.");
@@ -184,7 +184,7 @@ export class AppDebugSocketProxyFactory
 					appDebugSocket = await device.getDebugSocket(
 						appId,
 						projectName,
-						projectDir
+						projectDir,
 					);
 					currentAppSocket = appDebugSocket;
 					this.$logger.info("Backend socket created.");
@@ -198,7 +198,7 @@ export class AppDebugSocketProxyFactory
 					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
 					acceptHandshake = false;
 					this.$logger.warn(
-						`Cannot connect to device socket. The error message is '${err.message}'.`
+						`Cannot connect to device socket. The error message is '${err.message}'.`,
 					);
 				}
 
@@ -225,7 +225,7 @@ export class AppDebugSocketProxyFactory
 					webSocket.send(message);
 				} else {
 					this.$logger.trace(
-						`Received message ${message}, but unable to send it to webSocket as its state is: ${webSocket.readyState}`
+						`Received message ${message}, but unable to send it to webSocket as its state is: ${webSocket.readyState}`,
 					);
 				}
 			});
