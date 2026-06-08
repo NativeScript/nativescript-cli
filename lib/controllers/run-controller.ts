@@ -903,7 +903,11 @@ export class RunController extends EventEmitter implements IRunController {
 	): Promise<void> {
 		this._syncInProgress = true;
 		try {
-			await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+			const platformData = this.$platformsDataService.getPlatformData(
+				data.platform,
+				projectData
+			);
+			await this.syncChangedDataOnDevices(data, projectData, platformData, liveSyncInfo);
 		} catch (err: any) {
 			this.$logger.trace(`Error during sync on devices: ${err.message || err}`);
 		} finally {
