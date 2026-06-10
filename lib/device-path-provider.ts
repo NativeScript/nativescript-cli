@@ -58,12 +58,13 @@ export class DevicePathProvider implements IDevicePathProvider {
 					device.deviceInfo.platform,
 					projectData,
 				);
+				const buildOutputPath = platformData.getBuildOutputPath({} as never);
+				if (options.getDirname) {
+					return buildOutputPath;
+				}
 				// Sync into bin\app — the registered package root — so the running app
 				// picks up changes without a rebuild.
-				return path.join(
-					platformData.getBuildOutputPath({} as never),
-					APP_FOLDER_NAME,
-				);
+				return path.join(buildOutputPath, APP_FOLDER_NAME);
 			}
 		}
 
