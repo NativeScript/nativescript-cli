@@ -183,6 +183,12 @@ interface IPackageInstallationManager {
 interface INodePackageManagerInstallOptions
 	extends INpmInstallConfigurationOptions, IDictionary<string | boolean> {
 	/**
+	 * When true and the active package manager is npm, execute installs with `--legacy-peer-deps`.
+	 * Other package managers should ignore this option.
+	 */
+	legacyPeers?: boolean;
+
+	/**
 	 * Destination of the installation.
 	 * @type {string}
 	 * @optional
@@ -547,6 +553,7 @@ interface IAndroidReleaseOptions {
 interface INpmInstallConfigurationOptionsBase {
 	frameworkPath: string;
 	ignoreScripts: boolean; //npm flag
+	legacyPeerDeps?: boolean; //npm flag (--legacy-peer-deps)
 }
 
 interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOptionsBase {
