@@ -877,7 +877,6 @@ export class IOSProjectService
 			}
 		}
 
-		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
 		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({
 			watchAppFolderPath: path.join(
 				resourcesDirectoryPath,

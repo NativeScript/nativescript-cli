@@ -17,6 +17,11 @@ export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
 export const WEBPACK_PLUGIN_NAME = "@nativescript/webpack";
 export const RSPACK_PLUGIN_NAME = "@nativescript/rspack";
+// Project-relative directory the Vite bundler writes its build output to
+// before the CLI copies it into the platforms app folder. Mirrors the
+// default value computed in `@nativescript/vite`'s base configuration
+// (`process.env.NS_VITE_DIST_DIR || '.ns-vite-build'`).
+export const VITE_DIST_FOLDER_NAME = ".ns-vite-build";
 export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const UI_MOBILE_BASE_NAME = "@nativescript/ui-mobile-base";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
@@ -172,9 +177,7 @@ export class ITMSConstants {
 	static altoolExecutableName = "altool";
 }
 
-class ItunesConnectApplicationTypesClass
-	implements IiTunesConnectApplicationType
-{
+class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationType {
 	public iOS = "iOS App";
 	public Mac = "Mac OS X App";
 }
@@ -409,6 +412,7 @@ export enum IOSNativeTargetTypes {
 	watchApp = "watch_app",
 	watchExtension = "watch_extension",
 	appExtension = "app_extension",
+	application = "application",
 }
 
 const pathToLoggerAppendersDir = join(

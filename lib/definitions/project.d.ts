@@ -601,9 +601,7 @@ interface INativePrepare {
 }
 
 interface IBuildConfig
-	extends IAndroidBuildOptionsSettings,
-		IiOSBuildConfig,
-		IProjectDir {
+	extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IProjectDir {
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;
@@ -615,7 +613,8 @@ interface IBuildConfig
  * Describes iOS-specific build configuration properties
  */
 interface IiOSBuildConfig
-	extends IBuildForDevice,
+	extends
+		IBuildForDevice,
 		IiCloudContainerEnvironment,
 		IDeviceIdentifier,
 		IProvision,
@@ -865,6 +864,7 @@ interface IAddExtensionsFromPathOptions extends IAddTargetFromPathOptions {
 
 interface IAddWatchAppFromPathOptions extends IAddTargetFromPathOptions {
 	watchAppFolderPath: string;
+	disableStubBinary?: boolean;
 }
 
 interface IRemoveExtensionsOptions {
@@ -872,6 +872,37 @@ interface IRemoveExtensionsOptions {
 }
 
 interface IRemoveWatchAppOptions extends IRemoveExtensionsOptions {}
+
+interface IWatchAppJSONConfigModule {
+	name?: string;
+	path: string;
+	targetType?: string;
+	embed?: boolean;
+	frameworks?: Array<string | Record<string, string>>;
+	dependencies?: string[];
+	headerSearchPaths?: string[];
+	resources?: string[];
+	src?: string[];
+	linkerFlags?: string[];
+	buildConfigurationProperties?: Record<string, string>;
+	SPMPackages?: Array<IOSSPMPackage | string>;
+}
+interface IWatchAppJSONConfig {
+	targetType?: string;
+	forceAddEmbedWatchContent?: boolean;
+	sharedModulesBuildConfigurationProperties?: Record<string, string>;
+	basedir?: string;
+	infoPlistPath?: string;
+	xcprivacyPath?: string;
+	importSourcesFromMainFolder?: boolean;
+	importResourcesFromMainFolder?: boolean;
+	resources?: string[];
+	src?: string[];
+	resourcesExclude?: string[];
+	srcExclude?: string[];
+	modules: IWatchAppConfigModule[];
+	SPMPackages?: Array<IOSSPMPackage>;
+}
 
 interface IRubyFunction {
 	functionName: string;
