@@ -53,7 +53,7 @@ export class ProjectDataService implements IProjectDataService {
 		private $projectData: IProjectData,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
-		private $injector: IInjector
+		private $injector: IInjector,
 	) {
 		try {
 			// add the ProjectData of the default projectDir to the projectData cache
@@ -73,7 +73,7 @@ export class ProjectDataService implements IProjectDataService {
 	public getNSValue(projectDir: string, propertyName: string): any {
 		return this.getValue(
 			projectDir,
-			this.getNativeScriptPropertyName(propertyName)
+			this.getNativeScriptPropertyName(propertyName),
 		);
 	}
 
@@ -81,11 +81,11 @@ export class ProjectDataService implements IProjectDataService {
 		try {
 			return this.getPropertyValueFromJson(
 				jsonData,
-				this.getNativeScriptPropertyName(propertyName)
+				this.getNativeScriptPropertyName(propertyName),
 			);
 		} catch (e) {
 			this.$logger.trace(
-				"Failed to get NS property value from JSON project data."
+				"Failed to get NS property value from JSON project data.",
 			);
 		}
 
@@ -99,7 +99,7 @@ export class ProjectDataService implements IProjectDataService {
 	public removeNSProperty(projectDir: string, propertyName: string): void {
 		this.removeProperty(
 			projectDir,
-			this.getNativeScriptPropertyName(propertyName)
+			this.getNativeScriptPropertyName(propertyName),
 		);
 	}
 
@@ -110,7 +110,7 @@ export class ProjectDataService implements IProjectDataService {
 		][dependencyName];
 		this.$fs.writeJson(
 			projectFileInfo.projectFilePath,
-			projectFileInfo.projectData
+			projectFileInfo.projectData,
 		);
 	}
 
@@ -129,7 +129,7 @@ export class ProjectDataService implements IProjectDataService {
 	@exported("projectDataService")
 	public getProjectDataFromContent(
 		packageJsonContent: string,
-		projectDir?: string
+		projectDir?: string,
 	): IProjectData {
 		projectDir = projectDir || this.defaultProjectDir;
 		this.projectDataCache[projectDir] =
@@ -137,25 +137,25 @@ export class ProjectDataService implements IProjectDataService {
 			this.$injector.resolve<IProjectData>(ProjectData);
 		this.projectDataCache[projectDir].initializeProjectDataFromContent(
 			packageJsonContent,
-			projectDir
+			projectDir,
 		);
 		return this.projectDataCache[projectDir];
 	}
 
 	@exported("projectDataService")
 	public async getAssetsStructure(
-		opts: IProjectDir
+		opts: IProjectDir,
 	): Promise<IAssetsStructure> {
 		const iOSAssetStructure = await this.getIOSAssetsStructure(opts);
 		const androidAssetStructure = await this.getAndroidAssetsStructure(opts);
 
 		this.$logger.trace(
 			"iOS Assets structure:",
-			JSON.stringify(iOSAssetStructure, null, 2)
+			JSON.stringify(iOSAssetStructure, null, 2),
 		);
 		this.$logger.trace(
 			"Android Assets structure:",
-			JSON.stringify(androidAssetStructure, null, 2)
+			JSON.stringify(androidAssetStructure, null, 2),
 		);
 
 		return {
@@ -172,30 +172,30 @@ export class ProjectDataService implements IProjectDataService {
 		const basePath = path.join(
 			projectData.appResourcesDirectoryPath,
 			this.$devicePlatformsConstants.iOS,
-			AssetConstants.iOSAssetsDirName
+			AssetConstants.iOSAssetsDirName,
 		);
 		const pathToIcons = path.join(basePath, AssetConstants.iOSIconsDirName);
 		const icons = await this.getIOSAssetSubGroup(pathToIcons);
 
 		const pathToSplashBackgrounds = path.join(
 			basePath,
-			AssetConstants.iOSSplashBackgroundsDirName
+			AssetConstants.iOSSplashBackgroundsDirName,
 		);
 		const splashBackgrounds = await this.getIOSAssetSubGroup(
-			pathToSplashBackgrounds
+			pathToSplashBackgrounds,
 		);
 
 		const pathToSplashCenterImages = path.join(
 			basePath,
-			AssetConstants.iOSSplashCenterImagesDirName
+			AssetConstants.iOSSplashCenterImagesDirName,
 		);
 		const splashCenterImages = await this.getIOSAssetSubGroup(
-			pathToSplashCenterImages
+			pathToSplashCenterImages,
 		);
 
 		const pathToSplashImages = path.join(
 			basePath,
-			AssetConstants.iOSSplashImagesDirName
+			AssetConstants.iOSSplashImagesDirName,
 		);
 		const splashImages = await this.getIOSAssetSubGroup(pathToSplashImages);
 
@@ -209,7 +209,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	public removeNSConfigProperty(
 		projectDir: string,
-		propertyName: string
+		propertyName: string,
 	): void {
 		this.$logger.trace(`Removing "${propertyName}" property from nsconfig.`);
 		this.updateNsConfigValue(projectDir, null, [propertyName]);
@@ -218,7 +218,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	@exported("projectDataService")
 	public async getAndroidAssetsStructure(
-		opts: IProjectDir
+		opts: IProjectDir,
 	): Promise<IAssetGroup> {
 		// TODO: Use image-size package to get the width and height of an image.
 		// TODO: Parse the splash_screen.xml in nodpi directory and get from it the names of the background and center image.
@@ -228,10 +228,10 @@ export class ProjectDataService implements IProjectDataService {
 		const projectData = this.getProjectData(projectDir);
 		const pathToAndroidDir = path.join(
 			projectData.appResourcesDirectoryPath,
-			this.$devicePlatformsConstants.Android
+			this.$devicePlatformsConstants.Android,
 		);
 		const hasMigrated = this.$androidResourcesMigrationService.hasMigrated(
-			projectData.appResourcesDirectoryPath
+			projectData.appResourcesDirectoryPath,
 		);
 		const basePath = hasMigrated
 			? path.join(pathToAndroidDir, SRC_DIR, MAIN_DIR, RESOURCES_DIR)
@@ -240,7 +240,7 @@ export class ProjectDataService implements IProjectDataService {
 		let useLegacy = false;
 		try {
 			const manifest = this.$fs.readText(
-				path.resolve(basePath, "../AndroidManifest.xml")
+				path.resolve(basePath, "../AndroidManifest.xml"),
 			);
 			useLegacy = !manifest.includes(`android:icon="@mipmap/ic_launcher"`);
 		} catch (err) {
@@ -254,11 +254,11 @@ export class ProjectDataService implements IProjectDataService {
 			icons: this.getAndroidAssetSubGroup(content.icons, basePath),
 			splashBackgrounds: this.getAndroidAssetSubGroup(
 				content.splashBackgrounds,
-				basePath
+				basePath,
 			),
 			splashCenterImages: this.getAndroidAssetSubGroup(
 				content.splashCenterImages,
-				basePath
+				basePath,
 			),
 			splashImages: null,
 		};
@@ -277,7 +277,7 @@ export class ProjectDataService implements IProjectDataService {
 
 		const pathToProjectNodeModules = path.join(
 			projectDir,
-			NODE_MODULES_FOLDER_NAME
+			NODE_MODULES_FOLDER_NAME,
 		);
 		const files = this.$fs.enumerateFilesInDirectorySync(
 			projectData.appDirectoryPath,
@@ -297,7 +297,7 @@ export class ProjectDataService implements IProjectDataService {
 				}
 
 				return path.extname(filePath) === supportedFileExtension;
-			}
+			},
 		);
 
 		return files;
@@ -312,7 +312,7 @@ export class ProjectDataService implements IProjectDataService {
 	private updateNsConfigValue(
 		projectDir: string,
 		updateObject?: INsConfig,
-		propertiesToRemove?: string[]
+		propertiesToRemove?: string[],
 	): void {
 		// todo: figure out a way to update js/ts configs
 		// most likely needs an ast parser/writer
@@ -323,7 +323,7 @@ export class ProjectDataService implements IProjectDataService {
 		if (updateObject) {
 			newNsConfig = _.assign(
 				newNsConfig || this.getNsConfigDefaultObject(),
-				updateObject
+				updateObject,
 			);
 		}
 
@@ -346,7 +346,7 @@ export class ProjectDataService implements IProjectDataService {
 			} catch (e) {
 				this.$logger.trace(
 					"The `nsconfig` content is not a valid JSON. Parse error: ",
-					e
+					e,
 				);
 			}
 		}
@@ -361,7 +361,7 @@ export class ProjectDataService implements IProjectDataService {
 			"..",
 			CLI_RESOURCES_DIR_NAME,
 			AssetConstants.assets,
-			AssetConstants.imageDefinitionsFileName
+			AssetConstants.imageDefinitionsFileName,
 		);
 		const imageDefinitions = this.$fs.readJson(pathToImageDefinitions);
 
@@ -371,7 +371,7 @@ export class ProjectDataService implements IProjectDataService {
 	private async getIOSAssetSubGroup(dirPath: string): Promise<IAssetSubGroup> {
 		const pathToContentJson = path.join(
 			dirPath,
-			AssetConstants.iOSResourcesFileName
+			AssetConstants.iOSResourcesFileName,
 		);
 		const content = (this.$fs.exists(pathToContentJson) &&
 			<IAssetSubGroup>this.$fs.readJson(pathToContentJson)) || { images: [] };
@@ -405,7 +405,7 @@ export class ProjectDataService implements IProjectDataService {
 					assetSubGroup,
 					(assetElement) =>
 						assetElement.filename === image.filename &&
-						path.basename(assetElement.directory) === path.basename(dirPath)
+						path.basename(assetElement.directory) === path.basename(dirPath),
 				);
 
 				if (assetItem) {
@@ -435,20 +435,20 @@ export class ProjectDataService implements IProjectDataService {
 					this.$logger.trace(
 						"Missing data for image",
 						image,
-						" in CLI's resource file, but we will try to generate images based on the size from Contents.json"
+						" in CLI's resource file, but we will try to generate images based on the size from Contents.json",
 					);
 					finalContent.images.push(image);
 				} else if (image.filename) {
 					this.$logger.warn(
 						`Didn't find a matching image definition for file ${path.join(
 							path.basename(dirPath),
-							image.filename
-						)}. This file will be skipped from resources generation.`
+							image.filename,
+						)}. This file will be skipped from resources generation.`,
 					);
 				} else {
 					this.$logger.trace(
 						`Unable to detect data for image generation of image`,
-						image
+						image,
 					);
 				}
 			}
@@ -459,7 +459,7 @@ export class ProjectDataService implements IProjectDataService {
 
 	private getAndroidAssetSubGroup(
 		assetItems: IAssetItem[],
-		basePath: string
+		basePath: string,
 	): IAssetSubGroup {
 		const assetSubGroup: IAssetSubGroup = {
 			images: <any>[],
@@ -469,7 +469,7 @@ export class ProjectDataService implements IProjectDataService {
 			const imagePath = path.join(
 				basePath,
 				assetItem.directory,
-				assetItem.filename
+				assetItem.filename,
 			);
 			assetItem.path = imagePath;
 			if (assetItem.width && assetItem.height) {
@@ -490,7 +490,7 @@ export class ProjectDataService implements IProjectDataService {
 			} catch (err) {
 				this.$logger.trace(
 					`Error while trying to get property ${propertyName} from ${projectDir}. Error is:`,
-					err
+					err,
 				);
 			}
 		}
@@ -504,10 +504,10 @@ export class ProjectDataService implements IProjectDataService {
 
 	private getPropertyValueFromJson(
 		jsonData: any,
-		dottedPropertyName: string
+		dottedPropertyName: string,
 	): any {
 		const props = dottedPropertyName.split(
-			NATIVESCRIPT_PROPS_INTERNAL_DELIMITER
+			NATIVESCRIPT_PROPS_INTERNAL_DELIMITER,
 		);
 		let result = jsonData[props.shift()];
 
@@ -556,7 +556,7 @@ export class ProjectDataService implements IProjectDataService {
 	private getProjectFileData(projectDir: string): IProjectFileData {
 		const projectFilePath = path.join(
 			projectDir,
-			this.$staticConfig.PROJECT_FILE_NAME
+			this.$staticConfig.PROJECT_FILE_NAME,
 		);
 		const projectFileContent = this.$fs.readText(projectFilePath);
 		const projectData = projectFileContent
@@ -578,11 +578,11 @@ export class ProjectDataService implements IProjectDataService {
 
 	public getRuntimePackage(
 		projectDir: string,
-		platform: constants.SupportedPlatform
+		platform: constants.SupportedPlatform,
 	): IBasePluginData {
 		platform = platform.toLowerCase() as constants.SupportedPlatform;
 		const packageJson = this.$fs.readJson(
-			path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME)
+			path.join(projectDir, constants.PACKAGE_JSON_FILE_NAME),
 		);
 		const runtimeName =
 			platform === PlatformTypes.android
@@ -623,23 +623,23 @@ export class ProjectDataService implements IProjectDataService {
 	})
 	private getInstalledRuntimePackage(
 		projectDir: string,
-		platform: constants.SupportedPlatform
+		platform: constants.SupportedPlatform,
 	): IBasePluginData {
 		const runtimePackage = this.$pluginsService
 			.getDependenciesFromPackageJson(projectDir)
 			.devDependencies.find((d) => {
 				if (platform === constants.PlatformTypes.ios) {
-					const packageName = this.$projectData.nsConfig.ios?.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME;
-					return [
-						packageName,
-						constants.TNS_IOS_RUNTIME_NAME,
-					].includes(d.name);
+					const packageName =
+						this.$projectData.nsConfig?.ios?.runtimePackageName ||
+						constants.SCOPED_IOS_RUNTIME_NAME;
+					return [packageName, constants.TNS_IOS_RUNTIME_NAME].includes(d.name);
 				} else if (platform === constants.PlatformTypes.android) {
-					const packageName = this.$projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
-					return [
-						packageName,
-						constants.TNS_ANDROID_RUNTIME_NAME,
-					].includes(d.name);
+					const packageName =
+						this.$projectData.nsConfig?.android?.runtimePackageName ||
+						constants.SCOPED_ANDROID_RUNTIME_NAME;
+					return [packageName, constants.TNS_ANDROID_RUNTIME_NAME].includes(
+						d.name,
+					);
 				} else if (platform === constants.PlatformTypes.visionos) {
 					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
 				}
@@ -657,7 +657,7 @@ export class ProjectDataService implements IProjectDataService {
 						runtimePackage.name,
 						{
 							paths: [projectDir],
-						}
+						},
 					);
 
 					if (!runtimePackageJsonPath) {
@@ -666,12 +666,12 @@ export class ProjectDataService implements IProjectDataService {
 					}
 
 					runtimePackage.version = this.$fs.readJson(
-						runtimePackageJsonPath
+						runtimePackageJsonPath,
 					).version;
 				} catch (err) {
 					if (isRange) {
 						runtimePackage.version = semver.coerce(
-							runtimePackage.version
+							runtimePackage.version,
 						).version;
 
 						(runtimePackage as any)._coerced = true;
@@ -686,16 +686,20 @@ export class ProjectDataService implements IProjectDataService {
 
 		// default to the scoped runtimes
 		this.$logger.trace(
-			"Could not find an installed runtime, falling back to default runtimes"
+			"Could not find an installed runtime, falling back to default runtimes",
 		);
 		if (platform === constants.PlatformTypes.ios) {
 			return {
-				name: this.$projectData.nsConfig.ios?.runtimePackageName || constants.SCOPED_IOS_RUNTIME_NAME,
+				name:
+					this.$projectData.nsConfig?.ios?.runtimePackageName ||
+					constants.SCOPED_IOS_RUNTIME_NAME,
 				version: null,
 			};
 		} else if (platform === constants.PlatformTypes.android) {
 			return {
-				name: this.$projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME,
+				name:
+					this.$projectData.nsConfig?.android?.runtimePackageName ||
+					constants.SCOPED_ANDROID_RUNTIME_NAME,
 				version: null,
 			};
 		} else if (platform === constants.PlatformTypes.visionos) {
