@@ -130,6 +130,10 @@ interface INsConfigIOS extends INsConfigPlaform {
 	 * List packages to be included in the iOS build.
 	 */
 	SPMPackages?: Array<IOSSPMPackage>;
+	/**
+	 * Custom runtime package name
+	 */
+	runtimePackageName?: string
 }
 
 interface INSConfigVisionOS extends INsConfigIOS {}
@@ -168,6 +172,11 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	enableLineBreakpoints?: boolean;
 
 	enableMultithreadedJavascript?: boolean;
+
+	/**
+	 * Custom runtime package name
+	 */
+	runtimePackageName?: string
 }
 
 interface INsConfigHooks {
