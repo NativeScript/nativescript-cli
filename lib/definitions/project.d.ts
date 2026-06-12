@@ -133,7 +133,7 @@ interface INsConfigIOS extends INsConfigPlaform {
 	/**
 	 * Custom runtime package name
 	 */
-	runtimePackageName?: string
+	runtimePackageName?: string;
 }
 
 interface INSConfigVisionOS extends INsConfigIOS {}
@@ -176,7 +176,7 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	/**
 	 * Custom runtime package name
 	 */
-	runtimePackageName?: string
+	runtimePackageName?: string;
 }
 
 interface INsConfigHooks {
@@ -200,6 +200,13 @@ interface INsConfig {
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
 	projectName?: string;
+	/**
+	 * Legacy keys still found in user configs. Declared so the
+	 * runtime-package.json generation (PrepareController) can strip them
+	 * via destructuring without losing type safety.
+	 */
+	webpackPackageName?: string;
+	buildPath?: string;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -610,9 +617,7 @@ interface INativePrepare {
 }
 
 interface IBuildConfig
-	extends IAndroidBuildOptionsSettings,
-		IiOSBuildConfig,
-		IProjectDir {
+	extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IProjectDir {
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;
@@ -624,7 +629,8 @@ interface IBuildConfig
  * Describes iOS-specific build configuration properties
  */
 interface IiOSBuildConfig
-	extends IBuildForDevice,
+	extends
+		IBuildForDevice,
 		IiCloudContainerEnvironment,
 		IDeviceIdentifier,
 		IProvision,
