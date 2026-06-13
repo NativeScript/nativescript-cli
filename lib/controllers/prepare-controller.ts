@@ -18,7 +18,10 @@ import {
 	CONFIG_FILE_NAME_TS,
 	PACKAGE_JSON_FILE_NAME,
 	PLATFORMS_DIR_NAME,
+	PlatformTypes,
 	PREPARE_READY_EVENT_NAME,
+	SCOPED_ANDROID_RUNTIME_NAME,
+	SCOPED_IOS_RUNTIME_NAME,
 	SupportedPlatform,
 	TrackActionNames,
 } from "../constants";
@@ -31,11 +34,13 @@ import {
 } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import {
+	INsConfig,
 	IProjectConfigService,
 	IProjectData,
 	IProjectDataService,
 	IProjectService,
 } from "../definitions/project";
+import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
@@ -447,30 +452,83 @@ export class PrepareController extends EventEmitter {
 		this.$logger.info(
 			"Updating runtime package.json with configuration values...",
 		);
-		const nsConfig = this.$projectConfigService.readConfig(
-			projectData.projectDir,
+
+		// Tolerate a missing/unreadable config — prior to the destructure this
+		// was a plain object spread, where `undefined` is a legal no-op.
+		const {
+			hooks,
+			ignoredNativeDependencies,
+			webpackPackageName,
+			webpackConfigPath,
+			appResourcesPath,
+			buildPath,
+			appPath,
+			...nsConfig
+		} =
+			this.$projectConfigService.readConfig(projectData.projectDir) ??
+			({} as INsConfig);
+
+		const platform = platformData.platformNameLowerCase;
+		let installedRuntimePackageJSON;
+		let runtimePackageName: string;
+		if (platform === PlatformTypes.ios) {
+			runtimePackageName =
+				projectData.nsConfig?.ios?.runtimePackageName ||
+				SCOPED_IOS_RUNTIME_NAME;
+		} else if (platform === PlatformTypes.android) {
+			runtimePackageName =
+				projectData.nsConfig?.android?.runtimePackageName ||
+				SCOPED_ANDROID_RUNTIME_NAME;
+		}
+		// try reading from installed runtime first before reading from the npm registry...
+		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
+			runtimePackageName,
+			{
+				paths: [projectData.projectDir],
+			},
 		);
+
+		if (installedRuntimePackageJSONPath) {
+			installedRuntimePackageJSON = this.$fs.readJson(
+				installedRuntimePackageJSONPath,
+			);
+		}
 		const packageData: any = {
 			..._.pick(projectData.packageJsonData, ["name"]),
 			...nsConfig,
 			main: "bundle",
+			...(installedRuntimePackageJSON ? {} : {}),
 		};
-
-		if (
-			platformData.platformNameLowerCase === "ios" &&
-			packageData.ios &&
-			packageData.ios.discardUncaughtJsExceptions
-		) {
-			packageData.discardUncaughtJsExceptions =
-				packageData.ios.discardUncaughtJsExceptions;
+		if (platform === PlatformTypes.ios) {
+			if (installedRuntimePackageJSON) {
+				packageData.ios = packageData.ios || {};
+				packageData.ios.runtime = {
+					version: installedRuntimePackageJSON.version,
+				};
+			}
+			if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
+				packageData.discardUncaughtJsExceptions =
+					packageData.ios.discardUncaughtJsExceptions;
+			}
+			delete packageData.android;
 		}
-		if (
-			platformData.platformNameLowerCase === "android" &&
-			packageData.android &&
-			packageData.android.discardUncaughtJsExceptions
-		) {
-			packageData.discardUncaughtJsExceptions =
-				packageData.android.discardUncaughtJsExceptions;
+		if (platform === PlatformTypes.android) {
+			if (installedRuntimePackageJSON) {
+				packageData.android = packageData.android || {};
+				packageData.android.runtime = {
+					version: installedRuntimePackageJSON.version,
+					version_info: installedRuntimePackageJSON.version_info,
+					gradle: installedRuntimePackageJSON.gradle,
+				};
+			}
+			if (
+				packageData.android &&
+				packageData.android.discardUncaughtJsExceptions
+			) {
+				packageData.discardUncaughtJsExceptions =
+					packageData.android.discardUncaughtJsExceptions;
+			}
+			delete packageData.ios;
 		}
 		let packagePath: string;
 		if (
