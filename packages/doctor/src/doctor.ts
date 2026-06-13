@@ -3,6 +3,7 @@ import { EOL } from "os";
 import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
+import { WindowsLocalBuildRequirements } from "./local-build-requirements/windows-local-build-requirements";
 import { Helpers } from "./helpers";
 import * as semver from "semver";
 
@@ -15,7 +16,8 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		private hostInfo: HostInfo,
 		private iOSLocalBuildRequirements: IosLocalBuildRequirements,
 		private sysInfo: NativeScriptDoctor.ISysInfo,
-		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo
+		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
+		private windowsLocalBuildRequirements: WindowsLocalBuildRequirements,
 	) {}
 
 	public async canExecuteLocalBuild(
@@ -36,6 +38,10 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			platform.toLowerCase() === Constants.IOS_PLATFORM_NAME.toLowerCase()
 		) {
 			return await this.iOSLocalBuildRequirements.checkRequirements();
+		} else if (
+			platform.toLowerCase() === Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
+		) {
+			return await this.windowsLocalBuildRequirements.checkRequirements();
 		}
 
 		return false;
@@ -71,12 +77,31 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			result = result.concat(await this.getiOSInfos(sysInfoData));
 		}
 
+		if (
+			!config ||
+			!config.platform ||
+			config.platform.toLowerCase() ===
+				Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
+		) {
+			result = result.concat(this.getWindowsInfos(sysInfoData));
+		}
+
 		if (!this.hostInfo.isDarwin) {
 			result.push({
 				message:
 					"Local builds for iOS can be executed only on a macOS system. To build for iOS on a different operating system, you can use the NativeScript cloud infrastructure.",
 				additionalInformation: "",
 				platforms: [Constants.IOS_PLATFORM_NAME],
+				type: Constants.INFO_TYPE_NAME,
+			});
+		}
+
+		if (!this.hostInfo.isWindows) {
+			result.push({
+				message:
+					"Local builds for Windows can be executed only on a Windows system. To build for Windows on a different operating system, you can use the NativeScript cloud infrastructure.",
+				additionalInformation: "",
+				platforms: [Constants.WINDOWS_PLATFORM_NAME],
 				type: Constants.INFO_TYPE_NAME,
 			});
 		}
@@ -277,6 +302,37 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			}
 		}
 
+		return result;
+	}
+
+	private getWindowsInfos(
+		sysInfoData: NativeScriptDoctor.ISysInfoData,
+	): NativeScriptDoctor.IInfo[] {
+		let result: NativeScriptDoctor.IInfo[] = [];
+		if (this.hostInfo.isWindows) {
+			result = result.concat(
+				this.processSysInfoItem({
+					item: sysInfoData.dotNetSdkVer,
+					infoMessage: `The .NET SDK ${sysInfoData.dotNetSdkVer} is installed.`,
+					warningMessage: "The .NET SDK is not installed.",
+					additionalInformation:
+						`You will not be able to build your projects for Windows.${EOL}` +
+						`Download and install the .NET SDK from https://dotnet.microsoft.com/download${EOL}` +
+						`For more information visit: ${Constants.SYSTEM_REQUIREMENTS_LINKS}`,
+					platforms: [Constants.WINDOWS_PLATFORM_NAME],
+				}),
+				this.processSysInfoItem({
+					item: sysInfoData.windowsAppSdkWorkloadInstalled,
+					infoMessage: "The Windows App SDK dotnet workload is installed.",
+					warningMessage: "The Windows App SDK dotnet workload is not installed.",
+					additionalInformation:
+						`You will not be able to build your projects for Windows.${EOL}` +
+						`Run: dotnet workload install windows${EOL}` +
+						`For more information visit: ${Constants.SYSTEM_REQUIREMENTS_LINKS}`,
+					platforms: [Constants.WINDOWS_PLATFORM_NAME],
+				}),
+			);
+		}
 		return result;
 	}
 

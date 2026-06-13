@@ -43,6 +43,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private commonSysInfoCache: NativeScriptDoctor.ICommonSysInfoData;
 	private androidSysInfoCache: NativeScriptDoctor.IAndroidSysInfoData;
 	private iOSSysInfoCache: NativeScriptDoctor.IiOSSysInfoData;
+	private windowsSysInfoCache: NativeScriptDoctor.IWindowsSysInfoData;
+	private dotNetSdkVerCache: string;
+	private windowsAppSdkWorkloadInstalledCache: boolean;
 
 	private isCocoaPodsWorkingCorrectlyCache: boolean;
 	private nativeScriptCliVersionCache: string;
@@ -389,11 +392,29 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			);
 		}
 
-		return Object.assign(
+		if (
+			config &&
+			config.platform &&
+			config.platform.toLowerCase() ===
+				Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
+		) {
+			return <NativeScriptDoctor.ISysInfoData>(
+				Object.assign(
+					await this.getCommonSysInfo(),
+					await this.getWindowsSysInfo(),
+				)
+			);
+		}
+
+		const sysInfoParts: object[] = [
 			await this.getCommonSysInfo(),
 			await this.getAndroidSysInfo(),
 			await this.getiOSSysInfo(),
-		);
+		];
+		if (this.hostInfo.isWindows) {
+			sysInfoParts.push(await this.getWindowsSysInfo());
+		}
+		return Object.assign({}, ...sysInfoParts);
 	}
 
 	public isCocoaPodsWorkingCorrectly(): Promise<boolean> {
@@ -733,6 +754,46 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					await this.isAndroidSdkConfiguredCorrectly();
 
 				return result;
+			},
+		);
+	}
+
+	private getWindowsSysInfo(): Promise<NativeScriptDoctor.IWindowsSysInfoData> {
+		return this.getValueForProperty(
+			() => this.windowsSysInfoCache,
+			async (): Promise<NativeScriptDoctor.IWindowsSysInfoData> => {
+				const result: NativeScriptDoctor.IWindowsSysInfoData =
+					Object.create(null);
+				result.dotNetSdkVer = await this.getDotNetSdkVersion();
+				result.windowsAppSdkWorkloadInstalled =
+					await this.isWindowsAppSdkWorkloadInstalled();
+				return result;
+			},
+		);
+	}
+
+	private getDotNetSdkVersion(): Promise<string> {
+		return this.getValueForProperty(
+			() => this.dotNetSdkVerCache,
+			async (): Promise<string> => {
+				if (!this.hostInfo.isWindows) {
+					return null;
+				}
+				const output = await this.execCommand("dotnet --version");
+				return output ? output.trim().split(/\r?\n/)[0] : null;
+			},
+		);
+	}
+
+	private isWindowsAppSdkWorkloadInstalled(): Promise<boolean> {
+		return this.getValueForProperty(
+			() => this.windowsAppSdkWorkloadInstalledCache,
+			async (): Promise<boolean> => {
+				if (!this.hostInfo.isWindows) {
+					return false;
+				}
+				const output = await this.execCommand("dotnet workload list");
+				return output ? output.includes("windows") : false;
 			},
 		);
 	}
