@@ -432,12 +432,12 @@ export class FileSystem implements IFileSystem {
 					Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delayMs * attempt);
 					continue;
 				}
-				// If a sync lock on newly-created directories long enough
-				// that rename never succeeds even after retries.  Fall back to a
-				// recursive copy + delete, which doesn't require an atomic rename and
-				// is immune to the lock (individual file reads/writes still succeed).
+				
+				// Use fs.cpSync rather than this.copyFile: shelljs cp places src as a
+				// child of dest when dest already exists, whereas cpSync always writes
+				// to the dest path itself regardless of whether it pre-exists.
 				if (e.code === "EPERM" && process.platform === "win32") {
-					this.copyFile(oldPath, newPath);
+					fs.cpSync(oldPath, newPath, { recursive: true });
 					this.deleteDirectory(oldPath);
 					return;
 				}
