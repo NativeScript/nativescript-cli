@@ -419,7 +419,7 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public rename(oldPath: string, newPath: string): void {
-		// On Windows, OneDrive / AV scanners can briefly lock a newly-created
+		// On Windows, AV scanners can briefly lock a newly-created
 		// directory, causing a transient EPERM on rename.  Retry with backoff.
 		const maxAttempts = 5;
 		const delayMs = 200;
@@ -431,6 +431,15 @@ export class FileSystem implements IFileSystem {
 				if (e.code === "EPERM" && attempt < maxAttempts) {
 					Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delayMs * attempt);
 					continue;
+				}
+				// If a sync lock on newly-created directories long enough
+				// that rename never succeeds even after retries.  Fall back to a
+				// recursive copy + delete, which doesn't require an atomic rename and
+				// is immune to the lock (individual file reads/writes still succeed).
+				if (e.code === "EPERM" && process.platform === "win32") {
+					this.copyFile(oldPath, newPath);
+					this.deleteDirectory(oldPath);
+					return;
 				}
 				throw e;
 			}
