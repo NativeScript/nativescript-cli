@@ -419,7 +419,22 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public rename(oldPath: string, newPath: string): void {
-		fs.renameSync(oldPath, newPath);
+		// On Windows, OneDrive / AV scanners can briefly lock a newly-created
+		// directory, causing a transient EPERM on rename.  Retry with backoff.
+		const maxAttempts = 5;
+		const delayMs = 200;
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				fs.renameSync(oldPath, newPath);
+				return;
+			} catch (e) {
+				if (e.code === "EPERM" && attempt < maxAttempts) {
+					Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delayMs * attempt);
+					continue;
+				}
+				throw e;
+			}
+		}
 	}
 
 	public renameIfExists(oldPath: string, newPath: string): boolean {
