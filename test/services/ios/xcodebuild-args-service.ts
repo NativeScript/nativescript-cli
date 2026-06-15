@@ -101,6 +101,24 @@ describe("xcodebuildArgsService", () => {
 			assert.include(actualArgs, "SWIFT_ENABLE_EXPLICIT_MODULES=YES");
 			assert.notInclude(actualArgs, "SWIFT_ENABLE_EXPLICIT_MODULES=NO");
 		});
+
+		it("should include DEVELOPMENT_TEAM from build.xcconfig", () => {
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+				buildXcconfigContent: "DEVELOPMENT_TEAM = TEAM123",
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = xcodebuildArgsService.getXcodeProjectArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+			);
+
+			assert.include(actualArgs, "DEVELOPMENT_TEAM=TEAM123");
+		});
 	});
 
 	describe("getBuildForSimulatorArgs", () => {
