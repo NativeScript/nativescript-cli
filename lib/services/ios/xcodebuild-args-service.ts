@@ -227,6 +227,18 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			extraArgs.push(`${swiftUIBootProperty}=${swiftUIBootValue}`);
 		}
 
+		// Swift macro/compiler-plugin SPM targets must be code-signed with a
+		// development team when building for a device. Pass DEVELOPMENT_TEAM as a
+		// command-line build setting so it applies to SPM package targets too.
+		const developmentTeamProperty = "DEVELOPMENT_TEAM";
+		const developmentTeamValue = this.$xcconfigService.readPropertyValue(
+			BUILD_SETTINGS_FILE_PATH,
+			developmentTeamProperty,
+		);
+		if (developmentTeamValue) {
+			extraArgs.push(`${developmentTeamProperty}=${developmentTeamValue}`);
+		}
+
 		if (this.$fs.exists(xcworkspacePath)) {
 			return ["-workspace", xcworkspacePath, ...extraArgs];
 		}
