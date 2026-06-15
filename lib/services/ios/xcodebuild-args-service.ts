@@ -167,11 +167,17 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		// Introduced in Xcode 14+
 		// ref: https://forums.swift.org/t/telling-xcode-14-beta-4-to-trust-build-tool-plugins-programatically/59305/5
 		const skipPackageValidation = "-skipPackagePluginValidation";
-
+		// Introduced in Xcode 15+ to trust Swift macros (compiler plugins)
+		// non-interactively. Required for SPM packages that ship macros
+		// (e.g. apple/RealityKitScripting), otherwise the build fails with:
+		// "Macro '...' from package '...' must be enabled before it can be used"
+		// ref: https://developer.apple.com/documentation/xcode/writing-swift-macros
+		const skipMacroValidation = "-skipMacroValidation";
 		const extraArgs: string[] = [
 			"-scheme",
 			projectData.projectName,
 			skipPackageValidation,
+			skipMacroValidation,
 		];
 
 		const BUILD_SETTINGS_FILE_PATH = path.join(
@@ -186,6 +192,22 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		// like cocoapods issues related to ASSETCATALOG_COMPILER_APPICON_NAME
 		// references: https://medium.com/@iostechset/why-cocoapods-eats-app-icons-79fe729808d4
 		// https://github.com/CocoaPods/CocoaPods/issues/7003
+
+		// Xcode 26 makes Swift "explicitly built modules" the default. A
+		// regression there prevents macro/compiler-plugin SPM targets from
+		// resolving their swift-syntax module dependencies, failing with:
+		// "Unable to resolve module dependency: 'SwiftSyntax'" (and SwiftParser,
+		// SwiftSyntaxMacros, SwiftCompilerPlugin, SwiftDiagnostics).
+		// Passed as a command-line build setting so it overrides ALL targets,
+		// including the package targets we don't control.
+		// ref: https://forums.swift.org/t/xcode-26-unable-to-find-module-dependency/80516
+		const explicitModulesProperty = "SWIFT_ENABLE_EXPLICIT_MODULES";
+		const explicitModulesValue =
+			this.$xcconfigService.readPropertyValue(
+				BUILD_SETTINGS_FILE_PATH,
+				explicitModulesProperty,
+			) || "NO";
+		extraArgs.push(`${explicitModulesProperty}=${explicitModulesValue}`);
 
 		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
 		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
