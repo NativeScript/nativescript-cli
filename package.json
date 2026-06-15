@@ -58,7 +58,7 @@
     "@nativescript/doctor": "2.0.17",
     "@nativescript/hook": "3.0.5",
     "@npmcli/arborist": "9.1.8",
-    "@nstudio/trapezedev-project": "7.2.3",
+    "@nstudio/trapezedev-project": "7.2.4",
     "@rigor789/resolve-package-path": "1.0.7",
     "axios": "1.13.5",
     "byline": "5.0.0",
@@ -70,7 +70,7 @@
     "email-validator": "2.0.4",
     "esprima": "4.0.1",
     "font-finder": "1.1.0",
-    "ios-device-lib": "0.9.4",
+    "ios-device-lib": "0.9.5",
     "ios-mobileprovision-finder": "1.2.1",
     "ios-sim-portable": "4.5.1",
     "jimp": "1.6.0",
@@ -81,7 +81,7 @@
     "minimatch": "10.2.4",
     "mkdirp": "3.0.1",
     "mute-stream": "2.0.0",
-    "nativescript-dev-xcode": "0.8.1",
+    "nativescript-dev-xcode": "0.8.2",
     "open": "8.4.2",
     "ora": "5.4.1",
     "pacote": "21.0.4",
@@ -162,8 +162,12 @@
   "optionalDependencies": {
     "fsevents": "*"
   },
+  "bundleDependencies": [
+    "universal-analytics"
+  ],
   "overrides": {
     "@conventional-changelog/git-client": "2.5.1",
+    "uuid": "11.1.0",
     "jimp": {
       "xml2js": "0.6.2"
     },
