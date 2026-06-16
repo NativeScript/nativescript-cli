@@ -425,25 +425,34 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					);
 					const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
 
-					// If ADSF version manager is installed, get the config for the project directory and write it to the temporary project directory
+					// If asdf version manager is installed, get the current Ruby version for the project directory and write it to the temporary project directory
 					const asdfResult = await this.childProcess.spawnFromEvent(
 						"asdf",
-						["list", "ruby"],
+						["current", "ruby"],
 						"exit",
-					);
-					const asdfVersionMatch = (asdfResult.stdout as string).match(
-						SysInfo.VERSION_REGEXP,
+						{ ignoreError: true },
 					);
 
-					if (asdfVersionMatch?.[0]) {
-						const asdfVersion = asdfVersionMatch[0];
-						const asdfConfigPath = path.join(xcodeProjectDir, ".tool-versions");
-						const wroteASDFConfig = this.fileSystem.appendFile(
-							asdfConfigPath,
-							`ruby ${asdfVersion}`,
+					if (asdfResult.exitCode === 0) {
+						const asdfVersionMatch = (asdfResult.stdout as string).match(
+							SysInfo.VERSION_REGEXP,
 						);
-						if (!wroteASDFConfig) {
-							console.warn(`Cocoapods invocation may fail, check asdf config`);
+
+						if (asdfVersionMatch?.[0]) {
+							const asdfVersion = asdfVersionMatch[0];
+							const asdfConfigPath = path.join(
+								xcodeProjectDir,
+								".tool-versions",
+							);
+							const wroteASDFConfig = this.fileSystem.appendFile(
+								asdfConfigPath,
+								`ruby ${asdfVersion}`,
+							);
+							if (!wroteASDFConfig) {
+								console.warn(
+									`CocoaPods invocation may fail, check asdf config`,
+								);
+							}
 						}
 					}
 
