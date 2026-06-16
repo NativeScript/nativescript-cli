@@ -275,6 +275,9 @@ export class RunController extends EventEmitter implements IRunController {
 		const debugOptions = deviceDescriptor.debugOptions || {};
 
 		liveSyncResultInfo.waitForDebugger = !!debugOptions.debugBrk;
+		// Any debug session (attach or --debug-brk) should bring up the inspector. Windows keys the
+		// inspector start off this (a plain `ns run` never sets it, so the inspector stays off).
+		liveSyncResultInfo.debugMode = true;
 		liveSyncResultInfo.forceRefreshWithSocket = true;
 
 		const refreshInfo = await this.refreshApplicationWithoutDebug(

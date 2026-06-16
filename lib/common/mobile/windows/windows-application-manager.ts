@@ -224,8 +224,12 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		} else {
 			// PFN already cached from the pre-resolve above; no extra round-trip.
 			const pfn = this._packageFamilyNames.get(appData.appId) ?? appData.appId;
+			// Any debug session starts the inspector; --debug-brk additionally signals break-on-start.
+			if (appData.debugMode) {
+				this._writeMarker(pfn, "ns-inspector");
+			}
 			if (appData.waitForDebugger) {
-				this._writeDebugBreakMarker(pfn);
+				this._writeMarker(pfn, "ns-debugbreak");
 			}
 			// UWP apps are launched via shell:AppsFolder\<PFN>!<ApplicationId>.
 			// The ApplicationId comes from the <Application Id="..."> attribute in the manifest.
@@ -320,22 +324,19 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		return this._packageFamilyNames.get(appId) ?? appId;
 	}
 
-	private _writeDebugBreakMarker(pfn: string): void {
+	// Writes a sentinel file into the packaged app's LocalState that the C# host consumes on launch
+	// (RuntimeHost.ConsumeMarker). Used to signal the inspector ("ns-inspector") and break-on-start
+	// ("ns-debugbreak") out-of-band, since a UWP app launched via shell:AppsFolder inherits no env.
+	private _writeMarker(pfn: string, name: string): void {
 		const localAppData = process.env.LOCALAPPDATA;
 		if (!localAppData) return;
-		const markerPath = path.join(
-			localAppData,
-			"Packages",
-			pfn,
-			"LocalState",
-			"ns-debugbreak",
-		);
+		const markerPath = path.join(localAppData, "Packages", pfn, "LocalState", name);
 		try {
 			fs.mkdirSync(path.dirname(markerPath), { recursive: true });
 			fs.writeFileSync(markerPath, "", "utf8");
-			this.$logger.info(`[Windows] Debug break marker: ${markerPath}`);
+			this.$logger.info(`[Windows] Wrote ${name} marker: ${markerPath}`);
 		} catch (e) {
-			this.$logger.warn(`[Windows] Could not write debug break marker: ${e}`);
+			this.$logger.warn(`[Windows] Could not write ${name} marker: ${e}`);
 		}
 	}
 }

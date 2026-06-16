@@ -366,6 +366,12 @@ declare global {
 
 		interface IStartApplicationData extends IApplicationData {
 			waitForDebugger?: boolean;
+			/**
+			 * True when launching as part of a debug session (`ns debug`), regardless of --debug-brk.
+			 * Windows uses this to signal the host to start the inspector (via a sentinel file);
+			 * a plain `ns run` leaves it unset so the inspector/devtools server is never created.
+			 */
+			debugMode?: boolean;
 		}
 
 		interface IInstallAppData extends IApplicationData {

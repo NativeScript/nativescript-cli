@@ -31,6 +31,7 @@ export class WindowsDeviceLiveSyncService
 			projectName: projectData.projectName,
 			projectDir: projectData.projectDir,
 			waitForDebugger: _liveSyncInfo?.waitForDebugger,
+			debugMode: _liveSyncInfo?.debugMode,
 		} as Mobile.IStartApplicationData);
 	}
 
