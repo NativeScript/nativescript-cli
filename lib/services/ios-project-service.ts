@@ -97,6 +97,9 @@ export class IOSProjectService
 {
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
+	// CLI-managed folder under the platform root where we write generated
+	// artifacts (e.g. plugin modulemaps) so we never write into node_modules
+	private static GENERATED_PLUGINS_DIR_NAME = ".plugins";
 
 	constructor(
 		$fs: IFileSystem,
@@ -530,7 +533,10 @@ export class IOSProjectService
 						singlePlatformFramework,
 						path.extname(singlePlatformFramework),
 					);
-					let frameworkBinaryPath = path.join(singlePlatformFramework, frameworkName)
+					let frameworkBinaryPath = path.join(
+						singlePlatformFramework,
+						frameworkName,
+					);
 					if (library.BinaryPath) {
 						frameworkBinaryPath = path.join(
 							frameworkPath,
@@ -548,7 +554,9 @@ export class IOSProjectService
 				frameworkPath,
 				path.extname(frameworkPath),
 			);
-			return await isDynamicFrameworkBundle(path.join(frameworkPath, frameworkName));
+			return await isDynamicFrameworkBundle(
+				path.join(frameworkPath, frameworkName),
+			);
 		}
 	}
 
@@ -658,7 +666,29 @@ export class IOSProjectService
 		);
 		project.addToHeaderSearchPaths({ relativePath: relativeHeaderSearchPath });
 
-		this.generateModulemap(headersSubpath, libraryName);
+		// Write the generated modulemap into a CLI-managed folder under the
+		// platform root (never into node_modules). The modulemap references the
+		// plugin's headers in-place via relative paths, so nothing is copied.
+		const modulemapDir = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			IOSProjectService.GENERATED_PLUGINS_DIR_NAME,
+			libraryName,
+		);
+		const hasModulemap = this.generateModulemap(
+			headersSubpath,
+			libraryName,
+			modulemapDir,
+		);
+		if (hasModulemap) {
+			// Put the modulemap dir on the header search path so clang discovers
+			// the module there instead of inside node_modules.
+			project.addToHeaderSearchPaths({
+				relativePath: this.getLibSubpathRelativeToProjectPath(
+					modulemapDir,
+					projectData,
+				),
+			});
+		}
 		this.savePbxProj(project, projectData);
 	}
 
@@ -1682,6 +1712,19 @@ export class IOSProjectService
 				project.removeFromHeaderSearchPaths({
 					relativePath: relativeHeaderSearchPath,
 				});
+
+				// Remove the generated modulemap dir search path (see addStaticLibrary)
+				const modulemapDir = path.join(
+					this.getPlatformData(projectData).projectRoot,
+					IOSProjectService.GENERATED_PLUGINS_DIR_NAME,
+					path.basename(staticLibPath, ".a"),
+				);
+				project.removeFromHeaderSearchPaths({
+					relativePath: this.getLibSubpathRelativeToProjectPath(
+						modulemapDir,
+						projectData,
+					),
+				});
 			},
 		);
 
@@ -1691,29 +1734,52 @@ export class IOSProjectService
 	private generateModulemap(
 		headersFolderPath: string,
 		libraryName: string,
-	): void {
+		modulemapDir: string,
+	): boolean {
+		const modulemapPath = path.join(modulemapDir, "module.modulemap");
+
+		// A plugin may ship a `.a` without an `include/{lib}` headers folder. In
+		// that case there's nothing to expose as a module - clean up any stale
+		// modulemap and bail out instead of letting readDirectory throw.
+		if (!this.$fs.exists(headersFolderPath)) {
+			if (this.$fs.exists(modulemapPath)) {
+				this.$fs.deleteFile(modulemapPath);
+			}
+			return false;
+		}
+
 		const headersFilter = (fileName: string, containingFolderPath: string) =>
 			path.extname(fileName) === ".h" &&
 			this.$fs.getFsStats(path.join(containingFolderPath, fileName)).isFile();
 		const headersFolderContents = this.$fs.readDirectory(headersFolderPath);
-		let headers = _(headersFolderContents)
-			.filter((item) => headersFilter(item, headersFolderPath))
-			.value();
+		const headerFiles = headersFolderContents.filter((item) =>
+			headersFilter(item, headersFolderPath),
+		);
 
-		if (!headers.length) {
-			this.$fs.deleteFile(path.join(headersFolderPath, "module.modulemap"));
-			return;
+		if (!headerFiles.length) {
+			if (this.$fs.exists(modulemapPath)) {
+				this.$fs.deleteFile(modulemapPath);
+			}
+			return false;
 		}
 
-		headers = _.map(headers, (value) => `header "${value}"`);
+		// Reference the plugin's headers (still in node_modules) relative to the
+		// generated modulemap's location, so we don't copy headers or write into
+		// node_modules.
+		const headers = _.map(headerFiles, (value) => {
+			const relativeHeaderPath = path.relative(
+				modulemapDir,
+				path.join(headersFolderPath, value),
+			);
+			return `header "${relativeHeaderPath}"`;
+		});
 
 		const modulemap = `module ${libraryName} { explicit module ${libraryName} { ${headers.join(
 			" ",
 		)} } }`;
-		this.$fs.writeFile(
-			path.join(headersFolderPath, "module.modulemap"),
-			modulemap,
-		);
+		this.$fs.ensureDirectoryExists(modulemapDir);
+		this.$fs.writeFile(modulemapPath, modulemap);
+		return true;
 	}
 
 	private async mergeProjectXcconfigFiles(

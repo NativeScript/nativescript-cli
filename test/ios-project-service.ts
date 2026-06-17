@@ -1035,12 +1035,26 @@ describe("Static libraries support", () => {
 			fs.writeFile(join(staticLibraryHeadersPath, header), "");
 		});
 
-		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
-		// Read the generated modulemap and verify it.
-		let modulemap = fs.readFile(
-			join(staticLibraryHeadersPath, "module.modulemap"),
+		// The modulemap is written into a CLI-managed dir (not next to the
+		// headers / not in node_modules) and references the headers in place.
+		const modulemapDir = join(projectPath, ".plugins", libraryName);
+		const generated = iOSProjectService.generateModulemap(
+			staticLibraryHeadersPath,
+			libraryName,
+			modulemapDir,
 		);
-		const headerCommands = _.map(headers, (value) => `header "${value}"`);
+		assert.isTrue(generated);
+
+		// Read the generated modulemap and verify it.
+		let modulemap = fs.readFile(join(modulemapDir, "module.modulemap"));
+		const headerCommands = _.map(
+			headers,
+			(value) =>
+				`header "${path.relative(
+					modulemapDir,
+					join(staticLibraryHeadersPath, value),
+				)}"`,
+		);
 		const modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(
 			" ",
 		)} } }`;
@@ -1051,13 +1065,16 @@ describe("Static libraries support", () => {
 		_.each(headers, (header) => {
 			fs.deleteFile(join(staticLibraryHeadersPath, header));
 		});
-		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
+		const regenerated = iOSProjectService.generateModulemap(
+			staticLibraryHeadersPath,
+			libraryName,
+			modulemapDir,
+		);
+		assert.isFalse(regenerated);
 
 		let error: any;
 		try {
-			modulemap = fs.readFile(
-				join(staticLibraryHeadersPath, "module.modulemap"),
-			);
+			modulemap = fs.readFile(join(modulemapDir, "module.modulemap"));
 		} catch (err) {
 			error = err;
 		}
