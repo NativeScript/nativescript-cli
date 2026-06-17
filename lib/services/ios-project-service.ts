@@ -1736,6 +1736,18 @@ export class IOSProjectService
 		libraryName: string,
 		modulemapDir: string,
 	): boolean {
+		const modulemapPath = path.join(modulemapDir, "module.modulemap");
+
+		// A plugin may ship a `.a` without an `include/{lib}` headers folder. In
+		// that case there's nothing to expose as a module - clean up any stale
+		// modulemap and bail out instead of letting readDirectory throw.
+		if (!this.$fs.exists(headersFolderPath)) {
+			if (this.$fs.exists(modulemapPath)) {
+				this.$fs.deleteFile(modulemapPath);
+			}
+			return false;
+		}
+
 		const headersFilter = (fileName: string, containingFolderPath: string) =>
 			path.extname(fileName) === ".h" &&
 			this.$fs.getFsStats(path.join(containingFolderPath, fileName)).isFile();
@@ -1743,8 +1755,6 @@ export class IOSProjectService
 		const headerFiles = headersFolderContents.filter((item) =>
 			headersFilter(item, headersFolderPath),
 		);
-
-		const modulemapPath = path.join(modulemapDir, "module.modulemap");
 
 		if (!headerFiles.length) {
 			if (this.$fs.exists(modulemapPath)) {
