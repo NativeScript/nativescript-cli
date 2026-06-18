@@ -66,11 +66,13 @@ class CancellationService implements ICancellationService {
 	}
 
 	private static get killSwitchDir(): string {
-		return path.join(
-			os.tmpdir(),
-			process.env.SUDO_USER || process.env.USER || process.env.USERNAME || "",
-			"KillSwitches"
-		);
+		try {
+			const { username } = os.userInfo();
+			return path.join(os.tmpdir(), username, "KillSwitches");
+		} catch (err) {
+			// os.userInfo throws when there's no username of home directory - we'll default to a generic folder
+			return path.join(os.tmpdir(), ".nativescript-cli", "KillSwitches");
+		}
 	}
 
 	private static makeKillSwitchFileName(name: string): string {
