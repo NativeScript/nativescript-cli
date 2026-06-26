@@ -241,6 +241,7 @@ function createTestInjector(
 	testInjector.register("tempService", TempServiceStub);
 	testInjector.register("spmService", {
 		applySPMPackages: () => Promise.resolve(),
+		ensureSPMDependenciesResolved: () => Promise.resolve(),
 	});
 
 	return testInjector;

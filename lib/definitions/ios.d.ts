@@ -8,18 +8,18 @@ declare global {
 		setupSigningForDevice(
 			projectRoot: string,
 			projectData: IProjectData,
-			buildConfig: IOSBuildData
+			buildConfig: IOSBuildData,
 		): Promise<void>;
 		setupSigningFromTeam(
 			projectRoot: string,
 			projectData: IProjectData,
-			teamId: string
+			teamId: string,
 		): Promise<void>;
 		setupSigningFromProvision(
 			projectRoot: string,
 			projectData: IProjectData,
 			provision?: string,
-			mobileProvisionData?: any
+			mobileProvisionData?: any,
 		): Promise<void>;
 	}
 
@@ -27,17 +27,17 @@ declare global {
 		buildForSimulator(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			buildConfig: IBuildConfig
+			buildConfig: IBuildConfig,
 		): Promise<void>;
 		buildForDevice(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			buildConfig: IBuildConfig
+			buildConfig: IBuildConfig,
 		): Promise<string>;
 		buildForAppStore(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			buildConfig: IBuildConfig
+			buildConfig: IBuildConfig,
 		): Promise<string>;
 	}
 
@@ -47,35 +47,44 @@ declare global {
 		applySPMPackages(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			pluginSpmPackages?: IosSPMPackage[]
+			pluginSpmPackages?: IosSPMPackage[],
 		);
 		getSPMPackages(
 			projectData: IProjectData,
-			platform: string
+			platform: string,
 		): IosSPMPackage[];
+		resolveSPMDependencies(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			options?: { showProgress?: boolean },
+		): Promise<void>;
+		ensureSPMDependenciesResolved(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+		): Promise<void>;
 	}
 
 	interface IXcodebuildArgsService {
 		getBuildForSimulatorArgs(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			buildConfig: IBuildConfig
+			buildConfig: IBuildConfig,
 		): Promise<string[]>;
 		getBuildForDeviceArgs(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			buildConfig: IBuildConfig
+			buildConfig: IBuildConfig,
 		): Promise<string[]>;
 		getXcodeProjectArgs(
 			platformData: IPlatformData,
-			projectData: IProjectData
+			projectData: IProjectData,
 		): string[];
 	}
 
 	interface IXcodebuildCommandService {
 		executeCommand(
 			args: string[],
-			options: IXcodebuildCommandOptions
+			options: IXcodebuildCommandOptions,
 		): Promise<ISpawnResult>;
 	}
 
@@ -84,18 +93,24 @@ declare global {
 		cwd: string;
 		stdio?: string;
 		spawnOptions?: any;
+		/**
+		 * When provided, xcodebuild's output is piped (rather than inherited) and
+		 * forwarded here so the caller can render its own progress UI (e.g. a
+		 * spinner for Swift Package resolution/download activity).
+		 */
+		onProgress?: (chunk: { data: string; pipe: string }) => void;
 	}
 
 	interface IExportOptionsPlistService {
 		createDevelopmentExportOptionsPlist(
 			archivePath: string,
 			projectData: IProjectData,
-			buildConfig: IBuildConfig
+			buildConfig: IBuildConfig,
 		): Promise<IExportOptionsPlistOutput>;
 		createDistributionExportOptionsPlist(
 			projectRoot: string,
 			projectData: IProjectData,
-			buildConfig: IBuildConfig
+			buildConfig: IBuildConfig,
 		): Promise<IExportOptionsPlistOutput>;
 	}
 

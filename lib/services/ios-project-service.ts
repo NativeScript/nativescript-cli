@@ -440,6 +440,14 @@ export class IOSProjectService
 	): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
 
+		// On a first build, the runtime (and any other Swift packages) download
+		// here. Pre-resolve under a clear spinner so the subsequent
+		// "Xcode build..." step doesn't appear to hang while that happens.
+		await this.$spmService.ensureSPMDependenciesResolved(
+			platformData,
+			projectData,
+		);
+
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
