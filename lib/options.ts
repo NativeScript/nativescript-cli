@@ -204,6 +204,13 @@ export class Options {
 			template: { type: OptionType.String, hasSensitiveValue: true },
 			certificate: { type: OptionType.String, hasSensitiveValue: true },
 			certificatePassword: { type: OptionType.String, hasSensitiveValue: true },
+			certificateThumbprint: {
+				type: OptionType.String,
+				hasSensitiveValue: true,
+			},
+			storeUpload: { type: OptionType.Boolean, hasSensitiveValue: false },
+			msixbundle: { type: OptionType.Boolean, hasSensitiveValue: false },
+			arch: { type: OptionType.String, hasSensitiveValue: false },
 			release: {
 				type: OptionType.Boolean,
 				alias: "r",
@@ -234,6 +241,11 @@ export class Options {
 				hasSensitiveValue: false,
 				default: APP_FOLDER_NAME,
 			},
+		phoneProductId: { type: OptionType.String, hasSensitiveValue: false },
+		phonePublisherId: { type: OptionType.String, hasSensitiveValue: false },
+		regenGuid: { type: OptionType.Boolean, hasSensitiveValue: false },
+		noAutoGuid: { type: OptionType.Boolean, hasSensitiveValue: false },
+			allowZeroGuid: { type: OptionType.Boolean, hasSensitiveValue: false },
 			aab: { type: OptionType.Boolean, hasSensitiveValue: false },
 			performance: { type: OptionType.Object, hasSensitiveValue: true },
 			appleApplicationSpecificPassword: {
@@ -244,6 +256,11 @@ export class Options {
 			jar: { type: OptionType.String, hasSensitiveValue: true },
 			aar: { type: OptionType.String, hasSensitiveValue: true },
 			filter: { type: OptionType.String, hasSensitiveValue: true },
+			root: { type: OptionType.String, hasSensitiveValue: true },
+			roots: { type: OptionType.String, hasSensitiveValue: true },
+			input: { type: OptionType.String, hasSensitiveValue: true },
+			lib: { type: OptionType.String, hasSensitiveValue: true },
+			libs: { type: OptionType.String, hasSensitiveValue: true },
 			git: {
 				type: OptionType.Boolean,
 				hasSensitiveValue: false,

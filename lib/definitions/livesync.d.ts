@@ -252,6 +252,8 @@ declare global {
 		modifiedFilesData: Mobile.ILocalToDevicePathData[];
 		isFullSync: boolean;
 		waitForDebugger?: boolean;
+		/** True for any `ns debug` session (attach or --debug-brk); drives the Windows inspector start. */
+		debugMode?: boolean;
 		deviceAppData: Mobile.IDeviceAppData;
 		didRecover?: boolean;
 		forceRefreshWithSocket?: boolean;
@@ -508,6 +510,7 @@ declare global {
 		appIdentifier: string;
 		getDirname?: boolean;
 		watch?: boolean;
+		projectData?: IProjectData;
 	}
 
 	interface IDevicePathProvider {

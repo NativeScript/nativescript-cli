@@ -7,6 +7,8 @@ import {
 import { IFileSystem, IProjectHelper } from "../common/declarations";
 import { injector } from "../common/yok";
 import * as path from "path";
+import * as fs from "fs";
+import { execSync } from "child_process";
 import { color } from "../color";
 import {
 	ITerminalSpinner,
@@ -95,7 +97,10 @@ export class ProjectCleanupService implements IProjectCleanupService {
 				this.$logger.trace(
 					`${logPrefix}Path '${filePath}' is a directory, deleting.`
 				);
-				!dryRun && this.$fs.deleteDirectorySafe(filePath);
+				if (!dryRun) {
+					this._releaseWindowsFileLocks(filePath);
+					this.$fs.deleteDirectorySafe(filePath);
+				}
 				fileType = "directory";
 			} else {
 				this.$logger.trace(
@@ -129,6 +134,34 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			return { ok: true, size: 0 };
 		}
 		return { ok: true };
+	}
+
+	/**
+	 * On Windows, DLLs and EXEs inside the platforms build tree can be held open
+	 * by a previously-running app or by the .NET build tooling. Kill any matching
+	 * processes so the subsequent rmSync can succeed.
+	 */
+	private _releaseWindowsFileLocks(dirPath: string): void {
+		if (process.platform !== "win32") return;
+
+		// Collect exe names from the directory that might be running.
+		const exeNames: string[] = [];
+		try {
+			for (const entry of fs.readdirSync(dirPath, { withFileTypes: true, recursive: true } as any) as unknown as fs.Dirent[]) {
+				if (!entry.isFile()) continue;
+				const name: string = (entry as any).name ?? "";
+				if (name.toLowerCase().endsWith(".exe")) {
+					exeNames.push(name.slice(0, -4));
+				}
+			}
+		} catch { /* directory might be partially deleted */ }
+
+		for (const name of new Set(exeNames)) {
+			try {
+				execSync(`taskkill /F /IM "${name}.exe" /T`, { stdio: "ignore" });
+				this.$logger.trace(`[clean] Killed process: ${name}.exe`);
+			} catch { /* process not running — ignore */ }
+		}
 	}
 }
 

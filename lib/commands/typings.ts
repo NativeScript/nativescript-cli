@@ -30,6 +30,8 @@ export class TypingsCommand implements ICommand {
 			result = await this.handleAndroidTypings();
 		} else if (this.$mobileHelper.isiOSPlatform(platform)) {
 			result = await this.handleiOSTypings();
+		} else if (this.$mobileHelper.isWindowsPlatform(platform)) {
+			result = await this.handleWindowsTypings();
 		}
 		let typingsFolder = "./typings";
 		if (this.$options.copyTo) {
@@ -208,6 +210,83 @@ export class TypingsCommand implements ICommand {
 			"exit",
 			{ stdio: "inherit" },
 		);
+	}
+
+	private async handleWindowsTypings() {
+		if (!this.$hostInfo.isWindows) {
+			this.$logger.warn("Windows typings can only be generated on Windows.");
+			return false;
+		}
+
+		const outDir = path.resolve(
+			this.$projectData.projectDir,
+			"typings",
+			"windows",
+		);
+		this.$fs.ensureDirectoryExists(outDir);
+
+		const toolsDir = path.resolve(
+			this.$projectData.projectDir,
+			"platforms",
+			"windows",
+			"tools",
+		);
+		const arch = process.arch === "arm64" ? "arm64" : "x64";
+		const resolveGenerator = () =>
+			[
+				path.join(toolsDir, `typings-generator-${arch}.exe`),
+				path.join(toolsDir, "typings-generator.exe"),
+			].find((p) => this.$fs.exists(p));
+
+		let generatorPath = resolveGenerator();
+		if (!generatorPath) {
+			this.$logger.warn("No platforms folder found, preparing project now...");
+			await this.$childProcess.spawnFromEvent(
+				this.$hostInfo.isWindows ? "ns.cmd" : "ns",
+				["prepare", "windows"],
+				"exit",
+				{ stdio: "inherit", shell: this.$hostInfo.isWindows },
+			);
+			generatorPath = resolveGenerator();
+		}
+
+		if (!generatorPath) {
+			this.$logger.warn(
+				[
+					`Could not find the Windows typings generator under ${toolsDir}.`,
+					"Ensure @nativescript/windows is installed and the project has been prepared.",
+				].join("\n"),
+			);
+			return false;
+		}
+
+		const asArray = (input: string | string[]) => {
+			if (!input) {
+				return [];
+			}
+			return typeof input === "string" ? [input] : input;
+		};
+
+		const generatorArgs: string[] = ["--out-dir", outDir];
+		if (this.$options.root) {
+			generatorArgs.push("--root", this.$options.root);
+		}
+		if (this.$options.roots) {
+			generatorArgs.push("--roots", this.$options.roots);
+		}
+		if (this.$options.input) {
+			generatorArgs.push("--input", this.$options.input);
+		}
+		for (const lib of asArray(this.$options.lib)) {
+			generatorArgs.push("--lib", lib);
+		}
+		if (this.$options.libs) {
+			generatorArgs.push("--libs", this.$options.libs);
+		}
+
+		await this.$childProcess.spawnFromEvent(generatorPath, generatorArgs, "exit", {
+			stdio: "inherit",
+		});
 	}
 
 	private async handleiOSTypings() {

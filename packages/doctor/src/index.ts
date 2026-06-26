@@ -8,6 +8,7 @@ import { Helpers } from "./helpers";
 import { Doctor } from "./doctor";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
+import { WindowsLocalBuildRequirements } from "./local-build-requirements/windows-local-build-requirements";
 import { Constants as constants } from "./constants";
 
 const childProcess = new ChildProcess();
@@ -39,6 +40,10 @@ const iOSLocalBuildRequirements = new IosLocalBuildRequirements(
 	sysInfo,
 	hostInfo
 );
+const windowsLocalBuildRequirements = new WindowsLocalBuildRequirements(
+	sysInfo,
+	hostInfo
+);
 
 const doctor: NativeScriptDoctor.IDoctor = new Doctor(
 	androidLocalBuildRequirements,
@@ -46,7 +51,8 @@ const doctor: NativeScriptDoctor.IDoctor = new Doctor(
 	hostInfo,
 	iOSLocalBuildRequirements,
 	sysInfo,
-	androidToolsInfo
+	androidToolsInfo,
+	windowsLocalBuildRequirements,
 );
 
 const setShouldCacheSysInfo = sysInfo.setShouldCacheSysInfo.bind(sysInfo);

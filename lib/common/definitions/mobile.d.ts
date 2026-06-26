@@ -366,6 +366,12 @@ declare global {
 
 		interface IStartApplicationData extends IApplicationData {
 			waitForDebugger?: boolean;
+			/**
+			 * True when launching as part of a debug session (`ns debug`), regardless of --debug-brk.
+			 * Windows uses this to signal the host to start the inspector (via a sentinel file);
+			 * a plain `ns run` leaves it unset so the inspector/devtools server is never created.
+			 */
+			debugMode?: boolean;
 		}
 
 		interface IInstallAppData extends IApplicationData {
@@ -1204,6 +1210,7 @@ declare global {
 			isAndroidPlatform(platform: string): boolean;
 			isiOSPlatform(platform: string): boolean;
 			isvisionOSPlatform(platform: string): boolean;
+			isWindowsPlatform(platform: string): boolean;
 			isApplePlatform(platform: string): boolean;
 			normalizePlatformName(platform: string): string;
 			validatePlatformName(platform: string): string;
@@ -1248,10 +1255,12 @@ declare global {
 			iOS: string;
 			Android: string;
 			visionOS: string;
+			Windows: string;
 
 			isiOS(value: string): boolean;
 			isAndroid(value: string): boolean;
 			isvisionOS(value: string): boolean;
+			isWindows(value: string): boolean;
 		}
 
 		interface IDeviceApplication {

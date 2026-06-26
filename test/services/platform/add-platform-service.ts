@@ -28,7 +28,8 @@ function createTestInjector() {
 	injector.register("tempService", stubs.TempServiceStub);
 
 	const fs = injector.resolve("fs");
-	fs.exists = () => false;
+	fs.exists = (path: string) => path.includes("package.json");
+	fs.readJson = () => ({ version: "4.2.0" });
 
 	return injector;
 }
