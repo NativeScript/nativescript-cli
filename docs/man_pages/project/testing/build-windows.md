@@ -15,11 +15,18 @@ Builds the project for Windows and produces an MSIX package that you can deploy 
 
 Usage | Synopsis
 ---|---
-General | `$ ns build windows [--release] [--env.*]`
+General | `$ ns build windows [--release [--certificate <File Path> --certificate-password <Password>] [--certificate-thumbprint <Thumbprint>] [--store-upload] [--msixbundle]] [--arch <Architecture>] [--copy-to <File Path>] [--env.*]`
 
 ### Options
 
-* `--release` - If set, produces a release build. Otherwise, produces a debug build with DevTools support enabled.
+* `--release` - If set, produces a release build and packages it as an MSIX. By default this produces a sideloadable `.msix` (sign it with the `--certificate*` options); pass `--store-upload` to produce a `.msixupload` bundle for the Microsoft Store instead. Without `--release`, produces a debug build with DevTools support enabled.
+* `--certificate` - Specifies the file path to the code-signing certificate (`.pfx`) used to sign the release MSIX. Path is resolved relative to the project directory if not absolute. Used together with `--release`.
+* `--certificate-password` - Provides the password for the certificate specified with `--certificate`.
+* `--certificate-thumbprint` - Signs the release MSIX using an already-installed certificate identified by its thumbprint, instead of a `.pfx` file. Used together with `--release`. Takes precedence over `--certificate`.
+* `--store-upload` - When set with `--release`, produces an unsigned `.msixupload` bundle for submission to the Microsoft Store (the Store re-signs it). No local certificate is required.
+* `--msixbundle` - When set with `--release`, produces an MSIX bundle (`.msixbundle`). Implied by `--store-upload`.
+* `--arch` - Sets the target architecture for the build (for example `x64`, `arm64`). Defaults to `x64`.
+* `--copy-to` - Specifies the file path where the built package will be copied. If it points to a non-existent directory path, it will be created. If the specified value is an existing directory, the original file name will be used.
 * `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times. Supported additional flags:
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
     *   `--env.uglify` - provides basic obfuscation and smaller app size.
@@ -40,6 +47,7 @@ General | `$ ns build windows [--release] [--env.*]`
 ### Command Limitations
 
 * You can run `$ ns build windows` only on Windows systems.
+* A `--release` build without `--store-upload`, `--certificate` or `--certificate-thumbprint` produces an unsigned `.msix` that cannot be installed until it is signed.
 
 ### Related Commands
 
