@@ -117,6 +117,12 @@ export class SPMService implements ISPMService {
 				showProgress: true,
 			});
 		} catch (err) {
+			// best-effort, but don't bury the failure below trace level — a red
+			// resolve spinner with no visible reason is confusing. Warn with the
+			// message, keep the full error at trace.
+			this.$logger.warn(
+				`Failed to apply Swift Package dependencies: ${err?.message ?? err}`,
+			);
 			this.$logger.trace("SPM: error applying SPM packages: ", err);
 		}
 	}
@@ -127,6 +133,9 @@ export class SPMService implements ISPMService {
 	 * (now distributed as a remote Swift package) and any other SPM packages are
 	 * actually downloaded — which can take a while. Pass `showProgress` to render
 	 * a live spinner so the CLI doesn't look stalled while that happens.
+	 *
+	 * In verbose mode (`--log trace`) the condensed spinner is bypassed and
+	 * xcodebuild's raw resolution log is streamed straight through instead.
 	 */
 	public async resolveSPMDependencies(
 		platformData: IPlatformData,
@@ -141,10 +150,13 @@ export class SPMService implements ISPMService {
 				"-resolvePackageDependencies",
 			]);
 
-		if (!options?.showProgress) {
+		// Without progress, or when verbose: let xcodebuild's own resolution log
+		// stream straight to the terminal (inherited stdio). Verbose users want
+		// the raw log, not a condensed spinner that hides it.
+		if (!options?.showProgress || this.$logger.isVerbose()) {
 			await this.$xcodebuildCommandService.executeCommand(args, {
 				cwd: projectData.projectDir,
-				message: "Resolving SPM dependencies...",
+				message: "Resolving Swift Package dependencies...",
 			});
 			return;
 		}
