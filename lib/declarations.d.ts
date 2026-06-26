@@ -594,6 +594,8 @@ interface ITypingsOptions {
 	filter: string;
 }
 
+yaml: string;
+jsonMetadata: string;
 interface IOptions
 	extends
 		IRelease,
