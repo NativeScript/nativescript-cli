@@ -218,6 +218,12 @@ const ANDROID_SIGNING_REQUIRED_MESSAGE =
 	"you need to specify all --key-store-* options.";
 export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = `When producing a release build, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
 export const ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE = `When producing Android App Bundle, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
+export const WINDOWS_RELEASE_UNSIGNED_MESSAGE =
+	"Producing an unsigned Windows release package. The resulting .msix cannot be installed directly until it is signed. Pass --certificate (and --certificate-password) or --certificate-thumbprint to produce a signed, sideloadable package, or use --store-upload to produce a package for submission to the Microsoft Store.";
+export class WindowsAppPackageMessages {
+	public static STORE_UPLOAD_DOCS_MESSAGE =
+		"Built a Microsoft Store upload package (.msixupload). Submit it to your app via Partner Center: https://partner.microsoft.com/dashboard";
+}
 export const CACACHE_DIRECTORY_NAME = "_cacache";
 
 export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";

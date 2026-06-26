@@ -204,6 +204,13 @@ export class Options {
 			template: { type: OptionType.String, hasSensitiveValue: true },
 			certificate: { type: OptionType.String, hasSensitiveValue: true },
 			certificatePassword: { type: OptionType.String, hasSensitiveValue: true },
+			certificateThumbprint: {
+				type: OptionType.String,
+				hasSensitiveValue: true,
+			},
+			storeUpload: { type: OptionType.Boolean, hasSensitiveValue: false },
+			msixbundle: { type: OptionType.Boolean, hasSensitiveValue: false },
+			arch: { type: OptionType.String, hasSensitiveValue: false },
 			release: {
 				type: OptionType.Boolean,
 				alias: "r",

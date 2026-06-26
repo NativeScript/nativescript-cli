@@ -1,6 +1,8 @@
 import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	AndroidAppBundleMessages,
+	WINDOWS_RELEASE_UNSIGNED_MESSAGE,
+	WindowsAppPackageMessages,
 } from "../constants";
 import { ValidatePlatformCommandBase } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
@@ -310,6 +312,10 @@ export class BuildWindowsCommand extends BuildCommandBase implements ICommand {
 		await this.executeCore([
 			this.$devicePlatformsConstants.Windows.toLowerCase(),
 		]);
+
+		if (this.$options.release && this.$options.storeUpload) {
+			this.$logger.info(WindowsAppPackageMessages.STORE_UPLOAD_DOCS_MESSAGE);
+		}
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -323,6 +329,17 @@ export class BuildWindowsCommand extends BuildCommandBase implements ICommand {
 
 		let canExecute = await super.canExecuteCommandBase(platform);
 		if (canExecute) {
+			// A sideload release package without signing material can be produced,
+			// but it won't be installable until signed — warn rather than fail.
+			if (
+				this.$options.release &&
+				!this.$options.storeUpload &&
+				!this.$options.certificate &&
+				!this.$options.certificateThumbprint
+			) {
+				this.$logger.warn(WINDOWS_RELEASE_UNSIGNED_MESSAGE);
+			}
+
 			canExecute = await super.validateArgs(args, platform);
 		}
 

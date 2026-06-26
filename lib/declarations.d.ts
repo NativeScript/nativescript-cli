@@ -661,6 +661,10 @@ interface IOptions
 	template: string;
 	certificate: string;
 	certificatePassword: string;
+	certificateThumbprint: string;
+	storeUpload: boolean;
+	msixbundle: boolean;
+	arch: string;
 	var: Object;
 	default: Boolean;
 	count: number;

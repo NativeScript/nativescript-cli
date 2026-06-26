@@ -1,4 +1,8 @@
-import { AndroidBuildData, BuildData, IOSBuildData } from "../data/build-data";
+import {
+	AndroidBuildData,
+	IOSBuildData,
+	WindowsBuildData,
+} from "../data/build-data";
 import { IBuildDataService } from "../definitions/build";
 import { injector } from "../common/yok";
 
@@ -11,7 +15,7 @@ export class BuildDataService implements IBuildDataService {
 		} else if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			return new AndroidBuildData(projectDir, platform, data);
 		} else if (this.$mobileHelper.isWindowsPlatform(platform)) {
-			return new BuildData(projectDir, platform, data);
+			return new WindowsBuildData(projectDir, platform, data);
 		}
 	}
 }

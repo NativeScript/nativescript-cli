@@ -114,18 +114,40 @@ export class WindowsProjectService
 				),
 				platformProjectService: <any>this,
 				projectRoot: projectRoot,
-				getBuildOutputPath: (_options?: any): string => {
+				getBuildOutputPath: (options?: any): string => {
+					// Release builds are packaged into AppPackages/ (.msix/.msixupload),
+					// while debug builds run from the plain `dotnet build` output in bin/.
+					if (options?.release) {
+						return path.join(
+							projectRoot,
+							projectData.projectName,
+							"AppPackages",
+						);
+					}
 					return path.join(projectRoot, projectData.projectName, "bin");
 				},
-				getValidBuildOutputData: (): IValidBuildOutputData => {
+				getValidBuildOutputData: (
+					options?: any,
+				): IValidBuildOutputData => {
+					if (options?.release) {
+						// Packaged artifacts live in versioned subfolders of AppPackages/
+						// (e.g. App_1.0.0.0_x64_Test/App_1.0.0.0_x64.msix), so match by
+						// extension rather than an exact file name. A representative
+						// package name is kept so callers that read packageNames[0]
+						// (e.g. for error messages) have a valid value.
+						return {
+							packageNames: [
+								`${projectData.projectName}.msixupload`,
+								`${projectData.projectName}.msix`,
+							],
+							regexes: [
+								/\.(msixupload|appxupload|msixbundle|appxbundle|msix|appx)$/i,
+							],
+						};
+					}
+					// AppxManifest.xml triggers Add-AppxPackage -Register (dev flow).
 					return {
-						// AppxManifest.xml triggers Add-AppxPackage -Register (dev flow).
-						// msix/appx handle release builds.
-						packageNames: [
-							"AppxManifest.xml",
-							`${projectData.projectName}.msix`,
-							`${projectData.projectName}.appx`,
-						],
+						packageNames: ["AppxManifest.xml"],
 					};
 				},
 				configurationFileName: "Package.appxmanifest",
@@ -275,9 +297,8 @@ export class WindowsProjectService
 		projectData: IProjectData,
 		buildConfig: any,
 	): Promise<void> {
-		const config = buildConfig?.release
-			? Configurations.Release
-			: Configurations.Debug;
+		const isRelease = !!buildConfig?.release;
+		const config = isRelease ? Configurations.Release : Configurations.Debug;
 		const arch = buildConfig?.architectures?.[0] ?? "x64";
 		const csproj = path.join(
 			projectRoot,
@@ -285,9 +306,16 @@ export class WindowsProjectService
 			`${projectData.projectName}.csproj`,
 		);
 		const outputPath = path.join(projectRoot, projectData.projectName, "bin");
+		const appPackagesDir = path.join(
+			projectRoot,
+			projectData.projectName,
+			"AppPackages",
+		);
 
 		this.$logger.info(
-			`Building Windows project: ${csproj} [${config}|${arch}]`,
+			`Building Windows project: ${csproj} [${config}|${arch}]${
+				isRelease ? " (release package)" : ""
+			}`,
 		);
 
 		// If the app project provides an App_Resources/Windows/Package.appxmanifest,
@@ -323,15 +351,61 @@ export class WindowsProjectService
 			}
 		}
 
-		const dotnetArgs = [
-			"build",
-			csproj,
-			"-c",
-			config,
-			`-p:Platform=${arch}`,
-			"--output",
-			outputPath,
-		];
+		const dotnetArgs = ["build", csproj, "-c", config, `-p:Platform=${arch}`];
+
+		if (isRelease) {
+			// Produce an MSIX package (sideload-signed by default) or a Microsoft
+			// Store upload bundle when --store-upload is passed, instead of a plain
+			// run-from-bin build.
+			const storeUpload = !!buildConfig?.storeUpload;
+			const bundle = !!buildConfig?.msixBundle || storeUpload;
+			const certificate: string = buildConfig?.certificate;
+			const certificatePassword: string = buildConfig?.certificatePassword;
+			const certificateThumbprint: string =
+				buildConfig?.certificateThumbprint;
+
+			dotnetArgs.push(
+				"-p:GenerateAppxPackageOnBuild=true",
+				`-p:AppxPackageDir=${appPackagesDir}${path.sep}`,
+				`-p:UapAppxPackageBuildMode=${
+					storeUpload ? "StoreUpload" : "SideloadOnly"
+				}`,
+				`-p:AppxBundle=${bundle ? "Always" : "Never"}`,
+			);
+
+			if (bundle) {
+				dotnetArgs.push(`-p:AppxBundlePlatforms=${arch}`);
+			}
+
+			if (storeUpload) {
+				// The Store re-signs the package on submission, so don't sign locally.
+				dotnetArgs.push("-p:AppxPackageSigningEnabled=false");
+			} else if (certificateThumbprint) {
+				dotnetArgs.push(
+					"-p:AppxPackageSigningEnabled=true",
+					`-p:PackageCertificateThumbprint=${certificateThumbprint}`,
+				);
+			} else if (certificate) {
+				const certPath = path.isAbsolute(certificate)
+					? certificate
+					: path.join(projectData.projectDir, certificate);
+				dotnetArgs.push(
+					"-p:AppxPackageSigningEnabled=true",
+					`-p:PackageCertificateKeyFile=\"${certPath}\"`,
+				);
+				if (certificatePassword) {
+					dotnetArgs.push(
+						`-p:PackageCertificatePassword=${certificatePassword}`,
+					);
+				}
+			} else {
+				// No signing material provided — emit an unsigned package.
+				dotnetArgs.push("-p:AppxPackageSigningEnabled=false");
+			}
+		} else {
+			dotnetArgs.push("--output", outputPath);
+		}
+
 		if (appResourcesManifestArg) {
 			dotnetArgs.push(appResourcesManifestArg);
 		}
@@ -354,14 +428,15 @@ export class WindowsProjectService
 		}
 
 		// Add-AppxPackage -Register requires the manifest to be named AppxManifest.xml
-		// with $targetnametoken$ expanded to the actual EXE name.
+		// with $targetnametoken$ expanded to the actual EXE name. This is only used by
+		// the dev (debug) register flow; release builds produce a packaged .msix.
 		const manifestSrc = path.join(
 			projectRoot,
 			projectData.projectName,
 			"Package.appxmanifest",
 		);
 		const manifestDest = path.join(outputPath, "AppxManifest.xml");
-		if (this.$fs.exists(manifestSrc)) {
+		if (!isRelease && this.$fs.exists(manifestSrc)) {
 			const raw = fs.readFileSync(manifestSrc, "utf8");
 			const expanded = raw.split("$targetnametoken$").join(projectData.projectName);
 			fs.writeFileSync(manifestDest, expanded, "utf8");
