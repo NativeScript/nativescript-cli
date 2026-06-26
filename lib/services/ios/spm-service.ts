@@ -2,12 +2,17 @@ import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
 import { MobileProject } from "@nstudio/trapezedev-project";
 import { IPlatformData } from "../../definitions/platform";
+import { IFileSystem } from "../../common/declarations";
+import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
+import { color } from "../../color";
 import path = require("path");
 
 export class SPMService implements ISPMService {
 	constructor(
 		private $logger: ILogger,
+		private $fs: IFileSystem,
 		private $projectConfigService: IProjectConfigService,
+		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $xcodebuildCommandService: IXcodebuildCommandService,
 		private $xcodebuildArgsService: IXcodebuildArgsService,
 	) {}
@@ -36,11 +41,13 @@ export class SPMService implements ISPMService {
 	): void {
 		// include swift packages from plugin configs
 		// but allow app packages to override plugin packages with the same name
-		const appPackageNames = new Set(appPackages.map(pkg => pkg.name));
-		
+		const appPackageNames = new Set(appPackages.map((pkg) => pkg.name));
+
 		for (const pluginPkg of pluginPackages) {
 			if (appPackageNames.has(pluginPkg.name)) {
-				this.$logger.trace(`SPM: app package overrides plugin package: ${pluginPkg.name}`);
+				this.$logger.trace(
+					`SPM: app package overrides plugin package: ${pluginPkg.name}`,
+				);
 			} else {
 				appPackages.push(pluginPkg);
 			}
@@ -106,29 +113,226 @@ export class SPMService implements ISPMService {
 			await project.commit();
 
 			// finally resolve the dependencies
-			await this.resolveSPMDependencies(platformData, projectData);
+			await this.resolveSPMDependencies(platformData, projectData, {
+				showProgress: true,
+			});
 		} catch (err) {
+			// best-effort, but don't bury the failure below trace level — a red
+			// resolve spinner with no visible reason is confusing. Warn with the
+			// message, keep the full error at trace.
+			this.$logger.warn(
+				`Failed to apply Swift Package dependencies: ${err?.message ?? err}`,
+			);
 			this.$logger.trace("SPM: error applying SPM packages: ", err);
 		}
 	}
 
+	/**
+	 * Resolves (downloads + pins) the Swift Package dependencies referenced by
+	 * the Xcode project. On a first build this is where the NativeScript runtime
+	 * (now distributed as a remote Swift package) and any other SPM packages are
+	 * actually downloaded — which can take a while. Pass `showProgress` to render
+	 * a live spinner so the CLI doesn't look stalled while that happens.
+	 *
+	 * In verbose mode (`--log trace`) the condensed spinner is bypassed and
+	 * xcodebuild's raw resolution log is streamed straight through instead.
+	 */
 	public async resolveSPMDependencies(
 		platformData: IPlatformData,
 		projectData: IProjectData,
+		options?: { showProgress?: boolean },
 	) {
-		await this.$xcodebuildCommandService.executeCommand(
-			this.$xcodebuildArgsService
-				.getXcodeProjectArgs(platformData, projectData)
-				.concat([
-					"-destination",
-					"generic/platform=iOS",
-					"-resolvePackageDependencies",
-				]),
-			{
+		const args = this.$xcodebuildArgsService
+			.getXcodeProjectArgs(platformData, projectData)
+			.concat([
+				"-destination",
+				"generic/platform=iOS",
+				"-resolvePackageDependencies",
+			]);
+
+		// Without progress, or when verbose: let xcodebuild's own resolution log
+		// stream straight to the terminal (inherited stdio). Verbose users want
+		// the raw log, not a condensed spinner that hides it.
+		if (!options?.showProgress || this.$logger.isVerbose()) {
+			await this.$xcodebuildCommandService.executeCommand(args, {
 				cwd: projectData.projectDir,
-				message: "Resolving SPM dependencies...",
-			},
+				message: "Resolving Swift Package dependencies...",
+			});
+			return;
+		}
+
+		const spinner = this.$terminalSpinnerService.createSpinner();
+		const startedAt = Date.now();
+		let activity = "Resolving Swift Package dependencies";
+		let lineBuffer = "";
+
+		const render = () => {
+			const elapsed = Math.round((Date.now() - startedAt) / 1000);
+			spinner.text = `${activity}… ${color.dim(`(${elapsed}s)`)}`;
+		};
+		// keep the elapsed timer ticking even when xcodebuild is silent (e.g.
+		// while a binary artifact downloads) so the user can see it's alive.
+		const ticker = setInterval(render, 1000);
+
+		const onProgress = (chunk: { data: string; pipe: string }) => {
+			lineBuffer += chunk.data;
+			const lines = lineBuffer.split("\n");
+			// keep the last (possibly partial) line in the buffer
+			lineBuffer = lines.pop();
+			for (const line of lines) {
+				const described = this.describeSPMActivity(line);
+				if (described) {
+					activity = described;
+					render();
+				}
+			}
+		};
+
+		render();
+		spinner.start();
+		try {
+			await this.$xcodebuildCommandService.executeCommand(args, {
+				cwd: projectData.projectDir,
+				onProgress,
+			});
+			spinner.succeed(color.green("Swift Package dependencies resolved"));
+		} catch (err) {
+			spinner.fail(color.red("Failed to resolve Swift Package dependencies"));
+			throw err;
+		} finally {
+			clearInterval(ticker);
+		}
+	}
+
+	/**
+	 * Best-effort pre-resolve before a build so the (potentially slow) first-time
+	 * Swift package download happens under a clear progress indicator instead of
+	 * silently inside the subsequent "Xcode build..." step. No-op when the
+	 * project has no SPM references or they're already resolved.
+	 */
+	public async ensureSPMDependenciesResolved(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+	) {
+		if (!this.hasSPMReferences(platformData, projectData)) {
+			this.$logger.trace("SPM: project has no Swift Package references.");
+			return;
+		}
+
+		if (this.arePackagesResolved(platformData, projectData)) {
+			this.$logger.trace(
+				"SPM: Swift Package dependencies already resolved; skipping pre-resolve.",
+			);
+			return;
+		}
+
+		try {
+			await this.resolveSPMDependencies(platformData, projectData, {
+				showProgress: true,
+			});
+		} catch (err) {
+			// non-fatal: the build itself will resolve packages and surface the
+			// authoritative error if something is genuinely wrong.
+			this.$logger.trace("SPM: pre-resolve failed (continuing): ", err);
+		}
+	}
+
+	/**
+	 * Maps a raw xcodebuild/SwiftPM resolution log line to a concise,
+	 * user-facing activity description (or null for lines we don't surface).
+	 */
+	private describeSPMActivity(line: string): string | null {
+		const trimmed = line.trim();
+		if (!trimmed) {
+			return null;
+		}
+
+		// the big, otherwise-silent wait on a first build: a binary artifact
+		// (the NativeScript runtime xcframework) downloading.
+		if (/Downloading binary artifact/i.test(trimmed)) {
+			if (/ios-spm|nativescript/i.test(trimmed)) {
+				return "Downloading the NativeScript runtime (first build only)";
+			}
+			return "Downloading Swift Package binaries (first build only)";
+		}
+		if (/^Fetching\b/i.test(trimmed)) {
+			return `Fetching ${this.shortenPackageRef(trimmed)}`;
+		}
+		if (/^Cloning\b/i.test(trimmed)) {
+			return `Cloning ${this.shortenPackageRef(trimmed)}`;
+		}
+		if (/Computing version for/i.test(trimmed)) {
+			return "Computing package versions";
+		}
+		if (/Resolve Package Graph/i.test(trimmed)) {
+			return "Resolving Swift Package graph";
+		}
+		if (/Resolved source packages/i.test(trimmed)) {
+			return "Finalizing Swift Package dependencies";
+		}
+		return null;
+	}
+
+	/** Extracts a short, readable name from a SwiftPM repo URL/log line. */
+	private shortenPackageRef(line: string): string {
+		const match = line.match(/https?:\/\/\S+/);
+		if (!match) {
+			return "Swift Packages";
+		}
+		return path
+			.basename(match[0])
+			.replace(/\.git$/, "")
+			.replace(/[)\s].*$/, "");
+	}
+
+	/** True when the Xcode project references any Swift packages. */
+	private hasSPMReferences(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+	): boolean {
+		const pbxprojPath = path.join(
+			platformData.projectRoot,
+			`${projectData.projectName}.xcodeproj`,
+			"project.pbxproj",
 		);
+		if (!this.$fs.exists(pbxprojPath)) {
+			return false;
+		}
+		const contents = this.$fs.readText(pbxprojPath);
+		return (
+			contents.includes("XCRemoteSwiftPackageReference") ||
+			contents.includes("XCLocalSwiftPackageReference") ||
+			contents.includes("packageReferences")
+		);
+	}
+
+	/**
+	 * True when a Package.resolved already exists for the project — i.e. packages
+	 * have been resolved at least once, so the build's own resolve step will be a
+	 * fast no-op rather than a slow, silent first-time download.
+	 */
+	private arePackagesResolved(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+	): boolean {
+		const candidates = [
+			path.join(
+				platformData.projectRoot,
+				`${projectData.projectName}.xcworkspace`,
+				"xcshareddata",
+				"swiftpm",
+				"Package.resolved",
+			),
+			path.join(
+				platformData.projectRoot,
+				`${projectData.projectName}.xcodeproj`,
+				"project.xcworkspace",
+				"xcshareddata",
+				"swiftpm",
+				"Package.resolved",
+			),
+		];
+		return candidates.some((p) => this.$fs.exists(p));
 	}
 }
 injector.register("spmService", SPMService);
