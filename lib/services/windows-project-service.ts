@@ -201,14 +201,20 @@ export class WindowsProjectService
 		_frameworkVersion: string,
 		projectData: IProjectData,
 	): Promise<void> {
-		this.$fs.ensureDirectoryExists(
-			this.getPlatformData(projectData).projectRoot,
-		);
-		shell.cp(
-			"-R",
-			path.join(frameworkDir, "*"),
-			this.getPlatformData(projectData).projectRoot,
-		);
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		this.$fs.ensureDirectoryExists(projectRoot);
+		const name = projectData.projectName;
+		const entries = fs.readdirSync(frameworkDir, { withFileTypes: true });
+		for (const entry of entries) {
+			const srcPath = path.join(frameworkDir, entry.name);
+			if (entry.name === "__PROJECT_NAME__") {
+				const destPath = path.join(projectRoot, name);
+				shell.cp("-R", srcPath, destPath);
+			} else {
+				const destPath = path.join(projectRoot, entry.name);
+				shell.cp("-R", srcPath, destPath);
+			}
+		}
 	}
 
 	public async interpolateData(projectData: IProjectData): Promise<void> {
@@ -218,12 +224,45 @@ export class WindowsProjectService
 		const appId =
 			projectData.projectIdentifiers?.["windows"] ?? projectData.projectId;
 
-		const templateDir = path.join(projectRoot, placeholder);
 		const projectDir = path.join(projectRoot, name);
 
-		if (this.$fs.exists(templateDir)) {
-			this.$fs.rename(templateDir, projectDir);
+		const clearReadOnlyRecursive = (dir: string): void => {
+			try {
+				const entries = fs.readdirSync(dir, { withFileTypes: true });
+				for (const entry of entries) {
+					const fullPath = path.join(dir, entry.name);
+					fs.chmodSync(fullPath, 0o666);
+					if (entry.isDirectory()) {
+						clearReadOnlyRecursive(fullPath);
+					}
+				}
+				fs.chmodSync(dir, 0o666);
+			} catch (e) {
+				// ignore
+			}
+		};
+
+		if (process.platform === "win32" && this.$fs.exists(projectDir)) {
+			clearReadOnlyRecursive(projectDir);
 		}
+
+		const renameWithRetry = async (from: string, to: string): Promise<void> => {
+			let retries = 30;
+			while (retries > 0) {
+				try {
+					fs.renameSync(from, to);
+					return;
+				} catch (err: any) {
+					if ((err.code === "EPERM" || err.code === "EBUSY") && retries > 1) {
+						retries--;
+						console.warn(`Rename failed, retrying... (${retries} retries left): ${err.message}`);
+						await new Promise((resolve) => setTimeout(resolve, 300));
+					} else {
+						throw err;
+					}
+				}
+			}
+		};
 
 		if (!this.$fs.exists(projectDir)) {
 			return;
@@ -232,7 +271,7 @@ export class WindowsProjectService
 		const csprojPlaceholder = path.join(projectDir, `${placeholder}.csproj`);
 		const csprojDest = path.join(projectDir, `${name}.csproj`);
 		if (this.$fs.exists(csprojPlaceholder)) {
-			this.$fs.rename(csprojPlaceholder, csprojDest);
+			await renameWithRetry(csprojPlaceholder, csprojDest);
 		}
 
 		this._replaceInFiles(projectDir, placeholder, name);
