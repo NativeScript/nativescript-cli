@@ -35,7 +35,7 @@ export class CreateProjectCommand implements ICommand {
 		private $errors: IErrors,
 		private $options: IOptions,
 		private $prompter: IPrompter,
-		private $stringParameter: ICommandParameter
+		private $stringParameter: ICommandParameter,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -55,7 +55,7 @@ export class CreateProjectCommand implements ICommand {
 			this.$options.template
 		) {
 			this.$errors.failWithHelp(
-				"You cannot use a flavor option like --ng, --vue, --react, --solid, --svelte, --tsc and --js together with --template."
+				"You cannot use a flavor option like --ng, --vue, --react, --solid, --svelte, --tsc and --js together with --template.",
 			);
 		}
 
@@ -115,7 +115,7 @@ export class CreateProjectCommand implements ICommand {
 			this.printInteractiveCreationIntroIfNeeded();
 			projectName = await this.$prompter.getString(
 				`${getNextInteractiveAdverb()}, what will be the name of your app?`,
-				{ allowEmpty: false }
+				{ allowEmpty: false },
 			);
 			this.$logger.info();
 		}
@@ -130,9 +130,12 @@ export class CreateProjectCommand implements ICommand {
 			this.printInteractiveCreationIntroIfNeeded();
 			selectedTemplate = await this.interactiveFlavorAndTemplateSelection(
 				getNextInteractiveAdverb(),
-				getNextInteractiveAdverb()
+				getNextInteractiveAdverb(),
 			);
 		}
+
+		const legacyPeerDeps =
+			this.$options.legacyPeerDeps || (this.$options as any).legacyPeers;
 
 		this.createdProjectData = await this.$projectService.createProject({
 			projectName: projectName,
@@ -142,17 +145,18 @@ export class CreateProjectCommand implements ICommand {
 			// its already validated above
 			force: true,
 			ignoreScripts: this.$options.ignoreScripts,
+			legacyPeerDeps,
 		});
 	}
 
 	private async interactiveFlavorAndTemplateSelection(
 		flavorAdverb: string,
-		templateAdverb: string
+		templateAdverb: string,
 	) {
 		const selectedFlavor = await this.interactiveFlavorSelection(flavorAdverb);
 		const selectedTemplate: string = await this.interactiveTemplateSelection(
 			selectedFlavor,
-			templateAdverb
+			templateAdverb,
 		);
 
 		return selectedTemplate;
@@ -191,7 +195,7 @@ export class CreateProjectCommand implements ICommand {
 					key: constants.JsFlavorName,
 					description: "Use NativeScript without any framework",
 				},
-			]
+			],
 		);
 		return flavorSelection;
 	}
@@ -210,7 +214,7 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 
 	private async interactiveTemplateSelection(
 		flavorSelection: string,
-		adverb: string
+		adverb: string,
 	) {
 		const selectedFlavorTemplates: {
 			key?: string;
@@ -255,10 +259,10 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 			});
 			const selectedTemplateKey = await this.$prompter.promptForDetailedChoice(
 				`${adverb}, which template would you like to start from:`,
-				templateChoices
+				templateChoices,
 			);
 			selectedTemplate = selectedFlavorTemplates.find(
-				(t) => t.key === selectedTemplateKey
+				(t) => t.key === selectedTemplateKey,
 			).value;
 		} else {
 			selectedTemplate = selectedFlavorTemplates[0].value;
@@ -472,14 +476,14 @@ can skip this prompt next time using the --template option, or using --ng, --rea
 				].join(" "),
 				"",
 				`Now you can navigate to your project with ${color.cyan(
-					`cd ${relativePath}`
+					`cd ${relativePath}`,
 				)} and then:`,
 				"",
 				...runDebugNotes,
 				``,
 				`For more options consult the docs or run ${color.green("ns --help")}`,
 				"",
-			].join("\n")
+			].join("\n"),
 		);
 		// todo: add back ns preview
 		// this.$logger.printMarkdown(
