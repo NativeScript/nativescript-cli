@@ -61,7 +61,7 @@
     "@nativescript/doctor": "2.0.17",
     "@nativescript/hook": "3.0.5",
     "@npmcli/arborist": "9.1.8",
-    "@nstudio/trapezedev-project": "7.2.3",
+    "@nstudio/trapezedev-project": "7.2.4",
     "@rigor789/resolve-package-path": "1.0.7",
     "axios": "1.13.5",
     "byline": "5.0.0",
@@ -84,7 +84,7 @@
     "minimatch": "10.2.4",
     "mkdirp": "3.0.1",
     "mute-stream": "2.0.0",
-    "nativescript-dev-xcode": "0.8.1",
+    "nativescript-dev-xcode": "0.8.2",
     "open": "8.4.2",
     "ora": "5.4.1",
     "pacote": "21.0.4",
@@ -193,9 +193,5 @@
   "lint-staged": {
     "*.ts": "prettier --write"
   },
-  "packageManager": "yarn@4.10.3",
-  "resolutions": {
-    "nativescript-dev-xcode@0.8.1": "patch:nativescript-dev-xcode@npm%3A0.8.1#./.yarn/patches/nativescript-dev-xcode-npm-0.8.1-c14b82ef0b.patch",
-    "@nstudio/trapezedev-project@7.2.3": "patch:@nstudio/trapezedev-project@npm%3A7.2.3#./.yarn/patches/@nstudio-trapezedev-project-npm-7.2.3-6b4d535c7d.patch"
-  }
+  "packageManager": "yarn@4.10.3"
 }

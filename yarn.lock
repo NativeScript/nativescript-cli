@@ -13,7 +13,7 @@ __metadata:
     "@nativescript/doctor": "npm:2.0.17"
     "@nativescript/hook": "npm:3.0.5"
     "@npmcli/arborist": "npm:9.1.8"
-    "@nstudio/trapezedev-project": "npm:7.2.3"
+    "@nstudio/trapezedev-project": "npm:7.2.4"
     "@rigor789/resolve-package-path": "npm:1.0.7"
     "@types/byline": "npm:^4.2.36"
     "@types/chai": "npm:5.2.2"
@@ -80,7 +80,7 @@ __metadata:
     mkdirp: "npm:3.0.1"
     mocha: "npm:11.7.5"
     mute-stream: "npm:2.0.0"
-    nativescript-dev-xcode: "npm:0.8.1"
+    nativescript-dev-xcode: "npm:0.8.2"
     open: "npm:8.4.2"
     ora: "npm:5.4.1"
     pacote: "npm:21.0.4"
@@ -1101,9 +1101,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nstudio/trapezedev-project@npm:7.2.3":
-  version: 7.2.3
-  resolution: "@nstudio/trapezedev-project@npm:7.2.3"
+"@nstudio/trapezedev-project@npm:7.2.4":
+  version: 7.2.4
+  resolution: "@nstudio/trapezedev-project@npm:7.2.4"
   dependencies:
     "@ionic/utils-fs": "npm:^3.1.5"
     "@ionic/utils-subprocess": "npm:^2.1.8"
@@ -1121,43 +1121,14 @@ __metadata:
     prettier: "npm:^2.7.1"
     prompts: "npm:^2.4.2"
     replace: "npm:^1.1.0"
+    simple-plist: "npm:^1.4.0"
     tmp: "npm:^0.2.1"
     ts-node: "npm:^10.2.1"
-    xcode: "npm:^3.0.1"
+    uuid: "npm:^11.1.0"
     xml-js: "npm:^1.6.11"
     xpath: "npm:^0.0.32"
     yargs: "npm:^17.2.1"
-  checksum: 10c0/08f979c26205ff08d389bf996882311edc4444165b8e2ab1da8375b4b36ecac3223e2c8665cca6798beaec92284c2c734c8545f6a1bc9563ef2245f82a9ab8bb
-  languageName: node
-  linkType: hard
-
-"@nstudio/trapezedev-project@patch:@nstudio/trapezedev-project@npm%3A7.2.3#./.yarn/patches/@nstudio-trapezedev-project-npm-7.2.3-6b4d535c7d.patch::locator=%40akylas%2Fnativescript-cli%40workspace%3A.":
-  version: 7.2.3
-  resolution: "@nstudio/trapezedev-project@patch:@nstudio/trapezedev-project@npm%3A7.2.3#./.yarn/patches/@nstudio-trapezedev-project-npm-7.2.3-6b4d535c7d.patch::version=7.2.3&hash=8361a2&locator=%40akylas%2Fnativescript-cli%40workspace%3A."
-  dependencies:
-    "@ionic/utils-fs": "npm:^3.1.5"
-    "@ionic/utils-subprocess": "npm:^2.1.8"
-    "@prettier/plugin-xml": "npm:^2.2.0"
-    "@trapezedev/gradle-parse": "npm:7.1.3"
-    "@xmldom/xmldom": "npm:^0.8.11"
-    cross-spawn: "npm:^7.0.3"
-    diff: "npm:^5.1.0"
-    env-paths: "npm:^3.0.0"
-    gradle-to-js: "npm:^2.0.0"
-    ini: "npm:^2.0.0"
-    kleur: "npm:^4.1.5"
-    lodash: "npm:^4.17.21"
-    plist: "npm:^3.0.4"
-    prettier: "npm:^2.7.1"
-    prompts: "npm:^2.4.2"
-    replace: "npm:^1.1.0"
-    tmp: "npm:^0.2.1"
-    ts-node: "npm:^10.2.1"
-    xcode: "npm:^3.0.1"
-    xml-js: "npm:^1.6.11"
-    xpath: "npm:^0.0.32"
-    yargs: "npm:^17.2.1"
-  checksum: 10c0/29b0e0e692965f98e02e2c085526a40d49fa09b3d1dd0e9f9aeb05586aa67ee7a0af0000e43826912cc0419f1e6ef029c936d6b460b305f195c8ca414296f3f9
+  checksum: 10c0/87e14996d011f2a5f4db4046f3f26cbcfaba708bf7d8635e7269e63af94090749e32750d5cd4939db179b4cd5a9a5773ac04192790f4218f0c4a14ef01b05252
   languageName: node
   linkType: hard
 
@@ -7260,23 +7231,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"nativescript-dev-xcode@npm:0.8.1":
-  version: 0.8.1
-  resolution: "nativescript-dev-xcode@npm:0.8.1"
+"nativescript-dev-xcode@npm:0.8.2":
+  version: 0.8.2
+  resolution: "nativescript-dev-xcode@npm:0.8.2"
   dependencies:
     simple-plist: "npm:1.3.1"
-    uuid: "npm:9.0.1"
-  checksum: 10c0/dfd5aaab3cca1863c6d506106496506fc147b65dc3da7fb86d21ef6cfc1b67ae8ab53f33cc6c18cc5d6aaaafd82cac6c000117d8cfbf3dacf492925673d01ded
-  languageName: node
-  linkType: hard
-
-"nativescript-dev-xcode@patch:nativescript-dev-xcode@npm%3A0.8.1#./.yarn/patches/nativescript-dev-xcode-npm-0.8.1-c14b82ef0b.patch::locator=%40akylas%2Fnativescript-cli%40workspace%3A.":
-  version: 0.8.1
-  resolution: "nativescript-dev-xcode@patch:nativescript-dev-xcode@npm%3A0.8.1#./.yarn/patches/nativescript-dev-xcode-npm-0.8.1-c14b82ef0b.patch::version=0.8.1&hash=46999c&locator=%40akylas%2Fnativescript-cli%40workspace%3A."
-  dependencies:
-    simple-plist: "npm:1.3.1"
-    uuid: "npm:9.0.1"
-  checksum: 10c0/1f4d2457aebb381e2bbdca5ea32b1b0f6dd184cb5eb62df0b6236744111ce68fb135c882c4cf9fe74e563b24f7c78291f34d6477529d48d700680d4822848335
+    uuid: "npm:^11.1.0"
+  checksum: 10c0/b9a1431d6e4bd7927d77d99ee1d54e8ae40b8932fd55e36cb62c717139ddb454ac5405b0124f79af065a8e878ddcfa1e8aeae14f3e949ca8fc266534d60460b8
   languageName: node
   linkType: hard
 
@@ -9425,7 +9386,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"simple-plist@npm:1.4.0, simple-plist@npm:^1.1.0":
+"simple-plist@npm:1.4.0, simple-plist@npm:^1.4.0":
   version: 1.4.0
   resolution: "simple-plist@npm:1.4.0"
   dependencies:
@@ -10636,21 +10597,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uuid@npm:9.0.1":
-  version: 9.0.1
-  resolution: "uuid@npm:9.0.1"
+"uuid@npm:^11.1.0":
+  version: 11.1.1
+  resolution: "uuid@npm:11.1.1"
   bin:
-    uuid: dist/bin/uuid
-  checksum: 10c0/1607dd32ac7fc22f2d8f77051e6a64845c9bce5cd3dd8aa0070c074ec73e666a1f63c7b4e0f4bf2bc8b9d59dc85a15e17807446d9d2b17c8485fbc2147b27f9b
-  languageName: node
-  linkType: hard
-
-"uuid@npm:^7.0.3":
-  version: 7.0.3
-  resolution: "uuid@npm:7.0.3"
-  bin:
-    uuid: dist/bin/uuid
-  checksum: 10c0/2eee5723b0fcce8256f5bfd3112af6c453b5471db00af9c3533e3d5a6e57de83513f9a145a570890457bd7abf2c2aa05797291d950ac666e5a074895dc63168b
+    uuid: dist/esm/bin/uuid
+  checksum: 10c0/9e3af58eba872ece5a5e76f4773a94fc78a0ef2c2444c38dbe6b42f41dadf76c01850fd783604f27986f6195e6286aef064d45987d401b2a33127b98ddf7c0c5
   languageName: node
   linkType: hard
 
@@ -10890,16 +10842,6 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10c0/eac918213de265ef7cb3d4ca348b891a51a520d839aa51cdb8ca93d4fa7ff9f6ccb339ccee89e4075324097f0a55157c89fa3f7147bde9d8d7e90335dc087b53
-  languageName: node
-  linkType: hard
-
-"xcode@npm:^3.0.1":
-  version: 3.0.1
-  resolution: "xcode@npm:3.0.1"
-  dependencies:
-    simple-plist: "npm:^1.1.0"
-    uuid: "npm:^7.0.3"
-  checksum: 10c0/51bf35cee52909aeb18f868ecf9828f93b8042fadf968159320f9f11e757a52e43f6563a53b586986cfe5a34d576f3300c4c0cf1e14300084344ae206eaa53c3
   languageName: node
   linkType: hard
 
