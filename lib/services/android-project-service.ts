@@ -328,7 +328,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		frameworkVersion: string,
 		projectData: IProjectData
 	): Promise<void> {
+		const packageName = projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
 		if (
+			packageName === constants.SCOPED_ANDROID_RUNTIME_NAME &&
 			semver.lt(
 				frameworkVersion,
 				AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE
@@ -518,7 +520,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		addPlatform?: Function,
 		removePlatforms?: (platforms: string[]) => Promise<void>
 	): Promise<boolean> {
+		const packageName = projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
 		if (
+			packageName === constants.SCOPED_ANDROID_RUNTIME_NAME &&
 			semver.eq(
 				newVersion,
 				AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE
