@@ -108,7 +108,7 @@
     "winreg": "1.2.5",
     "ws": "8.18.3",
     "xml2js": "0.6.2",
-    "yargs": "17.7.2",
+    "yargs": "17.7.3",
     "yazl": "^3.3.1"
   },
   "devDependencies": {
@@ -137,7 +137,7 @@
     "@types/uuid": "^10.0.0",
     "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
-    "@types/yargs": "17.0.33",
+    "@types/yargs": "17.0.35",
     "@types/yazl": "^3.3.0",
     "braces": ">=3.0.3",
     "chai": "5.3.3",
