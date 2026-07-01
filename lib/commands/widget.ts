@@ -1062,7 +1062,7 @@ export class WidgetAndroidCommand extends WidgetCommand {
 		result = await prompts.prompt({
 			type: "text",
 			name: "initialLayout",
-			message: `What initial layout would you like for this widget? (Default is 'ns_remote_views_root_layout' which is an empty linear layout. You can customize this with your own custom layout)`,
+			message: `What initial layout would you like for this widget? (Default is 'ns_remote_views_linear_layout' which is an empty linear layout. You can customize this with your own custom layout)`,
 		});
 
 		result = await prompts.prompt({
@@ -1073,7 +1073,7 @@ export class WidgetAndroidCommand extends WidgetCommand {
 
 		const widgetFeatures = result.widgetFeatures || "Y";
 
-		const initialLayout = result.initialLayout || "ns_remote_views_root_layout";
+		const initialLayout = result.initialLayout || "ns_remote_views_linear_layout";
 
 		const bundleId = this.$projectConfigService.getValue(`id`, "");
 
