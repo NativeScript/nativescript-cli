@@ -168,7 +168,7 @@ export class SPMService implements ISPMService {
 
 		const render = () => {
 			const elapsed = Math.round((Date.now() - startedAt) / 1000);
-			spinner.text = `${activity}… ${color.dim(`(${elapsed}s)`)}`;
+			spinner.text = `${activity}… ${color.dim(`(${this.formatElapsed(elapsed)})`)}`;
 		};
 		// keep the elapsed timer ticking even when xcodebuild is silent (e.g.
 		// while a binary artifact downloads) so the user can see it's alive.
@@ -256,10 +256,10 @@ export class SPMService implements ISPMService {
 			return "Downloading Swift Package binaries (first build only)";
 		}
 		if (/^Fetching\b/i.test(trimmed)) {
-			return `Fetching ${this.shortenPackageRef(trimmed)}`;
+			return this.describePackageActivity("Fetching", trimmed);
 		}
 		if (/^Cloning\b/i.test(trimmed)) {
-			return `Cloning ${this.shortenPackageRef(trimmed)}`;
+			return this.describePackageActivity("Cloning", trimmed);
 		}
 		if (/Computing version for/i.test(trimmed)) {
 			return "Computing package versions";
@@ -273,16 +273,37 @@ export class SPMService implements ISPMService {
 		return null;
 	}
 
-	/** Extracts a short, readable name from a SwiftPM repo URL/log line. */
-	private shortenPackageRef(line: string): string {
+	/**
+	 * Builds a stable, self-explanatory activity label with the package being
+	 * worked on in parentheses, e.g. "Fetching Swift Packages (Auth0.swift)".
+	 */
+	private describePackageActivity(verb: string, line: string): string {
+		const packageRef = this.shortenPackageRef(line);
+		return packageRef
+			? `${verb} Swift Packages (${packageRef})`
+			: `${verb} Swift Packages`;
+	}
+
+	/**
+	 * Extracts a short, readable name from a SwiftPM repo URL/log line, or null
+	 * when the line contains no URL to name the package by.
+	 */
+	private shortenPackageRef(line: string): string | null {
 		const match = line.match(/https?:\/\/\S+/);
 		if (!match) {
-			return "Swift Packages";
+			return null;
 		}
 		return path
 			.basename(match[0])
 			.replace(/\.git$/, "")
 			.replace(/[)\s].*$/, "");
+	}
+
+	/** Formats an elapsed duration in whole seconds as "5m 15s". */
+	private formatElapsed(totalSeconds: number): string {
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = totalSeconds % 60;
+		return `${minutes}m ${seconds}s`;
 	}
 
 	/** True when the Xcode project references any Swift packages. */
