@@ -205,21 +205,28 @@ describe("SPM Service - resolution log parsing", () => {
 			);
 		});
 
-		it("summarizes fetching with the package name", () => {
+		it("summarizes fetching with the package name in parentheses", () => {
 			assert.equal(
 				service.describeSPMActivity(
 					"Fetching from https://github.com/NativeScript/ios-spm.git",
 				),
-				"Fetching ios-spm",
+				"Fetching Swift Packages (ios-spm)",
 			);
 		});
 
-		it("summarizes cloning with the package name", () => {
+		it("summarizes cloning with the package name in parentheses", () => {
 			assert.equal(
 				service.describeSPMActivity(
 					"Cloning https://github.com/Alamofire/Alamofire.git",
 				),
-				"Cloning Alamofire",
+				"Cloning Swift Packages (Alamofire)",
+			);
+		});
+
+		it("omits the parenthesized name when the line has no URL", () => {
+			assert.equal(
+				service.describeSPMActivity("Fetching cached package"),
+				"Fetching Swift Packages",
 			);
 		});
 
@@ -251,7 +258,7 @@ describe("SPM Service - resolution log parsing", () => {
 				service.describeSPMActivity(
 					"   Fetching https://github.com/NativeScript/ios-spm.git  ",
 				),
-				"Fetching ios-spm",
+				"Fetching Swift Packages (ios-spm)",
 			);
 		});
 
@@ -286,11 +293,18 @@ describe("SPM Service - resolution log parsing", () => {
 			);
 		});
 
-		it("falls back to a generic label when there is no URL", () => {
-			assert.equal(
-				service.shortenPackageRef("Fetching cached package"),
-				"Swift Packages",
-			);
+		it("returns null when there is no URL", () => {
+			assert.isNull(service.shortenPackageRef("Fetching cached package"));
+		});
+	});
+
+	describe("formatElapsed", () => {
+		it("always renders minutes and seconds", () => {
+			assert.equal(service.formatElapsed(0), "0m 0s");
+			assert.equal(service.formatElapsed(42), "0m 42s");
+			assert.equal(service.formatElapsed(60), "1m 0s");
+			assert.equal(service.formatElapsed(315), "5m 15s");
+			assert.equal(service.formatElapsed(3725), "62m 5s");
 		});
 	});
 });
