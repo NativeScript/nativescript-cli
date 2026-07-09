@@ -108,10 +108,19 @@ export class BundlerCompilerService
 			// HMR updates from. No-op unless bundler is vite + hmr + watch.
 			// Fired in parallel with the build watcher; both child processes
 			// inherit the adb-reverse env the run-controller set before
-			// prepare, so neither one spawns adb on its own. Intentionally not
-			// awaited — the device only connects to it at app launch, well
-			// after the first build.
-			this.startViteDevServer(platformData, projectData, prepareData);
+			// prepare, so neither one spawns adb on its own. Not awaited HERE
+			// — but the first-build resolution below gates on it, because the
+			// app is (re)started as soon as `compileWithWatch` resolves and its
+			// very first HTTP module fetch dies on connection-refused if the
+			// server hasn't bound yet (a cold `vite serve` config load + vendor
+			// prebuild competes with this build watcher for CPU and can take
+			// 10-30s). Running both in parallel keeps the happy-path wall time
+			// at max(first build, server bind) instead of their sum.
+			const viteDevServerStartup = this.startViteDevServer(
+				platformData,
+				projectData,
+				prepareData,
+			);
 
 			try {
 				const childProcess = await this.startBundleProcess(
@@ -183,7 +192,12 @@ export class BundlerCompilerService
 							this.copyViteBundleToNative(distOutput, destDir);
 						}
 
-						// Resolve the promise on first build completion
+						// Resolve the promise on first build completion — gated on
+						// the HMR dev server being reachable (no-op resolve for
+						// non-HMR runs). `startViteDevServer` never rejects and its
+						// readiness probe is bounded, so this cannot hang the run;
+						// on probe timeout we proceed and the device's own retry
+						// handles any residual gap.
 						if (isFirstBundlerWatchCompilation) {
 							isFirstBundlerWatchCompilation = false;
 							if (debugLog) {
@@ -191,7 +205,7 @@ export class BundlerCompilerService
 									"Vite first build completed, resolving compileWithWatch",
 								);
 							}
-							resolve(childProcess);
+							viteDevServerStartup.then(() => resolve(childProcess));
 							return;
 						}
 
@@ -703,7 +717,11 @@ export class BundlerCompilerService
 					`Vite dev server ready on port ${port} (HMR for ${key}).`,
 				);
 			} else {
-				this.$logger.trace(
+				// Warn (not trace): the first-build resolution in
+				// `compileWithWatch` gates on this method, so a probe timeout
+				// means the app will be deployed against a server that may not
+				// be up yet — the user should see why a boot might stall.
+				this.$logger.warn(
 					`Vite dev server port ${port} not observed open within the readiness probe window; continuing (it may bind shortly).`,
 				);
 			}
