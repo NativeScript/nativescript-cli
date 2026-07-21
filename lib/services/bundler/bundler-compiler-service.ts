@@ -90,6 +90,19 @@ export class BundlerCompilerService
 		);
 	}
 
+	private getViteBuildPaths(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+	) {
+		return {
+			distOutput: this.getViteDistOutputPath(projectData.projectDir),
+			destDir: path.join(
+				platformData.appDestinationDirectoryPath,
+				this.$options.hostProjectModuleName,
+			),
+		};
+	}
+
 	public async compileWithWatch(
 		platformData: IPlatformData,
 		projectData: IProjectData,
@@ -158,12 +171,9 @@ export class BundlerCompilerService
 						}
 
 						// Copy Vite output files directly to platform destination
-						const distOutput = this.getViteDistOutputPath(
-							projectData.projectDir,
-						);
-						const destDir = path.join(
-							platformData.appDestinationDirectoryPath,
-							this.$options.hostProjectModuleName,
+						const { distOutput, destDir } = this.getViteBuildPaths(
+							platformData,
+							projectData,
 						);
 
 						if (debugLog) {
@@ -428,25 +438,21 @@ export class BundlerCompilerService
 						// is left empty (or worse, runs stale dev/HMR artifacts from
 						// a previous `ns debug` run) and the runtime crashes on
 						// launch with `Check failed: has_pending_exception()`.
-						if (isVite) {
-							try {
-								const distOutput = this.getViteDistOutputPath(
-									projectData.projectDir,
+						// The copy must succeed for the build to succeed — a build
+						// whose bundle never reached the native app is not a
+						// successful build, so copy failures reject here.
+						try {
+							if (isVite) {
+								const { distOutput, destDir } = this.getViteBuildPaths(
+									platformData,
+									projectData,
 								);
-								const destDir = path.join(
-									platformData.appDestinationDirectoryPath,
-									this.$options.hostProjectModuleName,
-								);
-								this.copyViteBundleToNative(distOutput, destDir);
-							} catch (copyErr) {
-								this.$logger.warn(
-									`Failed to copy Vite output to platform destination: ${
-										(copyErr as Error).message
-									}`,
-								);
+								this.copyViteBundleToNative(distOutput, destDir, null, true);
 							}
+							resolve();
+						} catch (error) {
+							reject(error);
 						}
-						resolve();
 					} else {
 						const error: any = new Error(
 							`Executing ${projectData.bundler} failed with exit code ${exitCode}.`,
@@ -1102,6 +1108,7 @@ export class BundlerCompilerService
 		distOutput: string,
 		destDir: string,
 		specificFiles: string[] = null,
+		failOnError = false,
 	) {
 		// Clean and copy Vite output to native platform folder
 		if (debugLog) {
@@ -1143,6 +1150,15 @@ export class BundlerCompilerService
 					console.log("Full build: Copying all files.");
 				}
 
+				// Validate the source before touching the destination — cleaning
+				// destDir first would wipe a previously good bundle and leave an
+				// empty app folder behind a missing Vite output.
+				if (!this.$fs.exists(distOutput)) {
+					throw new Error(
+						`Vite output directory does not exist: ${distOutput}`,
+					);
+				}
+
 				// Clean destination directory
 				if (this.$fs.exists(destDir)) {
 					this.$fs.deleteDirectory(destDir);
@@ -1150,16 +1166,15 @@ export class BundlerCompilerService
 				this.$fs.createDirectory(destDir);
 
 				// Copy all files from dist to platform destination
-				if (this.$fs.exists(distOutput)) {
-					this.copyRecursiveSync(distOutput, destDir);
-				} else {
-					this.$logger.warn(
-						`Vite output directory does not exist: ${distOutput}`,
-					);
-				}
+				this.copyRecursiveSync(distOutput, destDir);
 			}
 		} catch (error) {
-			this.$logger.warn(`Failed to copy Vite bundle: ${error.message}`);
+			const copyError =
+				error instanceof Error ? error : new Error(String(error));
+			if (failOnError) {
+				throw copyError;
+			}
+			this.$logger.warn(`Failed to copy Vite bundle: ${copyError.message}`);
 		}
 	}
 
