@@ -126,13 +126,9 @@ export class BundlerCompilerService
 						}
 
 						// Copy Vite output files directly to platform destination
-						const distOutput = path.join(
-							projectData.projectDir,
-							".ns-vite-build",
-						);
-						const destDir = path.join(
-							platformData.appDestinationDirectoryPath,
-							this.$options.hostProjectModuleName,
+						const { distOutput, destDir } = this.getViteBuildPaths(
+							platformData,
+							projectData,
 						);
 
 						if (debugLog) {
@@ -380,7 +376,18 @@ export class BundlerCompilerService
 					delete this.bundlerProcesses[platformData.platformNameLowerCase];
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					if (exitCode === 0) {
-						resolve();
+						try {
+							if (this.getBundler() === "vite") {
+								const { distOutput, destDir } = this.getViteBuildPaths(
+									platformData,
+									projectData,
+								);
+								this.copyViteBundleToNative(distOutput, destDir, null, true);
+							}
+							resolve();
+						} catch (error) {
+							reject(error);
+						}
 					} else {
 						const error: any = new Error(
 							`Executing ${projectData.bundler} failed with exit code ${exitCode}.`,
@@ -845,10 +852,24 @@ export class BundlerCompilerService
 		return this.$projectConfigService.getValue(`bundler`, "webpack");
 	}
 
+	private getViteBuildPaths(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+	) {
+		return {
+			distOutput: path.join(projectData.projectDir, ".ns-vite-build"),
+			destDir: path.join(
+				platformData.appDestinationDirectoryPath,
+				this.$options.hostProjectModuleName,
+			),
+		};
+	}
+
 	private copyViteBundleToNative(
 		distOutput: string,
 		destDir: string,
 		specificFiles: string[] = null,
+		failOnError = false,
 	) {
 		// Clean and copy Vite output to native platform folder
 		if (debugLog) {
@@ -890,6 +911,12 @@ export class BundlerCompilerService
 					console.log("Full build: Copying all files.");
 				}
 
+				if (!this.$fs.exists(distOutput)) {
+					throw new Error(
+						`Vite output directory does not exist: ${distOutput}`,
+					);
+				}
+
 				// Clean destination directory
 				if (this.$fs.exists(destDir)) {
 					this.$fs.deleteDirectory(destDir);
@@ -897,16 +924,15 @@ export class BundlerCompilerService
 				this.$fs.createDirectory(destDir);
 
 				// Copy all files from dist to platform destination
-				if (this.$fs.exists(distOutput)) {
-					this.copyRecursiveSync(distOutput, destDir);
-				} else {
-					this.$logger.warn(
-						`Vite output directory does not exist: ${distOutput}`,
-					);
-				}
+				this.copyRecursiveSync(distOutput, destDir);
 			}
 		} catch (error) {
-			this.$logger.warn(`Failed to copy Vite bundle: ${error.message}`);
+			const copyError =
+				error instanceof Error ? error : new Error(String(error));
+			if (failOnError) {
+				throw copyError;
+			}
+			this.$logger.warn(`Failed to copy Vite bundle: ${copyError.message}`);
 		}
 	}
 

@@ -4,6 +4,8 @@ import { assert } from "chai";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
 import { CONFIG_FILE_NAME_DISPLAY } from "../../../lib/constants";
+import { EventEmitter } from "events";
+import * as path from "path";
 
 const iOSPlatformName = "ios";
 const androidPlatformName = "android";
@@ -27,12 +29,14 @@ function createTestInjector(): IInjector {
 	testInjector.register("childProcess", {});
 	testInjector.register("hooksService", {});
 	testInjector.register("hostInfo", {});
-	testInjector.register("options", {});
+	testInjector.register("options", { hostProjectModuleName: "app" });
 	testInjector.register("logger", {});
 	testInjector.register("errors", ErrorsStub);
 	testInjector.register("packageInstallationManager", {});
 	testInjector.register("mobileHelper", {});
-	testInjector.register("cleanupService", {});
+	testInjector.register("cleanupService", {
+		removeKillProcess: async (): Promise<void> => undefined,
+	});
 	testInjector.register("projectConfigService", {
 		getValue: (key: string, defaultValue?: string) => defaultValue,
 	});
@@ -221,6 +225,69 @@ describe("BundlerCompilerService", () => {
 	});
 
 	describe("compileWithoutWatch", () => {
+		it("copies a successful Vite build to the native app", async () => {
+			const childProcess = Object.assign(new EventEmitter(), { pid: 1234 });
+			const copies: Array<{
+				distOutput: string;
+				destDir: string;
+				failOnError: boolean;
+			}> = [];
+			(<any>bundlerCompilerService).startBundleProcess = async () =>
+				childProcess;
+			(<any>bundlerCompilerService).copyViteBundleToNative = (
+				distOutput: string,
+				destDir: string,
+				_specificFiles: string[],
+				failOnError: boolean,
+			) => {
+				copies.push({ distOutput, destDir, failOnError });
+			};
+			(<any>testInjector.resolve("projectConfigService")).getValue = () =>
+				"vite";
+
+			const compilation = bundlerCompilerService.compileWithoutWatch(
+				<any>{
+					platformNameLowerCase: "android",
+					appDestinationDirectoryPath: "/project/platforms/android",
+				},
+				<any>{ projectDir: "/project" },
+				<any>{},
+			);
+			setImmediate(() => childProcess.emit("close", 0));
+			await compilation;
+
+			assert.deepEqual(copies, [
+				{
+					distOutput: path.join("/project", ".ns-vite-build"),
+					destDir: path.join("/project/platforms/android", "app"),
+					failOnError: true,
+				},
+			]);
+		});
+
+		it("fails when a successful Vite build cannot be copied", async () => {
+			const childProcess = Object.assign(new EventEmitter(), { pid: 1234 });
+			(<any>bundlerCompilerService).startBundleProcess = async () =>
+				childProcess;
+			(<any>bundlerCompilerService).copyViteBundleToNative = () => {
+				throw new Error("copy failed");
+			};
+			(<any>testInjector.resolve("projectConfigService")).getValue = () =>
+				"vite";
+
+			const compilation = bundlerCompilerService.compileWithoutWatch(
+				<any>{
+					platformNameLowerCase: "ios",
+					appDestinationDirectoryPath: "/project/platforms/ios",
+				},
+				<any>{ projectDir: "/project" },
+				<any>{},
+			);
+			setImmediate(() => childProcess.emit("close", 0));
+
+			await assert.isRejected(compilation, "copy failed");
+		});
+
 		it("fails when the value set for bundlerConfigPath is not existant file", async () => {
 			const bundlerConfigPath = "some path.js";
 			testInjector.resolve("fs").exists = (filePath: string) =>
