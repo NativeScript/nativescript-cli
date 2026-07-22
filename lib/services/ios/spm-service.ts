@@ -6,8 +6,29 @@ import { IFileSystem } from "../../common/declarations";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 import { color } from "../../color";
 import path = require("path");
+import os = require("os");
+import fs = require("fs");
 
 export class SPMService implements ISPMService {
+	// SwiftPM keeps one bare clone per source package here (shared by Xcode and
+	// xcodebuild). Watching a package's clone grow is the only visibility into
+	// an otherwise silent long fetch — SwiftPM clones a repository's ENTIRE git
+	// history to read Package.swift, so a package hosted in a multi-GB repo can
+	// legitimately "fetch" for tens of minutes with no output.
+	private static readonly SWIFTPM_REPO_CACHE = path.join(
+		os.homedir(),
+		"Library",
+		"Caches",
+		"org.swift.swiftpm",
+		"repositories",
+	);
+	// Once a single package's clone passes this size, surface a one-time note
+	// explaining why the fetch is slow (250 MB is already far beyond any
+	// reasonably-hosted Swift package).
+	private static readonly LARGE_CLONE_NOTE_BYTES = 250 * 1024 * 1024;
+	// Lines of raw xcodebuild output kept for the failure report.
+	private static readonly OUTPUT_TAIL_LINES = 25;
+
 	constructor(
 		private $logger: ILogger,
 		private $fs: IFileSystem,
@@ -42,13 +63,22 @@ export class SPMService implements ISPMService {
 		// include swift packages from plugin configs
 		// but allow app packages to override plugin packages with the same name
 		const appPackageNames = new Set(appPackages.map((pkg) => pkg.name));
+		// multiple plugins may declare the same package (e.g. a shared shim) —
+		// only the first declaration is added; a second same-name package would
+		// produce duplicate (and possibly conflicting) references in the pbxproj.
+		const addedPluginPackageNames = new Set<string>();
 
 		for (const pluginPkg of pluginPackages) {
 			if (appPackageNames.has(pluginPkg.name)) {
 				this.$logger.trace(
 					`SPM: app package overrides plugin package: ${pluginPkg.name}`,
 				);
+			} else if (addedPluginPackageNames.has(pluginPkg.name)) {
+				this.$logger.trace(
+					`SPM: skipping duplicate plugin package: ${pluginPkg.name}`,
+				);
 			} else {
+				addedPluginPackageNames.add(pluginPkg.name);
 				appPackages.push(pluginPkg);
 			}
 		}
@@ -79,6 +109,11 @@ export class SPMService implements ISPMService {
 				return;
 			}
 
+			// name every package and where it comes from — when resolution is
+			// slow or fails, this is the first thing needed to tell WHICH
+			// dependency is responsible.
+			this.$logger.info(this.formatPackageListing(spmPackages));
+
 			const project = new MobileProject(platformData.projectRoot, {
 				ios: {
 					path: ".",
@@ -99,6 +134,13 @@ export class SPMService implements ISPMService {
 					// resolve the path relative to the project root
 					this.$logger.trace("SPM: resolving path for package: ", pkg.path);
 					pkg.path = path.resolve(projectData.projectDir, pkg.path);
+					if (!this.$fs.exists(pkg.path)) {
+						// surface this now — otherwise the only symptom is a cryptic
+						// xcodebuild resolution failure much later.
+						this.$logger.warn(
+							`SPM: local package path for "${pkg.name}" does not exist: ${pkg.path} — Xcode will fail to resolve it.`,
+						);
+					}
 				}
 				this.$logger.trace(`SPM: adding package ${pkg.name} to project.`, pkg);
 				await project.ios.addSPMPackage(projectData.projectName, pkg);
@@ -165,24 +207,80 @@ export class SPMService implements ISPMService {
 		const startedAt = Date.now();
 		let activity = "Resolving Swift Package dependencies";
 		let lineBuffer = "";
+		// package currently being git-fetched (short name), if any — used to
+		// measure its growing clone in the SwiftPM cache so a long silent fetch
+		// shows visible progress ("2.31 GB of git history fetched") instead of
+		// looking hung.
+		let fetchingPackageRef: string = null;
+		let fetchedBytes = 0;
+		let largeCloneNoted = false;
+		// rolling tail of raw xcodebuild output for the failure report.
+		const outputTail: string[] = [];
 
 		const render = () => {
 			const elapsed = Math.round((Date.now() - startedAt) / 1000);
-			spinner.text = `${activity}… ${color.dim(`(${this.formatElapsed(elapsed)})`)}`;
+			const fetched =
+				fetchedBytes > 0
+					? ` — ${this.formatBytes(fetchedBytes)} of git history fetched`
+					: "";
+			spinner.text = `${activity}…${fetched} ${color.dim(`(${this.formatElapsed(elapsed)})`)}`;
 		};
 		// keep the elapsed timer ticking even when xcodebuild is silent (e.g.
-		// while a binary artifact downloads) so the user can see it's alive.
-		const ticker = setInterval(render, 1000);
+		// while a repository clones or a binary artifact downloads) so the user
+		// can see it's alive. Every 5th tick, measure the in-progress clone.
+		let tickCount = 0;
+		const ticker = setInterval(() => {
+			tickCount++;
+			if (fetchingPackageRef && tickCount % 5 === 0) {
+				fetchedBytes = this.getPackageCloneSizeBytes(fetchingPackageRef);
+				if (
+					!largeCloneNoted &&
+					fetchedBytes >= SPMService.LARGE_CLONE_NOTE_BYTES
+				) {
+					largeCloneNoted = true;
+					// persist a one-time explanation above the spinner: this is the
+					// point where users otherwise assume the CLI is stuck.
+					spinner.stopAndPersist({
+						symbol: color.yellow("ℹ"),
+						text: color.yellow(
+							`the "${fetchingPackageRef}" package is hosted in a repository with a large git history — ` +
+								`SwiftPM clones the entire repository on first fetch, which can take a long time.${os.EOL}` +
+								`  cache: ${SPMService.SWIFTPM_REPO_CACHE}`,
+						),
+					});
+					spinner.start();
+				}
+			}
+			render();
+		}, 1000);
 
 		const onProgress = (chunk: { data: string; pipe: string }) => {
 			lineBuffer += chunk.data;
-			const lines = lineBuffer.split("\n");
+			// tolerate CRLF as well as LF so parsed lines never carry a stray \r
+			const lines = lineBuffer.split(/\r?\n/);
 			// keep the last (possibly partial) line in the buffer
 			lineBuffer = lines.pop();
 			for (const line of lines) {
+				const trimmed = line.trim();
+				if (trimmed) {
+					this.$logger.trace(`SPM: ${trimmed}`);
+					outputTail.push(trimmed);
+					if (outputTail.length > SPMService.OUTPUT_TAIL_LINES) {
+						outputTail.shift();
+					}
+				}
 				const described = this.describeSPMActivity(line);
 				if (described) {
 					activity = described;
+					// track which package a "Fetching <url>" line refers to so the
+					// ticker can measure its clone; any other activity means the
+					// fetch finished.
+					if (/^Fetching\b/i.test(trimmed)) {
+						fetchingPackageRef = this.shortenPackageRef(trimmed);
+					} else {
+						fetchingPackageRef = null;
+						fetchedBytes = 0;
+					}
 					render();
 				}
 			}
@@ -195,9 +293,21 @@ export class SPMService implements ISPMService {
 				cwd: projectData.projectDir,
 				onProgress,
 			});
-			spinner.succeed(color.green("Swift Package dependencies resolved"));
+			const elapsed = Math.round((Date.now() - startedAt) / 1000);
+			spinner.succeed(
+				color.green("Swift Package dependencies resolved") +
+					color.dim(` (${this.formatElapsed(elapsed)})`),
+			);
 		} catch (err) {
 			spinner.fail(color.red("Failed to resolve Swift Package dependencies"));
+			// the spinner swallowed the raw log — replay the tail so the actual
+			// xcodebuild error is visible without rerunning in verbose mode.
+			if (outputTail.length) {
+				this.$logger.info(color.dim("xcodebuild output (last lines):"));
+				for (const line of outputTail) {
+					this.$logger.info(color.dim(`  ${line}`));
+				}
+			}
 			throw err;
 		} finally {
 			clearInterval(ticker);
@@ -304,6 +414,103 @@ export class SPMService implements ISPMService {
 		const minutes = Math.floor(totalSeconds / 60);
 		const seconds = totalSeconds % 60;
 		return `${minutes}m ${seconds}s`;
+	}
+
+	/**
+	 * Multi-line listing of every package and its source — one package per
+	 * line, separated by the platform EOL so entries never clump together in
+	 * terminal output on macOS, Windows, or Linux.
+	 */
+	private formatPackageListing(spmPackages: IosSPMPackage[]): string {
+		return [
+			"Swift Packages:",
+			...spmPackages.map((pkg) => `  ${this.describePackageSource(pkg)}`),
+		].join(os.EOL);
+	}
+
+	/**
+	 * One-line description of a package and where it resolves from, e.g.
+	 * "FontManager (1.0.12 · https://github.com/NativeScript/font-manager.git)"
+	 * or "CanvasNative (local: node_modules/@nativescript/canvas/platforms/ios/NativeScriptV8)".
+	 */
+	private describePackageSource(pkg: IosSPMPackage): string {
+		if ("path" in pkg) {
+			return `${pkg.name} (local: ${pkg.path})`;
+		}
+		return `${pkg.name} (${pkg.version} · ${pkg.repositoryURL})`;
+	}
+
+	/**
+	 * Size on disk of the SwiftPM cache clone(s) for a package ref (the short
+	 * name produced by shortenPackageRef). Cache entries are named
+	 * "<repo-name>-<hash>". Returns 0 when nothing is there (yet).
+	 */
+	private getPackageCloneSizeBytes(packageRef: string): number {
+		let entries: fs.Dirent[];
+		try {
+			entries = fs.readdirSync(SPMService.SWIFTPM_REPO_CACHE, {
+				withFileTypes: true,
+			});
+		} catch (err) {
+			return 0;
+		}
+		let total = 0;
+		for (const entry of entries) {
+			if (
+				entry.isDirectory() &&
+				(entry.name === packageRef || entry.name.startsWith(`${packageRef}-`))
+			) {
+				total += this.getDirectorySizeBytes(
+					path.join(SPMService.SWIFTPM_REPO_CACHE, entry.name),
+				);
+			}
+		}
+		return total;
+	}
+
+	/**
+	 * Recursive directory size via the raw fs API. Tolerates files vanishing
+	 * mid-walk (git renames its temp packfiles while cloning) and does not
+	 * follow symlinks.
+	 */
+	private getDirectorySizeBytes(dirPath: string): number {
+		let total = 0;
+		const pending = [dirPath];
+		while (pending.length) {
+			const current = pending.pop();
+			let entries: fs.Dirent[];
+			try {
+				entries = fs.readdirSync(current, { withFileTypes: true });
+			} catch (err) {
+				continue;
+			}
+			for (const entry of entries) {
+				const fullPath = path.join(current, entry.name);
+				try {
+					if (entry.isDirectory()) {
+						pending.push(fullPath);
+					} else if (entry.isFile()) {
+						total += fs.statSync(fullPath).size;
+					}
+				} catch (err) {
+					// entry disappeared between readdir and stat — ignore
+				}
+			}
+		}
+		return total;
+	}
+
+	/** Formats a byte count as a short human-readable size ("2.31 GB"). */
+	private formatBytes(bytes: number): string {
+		const GB = 1024 ** 3;
+		const MB = 1024 ** 2;
+		if (bytes >= GB) {
+			return `${(bytes / GB).toFixed(2)} GB`;
+		}
+		if (bytes >= MB) {
+			return `${Math.round(bytes / MB)} MB`;
+		}
+		return `${Math.round(bytes / 1024)} KB`;
 	}
 
 	/** True when the Xcode project references any Swift packages. */
