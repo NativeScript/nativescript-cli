@@ -26,7 +26,7 @@ export class Yarn2PackageManager extends BasePackageManager {
 		$hostInfo: IHostInfo,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
-		$pacoteService: IPacoteService
+		$pacoteService: IPacoteService,
 	) {
 		super($childProcess, $fs, $hostInfo, $pacoteService, "yarn2");
 		this.$hostInfo_ = $hostInfo;
@@ -46,11 +46,12 @@ export class Yarn2PackageManager extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo> {
 		if (config.disableNpmInstall) {
 			return;
 		}
+		delete (config as any).legacyPeers;
 		if (config.ignoreScripts) {
 			config["ignore-scripts"] = true;
 		}
@@ -76,7 +77,7 @@ export class Yarn2PackageManager extends BasePackageManager {
 			const result = await this.processPackageManagerInstall(
 				packageName,
 				params,
-				{ cwd, isInstallingAllDependencies }
+				{ cwd, isInstallingAllDependencies },
 			);
 			return result;
 		} catch (e) {
@@ -89,7 +90,7 @@ export class Yarn2PackageManager extends BasePackageManager {
 	public uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
-		cwd?: string
+		cwd?: string,
 	): Promise<string> {
 		const flags = this.getFlagsString(config, false);
 		return this.$childProcess.exec(`yarn remove ${packageName} ${flags}`, {
@@ -105,7 +106,7 @@ export class Yarn2PackageManager extends BasePackageManager {
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(
-				`yarn npm info ${packageName} ${flags}`
+				`yarn npm info ${packageName} ${flags}`,
 			);
 		} catch (e) {
 			this.$errors.fail(e.message);
@@ -122,17 +123,17 @@ export class Yarn2PackageManager extends BasePackageManager {
 	@exported("yarn2")
 	public search(
 		filter: string[],
-		config: IDictionary<string | boolean>
+		config: IDictionary<string | boolean>,
 	): Promise<string> {
 		this.$errors.fail(
-			"Method not implemented. Yarn does not support searching for packages in the registry."
+			"Method not implemented. Yarn does not support searching for packages in the registry.",
 		);
 		return null;
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
 		const httpRequestResult = await this.$httpClient.httpRequest(
-			`https://api.npms.io/v2/search?q=keywords:${keyword}`
+			`https://api.npms.io/v2/search?q=keywords:${keyword}`,
 		);
 		const result: INpmsResult = JSON.parse(httpRequestResult.body);
 		return result;
@@ -141,19 +142,19 @@ export class Yarn2PackageManager extends BasePackageManager {
 	@exported("yarn2")
 	public async getRegistryPackageData(packageName: string): Promise<any> {
 		const registry = await this.$childProcess.exec(
-			`yarn config get npmRegistryServer`
+			`yarn config get npmRegistryServer`,
 		);
 		const url = `${registry.trim()}/${packageName}`;
 		this.$logger.trace(
-			`Trying to get data from yarn registry for package ${packageName}, url is: ${url}`
+			`Trying to get data from yarn registry for package ${packageName}, url is: ${url}`,
 		);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
 		this.$logger.trace(
-			`Successfully received data from yarn registry for package ${packageName}. Response data is: ${responseData}`
+			`Successfully received data from yarn registry for package ${packageName}. Response data is: ${responseData}`,
 		);
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(
-			`Successfully parsed data from yarn registry for package ${packageName}.`
+			`Successfully parsed data from yarn registry for package ${packageName}.`,
 		);
 		return jsonData;
 	}
