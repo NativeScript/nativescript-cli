@@ -592,6 +592,11 @@ interface ITypingsOptions {
 	jar: string;
 	aar: string;
 	filter: string;
+	root: string;
+	roots: string;
+	input: string;
+	lib: string;
+	libs: string;
 }
 
 interface IOptions
@@ -655,6 +660,10 @@ interface IOptions
 	template: string;
 	certificate: string;
 	certificatePassword: string;
+	certificateThumbprint: string;
+	storeUpload: boolean;
+	msixbundle: boolean;
+	arch: string;
 	var: Object;
 	default: Boolean;
 	count: number;

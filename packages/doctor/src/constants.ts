@@ -1,9 +1,11 @@
 export class Constants {
 	public static ANDROID_PLATFORM_NAME = "Android";
 	public static IOS_PLATFORM_NAME = "iOS";
+	public static WINDOWS_PLATFORM_NAME = "Windows";
 	public static SUPPORTED_PLATFORMS = [
 		Constants.ANDROID_PLATFORM_NAME,
 		Constants.IOS_PLATFORM_NAME,
+		Constants.WINDOWS_PLATFORM_NAME,
 	];
 	public static SYSTEM_REQUIREMENTS_LINKS =
 		"https://docs.nativescript.org/setup";
