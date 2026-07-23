@@ -1336,6 +1336,30 @@ export class IOSProjectService
 						[],
 					);
 					if (packages.length) {
+						for (const pkg of packages) {
+							// a plugin's local package path is naturally authored relative
+							// to the plugin itself, but the SPM service resolves relative
+							// paths against the app project dir. When the app-relative
+							// path doesn't exist (e.g. non-hoisted node_modules layouts),
+							// fall back to resolving against the plugin's own directory.
+							if (
+								"path" in pkg &&
+								pkg.path &&
+								!path.isAbsolute(pkg.path) &&
+								!this.$fs.exists(path.resolve(projectData.projectDir, pkg.path))
+							) {
+								const pluginRelativePath = path.resolve(
+									plugin.fullPath,
+									pkg.path,
+								);
+								if (this.$fs.exists(pluginRelativePath)) {
+									this.$logger.trace(
+										`SPM: resolved plugin-relative package path for ${pkg.name}: ${pluginRelativePath}`,
+									);
+									pkg.path = pluginRelativePath;
+								}
+							}
+						}
 						pluginSpmPackages.push(...packages);
 					}
 				}
@@ -1505,9 +1529,15 @@ export class IOSProjectService
 	): Promise<void> {
 		const project = this.createPbxProj(projectData);
 		const group = await this.getRootGroup(groupName, sourceFolderPath);
+		// pin the sources to the main app target: without an explicit target the
+		// underlying xcode lib picks whichever "Sources" build phase it finds
+		// first, which can be an extension target (e.g. a widget) once one
+		// exists — compiling plugin native code into extensions breaks their
+		// builds (and bloats them) since they lack the app's search paths.
 		project.addPbxGroup(group.files, group.name, group.path, null, {
 			isMain: true,
 			filesRelativeToProject: true,
+			target: project.getFirstTarget()?.uuid,
 		});
 		project.addToHeaderSearchPaths(group.path);
 		const headerFiles = this.$fs.exists(sourceFolderPath)

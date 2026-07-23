@@ -1,4 +1,5 @@
 import { assert } from "chai";
+import { EOL } from "os";
 import { SPMService } from "../lib/services/ios/spm-service";
 
 /**
@@ -305,6 +306,26 @@ describe("SPM Service - resolution log parsing", () => {
 			assert.equal(service.formatElapsed(60), "1m 0s");
 			assert.equal(service.formatElapsed(315), "5m 15s");
 			assert.equal(service.formatElapsed(3725), "62m 5s");
+		});
+	});
+
+	describe("formatPackageListing", () => {
+		it("lists one package per line using the platform EOL", () => {
+			assert.equal(
+				service.formatPackageListing([
+					{
+						name: "FontManager",
+						version: "1.0.12",
+						repositoryURL: "https://github.com/NativeScript/font-manager.git",
+					},
+					{ name: "CanvasNative", path: "node_modules/canvas/ios" },
+				]),
+				"Swift Packages:" +
+					EOL +
+					"  FontManager (1.0.12 · https://github.com/NativeScript/font-manager.git)" +
+					EOL +
+					"  CanvasNative (local: node_modules/canvas/ios)",
+			);
 		});
 	});
 });
