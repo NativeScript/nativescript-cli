@@ -1,4 +1,5 @@
 import * as assert from "assert";
+import * as fs from "fs";
 import * as path from "path";
 import { EOL } from "os";
 import { SysInfo } from "../src/sys-info";
@@ -908,6 +909,136 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 				const result = await sysInfo.getJavaVersion();
 				assert.equal(result, "1.8.0_25");
 			});
+		});
+	});
+
+	describe("isCocoaPodsWorkingCorrectly", () => {
+		interface ICocoaPodsMockOptions {
+			// Mimics the ChildProcess result for `asdf current ruby`.
+			// When omitted, asdf is treated as not installed.
+			asdfResult?: {
+				stdout?: string;
+				stderr?: string;
+				exitCode?: number | string;
+			};
+			podExitCode?: number;
+		}
+
+		const createCocoaPodsSysInfo = (options: ICocoaPodsMockOptions) => {
+			const appendedFiles: { filePath: string; text: string }[] = [];
+			const spawnCalls: {
+				command: string;
+				options?: ISpawnFromEventOptions;
+			}[] = [];
+
+			const childProcess: any = {
+				spawnFromEvent: async (
+					command: string,
+					args: string[],
+					event: string,
+					spawnFromEventOptions?: ISpawnFromEventOptions,
+				) => {
+					const fullCommand = `${command} ${args.join(" ")}`;
+					spawnCalls.push({
+						command: fullCommand,
+						options: spawnFromEventOptions,
+					});
+
+					if (fullCommand === "asdf current ruby") {
+						// Mirror the ChildProcess wrapper: with `ignoreError` it always
+						// resolves, surfacing a non-zero exitCode instead of throwing when
+						// asdf is missing/misconfigured.
+						return (
+							options.asdfResult || {
+								stdout: "",
+								stderr: "spawn asdf ENOENT",
+								exitCode: "ENOENT",
+							}
+						);
+					}
+
+					return {
+						stdout: "",
+						stderr: "",
+						exitCode: options.podExitCode ?? 0,
+					};
+				},
+				exec: async () => ({ stdout: "", stderr: "" }),
+				execFile: async (): Promise<any> => undefined,
+				execSync: (): string => null,
+			};
+
+			const fileSystem: any = {
+				exists: () => true,
+				extractZip: () => Promise.resolve(),
+				readDirectory: () => [],
+				appendFile: (filePath: string, text: string) => {
+					appendedFiles.push({ filePath, text });
+					return true;
+				},
+				deleteEntry: (filePath: string) =>
+					fs.rmSync(filePath, { recursive: true, force: true }),
+			};
+
+			const hostInfo: any = {
+				isDarwin: true,
+				isWindows: false,
+				isLinux: false,
+			};
+
+			const helpers = new Helpers(hostInfo);
+			const sysInfo = new SysInfo(
+				childProcess,
+				fileSystem,
+				helpers,
+				hostInfo,
+				null,
+				androidToolsInfo,
+			);
+
+			return { sysInfo, appendedFiles, spawnCalls };
+		};
+
+		it("writes the active Ruby version to .tool-versions when asdf is available", async () => {
+			const { sysInfo, appendedFiles, spawnCalls } = createCocoaPodsSysInfo({
+				asdfResult: {
+					stdout:
+						"ruby            3.2.1           /Users/user/app/.tool-versions",
+					exitCode: 0,
+				},
+			});
+
+			const result = await sysInfo.isCocoaPodsWorkingCorrectly();
+
+			assert.deepEqual(result, true);
+			assert.deepEqual(appendedFiles.length, 1);
+			assert.ok(
+				appendedFiles[0].filePath.endsWith(
+					path.join("cocoapods", ".tool-versions"),
+				),
+			);
+			// The entry must be newline-terminated so it does not merge with existing content.
+			assert.deepEqual(appendedFiles[0].text, "ruby 3.2.1\n");
+
+			const asdfCall = spawnCalls.find(
+				(c) => c.command === "asdf current ruby",
+			);
+			assert.ok(asdfCall, "expected asdf to be probed");
+			// The probe must not throw when asdf is missing/misconfigured...
+			assert.deepEqual(asdfCall.options.ignoreError, true);
+			// ...and it must resolve the version relative to the invocation directory.
+			assert.deepEqual(asdfCall.options.spawnOptions.cwd, process.cwd());
+		});
+
+		it("does not write .tool-versions and stays healthy when asdf is not installed", async () => {
+			const { sysInfo, appendedFiles } = createCocoaPodsSysInfo({
+				// asdf missing -> wrapper resolves with a non-zero (ENOENT) exit code.
+			});
+
+			const result = await sysInfo.isCocoaPodsWorkingCorrectly();
+
+			assert.deepEqual(result, true);
+			assert.deepEqual(appendedFiles.length, 0);
 		});
 	});
 });
