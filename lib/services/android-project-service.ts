@@ -89,7 +89,7 @@ function topologicalSortNativeDependencies(
 	dependencies: NativeDependency[],
 	start: NativeDependency[] = [],
 	depth = 0,
-	total = 0 // do not pass in, we calculate it in the initial run!
+	total = 0, // do not pass in, we calculate it in the initial run!
 ): NativeDependency[] {
 	// we set the total on the initial call - and never increment it, as it's used for esacaping the recursion
 	if (total === 0) {
@@ -101,18 +101,18 @@ function topologicalSortNativeDependencies(
 			const allSubDependenciesProcessed = currentDependency.dependencies.every(
 				(subDependency) => {
 					return sortedDeps.some((dep) => dep.name === subDependency);
-				}
+				},
 			);
 			if (allSubDependenciesProcessed) {
 				sortedDeps.push(currentDependency);
 			}
 			return sortedDeps;
 		},
-		start
+		start,
 	);
 
 	const remainingDeps = dependencies.filter(
-		(nativeDep) => !sortedDeps.includes(nativeDep)
+		(nativeDep) => !sortedDeps.includes(nativeDep),
 	);
 
 	// recurse if we still have remaining deps
@@ -122,7 +122,7 @@ function topologicalSortNativeDependencies(
 			remainingDeps,
 			sortedDeps,
 			depth + 1,
-			total
+			total,
 		);
 	}
 
@@ -151,7 +151,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $filesHashService: IFilesHashService,
 		private $gradleCommandService: IGradleCommandService,
 		private $gradleBuildService: IGradleBuildService,
-		private $analyticsService: IAnalyticsService
+		private $analyticsService: IAnalyticsService,
 	) {
 		super($fs, $projectDataService);
 	}
@@ -160,7 +160,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public getPlatformData(projectData: IProjectData): IPlatformData {
 		if (!projectData && !this._platformData) {
 			throw new Error(
-				"First call of getPlatformData without providing projectData."
+				"First call of getPlatformData without providing projectData.",
 			);
 		}
 		if (projectData && projectData.platformsDir) {
@@ -168,8 +168,8 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				? this.$options.hostProjectPath
 				: path.join(
 						projectData.platformsDir,
-						AndroidProjectService.ANDROID_PLATFORM_NAME
-				  );
+						AndroidProjectService.ANDROID_PLATFORM_NAME,
+					);
 
 			const appDestinationDirectoryArr = [
 				projectRoot,
@@ -196,7 +196,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const packageName = this.getProjectNameFromId(projectData);
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				constants.PlatformTypes.android
+				constants.PlatformTypes.android,
 			);
 
 			this._platformData = {
@@ -213,14 +213,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 							this.$options.hostProjectModuleName,
 							constants.BUILD_DIR,
 							constants.OUTPUTS_DIR,
-							constants.BUNDLE_DIR
+							constants.BUNDLE_DIR,
 						);
 					}
 
 					return path.join(...deviceBuildOutputArr);
 				},
 				getValidBuildOutputData: (
-					buildOptions: IBuildOutputOptions
+					buildOptions: IBuildOutputOptions,
 				): IValidBuildOutputData => {
 					const buildMode = buildOptions.release
 						? Configurations.Release.toLowerCase()
@@ -245,7 +245,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 						regexes: [
 							new RegExp(
 								`(${packageName}|${this.$options.hostProjectModuleName})-.*-(${Configurations.Debug}|${Configurations.Release})(-unsigned)?${constants.APK_EXTENSION_NAME}`,
-								"i"
+								"i",
 							),
 						],
 					};
@@ -255,7 +255,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				relativeToFrameworkConfigurationFilePath: path.join(
 					constants.SRC_DIR,
 					constants.MAIN_DIR,
-					constants.MANIFEST_FILE_NAME
+					constants.MANIFEST_FILE_NAME,
 				),
 				fastLivesyncFileExtensions: [".jpg", ".gif", ".png", ".bmp", ".webp"], // http://developer.android.com/guide/appendix/media-formats.html
 			};
@@ -266,12 +266,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public getCurrentPlatformVersion(
 		platformData: IPlatformData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		const currentPlatformData: IDictionary<any> =
 			this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				<constants.PlatformTypes>platformData.platformNameLowerCase
+				<constants.PlatformTypes>platformData.platformNameLowerCase,
 			);
 
 		return currentPlatformData && currentPlatformData[constants.VERSION_STRING];
@@ -282,11 +282,11 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public getAppResourcesDestinationDirectoryPath(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		const appResourcesDirStructureHasMigrated =
 			this.$androidResourcesMigrationService.hasMigrated(
-				projectData.getAppResourcesDirectoryPath()
+				projectData.getAppResourcesDirectoryPath(),
 			);
 
 		if (appResourcesDirStructureHasMigrated) {
@@ -299,7 +299,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async validate(
 		projectData: IProjectData,
 		options: IOptions,
-		notConfiguredEnvOptions?: INotConfiguredEnvOptions
+		notConfiguredEnvOptions?: INotConfiguredEnvOptions,
 	): Promise<IValidatePlatformOutput> {
 		this.validatePackageName(projectData.projectIdentifiers.android);
 		this.validateProjectName(projectData.projectName);
@@ -326,23 +326,23 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async createProject(
 		frameworkDir: string,
 		frameworkVersion: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		const packageName = projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
 		if (
 			packageName === constants.SCOPED_ANDROID_RUNTIME_NAME &&
 			semver.lt(
 				frameworkVersion,
-				AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE
+				AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE,
 			)
 		) {
 			this.$errors.fail(
-				`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`
+				`The NativeScript CLI requires Android runtime ${AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE} or later to work properly.`,
 			);
 		}
 
 		this.$fs.ensureDirectoryExists(
-			this.getPlatformData(projectData).projectRoot
+			this.getPlatformData(projectData).projectRoot,
 		);
 		const androidToolsInfo = this.$androidToolsInfo.getToolsInfo({
 			projectDir: projectData.projectDir,
@@ -355,7 +355,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.getPlatformData(projectData).projectRoot,
 			frameworkDir,
 			"*",
-			"-R"
+			"-R",
 		);
 
 		// TODO: Check if we actually need this and if it should be targetSdk or compileSdk
@@ -365,7 +365,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private getResDestinationDir(projectData: IProjectData): string {
 		const appResourcesDirStructureHasMigrated =
 			this.$androidResourcesMigrationService.hasMigrated(
-				projectData.getAppResourcesDirectoryPath()
+				projectData.getAppResourcesDirectoryPath(),
 			);
 
 		if (appResourcesDirStructureHasMigrated) {
@@ -374,7 +374,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			return path.join(
 				appResourcesDestinationPath,
 				constants.MAIN_DIR,
-				constants.RESOURCES_DIR
+				constants.RESOURCES_DIR,
 			);
 		} else {
 			return this.getLegacyAppResourcesDestinationDirPath(projectData);
@@ -383,7 +383,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	private cleanResValues(
 		targetSdkVersion: number,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): void {
 		const resDestinationDir = this.getResDestinationDir(projectData);
 		const directoriesInResFolder = this.$fs.readDirectory(resDestinationDir);
@@ -393,18 +393,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					dirName: dir,
 					sdkNum: parseInt(
 						dir.substr(
-							AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length
-						)
+							AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX.length,
+						),
 					),
 				};
 			})
 			.filter(
 				(dir) =>
 					dir.dirName.match(
-						AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX
+						AndroidProjectService.VALUES_VERSION_DIRNAME_PREFIX,
 					) &&
 					dir.sdkNum &&
-					(!targetSdkVersion || targetSdkVersion < dir.sdkNum)
+					(!targetSdkVersion || targetSdkVersion < dir.sdkNum),
 			)
 			.map((dir) => path.join(resDestinationDir, dir.dirName));
 
@@ -427,7 +427,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			this.getAppResourcesDestinationDirectoryPath(projectData);
 		if (
 			this.$androidResourcesMigrationService.hasMigrated(
-				appResourcesDirectoryPath
+				appResourcesDirectoryPath,
 			)
 		) {
 			stringsFilePath = path.join(
@@ -435,13 +435,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				constants.MAIN_DIR,
 				constants.RESOURCES_DIR,
 				"values",
-				"strings.xml"
+				"strings.xml",
 			);
 		} else {
 			stringsFilePath = path.join(
 				appResourcesDestinationDirectoryPath,
 				"values",
-				"strings.xml"
+				"strings.xml",
 			);
 		}
 
@@ -450,18 +450,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			"-i",
 			/__TITLE_ACTIVITY__/,
 			projectData.projectName,
-			stringsFilePath
+			stringsFilePath,
 		);
 
 		const gradleSettingsFilePath = path.join(
 			this.getPlatformData(projectData).projectRoot,
-			"settings.gradle"
+			"settings.gradle",
 		);
 		shell.sed(
 			"-i",
 			/__PROJECT_NAME__/,
 			this.getProjectNameFromId(projectData),
-			gradleSettingsFilePath
+			gradleSettingsFilePath,
 		);
 
 		try {
@@ -473,12 +473,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					"-i",
 					new RegExp(constants.PACKAGE_PLACEHOLDER_NAME),
 					projectData.projectIdentifiers.android,
-					projectData.appGradlePath
+					projectData.appGradlePath,
 				);
 			}
 		} catch (e) {
 			this.$logger.trace(
-				`Templates updated and no need for replace in app.gradle.`
+				`Templates updated and no need for replace in app.gradle.`,
 			);
 		}
 	}
@@ -490,7 +490,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			"-i",
 			/__PACKAGE__/,
 			projectData.projectIdentifiers.android,
-			manifestPath
+			manifestPath,
 		);
 	}
 
@@ -518,14 +518,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		canUpdate: boolean,
 		projectData: IProjectData,
 		addPlatform?: Function,
-		removePlatforms?: (platforms: string[]) => Promise<void>
+		removePlatforms?: (platforms: string[]) => Promise<void>,
 	): Promise<boolean> {
 		const packageName = projectData.nsConfig.android?.runtimePackageName || constants.SCOPED_ANDROID_RUNTIME_NAME;
 		if (
 			packageName === constants.SCOPED_ANDROID_RUNTIME_NAME &&
 			semver.eq(
 				newVersion,
-				AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE
+				AndroidProjectService.MIN_RUNTIME_VERSION_WITH_GRADLE,
 			)
 		) {
 			const platformLowercase =
@@ -543,18 +543,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async buildProject(
 		projectRoot: string,
 		projectData: IProjectData,
-		buildData: IAndroidBuildData
+		buildData: IAndroidBuildData,
 	): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
 		await this.$gradleBuildService.buildProject(
 			platformData.projectRoot,
-			buildData
+			buildData,
 		);
 
 		const outputPath = platformData.getBuildOutputPath(buildData);
 		await this.$filesHashService.saveHashesForProject(
 			this._platformData,
-			outputPath
+			outputPath,
 		);
 		await this.trackKotlinUsage(projectRoot);
 	}
@@ -562,20 +562,20 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public async buildForDeploy(
 		projectRoot: string,
 		projectData: IProjectData,
-		buildData?: IAndroidBuildData
+		buildData?: IAndroidBuildData,
 	): Promise<void> {
 		return this.buildProject(projectRoot, projectData, buildData);
 	}
 
 	public isPlatformPrepared(
 		projectRoot: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean {
 		return this.$fs.exists(
 			path.join(
 				this.getPlatformData(projectData).appDestinationDirectoryPath,
-				this.$options.hostProjectModuleName
-			)
+				this.$options.hostProjectModuleName,
+			),
 		);
 	}
 
@@ -588,12 +588,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	public ensureConfigurationFileInAppResources(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): void {
 		const appResourcesDirectoryPath = projectData.appResourcesDirectoryPath;
 		const appResourcesDirStructureHasMigrated =
 			this.$androidResourcesMigrationService.hasMigrated(
-				appResourcesDirectoryPath
+				appResourcesDirectoryPath,
 			);
 		let originalAndroidManifestFilePath;
 
@@ -603,13 +603,13 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				this.$devicePlatformsConstants.Android,
 				"src",
 				"main",
-				this.getPlatformData(projectData).configurationFileName
+				this.getPlatformData(projectData).configurationFileName,
 			);
 		} else {
 			originalAndroidManifestFilePath = path.join(
 				appResourcesDirectoryPath,
 				this.$devicePlatformsConstants.Android,
-				this.getPlatformData(projectData).configurationFileName
+				this.getPlatformData(projectData).configurationFileName,
 			);
 		}
 
@@ -617,7 +617,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		if (!manifestExists) {
 			this.$logger.warn(
-				"No manifest found in " + originalAndroidManifestFilePath
+				"No manifest found in " + originalAndroidManifestFilePath,
 			);
 			return;
 		}
@@ -625,7 +625,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		if (!appResourcesDirStructureHasMigrated) {
 			this.$fs.copyFile(
 				originalAndroidManifestFilePath,
-				this.getPlatformData(projectData).configurationFilePath
+				this.getPlatformData(projectData).configurationFilePath,
 			);
 		}
 	}
@@ -633,7 +633,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	public prepareAppResources(projectData: IProjectData): void {
 		const platformData = this.getPlatformData(projectData);
 		const projectAppResourcesPath = projectData.getAppResourcesDirectoryPath(
-			projectData.projectDir
+			projectData.projectDir,
 		);
 		const platformsAppResourcesPath =
 			this.getAppResourcesDestinationDirectoryPath(projectData);
@@ -644,7 +644,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		const appResourcesDirStructureHasMigrated =
 			this.$androidResourcesMigrationService.hasMigrated(
-				projectAppResourcesPath
+				projectAppResourcesPath,
 			);
 		if (appResourcesDirStructureHasMigrated) {
 			this.$fs.copyFile(
@@ -652,18 +652,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 					projectAppResourcesPath,
 					platformData.normalizedPlatformName,
 					constants.SRC_DIR,
-					"*"
+					"*",
 				),
-				platformsAppResourcesPath
+				platformsAppResourcesPath,
 			);
 		} else {
 			this.$fs.copyFile(
 				path.join(
 					projectAppResourcesPath,
 					platformData.normalizedPlatformName,
-					"*"
+					"*",
 				),
-				platformsAppResourcesPath
+				platformsAppResourcesPath,
 			);
 			// https://github.com/NativeScript/android-runtime/issues/899
 			// App_Resources/Android/libs is reserved to user's aars and jars, but they should not be copied as resources
@@ -680,13 +680,19 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async preparePluginNativeCode(
 		pluginData: IPluginData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		// build Android plugins which contain AndroidManifest.xml and/or resources
 		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(
 			pluginData,
-			AndroidProjectService.ANDROID_PLATFORM_NAME
+			AndroidProjectService.ANDROID_PLATFORM_NAME,
 		);
+		const platformDir = this.$options.hostProjectPath
+			? this.$options.hostProjectPath
+			: path.join(
+					projectData.platformsDir,
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
@@ -694,7 +700,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
-				aarOutputDir: pluginPlatformsFolderPath,
+				aarOutputDir: path.join(platformDir, ".plugins", pluginData.name),
 				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
 			};
 
@@ -712,14 +718,14 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async removePluginNativeCode(
 		pluginData: IPluginData,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		// not implemented
 	}
 
 	public async beforePrepareAllPlugins(
 		projectData: IProjectData,
-		dependencies?: IDependencyData[]
+		dependencies?: IDependencyData[],
 	): Promise<IDependencyData[]> {
 		if (dependencies) {
 			dependencies = this.filterUniqueDependencies(dependencies);
@@ -729,41 +735,44 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async handleNativeDependenciesChange(
 		projectData: IProjectData,
-		opts: IRelease
+		opts: IRelease,
 	): Promise<void> {
 		return;
 	}
 
 	private filterUniqueDependencies(
-		dependencies: IDependencyData[]
+		dependencies: IDependencyData[],
 	): IDependencyData[] {
-		const depsDictionary = dependencies.reduce((dict, dep) => {
-			const collision = dict[dep.name];
-			// in case there are multiple dependencies to the same module, the one declared in the package.json takes precedence
-			if (!collision || collision.depth > dep.depth) {
-				dict[dep.name] = dep;
-			}
-			return dict;
-		}, <IDictionary<IDependencyData>>{});
+		const depsDictionary = dependencies.reduce(
+			(dict, dep) => {
+				const collision = dict[dep.name];
+				// in case there are multiple dependencies to the same module, the one declared in the package.json takes precedence
+				if (!collision || collision.depth > dep.depth) {
+					dict[dep.name] = dep;
+				}
+				return dict;
+			},
+			<IDictionary<IDependencyData>>{},
+		);
 		return _.values(depsDictionary);
 	}
 
 	private provideDependenciesJson(
 		projectData: IProjectData,
-		dependencies: IDependencyData[]
+		dependencies: IDependencyData[],
 	): IDependencyData[] {
 		const platformDir = this.$options.hostProjectPath
 			? this.$options.hostProjectPath
 			: path.join(
 					projectData.platformsDir,
-					AndroidProjectService.ANDROID_PLATFORM_NAME
-			  );
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				);
 		const dependenciesJsonPath = path.join(
 			platformDir,
-			constants.DEPENDENCIES_JSON_NAME
+			constants.DEPENDENCIES_JSON_NAME,
 		);
 		let nativeDependencyData = dependencies.filter(
-			AndroidProjectService.isNativeAndroidDependency
+			AndroidProjectService.isNativeAndroidDependency,
 		);
 
 		let nativeDependencies = nativeDependencyData.map(
@@ -771,16 +780,17 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				return {
 					name,
 					directory: path.relative(platformDir, directory),
+					generatedDirectory: path.join(".plugins", name),
 					dependencies: dependencies.filter((dep) => {
 						// filter out transient dependencies that don't have native dependencies
 						return (
 							nativeDependencyData.findIndex(
-								(nativeDep) => nativeDep.name === dep
+								(nativeDep) => nativeDep.name === dep,
 							) !== -1
 						);
 					}),
 				} as NativeDependency;
-			}
+			},
 		);
 		nativeDependencies = topologicalSortNativeDependencies(nativeDependencies);
 		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
@@ -812,7 +822,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				cwd: projectRoot,
 				message: "Gradle stop services...",
 				stdio: "pipe",
-			}
+			},
 		);
 
 		return result;
@@ -826,7 +836,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 	public async cleanDeviceTempFolder(
 		deviceIdentifier: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		const adb = this.$injector.resolve(DeviceAndroidDebugBridge, {
 			identifier: deviceIdentifier,
@@ -847,7 +857,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		projectRoot: string,
 		frameworkDir: string,
 		files: string,
-		cpArg: string
+		cpArg: string,
 	): void {
 		const paths = files.split(" ").map((p) => path.join(frameworkDir, p));
 		shell.cp(cpArg, paths, projectRoot);
@@ -858,7 +868,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		//Enforce underscore limitation
 		if (!/^[a-zA-Z]+(\.[a-zA-Z0-9][a-zA-Z0-9_]*)+$/.test(packageName)) {
 			this.$errors.fail(
-				`Package name must look like: com.company.Name. Got: ${packageName}`
+				`Package name must look like: com.company.Name. Got: ${packageName}`,
 			);
 		}
 
@@ -880,7 +890,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	private getLegacyAppResourcesDestinationDirPath(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		const resourcePath: string[] = [
 			this.$options.hostProjectModuleName,
@@ -891,12 +901,12 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		return path.join(
 			this.getPlatformData(projectData).projectRoot,
-			...resourcePath
+			...resourcePath,
 		);
 	}
 
 	private getUpdatedAppResourcesDestinationDirPath(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		const resourcePath: string[] = [
 			this.$options.hostProjectModuleName,
@@ -905,7 +915,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 		return path.join(
 			this.getPlatformData(projectData).projectRoot,
-			...resourcePath
+			...resourcePath,
 		);
 	}
 
@@ -925,18 +935,18 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	private cleanUpPreparedResources(projectData: IProjectData): void {
 		let resourcesDirPath = path.join(
 			projectData.appResourcesDirectoryPath,
-			this.getPlatformData(projectData).normalizedPlatformName
+			this.getPlatformData(projectData).normalizedPlatformName,
 		);
 		if (
 			this.$androidResourcesMigrationService.hasMigrated(
-				projectData.appResourcesDirectoryPath
+				projectData.appResourcesDirectoryPath,
 			)
 		) {
 			resourcesDirPath = path.join(
 				resourcesDirPath,
 				constants.SRC_DIR,
 				constants.MAIN_DIR,
-				constants.RESOURCES_DIR
+				constants.RESOURCES_DIR,
 			);
 		}
 
@@ -967,7 +977,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			}
 		} catch (e) {
 			this.$logger.trace(
-				`Failed to track android build statistics. Error is: ${e.message}`
+				`Failed to track android build statistics. Error is: ${e.message}`,
 			);
 		}
 	}
@@ -976,7 +986,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		const staticsFilePath = path.join(
 			projectRoot,
 			constants.ANDROID_ANALYTICS_DATA_DIR,
-			constants.ANDROID_ANALYTICS_DATA_FILE
+			constants.ANDROID_ANALYTICS_DATA_FILE,
 		);
 		let buildStatistics;
 
@@ -985,7 +995,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 				buildStatistics = this.$fs.readJson(staticsFilePath);
 			} catch (e) {
 				this.$logger.trace(
-					`Unable to read android build statistics file. Error is ${e.message}`
+					`Unable to read android build statistics file. Error is ${e.message}`,
 				);
 			}
 		}
