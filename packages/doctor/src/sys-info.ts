@@ -424,6 +424,38 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 						tempDirectory,
 					);
 					const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
+
+					// If asdf version manager is installed, get the current Ruby version for the project directory and write it to the temporary project directory
+					const asdfResult = await this.childProcess.spawnFromEvent(
+						"asdf",
+						["current", "ruby"],
+						"exit",
+						{ ignoreError: true },
+					);
+
+					if (asdfResult.exitCode === 0) {
+						const asdfVersionMatch = (asdfResult.stdout as string).match(
+							SysInfo.VERSION_REGEXP,
+						);
+
+						if (asdfVersionMatch?.[0]) {
+							const asdfVersion = asdfVersionMatch[0];
+							const asdfConfigPath = path.join(
+								xcodeProjectDir,
+								".tool-versions",
+							);
+							const wroteASDFConfig = this.fileSystem.appendFile(
+								asdfConfigPath,
+								`ruby ${asdfVersion}`,
+							);
+							if (!wroteASDFConfig) {
+								console.warn(
+									`CocoaPods invocation may fail, check asdf config`,
+								);
+							}
+						}
+					}
+
 					const spawnResult = await this.childProcess.spawnFromEvent(
 						"pod",
 						["install"],
@@ -432,6 +464,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					);
 					return !spawnResult.exitCode;
 				} catch (err) {
+					console.log(`Pod command failed - ${err}`);
 					return false;
 				} finally {
 					this.fileSystem.deleteEntry(tempDirectory);
