@@ -11,15 +11,16 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release type. "dev" publishes a -next prerelease without bumping package.json. patch/minor/major/prerelease bump package.json, commit + tag to main, then publish as a stable release.'
-        type: choice
-        options:
-          - dev
-          - patch
-          - minor
-          - major
-          - prerelease
-        default: patch
+        description: >-
+          Release to cut. Leave empty for a rolling "next" prerelease (no version
+          bump). "dev" publishes a -dev prerelease (no bump). A semver keyword
+          (patch/minor/major) or an explicit version (e.g. 9.1.0, 9.1.0-alpha.1)
+          bumps package.json, commits + tags v<version>, then publishes a stable
+          release. A prerelease version publishes under the dist-tag matching its
+          prerelease id (alpha/beta/rc); a plain version publishes under "latest".
+        type: string
+        required: false
+        default: ''
 
 permissions: read-all
 
@@ -62,17 +63,22 @@ jobs:
           echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
 
       - name: Bump, commit and tag stable release (manual dispatch)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != 'dev' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != '' && inputs.release_type != 'dev' }}
+        env:
+          # env indirection keeps the free-text dispatch input out of shell interpolation
+          RELEASE_INPUT: ${{ inputs.release_type }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          npm version ${{ inputs.release_type }} -m "chore: release v%s"
+          # npm version accepts a semver keyword (patch/minor/major) or an explicit
+          # version; strip an optional leading "v" so v9.1.0 and 9.1.0 both work.
+          npm version "${RELEASE_INPUT#v}" -m "chore: release v%s"
           NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
           echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
           git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
 
       - name: Bump version for dev release
-        if: ${{ !contains(github.ref, 'refs/tags/') && (github.event_name != 'workflow_dispatch' || inputs.release_type == 'dev') }}
+        if: ${{ !contains(github.ref, 'refs/tags/') && (github.event_name != 'workflow_dispatch' || inputs.release_type == '' || inputs.release_type == 'dev') }}
         env:
           NPM_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type == 'dev' && 'dev' || 'next' }}
         run: |
@@ -82,9 +88,14 @@ jobs:
 
       - name: Output NPM Version and tag
         id: npm_version_output
+        env:
+          # true only for a manual dispatch that cut a real (bumped) release — not
+          # the empty "next" build or the "dev" channel. Computed in the GitHub
+          # expression context so the free-text input never reaches the shell.
+          IS_DISPATCH_RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != '' && inputs.release_type != 'dev' }}
         run: |
           NPM_TAG=$(node ./scripts/get-npm-tag.js)
-          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.release_type }}" != "dev" ]]; then
+          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "$IS_DISPATCH_RELEASE" == "true" ]]; then
             IS_RELEASE=true
           else
             IS_RELEASE=false
