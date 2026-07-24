@@ -32,9 +32,8 @@ function createOptions(testInjector: IInjector): IOptions {
 	return options;
 }
 
-describe("options", () => {
-	// TODO: Igor and Nathan will make this work again
-	return;
+// TODO: Igor and Nathan will make this work again
+describe.skip("options", () => {
 	let testInjector: IInjector;
 	beforeEach(() => {
 		testInjector = createTestInjector();

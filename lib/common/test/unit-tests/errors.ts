@@ -15,12 +15,12 @@ describe("errors", () => {
 	let isInteractive = false;
 	let processExitCode = 0;
 
-	before(() => {
+	beforeAll(() => {
 		// @ts-expect-error
 		helpers.isInteractive = () => isInteractive;
 	});
 
-	after(() => {
+	afterAll(() => {
 		// @ts-expect-error
 		helpers.isInteractive = originalIsInteractive;
 	});
@@ -139,7 +139,7 @@ describe("errors", () => {
 					"The error output must contain the error message",
 				);
 				assert.isTrue(
-					logger.errorOutput.indexOf("at next") !== -1,
+					/\n\s+at\s/.test(logger.errorOutput),
 					"The error output must contain callstack",
 				);
 				assert.isTrue(
