@@ -11,15 +11,17 @@ import {
 	IAnalyticsService,
 	IDisposable,
 	IDictionary,
-	AnalyticsStatus,
 	IUserSettingsService,
 	IAnalyticsSettingsService,
 	IChildProcess,
 	IProjectHelper,
-	GoogleAnalyticsDataType,
 	IStringDictionary,
-	TrackingTypes,
 } from "../../common/declarations";
+import {
+	AnalyticsStatus,
+	GoogleAnalyticsDataType,
+	TrackingTypes,
+} from "../../common/enums";
 import {
 	IGoogleAnalyticsTrackingInformation,
 	ITrackingInformation,
@@ -31,6 +33,8 @@ import {
 	IEventActionData,
 } from "../../common/definitions/google-analytics";
 import { injector } from "../../common/yok";
+import { DetachedProcessMessages } from "../../detached-processes/detached-process-enums";
+import { GoogleAnalyticsCustomDimensions } from "../../common/services/analytics/google-analytics-custom-dimensions";
 
 export class AnalyticsService implements IAnalyticsService, IDisposable {
 	private static ANALYTICS_BROKER_START_TIMEOUT = 10 * 1000;

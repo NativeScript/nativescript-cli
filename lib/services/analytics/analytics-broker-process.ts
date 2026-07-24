@@ -6,7 +6,8 @@ import { AnalyticsBroker } from "./analytics-broker";
 import { FileLogService } from "../../detached-processes/file-log-service";
 import { IAnalyticsBroker, ITrackingInformation } from "./analytics";
 import { injector } from "../../common/yok";
-import { TrackingTypes } from "../../common/declarations";
+import { TrackingTypes } from "../../common/enums";
+import { DetachedProcessMessages } from "../../detached-processes/detached-process-enums";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {

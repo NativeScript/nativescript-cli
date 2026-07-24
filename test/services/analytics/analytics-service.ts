@@ -11,8 +11,10 @@ import { IInjector } from "../../../lib/common/definitions/yok";
 import {
 	IChildProcess,
 	IAnalyticsService,
-	GoogleAnalyticsDataType,
 } from "../../../lib/common/declarations";
+import { GoogleAnalyticsDataType } from "../../../lib/common/enums";
+import { DetachedProcessMessages } from "../../../lib/detached-processes/detached-process-enums";
+import { GoogleAnalyticsCustomDimensions } from "../../../lib/common/services/analytics/google-analytics-custom-dimensions";
 
 const helpers = require("../../../lib/common/helpers");
 const originalIsInteractive = helpers.isInteractive;
@@ -59,8 +61,8 @@ const createTestInjector = (opts?: {
 		"projectHelper",
 		new stubs.ProjectHelperStub(
 			opts && opts.projectHelperErrorMsg,
-			opts && opts.projectDir
-		)
+			opts && opts.projectDir,
+		),
 	);
 
 	return testInjector;
@@ -82,20 +84,20 @@ describe("analyticsService", () => {
 				};
 			}) => {
 				const testInjector = createTestInjector();
-				const staticConfig = testInjector.resolve<Config.IStaticConfig>(
-					"staticConfig"
-				);
+				const staticConfig =
+					testInjector.resolve<Config.IStaticConfig>("staticConfig");
 				staticConfig.disableAnalytics = configuration.disableAnalytics;
 
-				configuration.userSettingsServiceOpts = configuration.userSettingsServiceOpts || {
-					trackFeatureUsageValue: "false",
-					defaultValue: "true",
-				};
+				configuration.userSettingsServiceOpts =
+					configuration.userSettingsServiceOpts || {
+						trackFeatureUsageValue: "false",
+						defaultValue: "true",
+					};
 				const userSettingsService = testInjector.resolve<any>(
-					"userSettingsService"
+					"userSettingsService",
 				);
 				userSettingsService.getSettingValue = async (
-					settingName: string
+					settingName: string,
 				): Promise<string> => {
 					if (settingName === trackFeatureUsage) {
 						return configuration.userSettingsServiceOpts.trackFeatureUsageValue;
@@ -105,20 +107,18 @@ describe("analyticsService", () => {
 				};
 
 				let isChildProcessSpawned = false;
-				const childProcess = testInjector.resolve<IChildProcess>(
-					"childProcess"
-				);
+				const childProcess =
+					testInjector.resolve<IChildProcess>("childProcess");
 				childProcess.spawn = (
 					command: string,
 					args?: string[],
-					options?: any
+					options?: any,
 				): any => {
 					isChildProcessSpawned = true;
 				};
 
-				const analyticsService = testInjector.resolve<IAnalyticsService>(
-					AnalyticsService
-				);
+				const analyticsService =
+					testInjector.resolve<IAnalyticsService>(AnalyticsService);
 				await analyticsService.trackInGoogleAnalytics({
 					googleAnalyticsDataType: GoogleAnalyticsDataType.Page,
 					customDimensions: {
@@ -169,11 +169,10 @@ describe("analyticsService", () => {
 		describe("does not fail", () => {
 			const assertExpectedError = async (
 				testInjector: IInjector,
-				opts: { isChildProcessSpawned: boolean; expectedErrorMessage: string }
+				opts: { isChildProcessSpawned: boolean; expectedErrorMessage: string },
 			) => {
-				const analyticsService = testInjector.resolve<IAnalyticsService>(
-					AnalyticsService
-				);
+				const analyticsService =
+					testInjector.resolve<IAnalyticsService>(AnalyticsService);
 				await analyticsService.trackInGoogleAnalytics({
 					googleAnalyticsDataType: GoogleAnalyticsDataType.Page,
 					customDimensions: {
@@ -185,13 +184,13 @@ describe("analyticsService", () => {
 				const logger = testInjector.resolve<stubs.LoggerStub>("logger");
 				assert.isTrue(
 					logger.traceOutput.indexOf(opts.expectedErrorMessage) !== -1,
-					`Tried to find error '${opts.expectedErrorMessage}', but couldn't. logger's trace output is: ${logger.traceOutput}`
+					`Tried to find error '${opts.expectedErrorMessage}', but couldn't. logger's trace output is: ${logger.traceOutput}`,
 				);
 			};
 
 			const setupTest = (
 				expectedErrorMessage: string,
-				projectHelperErrorMsg?: string
+				projectHelperErrorMsg?: string,
 			): any => {
 				const testInjector = createTestInjector({ projectHelperErrorMsg });
 				const opts = {
@@ -199,9 +198,8 @@ describe("analyticsService", () => {
 					expectedErrorMessage,
 				};
 
-				const childProcess = testInjector.resolve<IChildProcess>(
-					"childProcess"
-				);
+				const childProcess =
+					testInjector.resolve<IChildProcess>("childProcess");
 				return {
 					testInjector,
 					opts,
@@ -211,12 +209,12 @@ describe("analyticsService", () => {
 
 			it("when unable to start broker process", async () => {
 				const { testInjector, childProcess, opts } = setupTest(
-					"Unable to get broker instance due to error:  Error: custom error"
+					"Unable to get broker instance due to error:  Error: custom error",
 				);
 				childProcess.spawn = (
 					command: string,
 					args?: string[],
-					options?: any
+					options?: any,
 				): any => {
 					opts.isChildProcessSpawned = true;
 					throw new Error("custom error");
@@ -227,13 +225,13 @@ describe("analyticsService", () => {
 
 			it("when broker cannot start for required timeout", async () => {
 				const { testInjector, childProcess, opts } = setupTest(
-					"Unable to get broker instance due to error:  Error: Unable to start Analytics Broker process."
+					"Unable to get broker instance due to error:  Error: Unable to start Analytics Broker process.",
 				);
 				const originalSetTimeout = setTimeout;
 				childProcess.spawn = (
 					command: string,
 					args?: string[],
-					options?: any
+					options?: any,
 				): any => {
 					opts.isChildProcessSpawned = true;
 					(<any>global).setTimeout = (
@@ -251,13 +249,13 @@ describe("analyticsService", () => {
 
 			it("when broker is not connected", async () => {
 				const { testInjector, childProcess, opts } = setupTest(
-					"Broker not found or not connected."
+					"Broker not found or not connected.",
 				);
 
 				childProcess.spawn = (
 					command: string,
 					args?: string[],
-					options?: any
+					options?: any,
 				): any => {
 					opts.isChildProcessSpawned = true;
 					const spawnedProcess: any = getSpawnedProcess();
@@ -268,9 +266,9 @@ describe("analyticsService", () => {
 						() =>
 							spawnedProcess.emit(
 								"message",
-								DetachedProcessMessages.ProcessReadyToReceive
+								DetachedProcessMessages.ProcessReadyToReceive,
 							),
-						1
+						1,
 					);
 					return spawnedProcess;
 				};
@@ -280,13 +278,13 @@ describe("analyticsService", () => {
 
 			it("when sending message fails", async () => {
 				const { testInjector, childProcess, opts } = setupTest(
-					"Error while trying to send message to broker: Error: Failed to sent data."
+					"Error while trying to send message to broker: Error: Failed to sent data.",
 				);
 
 				childProcess.spawn = (
 					command: string,
 					args?: string[],
-					options?: any
+					options?: any,
 				): any => {
 					opts.isChildProcessSpawned = true;
 					const spawnedProcess: any = getSpawnedProcess();
@@ -300,9 +298,9 @@ describe("analyticsService", () => {
 						() =>
 							spawnedProcess.emit(
 								"message",
-								DetachedProcessMessages.ProcessReadyToReceive
+								DetachedProcessMessages.ProcessReadyToReceive,
 							),
-						1
+						1,
 					);
 					return spawnedProcess;
 				};
@@ -314,12 +312,12 @@ describe("analyticsService", () => {
 				const projectHelperErrorMsg = "Failed to find project directory.";
 				const { testInjector, childProcess, opts } = setupTest(
 					`Unable to get the projectDir from projectHelper Error: ${projectHelperErrorMsg}`,
-					projectHelperErrorMsg
+					projectHelperErrorMsg,
 				);
 				childProcess.spawn = (
 					command: string,
 					args?: string[],
-					options?: any
+					options?: any,
 				): any => {
 					opts.isChildProcessSpawned = true;
 					const spawnedProcess: any = getSpawnedProcess();
@@ -334,9 +332,9 @@ describe("analyticsService", () => {
 						() =>
 							spawnedProcess.emit(
 								"message",
-								DetachedProcessMessages.ProcessReadyToReceive
+								DetachedProcessMessages.ProcessReadyToReceive,
 							),
-						1
+						1,
 					);
 					return spawnedProcess;
 				};
@@ -350,7 +348,7 @@ describe("analyticsService", () => {
 				expectedResult: any,
 				dataToSend: any,
 				terminalOpts?: { isInteractive: boolean },
-				projectHelperOpts?: { projectDir: string }
+				projectHelperOpts?: { projectDir: string },
 			): { testInjector: IInjector; opts: any } => {
 				helpers.isInteractive = () =>
 					terminalOpts ? terminalOpts.isInteractive : true;
@@ -363,13 +361,12 @@ describe("analyticsService", () => {
 					messageSent: <any>null,
 				};
 
-				const childProcess = testInjector.resolve<IChildProcess>(
-					"childProcess"
-				);
+				const childProcess =
+					testInjector.resolve<IChildProcess>("childProcess");
 				childProcess.spawn = (
 					command: string,
 					args?: string[],
-					options?: any
+					options?: any,
 				): any => {
 					opts.isChildProcessSpawned = true;
 					const spawnedProcess: any = getSpawnedProcess();
@@ -384,9 +381,9 @@ describe("analyticsService", () => {
 						() =>
 							spawnedProcess.emit(
 								"message",
-								DetachedProcessMessages.ProcessReadyToReceive
+								DetachedProcessMessages.ProcessReadyToReceive,
 							),
-						1
+						1,
 					);
 
 					return spawnedProcess;
@@ -405,11 +402,10 @@ describe("analyticsService", () => {
 					expectedResult: any;
 					messageSent: any;
 					dataToSend: any;
-				}
+				},
 			) => {
-				const analyticsService = testInjector.resolve<IAnalyticsService>(
-					AnalyticsService
-				);
+				const analyticsService =
+					testInjector.resolve<IAnalyticsService>(AnalyticsService);
 				await analyticsService.trackInGoogleAnalytics(opts.dataToSend);
 
 				assert.isTrue(opts.isChildProcessSpawned);
@@ -426,7 +422,7 @@ describe("analyticsService", () => {
 			const getExpectedResult = (
 				gaDataType: string,
 				analyticsClient?: string,
-				projectType?: string
+				projectType?: string,
 			): any => {
 				const expectedResult: any = {
 					type: "googleAnalyticsData",
@@ -456,7 +452,7 @@ describe("analyticsService", () => {
 					it(`when data is ${googleAnalyticsDataType}`, async () => {
 						const { testInjector, opts } = setupTest(
 							getExpectedResult(googleAnalyticsDataType),
-							getDataToSend(googleAnalyticsDataType)
+							getDataToSend(googleAnalyticsDataType),
 						);
 						await assertExpectedResult(testInjector, opts);
 					});
@@ -466,11 +462,11 @@ describe("analyticsService", () => {
 							getExpectedResult(
 								googleAnalyticsDataType,
 								null,
-								sampleProjectType
+								sampleProjectType,
 							),
 							getDataToSend(googleAnalyticsDataType),
 							null,
-							{ projectDir: "/some-dir" }
+							{ projectDir: "/some-dir" },
 						);
 						await assertExpectedResult(testInjector, opts);
 					});
@@ -479,10 +475,10 @@ describe("analyticsService", () => {
 						const { testInjector, opts } = setupTest(
 							getExpectedResult(
 								googleAnalyticsDataType,
-								AnalyticsClients.Unknown
+								AnalyticsClients.Unknown,
 							),
 							getDataToSend(googleAnalyticsDataType),
-							{ isInteractive: false }
+							{ isInteractive: false },
 						);
 						await assertExpectedResult(testInjector, opts);
 					});
@@ -496,7 +492,7 @@ describe("analyticsService", () => {
 							const { testInjector, opts } = setupTest(
 								getExpectedResult(googleAnalyticsDataType, analyticsClient),
 								getDataToSend(googleAnalyticsDataType),
-								{ isInteractive }
+								{ isInteractive },
 							);
 							const options = testInjector.resolve<IOptions>("options");
 							options.analyticsClient = analyticsClient;
@@ -504,7 +500,7 @@ describe("analyticsService", () => {
 							await assertExpectedResult(testInjector, opts);
 						});
 					});
-				}
+				},
 			);
 		});
 	});
