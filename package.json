@@ -29,15 +29,17 @@
   ],
   "scripts": {
     "clean": "npx rimraf node_modules package-lock.json && npm run setup",
-    "build": "grunt",
-    "build.all": "grunt test",
+    "clean.build": "node scripts/clean.js",
+    "build": "npm run tsc && node scripts/generate-test-deps.js",
+    "build.all": "npm test",
     "dev": "tsc --watch",
     "setup": "npm i --ignore-scripts && npx husky",
     "test": "npm run tsc && mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
-    "prepack": "grunt prepare",
-    "postpack": "grunt set_dev_ga_id",
+    "prepack": "npm run clean.build && node scripts/generate-test-deps.js && npm test && tsc -p tsconfig.release.json && node scripts/set-ga-id.js live && node scripts/set-ga-id.js verify",
+    "postpack": "node scripts/set-ga-id.js dev",
+    "docs-jekyll": "node scripts/build-docs.js",
     "mocha": "mocha",
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
@@ -144,13 +146,6 @@
     "chai-as-promised": "8.0.2",
     "conventional-changelog-cli": "^5.0.0",
     "fast-check": "3.23.2",
-    "grunt": "1.6.1",
-    "grunt-contrib-clean": "2.0.1",
-    "grunt-contrib-copy": "1.0.0",
-    "grunt-contrib-watch": "1.1.0",
-    "grunt-shell": "4.0.0",
-    "grunt-template": "1.0.0",
-    "grunt-ts": "6.0.0-beta.22",
     "husky": "9.1.7",
     "istanbul": "0.4.5",
     "lint-staged": "~15.5.2",
@@ -173,12 +168,6 @@
     },
     "npm-watch": {
       "nodemon": "3.0.3"
-    },
-    "grunt": {
-      "minimatch": "3.1.5"
-    },
-    "globule": {
-      "minimatch": "3.1.5"
     },
     "replace": {
       "minimatch": "3.1.5"
