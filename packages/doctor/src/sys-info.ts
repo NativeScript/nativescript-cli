@@ -425,12 +425,13 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					);
 					const xcodeProjectDir = path.join(tempDirectory, "cocoapods");
 
-					// If asdf version manager is installed, get the current Ruby version for the project directory and write it to the temporary project directory
+					// If asdf version manager is installed, get the current Ruby version for the project directory and write it to the temporary project directory.
+					// Resolve relative to the directory `ns doctor` was invoked from, since it can be run outside of a project directory.
 					const asdfResult = await this.childProcess.spawnFromEvent(
 						"asdf",
 						["current", "ruby"],
 						"exit",
-						{ ignoreError: true },
+						{ ignoreError: true, spawnOptions: { cwd: process.cwd() } },
 					);
 
 					if (asdfResult.exitCode === 0) {
@@ -446,7 +447,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 							);
 							const wroteASDFConfig = this.fileSystem.appendFile(
 								asdfConfigPath,
-								`ruby ${asdfVersion}`,
+								`ruby ${asdfVersion}\n`,
 							);
 							if (!wroteASDFConfig) {
 								console.warn(
