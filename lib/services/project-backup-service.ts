@@ -8,7 +8,7 @@ export class ProjectBackupService implements IProjectBackupService {
 	constructor(
 		protected $fs: IFileSystem,
 		protected $logger: ILogger,
-		protected $projectHelper: IProjectHelper
+		protected $projectHelper: IProjectHelper,
 	) {}
 
 	getBackup(backupName: string): IBackup {
@@ -25,12 +25,19 @@ export class ProjectBackupService implements IProjectBackupService {
 		return backup.restore();
 	}
 
-	static Backup = class Backup implements IBackup {
+	// annotated so declaration emit has a nameable type: an anonymous class
+	// expression with private members cannot be described in a .d.ts
+	static Backup: new (
+		$super: ProjectBackupService,
+		name: string,
+		pathsToBackup?: string[],
+		basePath?: string,
+	) => IBackup = class Backup implements IBackup {
 		constructor(
 			private $super: ProjectBackupService,
 			private name: string,
 			private pathsToBackup: string[] = [],
-			private basePath: string = $super.$projectHelper.projectDir
+			private basePath: string = $super.$projectHelper.projectDir,
 		) {}
 
 		get backupDir() {
@@ -49,7 +56,7 @@ export class ProjectBackupService implements IProjectBackupService {
 				const targetPath = path.resolve(this.backupDir, pathToBackup);
 				if (this.$super.$fs.exists(sourcePath)) {
 					this.$super.$logger.trace(
-						`BACKING UP ${color.cyan(sourcePath)} -> ${color.green(targetPath)}`
+						`BACKING UP ${color.cyan(sourcePath)} -> ${color.green(targetPath)}`,
 					);
 					this.$super.$fs.copyFile(sourcePath, targetPath);
 					backedUpPaths.push(pathToBackup);
@@ -76,7 +83,7 @@ export class ProjectBackupService implements IProjectBackupService {
 				const sourcePath = path.resolve(this.backupDir, pathToBackup);
 				const targetPath = path.resolve(this.basePath, pathToBackup);
 				this.$super.$logger.trace(
-					`RESTORING ${color.green(sourcePath)} -> ${color.cyan(targetPath)}`
+					`RESTORING ${color.green(sourcePath)} -> ${color.cyan(targetPath)}`,
 				);
 				if (this.$super.$fs.exists(sourcePath)) {
 					this.$super.$fs.copyFile(sourcePath, targetPath);
@@ -110,7 +117,7 @@ export class ProjectBackupService implements IProjectBackupService {
 		remove() {
 			if (!this.$super.$fs.exists(this.backupDir)) {
 				this.$super.$logger.trace(
-					`No backup named ${this.name} could be found.`
+					`No backup named ${this.name} could be found.`,
 				);
 				return;
 			}
@@ -135,7 +142,7 @@ export class ProjectBackupService implements IProjectBackupService {
 		private getBackupData(): { name: string; paths: string[] } {
 			if (!this.$super.$fs.exists(this.backupDir)) {
 				this.$super.$logger.trace(
-					`No backup named ${this.name} could be found.`
+					`No backup named ${this.name} could be found.`,
 				);
 				return;
 			}
@@ -143,7 +150,7 @@ export class ProjectBackupService implements IProjectBackupService {
 
 			if (!this.$super.$fs.exists(backupJSONPath)) {
 				this.$super.$logger.trace(
-					`The backup ${this.name} does not contain a _backup.json.`
+					`The backup ${this.name} does not contain a _backup.json.`,
 				);
 				return;
 			}

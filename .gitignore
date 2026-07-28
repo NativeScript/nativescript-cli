@@ -88,3 +88,5 @@ lib/common/test-reports.xml
 !lib/common/scripts/**
 config/test-deps-versions-generated.json
 !scripts/*.js
+# build output
+/dist

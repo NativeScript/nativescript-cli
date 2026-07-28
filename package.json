@@ -1,6 +1,6 @@
 {
   "name": "nativescript",
-  "main": "./lib/nativescript-cli-lib.js",
+  "main": "./dist/lib/nativescript-cli-lib.js",
   "version": "9.1.0-alpha.15",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
@@ -11,40 +11,27 @@
     "ns": "./bin/tns"
   },
   "files": [
-    "bin/*",
-    "config",
-    "docs",
-    "!docs/html",
-    "lib",
-    "!lib/**/*.ts",
-    "lib/**/*.d.ts",
-    "!lib/**/*.js.map",
-    "!lib/common/test",
-    "!lib/common/docs/fonts",
-    "resources",
-    "setup",
-    "vendor",
-    "postinstall.js",
-    "preuninstall.js"
+    "dist"
   ],
   "scripts": {
     "clean": "npx rimraf node_modules package-lock.json && npm run setup",
     "clean.build": "node scripts/clean.js",
-    "build": "npm run tsc && node scripts/generate-test-deps.js",
+    "build": "node scripts/clean.js --dist-only && npm run tsc && node scripts/generate-test-deps.js && node scripts/copy-assets.js",
     "build.all": "npm test",
     "dev": "tsc --watch",
     "setup": "npm i --ignore-scripts && npx husky",
-    "test": "npm run tsc && mocha --config=test/.mocharc.yml",
+    "test": "npm run build && mocha --config=test/.mocharc.yml",
     "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
-    "prepack": "npm run clean.build && node scripts/generate-test-deps.js && npm test && tsc -p tsconfig.release.json && node scripts/set-ga-id.js live && node scripts/set-ga-id.js verify",
-    "postpack": "node scripts/set-ga-id.js dev",
+    "prepack": "node scripts/guard-root-pack.js",
     "docs-jekyll": "node scripts/build-docs.js",
     "mocha": "mocha",
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-mocha-watch.js",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}"
+    "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}",
+    "build.release": "npm run clean.build && tsc -p tsconfig.release.json && node scripts/generate-test-deps.js && node scripts/copy-assets.js --release && node scripts/set-ga-id.js live --dir dist && node scripts/set-ga-id.js verify --dir dist",
+    "pack": "npm run build.release && npm pack ./dist"
   },
   "repository": {
     "type": "git",

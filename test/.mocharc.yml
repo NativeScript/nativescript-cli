@@ -39,13 +39,13 @@ inline-diffs: false
 recursive: true
 reporter: 'spec'
 require:
-  - 'test/test-bootstrap.js'
+  - 'dist/test/test-bootstrap.js'
 retries: 1
 slow: 500
 sort: false
 spec:
-    - 'test/**/*.js'
-    - 'lib/common/test/unit-tests/**/*.js'
+    - 'dist/test/**/*.js'
+    - 'dist/lib/common/test/unit-tests/**/*.js'
 timeout: 150000 # same as "no-timeout: true" or "timeout: 0"
 
 # node flags
@@ -55,7 +55,7 @@ ui: 'bdd'
 v8-stack-trace-limit: 100 # V8 flags are prepended with "v8-"
 watch: false
 watch-files:
-  - 'test/**/*.js'
-  - 'lib/common/test/unit-tests/**/*.js'
+  - 'dist/test/**/*.js'
+  - 'dist/lib/common/test/unit-tests/**/*.js'
 # watch-ignore:
 #   - 'lib/vendor'
