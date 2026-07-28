@@ -43,18 +43,20 @@ export class XcconfigService implements IXcconfigService {
 			this.$fs.writeFile(destinationFile, "");
 		}
 
-		const escapedDestinationFile = destinationFile.replace(/'/g, "\\'");
-		const escapedSourceFile = sourceFile.replace(/'/g, "\\'");
-
 		// A key already present in the destination wins, so the incoming one is
 		// dropped. Report the drops whose values actually differ: a silently
 		// discarded setting is otherwise indistinguishable from one that was
 		// never written, which makes a plugin pinning e.g.
 		// CLANG_CXX_LANGUAGE_STANDARD very hard to track down.
-		const mergeScript = `require 'xcodeproj';
-		require 'json';
-		userConfig = Xcodeproj::Config.new('${escapedDestinationFile}')
-		existingConfig = Xcodeproj::Config.new('${escapedSourceFile}')
+		//
+		// The paths are passed as argv rather than interpolated: they come from
+		// the project and node_modules layout, and a shell-interpolated command
+		// would execute anything a directory name expands to.
+		const mergeScript = `require 'xcodeproj'
+		require 'json'
+		destination, source = ARGV
+		userConfig = Xcodeproj::Config.new(destination)
+		existingConfig = Xcodeproj::Config.new(source)
 		conflicts = []
 		userConfig.attributes.each do |key, kept|
 			if existingConfig.attributes.key?(key)
@@ -63,9 +65,14 @@ export class XcconfigService implements IXcconfigService {
 				existingConfig.attributes.delete(key)
 			end
 		end
-		userConfig.merge(existingConfig).save_as(Pathname.new('${escapedDestinationFile}'))
+		userConfig.merge(existingConfig).save_as(Pathname.new(destination))
 		print '${XcconfigService.CONFLICT_MARKER}' + JSON.generate(conflicts)`;
-		const output = await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
+		const output = await this.$childProcess.execFile("ruby", [
+			"-e",
+			mergeScript,
+			destinationFile,
+			sourceFile,
+		]);
 		this.warnAboutConflicts(sourceFile, output);
 	}
 
@@ -94,7 +101,8 @@ export class XcconfigService implements IXcconfigService {
 			this.$logger.warn(
 				`Ignoring ${conflict.key} = ${conflict.ignored} from ${sourceFile}: ` +
 					`already set to ${conflict.kept} by a higher precedence xcconfig. ` +
-					`The app's App_Resources xcconfig wins over any plugin's.`,
+					`The app's App_Resources xcconfig is applied first, then each ` +
+					`plugin's in dependency order.`,
 			);
 		}
 	}
