@@ -229,7 +229,6 @@ describe("SysInfo unit tests", () => {
 	});
 
 	describe("Should execute correct commands to check for", () => {
-		let spawnFromEventCommand: string;
 		let execCommands: string[] = [];
 		let fileSystem: any;
 		let hostInfo: any;
@@ -237,12 +236,7 @@ describe("SysInfo unit tests", () => {
 		beforeEach(() => {
 			execCommands = [];
 			const childProcess: ChildProcess = {
-				spawnFromEvent: async (
-					command: string,
-					args: string[],
-					event: string,
-				) => {
-					spawnFromEventCommand = `${command} ${args.join(" ")}`;
+				spawnFromEvent: async () => {
 					return { stdout: "", stderr: "" };
 				},
 				exec: async (command: string) => {
@@ -971,7 +965,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 			const fileSystem: any = {
 				exists: () => true,
 				extractZip: () => Promise.resolve(),
-				readDirectory: () => [],
+				readDirectory: (): string[] => [],
 				appendFile: (filePath: string, text: string) => {
 					appendedFiles.push({ filePath, text });
 					return true;

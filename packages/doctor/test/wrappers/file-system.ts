@@ -1,6 +1,6 @@
 import { tmpdir } from "os";
 import { assert } from "chai";
-import { rimraf, rimrafSync } from "rimraf";
+import { rimrafSync } from "rimraf";
 
 import { FileSystem } from "../../src/wrappers/file-system";
 

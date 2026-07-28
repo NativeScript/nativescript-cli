@@ -19,7 +19,7 @@ const androidToolsInfo = new AndroidToolsInfo(
 	childProcess,
 	fileSystem,
 	hostInfo,
-	helpers
+	helpers,
 );
 
 const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(
@@ -28,25 +28,24 @@ const sysInfo: NativeScriptDoctor.ISysInfo = new SysInfo(
 	helpers,
 	hostInfo,
 	winReg,
-	androidToolsInfo
+	androidToolsInfo,
 );
 
 const androidLocalBuildRequirements = new AndroidLocalBuildRequirements(
 	androidToolsInfo,
-	sysInfo
+	sysInfo,
 );
 const iOSLocalBuildRequirements = new IosLocalBuildRequirements(
 	sysInfo,
-	hostInfo
+	hostInfo,
 );
 
 const doctor: NativeScriptDoctor.IDoctor = new Doctor(
 	androidLocalBuildRequirements,
-	helpers,
 	hostInfo,
 	iOSLocalBuildRequirements,
 	sysInfo,
-	androidToolsInfo
+	androidToolsInfo,
 );
 
 const setShouldCacheSysInfo = sysInfo.setShouldCacheSysInfo.bind(sysInfo);
