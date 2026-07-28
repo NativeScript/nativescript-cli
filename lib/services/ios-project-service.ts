@@ -1834,6 +1834,23 @@ export class IOSProjectService
 			this.$fs.deleteFile(pluginsXcconfigFilePath);
 		}
 
+		// mergeFiles keeps whichever value is already present, so the app's
+		// xcconfig is merged before any plugin's to make it authoritative: a
+		// plugin must not be able to dictate a setting the app has chosen.
+		const appResourcesXcconfigPath = path.join(
+			projectData.appResourcesDirectoryPath,
+			this.getPlatformData(projectData).normalizedPlatformName,
+			BUILD_XCCONFIG_FILE_NAME,
+		);
+		if (this.$fs.exists(appResourcesXcconfigPath)) {
+			for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+				await this.$xcconfigService.mergeFiles(
+					appResourcesXcconfigPath,
+					pluginsXcconfigFilePath,
+				);
+			}
+		}
+
 		const allPlugins: IPluginData[] = this.getAllProductionPlugins(projectData);
 		for (const plugin of allPlugins) {
 			const pluginPlatformsFolderPath = plugin.pluginPlatformsFolderPath(
@@ -1850,20 +1867,6 @@ export class IOSProjectService
 						pluginsXcconfigFilePath,
 					);
 				}
-			}
-		}
-
-		const appResourcesXcconfigPath = path.join(
-			projectData.appResourcesDirectoryPath,
-			this.getPlatformData(projectData).normalizedPlatformName,
-			BUILD_XCCONFIG_FILE_NAME,
-		);
-		if (this.$fs.exists(appResourcesXcconfigPath)) {
-			for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
-				await this.$xcconfigService.mergeFiles(
-					appResourcesXcconfigPath,
-					pluginsXcconfigFilePath,
-				);
 			}
 		}
 
