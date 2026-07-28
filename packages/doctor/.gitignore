@@ -17,9 +17,6 @@ coverage
 # nyc test coverage
 .nyc_output
 
-# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
-.grunt
-
 # node-waf configuration
 .lock-wscript
 
@@ -64,6 +61,8 @@ test-reports.xml
 
 *.js
 *.js.map
-/src/.d.ts
-.d.ts
 !/*.js
+!/scripts/*.js
+
+/dist/
+/dist-test/
