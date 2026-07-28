@@ -3,50 +3,238 @@ name: '@nativescript/doctor -> npm'
 on:
   push:
     branches: [ 'main' ]
+    tags:
+      - '@nativescript/doctor@*'
     paths:
       - 'packages/doctor/**'
   workflow_dispatch:
+    inputs:
+      release_type:
+        description: >-
+          Release to cut. Leave empty for a rolling "next" prerelease (no version
+          bump). "dev" publishes a -dev prerelease (no bump). A semver keyword
+          (patch/minor/major) or an explicit version (e.g. 2.1.0, 2.1.0-alpha.1)
+          bumps packages/doctor/package.json, commits + tags
+          @nativescript/doctor@<version>, then publishes a stable release. A
+          prerelease version publishes under the dist-tag matching its prerelease
+          id (alpha/beta/rc); a plain version publishes under "latest".
+        type: string
+        required: false
+        default: ''
 
-defaults:
-  run:
-    working-directory: packages/doctor
+permissions: read-all
 
 env:
   NPM_TAG: 'next'
 
-permissions:
-  contents: read
-
 jobs:
-  release:
+  build:
+    name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: packages/doctor
+    outputs:
+      npm_version: ${{ steps.npm_version_output.outputs.NPM_VERSION }}
+      npm_tag: ${{ steps.npm_version_output.outputs.NPM_TAG }}
+      is_release: ${{ steps.npm_version_output.outputs.IS_RELEASE }}
 
     steps:
-
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
         with:
           egress-policy: audit
 
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.14.0
+          registry-url: "https://registry.npmjs.org"
 
       - name: Setup
         run: npm install
 
-      - name: Generate Version
+      - name: Get Current Version
         run: |
-          echo NPM_VERSION=$(node -e "console.log(require('./package.json').version);")-$NPM_TAG-$(date +"%m-%d-%Y")-$GITHUB_RUN_ID >> $GITHUB_ENV
+          NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
 
-      - name: Bump Version
-        run: npm --no-git-tag-version version $NPM_VERSION
+      - name: Bump, commit and tag stable release (manual dispatch)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != '' && inputs.release_type != 'dev' }}
+        env:
+          # env indirection keeps the free-text dispatch input out of shell interpolation
+          RELEASE_INPUT: ${{ inputs.release_type }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # npm version accepts a semver keyword (patch/minor/major) or an explicit
+          # version; strip an optional leading "v" so v2.1.0 and 2.1.0 both work.
+          # The tag is written by hand: npm's own v<version> tag namespace belongs
+          # to the CLI package at the repo root.
+          npm version "${RELEASE_INPUT#v}" --no-git-tag-version
+          NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+          git add package.json package-lock.json
+          git commit -m "chore(doctor): release @nativescript/doctor@$NPM_VERSION"
+          git tag -a "@nativescript/doctor@$NPM_VERSION" -m "@nativescript/doctor@$NPM_VERSION"
+          git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
+
+      - name: Bump version for dev release
+        if: ${{ !contains(github.ref, 'refs/tags/') && (github.event_name != 'workflow_dispatch' || inputs.release_type == '' || inputs.release_type == 'dev') }}
+        env:
+          NPM_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type == 'dev' && 'dev' || 'next' }}
+          # the shared version scripts live at the repo root, whose dependencies
+          # are not installed here — semver resolves out of this package instead
+          NODE_PATH: ${{ github.workspace }}/packages/doctor/node_modules
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 --match='@nativescript/doctor@*' 2>/dev/null || true)
+          LAST_TAGGED_VERSION=${LAST_TAG##*@}
+          # before the first scoped tag exists, the published version in
+          # package.json is the only baseline to bump past
+          export LAST_TAGGED_VERSION=${LAST_TAGGED_VERSION:-$NPM_VERSION}
+          NPM_VERSION=$(node "$GITHUB_WORKSPACE/scripts/get-next-version.js")
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
+          npm version $NPM_VERSION --no-git-tag-version
+
+      - name: Output NPM Version and tag
+        id: npm_version_output
+        env:
+          # true only for a manual dispatch that cut a real (bumped) release — not
+          # the empty "next" build or the "dev" channel. Computed in the GitHub
+          # expression context so the free-text input never reaches the shell.
+          IS_DISPATCH_RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != '' && inputs.release_type != 'dev' }}
+          NODE_PATH: ${{ github.workspace }}/packages/doctor/node_modules
+        run: |
+          NPM_TAG=$(node "$GITHUB_WORKSPACE/scripts/get-npm-tag.js")
+          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "$IS_DISPATCH_RELEASE" == "true" ]]; then
+            IS_RELEASE=true
+          else
+            IS_RELEASE=false
+          fi
+          echo NPM_VERSION=$NPM_VERSION >> $GITHUB_OUTPUT
+          echo NPM_TAG=$NPM_TAG >> $GITHUB_OUTPUT
+          echo IS_RELEASE=$IS_RELEASE >> $GITHUB_OUTPUT
 
       - name: Build @nativescript/doctor
         run: npm pack
 
-      - name: Publish @nativescript/doctor
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+      - name: Upload npm package artifact
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: npm-package-doctor
+          path: packages/doctor/nativescript-doctor-${{steps.npm_version_output.outputs.NPM_VERSION}}.tgz
+
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm-publish
+    needs:
+      - build
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      NPM_VERSION: ${{needs.build.outputs.npm_version}}
+      NPM_TAG: ${{needs.build.outputs.npm_tag}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.14.0
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-package-doctor
+          path: dist
+
+      - name: Update npm (required for OIDC trusted publishing)
         run: |
-          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
-          echo "Publishing @nativescript/doctor@$NPM_VERSION to NPM with tag $NPM_TAG..."
-          npm publish nativescript-doctor-$NPM_VERSION.tgz --tag $NPM_TAG
+          npm install -g npm@^11.5.1
+          npm --version
+
+      - name: Publish package (OIDC trusted publishing)
+        if: ${{ vars.USE_NPM_TOKEN != 'true' }}
+        run: |
+          echo "Publishing @nativescript/doctor@$NPM_VERSION to NPM with tag $NPM_TAG via OIDC trusted publishing..."
+          unset NODE_AUTH_TOKEN
+          if [ -n "${NPM_CONFIG_USERCONFIG:-}" ]; then
+            rm -f "$NPM_CONFIG_USERCONFIG"
+          fi
+          npm publish ./dist/nativescript-doctor-${{env.NPM_VERSION}}.tgz --tag $NPM_TAG --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ""
+
+      - name: Publish package (granular token)
+        if: ${{ vars.USE_NPM_TOKEN == 'true' }}
+        run: |
+          echo "Publishing @nativescript/doctor@$NPM_VERSION to NPM with tag $NPM_TAG via granular token..."
+          npm publish ./dist/nativescript-doctor-${{env.NPM_VERSION}}.tgz --tag $NPM_TAG --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+
+  github-release:
+    runs-on: ubuntu-latest
+    # runs for tag pushes and for manual dispatches that bumped a stable release
+    if: ${{ needs.build.outputs.is_release == 'true' }}
+    permissions:
+      contents: write
+    needs:
+      - build
+    env:
+      NPM_VERSION: ${{needs.build.outputs.npm_version}}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@9af89fc71515a100421586dfdb3dc9c984fbf411 # v2.19.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          ref: 'refs/tags/@nativescript/doctor@${{needs.build.outputs.npm_version}}'
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+        with:
+          node-version: 22.14.0
+
+      - name: Setup
+        working-directory: packages/doctor
+        run: npm i --ignore-scripts --no-package-lock
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: npm-package-doctor
+          path: dist
+
+      - name: Generate provenance statement
+        run: |
+          TGZ_PATH=$(ls dist/nativescript-doctor-*.tgz | head -n1)
+          TGZ_NAME=$(basename "$TGZ_PATH")
+          TGZ_SHA=$(sha256sum "$TGZ_PATH" | awk '{ print $1 }')
+          PROV_PATH="dist/${TGZ_NAME%.tgz}.intoto.jsonl"
+
+          cat > "$PROV_PATH" <<EOF
+          {"_type":"https://in-toto.io/Statement/v1","subject":[{"name":"$TGZ_NAME","digest":{"sha256":"$TGZ_SHA"}}],"predicateType":"https://slsa.dev/provenance/v1"}
+          EOF
+
+      - name: Partial Changelog
+        working-directory: packages/doctor
+        run: npx conventional-changelog -p angular -r2 --commit-path . --tag-prefix '@nativescript/doctor@' > "$GITHUB_WORKSPACE/body.md"
+
+      - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
+        with:
+          tag: '@nativescript/doctor@${{needs.build.outputs.npm_version}}'
+          artifacts: "dist/nativescript-doctor-*.tgz,dist/nativescript-doctor-*.intoto.jsonl"
+          bodyFile: "body.md"
+          prerelease: ${{needs.build.outputs.npm_tag != 'latest'}}
+          allowUpdates: true
