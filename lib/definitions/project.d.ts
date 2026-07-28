@@ -1,4 +1,4 @@
-import type { SupportedPlatform } from "../constants";
+import type { BuildNames, SupportedPlatform } from "../constants";
 import {
 	IAndroidBuildOptionsSettings,
 	IProvision,
@@ -808,11 +808,6 @@ interface ICocoaPodsPlatformManager {
 		podfileContent: string,
 		podfilePath: string,
 	): { replacedContent: string; podfilePlatformData: IPodfilePlatformData };
-}
-
-declare const enum BuildNames {
-	debug = "Debug",
-	release = "Release",
 }
 
 interface IXcodeTargetBuildConfigurationProperty {

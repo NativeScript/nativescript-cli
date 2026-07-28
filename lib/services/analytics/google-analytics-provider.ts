@@ -6,9 +6,9 @@ import { IStaticConfig, IConfiguration } from "../../declarations";
 import {
 	IAnalyticsSettingsService,
 	IProxyService,
-	GoogleAnalyticsDataType,
 	IStringDictionary,
 } from "../../common/declarations";
+import { GoogleAnalyticsDataType } from "../../common/enums";
 import { IGoogleAnalyticsProvider } from "./analytics";
 import {
 	IGoogleAnalyticsData,
@@ -17,6 +17,8 @@ import {
 } from "../../common/definitions/google-analytics";
 import * as _ from "lodash";
 import { injector } from "../../common/yok";
+import { FileLogMessageType } from "../../detached-processes/detached-process-enums";
+import { GoogleAnalyticsCustomDimensions } from "../../common/services/analytics/google-analytics-custom-dimensions";
 
 export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private currentPage: string;
@@ -28,7 +30,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		private $logger: ILogger,
 		private $proxyService: IProxyService,
 		private $config: IConfiguration,
-		private analyticsLoggingService: IFileLogService
+		private analyticsLoggingService: IFileLogService,
 	) {}
 
 	public async trackHit(trackInfo: IGoogleAnalyticsData): Promise<void> {
@@ -40,7 +42,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 			this.analyticsLoggingService.logData({
 				type: FileLogMessageType.Error,
 				message: `Unable to track information ${JSON.stringify(
-					trackInfo
+					trackInfo,
 				)}. Error is: ${e}`,
 			});
 			this.$logger.trace("Analytics exception: ", e);
@@ -57,7 +59,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 			cid: this.clientId,
 			headers: {
 				["User-Agent"]: this.$analyticsSettingsService.getUserAgentString(
-					`tnsCli/${this.$staticConfig.version}`
+					`tnsCli/${this.$staticConfig.version}`,
 				),
 			},
 			requestOptions: {
@@ -75,7 +77,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private async track(
 		gaTrackingId: string,
 		trackInfo: IGoogleAnalyticsData,
-		sessionId: string
+		sessionId: string,
 	): Promise<void> {
 		const proxySettings = await this.$proxyService.getCache();
 		const proxy = proxySettings && proxySettings.proxy;
@@ -85,14 +87,14 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 		await this.setCustomDimensions(
 			visitor,
 			trackInfo.customDimensions,
-			sessionId
+			sessionId,
 		);
 
 		switch (trackInfo.googleAnalyticsDataType) {
 			case GoogleAnalyticsDataType.Page:
 				await this.trackPageView(
 					visitor,
-					<IGoogleAnalyticsPageviewData>trackInfo
+					<IGoogleAnalyticsPageviewData>trackInfo,
 				);
 				break;
 			case GoogleAnalyticsDataType.Event:
@@ -104,7 +106,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 	private async setCustomDimensions(
 		visitor: ua.Visitor,
 		customDimensions: IStringDictionary,
-		sessionId: string
+		sessionId: string,
 	): Promise<void> {
 		const defaultValues: IStringDictionary = {
 			[GoogleAnalyticsCustomDimensions.cliVersion]: this.$staticConfig.version,
@@ -128,7 +130,7 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 
 	private trackEvent(
 		visitor: ua.Visitor,
-		trackInfo: IGoogleAnalyticsEventData
+		trackInfo: IGoogleAnalyticsEventData,
 	): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			visitor.event(
@@ -154,14 +156,14 @@ export class GoogleAnalyticsProvider implements IGoogleAnalyticsProvider {
 						message: `Tracked event with category: '${trackInfo.category}', action: '${trackInfo.action}', label: '${trackInfo.label}', value: '${trackInfo.value}' attached page: ${this.currentPage}.`,
 					});
 					resolve();
-				}
+				},
 			);
 		});
 	}
 
 	private trackPageView(
 		visitor: ua.Visitor,
-		trackInfo: IGoogleAnalyticsPageviewData
+		trackInfo: IGoogleAnalyticsPageviewData,
 	): Promise<void> {
 		return new Promise<void>((resolve, reject) => {
 			this.currentPage = trackInfo.path;

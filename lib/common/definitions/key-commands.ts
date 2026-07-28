@@ -29,7 +29,7 @@ export type IKeysLowerCase =
 
 export type IKeysUpperCase = Uppercase<IKeysLowerCase>;
 
-export const enum SpecialKeys {
+export enum SpecialKeys {
 	CtrlC = "\u0003",
 	QuestionMark = "?",
 }
@@ -41,11 +41,11 @@ export type IValidKeyName = IKeysLowerCase | IKeysUpperCase | IKeysSpecial;
 export interface IKeyCommandHelper {
 	attachKeyCommands: (
 		platform: IKeyCommandPlatform,
-		processType: SupportedProcessType
+		processType: SupportedProcessType,
 	) => void;
 
-	addOverride(key: IValidKeyName, execute: () => Promise<boolean>);
-	removeOverride(key: IValidKeyName);
+	addOverride(key: IValidKeyName, execute: () => Promise<boolean>): void;
+	removeOverride(key: IValidKeyName): void;
 	printCommands(platform: IKeyCommandPlatform): void;
 }
 

@@ -10,12 +10,14 @@ import { IPlatformValidationService, IOptions } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { OptionType, IErrors } from "../common/declarations";
+import { IErrors } from "../common/declarations";
+import { OptionType } from "../common/enums";
 import { injector } from "../common/yok";
 
 export class DeployOnDeviceCommand
 	extends ValidatePlatformCommandBase
-	implements ICommand {
+	implements ICommand
+{
 	public allowedParameters: ICommandParameter[] = [];
 
 	public dashedOptions = {
@@ -36,13 +38,13 @@ export class DeployOnDeviceCommand
 		private $mobileHelper: Mobile.IMobileHelper,
 		$platformsDataService: IPlatformsDataService,
 		private $deployCommandHelper: DeployCommandHelper,
-		private $migrateController: IMigrateController
+		private $migrateController: IMigrateController,
 	) {
 		super(
 			$options,
 			$platformsDataService,
 			$platformValidationService,
-			$projectData
+			$projectData,
 		);
 		this.$projectData.initializeProjectData();
 	}

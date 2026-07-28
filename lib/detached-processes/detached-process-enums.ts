@@ -1,7 +1,7 @@
 /**
  * Defines messages used in communication between CLI's process and analytics subprocesses.
  */
-declare const enum DetachedProcessMessages {
+export enum DetachedProcessMessages {
 	/**
 	 * The detached process is initialized and is ready to receive information for tracking.
 	 */
@@ -16,7 +16,7 @@ declare const enum DetachedProcessMessages {
 /**
  * Defines the type of the messages that should be written in the local analyitcs log file (in case such is specified).
  */
-declare const enum FileLogMessageType {
+export enum FileLogMessageType {
 	/**
 	 * Information message. This is the default value in case type is not specified.
 	 */
@@ -28,7 +28,7 @@ declare const enum FileLogMessageType {
 	Error = "Error",
 }
 
-declare const enum CleanupProcessMessage {
+export enum CleanupProcessMessage {
 	/**
 	 * This type of message defines that cleanup procedure should execute specific command.
 	 */
