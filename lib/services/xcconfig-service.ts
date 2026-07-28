@@ -15,17 +15,15 @@ export class XcconfigService implements IXcconfigService {
 	constructor(
 		private $childProcess: IChildProcess,
 		private $fs: IFileSystem,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary {
 		return {
-			[Configurations.Debug.toLowerCase()]: this.getPluginsDebugXcconfigFilePath(
-				projectRoot
-			),
-			[Configurations.Release.toLowerCase()]: this.getPluginsReleaseXcconfigFilePath(
-				projectRoot
-			),
+			[Configurations.Debug.toLowerCase()]:
+				this.getPluginsDebugXcconfigFilePath(projectRoot),
+			[Configurations.Release.toLowerCase()]:
+				this.getPluginsReleaseXcconfigFilePath(projectRoot),
 		};
 	}
 
@@ -39,7 +37,7 @@ export class XcconfigService implements IXcconfigService {
 
 	public async mergeFiles(
 		sourceFile: string,
-		destinationFile: string
+		destinationFile: string,
 	): Promise<void> {
 		if (!this.$fs.exists(destinationFile)) {
 			this.$fs.writeFile(destinationFile, "");
@@ -72,7 +70,8 @@ export class XcconfigService implements IXcconfigService {
 	}
 
 	private warnAboutConflicts(sourceFile: string, output: any): void {
-		const text: string = output === null || output === undefined ? "" : `${output}`;
+		const text: string =
+			output === null || output === undefined ? "" : `${output}`;
 		const markerIndex = text.lastIndexOf(XcconfigService.CONFLICT_MARKER);
 		if (markerIndex === -1) {
 			return;
@@ -81,12 +80,12 @@ export class XcconfigService implements IXcconfigService {
 		let conflicts: { key: string; kept: string; ignored: string }[];
 		try {
 			conflicts = JSON.parse(
-				text.substring(markerIndex + XcconfigService.CONFLICT_MARKER.length)
+				text.substring(markerIndex + XcconfigService.CONFLICT_MARKER.length),
 			);
 		} catch (err) {
 			// Never let a reporting problem fail the merge itself.
 			this.$logger.trace(
-				`Unable to read xcconfig conflicts for ${sourceFile}: ${err}`
+				`Unable to read xcconfig conflicts for ${sourceFile}: ${err}`,
 			);
 			return;
 		}
@@ -95,14 +94,14 @@ export class XcconfigService implements IXcconfigService {
 			this.$logger.warn(
 				`Ignoring ${conflict.key} = ${conflict.ignored} from ${sourceFile}: ` +
 					`already set to ${conflict.kept} by a higher precedence xcconfig. ` +
-					`The app's App_Resources xcconfig wins over any plugin's.`
+					`The app's App_Resources xcconfig wins over any plugin's.`,
 			);
 		}
 	}
 
 	public readPropertyValue(
 		xcconfigFilePath: string,
-		propertyName: string
+		propertyName: string,
 	): string {
 		if (this.$fs.exists(xcconfigFilePath)) {
 			const text = this.$fs.readText(xcconfigFilePath);
