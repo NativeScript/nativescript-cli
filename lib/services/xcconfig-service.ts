@@ -10,7 +10,13 @@ import * as _ from "lodash";
 import { injector } from "../common/yok";
 
 export class XcconfigService implements IXcconfigService {
-	constructor(private $childProcess: IChildProcess, private $fs: IFileSystem) {}
+	private static readonly CONFLICT_MARKER = "NS_XCCONFIG_CONFLICTS:";
+
+	constructor(
+		private $childProcess: IChildProcess,
+		private $fs: IFileSystem,
+		private $logger: ILogger
+	) {}
 
 	public getPluginsXcconfigFilePaths(projectRoot: string): IStringDictionary {
 		return {
@@ -42,14 +48,56 @@ export class XcconfigService implements IXcconfigService {
 		const escapedDestinationFile = destinationFile.replace(/'/g, "\\'");
 		const escapedSourceFile = sourceFile.replace(/'/g, "\\'");
 
+		// A key already present in the destination wins, so the incoming one is
+		// dropped. Report the drops whose values actually differ: a silently
+		// discarded setting is otherwise indistinguishable from one that was
+		// never written, which makes a plugin pinning e.g.
+		// CLANG_CXX_LANGUAGE_STANDARD very hard to track down.
 		const mergeScript = `require 'xcodeproj';
+		require 'json';
 		userConfig = Xcodeproj::Config.new('${escapedDestinationFile}')
 		existingConfig = Xcodeproj::Config.new('${escapedSourceFile}')
-		userConfig.attributes.each do |key,|
-  			existingConfig.attributes.delete(key) if (userConfig.attributes.key?(key) && existingConfig.attributes.key?(key))
+		conflicts = []
+		userConfig.attributes.each do |key, kept|
+			if existingConfig.attributes.key?(key)
+				ignored = existingConfig.attributes[key]
+				conflicts << { 'key' => key, 'kept' => kept.to_s, 'ignored' => ignored.to_s } if ignored.to_s != kept.to_s
+				existingConfig.attributes.delete(key)
+			end
 		end
-		userConfig.merge(existingConfig).save_as(Pathname.new('${escapedDestinationFile}'))`;
-		await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
+		userConfig.merge(existingConfig).save_as(Pathname.new('${escapedDestinationFile}'))
+		print '${XcconfigService.CONFLICT_MARKER}' + JSON.generate(conflicts)`;
+		const output = await this.$childProcess.exec(`ruby -e "${mergeScript}"`);
+		this.warnAboutConflicts(sourceFile, output);
+	}
+
+	private warnAboutConflicts(sourceFile: string, output: any): void {
+		const text: string = output === null || output === undefined ? "" : `${output}`;
+		const markerIndex = text.lastIndexOf(XcconfigService.CONFLICT_MARKER);
+		if (markerIndex === -1) {
+			return;
+		}
+
+		let conflicts: { key: string; kept: string; ignored: string }[];
+		try {
+			conflicts = JSON.parse(
+				text.substring(markerIndex + XcconfigService.CONFLICT_MARKER.length)
+			);
+		} catch (err) {
+			// Never let a reporting problem fail the merge itself.
+			this.$logger.trace(
+				`Unable to read xcconfig conflicts for ${sourceFile}: ${err}`
+			);
+			return;
+		}
+
+		for (const conflict of conflicts || []) {
+			this.$logger.warn(
+				`Ignoring ${conflict.key} = ${conflict.ignored} from ${sourceFile}: ` +
+					`already set to ${conflict.kept} by a higher precedence xcconfig. ` +
+					`The app's App_Resources xcconfig wins over any plugin's.`
+			);
+		}
 	}
 
 	public readPropertyValue(

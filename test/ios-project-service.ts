@@ -1201,6 +1201,45 @@ describe("Merge Project XCConfig files", () => {
 		}
 	});
 
+	it("The app's build.xcconfig wins over a plugin's", async () => {
+		fs.writeFile(
+			appResourcesXcconfigPath,
+			`CLANG_CXX_LANGUAGE_STANDARD = c++20${EOL}`,
+		);
+
+		const pluginPlatformsFolderPath = join(projectPath, "somePlugin", "ios");
+		fs.writeFile(
+			join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME),
+			`CLANG_CXX_LANGUAGE_STANDARD = c++17${EOL}GCC_C_LANGUAGE_STANDARD = gnu17${EOL}`,
+		);
+
+		const pluginsService = testInjector.resolve("pluginsService");
+		pluginsService.getAllProductionPlugins = () => [
+			{
+				name: "somePlugin",
+				pluginPlatformsFolderPath: () => pluginPlatformsFolderPath,
+			},
+		];
+
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
+
+		_.each(
+			xcconfigService.getPluginsXcconfigFilePaths(projectRoot),
+			(destinationFilePath) => {
+				assertPropertyValues(
+					{
+						// The app pinned this, so the plugin's c++17 must not win.
+						CLANG_CXX_LANGUAGE_STANDARD: "c++20",
+						// Keys the app says nothing about still come from the plugin.
+						GCC_C_LANGUAGE_STANDARD: "gnu17",
+					},
+					destinationFilePath,
+					testInjector,
+				);
+			},
+		);
+	});
+
 	it("Adds the entitlements property if not set by the user", async () => {
 		for (const release in [true, false]) {
 			const realExistsFunction = testInjector.resolve("fs").exists;
