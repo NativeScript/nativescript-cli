@@ -4,8 +4,8 @@ import {
 	IIOSNativeTargetService,
 	IProjectData,
 	IXcodeTargetBuildConfigurationProperty,
-	BuildNames,
 } from "../definitions/project";
+import { BuildNames } from "../constants";
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
@@ -14,7 +14,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 	constructor(
 		protected $fs: IFileSystem,
 		protected $pbxprojDomXcode: IPbxprojDomXcode,
-		protected $logger: ILogger
+		protected $logger: ILogger,
 	) {}
 
 	public addTargetToProject(
@@ -23,12 +23,12 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 		targetType: string,
 		project: IXcode.project,
 		platformData: IPlatformData,
-		parentTarget?: string
+		parentTarget?: string,
 	): IXcode.target {
 		const targetPath = path.join(targetRootPath, targetFolder);
 		const targetRelativePath = path.relative(
 			platformData.projectRoot,
-			targetPath
+			targetPath,
 		);
 		const files = this.$fs
 			.readDirectory(targetPath)
@@ -38,20 +38,20 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 			targetFolder,
 			targetType,
 			targetRelativePath,
-			parentTarget
+			parentTarget,
 		);
 		project.addBuildPhase([], "PBXSourcesBuildPhase", "Sources", target.uuid);
 		project.addBuildPhase(
 			[],
 			"PBXResourcesBuildPhase",
 			"Resources",
-			target.uuid
+			target.uuid,
 		);
 		project.addBuildPhase(
 			[],
 			"PBXFrameworksBuildPhase",
 			"Frameworks",
-			target.uuid
+			target.uuid,
 		);
 
 		project.addPbxGroup(files, targetFolder, targetPath, null, {
@@ -61,7 +61,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 		});
 		project.addToHeaderSearchPaths(
 			targetPath,
-			target.pbxNativeTarget.productName
+			target.pbxNativeTarget.productName,
 		);
 		return target;
 	}
@@ -69,7 +69,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 	public prepareSigning(
 		targetUuids: string[],
 		projectData: IProjectData,
-		projectPath: string
+		projectPath: string,
 	): void {
 		const xcode = this.$pbxprojDomXcode.Xcode.open(projectPath);
 		const signing = xcode.getSigning(projectData.projectName);
@@ -82,7 +82,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 						const signingConfiguration = signing.configurations[config];
 						xcode.setManualSigningStyleByTargetKey(
 							targetUuid,
-							signingConfiguration
+							signingConfiguration,
 						);
 						break;
 					}
@@ -104,7 +104,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 	public setXcodeTargetBuildConfigurationProperties(
 		properties: IXcodeTargetBuildConfigurationProperty[],
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): void {
 		properties.forEach((property) => {
 			const buildNames = property.buildNames || [
@@ -116,7 +116,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 					property.name,
 					property.value,
 					buildName,
-					targetName
+					targetName,
 				);
 			});
 		});
@@ -126,7 +126,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 		jsonPath: string,
 		targetUuid: string,
 		targetName: string,
-		project: IXcode.project
+		project: IXcode.project,
 	): void {
 		if (this.$fs.exists(jsonPath)) {
 			const configurationJson = this.$fs.readJson(jsonPath) || {};
@@ -139,7 +139,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 				project.addToBuildSettings(
 					"ASSETCATALOG_COMPILER_APPICON_NAME",
 					configurationJson.assetcatalogCompilerAppiconName,
-					targetUuid
+					targetUuid,
 				);
 			}
 			const properties: IXcodeTargetBuildConfigurationProperty[] = [];
@@ -148,7 +148,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 			if (configurationJson.targetBuildConfigurationProperties) {
 				_.forEach(
 					configurationJson.targetBuildConfigurationProperties,
-					(value, name: string) => properties.push({ value, name })
+					(value, name: string) => properties.push({ value, name }),
 				);
 			}
 
@@ -169,23 +169,23 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 							default: {
 								this.$logger.warn(
 									"Ignoring targetNamedBuildConfigurationProperties: %s. Only 'release', 'debug' are allowed.",
-									name
+									name,
 								);
 							}
 						}
 						if (buildName) {
 							_.forEach(value, (value, name: string) =>
-								properties.push({ value, name, buildNames: [buildName] })
+								properties.push({ value, name, buildNames: [buildName] }),
 							);
 						}
-					}
+					},
 				);
 			}
 
 			this.setXcodeTargetBuildConfigurationProperties(
 				properties,
 				targetName,
-				project
+				project,
 			);
 		}
 	}

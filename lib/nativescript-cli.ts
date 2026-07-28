@@ -35,7 +35,8 @@ if (process.platform === "win32") {
 import { installUncaughtExceptionListener } from "./common/errors";
 import { settlePromises } from "./common/helpers";
 import { injector } from "./common/yok";
-import { ErrorCodes, IErrors, ICommandDispatcher } from "./common/declarations";
+import { IErrors, ICommandDispatcher } from "./common/declarations";
+import { ErrorCodes } from "./common/enums";
 import {
 	IExtensibilityService,
 	IExtensionData,

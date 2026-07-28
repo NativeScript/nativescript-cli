@@ -6,9 +6,9 @@ import { IOptions } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import {
 	IConfigurationSettings,
-	OptionType,
 	ISettingsService,
 } from "../lib/common/declarations";
+import { OptionType } from "../lib/common/enums";
 import * as _ from "lodash";
 
 let isExecutionStopped = false;
@@ -241,12 +241,11 @@ describe("options", () => {
 				const expectedProfileDir = "TestDir";
 				process.argv.push("--profile-dir");
 				process.argv.push(expectedProfileDir);
-				const settingsService = testInjector.resolve<ISettingsService>(
-					"settingsService"
-				);
+				const settingsService =
+					testInjector.resolve<ISettingsService>("settingsService");
 				let valuePassedToSetSettings: string;
 				settingsService.setSettings = (
-					settings: IConfigurationSettings
+					settings: IConfigurationSettings,
 				): any => {
 					valuePassedToSetSettings = settings.profileDir;
 				};
@@ -274,7 +273,7 @@ describe("options", () => {
 				assert.isFalse(
 					isExecutionStopped,
 					"Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
-						"Dashed options (profile-dir) are added to yargs.argv in two ways: profile-dir and profileDir"
+						"Dashed options (profile-dir) are added to yargs.argv in two ways: profile-dir and profileDir",
 				);
 			});
 
@@ -288,7 +287,7 @@ describe("options", () => {
 				assert.isFalse(
 					isExecutionStopped,
 					"Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
-						"Dashed options (some-dashed-value) are added to yargs.argv in two ways: some-dashed-value and someDashedValue"
+						"Dashed options (some-dashed-value) are added to yargs.argv in two ways: some-dashed-value and someDashedValue",
 				);
 			});
 
@@ -305,7 +304,7 @@ describe("options", () => {
 				assert.isFalse(
 					isExecutionStopped,
 					"Dashed options should be validated in specific way. Make sure validation allows yargs specific behavior:" +
-						"Dashed options (special-dashed-v) are added to yargs.argv in two ways: special-dashed-v and specialDashedV"
+						"Dashed options (special-dashed-v) are added to yargs.argv in two ways: special-dashed-v and specialDashedV",
 				);
 			});
 		});
@@ -350,8 +349,7 @@ describe("options", () => {
 					expectedHmrValue: false,
 				},
 				{
-					name:
-						"should set hmr to false when provided through dashed options from command",
+					name: "should set hmr to false when provided through dashed options from command",
 					commandSpecificDashedOptions: {
 						hmr: {
 							type: OptionType.Boolean,
@@ -362,14 +360,12 @@ describe("options", () => {
 					expectedHmrValue: false,
 				},
 				{
-					name:
-						"should set hmr to false by default when --release option is provided",
+					name: "should set hmr to false by default when --release option is provided",
 					args: ["--release"],
 					expectedHmrValue: false,
 				},
 				{
-					name:
-						"should set hmr to false by default when --debug-brk option is provided",
+					name: "should set hmr to false by default when --debug-brk option is provided",
 					args: ["--debugBrk"],
 					expectedHmrValue: false,
 				},

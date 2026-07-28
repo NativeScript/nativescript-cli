@@ -506,3 +506,8 @@ export enum PackageManagers {
 	yarn2 = "yarn2",
 	bun = "bun",
 }
+
+export enum BuildNames {
+	debug = "Debug",
+	release = "Release",
+}
