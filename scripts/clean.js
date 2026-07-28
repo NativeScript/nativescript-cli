@@ -4,9 +4,19 @@ const path = require("path");
 
 const rootDir = path.join(__dirname, "..");
 
-// .gitignore is the source of truth for which files under lib/ and test/ are
-// compiler output: its negations already protect the vendored, hook and fixture
-// .js files that must survive a clean.
+fs.rmSync(path.join(rootDir, "dist"), { recursive: true, force: true });
+
+// tsc never removes output whose source is gone, so every build starts from an
+// empty dist - otherwise a deleted file keeps being compiled-in and tested
+// against, which is the failure this whole layout exists to prevent.
+if (process.argv.includes("--dist-only")) {
+  process.exit(0);
+}
+
+// Builds used to emit next to each source file, so a tree that predates dist/
+// still has hundreds of stale .js lying around. .gitignore is the source of
+// truth for which of those are compiler output - its negations protect the
+// vendored, hook and fixture .js that must survive.
 const result = child_process.spawnSync("git", ["clean", "-Xdf", "lib", "test"], {
   cwd: rootDir,
   stdio: "inherit",
