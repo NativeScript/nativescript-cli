@@ -58,10 +58,10 @@
     "vitest": "^4.1.10"
   },
   "dependencies": {
-    "lodash": "4.17.21",
+    "lodash": "^4.18.1",
     "semver": "7.7.3",
     "shelljs": "0.10.0",
     "winreg": "1.2.5",
-    "yauzl": "3.2.0"
+    "yauzl": "^3.4.0"
   }
 }
