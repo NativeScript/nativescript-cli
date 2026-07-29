@@ -105,7 +105,7 @@ jobs:
           echo IS_RELEASE=$IS_RELEASE >> $GITHUB_OUTPUT
 
       - name: Build nativescript
-        run: npm run pack
+        run: npm run pack.release
 
       - name: Upload npm package artifact
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
