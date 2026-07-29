@@ -2,7 +2,14 @@
 
 "use strict";
 var path = require("path"),
-	pathToLib = path.join(__dirname, "..", "lib"),
+	fs = require("fs"),
+	// In the published package dist/ is the root, so lib/ already sits next to
+	// bin/. In a source checkout lib/ holds only TypeScript and the compiled
+	// output lives under dist/.
+	distLib = path.join(__dirname, "..", "dist", "lib"),
+	pathToLib = fs.existsSync(distLib)
+		? distLib
+		: path.join(__dirname, "..", "lib"),
 	pathToCommon = path.join(pathToLib, "common");
 
 require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion();
