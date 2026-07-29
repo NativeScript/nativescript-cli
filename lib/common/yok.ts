@@ -1,33 +1,21 @@
 import * as path from "path";
 import * as _ from "lodash";
-import { annotate, isPromise } from "./helpers";
+import { isPromise } from "./helpers";
+import { reportDeprecation } from "./deprecation";
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "./constants";
 import { CommandsDelimiters } from "./constants";
 import { IDictionary } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { ICommandArgument, ICommand } from "./definitions/commands";
 import { IKeyCommand, IValidKeyName } from "./definitions/key-commands";
+import { Injector } from "./di/injector";
 
+/**
+ * The legacy global facade binding. New code should obtain the container via
+ * inject(Injector) inside an injection context rather than importing this;
+ * every legacy member on it is individually marked @deprecated.
+ */
 export let injector: IInjector;
-
-let indent = "";
-function trace(formatStr: string, ...args: any[]) {
-	// uncomment following lines when debugging dependency injection
-	// const items: any[] = [];
-	// for (let _i = 1; _i < arguments.length; _i++) {
-	// 	items[_i - 1] = arguments[_i];
-	// }
-	// const util = require("util");
-	// console.log(util.format.apply(util, [indent + formatStr].concat(args)));
-}
-
-function pushIndent() {
-	indent += "  ";
-}
-
-function popIndent() {
-	indent = indent.slice(0, -2);
-}
 
 function forEachName(names: any, action: (name: string) => void): void {
 	if (_.isString(names)) {
@@ -37,6 +25,9 @@ function forEachName(names: any, action: (name: string) => void): void {
 	}
 }
 
+/**
+ * @deprecated Yok-era class decorator with zero call sites; do not adopt.
+ */
 export function register(...rest: any[]) {
 	return function (target: any): void {
 		// TODO: Check if 'rest' has more arguments that have to be registered
@@ -44,6 +35,10 @@ export function register(...rest: any[]) {
 	};
 }
 
+/**
+ * @deprecated Shape of Yok's old internal records; the container now keeps
+ * provider records in lib/common/di.
+ */
 export interface IDependency {
 	require?: string;
 	resolver?: () => any;
@@ -51,8 +46,21 @@ export interface IDependency {
 	shared?: boolean;
 }
 
+/**
+ * The Yok facade: the externally reachable injector surface (every IInjector
+ * member, the global $injector, subclassability) kept intact while storage and
+ * resolution live in the token-based `Injector` (lib/common/di). Command
+ * routing, the key-command namespace, and the public-API builder still live
+ * here — they are separate subsystems that only share the container.
+ */
 export class Yok implements IInjector {
+	/**
+	 * @deprecated Escape hatch of the legacy require-time module map.
+	 */
 	public overrideAlreadyRequiredModule: boolean = false;
+
+	/** The token-based container backing this facade. */
+	private container = new Injector();
 
 	constructor() {
 		this.register("injector", this);
@@ -60,13 +68,17 @@ export class Yok implements IInjector {
 
 	private COMMANDS_NAMESPACE: string = "commands";
 	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
-	private modules: {
-		[name: string]: IDependency;
-	} = {};
-
-	private resolutionProgress: any = {};
 	private hierarchicalCommands: IDictionary<string[]> = {};
 
+	/** New-style access to the backing container, for token-based registration. */
+	public get di(): Injector {
+		return this.container;
+	}
+
+	/**
+	 * @deprecated Path-based command registration; slated for replacement by
+	 * manifest-declared commands.
+	 */
 	public requireCommand(names: any, file: string): void {
 		forEachName(names, (commandName) => {
 			const commands = commandName.split(
@@ -76,7 +88,7 @@ export class Yok implements IInjector {
 			if (commands.length > 1) {
 				if (
 					_.startsWith(commands[1], "*") &&
-					this.modules[this.createCommandName(commands[0])]
+					this.container.has(this.createCommandName(commands[0]))
 				) {
 					throw new Error(
 						"Default commands should be required before child commands",
@@ -96,7 +108,7 @@ export class Yok implements IInjector {
 
 			if (
 				commands.length > 1 &&
-				!this.modules[this.createCommandName(commands[0])]
+				!this.container.has(this.createCommandName(commands[0]))
 			) {
 				this.require(this.createCommandName(commands[0]), file);
 				if (commands[1] && !commandName.match(/\|\*/)) {
@@ -108,18 +120,33 @@ export class Yok implements IInjector {
 		});
 	}
 
+	/**
+	 * @deprecated Use provideLazy() from lib/common/di (via `Yok.di`) — the same
+	 * deferred loading, token-based.
+	 */
 	public require(names: any, file: string): void {
 		forEachName(names, (name) => this.requireOne(name, file));
 	}
 
+	/**
+	 * @deprecated Key-command counterpart of requireCommand; replaced together
+	 * with the command registry.
+	 */
 	public requireKeyCommand(name: any, file: string): void {
 		this.requireOne(this.createKeyCommandName(name), file);
 	}
 
+	/**
+	 * @deprecated Backing store of the require('nativescript') surface.
+	 * Do not add new entries through it.
+	 */
 	public publicApi: any = {
 		__modules__: {},
 	};
 
+	/**
+	 * @deprecated Legacy public-API builder.
+	 */
 	public requirePublic(names: any, file: string): void {
 		forEachName(names, (name) => {
 			this.requireOne(name, file);
@@ -127,6 +154,9 @@ export class Yok implements IInjector {
 		});
 	}
 
+	/**
+	 * @deprecated Legacy public-API builder.
+	 */
 	public requirePublicClass(names: any, file: string): void {
 		forEachName(names, (name) => {
 			this.requireOne(name, file);
@@ -152,7 +182,7 @@ export class Yok implements IInjector {
 	}
 
 	private resolveInstance(name: string): any {
-		let classInstance = _.first(this.modules[name].instances);
+		let classInstance = this.container.peek(name);
 		if (!classInstance) {
 			classInstance = this.resolve(name);
 		}
@@ -162,22 +192,29 @@ export class Yok implements IInjector {
 
 	private requireOne(name: string, file: string): void {
 		const relativePath = path.join("../", file);
-		const dependency: IDependency = {
-			require: require("fs").existsSync(
-				path.join(__dirname, relativePath + ".js"),
-			)
-				? relativePath
-				: file,
-			shared: true,
-		};
+		const dependencyPath = require("fs").existsSync(
+			path.join(__dirname, relativePath + ".js"),
+		)
+			? relativePath
+			: file;
 
-		if (!this.modules[name] || this.overrideAlreadyRequiredModule) {
-			this.modules[name] = dependency;
+		if (!this.container.has(name) || this.overrideAlreadyRequiredModule) {
+			// Yok replaced the whole record on an allowed re-require, dropping any
+			// resolver and cached instances with it — preserved via remove().
+			this.container.remove(name);
+			this.container.register({
+				provide: name,
+				useLazyRequire: () => require(dependencyPath),
+			});
 		} else {
 			throw new Error(`module '${name}' require'd twice.`);
 		}
 	}
 
+	/**
+	 * @deprecated Slated for replacement by defineCommand and manifest-declared
+	 * commands.
+	 */
 	public registerCommand(names: any, resolver: any): void {
 		forEachName(names, (name) => {
 			const commands = name.split(CommandsDelimiters.HierarchicalCommand);
@@ -189,6 +226,9 @@ export class Yok implements IInjector {
 		});
 	}
 
+	/**
+	 * @deprecated Replaced together with the command registry.
+	 */
 	public registerKeyCommand(name: IValidKeyName, resolver: IKeyCommand): void {
 		this.register(this.createKeyCommandName(name), resolver);
 	}
@@ -204,6 +244,10 @@ export class Yok implements IInjector {
 		return defaultCommand;
 	}
 
+	/**
+	 * @deprecated Hierarchical-routing internals of the legacy command registry;
+	 * they move out of the container with the defineCommand work.
+	 */
 	public buildHierarchicalCommand(
 		parentCommandName: string,
 		commandLineArguments: string[],
@@ -243,7 +287,7 @@ export class Yok implements IInjector {
 					.split(CommandsDelimiters.HierarchicalCommand)
 					.map((command) =>
 						_.startsWith(command, CommandsDelimiters.DefaultCommandSymbol)
-							? command.substr(1)
+							? command.slice(1)
 							: command,
 					),
 			);
@@ -332,6 +376,10 @@ export class Yok implements IInjector {
 		);
 	}
 
+	/**
+	 * @deprecated Legacy command-registry routing.
+	 * Side-effecting: fails with help output on a bad subcommand.
+	 */
 	public async isValidHierarchicalCommand(
 		commandName: string,
 		commandArguments: string[],
@@ -358,6 +406,9 @@ export class Yok implements IInjector {
 		return false;
 	}
 
+	/**
+	 * @deprecated Legacy command-registry routing.
+	 */
 	public isDefaultCommand(commandName: string): boolean {
 		return (
 			commandName.indexOf(CommandsDelimiters.DefaultCommandSymbol) > 0 &&
@@ -365,31 +416,33 @@ export class Yok implements IInjector {
 		);
 	}
 
+	/**
+	 * @deprecated Use provide() / Injector.register from lib/common/di (via
+	 * `Yok.di`); a contract's token name keeps string spellings resolvable.
+	 */
 	public register(name: string, resolver: any, shared?: boolean): void {
 		shared = shared === undefined ? true : shared;
-		trace("registered '%s'", name);
-
-		const dependency: any = this.modules[name] || {};
-		dependency.shared = shared;
 
 		if (_.isFunction(resolver)) {
-			dependency.resolver = resolver;
+			// Classes and factory functions alike: the legacy provider kind
+			// annotate()s the resolver and calls or news it by casing.
+			this.container.register({
+				provide: name,
+				useLegacyClass: resolver,
+				shared,
+			});
 		} else {
-			dependency.instances = dependency.instances || [];
-			if (shared) {
-				dependency.instances[0] = resolver;
-			} else {
-				dependency.instances.push(resolver);
-			}
+			this.container.register({ provide: name, useValue: resolver, shared });
 		}
-
-		this.modules[name] = dependency;
 	}
 
+	/**
+	 * @deprecated Legacy command-registry lookup.
+	 */
 	public resolveCommand(name: string): ICommand {
 		let command: ICommand;
 		const commandModuleName = this.createCommandName(name);
-		if (!this.modules[commandModuleName]) {
+		if (!this.container.has(commandModuleName)) {
 			return null;
 		}
 		command = this.resolve(commandModuleName);
@@ -397,10 +450,13 @@ export class Yok implements IInjector {
 		return command;
 	}
 
+	/**
+	 * @deprecated Legacy command-registry lookup.
+	 */
 	public resolveKeyCommand(name: string): IKeyCommand {
 		let command: IKeyCommand;
 		const commandModuleName = this.createKeyCommandName(name);
-		if (!this.modules[commandModuleName]) {
+		if (!this.container.has(commandModuleName)) {
 			return null;
 		}
 
@@ -409,12 +465,17 @@ export class Yok implements IInjector {
 		return command;
 	}
 
+	/**
+	 * @deprecated Use inject(Token) in an injection context, or Injector.get /
+	 * createInstance from lib/common/di (via `Yok.di`).
+	 */
 	public resolve(param: any, ctorArguments?: IDictionary<any>): any {
 		if (_.isFunction(param)) {
-			return this.resolveConstructor(<Function>param, ctorArguments);
-		} else {
-			return this.resolveByName(<string>param, ctorArguments);
+			// By-class resolution is transient and never retained — Yok did not
+			// track these instances for disposal either.
+			return this.container.createInstance(<Function>param, [], ctorArguments);
 		}
+		return this.container.get(<string>param, ctorArguments);
 	}
 
 	/* Regex to match dynamic calls in the following format:
@@ -423,11 +484,20 @@ export class Yok implements IInjector {
 		#{moduleName.functionName(param1, param2)} - multiple parameters separated with comma are supported
 		Check dynamicCall method for sample usage of this regular expression and see how to determine the passed parameters
 	*/
+	/**
+	 * @deprecated String-reflective help templating; removable only together with
+	 * the help-template pipeline. Usage is
+	 * runtime-traced via reportDeprecation.
+	 */
 	public get dynamicCallRegex(): RegExp {
 		return /#{([^.]+)\.([^}]+?)(\((.+)\))*}/;
 	}
 
+	/**
+	 * @deprecated See dynamicCallRegex.
+	 */
 	public getDynamicCallData(call: string, args?: any[]): any {
+		reportDeprecation({ api: "injector.dynamicCall", detail: call });
 		const parsed = call.match(this.dynamicCallRegex);
 		const module = this.resolve(parsed[1]);
 		if (!args && parsed[3]) {
@@ -437,6 +507,9 @@ export class Yok implements IInjector {
 		return module[parsed[2]].apply(module, args);
 	}
 
+	/**
+	 * @deprecated See dynamicCallRegex.
+	 */
 	public async dynamicCall(call: string, args?: any[]): Promise<any> {
 		const data = this.getDynamicCallData(call, args);
 
@@ -447,93 +520,16 @@ export class Yok implements IInjector {
 		return data;
 	}
 
-	private resolveConstructor(
-		ctor: any,
-		ctorArguments?: { [key: string]: any },
-	): any {
-		annotate(ctor);
-
-		const resolvedArgs = ctor.$inject.args.map((paramName: any) => {
-			if (ctorArguments && ctorArguments.hasOwnProperty(paramName)) {
-				return ctorArguments[paramName];
-			} else {
-				return this.resolve(paramName);
-			}
-		});
-
-		const name = ctor.$inject.name;
-		if (name && name[0] === name[0].toUpperCase()) {
-			return new (<any>ctor)(...resolvedArgs);
-		} else {
-			return ctor.apply(null, resolvedArgs);
-		}
-	}
-
-	private resolveByName(name: string, ctorArguments?: IDictionary<any>): any {
-		if (name[0] === "$") {
-			name = name.substr(1);
-		}
-
-		if (this.resolutionProgress[name]) {
-			throw new Error(`Cyclic dependency detected on dependency '${name}'`);
-		}
-		this.resolutionProgress[name] = true;
-
-		trace("resolving '%s'", name);
-		pushIndent();
-
-		let dependency: IDependency;
-		let instance: any;
-		try {
-			dependency = this.resolveDependency(name);
-
-			if (!dependency) {
-				throw new Error("unable to resolve " + name);
-			}
-
-			if (
-				!dependency.instances ||
-				!dependency.instances.length ||
-				!dependency.shared
-			) {
-				if (!dependency.resolver) {
-					throw new Error("no resolver registered for " + name);
-				}
-
-				dependency.instances = dependency.instances || [];
-
-				instance = this.resolveConstructor(dependency.resolver, ctorArguments);
-				dependency.instances.push(instance);
-			} else {
-				instance = _.first(dependency.instances);
-			}
-		} finally {
-			popIndent();
-			delete this.resolutionProgress[name];
-		}
-
-		return instance;
-	}
-
-	private resolveDependency(name: string): IDependency {
-		const module = this.modules[name];
-		if (!module) {
-			throw new Error("unable to resolve " + name);
-		}
-
-		if (module.require) {
-			require(module.require);
-		}
-		return module;
-	}
-
+	/**
+	 * @deprecated Legacy command-registry enumeration; feeds shell autocompletion
+	 * and help, so the `|` encoding is user-visible.
+	 */
 	public getRegisteredCommandsNames(includeDev: boolean): string[] {
-		const modulesNames: string[] = _.keys(this.modules);
-		const commandsNames: string[] = _.filter(modulesNames, (moduleName) =>
-			_.startsWith(moduleName, `${this.COMMANDS_NAMESPACE}.`),
+		const commandsNames = this.container.getRegisteredNames(
+			`${this.COMMANDS_NAMESPACE}.`,
 		);
 		let commands = _.map(commandsNames, (commandName: string) =>
-			commandName.substr(this.COMMANDS_NAMESPACE.length + 1),
+			commandName.slice(this.COMMANDS_NAMESPACE.length + 1),
 		);
 		if (!includeDev) {
 			commands = _.reject(commands, (command) => _.startsWith(command, "dev-"));
@@ -541,17 +537,22 @@ export class Yok implements IInjector {
 		return commands;
 	}
 
+	/**
+	 * @deprecated Legacy command-registry enumeration.
+	 */
 	public getRegisteredKeyCommandsNames(): string[] {
-		const modulesNames: string[] = _.keys(this.modules);
-		const commandsNames: string[] = _.filter(modulesNames, (moduleName) =>
-			_.startsWith(moduleName, `${this.KEY_COMMANDS_NAMESPACE}.`),
+		const commandsNames = this.container.getRegisteredNames(
+			`${this.KEY_COMMANDS_NAMESPACE}.`,
 		);
-		let commands = _.map(commandsNames, (commandName: string) =>
-			commandName.substr(this.KEY_COMMANDS_NAMESPACE.length + 1),
+		const commands = _.map(commandsNames, (commandName: string) =>
+			commandName.slice(this.KEY_COMMANDS_NAMESPACE.length + 1),
 		);
 		return commands;
 	}
 
+	/**
+	 * @deprecated Legacy command-registry routing.
+	 */
 	public getChildrenCommandsNames(commandName: string): string[] {
 		return this.hierarchicalCommands[commandName];
 	}
@@ -564,15 +565,12 @@ export class Yok implements IInjector {
 		return `${this.KEY_COMMANDS_NAMESPACE}.${name}`;
 	}
 
+	/**
+	 * @deprecated Delegates to Injector.dispose (reverse instantiation order);
+	 * new code disposes the di container directly.
+	 */
 	public dispose(): void {
-		Object.keys(this.modules).forEach((moduleName) => {
-			const instances = this.modules[moduleName].instances;
-			_.forEach(instances, (instance) => {
-				if (instance && instance.dispose && instance !== this) {
-					instance.dispose();
-				}
-			});
-		});
+		this.container.dispose([this]);
 	}
 }
 
@@ -581,6 +579,10 @@ if (!(<any>global).$injector) {
 	injector = (<any>global).$injector;
 }
 
+/**
+ * @deprecated Global-singleton wiring for the legacy facade; new code receives
+ * the container via inject(Injector) instead of a process-wide global.
+ */
 export function setGlobalInjector(inj: IInjector): IInjector {
 	(<any>global).$injector = injector = inj;
 	return inj;
