@@ -2,6 +2,7 @@ import * as path from "path";
 import * as util from "util";
 import * as _ from "lodash";
 import { annotate, getValueFromNestedObject } from "../helpers";
+import { reportDeprecation } from "../deprecation";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
 import { IOptions, IPerformanceService } from "../../declarations";
 import {
@@ -244,6 +245,12 @@ export class HooksService implements IHooksService {
 				hookArguments["projectData"] = hookArguments["$projectData"] =
 					projectDataHookArg;
 			}
+
+			reportDeprecation({
+				api: "hooks.param-name-signature",
+				detail: hook.fullPath,
+				logger: this.$logger,
+			});
 
 			const maybePromise = this.$injector.resolve(
 				hookEntryPoint,
