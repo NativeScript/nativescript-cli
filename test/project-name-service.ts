@@ -4,6 +4,7 @@ import { assert } from "chai";
 import { ErrorsStub, LoggerStub } from "./stubs";
 import { IProjectNameService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
+import { setIsInteractive } from "../lib/common/helpers";
 import * as _ from "lodash";
 
 const mockProjectNameValidator = {
@@ -36,14 +37,20 @@ describe("Project Name Service Tests", () => {
 	const invalidProjectNames = ["1invalid", "app"];
 
 	beforeEach(() => {
+		// ensureValidName only prompts when interactive; without this the result
+		// depends on whether the runner happens to own a TTY.
+		setIsInteractive(() => true);
 		testInjector = createTestInjector();
 		projectNameService = testInjector.resolve("projectNameService");
 	});
 
+	afterEach(() => {
+		setIsInteractive();
+	});
+
 	it("returns correct name when valid name is entered", async () => {
-		const actualProjectName = await projectNameService.ensureValidName(
-			validProjectName
-		);
+		const actualProjectName =
+			await projectNameService.ensureValidName(validProjectName);
 
 		assert.deepStrictEqual(actualProjectName, validProjectName);
 	});
@@ -67,9 +74,8 @@ describe("Project Name Service Tests", () => {
 				}
 			};
 
-			const actualProjectName = await projectNameService.ensureValidName(
-				invalidProjectName
-			);
+			const actualProjectName =
+				await projectNameService.ensureValidName(invalidProjectName);
 
 			assert.deepStrictEqual(actualProjectName, validProjectName);
 		});
@@ -77,7 +83,7 @@ describe("Project Name Service Tests", () => {
 		it(`returns the invalid name when "${invalidProjectName}" is entered and --force flag is present`, async () => {
 			const actualProjectName = await projectNameService.ensureValidName(
 				validProjectName,
-				{ force: true }
+				{ force: true },
 			);
 
 			assert.deepStrictEqual(actualProjectName, validProjectName);

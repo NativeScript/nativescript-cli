@@ -27,14 +27,14 @@ describe("settingsService", () => {
 	const appDataEnv = "appData";
 	const profileDirName = "profileDir";
 
-	before(() => {
+	beforeAll(() => {
 		// @ts-expect-error
 		os.homedir = () => osHomedir;
 		path.resolve = (p: string) => p;
 		process.env.AppData = appDataEnv;
 	});
 
-	after(() => {
+	afterAll(() => {
 		// @ts-expect-error
 		os.homedir = originalOsHomedir;
 		path.resolve = originalPathResolve;
@@ -59,7 +59,7 @@ describe("settingsService", () => {
 	};
 
 	const getExpectedProfileDir = (
-		opts: { isWindows: boolean } = { isWindows: true }
+		opts: { isWindows: boolean } = { isWindows: true },
 	) => {
 		const defaultProfileDirLocation = opts.isWindows
 			? appDataEnv
@@ -74,9 +74,8 @@ describe("settingsService", () => {
 				const hostInfo = testInjector.resolve<IHostInfo>("hostInfo");
 				hostInfo.isWindows = isWindows;
 
-				const settingsService = testInjector.resolve<ISettingsService>(
-					SettingsService
-				);
+				const settingsService =
+					testInjector.resolve<ISettingsService>(SettingsService);
 				const actualProfileDir = settingsService.getProfileDir();
 				const expectedProfileDir = getExpectedProfileDir({ isWindows });
 				assert.equal(actualProfileDir, expectedProfileDir);
@@ -122,21 +121,19 @@ describe("settingsService", () => {
 		_.each(testData, (testCase) => {
 			it(testCase.testName, () => {
 				const testInjector = createTestInjector();
-				const staticConfig = testInjector.resolve<Config.IStaticConfig>(
-					"staticConfig"
-				);
+				const staticConfig =
+					testInjector.resolve<Config.IStaticConfig>("staticConfig");
 				staticConfig.USER_AGENT_NAME = defaultUserAgentName;
 
-				const settingsService = testInjector.resolve<ISettingsService>(
-					SettingsService
-				);
+				const settingsService =
+					testInjector.resolve<ISettingsService>(SettingsService);
 				settingsService.setSettings(testCase.dataPassedToSetSettings);
 
 				const actualProfileDir = settingsService.getProfileDir();
 				assert.equal(actualProfileDir, testCase.expectedProfileDir);
 				assert.equal(
 					staticConfig.USER_AGENT_NAME,
-					testCase.expectedUserAgentName
+					testCase.expectedUserAgentName,
 				);
 			});
 		});

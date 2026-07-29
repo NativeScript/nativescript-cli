@@ -268,7 +268,13 @@ function createPackageJson(
 		.writeJson(join(projectPath, "package.json"), packageJsonData);
 }
 
-describe("Cocoapods support", () => {
+// These suites only define tests on macOS - each body is internally gated on
+// darwin. Marking the suite skipped elsewhere is what keeps the runner from
+// erroring on an empty suite; an empty suite is only tolerated when skipped.
+const describeOnMacOS =
+	require("os").platform() === "darwin" ? describe : describe.skip;
+
+describeOnMacOS("Cocoapods support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
@@ -657,7 +663,7 @@ describe("Cocoapods support", () => {
 	}
 });
 
-describe("Source code support", () => {
+describeOnMacOS("Source code support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log(
 			"Skipping Source code in plugin tests. They cannot work on windows",
@@ -978,7 +984,7 @@ describe("Source code support", () => {
 	}
 });
 
-describe("Static libraries support", () => {
+describeOnMacOS("Static libraries support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping static library tests. They work only on darwin.");
 		return;
@@ -1107,7 +1113,7 @@ describe("Relative paths", () => {
 	});
 });
 
-describe("Merge Project XCConfig files", () => {
+describeOnMacOS("Merge Project XCConfig files", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log(
 			"Skipping 'Merge Project XCConfig files' tests. They can work only on macOS",

@@ -23,7 +23,7 @@ describe("androidToolsInfo", () => {
 		EOL +
 		" described in " +
 		Constants.SYSTEM_REQUIREMENTS_LINKS;
-	before(() => {
+	beforeAll(() => {
 		process.env["ANDROID_HOME"] = "test";
 	});
 	const getAndroidToolsInfo = (runtimeVersion?: string): AndroidToolsInfo => {
@@ -404,7 +404,7 @@ describe("androidToolsInfo", () => {
 		});
 	});
 
-	after(() => {
+	afterAll(() => {
 		process.env["ANDROID_HOME"] = originalAndroidHome;
 	});
 });
