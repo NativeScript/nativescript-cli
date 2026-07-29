@@ -41,7 +41,42 @@ declare global {
 		): Promise<string>;
 	}
 
-	type IosSPMPackage = IosSPMPackageDefinition & { targets?: string[] };
+	interface IosSPMPackageBase {
+		name: string;
+		/** Swift product names to link from the package. */
+		libs: string[];
+		/**
+		 * Optional: if the project has additional targets (widgets, watch apps,
+		 * extensions...) list their names here to link the package with them too.
+		 */
+		targets?: string[];
+	}
+
+	/** A package resolved from a git remote at a version, range, branch or revision. */
+	interface IosRemoteSPMPackage extends IosSPMPackageBase {
+		repositoryURL: string;
+		version: string;
+	}
+
+	/** A package resolved from a directory on disk. */
+	interface IosLocalSPMPackage extends IosSPMPackageBase {
+		path: string;
+	}
+
+	type IosSPMPackage = IosRemoteSPMPackage | IosLocalSPMPackage;
+
+	/** One package linked into one target of the Xcode project. */
+	interface IosSPMPackageAssignment {
+		targetName: string;
+		package: IosSPMPackage;
+	}
+
+	interface ISPMPbxprojService {
+		addPackages(
+			projectRoot: string,
+			assignments: IosSPMPackageAssignment[],
+		): boolean;
+	}
 
 	interface ISPMService {
 		applySPMPackages(

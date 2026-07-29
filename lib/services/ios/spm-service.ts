@@ -1,6 +1,5 @@
 import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
-import { MobileProject } from "@nstudio/trapezedev-project";
 import { IPlatformData } from "../../definitions/platform";
 import { IFileSystem } from "../../common/declarations";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
@@ -36,6 +35,7 @@ export class SPMService implements ISPMService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $xcodebuildCommandService: IXcodebuildCommandService,
 		private $xcodebuildArgsService: IXcodebuildArgsService,
+		private $spmPbxprojService: ISPMPbxprojService,
 	) {}
 
 	public getSPMPackages(
@@ -114,21 +114,8 @@ export class SPMService implements ISPMService {
 			// dependency is responsible.
 			this.$logger.info(this.formatPackageListing(spmPackages));
 
-			const project = new MobileProject(platformData.projectRoot, {
-				ios: {
-					path: ".",
-				},
-				enableAndroid: false,
-			});
-			await project.load();
-
-			// note: in trapeze both visionOS and iOS are handled by the ios project.
-			if (!project.ios) {
-				this.$logger.trace("SPM: no iOS project found via trapeze.");
-				return;
-			}
-
 			// todo: handle removing packages? Or just warn and require a clean?
+			const assignments: IosSPMPackageAssignment[] = [];
 			for (const pkg of spmPackages) {
 				if ("path" in pkg) {
 					// resolve the path relative to the project root
@@ -143,16 +130,25 @@ export class SPMService implements ISPMService {
 					}
 				}
 				this.$logger.trace(`SPM: adding package ${pkg.name} to project.`, pkg);
-				await project.ios.addSPMPackage(projectData.projectName, pkg);
+				assignments.push({ targetName: projectData.projectName, package: pkg });
 
 				// Add to other Targets if specified (like widgets, etc.)
-				if (pkg.targets?.length) {
-					for (const target of pkg.targets) {
-						await project.ios.addSPMPackage(target, pkg);
-					}
+				for (const target of pkg.targets ?? []) {
+					assignments.push({ targetName: target, package: pkg });
 				}
 			}
-			await project.commit();
+
+			// note: visionOS shares the iOS Xcode project, so the same pbxproj is
+			// edited for both platforms.
+			if (
+				!this.$spmPbxprojService.addPackages(
+					platformData.projectRoot,
+					assignments,
+				)
+			) {
+				this.$logger.trace("SPM: no packages were applied to the project.");
+				return;
+			}
 
 			// finally resolve the dependencies
 			await this.resolveSPMDependencies(platformData, projectData, {
