@@ -1,4 +1,4 @@
-import { DoctorService } from "../../lib/services/doctor-service";
+import { DoctorServiceImpl as DoctorService } from "../../lib/services/doctor-service";
 import { Yok } from "../../lib/common/yok";
 import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
@@ -44,7 +44,7 @@ class DoctorServiceInheritor extends DoctorService {
 		$fs: IFileSystem,
 		$terminalSpinnerService: ITerminalSpinnerService,
 		$versionsService: IVersionsService,
-		$settingsService: ISettingsService
+		$settingsService: ISettingsService,
 	) {
 		super(
 			$analyticsService,
@@ -56,13 +56,13 @@ class DoctorServiceInheritor extends DoctorService {
 			$fs,
 			$terminalSpinnerService,
 			$versionsService,
-			$settingsService
+			$settingsService,
 		);
 	}
 
 	public getDeprecatedShortImportsInFiles(
 		files: string[],
-		projectDir: string
+		projectDir: string,
 	): { file: string; line: string }[] {
 		return super.getDeprecatedShortImportsInFiles(files, projectDir);
 	}
@@ -81,10 +81,10 @@ describe("doctorService", () => {
 		testInjector.register("terminalSpinnerService", {
 			execute: (
 				spinnerOptions: ITerminalSpinnerOptions,
-				action: () => Promise<any>
+				action: () => Promise<any>,
 			): Promise<any> => action(),
 			createSpinner: (
-				spinnerOptions?: ITerminalSpinnerOptions
+				spinnerOptions?: ITerminalSpinnerOptions,
 			): ITerminalSpinner =>
 				<any>{
 					text: "",
@@ -99,17 +99,17 @@ describe("doctorService", () => {
 		testInjector.register("jsonFileSettingsService", {
 			getSettingValue: async (
 				settingName: string,
-				cacheOpts?: ICacheTimeoutOpts
+				cacheOpts?: ICacheTimeoutOpts,
 			): Promise<any> => undefined,
 			saveSetting: async (
 				key: string,
 				value: any,
-				cacheOpts?: IUseCacheOpts
+				cacheOpts?: IUseCacheOpts,
 			): Promise<void> => undefined,
 		});
 		testInjector.register("platformEnvironmentRequirements", {
 			checkEnvironmentRequirements: async (
-				input: ICheckEnvironmentRequirementsInput
+				input: ICheckEnvironmentRequirementsInput,
 			): Promise<ICheckEnvironmentRequirementsOutput> => <any>{},
 		});
 
@@ -343,8 +343,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 					{ file: "file1", line: 'const application = require("application")' },
 					{
 						file: "file1",
-						line:
-							'you should import some long words here require("application") module and other words here`)',
+						line: 'you should import some long words here require("application") module and other words here`)',
 					},
 				],
 			},
@@ -352,9 +351,8 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 
 		it("getDeprecatedShortImportsInFiles returns correct results", () => {
 			const testInjector = createTestInjector();
-			const doctorService = testInjector.resolve<DoctorServiceInheritor>(
-				"doctorService"
-			);
+			const doctorService =
+				testInjector.resolve<DoctorServiceInheritor>("doctorService");
 			const fs = testInjector.resolve<IFileSystem>("fs");
 			fs.getFsStats = (file) =>
 				<any>{
@@ -372,7 +370,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 
 				const shortImports = doctorService.getDeprecatedShortImportsInFiles(
 					_.keys(filesContents),
-					"projectDir"
+					"projectDir",
 				);
 				assert.deepStrictEqual(shortImports, expectedShortImports);
 			});
@@ -431,9 +429,8 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
 			nsDoctorStub.returns(successGetInfosResult);
 			const testInjector = createTestInjector();
-			const doctorService = testInjector.resolve<IDoctorService>(
-				"doctorService"
-			);
+			const doctorService =
+				testInjector.resolve<IDoctorService>("doctorService");
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			await doctorService.printWarnings();
 			assert.isTrue(logger.output.indexOf("No issues were detected.") !== -1);
@@ -443,15 +440,14 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
 			nsDoctorStub.returns(failedGetInfosResult);
 			const testInjector = createTestInjector();
-			const doctorService = testInjector.resolve<IDoctorService>(
-				"doctorService"
-			);
+			const doctorService =
+				testInjector.resolve<IDoctorService>("doctorService");
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			await doctorService.printWarnings();
 			assert.isTrue(
 				logger.output.indexOf(
-					"There seem to be issues with your configuration."
-				) !== -1
+					"There seem to be issues with your configuration.",
+				) !== -1,
 			);
 		});
 
@@ -459,26 +455,26 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
 			nsDoctorStub.throws(
 				new Error(
-					"We should not call @nativescript/doctor package when we have results in the file."
-				)
+					"We should not call @nativescript/doctor package when we have results in the file.",
+				),
 			);
 
 			const testInjector = createTestInjector();
-			const doctorService = testInjector.resolve<IDoctorService>(
-				"doctorService"
-			);
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService");
+			const doctorService =
+				testInjector.resolve<IDoctorService>("doctorService");
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+				);
 			jsonFileSettingsService.getSettingValue = async (
 				settingName: string,
-				cacheOpts?: ICacheTimeoutOpts
+				cacheOpts?: ICacheTimeoutOpts,
 			): Promise<any> => successGetInfosResult;
 			let saveSettingValue: any = null;
 			jsonFileSettingsService.saveSetting = async (
 				key: string,
 				value: any,
-				cacheOpts?: IUseCacheOpts
+				cacheOpts?: IUseCacheOpts,
 			): Promise<void> => (saveSettingValue = value);
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			await doctorService.printWarnings();
@@ -491,17 +487,17 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			nsDoctorStub.returns(successGetInfosResult);
 
 			const testInjector = createTestInjector();
-			const doctorService = testInjector.resolve<IDoctorService>(
-				"doctorService"
-			);
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService");
+			const doctorService =
+				testInjector.resolve<IDoctorService>("doctorService");
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+				);
 			let saveSettingValue: any = null;
 			jsonFileSettingsService.saveSetting = async (
 				key: string,
 				value: any,
-				cacheOpts?: IUseCacheOpts
+				cacheOpts?: IUseCacheOpts,
 			): Promise<void> => (saveSettingValue = value);
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			await doctorService.printWarnings();
@@ -514,17 +510,17 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			nsDoctorStub.returns(successGetInfosResult);
 
 			const testInjector = createTestInjector();
-			const doctorService = testInjector.resolve<IDoctorService>(
-				"doctorService"
-			);
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService");
+			const doctorService =
+				testInjector.resolve<IDoctorService>("doctorService");
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+				);
 			let saveSettingValue: any = null;
 			let isGetSettingValueCalled = false;
 			jsonFileSettingsService.getSettingValue = async (
 				settingName: string,
-				cacheOpts?: ICacheTimeoutOpts
+				cacheOpts?: ICacheTimeoutOpts,
 			): Promise<any> => {
 				isGetSettingValueCalled = true;
 				return null;
@@ -532,7 +528,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			jsonFileSettingsService.saveSetting = async (
 				key: string,
 				value: any,
-				cacheOpts?: IUseCacheOpts
+				cacheOpts?: IUseCacheOpts,
 			): Promise<void> => (saveSettingValue = value);
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			await doctorService.printWarnings({ forceCheck: true });
@@ -541,7 +537,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			assert.isTrue(nsDoctorStub.calledOnce);
 			assert.isFalse(
 				isGetSettingValueCalled,
-				"When forceCheck is passed, we should not read the cache file."
+				"When forceCheck is passed, we should not read the cache file.",
 			);
 		});
 
@@ -549,9 +545,8 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			const nsDoctorStub = sandbox.stub(nativescriptDoctor.doctor, "getInfos");
 			nsDoctorStub.returns(failedGetInfosResult);
 			const testInjector = createTestInjector();
-			const doctorService = testInjector.resolve<IDoctorService>(
-				"doctorService"
-			);
+			const doctorService =
+				testInjector.resolve<IDoctorService>("doctorService");
 			const fs = testInjector.resolve<IFileSystem>("fs");
 			let deletedPath = "";
 			fs.deleteFile = (filePath: string): void => {
@@ -561,8 +556,8 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			await doctorService.printWarnings();
 			assert.isTrue(
 				logger.output.indexOf(
-					"There seem to be issues with your configuration."
-				) !== -1
+					"There seem to be issues with your configuration.",
+				) !== -1,
 			);
 			assert.isTrue(deletedPath.indexOf("doctor-cache.json") !== -1);
 		});
