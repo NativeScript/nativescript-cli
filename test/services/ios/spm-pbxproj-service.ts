@@ -1,5 +1,11 @@
 import { assert } from "chai";
-import { mkdtempSync, mkdirSync, copyFileSync, readFileSync } from "fs";
+import {
+	mkdtempSync,
+	mkdirSync,
+	copyFileSync,
+	readFileSync,
+	writeFileSync,
+} from "fs";
 import { tmpdir } from "os";
 import * as path from "path";
 import { Yok } from "../../../lib/common/yok";
@@ -12,6 +18,9 @@ import { IInjector } from "../../../lib/common/definitions/yok";
 
 // the target that exists in test/files/project.pbxproj
 const TARGET_NAME = "TNSBlank";
+// its PBXFrameworksBuildPhase uuid in that fixture (a group is also named
+// "Frameworks", so tests that strip the phase must key on the uuid)
+const FRAMEWORKS_PHASE_ID = "858B83F418CA22B800AB12DE";
 
 const remotePackage: IosSPMPackage = {
 	name: "swift-numerics",
@@ -234,6 +243,118 @@ describe("SPMPbxprojService", () => {
 			);
 			assert.include(contents, "version = 2.0.0");
 			assert.notInclude(contents, "version = 1.0.0");
+		});
+
+		it("skips a target without a Frameworks build phase, warns, and writes nothing", () => {
+			// strip the Frameworks build phase from the fixture target — both the
+			// section entry and its slot in the target's buildPhases
+			const pbxPath = path.join(
+				projectRoot,
+				`${TARGET_NAME}.xcodeproj`,
+				"project.pbxproj",
+			);
+			const stripped = readFileSync(pbxPath, "utf8")
+				.replace(
+					new RegExp(
+						`^\\s*${FRAMEWORKS_PHASE_ID} /\\* Frameworks \\*/,\\n`,
+						"m",
+					),
+					"",
+				)
+				.replace(
+					new RegExp(
+						`^\\s*${FRAMEWORKS_PHASE_ID} /\\* Frameworks \\*/ = \\{[\\s\\S]*?\\};\\n`,
+						"m",
+					),
+					"",
+				);
+			writeFileSync(pbxPath, stripped);
+
+			const result = service.addPackages(projectRoot, [
+				{ targetName: TARGET_NAME, package: remotePackage },
+			]);
+
+			assert.isFalse(
+				result,
+				"nothing could be applied, so nothing was written",
+			);
+			assert.isTrue(
+				warnings.some((w) => w.includes("no Frameworks build phase")),
+				`expected a warning about the missing build phase, got: ${warnings}`,
+			);
+			const contents = readPbxproj(projectRoot);
+			assert.notInclude(contents, "XCRemoteSwiftPackageReference");
+			assert.notInclude(
+				contents,
+				"packageReferences",
+				"the skipped package must leave no trace, not even an empty list",
+			);
+		});
+
+		it("keeps same-named products from different packages distinct", () => {
+			const otherPackage: IosSPMPackage = {
+				name: "other-numerics",
+				libs: ["RealModule"],
+				repositoryURL: "https://example.com/other/other-numerics.git",
+				version: "2.0.0",
+			};
+			const assignments: IosSPMPackageAssignment[] = [
+				{ targetName: TARGET_NAME, package: remotePackage },
+				{ targetName: TARGET_NAME, package: otherPackage },
+			];
+
+			assert.isTrue(service.addPackages(projectRoot, assignments));
+			// reapply to prove the scoped lookup is still idempotent
+			assert.isTrue(service.addPackages(projectRoot, assignments));
+
+			const xcode = require("nativescript-dev-xcode");
+			const project = new xcode.project(
+				path.join(projectRoot, `${TARGET_NAME}.xcodeproj`, "project.pbxproj"),
+			);
+			project.parseSync();
+			const section =
+				project.hash.project.objects["XCSwiftPackageProductDependency"];
+			const realModuleDeps = Object.keys(section)
+				.filter((key) => !key.endsWith("_comment"))
+				.map((key) => section[key])
+				.filter((entry) => entry.productName === "RealModule");
+
+			assert.equal(
+				realModuleDeps.length,
+				2,
+				"each package should own its own RealModule product dependency",
+			);
+			assert.equal(
+				new Set(realModuleDeps.map((entry) => entry.package)).size,
+				2,
+				"the two product dependencies should point at different packages",
+			);
+		});
+
+		it("quotes requirement values a pbxproj cannot hold bare", () => {
+			assert.isTrue(
+				service.addPackages(projectRoot, [
+					{
+						targetName: TARGET_NAME,
+						package: { ...remotePackage, version: "1.0.0-beta.1" },
+					},
+				]),
+			);
+
+			assert.include(readPbxproj(projectRoot), 'version = "1.0.0-beta.1";');
+		});
+
+		it("quotes branch requirements containing spaces", () => {
+			assert.isTrue(
+				service.addPackages(projectRoot, [
+					{
+						targetName: TARGET_NAME,
+						package: { ...remotePackage, version: "release 1.0" },
+					},
+				]),
+			);
+
+			assert.include(readPbxproj(projectRoot), 'branch = "release 1.0";');
 		});
 
 		it("skips a package whose target is missing, and warns", () => {

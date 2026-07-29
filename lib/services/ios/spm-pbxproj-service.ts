@@ -65,8 +65,9 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 				continue;
 			}
 
-			this.addPackageToTarget(project, targetId, pkg, projectRoot);
-			added = true;
+			if (this.addPackageToTarget(project, targetId, pkg, projectRoot)) {
+				added = true;
+			}
 		}
 
 		if (!added) {
@@ -123,29 +124,38 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 		return null;
 	}
 
+	/** Returns true when the package was actually linked into the target. */
 	private addPackageToTarget(
 		project: any,
 		targetId: string,
 		pkg: IosSPMPackage,
 		projectRoot: string,
-	): void {
+	): boolean {
 		const target = project.pbxNativeTargetSection()[targetId];
+
+		// A target without a Frameworks build phase has nowhere to link the
+		// products; adding the package reference alone would leave the project
+		// in a state Xcode reports as corrupt, so bail out loudly instead —
+		// before touching the project, so a skipped package leaves no trace.
+		// (Resolved from the target's own buildPhases: the xcode lib's
+		// pbxFrameworksBuildPhaseObj falls back to *any* target's Frameworks
+		// phase when this one has none, which would link into the wrong target.)
+		const frameworkBuildPhaseObj = this.findFrameworksBuildPhase(
+			project,
+			target,
+		);
+		if (!frameworkBuildPhaseObj) {
+			this.$logger.warn(
+				`SPM: target for package "${pkg.name}" has no Frameworks build phase — skipping.`,
+			);
+			return false;
+		}
+
 		const firstProject = project.getFirstProject().firstProject;
 		const packageReferences: any[] = (firstProject["packageReferences"] ??= []);
 		const packageProductReferences: any[] = (target[
 			"packageProductDependencies"
 		] ??= []);
-
-		// A target without a Frameworks build phase has nowhere to link the
-		// products; adding the package reference alone would leave the project
-		// in a state Xcode reports as corrupt, so bail out loudly instead.
-		const frameworkBuildPhaseObj = project.pbxFrameworksBuildPhaseObj(targetId);
-		if (!frameworkBuildPhaseObj) {
-			this.$logger.warn(
-				`SPM: target for package "${pkg.name}" has no Frameworks build phase — skipping.`,
-			);
-			return;
-		}
 		const frameworkBuildPhaseFiles: any[] = (frameworkBuildPhaseObj["files"] ??=
 			[]);
 
@@ -171,7 +181,7 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 			packageReferenceSectionContent = {
 				isa: packageReferenceSection,
 				repositoryURL: JSON.stringify(pkg.repositoryURL),
-				requirement: classifyVersion(pkg.version),
+				requirement: quoteValuesForPbxproj(classifyVersion(pkg.version)),
 			};
 		}
 
@@ -191,6 +201,10 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 		});
 
 		for (const lib of pkg.libs ?? []) {
+			// The comment is just the product name, which two different packages
+			// can share (e.g. both exposing a "Core" lib) — so entries here are
+			// additionally matched on the package they belong to, otherwise the
+			// second package would silently repoint the first one's entries.
 			const { uuid: spmProductDependencyUUID } = this.addOrUpdateEntry(
 				project,
 				"XCSwiftPackageProductDependency",
@@ -201,6 +215,7 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 					package_comment: spmPackageReferenceComment,
 					productName: lib,
 				},
+				(existing) => existing.package === spmPackageReferenceUUID,
 			);
 
 			const libComment = `${lib} in Frameworks`;
@@ -214,6 +229,7 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 					productRef: spmProductDependencyUUID,
 					productRef_comment: lib,
 				},
+				(existing) => existing.productRef === spmProductDependencyUUID,
 			);
 
 			this.addOrUpdateArrayEntry(
@@ -230,6 +246,21 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 				comment: libComment,
 			});
 		}
+
+		return true;
+	}
+
+	/** Finds the Frameworks build phase listed in this target's own buildPhases. */
+	private findFrameworksBuildPhase(project: any, target: any): any | null {
+		const section =
+			project.hash.project.objects["PBXFrameworksBuildPhase"] ?? {};
+		for (const phase of target.buildPhases ?? []) {
+			const phaseObj = section[phase.value];
+			if (phaseObj) {
+				return phaseObj;
+			}
+		}
+		return null;
 	}
 
 	/** Replaces a matching array entry in place, or appends it. */
@@ -250,16 +281,19 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 	 * Writes an object into a pbxproj section, reusing the uuid of an entry
 	 * with the same comment when one is already present. The comment is the
 	 * identity of an entry here — it's what keeps repeated applies idempotent.
+	 * When the comment alone is ambiguous (product names are not unique across
+	 * packages), `matches` narrows the lookup to the right entry.
 	 */
 	private addOrUpdateEntry(
 		project: any,
 		section: string,
 		entryComment: string,
 		entry: any,
+		matches?: (existing: any) => boolean,
 	): { uuid: string; comment: string } {
 		const pbxSection = (project.hash.project.objects[section] ??= {});
 		const entryUuid =
-			this.findUuidByComment(project, section, entryComment) ??
+			this.findUuidByComment(project, section, entryComment, matches) ??
 			project.generateUuid();
 
 		pbxSection[`${entryUuid}_comment`] = entryComment;
@@ -272,11 +306,19 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 		project: any,
 		section: string,
 		comment: string,
+		matches?: (existing: any) => boolean,
 	): string | null {
 		const pbxSection = project.hash.project.objects[section] ?? {};
-		const commentKey = Object.keys(pbxSection).find(
-			(key) => key.endsWith("_comment") && pbxSection[key] === comment,
-		);
+		const commentKey = Object.keys(pbxSection).find((key) => {
+			if (!key.endsWith("_comment") || pbxSection[key] !== comment) {
+				return false;
+			}
+			if (!matches) {
+				return true;
+			}
+			const existing = pbxSection[key.replace(/_comment$/, "")];
+			return existing != null && matches(existing);
+		});
 		return commentKey ? commentKey.replace(/_comment$/, "") : null;
 	}
 }
@@ -347,6 +389,27 @@ export function classifyVersion(version: string): Record<string, string> {
 		kind: "branch",
 		branch: version,
 	};
+}
+
+/**
+ * The charset Xcode itself leaves unquoted in a pbxproj. The pbxproj writer
+ * emits values verbatim, so anything outside it — a prerelease version like
+ * "1.0.0-beta.1", a branch like "release 1.0" — must be quoted by the caller
+ * or the written file is malformed.
+ */
+const UNQUOTED_PBX_VALUE = /^[A-Za-z0-9_$./]+$/;
+
+function quoteValuesForPbxproj(
+	obj: Record<string, string>,
+): Record<string, string> {
+	const result: Record<string, string> = {};
+	for (const [key, value] of Object.entries(obj)) {
+		result[key] =
+			typeof value === "string" && !UNQUOTED_PBX_VALUE.test(value)
+				? JSON.stringify(value)
+				: value;
+	}
+	return result;
 }
 
 injector.register("spmPbxprojService", SPMPbxprojService);
