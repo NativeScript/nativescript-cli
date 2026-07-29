@@ -16,11 +16,11 @@
     "clean": "npx rimraf node_modules package-lock.json && npm i && npm run clean.build",
     "clean.build": "node scripts/clean.js",
     "build": "tsc",
-    "build.all": "tsc -p tsconfig.test.json && node scripts/copy-test-fixtures.js",
     "dev": "tsc --watch",
     "prepack": "npm run clean.build && npm test && tsc -p tsconfig.release.json",
-    "test": "npm run build.all && mocha --recursive dist-test/test",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "test": "tsc -p tsconfig.test.json && vitest run",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "test-watch": "vitest"
   },
   "repository": {
     "type": "git",
@@ -46,7 +46,6 @@
   "devDependencies": {
     "@types/chai": "5.2.2",
     "@types/lodash": "4.17.21",
-    "@types/mocha": "10.0.10",
     "@types/semver": "7.7.1",
     "@types/shelljs": "0.8.17",
     "@types/temp": "0.9.4",
@@ -54,9 +53,9 @@
     "@types/yauzl": "2.10.3",
     "chai": "5.3.3",
     "conventional-changelog-cli": "^5.0.0",
-    "mocha": "11.7.5",
     "rimraf": "6.1.2",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
     "lodash": "4.17.21",

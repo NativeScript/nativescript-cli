@@ -19,7 +19,7 @@ if (result.status !== 0) {
 	throw new Error(`git clean exited with status ${result.status}`);
 }
 
-for (const dir of ["dist", "dist-test", "coverage"]) {
+for (const dir of ["dist", "coverage"]) {
 	fs.rmSync(path.join(rootDir, dir), { recursive: true, force: true });
 }
 
