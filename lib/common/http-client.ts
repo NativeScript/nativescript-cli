@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import { EOL } from "os";
 import * as util from "util";
+import { pipeline } from "stream/promises";
 import { Server, IProxySettings, IProxyService } from "./declarations";
 import { injector } from "./yok";
 import axios from "axios";
@@ -18,12 +19,12 @@ export class HttpClient implements Server.IHttpClient {
 	constructor(
 		private $logger: ILogger,
 		private $proxyService: IProxyService,
-		private $staticConfig: Config.IStaticConfig
+		private $staticConfig: Config.IStaticConfig,
 	) {}
 
 	public async httpRequest(
 		options: any,
-		proxySettings?: IProxySettings
+		proxySettings?: IProxySettings,
 	): Promise<Server.IResponse> {
 		try {
 			const result = await this.httpRequestCore(options, proxySettings);
@@ -43,7 +44,7 @@ export class HttpClient implements Server.IHttpClient {
 				this.$logger.warn(
 					"%s Retrying request to %s...",
 					err.message,
-					options.url || options
+					options.url || options,
 				);
 				const retryResult = await this.httpRequestCore(options, proxySettings);
 				return {
@@ -59,7 +60,7 @@ export class HttpClient implements Server.IHttpClient {
 
 	private async httpRequestCore(
 		options: any,
-		proxySettings?: IProxySettings
+		proxySettings?: IProxySettings,
 	): Promise<Server.IResponse> {
 		if (_.isString(options)) {
 			options = {
@@ -79,7 +80,7 @@ export class HttpClient implements Server.IHttpClient {
 			cliProxySettings,
 			options,
 			headers,
-			requestProto
+			requestProto,
 		);
 
 		if (!headers["User-Agent"]) {
@@ -113,7 +114,11 @@ export class HttpClient implements Server.IHttpClient {
 			method: options.method,
 			proxy: false,
 			httpAgent: agent,
+			// axios picks the agent by protocol, so an https:// request ignores httpAgent
+			httpsAgent: agent,
 			data: options.body,
+			responseType: options.pipeTo ? "stream" : undefined,
+			onDownloadProgress: options.onDownloadProgress,
 		}).catch((err) => {
 			this.$logger.trace("An error occurred while sending the request:", err);
 			if (err.response) {
@@ -137,8 +142,17 @@ export class HttpClient implements Server.IHttpClient {
 		if (result) {
 			this.$logger.trace(
 				"httpRequest: Done. code = %d",
-				result.status.toString()
+				result.status.toString(),
 			);
+
+			if (options.pipeTo) {
+				await pipeline(result.data, options.pipeTo);
+
+				return {
+					response: result,
+					headers: result.headers,
+				};
+			}
 
 			return {
 				response: result,
@@ -152,7 +166,7 @@ export class HttpClient implements Server.IHttpClient {
 		if (statusCode === HttpStatusCodes.PROXY_AUTHENTICATION_REQUIRED) {
 			const clientNameLowerCase = this.$staticConfig.CLIENT_NAME.toLowerCase();
 			this.$logger.error(
-				`You can run ${EOL}\t${clientNameLowerCase} proxy set <url> <username> <password>.${EOL}In order to supply ${clientNameLowerCase} with the credentials needed.`
+				`You can run ${EOL}\t${clientNameLowerCase} proxy set <url> <username> <password>.${EOL}In order to supply ${clientNameLowerCase} with the credentials needed.`,
 			);
 			return "Your proxy requires authentication.";
 		} else if (statusCode === HttpStatusCodes.PAYMENT_REQUIRED) {
@@ -177,7 +191,7 @@ export class HttpClient implements Server.IHttpClient {
 			} catch (parsingFailed) {
 				this.$logger.trace(
 					"Failed to get error from http request: ",
-					parsingFailed
+					parsingFailed,
 				);
 				return `The server returned unexpected response: ${body}`;
 			}
@@ -199,7 +213,7 @@ export class HttpClient implements Server.IHttpClient {
 		cliProxySettings: IProxySettings,
 		options: any,
 		headers: any,
-		requestProto: string
+		requestProto: string,
 	): Promise<void> {
 		const isLocalRequest =
 			options.host === "localhost" || options.host === "127.0.0.1";
