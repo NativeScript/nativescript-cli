@@ -24,7 +24,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NativeScript/nativescript-doctor.git"
+    "url": "git+https://github.com/NativeScript/nativescript-cli.git",
+    "directory": "packages/doctor"
   },
   "keywords": [
     "NativeScript",
@@ -40,9 +41,9 @@
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/NativeScript/nativescript-doctor/issues"
+    "url": "https://github.com/NativeScript/nativescript-cli/issues"
   },
-  "homepage": "https://github.com/NativeScript/nativescript-doctor#readme",
+  "homepage": "https://github.com/NativeScript/nativescript-cli/tree/main/packages/doctor#readme",
   "devDependencies": {
     "@types/chai": "5.2.2",
     "@types/lodash": "4.17.21",
