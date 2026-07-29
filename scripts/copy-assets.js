@@ -48,7 +48,6 @@ function copyFile(sourcePath, targetPath) {
 	const source = fs.statSync(sourcePath);
 	if (fs.existsSync(targetPath)) {
 		const target = fs.statSync(targetPath);
-		// vendor/ alone is ~31MB; re-copying it on every build is pure waste
 		if (target.mtimeMs >= source.mtimeMs && target.size === source.size) {
 			skipped++;
 			return;

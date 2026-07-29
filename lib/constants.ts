@@ -217,6 +217,15 @@ export const DEBUGGER_ATTACHED_EVENT_NAME = "debuggerAttached";
 export const DEBUGGER_DETACHED_EVENT_NAME = "debuggerDetached";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
+export const BUNDLETOOL_CACHE_DIRNAME = "bundletool";
+export const BUNDLETOOL_VERSION = "1.18.2";
+// sha256 of bundletool-all-<BUNDLETOOL_VERSION>.jar as published on GitHub;
+// must be updated together with BUNDLETOOL_VERSION or the download is rejected
+export const BUNDLETOOL_SHA256 =
+	"378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584";
+export const BUNDLETOOL_RELEASES_URL =
+	"https://github.com/google/bundletool/releases/download";
+export const BUNDLETOOL_PATH_ENV_VAR = "NS_BUNDLETOOL_PATH";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
 const ANDROID_SIGNING_REQUIRED_MESSAGE =
 	"you need to specify all --key-store-* options.";
