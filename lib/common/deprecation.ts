@@ -42,12 +42,14 @@ export function reportDeprecation(report: IDeprecationReport): void {
 	if (reported.has(key)) {
 		return;
 	}
-	reported.add(key);
 
 	const logger = report.logger || tryResolveGlobalLogger();
 	if (!logger) {
+		// Deliberately not latched: a report dropped for lack of a logger must
+		// still be deliverable once one becomes resolvable.
 		return;
 	}
+	reported.add(key);
 
 	if (stage === "warn") {
 		logger.warn(message);

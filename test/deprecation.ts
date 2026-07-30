@@ -84,4 +84,18 @@ describe("deprecation tracer", () => {
 			setGlobalInjector(previousInjector);
 		}
 	});
+
+	it("still delivers a report that was previously dropped for lack of a logger", () => {
+		const previousInjector = getInjector();
+		setGlobalInjector(new Yok());
+		try {
+			reportDeprecation({ api: "test.redeliver" });
+		} finally {
+			setGlobalInjector(previousInjector);
+		}
+
+		reportDeprecation({ api: "test.redeliver", logger });
+
+		assert.include(logger.traceOutput, "test.redeliver");
+	});
 });

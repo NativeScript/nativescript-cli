@@ -92,7 +92,7 @@ module.exports = function (hookArgs) {
 };
 ```
 
-* `inject()` is valid in the synchronous part of the hook body — not after an `await`. Resolve what you need up front; for late lookups, grab the container first: `const injector = inject(Injector)`, then `injector.get(...)` later.
+* `inject()` is valid in the synchronous part of the hook body — not after an `await`. Resolve what you need up front; for late lookups, grab the container first: `const injector = inject(Injector)` (`Injector` is exported from `nativescript/contracts` too), then `injector.get(...)` later.
 * `hookArgs` contains the parameters of the CLI function being hooked; its shape depends on the hook point. Declare it only when you need it — a hook may also take no parameters at all. A future typed hook API (`defineHook` with an explicit context object) will replace this parameter; it is the one remaining piece of the legacy convention.
 * Tokens resolve by class first and by their canonical name on a miss, so this works even if your dependency tree carries its own copy of `nativescript` — a duplicated token class still resolves to the running CLI's service.
 * Only a first tranche of services has typed tokens so far ([dependency-injection.md](dependency-injection.md#available-contracts) lists them); a service without a token is reachable by its registry name — `inject("logger")` — as a migration bridge.

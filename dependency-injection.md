@@ -123,7 +123,7 @@ Provider kinds:
 |---|---|---|
 | Class | `provide(Token, Impl)` / `{ provide, useClass }` | constructed with `new Impl()` inside an injection context, so `inject()` works in its fields |
 | Lazy class | `provideLazy(Token, () => Impl)` / `{ provide, useLazyClass }` | loader runs on first `get()` only — keeps startup lazy |
-| Value | `{ provide, useValue }` | registered instance; re-registering replaces the cached instance |
+| Value | `{ provide, useValue }` | registered instance; re-registering replaces the cached instance. With `shared: false` there is no resolver and `get()` throws — a preserved legacy quirk |
 | Factory | `{ provide, useFactory }` | called inside an injection context |
 
 `shared: false` makes a provider transient: every resolution constructs a fresh

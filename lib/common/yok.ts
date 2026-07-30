@@ -604,10 +604,18 @@ export class Yok extends Injector implements IInjector {
 	}
 }
 
-if (!(<any>global).$injector) {
-	(<any>global).$injector = new Yok();
-	injector = (<any>global).$injector;
-}
+// The global is the published legacy surface. It is an accessor pair so a
+// direct `global.$injector = x` assignment — allowed for third parties —
+// stays synchronized with the module binding that getInjector() and internal
+// code read; a plain data property would silently fork the two.
+injector = (<any>global).$injector || new Yok();
+Object.defineProperty(global, "$injector", {
+	get: () => injector,
+	set: (value: IInjector) => {
+		injector = value;
+	},
+	configurable: true,
+});
 
 /**
  * Accessor for the process-wide facade, for code that cannot receive the
@@ -625,6 +633,7 @@ export function getInjector(): IInjector {
  * the container via inject(Injector) instead of a process-wide global.
  */
 export function setGlobalInjector(inj: IInjector): IInjector {
-	(<any>global).$injector = injector = inj;
+	injector = inj;
+	(<any>global).$injector = inj;
 	return inj;
 }

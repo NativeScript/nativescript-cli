@@ -79,7 +79,7 @@ export class DoctorServiceImpl
 	) {}
 
 	public async printWarnings(configOptions?: {
-		trackResult: boolean;
+		trackResult?: boolean;
 		projectDir?: string;
 		runtimeVersion?: string;
 		options?: IOptions;
@@ -177,15 +177,16 @@ export class DoctorServiceImpl
 			"Running the setup script to try and automatically configure your environment.",
 		);
 
+		let result: ISpawnResult;
 		if (this.$hostInfo.isDarwin) {
-			await this.runSetupScriptCore(
+			result = await this.runSetupScriptCore(
 				DoctorServiceImpl.DarwinSetupScriptLocation,
 				[],
 			);
 		}
 
 		if (this.$hostInfo.isWindows) {
-			await this.runSetupScriptCore(
+			result = await this.runSetupScriptCore(
 				DoctorServiceImpl.WindowsSetupScriptExecutable,
 				DoctorServiceImpl.WindowsSetupScriptArguments,
 			);
@@ -195,6 +196,8 @@ export class DoctorServiceImpl
 			action: TrackActionNames.RunSetupScript,
 			additionalData: "Finished",
 		});
+
+		return result;
 	}
 
 	public async canExecuteLocalBuild(configuration?: {
@@ -203,6 +206,7 @@ export class DoctorServiceImpl
 		runtimeVersion?: string;
 		forceCheck?: boolean;
 	}): Promise<boolean> {
+		configuration = configuration || {};
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.CheckLocalBuildSetup,
 			additionalData: "Starting",

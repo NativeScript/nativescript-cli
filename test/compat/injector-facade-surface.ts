@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Yok } from "../../lib/common/yok";
+import { Yok, getInjector } from "../../lib/common/yok";
 import { Injector, inject, runInInjectionContext } from "../../lib/common/di";
 import {
 	CommandRegistry,
@@ -60,6 +60,19 @@ describe("injector facade surface", () => {
 		sub.register("subclassed", { value: 42 });
 		assert.equal(sub.resolve("subclassed").value, 42);
 		assert.strictEqual(sub.resolve("injector"), sub);
+	});
+
+	it("keeps getInjector() synchronized with a direct global.$injector assignment", () => {
+		const previous = getInjector();
+		const fresh = new Yok();
+
+		(<any>global).$injector = fresh;
+		try {
+			assert.strictEqual(getInjector(), fresh);
+		} finally {
+			(<any>global).$injector = previous;
+		}
+		assert.strictEqual(getInjector(), previous);
 	});
 
 	it("assigns the process-wide global.$injector", () => {
