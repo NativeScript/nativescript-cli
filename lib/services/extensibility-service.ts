@@ -18,6 +18,7 @@ import {
 	IGetExtensionCommandInfoParams,
 } from "../common/definitions/extensibility";
 import { injector } from "../common/yok";
+import { IInjector } from "../common/definitions/yok";
 import { CommandsDelimiters } from "../common/constants";
 import { isCommandDefinition } from "../common/define-command";
 import { createCommandFromDefinition } from "../common/services/command-definition-adapter";
@@ -77,6 +78,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		private $packageManager: INodePackageManager,
 		private $settingsService: ISettingsService,
 		private $requireService: IRequireService,
+		private $injector: IInjector,
 	) {}
 
 	public async installExtension(
@@ -362,12 +364,12 @@ export class ExtensibilityService implements IExtensibilityService {
 			const parentName = commandName.split(
 				CommandsDelimiters.HierarchicalCommand,
 			)[0];
-			const container = (<any>injector).di;
+			const container = (<any>this.$injector).di;
 			const parentWasAbsent =
 				parentName !== commandName && !container.has(`commands.${parentName}`);
 
 			try {
-				injector.requireCommand(commandName, absoluteModulePath);
+				this.$injector.requireCommand(commandName, absoluteModulePath);
 			} catch (err) {
 				const owner = this.manifestCommandOwners[commandName];
 				const ownerInfo = owner
@@ -389,7 +391,7 @@ export class ExtensibilityService implements IExtensibilityService {
 				const exported = require(absoluteModulePath);
 				const candidate = (exported && exported.default) ?? exported;
 				if (isCommandDefinition(candidate)) {
-					injector.registerCommand(commandName, () =>
+					this.$injector.registerCommand(commandName, () =>
 						createCommandFromDefinition(<any>candidate),
 					);
 				}

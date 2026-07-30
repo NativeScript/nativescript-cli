@@ -3,11 +3,10 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { ExtensibilityService } from "../lib/services/extensibility-service";
-import { Yok } from "../lib/common/yok";
+import { Yok, getInjector, setGlobalInjector } from "../lib/common/yok";
 import { LoggerStub } from "./stubs";
 import { clearReportedDeprecations } from "../lib/common/deprecation";
 import { CommandsDelimiters } from "../lib/common/constants";
-import { ICliGlobal } from "../lib/common/definitions/cli-global";
 import { IInjector } from "../lib/common/definitions/yok";
 import {
 	IExtensibilityService,
@@ -15,11 +14,13 @@ import {
 } from "../lib/common/definitions/extensibility";
 import { IStringDictionary } from "../lib/common/declarations";
 
-// The service registers commands on the global injector imported by
-// lib/common/yok, so every assertion about registered commands goes through it.
-// That injector is shared by the whole file, so command names must be unique per
-// test - a name reused across tests would collide like a real conflict does.
-const cliGlobal = <ICliGlobal>(<unknown>global);
+// Every assertion about registered commands goes through the per-test
+// injector: the service takes $injector as a constructor dependency. The
+// process-wide injector is pointed at that same instance for each test's
+// duration ONLY because legacy-shape fixture modules register through the
+// published global surface when they load - that swap is the legacy-compat
+// seam, not the assertion path. Command names stay unique per test since the
+// module require cache outlives a test.
 
 interface ITestCapture {
 	loadedModules: string[];
@@ -32,9 +33,14 @@ describe("extension manifests", () => {
 	let profileDir: string;
 	let requiredPaths: string[];
 	let capture: ITestCapture;
+	let testInjector: IInjector;
+	let previousProcessInjector: IInjector;
 
 	beforeEach(() => {
 		profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "ns-ext-manifest-"));
+		testInjector = getTestInjector();
+		previousProcessInjector = getInjector();
+		setGlobalInjector(testInjector);
 		requiredPaths = [];
 		capture = (<any>global).__nsmCapture = {
 			loadedModules: [],
@@ -48,6 +54,7 @@ describe("extension manifests", () => {
 	});
 
 	afterEach(() => {
+		setGlobalInjector(previousProcessInjector);
 		fs.rmSync(profileDir, { recursive: true, force: true });
 		delete (<any>global).__nsmCapture;
 	});
@@ -195,7 +202,6 @@ describe("extension manifests", () => {
 				},
 			);
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			const extensionData =
 				await extensibilityService.loadExtension(extensionName);
@@ -212,7 +218,7 @@ describe("extension manifests", () => {
 				"nsmlazy|clean",
 			]);
 
-			const command = cliGlobal.$injector.resolveCommand("nsmlazy|run");
+			const command = testInjector.resolveCommand("nsmlazy|run");
 			assert.isOk(command);
 			assert.deepStrictEqual(capture.loadedModules, ["lazy-run"]);
 
@@ -244,7 +250,6 @@ describe("extension manifests", () => {
 				},
 			);
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			await extensibilityService.loadExtension(extensionName);
 
@@ -253,9 +258,9 @@ describe("extension manifests", () => {
 			assert.include(warnOutput, "nsmbad|empty");
 			assert.include(warnOutput, extensionName);
 
-			assert.isOk(cliGlobal.$injector.resolveCommand("nsmbad|good"));
-			assert.isNull(cliGlobal.$injector.resolveCommand("nsmbad|number"));
-			assert.isNull(cliGlobal.$injector.resolveCommand("nsmbad|empty"));
+			assert.isOk(testInjector.resolveCommand("nsmbad|good"));
+			assert.isNull(testInjector.resolveCommand("nsmbad|number"));
+			assert.isNull(testInjector.resolveCommand("nsmbad|empty"));
 			assert.deepStrictEqual(capture.loadedModules, ["malformed-good"]);
 		});
 
@@ -279,7 +284,6 @@ describe("extension manifests", () => {
 				},
 			);
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			await extensibilityService.loadExtension(firstExtension);
 			await extensibilityService.loadExtension(secondExtension);
@@ -289,7 +293,7 @@ describe("extension manifests", () => {
 			assert.include(warnOutput, firstExtension);
 			assert.include(warnOutput, secondExtension);
 
-			const command = cliGlobal.$injector.resolveCommand("nsmconflict|run");
+			const command = testInjector.resolveCommand("nsmconflict|run");
 			await command.execute([]);
 			assert.deepStrictEqual(capture.executed, [
 				{ marker: "first-run", args: [] },
@@ -309,7 +313,6 @@ describe("extension manifests", () => {
 				},
 			);
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			const extensionData =
 				await extensibilityService.loadExtension(extensionName);
@@ -325,7 +328,7 @@ describe("extension manifests", () => {
 			assert.include(traceOutput, extensionName);
 
 			assert.deepStrictEqual(extensionData.commands, ["nsmeager|run"]);
-			assert.isOk(cliGlobal.$injector.resolveCommand("nsmeager|run"));
+			assert.isOk(testInjector.resolveCommand("nsmeager|run"));
 		});
 
 		it("keeps the eager path when the extension declares no commands", async () => {
@@ -336,7 +339,6 @@ describe("extension manifests", () => {
 				{ "main.js": mainModule("no-commands-main") },
 			);
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			const extensionData =
 				await extensibilityService.loadExtension(extensionName);
@@ -357,7 +359,6 @@ describe("extension manifests", () => {
 			writeExtension("nsm-data-array-ext", { commands: ["nsmdata|three"] }, {});
 			writeExtension("nsm-data-plain-ext", {}, {});
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			const extensionsData = extensibilityService.getInstalledExtensionsData();
 			const dataByName: { [name: string]: IExtensionData } = {};
@@ -382,7 +383,6 @@ describe("extension manifests", () => {
 			inputStrings: string[],
 		): Promise<any> => {
 			const extensionName = "nsm-registry-ext";
-			const testInjector = getTestInjector();
 			const packageManager = testInjector.resolve<any>("packageManager");
 			packageManager.searchNpms = async (keyword: string): Promise<any> => {
 				assert.equal(keyword, "nativescript:extension");
@@ -485,13 +485,12 @@ describe("extension manifests", () => {
 				},
 			);
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			await extensibilityService.loadExtension(extensionName);
 
 			assert.deepEqual(capture.loadedModules, []);
 
-			const command = cliGlobal.$injector.resolveCommand("nsmdef|hello");
+			const command = testInjector.resolveCommand("nsmdef|hello");
 			assert.isOk(command);
 			assert.deepEqual(capture.loadedModules, ["def-hello"]);
 
@@ -512,18 +511,17 @@ describe("extension manifests", () => {
 				},
 			);
 
-			const testInjector = getTestInjector();
 			const extensibilityService = resolveService(testInjector);
 			await extensibilityService.loadExtension(extensionName);
 
 			// Dispatch hits the parent first; its record must load the child module
 			// so the dispatcher the child's registration synthesizes exists.
-			const parent = <any>cliGlobal.$injector.resolveCommand("nsmdefp");
+			const parent = <any>testInjector.resolveCommand("nsmdefp");
 			assert.isOk(parent);
 			assert.isTrue(parent.isHierarchicalCommand);
 			assert.include(capture.loadedModules, "defp-go");
 
-			const child = cliGlobal.$injector.resolveCommand("nsmdefp|go");
+			const child = testInjector.resolveCommand("nsmdefp|go");
 			assert.isOk(child);
 		});
 	});

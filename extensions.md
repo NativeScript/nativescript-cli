@@ -88,21 +88,14 @@ The array is a discovery aid only — it lists the names the CLI may suggest you
 extension for, but it says nothing about where the implementations live. An
 extension declaring commands this way (or declaring no commands at all) is
 loaded the old way: the CLI `require()`s the package's main entry on **every**
-invocation and expects the module's top-level code to register everything.
+invocation and expects the module's top-level code to register everything
+through the injector global.
 
-```js
-// index.js of a legacy extension
-const path = require("path");
-
-global.$injector.requireCommand(
-	"hello|world",
-	path.join(__dirname, "commands", "hello-world"),
-);
-```
-
-This path remains supported, but it is tracked for eventual deprecation. Run any
-command with `--log trace` to see which installed extensions still rely on it,
-or set `NS_DEPRECATIONS=warn` to have those reports printed as warnings.
+This path remains supported for published extensions, but it is tracked for
+eventual deprecation and new extensions should not use it — declare the map
+instead. Run any command with `--log trace` to see which installed extensions
+still rely on it, or set `NS_DEPRECATIONS=warn` to have those reports printed
+as warnings.
 
 ## Writing a command module
 
@@ -124,31 +117,12 @@ module.exports = defineCommand({
 });
 ```
 
-Alternatively, a module may register itself when it is loaded, by calling
-`$injector.registerCommand` at the top level with the same name it is declared
-under in the manifest. The CLI resolves the command through the injector right
-after loading the module, so registration has to happen as a side effect of the
-`require`.
-
-```js
-// dist/commands/hello-world.js
-class HelloWorldCommand {
-	constructor($logger) {
-		this.$logger = $logger;
-		this.allowedParameters = [];
-	}
-
-	async execute(args) {
-		this.$logger.info(`Hello, ${args[0] || "world"}!`);
-	}
-}
-
-global.$injector.registerCommand("hello|world", HelloWorldCommand);
-```
-
-Constructor parameters are injected by name: a parameter called `$logger`
-receives the CLI's logger, `$fs` its file system service, and so on. A command
-class must expose `allowedParameters` and an `execute(args)` method.
+Legacy modules — command classes that register themselves at load time through
+the injector global, with parameter-name constructor injection — keep working
+when a manifest entry points at them, so existing extensions can adopt the map
+without rewriting their commands. Both of those mechanisms are deprecated
+(see [dependency-injection.md](dependency-injection.md)); write new modules as
+definitions.
 
 ## Command names
 
