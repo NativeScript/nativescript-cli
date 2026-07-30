@@ -77,11 +77,58 @@ Execute Hooks In-Process
 
 When your hook is a Node.js script, the CLI executes it in-process. This gives you access to the entire internal state of the CLI and all of its functions.
 
-The CLI assumes that this is a CommonJS module and calls its single exported function.
+The CLI assumes that this is a CommonJS module and calls the hook it exports — either a hook definition (see below) or a plain function.
 
 ## Writing a hook
 
-Hooks run inside an injection context, so services come from `inject()` — the same API used everywhere else (see [dependency-injection.md](dependency-injection.md)). Declare a `hookArgs` parameter only if you need the payload of the operation being hooked.
+Export a hook definition built with `defineHook`. It takes the hook point in the usual naming convention (`before-prepare`, `after-watch`) and a handler that receives a context object.
+
+```JavaScript
+const { defineHook, inject, DoctorService } = require("nativescript/contracts");
+
+module.exports = defineHook("before-prepare", async (ctx) => {
+	const doctorService = inject(DoctorService);
+	await doctorService.canExecuteLocalBuild();
+});
+```
+
+Services come from `inject()` — the same API used everywhere else (see [dependency-injection.md](dependency-injection.md)):
+
+* `inject()` is valid in the synchronous part of the handler — not after an `await`. Resolve what you need up front; for late lookups, grab the container first: `const injector = inject(Injector)` (`Injector` is exported from `nativescript/contracts` too), then `injector.get(...)` later.
+* Tokens resolve by class first and by their canonical name on a miss, so this works even if your dependency tree carries its own copy of `nativescript` — a duplicated token class still resolves to the running CLI's service.
+* Only a first tranche of services has typed tokens so far ([dependency-injection.md](dependency-injection.md#available-contracts) lists them); a service without a token is reachable by its registry name — `inject("logger")` — as a migration bridge.
+* If you build your hook in TypeScript, add `nativescript` as a `devDependency` and import the same names: `import { defineHook, inject, DoctorService } from "nativescript/contracts"`. An `.mjs` hook can `export default defineHook(...)`.
+
+`ctx.payload` holds the parameters of the CLI operation being hooked; its shape depends on the hook point. It is the CLI's own object, so mutating it influences the operation:
+
+```JavaScript
+module.exports = defineHook("before-build-task-args", (ctx) => {
+	ctx.payload.args.push("--offline");
+});
+```
+
+`ctx.wrap(middleware)` puts a middleware around the hooked method. The middleware receives the method's arguments and a `next` callback; call `next` to continue, or return without calling it to short-circuit the method entirely. Register it from a `before-` hook.
+
+```JavaScript
+module.exports = defineHook("before-prepare", (ctx) => {
+	ctx.wrap(async (args, next) => {
+		const result = await next(...args);
+		return result;
+	});
+});
+```
+
+`ctx.abort(message)` stops the hook and fails the command. Pass `{ asWarning: true }` to print the message as a warning and let the command continue instead.
+
+```JavaScript
+module.exports = defineHook("before-prepare", (ctx) => {
+	ctx.abort("Nothing to prepare.", { asWarning: true });
+});
+```
+
+### Plain function hooks
+
+Exporting a plain function is still supported. It runs in an injection context too, so `inject()` works the same way; declare a `hookArgs` parameter if you need the payload.
 
 ```JavaScript
 const { inject, DoctorService } = require("nativescript/contracts");
@@ -91,12 +138,6 @@ module.exports = function (hookArgs) {
 	return doctorService.canExecuteLocalBuild();
 };
 ```
-
-* `inject()` is valid in the synchronous part of the hook body — not after an `await`. Resolve what you need up front; for late lookups, grab the container first: `const injector = inject(Injector)` (`Injector` is exported from `nativescript/contracts` too), then `injector.get(...)` later.
-* `hookArgs` contains the parameters of the CLI function being hooked; its shape depends on the hook point. Declare it only when you need it — a hook may also take no parameters at all. A future typed hook API (`defineHook` with an explicit context object) will replace this parameter; it is the one remaining piece of the legacy convention.
-* Tokens resolve by class first and by their canonical name on a miss, so this works even if your dependency tree carries its own copy of `nativescript` — a duplicated token class still resolves to the running CLI's service.
-* Only a first tranche of services has typed tokens so far ([dependency-injection.md](dependency-injection.md#available-contracts) lists them); a service without a token is reachable by its registry name — `inject("logger")` — as a migration bridge.
-* If you build your hook in TypeScript, add `nativescript` as a `devDependency` and import the same names: `import { inject, DoctorService } from "nativescript/contracts"`.
 
 ## The hook contract
 
@@ -109,6 +150,10 @@ Member | Type | Description
 `errorAsWarning` | Boolean | Set this to treat the returned error as warning. The CLI prints the error.message colored as a warning and continues executing the current command.
  
 If these two members are not set, the CLI prints the returned error colored as fatal error and stops executing the current command.
+
+A plain-function hook can also return a function, which the CLI folds into a middleware chain around the hooked method.
+
+With `defineHook` neither convention is needed: `ctx.abort` replaces throwing an error carrying `stopExecution`/`errorAsWarning`, and `ctx.wrap` replaces returning a function.
 
 ## Legacy: parameter-name injection
 

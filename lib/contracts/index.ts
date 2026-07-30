@@ -25,3 +25,11 @@ export type {
 
 export { DoctorService } from "./doctor-service";
 export { ProjectNameService } from "./project-name-service";
+
+export { defineHook, isHookDefinition } from "../common/define-hook";
+export type {
+	IHookContext,
+	IHookDefinition,
+	HookHandler,
+	HookMiddleware,
+} from "../common/define-hook";
