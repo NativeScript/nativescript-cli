@@ -20,6 +20,8 @@ import {
 import { injector } from "../common/yok";
 import { IInjector } from "../common/definitions/yok";
 import { CommandsDelimiters } from "../common/constants";
+import { inject } from "../common/di/inject";
+import { CommandRegistry } from "../common/contracts";
 import { isCommandDefinition } from "../common/define-command";
 import { createCommandFromDefinition } from "../common/services/command-definition-adapter";
 
@@ -56,6 +58,8 @@ export class ExtensibilityService implements IExtensibilityService {
 
 	/** Command name -> name of the extension whose manifest claimed it first. */
 	private manifestCommandOwners: IStringDictionary = {};
+
+	private commandRegistry = inject(CommandRegistry);
 
 	private get pathToPackageJson(): string {
 		return path.join(this.pathToExtensions, constants.PACKAGE_JSON_FILE_NAME);
@@ -364,12 +368,12 @@ export class ExtensibilityService implements IExtensibilityService {
 			const parentName = commandName.split(
 				CommandsDelimiters.HierarchicalCommand,
 			)[0];
-			const container = this.$injector.di;
 			const parentWasAbsent =
-				parentName !== commandName && !container.has(`commands.${parentName}`);
+				parentName !== commandName &&
+				!this.$injector.has(`commands.${parentName}`);
 
 			try {
-				this.$injector.requireCommand(commandName, absoluteModulePath);
+				this.commandRegistry.requireCommand(commandName, absoluteModulePath);
 			} catch (err) {
 				const owner = this.manifestCommandOwners[commandName];
 				const ownerInfo = owner
@@ -391,17 +395,17 @@ export class ExtensibilityService implements IExtensibilityService {
 				const exported = require(absoluteModulePath);
 				const candidate = (exported && exported.default) ?? exported;
 				if (isCommandDefinition(candidate)) {
-					this.$injector.registerCommand(commandName, () =>
+					this.commandRegistry.registerCommand(commandName, () =>
 						createCommandFromDefinition(<any>candidate),
 					);
 				}
 			};
-			container.register({
+			this.$injector.register({
 				provide: `commands.${commandName}`,
 				useLazyRequire: loader,
 			});
 			if (parentWasAbsent) {
-				container.register({
+				this.$injector.register({
 					provide: `commands.${parentName}`,
 					useLazyRequire: loader,
 				});
