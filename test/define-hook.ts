@@ -157,7 +157,7 @@ describe("defineHook", () => {
 
 		await hooksService().executeBeforeHooks("case4");
 
-		assert.strictEqual(capture.container, (<any>testInjector).di);
+		assert.strictEqual(capture.container, testInjector);
 		assert.strictEqual(capture.logger, testInjector.resolve("logger"));
 	});
 

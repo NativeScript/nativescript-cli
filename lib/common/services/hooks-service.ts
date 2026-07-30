@@ -365,10 +365,11 @@ export class HooksService implements IHooksService {
 		}
 
 		const { context, middlewares } = createHookInvocation(hookArguments);
-		const container = this.$injector.di;
 
 		try {
-			await runInInjectionContext(container, () => definition.handler(context));
+			await runInInjectionContext(this.$injector, () =>
+				definition.handler(context),
+			);
 		} catch (err) {
 			if (
 				err &&
