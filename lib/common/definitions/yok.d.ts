@@ -1,6 +1,7 @@
 import { IDisposable, IDictionary } from "../declarations";
 import { ICommand } from "./commands";
 import { IKeyCommand, IValidKeyName } from "./key-commands";
+import { Injector } from "../di/injector";
 
 /**
  * The legacy injector facade surface. Every member is individually
@@ -9,6 +10,13 @@ import { IKeyCommand, IValidKeyName } from "./key-commands";
  * completes.
  */
 interface IInjector extends IDisposable {
+	/**
+	 * The token-based container backing this facade — the bridge to the
+	 * new-style API. Registrations and lookups by token go here; code already
+	 * running in an injection context should prefer inject(Injector).
+	 */
+	readonly di: Injector;
+
 	/**
 	 * @deprecated Use provideLazy() from lib/common/di — the same deferred
 	 * loading, token-based.
