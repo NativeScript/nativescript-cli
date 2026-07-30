@@ -67,6 +67,12 @@ export class Yok implements IInjector {
 	}
 
 	private COMMANDS_NAMESPACE: string = "commands";
+	/**
+	 * Parents whose dispatcher THIS instance synthesized. The require-ordering
+	 * guard below must not fire for them: they exist because a child was
+	 * registered, not because child requires ran out of order.
+	 */
+	private synthesizedParents = new Set<string>();
 	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
 	private hierarchicalCommands: IDictionary<string[]> = {};
 
@@ -88,7 +94,8 @@ export class Yok implements IInjector {
 			if (commands.length > 1) {
 				if (
 					_.startsWith(commands[1], "*") &&
-					this.container.has(this.createCommandName(commands[0]))
+					this.container.has(this.createCommandName(commands[0])) &&
+					!this.synthesizedParents.has(commands[0])
 				) {
 					throw new Error(
 						"Default commands should be required before child commands",
@@ -114,7 +121,9 @@ export class Yok implements IInjector {
 				if (commands[1] && !commandName.match(/\|\*/)) {
 					this.require(this.createCommandName(commandName), file);
 				}
-			} else {
+			} else if (!commandName.match(/\|\*/)) {
+				// Mirrors the default-command skip of the branch above: a default's
+				// own record comes from registerCommand, never from a require path.
 				this.require(this.createCommandName(commandName), file);
 			}
 		});
@@ -305,12 +314,13 @@ export class Yok implements IInjector {
 	}
 
 	private createHierarchicalCommand(name: string) {
+		this.synthesizedParents.add(name);
 		const factory = () => {
 			return {
 				disableAnalytics: true,
 				isHierarchicalCommand: true,
 				execute: async (args: string[]): Promise<void> => {
-					const commandsService = injector.resolve("commandsService");
+					const commandsService = this.resolve("commandsService");
 					let commandName: string = null;
 					const defaultCommand = this.getDefaultCommand(name, args);
 					let commandArguments: ICommandArgument[] = [];
@@ -364,7 +374,7 @@ export class Yok implements IInjector {
 			};
 		};
 
-		injector.registerCommand(name, factory);
+		this.registerCommand(name, factory);
 	}
 
 	private getHierarchicalCommandName(
@@ -395,7 +405,7 @@ export class Yok implements IInjector {
 					// In case buildHierarchicalCommand doesn't find a valid command
 					// there isn't a valid command or default with those arguments
 
-					const errors = injector.resolve("errors");
+					const errors = this.resolve("errors");
 					errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, commandName);
 				}
 
