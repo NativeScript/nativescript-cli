@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Yok, injector as globalInjector } from "../lib/common/yok";
+import { Yok } from "../lib/common/yok";
 import { IInjector } from "../lib/common/definitions/yok";
 import { inject } from "../lib/common/di";
 import { CommandsService } from "../lib/common/services/commands-service";
@@ -54,19 +54,18 @@ describe("defineCommand", () => {
 				run: () => undefined,
 			});
 
-			// The parent dispatcher is synthesized onto the global facade by the
-			// legacy registry, so registration happens there too.
-			registerCommandDefinition(definition, globalInjector);
+			const testInjector = createTestInjector();
+			registerCommandDefinition(definition, testInjector);
 
-			const command = globalInjector.resolveCommand("dctestwidget|add");
+			const command = testInjector.resolveCommand("dctestwidget|add");
 			assert.isFunction(command.execute);
 			assert.deepEqual(command.allowedParameters, []);
 
-			const parent = globalInjector.resolveCommand("dctestwidget");
+			const parent = testInjector.resolveCommand("dctestwidget");
 			assert.isTrue(parent.isHierarchicalCommand);
 
 			assert.include(
-				globalInjector.getRegisteredCommandsNames(false),
+				testInjector.getRegisteredCommandsNames(false),
 				"dctestwidget|add",
 			);
 		});
