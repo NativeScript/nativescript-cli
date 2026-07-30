@@ -80,11 +80,13 @@ function getDeprecationStage(): DeprecationStage {
 
 function tryResolveGlobalLogger(): IDeprecationLogger | null {
 	try {
-		const globalInjector = (<any>global).$injector;
-		if (!globalInjector) {
+		// Required at call time: yok imports this module, so a static import
+		// would be a cycle. Every reporting site already runs with yok loaded.
+		const injector = require("./yok").getInjector();
+		if (!injector) {
 			return null;
 		}
-		return globalInjector.resolve("logger");
+		return injector.resolve("logger");
 	} catch (err) {
 		return null;
 	}

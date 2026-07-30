@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Yok } from "../lib/common/yok";
+import { Yok, getInjector, setGlobalInjector } from "../lib/common/yok";
 import {
 	reportDeprecation,
 	clearReportedDeprecations,
@@ -59,31 +59,29 @@ describe("deprecation tracer", () => {
 		);
 	});
 
-	it("falls back to the global injector's logger when none is passed", () => {
-		const globalAny = <any>global;
-		const previousInjector = globalAny.$injector;
+	it("falls back to the process-wide injector's logger when none is passed", () => {
+		const previousInjector = getInjector();
 		const freshInjector = new Yok();
 		const freshLogger = new LoggerStub();
 		freshInjector.register("logger", freshLogger);
-		globalAny.$injector = freshInjector;
+		setGlobalInjector(freshInjector);
 
 		try {
 			reportDeprecation({ api: "test.global-logger" });
 			assert.include(freshLogger.traceOutput, "test.global-logger");
 		} finally {
-			globalAny.$injector = previousInjector;
+			setGlobalInjector(previousInjector);
 		}
 	});
 
 	it("drops the report silently when no logger is resolvable", () => {
-		const globalAny = <any>global;
-		const previousInjector = globalAny.$injector;
-		globalAny.$injector = undefined;
+		const previousInjector = getInjector();
+		setGlobalInjector(new Yok());
 
 		try {
 			assert.doesNotThrow(() => reportDeprecation({ api: "test.no-logger" }));
 		} finally {
-			globalAny.$injector = previousInjector;
+			setGlobalInjector(previousInjector);
 		}
 	});
 });

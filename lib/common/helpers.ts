@@ -567,10 +567,11 @@ export function hook(commandName: string) {
 	function getHooksService(self: any): IHooksService {
 		let hooksService: IHooksService = self.$hooksService;
 		if (!hooksService) {
-			// The global injector must stay the LAST resort: tests stub
+			// The process-wide injector must stay the LAST resort: tests stub
 			// self.$hooksService / self.$injector, and a class migrated off
-			// property injection has neither — only then may the global be used.
-			const injector = self.$injector || (<any>global).$injector;
+			// property injection has neither — only then may it be used. It is
+			// required at call time because yok imports this module (cycle).
+			const injector = self.$injector || require("./yok").getInjector();
 			if (!injector) {
 				throw Error(
 					"Type with hooks needs to have either $hooksService or $injector injected.",

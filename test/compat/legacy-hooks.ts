@@ -2,7 +2,7 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { Yok } from "../../lib/common/yok";
+import { Yok, getInjector, setGlobalInjector } from "../../lib/common/yok";
 import { HooksService } from "../../lib/common/services/hooks-service";
 import { hook } from "../../lib/common/helpers";
 import { IInjector } from "../../lib/common/definitions/yok";
@@ -301,15 +301,14 @@ describe("legacy hook contract", () => {
 			}
 		}
 
-		const globalAny = <any>global;
-		const previousInjector = globalAny.$injector;
-		globalAny.$injector = testInjector;
+		const previousInjector = getInjector();
+		setGlobalInjector(testInjector);
 		try {
 			const result = await new Subject().doWork();
 			assert.equal(result, "ok");
 			assert.isTrue(capture.ran);
 		} finally {
-			globalAny.$injector = previousInjector;
+			setGlobalInjector(previousInjector);
 		}
 	});
 
@@ -329,19 +328,18 @@ describe("legacy hook contract", () => {
 			}
 		}
 
-		const globalAny = <any>global;
-		const previousInjector = globalAny.$injector;
-		globalAny.$injector = {
+		const previousInjector = getInjector();
+		setGlobalInjector(<any>{
 			resolve: () => {
-				throw new Error("global injector must be the last resort");
+				throw new Error("the process-wide injector must be the last resort");
 			},
-		};
+		});
 		try {
 			const result = await new Subject().doWork();
 			assert.equal(result, "ok");
 			assert.isTrue(capture.ran);
 		} finally {
-			globalAny.$injector = previousInjector;
+			setGlobalInjector(previousInjector);
 		}
 	});
 });

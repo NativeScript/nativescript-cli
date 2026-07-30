@@ -590,6 +590,17 @@ if (!(<any>global).$injector) {
 }
 
 /**
+ * Accessor for the process-wide facade, for code that cannot receive the
+ * injector through DI or a static import (import cycles, decorator bodies).
+ * Prefer inject(Injector) in an injection context; prefer a constructor
+ * dependency in services. Never read global.$injector directly — the global
+ * exists only as the published legacy surface for extensions and hooks.
+ */
+export function getInjector(): IInjector {
+	return injector;
+}
+
+/**
  * @deprecated Global-singleton wiring for the legacy facade; new code receives
  * the container via inject(Injector) instead of a process-wide global.
  */
