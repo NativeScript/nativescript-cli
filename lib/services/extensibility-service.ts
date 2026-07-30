@@ -364,7 +364,7 @@ export class ExtensibilityService implements IExtensibilityService {
 			const parentName = commandName.split(
 				CommandsDelimiters.HierarchicalCommand,
 			)[0];
-			const container = (<any>this.$injector).di;
+			const container = this.$injector.di;
 			const parentWasAbsent =
 				parentName !== commandName && !container.has(`commands.${parentName}`);
 
