@@ -19,7 +19,6 @@ import {
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
-import { MobileProject } from "@nstudio/trapezedev-project";
 import { Minimatch } from "minimatch";
 
 const sourceExtensions = [
@@ -77,6 +76,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		protected $xcode: IXcode,
 		private $iOSNativeTargetService: IIOSNativeTargetService,
 		private $logger: ILogger,
+		private $spmPbxprojService: ISPMPbxprojService,
 	) {}
 
 	private addResourceFile(
@@ -1416,20 +1416,8 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				`Applying ${watchSPMPackages.length} SPM package(s) to targets:${targetNames}`,
 			);
 
-			const project = new MobileProject(platformData.projectRoot, {
-				ios: {
-					path: ".",
-				},
-				enableAndroid: false,
-			});
-			await project.load();
-
-			if (!project.ios) {
-				this.$logger.debug("No iOS project found via trapeze");
-				return;
-			}
-
 			// Add SPM packages to each watch target
+			const assignments: IosSPMPackageAssignment[] = [];
 			for (const pkg of watchSPMPackages) {
 				if ("path" in pkg) {
 					pkg.path = path.resolve(basedir, pkg.path);
@@ -1439,11 +1427,22 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 					`Adding SPM package ${JSON.stringify(pkg)} to targets ${targetNames}`,
 				);
 				for (const targetName of targetNames) {
-					project.ios.addSPMPackage(targetName, pkg);
+					assignments.push({ targetName, package: pkg });
 				}
 			}
 
-			await project.commit();
+			if (
+				!this.$spmPbxprojService.addPackages(
+					platformData.projectRoot,
+					assignments,
+				)
+			) {
+				this.$logger.debug(
+					`No SPM packages were applied to targets ${targetNames}`,
+				);
+				return;
+			}
+
 			this.$logger.debug(
 				`Successfully applied SPM packages to targets ${targetNames}`,
 			);
