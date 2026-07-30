@@ -105,7 +105,7 @@ export class WindowsProjectService
 			);
 
 			this._platformData = {
-				frameworkPackageName: runtimePackage?.name ?? "@nativescript/windows",
+				frameworkPackageName: runtimePackage.name,
 				normalizedPlatformName: "Windows",
 				platformNameLowerCase: "windows",
 				appDestinationDirectoryPath: path.join(
