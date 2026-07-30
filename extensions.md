@@ -106,7 +106,25 @@ or set `NS_DEPRECATIONS=warn` to have those reports printed as warnings.
 
 ## Writing a command module
 
-A command module must register itself when it is loaded, by calling
+The recommended shape is a module exporting a `defineCommand` definition (see
+[defining-commands.md](defining-commands.md)) — the CLI adapts and registers it
+under the manifest key when the command is first executed, and the module needs
+no registration side effects at all:
+
+```js
+// dist/commands/hello-world.js
+const { defineCommand, inject } = require("nativescript/contracts");
+
+module.exports = defineCommand({
+	name: "hello|world",
+	arguments: "any",
+	async run(ctx) {
+		inject("logger").info(`Hello, ${ctx.args[0] || "world"}!`);
+	},
+});
+```
+
+Alternatively, a module may register itself when it is loaded, by calling
 `$injector.registerCommand` at the top level with the same name it is declared
 under in the manifest. The CLI resolves the command through the injector right
 after loading the module, so registration has to happen as a side effect of the

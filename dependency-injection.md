@@ -265,6 +265,13 @@ The first tranche, growing as services migrate:
 | `DoctorService` | `doctorService` |
 | `ProjectNameService` | `projectNameService` |
 
+Related guides
+--------------
+
+- [defining-commands.md](defining-commands.md) — declarative, typed commands via `defineCommand`.
+- [extensions.md](extensions.md) — extension authoring, including the `nativescript.commands` manifest.
+- [extending-cli.md](extending-cli.md) — hooks, including the typed `defineHook` API.
+
 Legacy → new quick reference
 ----------------------------
 

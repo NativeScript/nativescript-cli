@@ -322,9 +322,10 @@ side-effect-free contracts entry point deliberately does not pull it in.
 `defineCommand`, the option helpers and all the types are exported from both
 `nativescript/contracts` and `lib/common/define-command`.
 
-Declaring commands from an extension manifest, so that an extension does not
-have to call a registration function at load time, is being added separately.
-Until then, extensions register definitions the same way the CLI does.
+Extensions do not need `registerCommandDefinition` at all: a
+`nativescript.commands` manifest entry may point straight at a module that
+exports a definition, and the CLI adapts and registers it lazily under the
+manifest key (see [extensions.md](extensions.md)).
 
 Relationship to `ICommand`
 --------------------------

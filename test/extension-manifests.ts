@@ -457,4 +457,74 @@ describe("extension manifests", () => {
 			assert.isNull(result);
 		});
 	});
+
+	describe("commands declared as defineCommand modules", () => {
+		const contractsPath = require.resolve("../lib/contracts");
+
+		const definitionModule = (commandName: string, marker: string): string =>
+			`const { defineCommand } = require(${JSON.stringify(contractsPath)});
+			global.__nsmCapture.loadedModules.push(${JSON.stringify(marker)});
+			module.exports = defineCommand({
+				name: ${JSON.stringify(commandName)},
+				arguments: "any",
+				async run(ctx) {
+					global.__nsmCapture.executed.push({ marker: ${JSON.stringify(
+						marker,
+					)}, args: ctx.args });
+				},
+			});`;
+
+		it("adapts and registers a pure definition module lazily", async () => {
+			const extensionName = "nsm-def-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmdef|hello": "./dist/hello.js" } },
+				{
+					"main.js": mainModule("def-main"),
+					"dist/hello.js": definitionModule("nsmdef|hello", "def-hello"),
+				},
+			);
+
+			const testInjector = getTestInjector();
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.deepEqual(capture.loadedModules, []);
+
+			const command = cliGlobal.$injector.resolveCommand("nsmdef|hello");
+			assert.isOk(command);
+			assert.deepEqual(capture.loadedModules, ["def-hello"]);
+
+			await command.execute(["fast"]);
+			assert.deepEqual(capture.executed, [
+				{ marker: "def-hello", args: ["fast"] },
+			]);
+		});
+
+		it("resolves the hierarchical parent dispatcher before any child module has loaded", async () => {
+			const extensionName = "nsm-defp-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmdefp|go": "./dist/go.js" } },
+				{
+					"main.js": mainModule("defp-main"),
+					"dist/go.js": definitionModule("nsmdefp|go", "defp-go"),
+				},
+			);
+
+			const testInjector = getTestInjector();
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			// Dispatch hits the parent first; its record must load the child module
+			// so the dispatcher the child's registration synthesizes exists.
+			const parent = <any>cliGlobal.$injector.resolveCommand("nsmdefp");
+			assert.isOk(parent);
+			assert.isTrue(parent.isHierarchicalCommand);
+			assert.include(capture.loadedModules, "defp-go");
+
+			const child = cliGlobal.$injector.resolveCommand("nsmdefp|go");
+			assert.isOk(child);
+		});
+	});
 });

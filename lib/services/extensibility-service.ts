@@ -18,6 +18,9 @@ import {
 	IGetExtensionCommandInfoParams,
 } from "../common/definitions/extensibility";
 import { injector } from "../common/yok";
+import { CommandsDelimiters } from "../common/constants";
+import { isCommandDefinition } from "../common/define-command";
+import { createCommandFromDefinition } from "../common/services/command-definition-adapter";
 
 function isNonEmptyString(value: any): boolean {
 	return typeof value === "string" && value.trim().length > 0;
@@ -333,8 +336,10 @@ export class ExtensibilityService implements IExtensibilityService {
 	/**
 	 * Registers each declared command as a deferred require of its own module, so
 	 * nothing from the extension is loaded until one of its commands is executed.
-	 * Each module is expected to register itself on load, by calling
-	 * `$injector.registerCommand(<name>, <class>)` at the top level.
+	 * A module may either register itself on load (a legacy-style
+	 * `$injector.registerCommand(<name>, <class>)` at the top level) or export a
+	 * `defineCommand` definition, which the deferred loader adapts and registers
+	 * under the manifest key.
 	 */
 	private registerDeclaredCommands(
 		extensionName: string,
@@ -353,11 +358,16 @@ export class ExtensibilityService implements IExtensibilityService {
 				continue;
 			}
 
+			const absoluteModulePath = path.join(pathToExtension, modulePath);
+			const parentName = commandName.split(
+				CommandsDelimiters.HierarchicalCommand,
+			)[0];
+			const container = (<any>injector).di;
+			const parentWasAbsent =
+				parentName !== commandName && !container.has(`commands.${parentName}`);
+
 			try {
-				injector.requireCommand(
-					commandName,
-					path.join(pathToExtension, modulePath),
-				);
+				injector.requireCommand(commandName, absoluteModulePath);
 			} catch (err) {
 				const owner = this.manifestCommandOwners[commandName];
 				const ownerInfo = owner
@@ -367,6 +377,32 @@ export class ExtensibilityService implements IExtensibilityService {
 					`Extension ${extensionName} is unable to register command ${commandName}.${ownerInfo} Error: ${err.message}`,
 				);
 				continue;
+			}
+
+			// requireCommand's own loader only require()s the module for its side
+			// effects, which covers self-registering modules but not definition
+			// exports. The override must also land on a parent record this entry
+			// just created: dispatch resolves the parent BEFORE any child module
+			// has loaded, and the parent dispatcher only comes into existence once
+			// a child's registerCommand runs.
+			const loader = () => {
+				const exported = require(absoluteModulePath);
+				const candidate = (exported && exported.default) ?? exported;
+				if (isCommandDefinition(candidate)) {
+					injector.registerCommand(commandName, () =>
+						createCommandFromDefinition(<any>candidate),
+					);
+				}
+			};
+			container.register({
+				provide: `commands.${commandName}`,
+				useLazyRequire: loader,
+			});
+			if (parentWasAbsent) {
+				container.register({
+					provide: `commands.${parentName}`,
+					useLazyRequire: loader,
+				});
 			}
 
 			this.manifestCommandOwners[commandName] = extensionName;
