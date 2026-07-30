@@ -1,4 +1,5 @@
 export { Injector } from "./injector";
+export type { InjectOptions } from "./injector";
 export { inject, runInInjectionContext } from "./inject";
 export { forwardRef, resolveForwardRef } from "./forward-ref";
 export {

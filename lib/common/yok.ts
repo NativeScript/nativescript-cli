@@ -505,7 +505,7 @@ export class Yok extends Injector implements IInjector {
 			// track these instances for disposal either.
 			return this.createInstance(<Function>param, [], ctorArguments);
 		}
-		return this.get(<string>param, ctorArguments);
+		return this.getWithLegacyArguments(<string>param, ctorArguments);
 	}
 
 	/* Regex to match dynamic calls in the following format:

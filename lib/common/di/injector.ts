@@ -6,6 +6,18 @@ import type { Provider, ProviderToken, Type } from "./providers";
 
 type TokenKey = string | Function;
 
+export interface InjectOptions {
+	/** Resolve to null instead of throwing when the token is not registered. */
+	optional?: boolean;
+	/** Resolve at this injector's level only — no parent fallthrough. */
+	self?: boolean;
+	/**
+	 * Start resolution at the parent — escapes a child scope's shadowing
+	 * entry (e.g. a hook payload key that collides with a service name).
+	 */
+	skipSelf?: boolean;
+}
+
 type ProviderKind = "value" | "class" | "factory" | "lazyClass" | "legacyClass";
 
 interface IProviderRecord {
@@ -56,10 +68,41 @@ export class Injector {
 	 */
 	// T defaults to any so string tokens (which give inference no source and
 	// would otherwise land on unknown) stay ergonomic during the migration.
+	public get<T = any>(token: ProviderToken<T>): T;
 	public get<T = any>(
 		token: ProviderToken<T>,
+		options: InjectOptions & { optional: true },
+	): T | null;
+	public get<T = any>(token: ProviderToken<T>, options: InjectOptions): T;
+	public get<T = any>(
+		token: ProviderToken<T>,
+		options?: InjectOptions,
+	): T | null {
+		if (options && options.self && options.skipSelf) {
+			throw new Error("inject options cannot combine self and skipSelf");
+		}
+		token = resolveForwardRef(token);
+		const found = this.findRecord(token, options);
+		if (!found) {
+			if (options && options.optional) {
+				return null;
+			}
+			throw new Error("unable to resolve " + displayNameOf(token));
+		}
+		return found.owner.instantiate(found.record);
+	}
+
+	/**
+	 * The legacy facade's channel for Yok's `resolve(name, bag)` sites: the
+	 * bag applies to the construction this call itself triggers, with raw
+	 * own-key semantics, and never propagates to nested resolutions. Not part
+	 * of the public API — new code passes per-call providers to
+	 * createInstance instead.
+	 */
+	protected getWithLegacyArguments(
+		token: ProviderToken,
 		ctorArguments?: { [key: string]: any },
-	): T {
+	): any {
 		token = resolveForwardRef(token);
 		const found = this.findRecord(token);
 		if (!found) {
@@ -237,12 +280,20 @@ export class Injector {
 		return name !== undefined ? this.providers.get(name) : undefined;
 	}
 
+	// self/skipSelf apply to the entry level only: the parent walk below is
+	// always an ordinary full lookup from that injector on.
 	private findRecord(
 		token: ProviderToken,
+		options?: InjectOptions,
 	): { record: IProviderRecord; owner: Injector } | undefined {
-		const local = this.findRecordLocal(token);
-		if (local) {
-			return { record: local, owner: this };
+		if (!options || !options.skipSelf) {
+			const local = this.findRecordLocal(token);
+			if (local) {
+				return { record: local, owner: this };
+			}
+			if (options && options.self) {
+				return undefined;
+			}
 		}
 		return this.parent ? this.parent.findRecord(token) : undefined;
 	}

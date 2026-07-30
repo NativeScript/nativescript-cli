@@ -14,6 +14,7 @@ export type { IContractOptions } from "../common/di/contract";
 export { inject, runInInjectionContext } from "../common/di/inject";
 export { forwardRef, resolveForwardRef } from "../common/di/forward-ref";
 export { Injector } from "../common/di/injector";
+export type { InjectOptions } from "../common/di/injector";
 export { provide, provideLazy } from "../common/di/providers";
 export type {
 	Provider,

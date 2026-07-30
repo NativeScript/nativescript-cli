@@ -95,6 +95,21 @@ string name — all three return the same instance. The string forms exist for
 interoperability with the legacy registry; use the class token whenever one
 exists.
 
+Both `inject()` and `get()` take Angular-shaped options as their second
+argument:
+
+```ts
+inject(DoctorService, { optional: true }); // DoctorService | null — no throw
+inject("logger", { skipSelf: true });      // start at the parent: escapes a
+                                           // child scope's shadowing entry
+inject("options", { self: true });         // this level only — no fallthrough
+```
+
+`optional` covers not-found only; a found-but-misconfigured provider still
+throws. `self` and `skipSelf` cannot be combined. There is deliberately no
+`host` option: it is an Angular component-tree concept with no analog in the
+CLI's injector hierarchy.
+
 Registering: providers
 ----------------------
 

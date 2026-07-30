@@ -1,4 +1,4 @@
-import type { Injector } from "./injector";
+import type { Injector, InjectOptions } from "./injector";
 import type { ProviderToken } from "./providers";
 
 // Sync-only by design (no AsyncLocalStorage): `current` is restored in a
@@ -7,7 +7,19 @@ import type { ProviderToken } from "./providers";
 // later lookups.
 let current: Injector | null = null;
 
-export function inject<T = any>(token: ProviderToken<T>): T {
+export function inject<T = any>(token: ProviderToken<T>): T;
+export function inject<T = any>(
+	token: ProviderToken<T>,
+	options: InjectOptions & { optional: true },
+): T | null;
+export function inject<T = any>(
+	token: ProviderToken<T>,
+	options: InjectOptions,
+): T;
+export function inject<T = any>(
+	token: ProviderToken<T>,
+	options?: InjectOptions,
+): T | null {
 	if (!current) {
 		throw new Error(
 			"inject() can only be called from an injection context — a field " +
@@ -16,7 +28,7 @@ export function inject<T = any>(token: ProviderToken<T>): T {
 				"the Injector itself and use injector.get() for late lookups.",
 		);
 	}
-	return current.get(token);
+	return current.get(token, options);
 }
 
 export function runInInjectionContext<T>(injector: Injector, fn: () => T): T {

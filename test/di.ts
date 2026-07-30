@@ -187,6 +187,66 @@ describe("di: forwardRef", () => {
 	});
 });
 
+describe("di: inject options", () => {
+	it("optional resolves to null for an unknown token, and normally for a known one", () => {
+		const injector = new Injector([provide(Greeter, GreeterImpl)]);
+
+		assert.isNull(injector.get("nothing-here", { optional: true }));
+		assert.instanceOf(injector.get(Greeter, { optional: true }), GreeterImpl);
+
+		runInInjectionContext(injector, () => {
+			assert.isNull(inject("nothing-here", { optional: true }));
+		});
+	});
+
+	it("optional does not swallow a found-but-misconfigured record", () => {
+		const injector = new Injector([
+			{ provide: "brokenLiteral", useValue: {}, shared: false },
+		]);
+
+		assert.throws(
+			() => injector.get("brokenLiteral", { optional: true }),
+			/no resolver registered/,
+		);
+	});
+
+	it("skipSelf escapes a child scope's shadowing entry", () => {
+		const root = new Injector([
+			{ provide: "logger", useValue: { from: "root" } },
+		]);
+		const child = root.createChild([
+			{ provide: "logger", useValue: { from: "payload" } },
+		]);
+
+		assert.equal(child.get<any>("logger").from, "payload");
+		assert.equal(child.get<any>("logger", { skipSelf: true }).from, "root");
+		// On the root there is no parent to skip to.
+		assert.isNull(root.get("logger", { skipSelf: true, optional: true }));
+	});
+
+	it("self refuses parent fallthrough", () => {
+		const root = new Injector([{ provide: "rootOnly", useValue: { tag: 1 } }]);
+		const child = root.createChild([
+			{ provide: "childOnly", useValue: { tag: 2 } },
+		]);
+
+		assert.equal(child.get<any>("childOnly", { self: true }).tag, 2);
+		assert.throws(
+			() => child.get("rootOnly", { self: true }),
+			/unable to resolve/,
+		);
+		assert.isNull(child.get("rootOnly", { self: true, optional: true }));
+	});
+
+	it("rejects combining self and skipSelf", () => {
+		const injector = new Injector();
+		assert.throws(
+			() => injector.get("anything", { self: true, skipSelf: true }),
+			/cannot combine self and skipSelf/,
+		);
+	});
+});
+
 describe("di: cycles", () => {
 	it("reports the full resolution path", () => {
 		class CycleA {
