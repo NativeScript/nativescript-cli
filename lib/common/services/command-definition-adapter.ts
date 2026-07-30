@@ -65,12 +65,16 @@ export function createCommandFromDefinition<
 	// Resolved per call: the options service only holds parsed values once
 	// validateOptions has run for this command.
 	const buildContext = (args: string[]): ICommandContext<TSchema> => {
-		const optionsService: any = targetInjector.resolve("options");
 		const options: any = {};
-		for (const optionName of optionNames) {
-			options[optionName] = optionsService
-				? optionsService[optionName]
-				: undefined;
+		// Only a definition that declares options may depend on the options
+		// service being registered - a bare command must work without one.
+		if (optionNames.length) {
+			const optionsService: any = targetInjector.resolve("options");
+			for (const optionName of optionNames) {
+				options[optionName] = optionsService
+					? optionsService[optionName]
+					: undefined;
+			}
 		}
 
 		return { args, options };
