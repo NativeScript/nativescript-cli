@@ -30,6 +30,13 @@ interface IExtensionData extends IExtensionName {
 	 * Full path to the directory of the installed extension.
 	 */
 	pathToExtension: string;
+
+	/**
+	 * Names of the commands the extension contributes, as declared in the commands key of the nativescript key of its package.json.
+	 * The key may be a map of command name to the module implementing it, in which case these are its keys, or the legacy array of command names, in which case these are its entries.
+	 * The property is not set when the extension declares no commands.
+	 */
+	commands?: string[];
 }
 
 /**

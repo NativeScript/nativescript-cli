@@ -19,8 +19,39 @@ import {
 } from "../common/definitions/extensibility";
 import { injector } from "../common/yok";
 
+function isNonEmptyString(value: any): boolean {
+	return typeof value === "string" && value.trim().length > 0;
+}
+
+function isCommandsMap(commands: any): boolean {
+	return !!commands && typeof commands === "object" && !Array.isArray(commands);
+}
+
+/**
+ * Reads the names of the commands an extension contributes out of either shape
+ * of `nativescript.commands` - the legacy array of names, or the map of name to
+ * module path.
+ */
+function getDeclaredCommandNames(
+	commands: any,
+	opts?: { copy: boolean },
+): string[] {
+	if (Array.isArray(commands)) {
+		return opts && opts.copy ? commands.slice() : commands;
+	}
+
+	if (isCommandsMap(commands)) {
+		return _.keys(commands);
+	}
+
+	return null;
+}
+
 export class ExtensibilityService implements IExtensibilityService {
 	private customPathToExtensions: string = null;
+
+	/** Command name -> name of the extension whose manifest claimed it first. */
+	private manifestCommandOwners: IStringDictionary = {};
 
 	private get pathToPackageJson(): string {
 		return path.join(this.pathToExtensions, constants.PACKAGE_JSON_FILE_NAME);
@@ -132,12 +163,23 @@ export class ExtensibilityService implements IExtensibilityService {
 			packageJsonData.nativescript &&
 			packageJsonData.nativescript.docs &&
 			path.join(pathToExtension, packageJsonData.nativescript.docs);
-		return {
+		const result: IExtensionData = {
 			extensionName: packageJsonData.name,
 			version: packageJsonData.version,
 			docs,
 			pathToExtension,
 		};
+
+		const commands = getDeclaredCommandNames(
+			packageJsonData &&
+				packageJsonData.nativescript &&
+				packageJsonData.nativescript.commands,
+		);
+		if (commands) {
+			result.commands = commands;
+		}
+
+		return result;
 	}
 
 	public async loadExtension(extensionName: string): Promise<IExtensionData> {
@@ -145,12 +187,23 @@ export class ExtensibilityService implements IExtensibilityService {
 			await this.assertExtensionIsInstalled(extensionName);
 
 			const pathToExtension = this.getPathToExtension(extensionName);
-			reportDeprecation({
-				api: "extensions.require-time-registration",
-				detail: extensionName,
-				logger: this.$logger,
-			});
-			this.$requireService.require(pathToExtension);
+			const commandsMap = this.getDeclaredCommandsMap(extensionName);
+
+			if (commandsMap) {
+				this.registerDeclaredCommands(
+					extensionName,
+					pathToExtension,
+					commandsMap,
+				);
+			} else {
+				reportDeprecation({
+					api: "extensions.require-time-registration",
+					detail: extensionName,
+					logger: this.$logger,
+				});
+				this.$requireService.require(pathToExtension);
+			}
+
 			return this.getInstalledExtensionData(extensionName);
 		} catch (error) {
 			this.$logger.warn(
@@ -200,10 +253,13 @@ export class ExtensibilityService implements IExtensibilityService {
 					await this.$packageManager.getRegistryPackageData(extensionName);
 				const latestPackageData =
 					registryData.versions[registryData["dist-tags"].latest];
-				const commands: string[] =
+				const commands = getDeclaredCommandNames(
 					latestPackageData &&
-					latestPackageData.nativescript &&
-					latestPackageData.nativescript.commands;
+						latestPackageData.nativescript &&
+						latestPackageData.nativescript.commands,
+					// The |* synthesis below pushes into this array.
+					{ copy: true },
+				);
 				if (commands && commands.length) {
 					// For each default command we need to add its short syntax in the array of commands.
 					// For example in case there's a default command called devices list, the commands array will contain devices|*list.
@@ -247,6 +303,74 @@ export class ExtensibilityService implements IExtensibilityService {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns the `nativescript.commands` value of an extension only when it is a
+	 * map of command name to module path. Any other shape (the legacy array of
+	 * command names, a missing key, an unreadable package.json) yields null and
+	 * keeps the extension on the eager require path.
+	 */
+	private getDeclaredCommandsMap(extensionName: string): IStringDictionary {
+		let commands: any;
+
+		try {
+			const packageJsonData = this.getExtensionPackageJsonData(extensionName);
+			commands =
+				packageJsonData &&
+				packageJsonData.nativescript &&
+				packageJsonData.nativescript.commands;
+		} catch (err) {
+			this.$logger.trace(
+				`Unable to read the package.json of extension ${extensionName}. Error is: ${err}`,
+			);
+			return null;
+		}
+
+		return isCommandsMap(commands) ? commands : null;
+	}
+
+	/**
+	 * Registers each declared command as a deferred require of its own module, so
+	 * nothing from the extension is loaded until one of its commands is executed.
+	 * Each module is expected to register itself on load, by calling
+	 * `$injector.registerCommand(<name>, <class>)` at the top level.
+	 */
+	private registerDeclaredCommands(
+		extensionName: string,
+		pathToExtension: string,
+		commands: IStringDictionary,
+	): void {
+		for (const commandName of _.keys(commands)) {
+			const modulePath = commands[commandName];
+
+			if (!isNonEmptyString(commandName) || !isNonEmptyString(modulePath)) {
+				this.$logger.warn(
+					`Extension ${extensionName} declares an invalid command in its nativescript.commands: '${commandName}': ${JSON.stringify(
+						modulePath,
+					)}. Both the command name and the path to its module must be non-empty strings. Skipping this command.`,
+				);
+				continue;
+			}
+
+			try {
+				injector.requireCommand(
+					commandName,
+					path.join(pathToExtension, modulePath),
+				);
+			} catch (err) {
+				const owner = this.manifestCommandOwners[commandName];
+				const ownerInfo = owner
+					? ` It is already registered by extension ${owner}.`
+					: "";
+				this.$logger.warn(
+					`Extension ${extensionName} is unable to register command ${commandName}.${ownerInfo} Error: ${err.message}`,
+				);
+				continue;
+			}
+
+			this.manifestCommandOwners[commandName] = extensionName;
+		}
 	}
 
 	private getPathToExtension(extensionName: string): string {
