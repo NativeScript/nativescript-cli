@@ -25,3 +25,21 @@ export type {
 
 export { DoctorService } from "./doctor-service";
 export { ProjectNameService } from "./project-name-service";
+
+export {
+	defineCommand,
+	isCommandDefinition,
+	booleanOption,
+	stringOption,
+	numberOption,
+	arrayOption,
+} from "../common/define-command";
+export type {
+	ICommandDefinition,
+	ICommandContext,
+	ICommandOptionSpec,
+	ICommandOptionsSchema,
+	CommandOptionSpecInit,
+	CommandOptionType,
+	CommandOptionValues,
+} from "../common/define-command";
