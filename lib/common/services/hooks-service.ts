@@ -246,11 +246,19 @@ export class HooksService implements IHooksService {
 					projectDataHookArg;
 			}
 
-			reportDeprecation({
-				api: "hooks.param-name-signature",
-				detail: hook.fullPath,
-				logger: this.$logger,
-			});
+			// Only param-name *service* injection is on the deprecation track; a
+			// hook declaring nothing but `hookArgs` (or no parameters) already
+			// follows the recommended pattern and must not be flagged.
+			const usesParamNameInjection = (<string[]>(
+				hookEntryPoint.$inject.args
+			)).some((argument) => argument !== this.hookArgsName);
+			if (usesParamNameInjection) {
+				reportDeprecation({
+					api: "hooks.param-name-signature",
+					detail: hook.fullPath,
+					logger: this.$logger,
+				});
+			}
 
 			const maybePromise = this.$injector.resolve(
 				hookEntryPoint,

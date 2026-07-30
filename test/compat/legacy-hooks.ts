@@ -138,6 +138,9 @@ describe("legacy hook contract", () => {
 		});
 
 		assert.deepEqual(args, ["assembleDebug", "--offline"]);
+		// A hookArgs-only signature is the recommended pattern and must not be
+		// reported as param-name injection.
+		assert.notInclude(logger().traceOutput, "hooks.param-name-signature");
 	});
 
 	it("treats a rejection carrying stopExecution + errorAsWarning as a warning, not a failure", async () => {
@@ -259,6 +262,29 @@ describe("legacy hook contract", () => {
 
 		assert.equal(result, "short-circuited");
 		assert.isUndefined(capture.originalRan);
+	});
+
+	it("runs hook bodies in an injection context, so inject() resolves services", async () => {
+		const diPath = require.resolve("../../lib/common/di");
+		writeHook(
+			projectDir,
+			"before-case-inject",
+			`const { inject, Injector } = require(${JSON.stringify(diPath)});
+			module.exports = function (hookArgs) {
+				global.__hookCapture.logger = inject("logger");
+				global.__hookCapture.container = inject(Injector);
+				global.__hookCapture.hookArgs = hookArgs;
+			};`,
+		);
+
+		const payload = { sample: true };
+		await hooksService().executeBeforeHooks("case-inject", {
+			hookArgs: payload,
+		});
+
+		assert.strictEqual(capture.logger, testInjector.resolve("logger"));
+		assert.strictEqual(capture.container, (<any>testInjector).di);
+		assert.strictEqual(capture.hookArgs, payload);
 	});
 
 	it("@hook falls back to the global injector when the class has neither $hooksService nor $injector", async () => {
