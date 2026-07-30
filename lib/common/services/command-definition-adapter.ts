@@ -86,7 +86,7 @@ export function createCommandFromDefinition<
 		execute: async (args: string[]): Promise<void> => {
 			// runInInjectionContext is synchronous, so inject() is available while
 			// run() executes up to its first await, and not after it.
-			await runInInjectionContext(targetInjector.di, () =>
+			await runInInjectionContext(targetInjector, () =>
 				definition.run(buildContext(args)),
 			);
 		},
