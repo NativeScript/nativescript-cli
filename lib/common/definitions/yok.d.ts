@@ -1,30 +1,22 @@
-import { IDisposable, IDictionary } from "../declarations";
+import { IDictionary } from "../declarations";
 import { ICommand } from "./commands";
 import { IKeyCommand, IValidKeyName } from "./key-commands";
 import { Injector } from "../di/injector";
+import { Provider } from "../di/providers";
 
 /**
- * The legacy injector facade surface. Every member is individually
- * @deprecated in favor of the token-based container in lib/common/di;
- * the interface itself survives until the hook/extension deprecation
- * completes.
+ * The legacy injector facade surface. It extends the token-based `Injector` —
+ * the facade IS an injector — and adds the legacy subsystems, whose members
+ * are individually @deprecated. Only the `Yok` class hierarchy implements
+ * this; the interface survives until the hook/extension deprecation completes.
  */
-interface IInjector extends IDisposable {
+interface IInjector extends Injector {
 	/**
-	 * The token-based container backing this facade — the bridge to the
-	 * new-style API. Registrations and lookups by token go here; code already
-	 * running in an injection context should prefer inject(Injector).
-	 */
-	readonly di: Injector;
-
-	/**
-	 * @deprecated Use provideLazy() from lib/common/di — the same deferred
-	 * loading, token-based.
+	 * @deprecated Use provideLazy() — the same deferred loading, token-based.
 	 */
 	require(name: string, file: string): void;
 	/**
-	 * @deprecated Use provideLazy() from lib/common/di — the same deferred
-	 * loading, token-based.
+	 * @deprecated Use provideLazy() — the same deferred loading, token-based.
 	 */
 	require(names: string[], file: string): void;
 	/**
@@ -52,23 +44,21 @@ interface IInjector extends IDisposable {
 	/**
 	 * Resolves an implementation by constructor function.
 	 * The injector will create new instances for every call.
-	 * @deprecated Use Injector.createInstance from lib/common/di.
+	 * @deprecated Use Injector.createInstance.
 	 */
 	resolve(ctor: Function, ctorArguments?: { [key: string]: any }): any;
 	/**
-	 * @deprecated Use Injector.createInstance from lib/common/di.
+	 * @deprecated Use Injector.createInstance.
 	 */
 	resolve<T>(ctor: Function, ctorArguments?: { [key: string]: any }): T;
 	/**
 	 * Resolves an implementation by name.
 	 * The injector will create only one instance per name and return the same instance on subsequent calls.
-	 * @deprecated Use inject(Token) in an injection context, or Injector.get
-	 * from lib/common/di.
+	 * @deprecated Use inject(Token) in an injection context, or Injector.get.
 	 */
 	resolve(name: string, ctorArguments?: IDictionary<any>): any;
 	/**
-	 * @deprecated Use inject(Token) in an injection context, or Injector.get
-	 * from lib/common/di.
+	 * @deprecated Use inject(Token) in an injection context, or Injector.get.
 	 */
 	resolve<T>(name: string, ctorArguments?: IDictionary<any>): T;
 
@@ -81,10 +71,11 @@ interface IInjector extends IDisposable {
 	 */
 	resolveKeyCommand(key: string): IKeyCommand;
 	/**
-	 * @deprecated Use provide() / Injector.register from lib/common/di; a
-	 * contract's token name keeps string spellings resolvable.
+	 * @deprecated Legacy name-based registration. Use the Provider overload or
+	 * provide(); a contract's token name keeps string spellings resolvable.
 	 */
 	register(name: string, resolver: any, shared?: boolean): void;
+	register(providers: Provider | Provider[]): void;
 	/**
 	 * @deprecated Slated for replacement by defineCommand and manifest-declared
 	 * commands.

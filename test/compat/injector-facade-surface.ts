@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { Yok } from "../../lib/common/yok";
+import { Injector, inject, runInInjectionContext } from "../../lib/common/di";
 
 // Pins the externally reachable injector surface: every IInjector member
 // (lib/common/definitions/yok.d.ts) plus dispose, subclassability, the
@@ -63,6 +64,24 @@ describe("injector facade surface", () => {
 				`global.$injector missing: ${member}`,
 			);
 		}
+	});
+
+	it("IS an Injector: instanceof holds and the new API works on the facade directly", () => {
+		const inj = new Yok();
+		assert.instanceOf(inj, Injector);
+
+		// Provider-form registration dispatches to the container...
+		inj.register({ provide: "viaProvider", useValue: { tag: 1 } });
+		assert.equal(inj.get<any>("viaProvider").tag, 1);
+		// ...while string-form registration keeps legacy semantics.
+		inj.register("viaLegacy", { tag: 2 });
+		assert.equal(inj.resolve("viaLegacy").tag, 2);
+		assert.strictEqual(inj.get("viaLegacy"), inj.resolve("viaLegacy"));
+
+		// One identity: the injection context IS the facade.
+		runInInjectionContext(inj, () => {
+			assert.strictEqual(inject(Injector), inj);
+		});
 	});
 
 	it("calls lowercase/anonymous resolvers as factories instead of new-ing them", () => {

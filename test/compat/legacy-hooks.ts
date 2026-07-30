@@ -283,7 +283,7 @@ describe("legacy hook contract", () => {
 		});
 
 		assert.strictEqual(capture.logger, testInjector.resolve("logger"));
-		assert.strictEqual(capture.container, testInjector.di);
+		assert.strictEqual(capture.container, testInjector);
 		assert.strictEqual(capture.hookArgs, payload);
 	});
 

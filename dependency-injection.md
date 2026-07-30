@@ -195,11 +195,13 @@ and resolve late (see above).
 Working alongside the legacy `$injector`
 ----------------------------------------
 
-The `Yok` facade (`global.$injector`) delegates to the token-based container,
-exposed as `$injector.di`. Everything is one registry:
+The `Yok` facade (`global.$injector`) IS an `Injector` — the class extends the
+token-based container — so the new API works on it directly:
 
 ```ts
-$injector.resolve("doctorService") === $injector.di.get(DoctorService); // true
+$injector.resolve("doctorService") === $injector.get(DoctorService); // true
+$injector.register(provide(DoctorService, DoctorServiceImpl));
+runInInjectionContext($injector, () => inject(DoctorService));
 ```
 
 - Legacy string names are permanent: a contract's token name is its interop
@@ -244,8 +246,8 @@ The first tranche, growing as services migrate:
 Legacy → new quick reference
 ----------------------------
 
-`di` below is the token-based container backing the facade (`$injector.di`),
-or any `Injector` you hold directly.
+`di` below is any `Injector` you hold — including `$injector` itself, which
+extends `Injector`.
 
 | Legacy (`$injector`) | New |
 |---|---|

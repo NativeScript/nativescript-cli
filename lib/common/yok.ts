@@ -9,6 +9,7 @@ import { IInjector } from "./definitions/yok";
 import { ICommandArgument, ICommand } from "./definitions/commands";
 import { IKeyCommand, IValidKeyName } from "./definitions/key-commands";
 import { Injector } from "./di/injector";
+import type { Provider } from "./di/providers";
 
 /**
  * The legacy global facade binding. New code should obtain the container via
@@ -47,22 +48,20 @@ export interface IDependency {
 }
 
 /**
- * The Yok facade: the externally reachable injector surface (every IInjector
- * member, the global $injector, subclassability) kept intact while storage and
- * resolution live in the token-based `Injector` (lib/common/di). Command
- * routing, the key-command namespace, and the public-API builder still live
- * here — they are separate subsystems that only share the container.
+ * The Yok facade IS the token-based `Injector` — it extends it — plus the
+ * legacy surface: command routing, the key-command namespace, the module
+ * loader, and the public-API builder. Those subsystems historically shared
+ * the container object and migrate out separately; until then they live here,
+ * individually marked @deprecated.
  */
-export class Yok implements IInjector {
+export class Yok extends Injector implements IInjector {
 	/**
 	 * @deprecated Escape hatch of the legacy require-time module map.
 	 */
 	public overrideAlreadyRequiredModule: boolean = false;
 
-	/** The token-based container backing this facade. */
-	private container = new Injector();
-
 	constructor() {
+		super();
 		this.register("injector", this);
 	}
 
@@ -75,11 +74,6 @@ export class Yok implements IInjector {
 	private synthesizedParents = new Set<string>();
 	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
 	private hierarchicalCommands: IDictionary<string[]> = {};
-
-	/** New-style access to the backing container, for token-based registration. */
-	public get di(): Injector {
-		return this.container;
-	}
 
 	/**
 	 * @deprecated Path-based command registration; slated for replacement by
@@ -94,7 +88,7 @@ export class Yok implements IInjector {
 			if (commands.length > 1) {
 				if (
 					_.startsWith(commands[1], "*") &&
-					this.container.has(this.createCommandName(commands[0])) &&
+					this.has(this.createCommandName(commands[0])) &&
 					!this.synthesizedParents.has(commands[0])
 				) {
 					throw new Error(
@@ -115,7 +109,7 @@ export class Yok implements IInjector {
 
 			if (
 				commands.length > 1 &&
-				!this.container.has(this.createCommandName(commands[0]))
+				!this.has(this.createCommandName(commands[0]))
 			) {
 				this.require(this.createCommandName(commands[0]), file);
 				if (commands[1] && !commandName.match(/\|\*/)) {
@@ -191,7 +185,7 @@ export class Yok implements IInjector {
 	}
 
 	private resolveInstance(name: string): any {
-		let classInstance = this.container.peek(name);
+		let classInstance = this.peek(name);
 		if (!classInstance) {
 			classInstance = this.resolve(name);
 		}
@@ -207,11 +201,11 @@ export class Yok implements IInjector {
 			? relativePath
 			: file;
 
-		if (!this.container.has(name) || this.overrideAlreadyRequiredModule) {
+		if (!this.has(name) || this.overrideAlreadyRequiredModule) {
 			// Yok replaced the whole record on an allowed re-require, dropping any
 			// resolver and cached instances with it — preserved via remove().
-			this.container.remove(name);
-			this.container.register({
+			this.remove(name);
+			this.register({
 				provide: name,
 				useLazyRequire: () => require(dependencyPath),
 			});
@@ -427,22 +421,33 @@ export class Yok implements IInjector {
 	}
 
 	/**
-	 * @deprecated Use provide() / Injector.register from lib/common/di (via
-	 * `Yok.di`); a contract's token name keeps string spellings resolvable.
+	 * @deprecated Legacy name-based registration. Use a Provider (the overload
+	 * below) or provide(); a contract's token name keeps string spellings
+	 * resolvable.
 	 */
-	public register(name: string, resolver: any, shared?: boolean): void {
-		shared = shared === undefined ? true : shared;
+	public register(name: string, resolver: any, shared?: boolean): void;
+	public register(providers: Provider | Provider[]): void;
+	public register(
+		nameOrProviders: string | Provider | Provider[],
+		resolver?: any,
+		shared?: boolean,
+	): void {
+		if (typeof nameOrProviders !== "string") {
+			super.register(nameOrProviders);
+			return;
+		}
 
+		shared = shared === undefined ? true : shared;
 		if (_.isFunction(resolver)) {
 			// Classes and factory functions alike: the legacy provider kind
 			// annotate()s the resolver and calls or news it by casing.
-			this.container.register({
-				provide: name,
+			super.register({
+				provide: nameOrProviders,
 				useLegacyClass: resolver,
 				shared,
 			});
 		} else {
-			this.container.register({ provide: name, useValue: resolver, shared });
+			super.register({ provide: nameOrProviders, useValue: resolver, shared });
 		}
 	}
 
@@ -452,7 +457,7 @@ export class Yok implements IInjector {
 	public resolveCommand(name: string): ICommand {
 		let command: ICommand;
 		const commandModuleName = this.createCommandName(name);
-		if (!this.container.has(commandModuleName)) {
+		if (!this.has(commandModuleName)) {
 			return null;
 		}
 		command = this.resolve(commandModuleName);
@@ -466,7 +471,7 @@ export class Yok implements IInjector {
 	public resolveKeyCommand(name: string): IKeyCommand {
 		let command: IKeyCommand;
 		const commandModuleName = this.createKeyCommandName(name);
-		if (!this.container.has(commandModuleName)) {
+		if (!this.has(commandModuleName)) {
 			return null;
 		}
 
@@ -483,9 +488,9 @@ export class Yok implements IInjector {
 		if (_.isFunction(param)) {
 			// By-class resolution is transient and never retained — Yok did not
 			// track these instances for disposal either.
-			return this.container.createInstance(<Function>param, [], ctorArguments);
+			return this.createInstance(<Function>param, [], ctorArguments);
 		}
-		return this.container.get(<string>param, ctorArguments);
+		return this.get(<string>param, ctorArguments);
 	}
 
 	/* Regex to match dynamic calls in the following format:
@@ -535,7 +540,7 @@ export class Yok implements IInjector {
 	 * and help, so the `|` encoding is user-visible.
 	 */
 	public getRegisteredCommandsNames(includeDev: boolean): string[] {
-		const commandsNames = this.container.getRegisteredNames(
+		const commandsNames = this.getRegisteredNames(
 			`${this.COMMANDS_NAMESPACE}.`,
 		);
 		let commands = _.map(commandsNames, (commandName: string) =>
@@ -551,7 +556,7 @@ export class Yok implements IInjector {
 	 * @deprecated Legacy command-registry enumeration.
 	 */
 	public getRegisteredKeyCommandsNames(): string[] {
-		const commandsNames = this.container.getRegisteredNames(
+		const commandsNames = this.getRegisteredNames(
 			`${this.KEY_COMMANDS_NAMESPACE}.`,
 		);
 		const commands = _.map(commandsNames, (commandName: string) =>
@@ -579,8 +584,8 @@ export class Yok implements IInjector {
 	 * @deprecated Delegates to Injector.dispose (reverse instantiation order);
 	 * new code disposes the di container directly.
 	 */
-	public dispose(): void {
-		this.container.dispose([this]);
+	public dispose(exclude: any[] = []): void {
+		super.dispose([this, ...exclude]);
 	}
 }
 
