@@ -1,6 +1,12 @@
 import { assert } from "chai";
 import { Yok } from "../../lib/common/yok";
 import { Injector, inject, runInInjectionContext } from "../../lib/common/di";
+import {
+	CommandRegistry,
+	KeyCommandRegistry,
+	ModuleRegistry,
+	PublicApiBuilder,
+} from "../../lib/common/contracts";
 
 // Pins the externally reachable injector surface: every IInjector member
 // (lib/common/definitions/yok.d.ts) plus dispose, subclassability, the
@@ -81,6 +87,24 @@ describe("injector facade surface", () => {
 		// One identity: the injection context IS the facade.
 		runInInjectionContext(inj, () => {
 			assert.strictEqual(inject(Injector), inj);
+		});
+	});
+
+	it("registers its subsystem faces as tokens that resolve to the facade", () => {
+		const inj = new Yok();
+
+		for (const token of [
+			CommandRegistry,
+			KeyCommandRegistry,
+			ModuleRegistry,
+			PublicApiBuilder,
+		]) {
+			assert.strictEqual(inj.get(<any>token), inj);
+		}
+		assert.strictEqual(inj.resolve("commandRegistry"), inj);
+
+		runInInjectionContext(inj, () => {
+			assert.strictEqual(inject(CommandRegistry), inj);
 		});
 	});
 

@@ -10,6 +10,12 @@ import { ICommandArgument, ICommand } from "./definitions/commands";
 import { IKeyCommand, IValidKeyName } from "./definitions/key-commands";
 import { Injector } from "./di/injector";
 import type { Provider } from "./di/providers";
+import {
+	CommandRegistry,
+	KeyCommandRegistry,
+	ModuleRegistry,
+	PublicApiBuilder,
+} from "./contracts";
 
 /**
  * The legacy global facade binding. New code should obtain the container via
@@ -63,6 +69,15 @@ export class Yok extends Injector implements IInjector {
 	constructor() {
 		super();
 		this.register("injector", this);
+		// Each subsystem face resolves to the facade until it is physically
+		// extracted; extraction then swaps the provider without touching
+		// consumers of the token.
+		this.register([
+			{ provide: CommandRegistry, useValue: this },
+			{ provide: KeyCommandRegistry, useValue: this },
+			{ provide: ModuleRegistry, useValue: this },
+			{ provide: PublicApiBuilder, useValue: this },
+		]);
 	}
 
 	private COMMANDS_NAMESPACE: string = "commands";
