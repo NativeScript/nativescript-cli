@@ -85,7 +85,7 @@
     "shelljs": "0.10.0",
     "simple-git": "3.36.0",
     "simple-plist": "1.4.0",
-    "source-map": "0.7.6",
+    "source-map": "0.8.0",
     "tar": "7.5.9",
     "ts-morph": "25.0.1",
     "tunnel": "0.0.6",
