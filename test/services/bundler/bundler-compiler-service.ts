@@ -8,6 +8,7 @@ import { IInjector } from "../../../lib/common/definitions/yok";
 import {
 	BUNDLER_COMPILATION_COMPLETE,
 	CONFIG_FILE_NAME_DISPLAY,
+	PackageManagers,
 } from "../../../lib/constants";
 
 const iOSPlatformName = "ios";
@@ -23,10 +24,12 @@ function getAllEmittedFiles(hash: string) {
 	];
 }
 
-function createTestInjector(): IInjector {
+function createTestInjector(
+	packageManager: PackageManagers = PackageManagers.npm,
+): IInjector {
 	const testInjector = new Yok();
 	testInjector.register("packageManager", {
-		getPackageManagerName: async () => "npm",
+		getPackageManagerName: async () => packageManager,
 	});
 	testInjector.register("bundlerCompilerService", BundlerCompilerService);
 	testInjector.register("childProcess", {});
@@ -62,6 +65,29 @@ describe("BundlerCompilerService", () => {
 	beforeEach(() => {
 		testInjector = createTestInjector();
 		bundlerCompilerService = testInjector.resolve(BundlerCompilerService);
+	});
+
+	describe("shouldUsePreserveSymlinksOption", () => {
+		it("should preserve symlinks for npm", async () => {
+			const result = await (<any>(
+				bundlerCompilerService
+			)).shouldUsePreserveSymlinksOption();
+
+			assert.isTrue(result);
+		});
+
+		for (const packageManager of [PackageManagers.pnpm, PackageManagers.bun]) {
+			it(`should not preserve symlinks for ${packageManager}`, async () => {
+				testInjector = createTestInjector(packageManager);
+				bundlerCompilerService = testInjector.resolve(BundlerCompilerService);
+
+				const result = await (<any>(
+					bundlerCompilerService
+				)).shouldUsePreserveSymlinksOption();
+
+				assert.isFalse(result);
+			});
+		}
 	});
 
 	describe("getUpdatedEmittedFiles", () => {
