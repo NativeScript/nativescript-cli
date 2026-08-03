@@ -366,7 +366,7 @@ interface IProjectDataService {
 	 * @returns {any} The value of the property.
 	 * @deprecated no longer used - will be removed in 8.0.
 	 */
-	getNSValueFromContent(jsonData: Object, propertyName: string): any;
+	getNSValueFromContent(jsonData: object, propertyName: string): any;
 }
 
 interface IProjectCleanupService {

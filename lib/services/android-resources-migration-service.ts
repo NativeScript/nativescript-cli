@@ -5,8 +5,7 @@ import { IAndroidResourcesMigrationService } from "../declarations";
 import { IFileSystem, IErrors } from "../common/declarations";
 import { injector } from "../common/yok";
 
-export class AndroidResourcesMigrationService
-	implements IAndroidResourcesMigrationService {
+export class AndroidResourcesMigrationService implements IAndroidResourcesMigrationService {
 	private static ANDROID_DIR = "Android";
 	private static ANDROID_DIR_TEMP = "Android-Updated";
 	private static ANDROID_DIR_OLD = "Android-Pre-v4";
@@ -15,7 +14,7 @@ export class AndroidResourcesMigrationService
 		private $fs: IFileSystem,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 	) {}
 
 	public canMigrate(platformString: string): boolean {
@@ -31,51 +30,51 @@ export class AndroidResourcesMigrationService
 				appResourcesDir,
 				AndroidResourcesMigrationService.ANDROID_DIR,
 				constants.SRC_DIR,
-				constants.MAIN_DIR
-			)
+				constants.MAIN_DIR,
+			),
 		);
 	}
 
 	public async migrate(
 		appResourcesDir: string,
-		backupLocation?: string
+		backupLocation?: string,
 	): Promise<void> {
 		const originalAppResources = path.join(
 			appResourcesDir,
-			AndroidResourcesMigrationService.ANDROID_DIR
+			AndroidResourcesMigrationService.ANDROID_DIR,
 		);
 		const appResourcesDestination = path.join(
 			appResourcesDir,
-			AndroidResourcesMigrationService.ANDROID_DIR_TEMP
+			AndroidResourcesMigrationService.ANDROID_DIR_TEMP,
 		);
 		const appResourcesBackup = path.join(
 			backupLocation || appResourcesDir,
-			AndroidResourcesMigrationService.ANDROID_DIR_OLD
+			AndroidResourcesMigrationService.ANDROID_DIR_OLD,
 		);
 
 		try {
 			await this.tryMigrate(
 				originalAppResources,
 				appResourcesDestination,
-				appResourcesBackup
+				appResourcesBackup,
 			);
 			this.$logger.info(
-				`Successfully updated your project's application resources '/Android' directory structure.${EOL}The previous version of your Android application resources has been renamed to '/${AndroidResourcesMigrationService.ANDROID_DIR_OLD}'`
+				`Successfully updated your project's application resources '/Android' directory structure.${EOL}The previous version of your Android application resources has been renamed to '/${AndroidResourcesMigrationService.ANDROID_DIR_OLD}'`,
 			);
 		} catch (error) {
 			try {
 				this.recover(
 					originalAppResources,
 					appResourcesDestination,
-					appResourcesBackup
+					appResourcesBackup,
 				);
 				this.$logger.info(
-					"Failed to update resources. They should be in their initial state."
+					"Failed to update resources. They should be in their initial state.",
 				);
 			} catch (err) {
 				this.$logger.trace(err);
 				this.$logger.info(
-					`Failed to update resources.${EOL} Backup of original content is inside "${appResourcesBackup}".${EOL}If "${originalAppResources} is missing copy from backup folder."`
+					`Failed to update resources.${EOL} Backup of original content is inside "${appResourcesBackup}".${EOL}If "${originalAppResources} is missing copy from backup folder."`,
 				);
 			} finally {
 				this.$errors.fail(error.message);
@@ -86,27 +85,27 @@ export class AndroidResourcesMigrationService
 	private async tryMigrate(
 		originalAppResources: string,
 		appResourcesDestination: string,
-		appResourcesBackup: string
+		appResourcesBackup: string,
 	): Promise<void> {
 		const appMainSourceSet = path.join(
 			appResourcesDestination,
 			constants.SRC_DIR,
-			constants.MAIN_DIR
+			constants.MAIN_DIR,
 		);
 		const appResourcesMainSourceSetResourcesDestination = path.join(
 			appMainSourceSet,
-			constants.RESOURCES_DIR
+			constants.RESOURCES_DIR,
 		);
 
 		this.$fs.ensureDirectoryExists(appResourcesDestination);
 		this.$fs.ensureDirectoryExists(appMainSourceSet);
 		// create /java, /res and /assets in the App_Resources/Android/src/main directory
 		this.$fs.ensureDirectoryExists(
-			appResourcesMainSourceSetResourcesDestination
+			appResourcesMainSourceSetResourcesDestination,
 		);
 		this.$fs.ensureDirectoryExists(path.join(appMainSourceSet, "java"));
 		this.$fs.ensureDirectoryExists(
-			path.join(appMainSourceSet, constants.ASSETS_DIR)
+			path.join(appMainSourceSet, constants.ASSETS_DIR),
 		);
 
 		const isDirectory = (source: string) =>
@@ -119,7 +118,7 @@ export class AndroidResourcesMigrationService
 
 		this.$fs.copyFile(
 			path.join(originalAppResources, constants.APP_GRADLE_FILE_NAME),
-			path.join(appResourcesDestination, constants.APP_GRADLE_FILE_NAME)
+			path.join(appResourcesDestination, constants.APP_GRADLE_FILE_NAME),
 		);
 
 		const appResourcesFiles = getAllFiles(originalAppResources);
@@ -146,7 +145,7 @@ export class AndroidResourcesMigrationService
 
 		this.$fs.copyFile(
 			path.join(originalAppResources, constants.MANIFEST_FILE_NAME),
-			path.join(appMainSourceSet, constants.MANIFEST_FILE_NAME)
+			path.join(appMainSourceSet, constants.MANIFEST_FILE_NAME),
 		);
 
 		// rename the legacy app_resources to ANDROID_DIR_OLD
@@ -159,7 +158,7 @@ export class AndroidResourcesMigrationService
 	private recover(
 		originalAppResources: string,
 		appResourcesDestination: string,
-		appResourcesBackup: string
+		appResourcesBackup: string,
 	): void {
 		if (!this.$fs.exists(originalAppResources)) {
 			this.$fs.rename(appResourcesBackup, originalAppResources);
@@ -173,5 +172,5 @@ export class AndroidResourcesMigrationService
 
 injector.register(
 	"androidResourcesMigrationService",
-	AndroidResourcesMigrationService
+	AndroidResourcesMigrationService,
 );

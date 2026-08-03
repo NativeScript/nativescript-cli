@@ -26,12 +26,12 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 		private $errors: IErrors,
 		private $httpClient: Server.IHttpClient,
 		private $logger: ILogger,
-		private $prompter: IPrompter
+		private $prompter: IPrompter,
 	) {}
 
 	public async createUserSession(
 		credentials: ICredentials,
-		opts?: IAppleCreateUserSessionOptions
+		opts?: IAppleCreateUserSessionOptions,
 	): Promise<IApplePortalUserDetail> {
 		const loginResult = await this.login(credentials, opts);
 
@@ -42,7 +42,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 					loginResult.scnt,
 					loginResult.xAppleIdSessionId,
 					authServiceKey,
-					loginResult.hashcash
+					loginResult.hashcash,
 				);
 			}
 
@@ -55,7 +55,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 			});
 
 			this.$applePortalCookieService.updateUserSessionCookie(
-				sessionResponse.headers["set-cookie"]
+				sessionResponse.headers["set-cookie"],
 			);
 		}
 
@@ -69,7 +69,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 		});
 
 		this.$applePortalCookieService.updateUserSessionCookie(
-			userDetailsResponse.headers["set-cookie"]
+			userDetailsResponse.headers["set-cookie"],
 		);
 
 		const userdDetails = JSON.parse(userDetailsResponse.body).data;
@@ -102,7 +102,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 		});
 
 		const webSessionCookie = this.$applePortalCookieService.getWebSessionCookie(
-			webSessionResponse.headers["set-cookie"]
+			webSessionResponse.headers["set-cookie"],
 		);
 
 		return webSessionCookie;
@@ -110,7 +110,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 
 	private async login(
 		credentials: ICredentials,
-		opts?: IAppleCreateUserSessionOptions
+		opts?: IAppleCreateUserSessionOptions,
 	): Promise<IAppleLoginResult> {
 		const result = {
 			scnt: <string>null,
@@ -122,7 +122,7 @@ export class ApplePortalSessionService implements IApplePortalSessionService {
 
 		if (opts && opts.sessionBase64) {
 			const decodedSession = Buffer.from(opts.sessionBase64, "base64").toString(
-				"utf8"
+				"utf8",
 			);
 
 			this.$applePortalCookieService.updateUserSessionCookie([decodedSession]);
@@ -201,7 +201,7 @@ For more details how to set up your environment, please execute "ns publish ios 
 
 		const hashcash = await this.fetchHashcash(
 			loginConfig.authServiceUrl,
-			loginConfig.authServiceKey
+			loginConfig.authServiceKey,
 		);
 
 		const completeUrl = `${loginConfig.authServiceUrl}/auth/signin/complete?isRememberMeEnabled=false`;
@@ -222,7 +222,7 @@ For more details how to set up your environment, please execute "ns publish ios 
 		});
 
 		this.$applePortalCookieService.updateUserSessionCookie(
-			completeResponse.headers["set-cookie"]
+			completeResponse.headers["set-cookie"],
 		);
 	}
 
@@ -240,7 +240,7 @@ For more details how to set up your environment, please execute "ns publish ios 
 			config = JSON.parse(response.body);
 		} catch (err) {
 			this.$logger.trace(
-				`Error while executing request to ${this.loginConfigEndpoint}. More info: ${err}`
+				`Error while executing request to ${this.loginConfigEndpoint}. More info: ${err}`,
 			);
 		}
 
@@ -249,7 +249,7 @@ For more details how to set up your environment, please execute "ns publish ios 
 
 	private async fetchHashcash(
 		authServiceUrl: string,
-		authServiceKey: string
+		authServiceKey: string,
 	): Promise<string> {
 		const loginUrl = `${authServiceUrl}/auth/signin?widgetKey=${authServiceKey}`;
 		const response = await this.$httpClient.httpRequest({
@@ -268,7 +268,7 @@ For more details how to set up your environment, please execute "ns publish ios 
 		scnt: string,
 		xAppleIdSessionId: string,
 		authServiceKey: string,
-		hashcash: string
+		hashcash: string,
 	): Promise<void> {
 		const headers = {
 			scnt: scnt,
@@ -304,7 +304,7 @@ For more details how to set up your environment, please execute "ns publish ios 
 			const parsedAuthResponse = JSON.parse(authResponse.body);
 			token = await this.$prompter.getString(
 				`Please enter the ${parsedAuthResponse.securityCode.length} digit code`,
-				{ allowEmpty: false }
+				{ allowEmpty: false },
 			);
 			const body: any = {
 				securityCode: {
@@ -336,15 +336,15 @@ For more details how to set up your environment, please execute "ns publish ios 
 			});
 
 			this.$applePortalCookieService.updateUserSessionCookie(
-				authTrustResponse.headers["set-cookie"]
+				authTrustResponse.headers["set-cookie"],
 			);
 		} else if (multiSMS) {
 			this.$errors.fail(
-				`The NativeScript CLI does not support SMS authenticaton with multiple registered phone numbers.`
+				`The NativeScript CLI does not support SMS authenticaton with multiple registered phone numbers.`,
 			);
 		} else {
 			this.$errors.fail(
-				`Although response from Apple indicated activated Two-step Verification or Two-factor Authentication, NativeScript CLI don't know how to handle this response: ${data}`
+				`Although response from Apple indicated activated Two-step Verification or Two-factor Authentication, NativeScript CLI don't know how to handle this response: ${data}`,
 			);
 		}
 	}
@@ -375,9 +375,9 @@ function getHashCanDateString(): string {
 	const now = new Date();
 
 	return `${now.getFullYear()}${padTo2Digits(now.getMonth() + 1)}${padTo2Digits(
-		now.getDate()
+		now.getDate(),
 	)}${padTo2Digits(now.getHours())}${padTo2Digits(
-		now.getMinutes()
+		now.getMinutes(),
 	)}${padTo2Digits(now.getSeconds())}`;
 }
 function padTo2Digits(num: number) {

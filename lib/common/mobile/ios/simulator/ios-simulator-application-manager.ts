@@ -27,14 +27,14 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $tempService: ITempService,
 		$logger: ILogger,
-		$hooksService: IHooksService
+		$hooksService: IHooksService,
 	) {
 		super($logger, $hooksService, $deviceLogProvider);
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {
 		return this.iosSim.getInstalledApplications(
-			this.device.deviceInfo.identifier
+			this.device.deviceInfo.identifier,
 		);
 	}
 
@@ -48,7 +48,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 			await this.$fs.unzip(packageFilePath, dir);
 			const app = _.find(
 				this.$fs.readDirectory(dir),
-				(directory) => path.extname(directory) === ".app"
+				(directory) => path.extname(directory) === ".app",
 			);
 			if (app) {
 				packageFilePath = path.join(dir, app);
@@ -57,7 +57,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 
 		await this.iosSim.installApplication(
 			this.device.deviceInfo.identifier,
-			packageFilePath
+			packageFilePath,
 		);
 	}
 
@@ -65,32 +65,32 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		await this.detachNativeDebugger(appIdentifier);
 		return this.iosSim.uninstallApplication(
 			this.device.deviceInfo.identifier,
-			appIdentifier
+			appIdentifier,
 		);
 	}
 
 	public async startApplication(
-		appData: Mobile.IStartApplicationData
+		appData: Mobile.IStartApplicationData,
 	): Promise<void> {
 		const args = process.env.IOS_SIMULATOR_RUN_ARGS || "";
 		const options = appData.waitForDebugger
 			? {
 					waitForDebugger: true,
 					args: `--nativescript-debug-brk ${args}`.trim(),
-			  }
+				}
 			: args
-			? { args }
-			: {};
+				? { args }
+				: {};
 		await this.setDeviceLogData(appData);
 		const launchResult = await this.iosSim.startApplication(
 			this.device.deviceInfo.identifier,
 			appData.appId,
-			options
+			options,
 		);
 		const pid = getPidFromiOSSimulatorLogs(appData.appId, launchResult);
 		this.$deviceLogProvider.setApplicationPidForDevice(
 			this.device.deviceInfo.identifier,
-			pid
+			pid,
 		);
 		if (appData.waitForDebugger) {
 			this.attachNativeDebugger(appData.appId, pid);
@@ -98,7 +98,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async stopApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		const { appId } = appData;
 
@@ -108,7 +108,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 		await this.iosSim.stopApplication(
 			this.device.deviceInfo.identifier,
 			appData.appId,
-			appData.projectName
+			appData.projectName,
 		);
 	}
 
@@ -119,7 +119,7 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async getDebuggableAppViews(
-		appIdentifiers: string[]
+		appIdentifiers: string[],
 	): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> {
 		// Implement when we can find debuggable applications for iOS.
 		return Promise.resolve(null);
@@ -156,15 +156,15 @@ export class IOSSimulatorApplicationManager extends ApplicationManagerBase {
 	}
 
 	private async setDeviceLogData(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		this.$deviceLogProvider.setProjectNameForDevice(
 			this.device.deviceInfo.identifier,
-			appData.projectName
+			appData.projectName,
 		);
 		this.$deviceLogProvider.setProjectDirForDevice(
 			this.device.deviceInfo.identifier,
-			appData.projectDir
+			appData.projectDir,
 		);
 
 		if (!this.$options.justlaunch) {

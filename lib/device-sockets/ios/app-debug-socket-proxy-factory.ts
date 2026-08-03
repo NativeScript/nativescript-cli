@@ -170,7 +170,6 @@ export class AppDebugSocketProxyFactory
 					);
 
 					this.$logger.info("Frontend client connected.");
-					let appDebugSocket;
 					if (currentAppSocket) {
 						currentAppSocket.removeAllListeners();
 						currentAppSocket = null;
@@ -181,7 +180,7 @@ export class AppDebugSocketProxyFactory
 						}
 						await device.destroyDebugSocket(appId);
 					}
-					appDebugSocket = await device.getDebugSocket(
+					const appDebugSocket = await device.getDebugSocket(
 						appId,
 						projectName,
 						projectDir,

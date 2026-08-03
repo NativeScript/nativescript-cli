@@ -27,7 +27,7 @@ export class InstallCommand implements ICommand {
 		private $logger: ILogger,
 		private $fs: IFileSystem,
 		private $stringParameter: ICommandParameter,
-		private $packageManager: INodePackageManager
+		private $packageManager: INodePackageManager,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -42,30 +42,30 @@ export class InstallCommand implements ICommand {
 		let error: string = "";
 
 		await this.$pluginsService.ensureAllDependenciesAreInstalled(
-			this.$projectData
+			this.$projectData,
 		);
 
 		for (const platform of this.$mobileHelper.platformNames) {
 			const platformData = this.$platformsDataService.getPlatformData(
 				platform,
-				this.$projectData
+				this.$projectData,
 			);
 			const frameworkPackageData = this.$projectDataService.getRuntimePackage(
 				this.$projectData.projectDir,
-				<PlatformTypes>platformData.platformNameLowerCase
+				<PlatformTypes>platformData.platformNameLowerCase,
 			);
 			if (frameworkPackageData && frameworkPackageData.version) {
 				try {
 					const platformProjectService = platformData.platformProjectService;
 					await platformProjectService.validate(
 						this.$projectData,
-						this.$options
+						this.$options,
 					);
 
 					await this.$platformCommandHelper.addPlatforms(
 						[`${platform}@${frameworkPackageData.version}`],
 						this.$projectData,
-						this.$options.frameworkPath
+						this.$options.frameworkPath,
 					);
 				} catch (err) {
 					error = `${error}${EOL}${err}`;

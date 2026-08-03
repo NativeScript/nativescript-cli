@@ -19,7 +19,7 @@ export class PreviewCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $packageManager: IPackageManager,
 		private $childProcess: IChildProcess,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	private getPreviewCLIPath(): string {
@@ -37,7 +37,7 @@ export class PreviewCommand implements ICommand {
 				{
 					"save-dev": true,
 					"save-exact": true,
-				} as any
+				} as any,
 			);
 		}
 
@@ -58,6 +58,7 @@ export class PreviewCommand implements ICommand {
 					break;
 				case PackageManagers.bun:
 					installCommand = "bun add --dev @nativescript/preview-cli";
+					break;
 				case PackageManagers.npm:
 				default:
 					installCommand = "npm install --save-dev @nativescript/preview-cli";
@@ -78,7 +79,7 @@ export class PreviewCommand implements ICommand {
 					color.cyan("  ./node_modules/.bin/preview-cli"),
 					"",
 					"And if you are still having issues, try again - or reach out on Discord/open an issue on GitHub.",
-				].join("\n")
+				].join("\n"),
 			);
 
 			this.$errors.fail("Running preview failed.");
@@ -93,7 +94,7 @@ export class PreviewCommand implements ICommand {
 			[previewCLIBinPath, ...commandArgs],
 			{
 				stdio: "inherit",
-			}
+			},
 		);
 	}
 

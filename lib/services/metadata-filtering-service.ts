@@ -18,12 +18,12 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 		private $pluginsService: IPluginsService,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $platformsDataService: IPlatformsDataService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public generateMetadataFilters(
 		projectData: IProjectData,
-		platform: string
+		platform: string,
 	): void {
 		this.generateWhitelist(projectData, platform);
 		this.generateBlacklist(projectData, platform);
@@ -33,28 +33,27 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 		const platformsDirPath = this.getPlatformsDirPath(projectData, platform);
 		const pathToWhitelistFile = path.join(
 			platformsDirPath,
-			MetadataFilteringConstants.WHITELIST_FILE_NAME
+			MetadataFilteringConstants.WHITELIST_FILE_NAME,
 		);
 		this.$fs.deleteFile(pathToWhitelistFile);
 
 		const nativeApiConfiguration = this.getNativeApiConfigurationForPlatform(
 			projectData,
-			platform
+			platform,
 		);
 		if (nativeApiConfiguration) {
 			const whitelistedItems: string[] = [];
 			if (nativeApiConfiguration["whitelist-plugins-usages"]) {
 				const plugins = this.$pluginsService.getAllProductionPlugins(
 					projectData,
-					platform
+					platform,
 				);
 				for (const pluginData of plugins) {
-					const pathToPlatformsDir = pluginData.pluginPlatformsFolderPath(
-						platform
-					);
+					const pathToPlatformsDir =
+						pluginData.pluginPlatformsFolderPath(platform);
 					const pathToPluginsMetadataConfig = path.join(
 						pathToPlatformsDir,
-						MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
+						MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME,
 					);
 					if (this.$fs.exists(pathToPluginsMetadataConfig)) {
 						const pluginConfig: INativeApiUsagePluginConfiguration =
@@ -63,17 +62,17 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 							`Adding content of ${pathToPluginsMetadataConfig} to whitelisted items of metadata filtering: ${JSON.stringify(
 								pluginConfig,
 								null,
-								2
-							)}`
+								2,
+							)}`,
 						);
 						const itemsToAdd = pluginConfig.uses || [];
 						if (itemsToAdd.length) {
 							whitelistedItems.push(
-								`// Added from: ${pathToPluginsMetadataConfig}`
+								`// Added from: ${pathToPluginsMetadataConfig}`,
 							);
 							whitelistedItems.push(...itemsToAdd);
 							whitelistedItems.push(
-								`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`
+								`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`,
 							);
 						}
 					}
@@ -87,8 +86,8 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 					`Adding content from application to whitelisted items of metadata filtering: ${JSON.stringify(
 						applicationWhitelistedItems,
 						null,
-						2
-					)}`
+						2,
+					)}`,
 				);
 
 				whitelistedItems.push(`// Added from application`);
@@ -106,28 +105,27 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 		const platformsDirPath = this.getPlatformsDirPath(projectData, platform);
 		const pathToBlacklistFile = path.join(
 			platformsDirPath,
-			MetadataFilteringConstants.BLACKLIST_FILE_NAME
+			MetadataFilteringConstants.BLACKLIST_FILE_NAME,
 		);
 		this.$fs.deleteFile(pathToBlacklistFile);
 
 		const nativeApiConfiguration = this.getNativeApiConfigurationForPlatform(
 			projectData,
-			platform
+			platform,
 		);
 		if (nativeApiConfiguration) {
 			const blacklistedItems: string[] = nativeApiConfiguration.blacklist || [];
 			if (nativeApiConfiguration["whitelist-plugins-usages"]) {
 				const plugins = this.$pluginsService.getAllProductionPlugins(
 					projectData,
-					platform
+					platform,
 				);
 				for (const pluginData of plugins) {
-					const pathToPlatformsDir = pluginData.pluginPlatformsFolderPath(
-						platform
-					);
+					const pathToPlatformsDir =
+						pluginData.pluginPlatformsFolderPath(platform);
 					const pathToPluginsMetadataConfig = path.join(
 						pathToPlatformsDir,
-						MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
+						MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME,
 					);
 					if (this.$fs.exists(pathToPluginsMetadataConfig)) {
 						const pluginConfig: INativeApiUsagePluginConfiguration =
@@ -136,17 +134,17 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 							`Adding content of ${pathToPluginsMetadataConfig} to whitelisted items of metadata filtering: ${JSON.stringify(
 								pluginConfig,
 								null,
-								2
-							)}`
+								2,
+							)}`,
 						);
 						const itemsToAdd = pluginConfig.blacklist || [];
 						if (itemsToAdd.length) {
 							blacklistedItems.push(
-								`// Added from: ${pathToPluginsMetadataConfig}`
+								`// Added from: ${pathToPluginsMetadataConfig}`,
 							);
 							blacklistedItems.push(...itemsToAdd);
 							blacklistedItems.push(
-								`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`
+								`// Finished part from ${pathToPluginsMetadataConfig}${os.EOL}`,
 							);
 						}
 					}
@@ -157,20 +155,18 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 			}
 		} else {
 			this.$logger.trace(
-				`There's no application configuration for metadata filtering for platform ${platform}. Full metadata will be generated.`
+				`There's no application configuration for metadata filtering for platform ${platform}. Full metadata will be generated.`,
 			);
 		}
 	}
 
 	private getNativeApiConfigurationForPlatform(
 		projectData: IProjectData,
-		platform: string
+		platform: string,
 	): INativeApiUsageConfiguration {
 		let config: INativeApiUsageConfiguration = null;
-		const pathToApplicationConfigurationFile = this.getPathToApplicationConfigurationForPlatform(
-			projectData,
-			platform
-		);
+		const pathToApplicationConfigurationFile =
+			this.getPathToApplicationConfigurationForPlatform(projectData, platform);
 		if (this.$fs.exists(pathToApplicationConfigurationFile)) {
 			config = this.$fs.readJson(pathToApplicationConfigurationFile);
 		}
@@ -180,23 +176,23 @@ export class MetadataFilteringService implements IMetadataFilteringService {
 
 	private getPlatformsDirPath(
 		projectData: IProjectData,
-		platform: string
+		platform: string,
 	): string {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 		return platformData.projectRoot;
 	}
 
 	private getPathToApplicationConfigurationForPlatform(
 		projectData: IProjectData,
-		platform: string
+		platform: string,
 	): string {
 		return path.join(
 			projectData.appResourcesDirectoryPath,
 			this.$mobileHelper.normalizePlatformName(platform),
-			MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
+			MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME,
 		);
 	}
 }

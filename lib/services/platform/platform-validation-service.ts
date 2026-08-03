@@ -12,7 +12,7 @@ export class PlatformValidationService implements IPlatformValidationService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $platformsDataService: IPlatformsDataService
+		private $platformsDataService: IPlatformsDataService,
 	) {}
 
 	public isValidPlatform(platform: string, projectData: IProjectData): boolean {
@@ -35,27 +35,27 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 		if (!this.isValidPlatform(platform, projectData)) {
 			const platformNames = helpers.formatListOfNames(
-				this.$mobileHelper.platformNames
+				this.$mobileHelper.platformNames,
 			);
 			this.$errors.fail(
-				`Invalid platform ${platform}. Valid platforms are ${platformNames}.`
+				`Invalid platform ${platform}. Valid platforms are ${platformNames}.`,
 			);
 		}
 	}
 
 	public validatePlatformInstalled(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): void {
 		this.validatePlatform(platform, projectData);
 
 		const hasPlatformDirectory = this.$fs.exists(
-			path.join(projectData.platformsDir, platform.toLowerCase())
+			path.join(projectData.platformsDir, platform.toLowerCase()),
 		);
 		if (!hasPlatformDirectory) {
 			this.$errors.fail(
 				"The platform %s is not added to this project. Please use 'ns platform add <platform>'",
-				platform
+				platform,
 			);
 		}
 	}
@@ -65,11 +65,11 @@ export class PlatformValidationService implements IPlatformValidationService {
 		teamId: true | string,
 		projectData: IProjectData,
 		platform?: string,
-		aab?: boolean
+		aab?: boolean,
 	): Promise<boolean> {
 		if (platform && !this.$mobileHelper.isAndroidPlatform(platform) && aab) {
 			this.$errors.fail(
-				"The --aab option is supported only for the Android platform."
+				"The --aab option is supported only for the Android platform.",
 			);
 		}
 
@@ -78,35 +78,35 @@ export class PlatformValidationService implements IPlatformValidationService {
 			this.$logger.trace("Validate options for platform: " + platform);
 			const platformData = this.$platformsDataService.getPlatformData(
 				platform,
-				projectData
+				projectData,
 			);
 
 			const result = await platformData.platformProjectService.validateOptions(
 				projectData.projectIdentifiers[platform.toLowerCase()],
 				provision,
-				teamId
+				teamId,
 			);
 
 			return result;
 		} else {
 			let valid = true;
 			const platforms = this.$mobileHelper.platformNames.map((p) =>
-				p.toLowerCase()
+				p.toLowerCase(),
 			);
 			for (const availablePlatform of platforms) {
 				this.$logger.trace(
-					"Validate options for platform: " + availablePlatform
+					"Validate options for platform: " + availablePlatform,
 				);
 				const platformData = this.$platformsDataService.getPlatformData(
 					availablePlatform,
-					projectData
+					projectData,
 				);
 				valid =
 					valid &&
 					(await platformData.platformProjectService.validateOptions(
 						projectData.projectIdentifiers[availablePlatform.toLowerCase()],
 						provision,
-						teamId
+						teamId,
 					));
 			}
 
@@ -116,11 +116,11 @@ export class PlatformValidationService implements IPlatformValidationService {
 
 	public isPlatformSupportedForOS(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean {
 		const targetedOS = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		).targetedOS;
 		const res =
 			!targetedOS ||

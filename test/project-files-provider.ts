@@ -72,11 +72,11 @@ describe("project-files-provider", () => {
 				path.join(appSourceDir, "test.js"),
 				"android",
 				projectData,
-				{}
+				{},
 			);
 			assert.deepStrictEqual(
 				mappedFilePath,
-				path.join(appDestinationDirectoryPath, "app", "test.js")
+				path.join(appDestinationDirectoryPath, "app", "test.js"),
 			);
 		});
 
@@ -85,11 +85,11 @@ describe("project-files-provider", () => {
 				path.join(appSourceDir, "App_Resources", "android", "test.js"),
 				"android",
 				projectData,
-				{}
+				{},
 			);
 			assert.deepStrictEqual(
 				mappedFilePath,
-				path.join(appResourcesDestinationDirectoryPath, "test.js")
+				path.join(appResourcesDestinationDirectoryPath, "test.js"),
 			);
 		});
 
@@ -98,7 +98,7 @@ describe("project-files-provider", () => {
 				path.join(appSourceDir, "App_Resources", "android", "test.js"),
 				"iOS",
 				projectData,
-				{}
+				{},
 			);
 			assert.deepStrictEqual(mappedFilePath, null);
 		});
@@ -108,7 +108,7 @@ describe("project-files-provider", () => {
 				path.join(appSourceDir, "App_Resources", "test.js"),
 				"android",
 				projectData,
-				{}
+				{},
 			);
 			assert.deepStrictEqual(mappedFilePath, null);
 		});
@@ -118,11 +118,11 @@ describe("project-files-provider", () => {
 				path.join(appSourceDir, "test.android.js"),
 				"android",
 				projectData,
-				{}
+				{},
 			);
 			assert.deepStrictEqual(
 				mappedFilePath,
-				path.join(appDestinationDirectoryPath, "app", "test.js")
+				path.join(appDestinationDirectoryPath, "app", "test.js"),
 			);
 		});
 
@@ -131,11 +131,11 @@ describe("project-files-provider", () => {
 				path.join(appSourceDir, "test.debug.js"),
 				"android",
 				projectData,
-				{}
+				{},
 			);
 			assert.deepStrictEqual(
 				mappedFilePath,
-				path.join(appDestinationDirectoryPath, "app", "test.js")
+				path.join(appDestinationDirectoryPath, "app", "test.js"),
 			);
 		});
 	});

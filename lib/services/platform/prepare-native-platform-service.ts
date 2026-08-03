@@ -8,15 +8,13 @@ import { IHooksService } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { IOptions } from "../../declarations";
 
-export class PrepareNativePlatformService
-	implements IPrepareNativePlatformService
-{
+export class PrepareNativePlatformService implements IPrepareNativePlatformService {
 	constructor(
 		public $hooksService: IHooksService,
 		private $nodeModulesBuilder: INodeModulesBuilder,
 		private $projectChangesService: IProjectChangesService,
 		private $metadataFilteringService: IMetadataFilteringService,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	@performanceLog()
@@ -24,13 +22,13 @@ export class PrepareNativePlatformService
 	public async prepareNativePlatform(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<boolean> {
 		const { nativePrepare, release } = prepareData;
 		const changesInfo = await this.$projectChangesService.checkForChanges(
 			platformData,
 			projectData,
-			prepareData
+			prepareData,
 		);
 		if (nativePrepare && nativePrepare.skipNativePrepare) {
 			return changesInfo.hasChanges;
@@ -55,7 +53,7 @@ export class PrepareNativePlatformService
 		if (hasChangesRequirePrepare || this.$options.hostProjectPath) {
 			await platformData.platformProjectService.prepareProject(
 				projectData,
-				prepareData
+				prepareData,
 			);
 		}
 
@@ -69,25 +67,25 @@ export class PrepareNativePlatformService
 		if (hasNativeModulesChange || hasConfigChange) {
 			await platformData.platformProjectService.processConfigurationFilesFromAppResources(
 				projectData,
-				{ release }
+				{ release },
 			);
 			await platformData.platformProjectService.handleNativeDependenciesChange(
 				projectData,
-				{ release }
+				{ release },
 			);
 			this.$metadataFilteringService.generateMetadataFilters(
 				projectData,
-				platformData.platformNameLowerCase
+				platformData.platformNameLowerCase,
 			);
 		}
 
 		platformData.platformProjectService.interpolateConfigurationFile(
-			projectData
+			projectData,
 		);
 		await this.$projectChangesService.setNativePlatformStatus(
 			platformData,
 			projectData,
-			{ nativePlatformStatus: NativePlatformStatus.alreadyPrepared }
+			{ nativePlatformStatus: NativePlatformStatus.alreadyPrepared },
 		);
 
 		return hasChanges;
@@ -95,7 +93,7 @@ export class PrepareNativePlatformService
 
 	private async cleanProject(
 		platformData: IPlatformData,
-		options: { release: boolean }
+		options: { release: boolean },
 	): Promise<void> {
 		// android build artifacts need to be cleaned up
 		// when switching between debug, release and webpack builds
@@ -117,7 +115,7 @@ export class PrepareNativePlatformService
 		const { release: currentIsRelease } = options;
 		if (previousWasRelease !== currentIsRelease) {
 			await platformData.platformProjectService.cleanProject(
-				platformData.projectRoot
+				platformData.projectRoot,
 			);
 		}
 	}

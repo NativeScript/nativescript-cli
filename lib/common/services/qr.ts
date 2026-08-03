@@ -6,7 +6,7 @@ import { IQrCodeGenerator } from "../declarations";
 export class QrCodeGenerator implements IQrCodeGenerator {
 	constructor(
 		private $staticConfig: Config.IStaticConfig,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async generateDataUri(data: string): Promise<string> {

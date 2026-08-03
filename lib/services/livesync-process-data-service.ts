@@ -8,22 +8,21 @@ export class LiveSyncProcessDataService implements ILiveSyncProcessDataService {
 	public persistData(
 		projectDir: string,
 		deviceDescriptors: ILiveSyncDeviceDescriptor[],
-		platforms: string[]
+		platforms: string[],
 	): void {
 		this.processes[projectDir] =
 			this.processes[projectDir] || Object.create(null);
 		this.processes[projectDir].actionsChain =
 			this.processes[projectDir].actionsChain || Promise.resolve();
-		this.processes[projectDir].currentSyncAction = this.processes[
-			projectDir
-		].actionsChain;
+		this.processes[projectDir].currentSyncAction =
+			this.processes[projectDir].actionsChain;
 		this.processes[projectDir].isStopped = false;
 		this.processes[projectDir].platforms = platforms;
 
 		const currentDeviceDescriptors = this.getDeviceDescriptors(projectDir);
 		this.processes[projectDir].deviceDescriptors = _.uniqBy(
 			currentDeviceDescriptors.concat(deviceDescriptors),
-			"identifier"
+			"identifier",
 		);
 	}
 

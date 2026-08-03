@@ -9,25 +9,22 @@ import {
 	IApplePortalApplication,
 } from "./definitions";
 
-export class ApplePortalApplicationService
-	implements IApplePortalApplicationService
-{
+export class ApplePortalApplicationService implements IApplePortalApplicationService {
 	constructor(
 		private $applePortalSessionService: IApplePortalSessionService,
 		private $errors: IErrors,
-		private $httpClient: Server.IHttpClient
+		private $httpClient: Server.IHttpClient,
 	) {}
 
 	public async getApplications(
-		user: IApplePortalUserDetail
+		user: IApplePortalUserDetail,
 	): Promise<IApplePortalApplicationSummary[]> {
 		let result: IApplePortalApplicationSummary[] = [];
 
 		for (const account of user.associatedAccounts) {
 			const contentProviderId = account.contentProvider.contentProviderId;
-			const applications = await this.getApplicationsByProvider(
-				contentProviderId
-			);
+			const applications =
+				await this.getApplicationsByProvider(contentProviderId);
 			result = result.concat(applications.summaries);
 		}
 
@@ -35,7 +32,7 @@ export class ApplePortalApplicationService
 	}
 
 	public async getApplicationsByProvider(
-		contentProviderId: number
+		contentProviderId: number,
 	): Promise<IApplePortalApplication> {
 		const webSessionCookie =
 			await this.$applePortalSessionService.createWebSession(contentProviderId);
@@ -43,7 +40,7 @@ export class ApplePortalApplicationService
 		await this.getApplicationsByUrl(
 			webSessionCookie,
 			"https://appstoreconnect.apple.com/iris/v1/apps?include=appStoreVersions",
-			summaries
+			summaries,
 		);
 
 		return { summaries: summaries };
@@ -52,7 +49,7 @@ export class ApplePortalApplicationService
 	private async getApplicationsByUrl(
 		webSessionCookie: string,
 		url: string,
-		summaries: IApplePortalApplicationSummary[]
+		summaries: IApplePortalApplicationSummary[],
 	): Promise<void> {
 		const response = await this.$httpClient.httpRequest({
 			url,
@@ -66,8 +63,7 @@ export class ApplePortalApplicationService
 		const data = result.data;
 
 		for (const app of data) {
-			let summary: IApplePortalApplicationSummary;
-			summary = {
+			const summary: IApplePortalApplicationSummary = {
 				bundleId: app.attributes.bundleId,
 				adamId: app.id,
 				name: app.attributes.name,
@@ -80,30 +76,30 @@ export class ApplePortalApplicationService
 			await this.getApplicationsByUrl(
 				webSessionCookie,
 				result.links.next,
-				summaries
+				summaries,
 			);
 		}
 	}
 
 	public async getApplicationByBundleId(
 		user: IApplePortalUserDetail,
-		bundleId: string
+		bundleId: string,
 	): Promise<IApplePortalApplicationSummary> {
 		const applications = await this.getApplications(user);
 		if (!applications || !applications.length) {
 			this.$errors.fail(
-				`Cannot find any registered applications for Apple ID ${user.userName} in iTunes Connect.`
+				`Cannot find any registered applications for Apple ID ${user.userName} in iTunes Connect.`,
 			);
 		}
 
 		const application = _.find(
 			applications,
-			(app) => app.bundleId === bundleId
+			(app) => app.bundleId === bundleId,
 		);
 
 		if (!application) {
 			this.$errors.fail(
-				`Cannot find registered applications that match the specified identifier ${bundleId} in iTunes Connect.`
+				`Cannot find registered applications that match the specified identifier ${bundleId} in iTunes Connect.`,
 			);
 		}
 
@@ -112,5 +108,5 @@ export class ApplePortalApplicationService
 }
 injector.register(
 	"applePortalApplicationService",
-	ApplePortalApplicationService
+	ApplePortalApplicationService,
 );

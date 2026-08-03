@@ -15,19 +15,20 @@ export class ListPluginsCommand implements ICommand {
 	constructor(
 		private $pluginsService: IPluginsService,
 		private $projectData: IProjectData,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
-		const installedPlugins: IPackageJsonDepedenciesResult = this.$pluginsService.getDependenciesFromPackageJson(
-			this.$projectData.projectDir
-		);
+		const installedPlugins: IPackageJsonDepedenciesResult =
+			this.$pluginsService.getDependenciesFromPackageJson(
+				this.$projectData.projectDir,
+			);
 
 		const headers: string[] = ["Plugin", "Version"];
 		const dependenciesData: string[][] = this.createTableCells(
-			installedPlugins.dependencies
+			installedPlugins.dependencies,
 		);
 
 		const dependenciesTable: any = createTable(headers, dependenciesData);
@@ -39,12 +40,12 @@ export class ListPluginsCommand implements ICommand {
 			installedPlugins.devDependencies.length
 		) {
 			const devDependenciesData: string[][] = this.createTableCells(
-				installedPlugins.devDependencies
+				installedPlugins.devDependencies,
 			);
 
 			const devDependenciesTable: any = createTable(
 				headers,
-				devDependenciesData
+				devDependenciesData,
 			);
 
 			this.$logger.info("Dev Dependencies:");
@@ -54,18 +55,18 @@ export class ListPluginsCommand implements ICommand {
 		}
 
 		const viewDependenciesCommand: string = color.cyan(
-			"npm view <pluginName> grep dependencies"
+			"npm view <pluginName> grep dependencies",
 		);
 		const viewDevDependenciesCommand: string = color.cyan(
-			"npm view <pluginName> grep devDependencies"
+			"npm view <pluginName> grep devDependencies",
 		);
 
 		this.$logger.warn("NOTE:");
 		this.$logger.warn(
-			`If you want to check the dependencies of installed plugin use ${viewDependenciesCommand}`
+			`If you want to check the dependencies of installed plugin use ${viewDependenciesCommand}`,
 		);
 		this.$logger.warn(
-			`If you want to check the dev dependencies of installed plugin use ${viewDevDependenciesCommand}`
+			`If you want to check the dev dependencies of installed plugin use ${viewDevDependenciesCommand}`,
 		);
 	}
 

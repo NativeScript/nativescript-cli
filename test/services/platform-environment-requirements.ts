@@ -32,7 +32,7 @@ function createTestInjector() {
 	testInjector.register("prompter", {});
 	testInjector.register(
 		"platformEnvironmentRequirements",
-		PlatformEnvironmentRequirements
+		PlatformEnvironmentRequirements,
 	);
 	testInjector.register("staticConfig", { SYS_REQUIREMENTS_LINK: "" });
 
@@ -50,7 +50,8 @@ describe("platformEnvironmentRequirements ", () => {
 
 	describe("checkRequirements", () => {
 		let testInjector: IInjector = null;
-		let platformEnvironmentRequirements: IPlatformEnvironmentRequirements = null;
+		let platformEnvironmentRequirements: IPlatformEnvironmentRequirements =
+			null;
 		let promptForChoiceData: { message: string; choices: string[] }[] = [];
 
 		function mockDoctorService(data: {
@@ -85,7 +86,7 @@ describe("platformEnvironmentRequirements ", () => {
 		beforeEach(() => {
 			testInjector = createTestInjector();
 			platformEnvironmentRequirements = testInjector.resolve(
-				"platformEnvironmentRequirements"
+				"platformEnvironmentRequirements",
 			);
 			process.stdout.isTTY = true;
 			process.stdin.isTTY = true;
@@ -98,9 +99,10 @@ describe("platformEnvironmentRequirements ", () => {
 
 		it("should return true when environment is configured", async () => {
 			mockDoctorService({ canExecuteLocalBuild: true });
-			const result = await platformEnvironmentRequirements.checkEnvironmentRequirements(
-				{ platform }
-			);
+			const result =
+				await platformEnvironmentRequirements.checkEnvironmentRequirements({
+					platform,
+				});
 			assert.isTrue(result.canExecute);
 			assert.isTrue(promptForChoiceData.length === 0);
 		});
@@ -108,9 +110,10 @@ describe("platformEnvironmentRequirements ", () => {
 		it("should skip env check when NS_SKIP_ENV_CHECK environment variable is passed", async () => {
 			(<any>process.env).NS_SKIP_ENV_CHECK = true;
 
-			const output = await platformEnvironmentRequirements.checkEnvironmentRequirements(
-				{ platform }
-			);
+			const output =
+				await platformEnvironmentRequirements.checkEnvironmentRequirements({
+					platform,
+				});
 
 			assert.isTrue(output.canExecute);
 			assert.isTrue(promptForChoiceData.length === 0);
@@ -126,7 +129,7 @@ describe("platformEnvironmentRequirements ", () => {
 				await assert.isRejected(
 					platformEnvironmentRequirements.checkEnvironmentRequirements({
 						platform,
-					})
+					}),
 				);
 			});
 		});

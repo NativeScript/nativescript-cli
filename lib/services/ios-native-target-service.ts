@@ -156,7 +156,7 @@ export class IOSNativeTargetService implements IIOSNativeTargetService {
 				_.forEach(
 					configurationJson.targetNamedBuildConfigurationProperties,
 					(value, name: string) => {
-						var buildName: BuildNames = null;
+						let buildName: BuildNames = null;
 						switch (name) {
 							case "debug": {
 								buildName = BuildNames.debug;

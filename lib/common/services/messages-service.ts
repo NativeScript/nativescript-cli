@@ -37,7 +37,7 @@ export class MessagesService implements IMessagesService {
 
 	public set pathsToMessageJsonFiles(pathsToMessageJsonFiles: string[]) {
 		this._pathsToMessageJsonFiles = pathsToMessageJsonFiles.concat(
-			this.pathToDefaultMessageJson
+			this.pathToDefaultMessageJson,
 		);
 		this.refreshMessageJsonContentsCache();
 	}
@@ -52,12 +52,12 @@ export class MessagesService implements IMessagesService {
 			const messageValue = this.getMessageFromJsonRecursive(
 				keys,
 				jsonFileContents,
-				0
+				0,
 			);
 			if (messageValue) {
 				result = this.getFormatedMessage.apply(
 					this,
-					[messageValue].concat(argsArray)
+					[messageValue].concat(argsArray),
 				);
 				return false;
 			}
@@ -69,7 +69,7 @@ export class MessagesService implements IMessagesService {
 	private getMessageFromJsonRecursive(
 		keys: string[],
 		jsonContents: any,
-		index: number
+		index: number,
 	): string {
 		if (index >= keys.length) {
 			return null;

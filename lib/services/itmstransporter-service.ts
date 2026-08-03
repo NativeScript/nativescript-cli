@@ -26,7 +26,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		private $logger: ILogger,
 		private $plistParser: IPlistParser,
 		private $xcodeSelectService: IXcodeSelectService,
-		private $tempService: ITempService
+		private $tempService: ITempService,
 	) {}
 
 	private get $projectData(): IProjectData {
@@ -39,19 +39,19 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		if (+version.major < 14) {
 			if (!this.$fs.exists(itmsTransporterPath)) {
 				this.$errors.fail(
-					"iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged."
+					"iTMS Transporter not found on this machine - make sure your Xcode installation is not damaged.",
 				);
 			}
 		} else {
 			const altoolPath = await this.getAltoolPath();
 			if (!this.$fs.exists(altoolPath)) {
 				this.$errors.fail(
-					"altool not found on this machine - make sure your Xcode installation is not damaged."
+					"altool not found on this machine - make sure your Xcode installation is not damaged.",
 				);
 			}
 			if (!appSpecificPassword) {
 				this.$errors.fail(
-					"An app-specific password is required from xCode versions 14 and above, Use the --appleApplicationSpecificPassword to supply it."
+					"An app-specific password is required from xCode versions 14 and above, Use the --appleApplicationSpecificPassword to supply it.",
 				);
 			}
 		}
@@ -74,10 +74,11 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			? ITMSConstants.VerboseLoggingLevels.Verbose
 			: ITMSConstants.VerboseLoggingLevels.Informational;
 		const bundleId = await this.getBundleIdentifier(data);
-		const application = await this.$applePortalApplicationService.getApplicationByBundleId(
-			data.user,
-			bundleId
-		);
+		const application =
+			await this.$applePortalApplicationService.getApplicationByBundleId(
+				data.user,
+				bundleId,
+			);
 
 		this.$fs.createDirectory(innerDirectory);
 
@@ -91,12 +92,12 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			application.adamId,
 			ipaFileName,
 			ipaFileHash,
-			ipaFileSize
+			ipaFileSize,
 		);
 
 		this.$fs.writeFile(
 			path.join(innerDirectory, ITMSConstants.ApplicationMetadataFile),
-			metadata
+			metadata,
 		);
 
 		const password = data.user.isTwoFactorAuthenticationEnabled
@@ -117,7 +118,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				loggingLevel,
 			],
 			"close",
-			{ stdio: "inherit" }
+			{ stdio: "inherit" },
 		);
 	}
 
@@ -170,12 +171,12 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				path.extname(ipaFilePath) !== ".ipa"
 			) {
 				this.$errors.fail(
-					`Cannot use specified ipa file ${ipaFilePath}. File either does not exist or is not an ipa file.`
+					`Cannot use specified ipa file ${ipaFilePath}. File either does not exist or is not an ipa file.`,
 				);
 			}
 
 			this.$logger.trace(
-				"--ipa set - extracting .ipa file to get app's bundle identifier"
+				"--ipa set - extracting .ipa file to get app's bundle identifier",
 			);
 			const destinationDir = await this.$tempService.mkdirSync("ipa-");
 			await this.$fs.unzip(ipaFilePath, destinationDir);
@@ -187,26 +188,26 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			allFiles.forEach((f) => this.$logger.trace(" - " + f));
 
 			allFiles = allFiles.filter(
-				(f) => path.extname(f).toLowerCase() === ".app"
+				(f) => path.extname(f).toLowerCase() === ".app",
 			);
 			if (allFiles.length > 1) {
 				this.$errors.fail(
-					"In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload."
+					"In the .ipa the ITMSTransporter is uploading there is more than one .app file. We don't know which one to upload.",
 				);
 			} else if (allFiles.length <= 0) {
 				this.$errors.fail(
-					"In the .ipa the ITMSTransporter is uploading there must be at least one .app file."
+					"In the .ipa the ITMSTransporter is uploading there must be at least one .app file.",
 				);
 			}
 			const appFile = path.join(payloadDir, allFiles[0]);
 
 			const plistObject = await this.$plistParser.parseFile(
-				path.join(appFile, INFO_PLIST_FILE_NAME)
+				path.join(appFile, INFO_PLIST_FILE_NAME),
 			);
 			const bundleId = plistObject && plistObject.CFBundleIdentifier;
 			if (!bundleId) {
 				this.$errors.fail(
-					`Unable to determine bundle identifier from ${ipaFilePath}.`
+					`Unable to determine bundle identifier from ${ipaFilePath}.`,
 				);
 			}
 
@@ -221,14 +222,14 @@ export class ITMSTransporterService implements IITMSTransporterService {
 	@cache()
 	private async getAltoolPath(): Promise<string> {
 		const xcodePath = await this.$xcodeSelectService.getContentsDirectoryPath();
-		let itmsTransporterPath = path.join(
+		const itmsTransporterPath = path.join(
 			xcodePath,
 			"..",
 			"Contents",
 			"Developer",
 			"usr",
 			"bin",
-			ITMSConstants.altoolExecutableName
+			ITMSConstants.altoolExecutableName,
 		);
 
 		return itmsTransporterPath;
@@ -247,7 +248,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 			"A",
 			"itms",
 			"bin",
-			ITMSConstants.iTMSExecutableName
+			ITMSConstants.iTMSExecutableName,
 		);
 
 		const xcodeVersionData = await this.$xcodeSelectService.getXcodeVersion();
@@ -256,13 +257,13 @@ export class ITMSTransporterService implements IITMSTransporterService {
 				xcodePath,
 				"Applications",
 				"Application Loader.app",
-				"Contents"
+				"Contents",
 			);
 			itmsTransporterPath = path.join(
 				loaderAppContentsPath,
 				ITMSConstants.iTMSDirectoryName,
 				"bin",
-				ITMSConstants.iTMSExecutableName
+				ITMSConstants.iTMSExecutableName,
 			);
 		}
 
@@ -273,7 +274,7 @@ export class ITMSTransporterService implements IITMSTransporterService {
 		appleId: string,
 		ipaFileName: string,
 		ipaFileHash: string,
-		ipaFileSize: number
+		ipaFileSize: number,
 	): string {
 		return `<?xml version="1.0" encoding="UTF-8"?>
 <package version="software4.7" xmlns="http://apple.com/itunes/importer">

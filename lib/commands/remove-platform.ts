@@ -15,7 +15,7 @@ export class RemovePlatformCommand implements ICommand {
 		private $errors: IErrors,
 		private $platformCommandHelper: IPlatformCommandHelper,
 		private $platformValidationService: IPlatformValidationService,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -27,14 +27,14 @@ export class RemovePlatformCommand implements ICommand {
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args || args.length === 0) {
 			this.$errors.failWithHelp(
-				"No platform specified. Please specify a platform to remove."
+				"No platform specified. Please specify a platform to remove.",
 			);
 		}
 
 		_.each(args, (platform) => {
 			this.$platformValidationService.validatePlatform(
 				platform,
-				this.$projectData
+				this.$projectData,
 			);
 		});
 

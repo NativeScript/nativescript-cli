@@ -11,7 +11,7 @@ export interface ITimelineProfilerService {
 }
 
 const TIMELINE_LOG_RE =
-	/Timeline:\s*(\d*.?\d*ms:\s*)?([^\:]*\:)?(.*)\((\d*.?\d*)ms\.?\s*-\s*(\d*.\d*)ms\.?\)/;
+	/Timeline:\s*(\d*.?\d*ms:\s*)?([^:]*:)?(.*)\((\d*.?\d*)ms\.?\s*-\s*(\d*.\d*)ms\.?\)/;
 
 enum ChromeTraceEventPhase {
 	BEGIN = "B",
@@ -40,7 +40,7 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 	constructor(
 		private $projectConfigService: IProjectConfigService,
 		private $fs: IFileSystem,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	private attachExitHanlder() {
@@ -110,24 +110,24 @@ export class TimelineProfilerService implements ITimelineProfilerService {
 			const deviceTimelineFileName = `timeline-${deviceIdentifier}.json`;
 			this.$fs.writeJson(
 				path.resolve(process.cwd(), deviceTimelineFileName),
-				deviceTimeline.timeline
+				deviceTimeline.timeline,
 			);
 			this.$logger.info(
 				`Timeline data for device ${color.cyan(
-					deviceIdentifier
-				)} written to ${color.green(deviceTimelineFileName)}`
+					deviceIdentifier,
+				)} written to ${color.green(deviceTimelineFileName)}`,
 			);
 		});
 
 		this.$logger.info(
 			color.green(
-				"\n\nTo view the timeline data, open the following URL in Chrome, and load the json file:"
-			)
+				"\n\nTo view the timeline data, open the following URL in Chrome, and load the json file:",
+			),
 		);
 		this.$logger.info(
 			color.green(
-				"devtools://devtools/bundled/inspector.html?panel=timeline\n\n"
-			)
+				"devtools://devtools/bundled/inspector.html?panel=timeline\n\n",
+			),
 		);
 
 		process.exit();

@@ -42,15 +42,14 @@ describe("androidToolsInfo", () => {
 	describe("validateJavacVersion", () => {
 		it("throws error when passing showWarningsAsErrors to true and javac is not installed", () => {
 			const testInjector = createTestInjector();
-			const androidToolsInfo = testInjector.resolve<IAndroidToolsInfo>(
-				AndroidToolsInfo
-			);
+			const androidToolsInfo =
+				testInjector.resolve<IAndroidToolsInfo>(AndroidToolsInfo);
 			assert.throws(
 				() =>
 					androidToolsInfo.validateJavacVersion(null, {
 						showWarningsAsErrors: true,
 					}),
-				"Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable."
+				"Error executing command 'javac'. Make sure you have installed The Java Development Kit (JDK) and set JAVA_HOME environment variable.",
 			);
 		});
 	});

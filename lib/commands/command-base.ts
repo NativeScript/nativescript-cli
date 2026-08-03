@@ -12,7 +12,7 @@ export abstract class ValidatePlatformCommandBase {
 		protected $options: IOptions,
 		protected $platformsDataService: IPlatformsDataService,
 		protected $platformValidationService: IPlatformValidationService,
-		protected $projectData: IProjectData
+		protected $projectData: IProjectData,
 	) {}
 
 	abstract allowedParameters: ICommandParameter[];
@@ -20,12 +20,12 @@ export abstract class ValidatePlatformCommandBase {
 
 	public async canExecuteCommandBase(
 		platform: string,
-		options?: ICanExecuteCommandOptions
+		options?: ICanExecuteCommandOptions,
 	): Promise<boolean> {
 		options = options || {};
 		const validatePlatformOutput = await this.validatePlatformBase(
 			platform,
-			options.notConfiguredEnvOptions
+			options.notConfiguredEnvOptions,
 		);
 		const canExecute = this.canExecuteCommand(validatePlatformOutput);
 		let result = canExecute;
@@ -35,7 +35,7 @@ export abstract class ValidatePlatformCommandBase {
 				this.$options.provision,
 				this.$options.teamId,
 				this.$projectData,
-				platform
+				platform,
 			);
 		}
 
@@ -44,23 +44,23 @@ export abstract class ValidatePlatformCommandBase {
 
 	private async validatePlatformBase(
 		platform: string,
-		notConfiguredEnvOptions: INotConfiguredEnvOptions
+		notConfiguredEnvOptions: INotConfiguredEnvOptions,
 	): Promise<IValidatePlatformOutput> {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			this.$projectData
+			this.$projectData,
 		);
 		const platformProjectService = platformData.platformProjectService;
 		const result = await platformProjectService.validate(
 			this.$projectData,
 			this.$options,
-			notConfiguredEnvOptions
+			notConfiguredEnvOptions,
 		);
 		return result;
 	}
 
 	private canExecuteCommand(
-		validatePlatformOutput: IValidatePlatformOutput
+		validatePlatformOutput: IValidatePlatformOutput,
 	): boolean {
 		return (
 			validatePlatformOutput &&

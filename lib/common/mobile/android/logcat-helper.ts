@@ -22,7 +22,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logger: ILogger,
 		private $injector: IInjector,
-		private $devicesService: Mobile.IDevicesService
+		private $devicesService: Mobile.IDevicesService,
 	) {
 		this.mapDevicesLoggingData = Object.create(null);
 	}
@@ -40,7 +40,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 
 			const logcatStream = await this.getLogcatStream(
 				deviceIdentifier,
-				options.pid
+				options.pid,
 			);
 
 			const lineStream = byline(logcatStream.stdout);
@@ -57,7 +57,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 
 					if (code !== 0) {
 						this.$logger.trace(
-							"ADB process exited with code " + code.toString()
+							"ADB process exited with code " + code.toString(),
 						);
 					}
 				} catch (err) {
@@ -71,14 +71,14 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 					this.$deviceLogProvider.logData(
 						line,
 						this.$devicePlatformsConstants.Android,
-						deviceIdentifier
+						deviceIdentifier,
 					);
 				}
 			});
 
 			const appStartTrackingStream = await this.getAppStartTrackingLogcatStream(
 				deviceIdentifier,
-				options.appId
+				options.appId,
 			);
 
 			this.mapDevicesLoggingData[deviceIdentifier].appStartTrackingProcess =
@@ -92,11 +92,11 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 				if (!this.mapDevicesLoggingData[deviceIdentifier]?.loggingProcess)
 					return;
 				const lines = (lineBuffer.toString() || "").split("\n");
-				for (let line of lines) {
+				for (const line of lines) {
 					// 2024-06-26 16:43:22.286   630-659   ActivityManager system_server I  Start proc 8854:org.nativescript.uitestsapp/u0a190 for next-top-activity {org.nativescript.uitestsapp/com.tns.NativeScriptActivity}
 
 					const startProc = /Start proc (?<pid>[0-9]+):(?<appId>.+?)\//.exec(
-						line
+						line,
 					);
 
 					if (
@@ -115,7 +115,7 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 	public async dump(deviceIdentifier: string): Promise<void> {
 		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(
 			DeviceAndroidDebugBridge,
-			{ identifier: deviceIdentifier }
+			{ identifier: deviceIdentifier },
 		);
 		const logcatDumpStream = await adb.executeCommand(["logcat", "-d"], {
 			returnChildProcess: true,
@@ -167,18 +167,17 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 			!!device.deviceInfo.version &&
 			semver.gte(
 				semver.coerce(device.deviceInfo.version),
-				minAndroidWithLogcatPidSupport
+				minAndroidWithLogcatPidSupport,
 			)
 		);
 	}
 
 	private async getLogcatStream(deviceIdentifier: string, pid?: string) {
-		const isLogcatPidSupported = await this.isLogcatPidSupported(
-			deviceIdentifier
-		);
+		const isLogcatPidSupported =
+			await this.isLogcatPidSupported(deviceIdentifier);
 		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(
 			DeviceAndroidDebugBridge,
-			{ identifier: deviceIdentifier }
+			{ identifier: deviceIdentifier },
 		);
 
 		// -T 1 - shows only new logs after starting adb logcat
@@ -211,11 +210,11 @@ export class LogcatHelper implements Mobile.ILogcatHelper {
 
 	private async getAppStartTrackingLogcatStream(
 		deviceIdentifier: string,
-		appId?: string
+		appId?: string,
 	) {
 		const adb: Mobile.IDeviceAndroidDebugBridge = this.$injector.resolve(
 			DeviceAndroidDebugBridge,
-			{ identifier: deviceIdentifier }
+			{ identifier: deviceIdentifier },
 		);
 
 		// -b system  - shows the system buffer/logs only

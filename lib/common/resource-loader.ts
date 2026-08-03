@@ -5,7 +5,7 @@ import { injector } from "./yok";
 export class ResourceLoader implements IResourceLoader {
 	constructor(
 		private $fs: IFileSystem,
-		private $staticConfig: Config.IStaticConfig
+		private $staticConfig: Config.IStaticConfig,
 	) {}
 
 	resolvePath(resourcePath: string): string {

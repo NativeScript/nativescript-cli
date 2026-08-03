@@ -17,7 +17,7 @@ export abstract class ApplicationManagerBase
 	constructor(
 		protected $logger: ILogger,
 		protected $hooksService: IHooksService,
-		protected $deviceLogProvider: Mobile.IDeviceLogProvider
+		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
 	) {
 		super();
 	}
@@ -31,11 +31,10 @@ export abstract class ApplicationManagerBase
 	public async reinstallApplication(
 		appIdentifier: string,
 		packageFilePath: string,
-		buildData?: IBuildData
+		buildData?: IBuildData,
 	): Promise<void> {
-		const isApplicationInstalled = await this.isApplicationInstalled(
-			appIdentifier
-		);
+		const isApplicationInstalled =
+			await this.isApplicationInstalled(appIdentifier);
 
 		if (isApplicationInstalled && buildData?.clean) {
 			await this.uninstallApplication(appIdentifier);
@@ -45,7 +44,7 @@ export abstract class ApplicationManagerBase
 	}
 
 	public async restartApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		await this.stopApplication(appData);
 		await this.startApplication(appData);
@@ -73,20 +72,20 @@ export abstract class ApplicationManagerBase
 
 						const newAppIdentifiers = _.difference(
 							currentlyInstalledAppIdentifiers,
-							previouslyInstalledAppIdentifiers
+							previouslyInstalledAppIdentifiers,
 						);
 						const removedAppIdentifiers = _.difference(
 							previouslyInstalledAppIdentifiers,
-							currentlyInstalledAppIdentifiers
+							currentlyInstalledAppIdentifiers,
 						);
 
 						this.lastInstalledAppIdentifiers = currentlyInstalledAppIdentifiers;
 
 						_.each(newAppIdentifiers, (appIdentifier) =>
-							this.emit("applicationInstalled", appIdentifier)
+							this.emit("applicationInstalled", appIdentifier),
 						);
 						_.each(removedAppIdentifiers, (appIdentifier) =>
-							this.emit("applicationUninstalled", appIdentifier)
+							this.emit("applicationUninstalled", appIdentifier),
 						);
 
 						await this.checkForAvailableDebuggableAppsChanges();
@@ -100,7 +99,7 @@ export abstract class ApplicationManagerBase
 							resolve();
 						}
 					}
-				}
+				},
 			);
 		}
 
@@ -108,13 +107,13 @@ export abstract class ApplicationManagerBase
 	}
 
 	public async tryStartApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		try {
 			await this.startApplication(appData);
 		} catch (err) {
 			this.$logger.trace(
-				`Unable to start application ${appData.appId} with name ${appData.projectName}. Error is: ${err.message}`
+				`Unable to start application ${appData.appId} with name ${appData.projectName}. Error is: ${err.message}`,
 			);
 		}
 	}
@@ -122,21 +121,21 @@ export abstract class ApplicationManagerBase
 	public abstract installApplication(
 		packageFilePath: string,
 		appIdentifier?: string,
-		buildData?: IBuildData
+		buildData?: IBuildData,
 	): Promise<void>;
 	public abstract uninstallApplication(appIdentifier: string): Promise<void>;
 	public abstract startApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void>;
 	public abstract stopApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void>;
 	public abstract getInstalledApplications(): Promise<string[]>;
 	public abstract getDebuggableApps(): Promise<
 		Mobile.IDeviceApplicationInformation[]
 	>;
 	public abstract getDebuggableAppViews(
-		appIdentifiers: string[]
+		appIdentifiers: string[],
 	): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>>;
 
 	private async checkForAvailableDebuggableAppsChanges(): Promise<void> {
@@ -147,12 +146,12 @@ export abstract class ApplicationManagerBase
 		const newAvailableDebuggableApps = _.differenceBy(
 			currentlyAvailableDebuggableApps,
 			previouslyAvailableDebuggableApps,
-			"appIdentifier"
+			"appIdentifier",
 		);
 		const notAvailableAppsForDebugging = _.differenceBy(
 			previouslyAvailableDebuggableApps,
 			currentlyAvailableDebuggableApps,
-			"appIdentifier"
+			"appIdentifier",
 		);
 
 		this.lastAvailableDebuggableApps = currentlyAvailableDebuggableApps;
@@ -161,7 +160,7 @@ export abstract class ApplicationManagerBase
 			newAvailableDebuggableApps,
 			(appInfo: Mobile.IDeviceApplicationInformation) => {
 				this.emit("debuggableAppFound", appInfo);
-			}
+			},
 		);
 
 		_.each(
@@ -175,7 +174,7 @@ export abstract class ApplicationManagerBase
 					// Prevent emitting debuggableViewLost when application cannot be debugged anymore.
 					delete this.lastAvailableDebuggableAppViews[appInfo.appIdentifier];
 				}
-			}
+			},
 		);
 
 		const cordovaDebuggableAppIdentifiers = _(currentlyAvailableDebuggableApps)
@@ -184,7 +183,7 @@ export abstract class ApplicationManagerBase
 			.value();
 
 		const currentlyAvailableAppViews = await this.getDebuggableAppViews(
-			cordovaDebuggableAppIdentifiers
+			cordovaDebuggableAppIdentifiers,
 		);
 
 		_.each(
@@ -196,12 +195,12 @@ export abstract class ApplicationManagerBase
 				const newAvailableViews = _.differenceBy(
 					currentlyAvailableViews,
 					previouslyAvailableViews,
-					"id"
+					"id",
 				);
 				const notAvailableViews = _.differenceBy(
 					previouslyAvailableViews,
 					currentlyAvailableViews,
-					"id"
+					"id",
 				);
 
 				_.each(notAvailableViews, (debugWebViewInfo) => {
@@ -216,12 +215,12 @@ export abstract class ApplicationManagerBase
 				const keptViews = _.differenceBy(
 					currentlyAvailableViews,
 					newAvailableViews,
-					"id"
+					"id",
 				);
 				_.each(keptViews, (view) => {
 					const previousTimeViewInfo = _.find(
 						previouslyAvailableViews,
-						(previousView) => previousView.id === view.id
+						(previousView) => previousView.id === view.id,
 					);
 					if (!_.isEqual(view, previousTimeViewInfo)) {
 						this.emit("debuggableViewChanged", appIdentifier, view);
@@ -230,7 +229,7 @@ export abstract class ApplicationManagerBase
 
 				this.lastAvailableDebuggableAppViews[appIdentifier] =
 					currentlyAvailableViews;
-			}
+			},
 		);
 	}
 }

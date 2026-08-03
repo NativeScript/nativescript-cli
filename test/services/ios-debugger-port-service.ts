@@ -153,7 +153,7 @@ describe("iOSDebuggerPortService", () => {
 		deviceLogProvider.emit(
 			DEVICE_LOG_EVENT_NAME,
 			message,
-			device.deviceInfo.identifier
+			device.deviceInfo.identifier,
 		);
 	}
 	describe("getPort", () => {

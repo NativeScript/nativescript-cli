@@ -14,7 +14,10 @@ import { IDictionary } from "../../../declarations";
 class AndroidDeviceMock {
 	public deviceInfo: any = {};
 
-	constructor(public identifier: string, public status: string) {
+	constructor(
+		public identifier: string,
+		public status: string,
+	) {
 		this.deviceInfo.identifier = identifier;
 		this.deviceInfo.status = status;
 	}
@@ -46,7 +49,7 @@ function createTestInjector(): IInjector {
 	injector.register("logger", {});
 	injector.register(
 		"androidDebugBridgeResultHandler",
-		AndroidDebugBridgeResultHandler
+		AndroidDebugBridgeResultHandler,
 	);
 	injector.register("mobileHelper", {
 		isAndroidPlatform: () => {
@@ -65,7 +68,7 @@ function createTestInjector(): IInjector {
 			args: string[],
 			event: string,
 			options?: any,
-			spawnFromEventOptions?: any
+			spawnFromEventOptions?: any,
 		) => {
 			return Promise.resolve(args);
 		},
@@ -88,7 +91,7 @@ function createTestInjector(): IInjector {
 		) {
 			return new AndroidDeviceMock(
 				ctorArguments["identifier"],
-				ctorArguments["status"]
+				ctorArguments["status"],
 			);
 		} else {
 			return originalResolve.apply(injector, [param, ctorArguments]);
@@ -121,7 +124,7 @@ describe("androidDeviceDiscovery", () => {
 				DeviceDiscoveryEventNames.DEVICE_FOUND,
 				(device: Mobile.IDevice) => {
 					devicesFound.push(device);
-				}
+				},
 			);
 
 			// As startLookingForDevices is blocking, we should emit data on the next tick, so the future will be resolved and we'll receive the data.
@@ -134,11 +137,11 @@ describe("androidDeviceDiscovery", () => {
 			await androidDeviceDiscovery.startLookingForDevices();
 			assert.isTrue(
 				devicesFound.length === 1,
-				"We should have found ONE device."
+				"We should have found ONE device.",
 			);
 			assert.deepStrictEqual(
 				devicesFound[0].deviceInfo.identifier,
-				androidDeviceIdentifier
+				androidDeviceIdentifier,
 			);
 			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 		});
@@ -146,10 +149,11 @@ describe("androidDeviceDiscovery", () => {
 
 	describe("ensureAdbServerStarted", () => {
 		it("should spawn adb with start-server parameter", async () => {
-			const ensureAdbServerStartedOutput = await androidDeviceDiscovery.ensureAdbServerStarted();
+			const ensureAdbServerStartedOutput =
+				await androidDeviceDiscovery.ensureAdbServerStarted();
 			assert.isTrue(
 				_.includes(ensureAdbServerStartedOutput, "start-server"),
-				"start-server should be passed to adb."
+				"start-server should be passed to adb.",
 			);
 		});
 	});
@@ -164,7 +168,7 @@ describe("androidDeviceDiscovery", () => {
 						devicesFound.push(device);
 						resolve();
 					});
-				}
+				},
 			);
 
 			setTimeout(() => {
@@ -177,11 +181,11 @@ describe("androidDeviceDiscovery", () => {
 			await promise;
 			assert.isTrue(
 				devicesFound.length === 1,
-				"We should have found ONE device."
+				"We should have found ONE device.",
 			);
 			assert.deepStrictEqual(
 				devicesFound[0].deviceInfo.identifier,
-				androidDeviceIdentifier
+				androidDeviceIdentifier,
 			);
 			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 		});
@@ -197,7 +201,7 @@ describe("androidDeviceDiscovery", () => {
 							resolve();
 						}
 					});
-				}
+				},
 			);
 
 			setTimeout(() => {
@@ -210,16 +214,16 @@ describe("androidDeviceDiscovery", () => {
 			await promise;
 			assert.isTrue(
 				devicesFound.length === 2,
-				"We should have found two devices."
+				"We should have found two devices.",
 			);
 			assert.deepStrictEqual(
 				devicesFound[0].deviceInfo.identifier,
-				androidDeviceIdentifier
+				androidDeviceIdentifier,
 			);
 			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 			assert.deepStrictEqual(
 				devicesFound[1].deviceInfo.identifier,
-				"secondDevice"
+				"secondDevice",
 			);
 			assert.deepStrictEqual(devicesFound[1].status, androidDeviceStatus);
 		});
@@ -229,7 +233,7 @@ describe("androidDeviceDiscovery", () => {
 				DeviceDiscoveryEventNames.DEVICE_FOUND,
 				(device: Mobile.IDevice) => {
 					throw new Error("Devices should not be found.");
-				}
+				},
 			);
 
 			setTimeout(() => {
@@ -241,12 +245,12 @@ describe("androidDeviceDiscovery", () => {
 			await androidDeviceDiscovery.startLookingForDevices();
 			assert.isTrue(
 				devicesFound.length === 0,
-				"We should have NOT found devices."
+				"We should have NOT found devices.",
 			);
 		});
 
 		const validateDeviceFoundWhenAdbReportsAdditionalMessages = async (
-			adbMessage: string
+			adbMessage: string,
 		) => {
 			let promise: Promise<void>;
 			androidDeviceDiscovery.on(
@@ -256,7 +260,7 @@ describe("androidDeviceDiscovery", () => {
 						devicesFound.push(device);
 						resolve();
 					});
-				}
+				},
 			);
 
 			setTimeout(() => {
@@ -269,11 +273,11 @@ describe("androidDeviceDiscovery", () => {
 			await promise;
 			assert.isTrue(
 				devicesFound.length === 1,
-				"We should have found ONE device."
+				"We should have found ONE device.",
 			);
 			assert.deepStrictEqual(
 				devicesFound[0].deviceInfo.identifier,
-				androidDeviceIdentifier
+				androidDeviceIdentifier,
 			);
 			assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 		};
@@ -306,7 +310,7 @@ describe("androidDeviceDiscovery", () => {
 							devicesFound.push(device);
 							resolve();
 						});
-					}
+					},
 				);
 
 				setTimeout(() => {
@@ -317,7 +321,7 @@ describe("androidDeviceDiscovery", () => {
 				await androidDeviceDiscovery.startLookingForDevices();
 				await promise;
 				androidDeviceDiscovery.removeAllListeners(
-					DeviceDiscoveryEventNames.DEVICE_FOUND
+					DeviceDiscoveryEventNames.DEVICE_FOUND,
 				);
 			});
 
@@ -326,7 +330,7 @@ describe("androidDeviceDiscovery", () => {
 					DeviceDiscoveryEventNames.DEVICE_FOUND,
 					(device: Mobile.IDevice) => {
 						throw new Error("Should not report same device as found");
-					}
+					},
 				);
 
 				setTimeout(() => {
@@ -337,11 +341,11 @@ describe("androidDeviceDiscovery", () => {
 				await androidDeviceDiscovery.startLookingForDevices();
 				assert.isTrue(
 					devicesFound.length === 1,
-					"We should have found ONE device."
+					"We should have found ONE device.",
 				);
 				assert.deepStrictEqual(
 					devicesFound[0].deviceInfo.identifier,
-					androidDeviceIdentifier
+					androidDeviceIdentifier,
 				);
 				assert.deepStrictEqual(devicesFound[0].status, androidDeviceStatus);
 			});
@@ -353,7 +357,7 @@ describe("androidDeviceDiscovery", () => {
 					DeviceDiscoveryEventNames.DEVICE_LOST,
 					(device: Mobile.IDevice) => {
 						promise = Promise.resolve(device);
-					}
+					},
 				);
 
 				setTimeout(() => {
@@ -365,11 +369,11 @@ describe("androidDeviceDiscovery", () => {
 				const lostDevice = await promise;
 				assert.deepStrictEqual(
 					lostDevice.deviceInfo.identifier,
-					androidDeviceIdentifier
+					androidDeviceIdentifier,
 				);
 				assert.deepStrictEqual(
 					lostDevice.deviceInfo.status,
-					androidDeviceStatus
+					androidDeviceStatus,
 				);
 			});
 
@@ -380,7 +384,7 @@ describe("androidDeviceDiscovery", () => {
 					DeviceDiscoveryEventNames.DEVICE_LOST,
 					(device: Mobile.IDevice) => {
 						promise = Promise.resolve(device);
-					}
+					},
 				);
 
 				const output = `List of devices attached${EOL}`;
@@ -394,20 +398,20 @@ describe("androidDeviceDiscovery", () => {
 				const lostDevice = await promise;
 				assert.deepStrictEqual(
 					lostDevice.deviceInfo.identifier,
-					androidDeviceIdentifier
+					androidDeviceIdentifier,
 				);
 				assert.deepStrictEqual(
 					lostDevice.deviceInfo.status,
-					androidDeviceStatus
+					androidDeviceStatus,
 				);
 
 				androidDeviceDiscovery.on(
 					DeviceDiscoveryEventNames.DEVICE_LOST,
 					(device: Mobile.IDevice) => {
 						throw new Error(
-							"Should not report device as removed next time after it has been already reported."
+							"Should not report device as removed next time after it has been already reported.",
 						);
-					}
+					},
 				);
 
 				setTimeout(() => {
@@ -427,10 +431,10 @@ describe("androidDeviceDiscovery", () => {
 					(device: Mobile.IDevice) => {
 						_.remove(
 							devicesFound,
-							(d) => d.deviceInfo.identifier === device.deviceInfo.identifier
+							(d) => d.deviceInfo.identifier === device.deviceInfo.identifier,
 						);
 						deviceLostPromise = Promise.resolve(device);
-					}
+					},
 				);
 
 				androidDeviceDiscovery.on(
@@ -438,7 +442,7 @@ describe("androidDeviceDiscovery", () => {
 					(device: Mobile.IDevice) => {
 						devicesFound.push(device);
 						deviceFoundPromise = Promise.resolve(device);
-					}
+					},
 				);
 
 				const output = `List of devices attached${EOL}${androidDeviceIdentifier}	unauthorized${EOL}${EOL}`;
@@ -452,21 +456,21 @@ describe("androidDeviceDiscovery", () => {
 				const lostDevice = await deviceLostPromise;
 				assert.deepStrictEqual(
 					lostDevice.deviceInfo.identifier,
-					androidDeviceIdentifier
+					androidDeviceIdentifier,
 				);
 				assert.deepStrictEqual(
 					lostDevice.deviceInfo.status,
-					androidDeviceStatus
+					androidDeviceStatus,
 				);
 
 				await deviceFoundPromise;
 				assert.isTrue(
 					devicesFound.length === 1,
-					"We should have found ONE device."
+					"We should have found ONE device.",
 				);
 				assert.deepStrictEqual(
 					devicesFound[0].deviceInfo.identifier,
-					androidDeviceIdentifier
+					androidDeviceIdentifier,
 				);
 				assert.deepStrictEqual(devicesFound[0].status, "unauthorized");
 
@@ -479,7 +483,7 @@ describe("androidDeviceDiscovery", () => {
 				await androidDeviceDiscovery.startLookingForDevices();
 				assert.isTrue(
 					devicesFound.length === 1,
-					"We should have found ONE device."
+					"We should have found ONE device.",
 				);
 			});
 		});
@@ -489,7 +493,7 @@ describe("androidDeviceDiscovery", () => {
 				DeviceDiscoveryEventNames.DEVICE_FOUND,
 				(device: Mobile.IDevice) => {
 					throw new Error("Devices should not be found.");
-				}
+				},
 			);
 
 			const error = new Error("ADB Error");
@@ -528,7 +532,7 @@ describe("androidDeviceDiscovery", () => {
 				DeviceDiscoveryEventNames.DEVICE_FOUND,
 				(device: Mobile.IDevice) => {
 					throw new Error("Devices should not be found.");
-				}
+				},
 			);
 			const error = new Error("ADB Error");
 			try {

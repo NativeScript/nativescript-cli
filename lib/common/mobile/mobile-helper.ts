@@ -13,7 +13,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		private $errors: IErrors,
 		private $fs: IFileSystem,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $tempService: ITempService
+		private $tempService: ITempService,
 	) {}
 
 	public get platformNames(): string[] {
@@ -77,7 +77,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			this.$errors.fail(
 				"'%s' is not a valid device platform. Valid platforms are %s.",
 				platform,
-				helpers.formatListOfNames(this.platformNames)
+				helpers.formatListOfNames(this.platformNames),
 			);
 		}
 
@@ -86,7 +86,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 
 	public buildDevicePath(...args: string[]): string {
 		return this.correctDevicePath(
-			args.join(MobileHelper.DEVICE_PATH_SEPARATOR)
+			args.join(MobileHelper.DEVICE_PATH_SEPARATOR),
 		);
 	}
 
@@ -101,7 +101,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 	public async getDeviceFileContent(
 		device: Mobile.IDevice,
 		deviceFilePath: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<string> {
 		const uniqueFilePath = await this.$tempService.path({ suffix: ".tmp" });
 		const platform = device.deviceInfo.platform.toLowerCase();
@@ -109,7 +109,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			await device.fileSystem.getFile(
 				deviceFilePath,
 				projectData.projectIdentifiers[platform],
-				uniqueFilePath
+				uniqueFilePath,
 			);
 		} catch (e) {
 			return null;

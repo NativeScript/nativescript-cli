@@ -7,12 +7,13 @@ import { injector } from "../common/yok";
 
 export class LogParserService
 	extends EventEmitter
-	implements ILogParserService {
+	implements ILogParserService
+{
 	private parseRules: IDictionary<ILogParseRule> = {};
 
 	constructor(
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {
 		super();
 	}
@@ -30,14 +31,14 @@ export class LogParserService
 	private startParsingLogCore(): void {
 		this.$deviceLogProvider.on(
 			DEVICE_LOG_EVENT_NAME,
-			this.processDeviceLogResponse.bind(this)
+			this.processDeviceLogResponse.bind(this),
 		);
 	}
 
 	private processDeviceLogResponse(
 		message: string,
 		deviceIdentifier: string,
-		devicePlatform?: string
+		devicePlatform?: string,
 	) {
 		const lines = message.split("\n");
 		_.forEach(lines, (line) => {

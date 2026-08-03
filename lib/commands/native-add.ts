@@ -13,7 +13,7 @@ export class NativeAddCommand implements ICommand {
 	constructor(
 		protected $projectData: IProjectData,
 		protected $logger: ILogger,
-		protected $errors: IErrors
+		protected $errors: IErrors,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -26,7 +26,7 @@ export class NativeAddCommand implements ICommand {
 
 	protected failWithUsage(): void {
 		this.$errors.failWithHelp(
-			"Usage: ns native add [swift|objective-c|java|kotlin] [class name]"
+			"Usage: ns native add [swift|objective-c|java|kotlin] [class name]",
 		);
 	}
 	public async canExecute(args: string[]): Promise<boolean> {
@@ -80,7 +80,7 @@ export class NativeAddAndroidCommand extends NativeAddSingleCommand {
 
 	private generateJavaClassContent(
 		packageName: string,
-		classSimpleName: string
+		classSimpleName: string,
 	): string {
 		return (
 			(packageName.length > 0 ? `package ${packageName};` : "") +
@@ -98,7 +98,7 @@ public class ${classSimpleName} {
 
 	private generateKotlinClassContent(
 		packageName: string,
-		classSimpleName: string
+		classSimpleName: string,
 	): string {
 		return (
 			(packageName.length > 0 ? `package ${packageName};` : "") +
@@ -115,28 +115,28 @@ class ${classSimpleName} {
 		);
 	}
 	public doJavaKotlin(className: string, extension: string): void {
-		const fileExt = extension == "java" ? extension : "kt";
+		const fileExt = extension === "java" ? extension : "kt";
 		const packageName = this.getPackageName(className);
 		const classSimpleName = this.getClassSimpleName(className);
 		const packagePath = path.join(
 			this.getAndroidSourcePathBase(),
-			...packageName.split(".")
+			...packageName.split("."),
 		);
 		const filePath = path.join(packagePath, `${classSimpleName}.${fileExt}`);
 
 		if (fs.existsSync(filePath)) {
 			this.$errors.failWithHelp(
-				`${extension} file '${filePath}' already exists.`
+				`${extension} file '${filePath}' already exists.`,
 			);
 			return;
 		}
 
-		if (extension == "kotlin" && !this.checkAndUpdateGradleProperties()) {
+		if (extension === "kotlin" && !this.checkAndUpdateGradleProperties()) {
 			return;
 		}
 
 		const fileContent =
-			extension == "java"
+			extension === "java"
 				? this.generateJavaClassContent(packageName, classSimpleName)
 				: this.generateKotlinClassContent(packageName, classSimpleName);
 
@@ -144,8 +144,8 @@ class ${classSimpleName} {
 		fs.writeFileSync(filePath, fileContent);
 		this.$logger.info(
 			`${capitalizeFirstLetter(
-				extension
-			)} file '${filePath}' generated successfully.`
+				extension,
+			)} file '${filePath}' generated successfully.`,
 		);
 	}
 
@@ -164,7 +164,7 @@ class ${classSimpleName} {
 
 				if (useKotlin === "false") {
 					this.$errors.failWithHelp(
-						"The useKotlin property is set to false. Stopping processing. Kotlin must be enabled in gradle.properties to use."
+						"The useKotlin property is set to false. Stopping processing. Kotlin must be enabled in gradle.properties to use.",
 					);
 					return false;
 				}
@@ -175,13 +175,13 @@ class ${classSimpleName} {
 			} else {
 				fs.appendFileSync(filePath, `${EOL}useKotlin=true${EOL}`);
 				this.$logger.info(
-					'Added "useKotlin=true" property to gradle.properties.'
+					'Added "useKotlin=true" property to gradle.properties.',
 				);
 			}
 		} else {
 			fs.writeFileSync(filePath, `useKotlin=true${EOL}`);
 			this.$logger.info(
-				'Created gradle.properties with "useKotlin=true" property.'
+				'Created gradle.properties with "useKotlin=true" property.',
 			);
 		}
 		return true;
@@ -234,14 +234,14 @@ export class NativeAddObjectiveCCommand extends NativeAddSingleCommand {
 			// Modify/Generate moduleMap
 			this.generateOrUpdateModuleMap(
 				`${className}.h`,
-				path.join(iosSourceBase, "module.modulemap")
+				path.join(iosSourceBase, "module.modulemap"),
 			);
 		}
 	}
 
 	private generateOrUpdateModuleMap(
 		headerFileName: string,
-		moduleMapPath: string
+		moduleMapPath: string,
 	): void {
 		const moduleName = "LocalModule";
 		const headerPath = headerFileName;
@@ -259,14 +259,14 @@ export class NativeAddObjectiveCCommand extends NativeAddSingleCommand {
 			if (moduleMapContent.includes(headerDeclaration)) {
 				// Header is already present in the module map
 				this.$logger.warn(
-					`Header '${headerFileName}' is already added to the module map.`
+					`Header '${headerFileName}' is already added to the module map.`,
 				);
 				return;
 			}
 
 			const updatedModuleMapContent = moduleMapContent.replace(
 				new RegExp(`module ${moduleName} {\\s*([^}]*)\\s*}`, "s"),
-				`module ${moduleName} {${EOL}    $1${EOL}    ${headerDeclaration}${EOL}}`
+				`module ${moduleName} {${EOL}    $1${EOL}    ${headerDeclaration}${EOL}}`,
 			);
 
 			fs.writeFileSync(moduleMapPath, updatedModuleMapContent);
@@ -279,25 +279,25 @@ export class NativeAddObjectiveCCommand extends NativeAddSingleCommand {
 		}
 
 		this.$logger.info(
-			`Module map '${moduleMapPath}' has been updated with the header '${headerFileName}'.`
+			`Module map '${moduleMapPath}' has been updated with the header '${headerFileName}'.`,
 		);
 	}
 
 	private generateObjectiveCFiles(
 		className: string,
 		classFilePath: string,
-		interfaceFilePath: string
+		interfaceFilePath: string,
 	): boolean {
 		if (fs.existsSync(classFilePath)) {
 			this.$errors.failWithHelp(
-				`Error: File '${classFilePath}' already exists.`
+				`Error: File '${classFilePath}' already exists.`,
 			);
 			return false;
 		}
 
 		if (fs.existsSync(interfaceFilePath)) {
 			this.$errors.failWithHelp(
-				`Error: File '${interfaceFilePath}' already exists.`
+				`Error: File '${interfaceFilePath}' already exists.`,
 			);
 			return false;
 		}
@@ -324,12 +324,12 @@ export class NativeAddObjectiveCCommand extends NativeAddSingleCommand {
 
 		fs.writeFileSync(classFilePath, classContent);
 		this.$logger.trace(
-			`Objective-C class file '${classFilePath}' generated successfully.`
+			`Objective-C class file '${classFilePath}' generated successfully.`,
 		);
 
 		fs.writeFileSync(interfaceFilePath, interfaceContent);
 		this.$logger.trace(
-			`Objective-C interface file '${interfaceFilePath}' generated successfully.`
+			`Objective-C interface file '${interfaceFilePath}' generated successfully.`,
 		);
 		return true;
 	}
@@ -385,5 +385,5 @@ injector.registerCommand(["native|add|kotlin"], NativeAddKotlinCommand);
 injector.registerCommand(["native|add|swift"], NativeAddSwiftCommand);
 injector.registerCommand(
 	["native|add|objective-c"],
-	NativeAddObjectiveCCommand
+	NativeAddObjectiveCCommand,
 );

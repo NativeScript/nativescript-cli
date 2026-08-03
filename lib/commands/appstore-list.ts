@@ -27,7 +27,7 @@ export class ListiOSApps implements ICommand {
 		private $platformValidationService: IPlatformValidationService,
 		private $errors: IErrors,
 		private $prompter: IPrompter,
-		private $options: IOptions
+		private $options: IOptions,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -36,11 +36,11 @@ export class ListiOSApps implements ICommand {
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				this.$devicePlatformsConstants.iOS,
-				this.$projectData
+				this.$projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`
+				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`,
 			);
 		}
 
@@ -61,17 +61,16 @@ export class ListiOSApps implements ICommand {
 			{ username, password },
 			{
 				sessionBase64: this.$options.appleSessionBase64,
-			}
+			},
 		);
 		if (!user.areCredentialsValid) {
 			this.$errors.fail(
-				`Invalid username and password combination. Used '${username}' as the username.`
+				`Invalid username and password combination. Used '${username}' as the username.`,
 			);
 		}
 
-		const applications = await this.$applePortalApplicationService.getApplications(
-			user
-		);
+		const applications =
+			await this.$applePortalApplicationService.getApplications(user);
 
 		if (!applications || !applications.length) {
 			this.$logger.info("Seems you don't have any applications yet.");
@@ -87,7 +86,7 @@ export class ListiOSApps implements ICommand {
 							application.versionSets[0].inFlightVersion.version) ||
 						"";
 					return [application.name, application.bundleId, version];
-				})
+				}),
 			);
 
 			this.$logger.info(table.toString());

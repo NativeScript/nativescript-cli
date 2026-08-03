@@ -13,7 +13,7 @@ import {
 } from "../declarations";
 
 declare global {
-	export module Mobile {
+	export namespace Mobile {
 		/**
 		 * Describes available information for a device.
 		 */

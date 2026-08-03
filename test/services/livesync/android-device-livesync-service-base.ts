@@ -40,14 +40,14 @@ class AndroidDeviceLiveSyncServiceBaseMock extends AndroidDeviceLiveSyncServiceB
 		$platformsDataService: any,
 		$filesHashService: any,
 		$logger: ILogger,
-		device: Mobile.IAndroidDevice
+		device: Mobile.IAndroidDevice,
 	) {
 		super($injector, $platformsDataService, $filesHashService, $logger, device);
 	}
 
 	public async transferFilesOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<void> {
 		transferFilesOnDeviceParams.push({ deviceAppData, localToDevicePaths });
 	}
@@ -55,7 +55,7 @@ class AndroidDeviceLiveSyncServiceBaseMock extends AndroidDeviceLiveSyncServiceB
 	public async transferDirectoryOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		projectFilesPath: string
+		projectFilesPath: string,
 	): Promise<void> {
 		transferDirectoryOnDeviceParams.push({
 			deviceAppData,
@@ -74,7 +74,7 @@ class LocalToDevicePathDataMock {
 
 	public getDevicePath(): string {
 		return `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${path.basename(
-			this.filePath
+			this.filePath,
 		)}`;
 	}
 }
@@ -99,7 +99,7 @@ function createTestInjector() {
 }
 
 function mockDevice(
-	deviceHashService: Mobile.IAndroidDeviceHashService
+	deviceHashService: Mobile.IAndroidDeviceHashService,
 ): Mobile.IAndroidDevice {
 	const device: Mobile.IAndroidDevice = {
 		deviceInfo: mockDeviceInfo(),
@@ -132,7 +132,7 @@ function mockDeviceInfo(): Mobile.IDeviceInfo {
 }
 
 function createDeviceAppData(
-	deviceHashService: Mobile.IAndroidDeviceHashService
+	deviceHashService: Mobile.IAndroidDeviceHashService,
 ): Mobile.IDeviceAppData {
 	return {
 		getDeviceProjectRootPath: async () =>
@@ -165,7 +165,7 @@ function mockDeviceApplicationManager(): Mobile.IDeviceApplicationManager {
 }
 
 function mockDeviceFileSystem(
-	deviceHashService: Mobile.IAndroidDeviceHashService
+	deviceHashService: Mobile.IAndroidDeviceHashService,
 ): Mobile.IAndroidDeviceFileSystem {
 	return <any>{
 		deleteFile: async (deviceFilePath: string, appId: string) => {
@@ -176,12 +176,12 @@ function mockDeviceFileSystem(
 	};
 }
 
-function mockFsStats(options: {
-	isDirectory: boolean;
-	isFile: boolean;
-}): (
-	filePath: string
-) => { isDirectory: () => boolean; isFile: () => boolean } {
+function mockFsStats(options: { isDirectory: boolean; isFile: boolean }): (
+	filePath: string,
+) => {
+	isDirectory: () => boolean;
+	isFile: () => boolean;
+} {
 	return (filePath: string) => ({
 		isDirectory: (): boolean => options.isDirectory,
 		isFile: (): boolean => options.isFile,
@@ -226,19 +226,20 @@ function setup(options?: ITestSetupInput): ITestSetupOutput {
 		appIdentifier,
 		fs,
 		injector.resolve("mobileHelper"),
-		<any>{ mkdirSync: async () => "" }
+		<any>{ mkdirSync: async () => "" },
 	);
 	const localToDevicePaths = _.keys(filesToShasums).map((file) =>
-		injector.resolve(LocalToDevicePathDataMock, { filePath: file })
+		injector.resolve(LocalToDevicePathDataMock, { filePath: file }),
 	);
 	const deviceAppData = createDeviceAppData(deviceHashService);
-	const androidDeviceLiveSyncServiceBase = new AndroidDeviceLiveSyncServiceBaseMock(
-		injector,
-		mockPlatformsData(),
-		mockFilesHashService(),
-		mockLogger(),
-		mockDevice(deviceHashService)
-	);
+	const androidDeviceLiveSyncServiceBase =
+		new AndroidDeviceLiveSyncServiceBaseMock(
+			injector,
+			mockPlatformsData(),
+			mockFilesHashService(),
+			mockLogger(),
+			mockDevice(deviceHashService),
+		);
 
 	fs.exists = () => options.existsHashesFile;
 	fs.getFsStats = mockFsStats({ isDirectory: false, isFile: true });
@@ -268,7 +269,7 @@ function setup(options?: ITestSetupInput): ITestSetupOutput {
 
 async function transferFiles(
 	testSetup: ITestSetupOutput,
-	options: { force: boolean; isFullSync: boolean }
+	options: { force: boolean; isFullSync: boolean },
 ): Promise<Mobile.ILocalToDevicePathData[]> {
 	const androidDeviceLiveSyncServiceBase =
 		testSetup.androidDeviceLiveSyncServiceBase;
@@ -278,7 +279,7 @@ async function transferFiles(
 		testSetup.projectRoot,
 		{},
 		{},
-		options
+		options,
 	);
 	return transferredFiles;
 }
@@ -301,12 +302,12 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 1);
 				assert.equal(
 					transferredFiles[0].getLocalPath(),
-					testSetup.changedFileLocalPath
+					testSetup.changedFileLocalPath,
 				);
 				assert.equal(transferDirectoryOnDeviceParams.length, 1);
 				assert.equal(
 					transferDirectoryOnDeviceParams[0].localToDevicePaths.length,
-					1
+					1,
 				);
 			});
 			it("transfers only changed files when there are file changes", async () => {
@@ -321,7 +322,7 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 1);
 				assert.equal(
 					transferredFiles[0].getLocalPath(),
-					testSetup.changedFileLocalPath
+					testSetup.changedFileLocalPath,
 				);
 			});
 			it("transfers only changed files when there are both changed and not changed files", async () => {
@@ -337,7 +338,7 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 1);
 				assert.equal(
 					transferredFiles[0].getLocalPath(),
-					testSetup.changedFileLocalPath
+					testSetup.changedFileLocalPath,
 				);
 			});
 			it("does not transfer files when no file changes", async () => {
@@ -365,11 +366,11 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 2);
 				assert.deepStrictEqual(
 					transferredFiles[0].getLocalPath(),
-					testSetup.changedFileLocalPath
+					testSetup.changedFileLocalPath,
 				);
 				assert.deepStrictEqual(
 					transferredFiles[1].getLocalPath(),
-					testSetup.unchangedFileLocalPath
+					testSetup.unchangedFileLocalPath,
 				);
 			});
 			it("transfers files which has different location and no changed files", async () => {
@@ -386,7 +387,7 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 1);
 				assert.deepStrictEqual(
 					transferredFiles[0].getLocalPath(),
-					testSetup.unchangedFileLocalPath
+					testSetup.unchangedFileLocalPath,
 				);
 			});
 			it("transfers changed files with different location", async () => {
@@ -402,7 +403,7 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 1);
 				assert.equal(
 					transferredFiles[0].getLocalPath(),
-					testSetup.changedFileLocalPath
+					testSetup.changedFileLocalPath,
 				);
 			});
 		});
@@ -419,7 +420,7 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 1);
 				assert.equal(
 					transferredFiles[0].getLocalPath(),
-					testSetup.changedFileLocalPath
+					testSetup.changedFileLocalPath,
 				);
 				assert.equal(transferDirectoryOnDeviceParams.length, 0);
 			});
@@ -434,7 +435,7 @@ describe("AndroidDeviceLiveSyncServiceBase", () => {
 				assert.equal(transferredFiles.length, 1);
 				assert.equal(
 					transferredFiles[0].getLocalPath(),
-					testSetup.changedFileLocalPath
+					testSetup.changedFileLocalPath,
 				);
 			});
 		});

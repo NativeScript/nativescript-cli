@@ -18,7 +18,7 @@ export class IOSSimResolver implements Mobile.IiOSSimResolver {
 		return path.join(
 			require.resolve(IOSSimResolver.iOSSimName),
 			"..",
-			IOSSimResolver.iOSStandaloneExecutableName
+			IOSSimResolver.iOSStandaloneExecutableName,
 		);
 	}
 }

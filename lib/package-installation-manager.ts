@@ -26,7 +26,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		private $settingsService: ISettingsService,
 		private $fs: IFileSystem,
 		private $staticConfig: IStaticConfig,
-		private $projectDataService: IProjectDataService
+		private $projectDataService: IProjectDataService,
 	) {}
 
 	public async getLatestVersion(packageName: string): Promise<string> {
@@ -39,7 +39,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 	public async getLatestCompatibleVersion(
 		packageName: string,
-		referenceVersion?: string
+		referenceVersion?: string,
 	): Promise<string> {
 		referenceVersion = referenceVersion || this.$staticConfig.version;
 		const isPreReleaseVersion = semver.prerelease(referenceVersion) !== null;
@@ -47,8 +47,8 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		const compatibleVersionRange = isPreReleaseVersion
 			? `~${referenceVersion}`
 			: `~${semver.major(referenceVersion)}.${semver.minor(
-					referenceVersion
-			  )}.0`;
+					referenceVersion,
+				)}.0`;
 		const latestVersion = await this.getLatestVersion(packageName);
 		if (semver.satisfies(latestVersion, compatibleVersionRange)) {
 			return latestVersion;
@@ -57,14 +57,14 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		return (
 			(await this.getMaxSatisfyingVersion(
 				packageName,
-				compatibleVersionRange
+				compatibleVersionRange,
 			)) || latestVersion
 		);
 	}
 
 	public async getMaxSatisfyingVersion(
 		packageName: string,
-		versionRange: string
+		versionRange: string,
 	): Promise<string> {
 		const data = await this.$packageManager.view(packageName, {
 			versions: true,
@@ -89,7 +89,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 	public async getMaxSatisfyingVersionSafe(
 		packageName: string,
-		versionIdentifier: string
+		versionIdentifier: string,
 	): Promise<string> {
 		let maxDependencyVersion;
 		if (semver.valid(versionIdentifier)) {
@@ -97,12 +97,12 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		} else if (semver.validRange(versionIdentifier)) {
 			maxDependencyVersion = await this.getMaxSatisfyingVersion(
 				packageName,
-				versionIdentifier
+				versionIdentifier,
 			);
 		} else {
 			maxDependencyVersion = await this.$packageManager.getTagVersion(
 				packageName,
-				versionIdentifier
+				versionIdentifier,
 			);
 		}
 
@@ -111,7 +111,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 	public async getInstalledDependencyVersion(
 		packageName: string,
-		projectDir?: string
+		projectDir?: string,
 	): Promise<string> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const devDependencies = projectData.devDependencies || {};
@@ -120,7 +120,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			dependencies[packageName] || devDependencies[packageName];
 		const installedVersion = await this.getMaxSatisfyingVersionSafe(
 			packageName,
-			referencedVersion
+			referencedVersion,
 		);
 
 		return installedVersion;
@@ -128,16 +128,15 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 	public async getLatestCompatibleVersionSafe(
 		packageName: string,
-		referenceVersion?: string
+		referenceVersion?: string,
 	): Promise<string> {
 		let version = "";
-		const canGetVersionFromNpm = await this.$packageManager.isRegistered(
-			packageName
-		);
+		const canGetVersionFromNpm =
+			await this.$packageManager.isRegistered(packageName);
 		if (canGetVersionFromNpm) {
 			version = await this.getLatestCompatibleVersion(
 				packageName,
-				referenceVersion
+				referenceVersion,
 			);
 		}
 
@@ -147,7 +146,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	public async install(
 		packageToInstall: string,
 		projectDir: string,
-		opts?: INpmInstallOptions
+		opts?: INpmInstallOptions,
 	): Promise<any> {
 		try {
 			const pathToSave = projectDir;
@@ -158,7 +157,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 				packageToInstall,
 				pathToSave,
 				version,
-				dependencyType
+				dependencyType,
 			);
 		} catch (error) {
 			this.$logger.trace(error);
@@ -170,13 +169,13 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	public async uninstall(
 		packageToUninstall: string,
 		projectDir: string,
-		opts?: IDictionary<string | boolean>
+		opts?: IDictionary<string | boolean>,
 	): Promise<any> {
 		try {
 			return await this.$packageManager.uninstall(
 				packageToUninstall,
 				opts,
-				projectDir
+				projectDir,
 			);
 		} catch (error) {
 			this.$logger.trace(error);
@@ -187,12 +186,12 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 	public async getInspectorFromCache(
 		inspectorNpmPackageName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<string> {
 		const inspectorPath = path.join(
 			projectDir,
 			constants.NODE_MODULES_FOLDER_NAME,
-			inspectorNpmPackageName
+			inspectorNpmPackageName,
 		);
 
 		// local installation takes precedence over cache
@@ -205,22 +204,22 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		const pathToPackageInCache = path.join(
 			cachePath,
 			constants.NODE_MODULES_FOLDER_NAME,
-			inspectorNpmPackageName
+			inspectorNpmPackageName,
 		);
 		const iOSFrameworkNSValue = this.$projectDataService.getRuntimePackage(
 			projectDir,
-			constants.PlatformTypes.ios
+			constants.PlatformTypes.ios,
 		);
 		const version = await this.getLatestCompatibleVersion(
 			inspectorNpmPackageName,
-			iOSFrameworkNSValue.version
+			iOSFrameworkNSValue.version,
 		);
 		let shouldInstall = !this.$fs.exists(pathToPackageInCache);
 
 		if (!shouldInstall) {
 			try {
 				const installedVersion = this.$fs.readJson(
-					path.join(pathToPackageInCache, constants.PACKAGE_JSON_FILE_NAME)
+					path.join(pathToPackageInCache, constants.PACKAGE_JSON_FILE_NAME),
 				).version;
 				shouldInstall = version !== installedVersion;
 			} catch (err) {
@@ -231,7 +230,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		if (shouldInstall) {
 			await this.$childProcess.exec(
 				`npm install ${inspectorNpmPackageName}@${version} --prefix ${cachePath}`,
-				{ maxBuffer: 250 * 1024 }
+				{ maxBuffer: 250 * 1024 },
 			);
 		}
 
@@ -246,7 +245,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	private getInspectorCachePath(): string {
 		return path.join(
 			this.$settingsService.getProfileDir(),
-			constants.INSPECTOR_CACHE_DIRNAME
+			constants.INSPECTOR_CACHE_DIRNAME,
 		);
 	}
 
@@ -255,7 +254,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 
 		const cacheDirPackageJsonLocation = path.join(
 			cacheDirName,
-			constants.PACKAGE_JSON_FILE_NAME
+			constants.PACKAGE_JSON_FILE_NAME,
 		);
 		if (!this.$fs.exists(cacheDirPackageJsonLocation)) {
 			this.$fs.writeJson(cacheDirPackageJsonLocation, {
@@ -265,7 +264,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		}
 	}
 
-	private inspectorAlreadyInstalled(pathToInspector: string): Boolean {
+	private inspectorAlreadyInstalled(pathToInspector: string): boolean {
 		if (this.$fs.exists(pathToInspector)) {
 			return true;
 		}
@@ -277,7 +276,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		pathToSave: string,
 		version: string,
-		dependencyType: string
+		dependencyType: string,
 	): Promise<string> {
 		const possiblePackageName = path.resolve(packageName);
 		if (this.$fs.exists(possiblePackageName)) {
@@ -290,14 +289,14 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			packageName,
 			pathToSave,
 			version,
-			dependencyType
+			dependencyType,
 		);
 		const installedPackageName = installResultInfo.name;
 
 		const pathToInstalledPackage = path.join(
 			pathToSave,
 			"node_modules",
-			installedPackageName
+			installedPackageName,
 		);
 
 		return pathToInstalledPackage;
@@ -307,7 +306,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		pathToSave: string,
 		version: string,
-		dependencyType: string
+		dependencyType: string,
 	): Promise<INpmInstallResultInfo> {
 		this.$logger.info(`Installing ${packageName}`);
 
@@ -322,7 +321,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		return await this.$packageManager.install(
 			packageName,
 			pathToSave,
-			npmOptions
+			npmOptions,
 		);
 	}
 
@@ -332,7 +331,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 	 */
 	private async getVersion(
 		packageName: string,
-		version: string
+		version: string,
 	): Promise<string> {
 		let data: any = await this.$packageManager.view(packageName, {
 			"dist-tags": true,

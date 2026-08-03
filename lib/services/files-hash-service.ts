@@ -13,7 +13,7 @@ export class FilesHashService implements IFilesHashService {
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	public async generateHashes(files: string[]): Promise<IStringDictionary> {
@@ -27,7 +27,7 @@ export class FilesHashService implements IFilesHashService {
 				}
 			} catch (err) {
 				this.$logger.trace(
-					`Unable to generate hash for file ${file}. Error is: ${err}`
+					`Unable to generate hash for file ${file}. Error is: ${err}`,
 				);
 			}
 		};
@@ -38,11 +38,11 @@ export class FilesHashService implements IFilesHashService {
 	}
 
 	public async generateHashesForProject(
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<IStringDictionary> {
 		const appFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			this.$options.hostProjectModuleName
+			this.$options.hostProjectModuleName,
 		);
 		const files = this.$fs.enumerateFilesInDirectorySync(appFilesPath);
 		const hashes = await this.generateHashes(files);
@@ -51,7 +51,7 @@ export class FilesHashService implements IFilesHashService {
 
 	public async saveHashesForProject(
 		platformData: IPlatformData,
-		hashesFileDirectory: string
+		hashesFileDirectory: string,
 	): Promise<IStringDictionary> {
 		const hashes = await this.generateHashesForProject(platformData);
 		this.saveHashes(hashes, hashesFileDirectory);
@@ -60,7 +60,7 @@ export class FilesHashService implements IFilesHashService {
 
 	public async getChanges(
 		files: string[],
-		oldHashes: IStringDictionary
+		oldHashes: IStringDictionary,
 	): Promise<IStringDictionary> {
 		const newHashes = await this.generateHashes(files);
 		return this.getChangesInShasums(oldHashes, newHashes);
@@ -68,14 +68,14 @@ export class FilesHashService implements IFilesHashService {
 
 	public hasChangesInShasums(
 		oldHashes: IStringDictionary,
-		newHashes: IStringDictionary
+		newHashes: IStringDictionary,
 	): boolean {
 		return !!_.keys(this.getChangesInShasums(oldHashes, newHashes)).length;
 	}
 
 	public saveHashes(
 		hashes: IStringDictionary,
-		hashesFileDirectory: string
+		hashesFileDirectory: string,
 	): void {
 		const hashesFilePath = path.join(hashesFileDirectory, HASHES_FILE_NAME);
 		this.$fs.writeJson(hashesFilePath, hashes);
@@ -83,17 +83,17 @@ export class FilesHashService implements IFilesHashService {
 
 	public getChangesInShasums(
 		oldHashes: IStringDictionary,
-		newHashes: IStringDictionary
+		newHashes: IStringDictionary,
 	): IStringDictionary {
 		const addedFileHashes = _.omitBy(
 			newHashes,
 			(hash: string, pathToFile: string) =>
-				!!oldHashes[pathToFile] && oldHashes[pathToFile] === hash
+				!!oldHashes[pathToFile] && oldHashes[pathToFile] === hash,
 		);
 		const removedFileHashes = _.omitBy(
 			oldHashes,
 			(hash: string, pathToFile: string) =>
-				!!newHashes[pathToFile] && newHashes[pathToFile] === hash
+				!!newHashes[pathToFile] && newHashes[pathToFile] === hash,
 		);
 		const result = {};
 		_.extend(result, addedFileHashes, removedFileHashes);

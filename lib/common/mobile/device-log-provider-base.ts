@@ -11,17 +11,17 @@ export abstract class DeviceLogProviderBase
 	constructor(
 		protected $logFilter: Mobile.ILogFilter,
 		protected $logger: ILogger,
-		protected $logSourceMapService: Mobile.ILogSourceMapService
+		protected $logSourceMapService: Mobile.ILogSourceMapService,
 	) {
 		super();
 	}
 
 	public async setSourceFileLocation(
-		pathToOriginalFile: string
+		pathToOriginalFile: string,
 	): Promise<void> {
 		try {
 			await this.$logSourceMapService.setSourceMapConsumerForFile(
-				pathToOriginalFile
+				pathToOriginalFile,
 			);
 		} catch (err) {
 			this.$logger.trace("Error while trying to set source map file", err);
@@ -31,23 +31,23 @@ export abstract class DeviceLogProviderBase
 	public abstract logData(
 		lineText: string,
 		platform: string,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): void;
 
 	public abstract setLogLevel(
 		logLevel: string,
-		deviceIdentifier?: string
+		deviceIdentifier?: string,
 	): void;
 
 	public setApplicationPidForDevice(
 		deviceIdentifier: string,
-		pid: string
+		pid: string,
 	): void {
 		this.setDeviceLogOptionsProperty(
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.applicationPid,
-			pid
+			pid,
 		);
 	}
 
@@ -56,31 +56,31 @@ export abstract class DeviceLogProviderBase
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.applicationId,
-			appId
+			appId,
 		);
 	}
 
 	public setProjectNameForDevice(
 		deviceIdentifier: string,
-		projectName: string
+		projectName: string,
 	): void {
 		this.setDeviceLogOptionsProperty(
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.projectName,
-			projectName
+			projectName,
 		);
 	}
 
 	public setProjectDirForDevice(
 		deviceIdentifier: string,
-		projectDir: string
+		projectDir: string,
 	): void {
 		this.setDeviceLogOptionsProperty(
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.projectDir,
-			projectDir
+			projectDir,
 		);
 	}
 
@@ -107,7 +107,7 @@ export abstract class DeviceLogProviderBase
 	}
 
 	protected getDeviceLogOptionsForDevice(
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): Mobile.IDeviceLogOptions {
 		const loggingOptions = this.devicesLogOptions[deviceIdentifier];
 		if (!loggingOptions) {
@@ -120,7 +120,7 @@ export abstract class DeviceLogProviderBase
 	protected setDeviceLogOptionsProperty(
 		deviceIdentifier: string,
 		propNameFunction: Function,
-		propertyValue: string | boolean
+		propertyValue: string | boolean,
 	): void {
 		const propertyName = getPropertyName(propNameFunction);
 

@@ -23,7 +23,7 @@ injector.register("analyticsService", {
 	async getStatusMessage(
 		settingName: string,
 		jsonFormat: boolean,
-		readableSettingName: string
+		readableSettingName: string,
 	): Promise<string> {
 		return "Fake message";
 	},

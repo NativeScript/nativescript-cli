@@ -18,7 +18,7 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		protected $fs: IFileSystem,
 		protected $pbxprojDomXcode: IPbxprojDomXcode,
 		protected $xcode: IXcode,
-		private $iOSNativeTargetService: IIOSNativeTargetService
+		private $iOSNativeTargetService: IIOSNativeTargetService,
 	) {}
 
 	public async addExtensionsFromPath({
@@ -42,14 +42,14 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 					extensionFolder,
 					IOSNativeTargetTypes.appExtension,
 					project,
-					platformData
+					platformData,
 				);
 				this.configureTarget(
 					extensionFolder,
 					path.join(extensionsFolderPath, extensionFolder),
 					target,
 					project,
-					projectData
+					projectData,
 				);
 				targetUuids.push(target.uuid);
 				addedExtensions = true;
@@ -57,12 +57,12 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 
 		this.$fs.writeFile(
 			pbxProjPath,
-			project.writeSync({ omitEmptyValues: true })
+			project.writeSync({ omitEmptyValues: true }),
 		);
 		this.$iOSNativeTargetService.prepareSigning(
 			targetUuids,
 			projectData,
-			pbxProjPath
+			pbxProjPath,
 		);
 
 		return addedExtensions;
@@ -73,7 +73,7 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		extensionPath: string,
 		target: IXcode.target,
 		project: IXcode.project,
-		projectData: IProjectData
+		projectData: IProjectData,
 	) {
 		const extJsonPath = path.join(extensionPath, "extension.json");
 
@@ -85,14 +85,14 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 				},
 			],
 			extensionName,
-			project
+			project,
 		);
 
 		this.$iOSNativeTargetService.setConfigurationsFromJsonFile(
 			extJsonPath,
 			target.uuid,
 			extensionName,
-			project
+			project,
 		);
 	}
 
@@ -100,11 +100,11 @@ export class IOSExtensionsService implements IIOSExtensionsService {
 		const project = new this.$xcode.project(pbxProjPath);
 		project.parseSync();
 		project.removeTargetsByProductType(
-			IOSNativeTargetProductTypes.appExtension
+			IOSNativeTargetProductTypes.appExtension,
 		);
 		this.$fs.writeFile(
 			pbxProjPath,
-			project.writeSync({ omitEmptyValues: true })
+			project.writeSync({ omitEmptyValues: true }),
 		);
 	}
 }

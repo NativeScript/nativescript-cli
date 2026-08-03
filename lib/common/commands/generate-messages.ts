@@ -11,7 +11,7 @@ export class GenerateMessages implements ICommand {
 	constructor(
 		private $fs: IFileSystem,
 		private $messageContractGenerator: IServiceContractGenerator,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	allowedParameters: ICommandParameter[] = [];
@@ -26,20 +26,20 @@ export class GenerateMessages implements ICommand {
 		if (this.$options.default) {
 			interfaceFilePath = path.join(
 				innerMessagesDirectory,
-				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME
+				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME,
 			);
 			implementationFilePath = path.join(
 				innerMessagesDirectory,
-				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME
+				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME,
 			);
 		} else {
 			interfaceFilePath = path.join(
 				outerMessagesDirectory,
-				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME
+				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME,
 			);
 			implementationFilePath = path.join(
 				outerMessagesDirectory,
-				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME
+				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME,
 			);
 		}
 

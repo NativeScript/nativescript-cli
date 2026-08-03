@@ -12,7 +12,7 @@ function createTestInjector(loggingLevel: string, emptyFilteredData?: boolean) {
 		filterData: (
 			platform: string,
 			data: string,
-			loggingOptions: Mobile.IDeviceLogOptions
+			loggingOptions: Mobile.IDeviceLogOptions,
 		) => {
 			return emptyFilteredData ? null : `${loggingOptions.logLevel} ${data}`;
 		},
@@ -46,7 +46,7 @@ describe("proton deviceLogProvider", () => {
 					"data",
 					(deviceIdentifier: string, data: string) => {
 						emittedData = data;
-					}
+					},
 				);
 				deviceLogProvider.logData(testData, "platform");
 				assert.deepStrictEqual(emittedData, filteredInfoData);
@@ -61,12 +61,12 @@ describe("proton deviceLogProvider", () => {
 					"data",
 					(deviceIdentifier: string, data: string) => {
 						emittedData = data;
-					}
+					},
 				);
 				deviceLogProvider.logData(testData, "platform");
 				assert.deepStrictEqual(
 					emittedData,
-					"some default value that should NOT be changed"
+					"some default value that should NOT be changed",
 				);
 			});
 		});
@@ -82,7 +82,7 @@ describe("proton deviceLogProvider", () => {
 					(deviceIdentifier: string, data: string) => {
 						emittedData = data;
 						expectedDeviceIdentifier = deviceIdentifier;
-					}
+					},
 				);
 				deviceLogProvider.logData(testData, "platform", "deviceId");
 				assert.deepStrictEqual(emittedData, filteredInfoData);
@@ -100,12 +100,12 @@ describe("proton deviceLogProvider", () => {
 					(deviceIdentifier: string, data: string) => {
 						emittedData = data;
 						expectedDeviceIdentifier = deviceIdentifier;
-					}
+					},
 				);
 				deviceLogProvider.logData(testData, "platform");
 				assert.deepStrictEqual(
 					emittedData,
-					"some default value that should NOT be changed"
+					"some default value that should NOT be changed",
 				);
 				assert.deepStrictEqual(expectedDeviceIdentifier, null);
 			});

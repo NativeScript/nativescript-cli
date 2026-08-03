@@ -1,0 +1,49 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"ignorePatterns": [
+		"lib/common/test/resources/**",
+		"lib/common/vendor/**",
+		"lib/common/bin/**",
+		"test/files/**",
+		"vendor/**",
+		"resources/**",
+		"packages/**",
+		"docs/**",
+		"docs-cli/**"
+	],
+	"rules": {
+		"no-unused-vars": [
+			"warn",
+			{
+				"args": "none",
+				"caughtErrors": "none",
+				"varsIgnorePattern": "^_",
+				"ignoreRestSiblings": true
+			}
+		],
+		"eqeqeq": ["error", "always", { "null": "ignore" }],
+		"no-debugger": "error",
+		"no-eval": "error",
+		"no-var": "error",
+		"prefer-const": [
+			"error",
+			{ "destructuring": "all", "ignoreReadBeforeAssign": true }
+		],
+		"no-new-wrappers": "error",
+		"no-redeclare": "error",
+		"no-unused-expressions": [
+			"error",
+			{ "allowShortCircuit": true, "allowTernary": true }
+		],
+		"no-empty": "warn",
+		"no-fallthrough": "error"
+	},
+	"overrides": [
+		{
+			"files": ["**/*.d.ts"],
+			"rules": {
+				"no-var": "off"
+			}
+		}
+	]
+}

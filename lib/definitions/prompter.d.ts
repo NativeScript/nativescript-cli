@@ -16,11 +16,11 @@ declare global {
 				| string[]
 				| { title: string; description?: string; value?: string }[],
 			multiple: boolean = false,
-			options: any = {}
+			options: any = {},
 		): Promise<string>;
 		promptForDetailedChoice(
 			promptMessage: string,
-			choices: { key: string; description: string }[]
+			choices: { key: string; description: string }[],
 		): Promise<string>;
 		confirm(prompt: string, defaultAction?: () => boolean): Promise<boolean>;
 	}

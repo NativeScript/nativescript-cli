@@ -79,15 +79,13 @@ class AndroidDebugBridgeStub {
 				if (passedIdentifier === invalidIdentifier) {
 					return "invalid output string";
 				} else {
-					const testString = this.validTestInput[
-						AndroidDebugBridgeStub.methodCallCount
-					];
+					const testString =
+						this.validTestInput[AndroidDebugBridgeStub.methodCallCount];
 					return testString;
 				}
 			} else {
-				this.startedWithActivityManager = this.checkIfStartedWithActivityManager(
-					args
-				);
+				this.startedWithActivityManager =
+					this.checkIfStartedWithActivityManager(args);
 				if (this.startedWithActivityManager) {
 					this.validIdentifierPassed = this.checkIfValidIdentifierPassed(args);
 				}
@@ -103,7 +101,7 @@ class AndroidDebugBridgeStub {
 
 	public async pushFile(
 		localFilePath: string,
-		deviceFilePath: string
+		deviceFilePath: string,
 	): Promise<void> {
 		await this.executeShellCommand(["push", localFilePath, deviceFilePath]);
 	}
@@ -121,9 +119,8 @@ class AndroidDebugBridgeStub {
 	private checkIfValidIdentifierPassed(args: string[]): boolean {
 		if (args && args.length) {
 			const possibleIdentifier = args[args.length - 1];
-			const validTestString = this.expectedValidTestInput[
-				AndroidDebugBridgeStub.methodCallCount
-			];
+			const validTestString =
+				this.expectedValidTestInput[AndroidDebugBridgeStub.methodCallCount];
 
 			return possibleIdentifier === validTestString;
 		}
@@ -150,7 +147,7 @@ function createTestInjector(options?: { justLaunch?: boolean }): IInjector {
 	testInjector.register("androidProcessService", AndroidProcessServiceStub);
 	testInjector.register(
 		"androidBundleToolService",
-		AndroidBundleToolServiceStub
+		AndroidBundleToolServiceStub,
 	);
 	testInjector.register("fs", FileSystemStub);
 	testInjector.register("httpClient", {});
@@ -171,7 +168,7 @@ describe("android-application-manager", () => {
 	function setup(options?: { justLaunch?: boolean }) {
 		testInjector = createTestInjector(options);
 		androidApplicationManager = testInjector.resolve(
-			"androidApplicationManager"
+			"androidApplicationManager",
 		);
 		androidDebugBridge = testInjector.resolve("adb");
 		logcatHelper = testInjector.resolve("logcatHelper");
@@ -217,7 +214,7 @@ describe("android-application-manager", () => {
 			setup();
 
 			await androidApplicationManager.startApplication(
-				_.extend({}, validStartOptions, { justLaunch: true })
+				_.extend({}, validStartOptions, { justLaunch: true }),
 			);
 
 			assert.equal(logcatHelper.StartCallCount, 0);
@@ -227,7 +224,7 @@ describe("android-application-manager", () => {
 			setup({ justLaunch: true });
 
 			await androidApplicationManager.startApplication(
-				_.extend({}, validStartOptions, { justLaunch: false })
+				_.extend({}, validStartOptions, { justLaunch: false }),
 			);
 
 			assert.equal(logcatHelper.StartCallCount, 0);
@@ -237,7 +234,7 @@ describe("android-application-manager", () => {
 			setup({ justLaunch: true });
 
 			await androidApplicationManager.startApplication(
-				_.extend({}, validStartOptions, { justLaunch: true })
+				_.extend({}, validStartOptions, { justLaunch: true }),
 			);
 
 			assert.equal(logcatHelper.StartCallCount, 0);
@@ -262,7 +259,7 @@ describe("android-application-manager", () => {
 
 			assert.equal(
 				deviceLogProvider.currentDevicePids[validDeviceIdentifier],
-				expectedPid
+				expectedPid,
 			);
 		});
 
@@ -279,8 +276,8 @@ describe("android-application-manager", () => {
 			assert.isTrue(logger.traceOutput.indexOf("Wasn't able to get pid") > -1);
 			assert.isTrue(
 				logger.output.indexOf(
-					`Unable to find running "${validIdentifier}" application on device `
-				) === -1
+					`Unable to find running "${validIdentifier}" application on device `,
+				) === -1,
 			);
 		});
 
@@ -291,20 +288,19 @@ describe("android-application-manager", () => {
 			androidApplicationManager.PID_CHECK_TIMEOUT = expectedPidTimeout;
 			androidProcessService.GetAppProcessIdResult = null;
 
-			const startApplicationPromise = androidApplicationManager.startApplication(
-				validStartOptions
-			);
+			const startApplicationPromise =
+				androidApplicationManager.startApplication(validStartOptions);
 
 			startApplicationPromise.catch(() => {
 				assert.isTrue(logcatHelper.DumpCallCount > 0);
 				assert.isTrue(
-					logger.traceOutput.indexOf("Wasn't able to get pid") > -1
+					logger.traceOutput.indexOf("Wasn't able to get pid") > -1,
 				);
 			});
 
 			return assert.isRejected(
 				startApplicationPromise,
-				`Unable to find running "${validIdentifier}" application on device `
+				`Unable to find running "${validIdentifier}" application on device `,
 			);
 		});
 	});
@@ -312,17 +308,19 @@ describe("android-application-manager", () => {
 	describe("installApplication", () => {
 		afterEach(function () {
 			androidDebugBridge.calledInstallApplication = false;
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 			bundleToolService.isBuildApksCalled = false;
 			bundleToolService.isInstallApksCalled = false;
 		});
 
 		it("should install apk using adb", async () => {
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 
 			await androidApplicationManager.installApplication("myApp.apk");
 
@@ -332,9 +330,10 @@ describe("android-application-manager", () => {
 		});
 
 		it("should install aab using bundletool", async () => {
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 
 			await androidApplicationManager.installApplication("myApp.aab");
 
@@ -345,14 +344,15 @@ describe("android-application-manager", () => {
 
 		it("should skip aab build when already built", async () => {
 			const fsStub = testInjector.resolve<FileSystemStub>("fs");
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 
 			await androidApplicationManager.installApplication(
 				"myApp.aab",
 				"my.app",
-				validSigning
+				validSigning,
 			);
 
 			assert.isTrue(bundleToolService.isBuildApksCalled);
@@ -365,7 +365,7 @@ describe("android-application-manager", () => {
 			await androidApplicationManager.installApplication(
 				"myApp.aab",
 				"my.app",
-				validSigning
+				validSigning,
 			);
 
 			assert.isFalse(bundleToolService.isBuildApksCalled);
@@ -398,7 +398,7 @@ describe("android-application-manager", () => {
 
 			assert.equal(
 				deviceLogProvider.currentDevicePids[validDeviceIdentifier],
-				null
+				null,
 			);
 		});
 	});

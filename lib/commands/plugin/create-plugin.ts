@@ -27,7 +27,7 @@ export class CreatePluginCommand implements ICommand {
 		private $fs: IFileSystem,
 		private $childProcess: IChildProcess,
 		private $prompter: IPrompter,
-		private $packageManager: INodePackageManager
+		private $packageManager: INodePackageManager,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -51,7 +51,7 @@ export class CreatePluginCommand implements ICommand {
 
 		this.$logger.printMarkdown(
 			"Solution for `%s` was successfully created.",
-			pluginRepoName
+			pluginRepoName,
 		);
 	}
 
@@ -65,10 +65,10 @@ export class CreatePluginCommand implements ICommand {
 
 	private async setupSeed(
 		projectDir: string,
-		pluginRepoName: string
+		pluginRepoName: string,
 	): Promise<void> {
 		this.$logger.printMarkdown(
-			"Executing initial plugin configuration script..."
+			"Executing initial plugin configuration script...",
 		);
 
 		const config = this.$options;
@@ -85,15 +85,15 @@ export class CreatePluginCommand implements ICommand {
 		const gitHubUsername = await this.getGitHubUsername(config.username);
 		const pluginNameSource = await this.getPluginNameSource(
 			config.pluginName,
-			pluginRepoName
+			pluginRepoName,
 		);
 		const includeTypescriptDemo = await this.getShouldIncludeDemoResult(
 			config.includeTypeScriptDemo,
-			this.includeTypeScriptDemoMessage
+			this.includeTypeScriptDemoMessage,
 		);
 		const includeAngularDemo = await this.getShouldIncludeDemoResult(
 			config.includeAngularDemo,
-			this.includeAngularDemoMessage
+			this.includeAngularDemoMessage,
 		);
 
 		if (
@@ -104,7 +104,7 @@ export class CreatePluginCommand implements ICommand {
 				!config.includeTypeScriptDemo)
 		) {
 			this.$logger.printMarkdown(
-				"Using default values for plugin creation options since your shell is not interactive."
+				"Using default values for plugin creation options since your shell is not interactive.",
 			);
 		}
 
@@ -123,7 +123,7 @@ export class CreatePluginCommand implements ICommand {
 			process.execPath,
 			params,
 			"close",
-			{ stdio: "inherit", cwd, timeout: 10000 }
+			{ stdio: "inherit", cwd, timeout: 10000 },
 		);
 		if (outputScript && outputScript.stdout) {
 			this.$logger.printMarkdown(outputScript.stdout);
@@ -140,15 +140,15 @@ export class CreatePluginCommand implements ICommand {
 
 	private async downloadPackage(
 		selectedTemplate: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<void> {
 		if (selectedTemplate) {
 			this.$logger.printMarkdown(
-				"Make sure your custom template is compatible with the Plugin Seed at https://github.com/NativeScript/nativescript-plugin-seed/"
+				"Make sure your custom template is compatible with the Plugin Seed at https://github.com/NativeScript/nativescript-plugin-seed/",
 			);
 		} else {
 			this.$logger.printMarkdown(
-				"Downloading the latest version of NativeScript Plugin Seed..."
+				"Downloading the latest version of NativeScript Plugin Seed...",
 			);
 		}
 
@@ -182,7 +182,7 @@ export class CreatePluginCommand implements ICommand {
 
 	private async getPluginNameSource(
 		pluginNameSource: string,
-		pluginRepoName: string
+		pluginRepoName: string,
 	): Promise<string> {
 		if (!pluginNameSource) {
 			// remove nativescript- prefix for naming plugin files
@@ -205,7 +205,7 @@ export class CreatePluginCommand implements ICommand {
 
 	private async getShouldIncludeDemoResult(
 		includeDemoOption: string,
-		message: string
+		message: string,
 	): Promise<string> {
 		let shouldIncludeDemo = !!includeDemoOption;
 		if (!includeDemoOption && isInteractive()) {

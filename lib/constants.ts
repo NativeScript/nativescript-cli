@@ -100,14 +100,14 @@ export class LiveSyncTrackActionNames {
 	static DEVICE_INFO = `Device Info for ${liveSyncOperation}`;
 }
 
-export const PackageJsonKeysToKeep: Array<String> = [
+export const PackageJsonKeysToKeep: Array<string> = [
 	"name",
 	"main",
 	"android",
 	"version",
 	"pluginsData",
 ];
-export const TemplatesV2PackageJsonKeysToRemove: Array<String> = [
+export const TemplatesV2PackageJsonKeysToRemove: Array<string> = [
 	"name",
 	"version",
 	"displayName",

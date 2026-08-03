@@ -284,7 +284,7 @@ describe("GenymotionService", () => {
 		testInjector = createTestInjector();
 		androidGenymotionService = testInjector.resolve(
 			"androidGenymotionService",
-			AndroidGenymotionService
+			AndroidGenymotionService,
 		);
 		adb = testInjector.resolve("adb");
 	});
@@ -292,7 +292,7 @@ describe("GenymotionService", () => {
 	function mockAdbGetPropertyValue(
 		deviceIds: string[],
 		propName: string,
-		propertyValue: string
+		propertyValue: string,
 	) {
 		adb.getPropertyValue = (deviceId: string, propertyName: string) => {
 			if (_.includes(deviceIds, deviceId) && propName === propertyName) {
@@ -305,9 +305,7 @@ describe("GenymotionService", () => {
 
 	function mockVirtualBoxService(
 		output: Mobile.IVirtualBoxListVmsOutput,
-		mapEnumerateGuestPropertiesOutput?: IDictionary<
-			Mobile.IVirtualBoxEnumerateGuestPropertiesOutput
-		>
+		mapEnumerateGuestPropertiesOutput?: IDictionary<Mobile.IVirtualBoxEnumerateGuestPropertiesOutput>,
 	) {
 		virtualBoxService = testInjector.resolve("virtualBoxService");
 		virtualBoxService.listVms = () => Promise.resolve(output);
@@ -350,7 +348,7 @@ describe("GenymotionService", () => {
 
 			mockVirtualBoxService(
 				{ vms, error: null },
-				mapEnumerateGuestPropertiesOutput
+				mapEnumerateGuestPropertiesOutput,
 			);
 			const result = await androidGenymotionService.getEmulatorImages([]);
 			assert.lengthOf(result.devices, 4);
@@ -360,7 +358,7 @@ describe("GenymotionService", () => {
 					displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
 					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[1],
@@ -368,7 +366,7 @@ describe("GenymotionService", () => {
 					displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
 					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[2],
@@ -376,7 +374,7 @@ describe("GenymotionService", () => {
 					displayName: "Custom Phone - 5.1.0 - API 22 - 768x1280",
 					imageIdentifier: "94761c90-759f-4ae4-8eb3-8929a57a7ceb",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[3],
@@ -384,7 +382,7 @@ describe("GenymotionService", () => {
 					displayName: "test",
 					imageIdentifier: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(result.errors, []);
 		});
@@ -401,14 +399,14 @@ describe("GenymotionService", () => {
 
 			mockVirtualBoxService(
 				{ vms, error: null },
-				mapEnumerateGuestPropertiesOutput
+				mapEnumerateGuestPropertiesOutput,
 			);
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
 			childProcess.trySpawnFromCloseEvent = async (
 				command: string,
 				args: string[],
 				options?: any,
-				spawnFromEventOptions?: ISpawnFromEventOptions
+				spawnFromEventOptions?: ISpawnFromEventOptions,
 			): Promise<ISpawnResult> => {
 				return <any>{ stderr: "some error" };
 			};
@@ -426,7 +424,7 @@ describe("GenymotionService", () => {
 					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
 					version: "5.0",
 					errorHelp,
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[1],
@@ -435,7 +433,7 @@ describe("GenymotionService", () => {
 					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
 					version: "5.0",
 					errorHelp,
-				})
+				}),
 			);
 			assert.deepStrictEqual(result.errors, []);
 		});
@@ -452,14 +450,14 @@ describe("GenymotionService", () => {
 
 			mockVirtualBoxService(
 				{ vms, error: null },
-				mapEnumerateGuestPropertiesOutput
+				mapEnumerateGuestPropertiesOutput,
 			);
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
 			childProcess.trySpawnFromCloseEvent = async (
 				command: string,
 				args: string[],
 				options?: any,
-				spawnFromEventOptions?: ISpawnFromEventOptions
+				spawnFromEventOptions?: ISpawnFromEventOptions,
 			): Promise<ISpawnResult> => {
 				return <any>{
 					stderr: AndroidVirtualDevice.GENYMOTION_DEFAULT_STDERR_STRING,
@@ -475,7 +473,7 @@ describe("GenymotionService", () => {
 					displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
 					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[1],
@@ -483,7 +481,7 @@ describe("GenymotionService", () => {
 					displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
 					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(result.errors, []);
 		});
@@ -505,10 +503,10 @@ describe("GenymotionService", () => {
 			};
 			mockVirtualBoxService(
 				{ vms, error: null },
-				mapEnumerateGuestPropertiesOutput
+				mapEnumerateGuestPropertiesOutput,
 			);
 			(<any>androidGenymotionService).isGenymotionEmulator = (
-				emulatorId: string
+				emulatorId: string,
 			) => Promise.resolve(true);
 			androidGenymotionService.getRunningEmulatorName = (emulatorId: string) =>
 				Promise.resolve("test");
@@ -522,7 +520,7 @@ describe("GenymotionService", () => {
 					displayName: "Google Nexus 4 - 5.0.0 - API 21 - 768x1280",
 					imageIdentifier: "9d9beef2-cc60-4a54-bcc0-cc1dbf89811f",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[1],
@@ -530,7 +528,7 @@ describe("GenymotionService", () => {
 					displayName: "Custom Tablet - 6.0.0 - API 23 - 1536x2048",
 					imageIdentifier: "da83e290-4d54-4b94-8654-540cf0c96604",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[2],
@@ -538,7 +536,7 @@ describe("GenymotionService", () => {
 					displayName: "Custom Phone - 5.1.0 - API 22 - 768x1280",
 					imageIdentifier: "94761c90-759f-4ae4-8eb3-8929a57a7ceb",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(
 				result.devices[3],
@@ -547,7 +545,7 @@ describe("GenymotionService", () => {
 					identifier: "192.168.56.101:5555",
 					imageIdentifier: "4a1bf7cd-a7b4-45ef-8cb0-c5a0aafad211",
 					version: "5.0",
-				})
+				}),
 			);
 			assert.deepStrictEqual(result.errors, []);
 		});
@@ -557,7 +555,7 @@ describe("GenymotionService", () => {
 		it("should return [] when there are no running emulators", async () => {
 			mockAdbGetPropertyValue([], "", "");
 			const emulators = await androidGenymotionService.getRunningEmulatorIds(
-				[]
+				[],
 			);
 			assert.deepStrictEqual(emulators, []);
 		});
@@ -565,7 +563,7 @@ describe("GenymotionService", () => {
 			mockAdbGetPropertyValue(
 				["192.168.56.101:5555", "192.168.56.102:5555"],
 				"ro.build.product",
-				"vbox"
+				"vbox",
 			);
 			const emulators = await androidGenymotionService.getRunningEmulatorIds([
 				"192.168.56.101:5555	device",

@@ -3,9 +3,7 @@ import { IDebugInformation } from "../declarations";
 import { IProjectDir, IPlatform } from "../common/declarations";
 
 interface IDebugData
-	extends IProjectDir,
-		Mobile.IDeviceIdentifier,
-		IOptionalDebuggingOptions {
+	extends IProjectDir, Mobile.IDeviceIdentifier, IOptionalDebuggingOptions {
 	applicationIdentifier: string;
 	projectName?: string;
 }
@@ -102,7 +100,7 @@ interface IDebugDataService {
 	getDebugData(
 		deviceIdentifier: string,
 		projectData: IProjectData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): IDebugData;
 }
 
@@ -124,7 +122,7 @@ interface IDeviceDebugService extends IPlatform, NodeJS.EventEmitter {
 	 */
 	debug(
 		debugData: IAppDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugResultInfo>;
 }
 
@@ -149,18 +147,18 @@ interface IDebugController {
 	stopDebug(deviceIdentifier: string): Promise<void>;
 	printDebugInformation(
 		debugInformation: IDebugInformation,
-		fireDebuggerAttachedEvent?: boolean
+		fireDebuggerAttachedEvent?: boolean,
 	): IDebugInformation;
 	enableDebuggingCoreWithoutWaitingCurrentAction(
 		projectDir: string,
 		deviceIdentifier: string,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugInformation>;
 	enableDebugging(
-		enableDebuggingData: IEnableDebuggingData
+		enableDebuggingData: IEnableDebuggingData,
 	): Promise<IDebugInformation>[];
 	disableDebugging(disableDebuggingData: IDisableDebuggingData): Promise<void>;
 	attachDebugger(
-		attachDebuggerData: IAttachDebuggerData
+		attachDebuggerData: IAttachDebuggerData,
 	): Promise<IDebugInformation>;
 }

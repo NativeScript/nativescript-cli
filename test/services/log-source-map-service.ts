@@ -40,7 +40,7 @@ function createTestInjector(): IInjector {
 					"..",
 					"files",
 					"sourceMapBundle",
-					platform.toLowerCase()
+					platform.toLowerCase(),
 				),
 				frameworkPackageName: `tns-${platform.toLowerCase()}`,
 			};
@@ -75,7 +75,7 @@ const testCases: IDictionary<
 			message:
 				"JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap (file:///data/data/org.nativescript.sourceMap/files/app/bundle.js:303:17)",
 			expected: `JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap file: ${toPlatformSep(
-				"src/main-view-model.ts"
+				"src/main-view-model.ts",
 			)}:30:16\n`,
 		},
 		{
@@ -83,7 +83,7 @@ const testCases: IDictionary<
 			message:
 				"System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/bundle.js', line: 304, column: 15",
 			expected: `System.err: 	Frame: function:'module.exports.push../main-view-model.ts.HelloWorldModel.onTap', file:'file: ${toPlatformSep(
-				"src/main-view-model.ts"
+				"src/main-view-model.ts",
 			)}:31:14\n`,
 		},
 		{
@@ -106,7 +106,7 @@ const testCases: IDictionary<
 			message:
 				"JS: at onTap (file:///data/data/org.nativescript.sourceMap/files/app/external.js:12:22)",
 			expected: `JS: at onTap file: ${toPlatformSep(
-				"src/external-test.js"
+				"src/external-test.js",
 			)}:3:4\n`,
 		},
 		{
@@ -114,7 +114,7 @@ const testCases: IDictionary<
 			message:
 				"System.err: 	Frame: function:'./external-test.js.onTap', file:'file:///data/data/org.nativescript.sourceMap/files/app/external.js', line: 13, column: 32",
 			expected: `System.err: 	Frame: function:'./external-test.js.onTap', file:'file: ${toPlatformSep(
-				"src/external-test.js"
+				"src/external-test.js",
 			)}:4:4\n`,
 		},
 	],
@@ -123,28 +123,28 @@ const testCases: IDictionary<
 			caseName: "console message",
 			message: "CONSOLE LOG file:///app/bundle.js:294:20: Test.",
 			expected: `CONSOLE LOG file: ${toPlatformSep(
-				"src/main-view-model.ts"
+				"src/main-view-model.ts",
 			)}:29:20 Test.\n`,
 		},
 		{
 			caseName: "trace message",
 			message: "CONSOLE TRACE file:///app/bundle.js:295:22: Test",
 			expected: `CONSOLE TRACE file: ${toPlatformSep(
-				"src/main-view-model.ts"
+				"src/main-view-model.ts",
 			)}:30:22 Test\n`,
 		},
 		{
 			caseName: "error message",
 			message: "file:///app/bundle.js:296:32: JS ERROR Error: Test",
 			expected: `file: ${toPlatformSep(
-				"src/main-view-model.ts"
+				"src/main-view-model.ts",
 			)}:31:31 JS ERROR Error: Test\n`,
 		},
 		{
 			caseName: "error stack trace",
 			message: "onTap@file:///app/bundle.js:296:32",
 			expected: `onTap@file: ${toPlatformSep(
-				"src/main-view-model.ts"
+				"src/main-view-model.ts",
 			)}:31:31\n`,
 		},
 		{
@@ -157,7 +157,7 @@ const testCases: IDictionary<
 			runtimeVersion: "6.1.0",
 			message: "onTap(file:///app/bundle.js:296:22)",
 			expected: `onTap(file: ${toPlatformSep(
-				"src/main-view-model.ts"
+				"src/main-view-model.ts",
 			)}:31:18)\n`,
 		},
 		// External maps
@@ -165,21 +165,21 @@ const testCases: IDictionary<
 			caseName: "console message (external map)",
 			message: "CONSOLE LOG file:///app/external.js:11:20: Test.",
 			expected: `CONSOLE LOG file: ${toPlatformSep(
-				"src/external-test.js"
+				"src/external-test.js",
 			)}:2:16 Test.\n`,
 		},
 		{
 			caseName: "trace message (external map)",
 			message: "CONSOLE TRACE file:///app/external.js:12:22: Test",
 			expected: `CONSOLE TRACE file: ${toPlatformSep(
-				"src/external-test.js"
+				"src/external-test.js",
 			)}:3:4 Test\n`,
 		},
 		{
 			caseName: "error message (external map)",
 			message: "file:///app/external.js:13:32: JS ERROR Error: Test",
 			expected: `file: ${toPlatformSep(
-				"src/external-test.js"
+				"src/external-test.js",
 			)}:4:4 JS ERROR Error: Test\n`,
 		},
 		{
@@ -202,7 +202,7 @@ describe("log-source-map-service", () => {
 				__dirname,
 				"..",
 				"files",
-				"sourceMapBundle"
+				"sourceMapBundle",
 			);
 			const fs = testInjector.resolve<IFileSystem>("fs");
 			const files = fs.enumerateFilesInDirectorySync(originalFilesLocation);
@@ -226,7 +226,7 @@ describe("log-source-map-service", () => {
 						const result = logSourceMapService.replaceWithOriginalFileLocations(
 							platform.toLowerCase(),
 							testCase.message,
-							{ logLevel: "info", projectDir: "test" }
+							{ logLevel: "info", projectDir: "test" },
 						);
 						assert.equal(result, testCase.expected);
 					});

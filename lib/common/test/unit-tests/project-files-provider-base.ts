@@ -13,13 +13,13 @@ class ProjectFilesProvider extends ProjectFilesProviderBase {
 
 	public isFileExcluded(filePath: string): boolean {
 		throw new Error(
-			"Testing ProjectFilesProviderBase should not test abstract member isFileExcluded."
+			"Testing ProjectFilesProviderBase should not test abstract member isFileExcluded.",
 		);
 	}
 
 	public mapFilePath(filePath: string, platform: string): string {
 		throw new Error(
-			"Testing ProjectFilesProviderBase should not test abstract member mapFilePath."
+			"Testing ProjectFilesProviderBase should not test abstract member mapFilePath.",
 		);
 	}
 }
@@ -50,7 +50,7 @@ describe("ProjectFilesProviderBase", () => {
 			const filePath = "/test/filePath.ts",
 				preparedPath = projectFilesProviderBase.getPreparedFilePath(
 					filePath,
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(preparedPath, expectedFilePath);
@@ -60,7 +60,7 @@ describe("ProjectFilesProviderBase", () => {
 			const filePath = "/test/filePath.android.ts",
 				preparedPath = projectFilesProviderBase.getPreparedFilePath(
 					filePath,
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(preparedPath, expectedFilePath);
@@ -70,7 +70,7 @@ describe("ProjectFilesProviderBase", () => {
 			const filePath = "/test/filePath.iOS.ts",
 				preparedPath = projectFilesProviderBase.getPreparedFilePath(
 					filePath,
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(preparedPath, expectedFilePath);
@@ -80,7 +80,7 @@ describe("ProjectFilesProviderBase", () => {
 			const filePath = "/test/filePath.AnDroId.ts",
 				preparedPath = projectFilesProviderBase.getPreparedFilePath(
 					filePath,
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(preparedPath, expectedFilePath);
@@ -90,7 +90,7 @@ describe("ProjectFilesProviderBase", () => {
 			const filePath = "/test/filePath.debug.ts",
 				preparedPath = projectFilesProviderBase.getPreparedFilePath(
 					filePath,
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(preparedPath, expectedFilePath);
@@ -100,7 +100,7 @@ describe("ProjectFilesProviderBase", () => {
 			const filePath = "/test/filePath.DebUG.ts",
 				preparedPath = projectFilesProviderBase.getPreparedFilePath(
 					filePath,
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(preparedPath, expectedFilePath);
@@ -110,7 +110,7 @@ describe("ProjectFilesProviderBase", () => {
 			const filePath = "/test/filePath.release.ts",
 				preparedPath = projectFilesProviderBase.getPreparedFilePath(
 					filePath,
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(preparedPath, expectedFilePath);
@@ -120,7 +120,7 @@ describe("ProjectFilesProviderBase", () => {
 	describe("getProjectFileInfo", () => {
 		const getExpectedProjectFileInfo = (
 			filePath: string,
-			shouldIncludeFile: boolean
+			shouldIncludeFile: boolean,
 		) => {
 			return {
 				filePath: filePath,
@@ -134,12 +134,12 @@ describe("ProjectFilesProviderBase", () => {
 				projectFileInfo = projectFilesProviderBase.getProjectFileInfo(
 					filePath,
 					"",
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(
 				projectFileInfo,
-				getExpectedProjectFileInfo(filePath, true)
+				getExpectedProjectFileInfo(filePath, true),
 			);
 		});
 
@@ -148,12 +148,12 @@ describe("ProjectFilesProviderBase", () => {
 				projectFileInfo = projectFilesProviderBase.getProjectFileInfo(
 					filePath,
 					"android",
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(
 				projectFileInfo,
-				getExpectedProjectFileInfo(filePath, true)
+				getExpectedProjectFileInfo(filePath, true),
 			);
 		});
 
@@ -162,12 +162,12 @@ describe("ProjectFilesProviderBase", () => {
 				projectFileInfo = projectFilesProviderBase.getProjectFileInfo(
 					filePath,
 					"android",
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(
 				projectFileInfo,
-				getExpectedProjectFileInfo(filePath, true)
+				getExpectedProjectFileInfo(filePath, true),
 			);
 		});
 
@@ -176,12 +176,12 @@ describe("ProjectFilesProviderBase", () => {
 				projectFileInfo = projectFilesProviderBase.getProjectFileInfo(
 					filePath,
 					"android",
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(
 				projectFileInfo,
-				getExpectedProjectFileInfo(filePath, false)
+				getExpectedProjectFileInfo(filePath, false),
 			);
 		});
 
@@ -190,12 +190,12 @@ describe("ProjectFilesProviderBase", () => {
 				projectFileInfo = projectFilesProviderBase.getProjectFileInfo(
 					filePath,
 					"android",
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(
 				projectFileInfo,
-				getExpectedProjectFileInfo(filePath, true)
+				getExpectedProjectFileInfo(filePath, true),
 			);
 		});
 
@@ -204,12 +204,12 @@ describe("ProjectFilesProviderBase", () => {
 				projectFileInfo = projectFilesProviderBase.getProjectFileInfo(
 					filePath,
 					"android",
-					{}
+					{},
 				);
 
 			assert.deepStrictEqual(
 				projectFileInfo,
-				getExpectedProjectFileInfo(filePath, false)
+				getExpectedProjectFileInfo(filePath, false),
 			);
 		});
 
@@ -219,12 +219,12 @@ describe("ProjectFilesProviderBase", () => {
 			const projectFileInfo = projectFilesProviderBase.getProjectFileInfo(
 				filePath,
 				"android",
-				{ configuration: "release" }
+				{ configuration: "release" },
 			);
 
 			assert.deepStrictEqual(
 				projectFileInfo,
-				getExpectedProjectFileInfo(filePath, true)
+				getExpectedProjectFileInfo(filePath, true),
 			);
 		});
 	});

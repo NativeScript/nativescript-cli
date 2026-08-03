@@ -12,22 +12,22 @@ import { injector } from "../../common/yok";
 
 export class GradleBuildService
 	extends EventEmitter
-	implements IGradleBuildService {
+	implements IGradleBuildService
+{
 	constructor(
 		private $childProcess: IChildProcess,
 		private $gradleBuildArgsService: IGradleBuildArgsService,
-		private $gradleCommandService: IGradleCommandService
+		private $gradleCommandService: IGradleCommandService,
 	) {
 		super();
 	}
 
 	public async buildProject(
 		projectRoot: string,
-		buildData: IAndroidBuildData
+		buildData: IAndroidBuildData,
 	): Promise<void> {
-		const buildTaskArgs = await this.$gradleBuildArgsService.getBuildTaskArgs(
-			buildData
-		);
+		const buildTaskArgs =
+			await this.$gradleBuildArgsService.getBuildTaskArgs(buildData);
 		const spawnOptions = {
 			emitOptions: { eventName: constants.BUILD_OUTPUT_EVENT_NAME },
 			throwError: true,
@@ -46,18 +46,17 @@ export class GradleBuildService
 			(data: any) => this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data),
 			this.$gradleCommandService.executeCommand(
 				buildTaskArgs,
-				gradleCommandOptions
-			)
+				gradleCommandOptions,
+			),
 		);
 	}
 
 	public async cleanProject(
 		projectRoot: string,
-		buildData: IAndroidBuildData
+		buildData: IAndroidBuildData,
 	): Promise<void> {
-		const cleanTaskArgs = this.$gradleBuildArgsService.getCleanTaskArgs(
-			buildData
-		);
+		const cleanTaskArgs =
+			this.$gradleBuildArgsService.getCleanTaskArgs(buildData);
 		const gradleCommandOptions = {
 			cwd: projectRoot,
 			message: "Gradle clean...",
@@ -65,7 +64,7 @@ export class GradleBuildService
 		};
 		await this.$gradleCommandService.executeCommand(
 			cleanTaskArgs,
-			gradleCommandOptions
+			gradleCommandOptions,
 		);
 	}
 }

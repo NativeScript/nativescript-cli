@@ -20,7 +20,7 @@ export class UpdateCommand implements ICommand {
 		private $errors: IErrors,
 		private $logger: ILogger,
 		private $projectData: IProjectData,
-		private $markingModeService: IMarkingModeService
+		private $markingModeService: IMarkingModeService,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -42,7 +42,7 @@ export class UpdateCommand implements ICommand {
 			}))
 		) {
 			this.$logger.printMarkdown(
-				`__${UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE}__`
+				`__${UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE}__`,
 			);
 			return;
 		}

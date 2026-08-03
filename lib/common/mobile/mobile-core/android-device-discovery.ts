@@ -19,18 +19,18 @@ export class AndroidDeviceDiscovery
 	constructor(
 		private $injector: IInjector,
 		private $adb: Mobile.IAndroidDebugBridge,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {
 		super();
 	}
 
 	private async createAndAddDevice(
-		adbDeviceInfo: IAdbAndroidDeviceInfo
+		adbDeviceInfo: IAdbAndroidDeviceInfo,
 	): Promise<void> {
 		this._devices.push(adbDeviceInfo);
 		const device: Mobile.IAndroidDevice = this.$injector.resolve(
 			AndroidDevice,
-			{ identifier: adbDeviceInfo.identifier, status: adbDeviceInfo.status }
+			{ identifier: adbDeviceInfo.identifier, status: adbDeviceInfo.status },
 		);
 		await device.init();
 		this.addDevice(device);
@@ -42,7 +42,7 @@ export class AndroidDeviceDiscovery
 	}
 
 	public async startLookingForDevices(
-		options?: Mobile.IDeviceLookingOptions
+		options?: Mobile.IDeviceLookingOptions,
 	): Promise<void> {
 		if (
 			options &&
@@ -72,7 +72,7 @@ export class AndroidDeviceDiscovery
 					identifier: identifier,
 					status: status,
 				};
-			}
+			},
 		);
 
 		_(this._devices)
@@ -82,12 +82,13 @@ export class AndroidDeviceDiscovery
 						_.find(
 							currentDevices,
 							(device) =>
-								device.identifier === d.identifier && device.status === d.status
+								device.identifier === d.identifier &&
+								device.status === d.status,
 						)
-					)
+					),
 			)
 			.each((d: IAdbAndroidDeviceInfo) =>
-				this.deleteAndRemoveDevice(d.identifier)
+				this.deleteAndRemoveDevice(d.identifier),
 			);
 
 		await Promise.all(
@@ -99,12 +100,12 @@ export class AndroidDeviceDiscovery
 								this._devices,
 								(device) =>
 									device.identifier === d.identifier &&
-									device.status === d.status
+									device.status === d.status,
 							)
-						)
+						),
 				)
 				.map((d: IAdbAndroidDeviceInfo) => this.createAndAddDevice(d))
-				.value()
+				.value(),
 		);
 	}
 

@@ -7,7 +7,7 @@ export class LogFilter implements Mobile.ILogFilter {
 	constructor(
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $injector: IInjector,
-		private $loggingLevels: Mobile.ILoggingLevels
+		private $loggingLevels: Mobile.ILoggingLevels,
 	) {}
 
 	public get loggingLevel(): string {
@@ -23,7 +23,7 @@ export class LogFilter implements Mobile.ILogFilter {
 	public filterData(
 		platform: string,
 		data: string,
-		loggingOptions: Mobile.IDeviceLogOptions = <any>{}
+		loggingOptions: Mobile.IDeviceLogOptions = <any>{},
 	): string {
 		loggingOptions = loggingOptions || <any>{};
 		const deviceLogFilter = this.getDeviceLogFilterInstance(platform);
@@ -37,7 +37,7 @@ export class LogFilter implements Mobile.ILogFilter {
 	}
 
 	private getDeviceLogFilterInstance(
-		platform: string
+		platform: string,
 	): Mobile.IPlatformLogFilter {
 		if (platform) {
 			if (

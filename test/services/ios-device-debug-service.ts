@@ -26,7 +26,7 @@ class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
 		$errors: IErrors,
 		$packageInstallationManager: IPackageInstallationManager,
 		$appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
-		$projectDataService: IProjectDataService
+		$projectDataService: IProjectDataService,
 	) {
 		super(
 			<any>{ deviceInfo: { identifier: "123" } },
@@ -37,7 +37,7 @@ class IOSDeviceDebugServiceInheritor extends IOSDeviceDebugService {
 			$errors,
 			$packageInstallationManager,
 			$appDebugSocketProxyFactory,
-			$projectDataService
+			$projectDataService,
 		);
 	}
 
@@ -65,7 +65,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("net", {
 		getAvailablePortInRange: async (
 			startPort: number,
-			endPort?: number
+			endPort?: number,
 		): Promise<number> => 41000,
 		waitForPortToListen: async (opts: {
 			port: number;
@@ -216,12 +216,13 @@ describe("iOSDeviceDebugService", () => {
 		for (const testCase of chromUrlTestCases) {
 			it(`returns correct url when ${testCase.scenarioName}`, () => {
 				const testInjector = createTestInjector();
-				const iOSDeviceDebugService = testInjector.resolve<
-					IOSDeviceDebugServiceInheritor
-				>(IOSDeviceDebugServiceInheritor);
+				const iOSDeviceDebugService =
+					testInjector.resolve<IOSDeviceDebugServiceInheritor>(
+						IOSDeviceDebugServiceInheritor,
+					);
 				const actualChromeUrl = iOSDeviceDebugService.getChromeDebugUrl(
 					testCase.debugOptions,
-					expectedPort
+					expectedPort,
 				);
 				assert.equal(actualChromeUrl, testCase.expectedChromeUrl);
 			});
@@ -233,12 +234,13 @@ describe("iOSDeviceDebugService", () => {
 			const hostInfo = testInjector.resolve("hostInfo");
 			hostInfo.isDarwin = hostInfo.isWindows = false;
 
-			const iOSDeviceDebugService = testInjector.resolve<
-				IOSDeviceDebugServiceInheritor
-			>(IOSDeviceDebugServiceInheritor);
+			const iOSDeviceDebugService =
+				testInjector.resolve<IOSDeviceDebugServiceInheritor>(
+					IOSDeviceDebugServiceInheritor,
+				);
 			assert.isRejected(
 				iOSDeviceDebugService.debug(null, null),
-				"Debugging on iOS devices is not supported for"
+				"Debugging on iOS devices is not supported for",
 			);
 		});
 	});

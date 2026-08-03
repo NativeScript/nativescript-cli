@@ -14,7 +14,7 @@ export class FontsCommand implements ICommand {
 		private $projectData: IProjectData,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $projectConfigService: IProjectConfigService
+		private $projectConfigService: IProjectConfigService,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -25,14 +25,14 @@ export class FontsCommand implements ICommand {
 		const defaultFontsFolderPaths = [
 			path.join(
 				this.$projectConfigService.getValue("appPath") ?? "",
-				constants.FONTS_DIR
+				constants.FONTS_DIR,
 			),
 			path.join(constants.APP_FOLDER_NAME, constants.FONTS_DIR),
 			path.join(constants.SRC_DIR, constants.FONTS_DIR),
 		].map((entry) => path.resolve(this.$projectData.projectDir, entry));
 
 		const fontsFolderPath = defaultFontsFolderPaths.find((entry) =>
-			this.$fs.exists(entry)
+			this.$fs.exists(entry),
 		);
 
 		if (!fontsFolderPath) {

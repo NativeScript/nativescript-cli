@@ -393,7 +393,7 @@ export class Options {
 				const args: string[] = argv._.slice(1);
 				const commands = injector
 					.getRegisteredCommandsNames(false)
-					.filter((c) => c != "/?"); // remove the /? command, looks weird... :D
+					.filter((c) => c !== "/?"); // remove the /? command, looks weird... :D
 				const currentDepth = args.length > 0 ? args.length - 1 : 0;
 				const current = current_ ?? args[currentDepth] ?? "";
 				// split all commands into their components ie. "device|list" => ["device", "list"]

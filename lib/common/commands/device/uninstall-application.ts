@@ -6,7 +6,7 @@ export class UninstallApplicationCommand implements ICommand {
 	constructor(
 		private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	allowedParameters: ICommandParameter[] = [this.$stringParameter];
@@ -24,5 +24,5 @@ export class UninstallApplicationCommand implements ICommand {
 }
 injector.registerCommand(
 	["device|uninstall", "devices|uninstall"],
-	UninstallApplicationCommand
+	UninstallApplicationCommand,
 );

@@ -73,7 +73,7 @@ export class OptionsTracker {
 		value: any,
 		shorthands: string[] = [],
 		options: IDictionary<IDashedOption> = {},
-	): Boolean {
+	): boolean {
 		if (shorthands.indexOf(key) >= 0) {
 			return true;
 		}

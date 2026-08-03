@@ -16,7 +16,7 @@ export class AppleLogin implements ICommand {
 		private $errors: IErrors,
 		private $injector: IInjector,
 		private $logger: ILogger,
-		private $prompter: IPrompter
+		private $prompter: IPrompter,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -38,7 +38,7 @@ export class AppleLogin implements ICommand {
 		});
 		if (!user.areCredentialsValid) {
 			this.$errors.fail(
-				`Invalid username and password combination. Used '${username}' as the username.`
+				`Invalid username and password combination. Used '${username}' as the username.`,
 			);
 		}
 

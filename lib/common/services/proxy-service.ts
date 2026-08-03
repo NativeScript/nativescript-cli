@@ -16,11 +16,11 @@ export class ProxyService implements IProxyService {
 
 	constructor(
 		private $settingsService: ISettingsService,
-		private $staticConfig: Config.IStaticConfig
+		private $staticConfig: Config.IStaticConfig,
 	) {
 		this.proxyCacheFilePath = path.join(
 			this.$settingsService.getProfileDir(),
-			Proxy.CACHE_FILE_NAME
+			Proxy.CACHE_FILE_NAME,
 		);
 		this.credentialsKey = `${this.$staticConfig.CLIENT_NAME}_PROXY`;
 	}

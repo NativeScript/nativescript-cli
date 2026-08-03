@@ -9,20 +9,20 @@ export class DevicePathProvider implements IDevicePathProvider {
 	constructor(
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {}
 
 	public async getDeviceProjectRootPath(
 		device: Mobile.IDevice,
-		options: IDeviceProjectRootOptions
+		options: IDeviceProjectRootOptions,
 	): Promise<string> {
 		let projectRoot = "";
 		if (this.$mobileHelper.isApplePlatform(device.deviceInfo.platform)) {
 			projectRoot = device.isEmulator
 				? await this.$iOSSimResolver.iOSSim.getApplicationPath(
 						device.deviceInfo.identifier,
-						options.appIdentifier
-				  )
+						options.appIdentifier,
+					)
 				: LiveSyncPaths.IOS_DEVICE_PROJECT_ROOT_PATH;
 
 			if (!projectRoot) {

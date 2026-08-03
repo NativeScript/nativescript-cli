@@ -5,7 +5,7 @@ import { ISystemWarning } from "./declarations";
 import { SystemWarningsSeverity } from "../definitions/system-warnings";
 
 // Use only ES5 code here - pure JavaScript can be executed with any Node.js version (even 0.10, 0.12).
-/* tslint:disable:no-var-keyword no-var-requires prefer-const*/
+/* eslint-disable no-var, prefer-const */
 var os = require("os");
 var semver = require("semver");
 var util = require("util");
@@ -111,4 +111,3 @@ export function getNodeWarning(): ISystemWarning {
 
 	return nodeWarn;
 }
-/* tslint:enable */

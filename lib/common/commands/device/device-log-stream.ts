@@ -16,7 +16,7 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 		private $loggingLevels: Mobile.ILoggingLevels,
 		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		$cleanupService: ICleanupService
+		$cleanupService: ICleanupService,
 	) {
 		$iOSSimulatorLogProvider.setShouldDispose(false);
 		$cleanupService.setShouldDispose(false);
@@ -35,7 +35,7 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 		if (this.$devicesService.deviceCount > 1) {
 			await this.$commandsService.tryExecuteCommand("device", []);
 			this.$errors.failWithHelp(
-				OpenDeviceLogStreamCommand.NOT_SPECIFIED_DEVICE_ERROR_MESSAGE
+				OpenDeviceLogStreamCommand.NOT_SPECIFIED_DEVICE_ERROR_MESSAGE,
 			);
 		}
 
@@ -46,5 +46,5 @@ export class OpenDeviceLogStreamCommand implements ICommand {
 
 injector.registerCommand(
 	["device|log", "devices|log"],
-	OpenDeviceLogStreamCommand
+	OpenDeviceLogStreamCommand,
 );

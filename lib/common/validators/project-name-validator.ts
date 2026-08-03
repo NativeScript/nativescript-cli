@@ -55,19 +55,19 @@ export class ProjectNameValidator implements IProjectNameValidator {
 
 		if (helpers.isNullOrWhitespace(name)) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.EMPTY_FILENAME_ERROR_MESSAGE
+				ProjectNameValidator.EMPTY_FILENAME_ERROR_MESSAGE,
 			);
 		}
 		if (!validNameRegex.test(name)) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.NOT_VALID_NAME_ERROR_MESSAGE
+				ProjectNameValidator.NOT_VALID_NAME_ERROR_MESSAGE,
 			);
 		}
 		if (
 			_.includes(ProjectNameValidator.INVALID_FILENAMES, name.split(".")[0])
 		) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.RESERVED_NAME_ERROR_MESSAGE
+				ProjectNameValidator.RESERVED_NAME_ERROR_MESSAGE,
 			);
 		}
 		if (
@@ -75,27 +75,27 @@ export class ProjectNameValidator implements IProjectNameValidator {
 			_.includes(ProjectNameValidator.INVALID_EXTENSIONS, ext)
 		) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.INVALID_EXTENSION_ERROR_MESSAGE
+				ProjectNameValidator.INVALID_EXTENSION_ERROR_MESSAGE,
 			);
 		}
 		if (name.length > ProjectNameValidator.MAX_FILENAME_LENGTH) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.TOO_LONG_NAME_ERROR_MESSAGE
+				ProjectNameValidator.TOO_LONG_NAME_ERROR_MESSAGE,
 			);
 		}
 		if (_.startsWith(name, " ")) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.LEADING_SPACES_ERROR_MESSAGE
+				ProjectNameValidator.LEADING_SPACES_ERROR_MESSAGE,
 			);
 		}
 		if (_.endsWith(name, ".")) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.TRAILING_DOTS_ERROR_MESSAGE
+				ProjectNameValidator.TRAILING_DOTS_ERROR_MESSAGE,
 			);
 		}
 		if (_.endsWith(name, " ")) {
 			return new ValidationResult.ValidationResult(
-				ProjectNameValidator.TRAILING_SPACES_ERROR_MESSAGE
+				ProjectNameValidator.TRAILING_SPACES_ERROR_MESSAGE,
 			);
 		}
 
@@ -103,9 +103,8 @@ export class ProjectNameValidator implements IProjectNameValidator {
 	}
 
 	public validate(name: string): boolean {
-		const validationResult: ValidationResult.ValidationResult = this.validateName(
-			name
-		);
+		const validationResult: ValidationResult.ValidationResult =
+			this.validateName(name);
 		const isSuccessful = validationResult.isSuccessful;
 
 		if (!isSuccessful) {

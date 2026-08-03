@@ -13,7 +13,10 @@ class Wp8EmulatorServices implements Mobile.IEmulatorPlatformService {
 			: process.env.ProgramFiles;
 	}
 
-	constructor(private $logger: ILogger, private $childProcess: IChildProcess) {}
+	constructor(
+		private $logger: ILogger,
+		private $childProcess: IChildProcess,
+	) {}
 
 	public async getEmulatorId(): Promise<string> {
 		return "";
@@ -24,7 +27,7 @@ class Wp8EmulatorServices implements Mobile.IEmulatorPlatformService {
 	}
 
 	public async getRunningEmulatorImageIdentifier(
-		emulatorId: string
+		emulatorId: string,
 	): Promise<string> {
 		return null;
 	}
@@ -39,7 +42,7 @@ class Wp8EmulatorServices implements Mobile.IEmulatorPlatformService {
 
 	public async runApplicationOnEmulator(
 		app: string,
-		emulatorOptions?: Mobile.IRunApplicationOnEmulatorOptions
+		emulatorOptions?: Mobile.IRunApplicationOnEmulatorOptions,
 	): Promise<void> {
 		this.$logger.info("Starting Windows Phone Emulator");
 		const emulatorStarter = this.getPathToEmulatorStarter();
@@ -67,7 +70,7 @@ class Wp8EmulatorServices implements Mobile.IEmulatorPlatformService {
 		return path.join(
 			Wp8EmulatorServices.programFilesPath,
 			Wp8EmulatorServices.WP8_LAUNCHER_PATH,
-			Wp8EmulatorServices.WP8_LAUNCHER
+			Wp8EmulatorServices.WP8_LAUNCHER,
 		);
 	}
 }

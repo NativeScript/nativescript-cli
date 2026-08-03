@@ -68,9 +68,9 @@ describe("AddPlatformService", () => {
 							projectDir: projectData.projectDir,
 							platform,
 							nativePrepare,
-						}
+						},
 					),
-					errorMessage
+					errorMessage,
 				);
 			});
 			it(`shouldn't add native platform when skipNativePrepare is provided for ${platform}`, async () => {
@@ -81,7 +81,7 @@ describe("AddPlatformService", () => {
 				const platformsDataService = injector.resolve("platformsDataService");
 				const platformData = platformsDataService.getPlatformData(
 					platform,
-					injector.resolve("projectData")
+					injector.resolve("projectData"),
 				);
 				platformData.platformProjectService.createProject = () =>
 					(isCreateNativeProjectCalled = true);
@@ -96,7 +96,7 @@ describe("AddPlatformService", () => {
 						projectDir: projectData.projectDir,
 						platform,
 						nativePrepare: { skipNativePrepare: true },
-					}
+					},
 				);
 				assert.isFalse(isCreateNativeProjectCalled);
 			});
@@ -108,7 +108,7 @@ describe("AddPlatformService", () => {
 				const platformsDataService = injector.resolve("platformsDataService");
 				const platformData = platformsDataService.getPlatformData(
 					platform,
-					injector.resolve("projectData")
+					injector.resolve("projectData"),
 				);
 				platformData.platformProjectService.createProject = () =>
 					(isCreateNativeProjectCalled = true);
@@ -119,7 +119,7 @@ describe("AddPlatformService", () => {
 					projectData,
 					platformData,
 					platform,
-					{ projectDir: projectData.projectDir, platform, nativePrepare }
+					{ projectDir: projectData.projectDir, platform, nativePrepare },
 				);
 				assert.isTrue(isCreateNativeProjectCalled);
 			});

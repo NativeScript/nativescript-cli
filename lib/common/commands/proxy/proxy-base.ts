@@ -9,7 +9,7 @@ export abstract class ProxyCommandBase implements ICommand {
 		protected $analyticsService: IAnalyticsService,
 		protected $logger: ILogger,
 		protected $proxyService: IProxyService,
-		private commandName: string
+		private commandName: string,
 	) {}
 
 	public abstract execute(args: string[]): Promise<void>;

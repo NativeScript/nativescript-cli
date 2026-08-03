@@ -10,7 +10,7 @@ export class PutFileCommand implements ICommand {
 		private $stringParameter: ICommandParameter,
 		private $options: IOptions,
 		private $projectData: IProjectData,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {}
 
 	allowedParameters: ICommandParameter[] = [
@@ -34,7 +34,7 @@ export class PutFileCommand implements ICommand {
 			}
 			if (!this.$projectData.projectIdentifiers) {
 				this.$errors.fail(
-					"Please enter application identifier or execute this command in project."
+					"Please enter application identifier or execute this command in project.",
 				);
 			}
 		}
@@ -52,5 +52,5 @@ export class PutFileCommand implements ICommand {
 }
 injector.registerCommand(
 	["device|put-file", "devices|put-file"],
-	PutFileCommand
+	PutFileCommand,
 );

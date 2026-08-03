@@ -17,12 +17,12 @@ export class GradleCommandService implements IGradleCommandService {
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async executeCommand(
 		gradleArgs: string[],
-		options: IGradleCommandOptions
+		options: IGradleCommandOptions,
 	): Promise<ISpawnResult> {
 		const { message, cwd, stdio, spawnOptions } = options;
 		this.$logger.info(message);
@@ -43,7 +43,7 @@ export class GradleCommandService implements IGradleCommandService {
 			gradleExecutable,
 			sanitizedGradleArgs,
 			childProcessOptions,
-			spawnOptions
+			spawnOptions,
 		);
 
 		return result;
@@ -53,7 +53,7 @@ export class GradleCommandService implements IGradleCommandService {
 		gradleExecutable: string,
 		gradleArgs: string[],
 		childProcessOptions: { cwd: string; stdio: string; shell: boolean },
-		spawnOptions: ISpawnFromEventOptions
+		spawnOptions: ISpawnFromEventOptions,
 	): Promise<ISpawnResult> {
 		try {
 			const result = await this.$childProcess.spawnFromEvent(
@@ -61,7 +61,7 @@ export class GradleCommandService implements IGradleCommandService {
 				gradleArgs,
 				"close",
 				childProcessOptions,
-				spawnOptions
+				spawnOptions,
 			);
 
 			return result;

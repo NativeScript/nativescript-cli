@@ -29,28 +29,27 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $pacoteService: IPacoteService,
 		private $packageManager: INodePackageManager,
-		private $staticConfig: IStaticConfig
+		private $staticConfig: IStaticConfig,
 	) {}
 
 	@performanceLog()
 	public async prepareTemplate(
 		templateValue: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<ITemplateData> {
 		if (!templateValue) {
 			templateValue = constants.RESERVED_TEMPLATE_NAMES["default"];
 		}
 
-		const templateNameParts = await this.$packageManager.getPackageNameParts(
-			templateValue
-		);
+		const templateNameParts =
+			await this.$packageManager.getPackageNameParts(templateValue);
 		templateValue =
 			constants.RESERVED_TEMPLATE_NAMES[templateNameParts.name] ||
 			templateNameParts.name;
 
 		const version = await this.getDesiredVersion(
 			templateValue,
-			templateNameParts.version
+			templateNameParts.version,
 		);
 
 		const fullTemplateName = await this.$packageManager.getPackageFullName({
@@ -58,13 +57,12 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			version: version,
 		});
 
-		const templatePackageJsonContent = await this.getTemplatePackageJsonContent(
-			fullTemplateName
-		);
+		const templatePackageJsonContent =
+			await this.getTemplatePackageJsonContent(fullTemplateName);
 
 		const templateNameToBeTracked = this.getTemplateNameToBeTracked(
 			templateValue,
-			templatePackageJsonContent
+			templatePackageJsonContent,
 		);
 		if (templateNameToBeTracked) {
 			await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -87,14 +85,13 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 	}
 
 	private async getTemplatePackageJsonContent(
-		templateName: string
+		templateName: string,
 	): Promise<ITemplatePackageJsonContent> {
 		if (!this.templatePackageContents[templateName]) {
-			this.templatePackageContents[
-				templateName
-			] = await this.$pacoteService.manifest(templateName, {
-				fullMetadata: true,
-			});
+			this.templatePackageContents[templateName] =
+				await this.$pacoteService.manifest(templateName, {
+					fullMetadata: true,
+				});
 		}
 
 		return this.templatePackageContents[templateName];
@@ -102,7 +99,7 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 	private getTemplateNameToBeTracked(
 		templateName: string,
-		packageJsonContent: any
+		packageJsonContent: any,
 	): string {
 		try {
 			if (this.$fs.exists(templateName)) {
@@ -115,14 +112,14 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 			return templateName;
 		} catch (err) {
 			this.$logger.trace(
-				`Unable to get template name to be tracked, error is: ${err}`
+				`Unable to get template name to be tracked, error is: ${err}`,
 			);
 		}
 	}
 
 	private async getDesiredVersion(
 		templateName: string,
-		defaultVersion?: string
+		defaultVersion?: string,
 	) {
 		if (defaultVersion) {
 			return defaultVersion;
@@ -134,12 +131,12 @@ export class ProjectTemplatesService implements IProjectTemplatesService {
 
 		try {
 			const cliMajorVersion = semver.parse(
-				semver.coerce(this.$staticConfig.version)
+				semver.coerce(this.$staticConfig.version),
 			).major;
 			return `^${cliMajorVersion}.0.0`;
 		} catch (err) {
 			return this.$packageInstallationManager.getLatestCompatibleVersionSafe(
-				templateName
+				templateName,
 			);
 		}
 	}

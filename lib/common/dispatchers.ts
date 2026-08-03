@@ -29,7 +29,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 		private $options: IOptions,
 		private $versionsService: IVersionsService,
 		private $packageManager: IPackageManager,
-		private $terminalSpinnerService: ITerminalSpinnerService
+		private $terminalSpinnerService: ITerminalSpinnerService,
 	) {}
 
 	public async dispatchCommand(): Promise<void> {
@@ -45,7 +45,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 					__dirname,
 					"..",
 					"..",
-					"package.json"
+					"package.json",
 				),
 			});
 			this.$logger.trace("System information:");
@@ -76,7 +76,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 		await this.$commandsService.tryExecuteCommand(
 			commandName,
-			commandArguments
+			commandArguments,
 		);
 	}
 
@@ -84,7 +84,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 	private async resolveCommand(
 		commandName: string,
 		commandArguments: string[],
-		argv: string[]
+		argv: string[],
 	) {
 		// just a hook point
 		return { commandName, commandArguments, argv };
@@ -142,14 +142,14 @@ export class CommandDispatcher implements ICommandDispatcher {
 				nativescriptCliVersion.latestVersion,
 				{
 					loose: true,
-				}
+				},
 			)
 		) {
 			// up-to-date
 			spinner.succeed("Up to date.");
 		} else {
 			spinner.info(
-				`New version of NativeScript CLI is available (${nativescriptCliVersion.latestVersion}), run '${updateCommand}' to update.`
+				`New version of NativeScript CLI is available (${nativescriptCliVersion.latestVersion}), run '${updateCommand}' to update.`,
 			);
 		}
 	}

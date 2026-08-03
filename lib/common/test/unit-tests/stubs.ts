@@ -1,5 +1,3 @@
-/* tslint:disable:no-empty */
-
 import * as util from "util";
 import { EventEmitter } from "events";
 import * as _ from "lodash";
@@ -22,7 +20,7 @@ import {
 export class LockServiceStub implements ILockService {
 	public async lock(
 		lockFilePath?: string,
-		lockOpts?: ILockOptions
+		lockOpts?: ILockOptions,
 	): Promise<() => void> {
 		return () => {};
 	}
@@ -32,7 +30,7 @@ export class LockServiceStub implements ILockService {
 	public async executeActionWithLock<T>(
 		action: () => Promise<T>,
 		lockFilePath?: string,
-		lockOpts?: ILockOptions
+		lockOpts?: ILockOptions,
 	): Promise<T> {
 		const result = await action();
 		return result;
@@ -107,7 +105,7 @@ export class ErrorsStub implements IErrors {
 
 	async beginCommand(
 		action: () => Promise<boolean>,
-		printHelpCommand: () => Promise<void>
+		printHelpCommand: () => Promise<void>,
 	): Promise<boolean> {
 		return action();
 	}
@@ -153,25 +151,25 @@ export class AndroidProcessServiceStub
 	async mapAbstractToTcpPort(
 		deviceIdentifier: string,
 		appIdentifier: string,
-		framework: string
+		framework: string,
 	): Promise<string> {
 		return this.MapAbstractToTcpPortResult;
 	}
 	async getDebuggableApps(
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): Promise<Mobile.IDeviceApplicationInformation[]> {
 		return this.GetDebuggableAppsResult;
 	}
 	async getMappedAbstractToTcpPorts(
 		deviceIdentifier: string,
 		appIdentifiers: string[],
-		framework: string
+		framework: string,
 	): Promise<IDictionary<number>> {
 		return this.GetMappedAbstractToTcpPortsResult;
 	}
 	async getAppProcessId(
 		deviceIdentifier: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<string> {
 		while (this.GetAppProcessIdFailAttempts) {
 			this.GetAppProcessIdFailAttempts--;
@@ -181,7 +179,7 @@ export class AndroidProcessServiceStub
 		return this.GetAppProcessIdResult;
 	}
 	async forwardFreeTcpToAbstractPort(
-		portForwardInputData: Mobile.IPortForwardData
+		portForwardInputData: Mobile.IPortForwardData,
 	): Promise<number> {
 		return this.ForwardFreeTcpToAbstractPortResult;
 	}

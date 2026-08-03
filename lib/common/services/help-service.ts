@@ -32,8 +32,7 @@ export class HelpService implements IHelpService {
 	private static RELATIVE_PATH_TO_IMAGES_REGEX = /@RELATIVE_PATH_TO_IMAGES@/g;
 	private static RELATIVE_PATH_TO_INDEX_REGEX = /@RELATIVE_PATH_TO_INDEX@/g;
 	private static EXTENSION_NAME_REGEX = /@EXTENSION_NAME@/g;
-	private static MARKDOWN_LINK_REGEX =
-		/\[([\w \-\`\<\>\*\:\\]+?)\]\([\s\S]+?\)/g;
+	private static MARKDOWN_LINK_REGEX = /\[([\w \-`\<>\*:\\]+?)\]\([\s\S]+?\)/g;
 	private static SPAN_REGEX =
 		/([\s\S]*?)(?:\r?\n)?<span.*?>([\s\S]*?)<\/span>(?:\r?\n)*/g;
 	private static NEW_LINE_REGEX = /<\/?\s*?br\s*?\/?>/g; // <br>, <br > <br/> <br />

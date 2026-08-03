@@ -6,7 +6,7 @@ import { ICommandParameter } from "./common/definitions/commands";
 export class PlatformCommandParameter implements ICommandParameter {
 	constructor(
 		private $platformValidationService: IPlatformValidationService,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {}
 	mandatory = true;
 	async validate(value: string): Promise<boolean> {

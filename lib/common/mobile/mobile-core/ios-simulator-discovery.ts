@@ -15,13 +15,13 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $hostInfo: IHostInfo,
-		private $iOSEmulatorServices: Mobile.IiOSSimulatorService
+		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 	) {
 		super();
 	}
 
 	public async startLookingForDevices(
-		options?: Mobile.IDeviceLookingOptions
+		options?: Mobile.IDeviceLookingOptions,
 	): Promise<void> {
 		if (
 			options &&
@@ -36,7 +36,8 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 
 	private async checkForDevices(): Promise<void> {
 		if (this.$hostInfo.isDarwin) {
-			const currentSimulators: Mobile.IiSimDevice[] = await this.$iOSSimResolver.iOSSim.getRunningSimulators();
+			const currentSimulators: Mobile.IiSimDevice[] =
+				await this.$iOSSimResolver.iOSSim.getRunningSimulators();
 
 			// Remove old simulators
 			_(this.cachedSimulators)
@@ -47,8 +48,8 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 							simulator &&
 							s &&
 							simulator.id === s.id &&
-							simulator.state === s.state
-					)
+							simulator.state === s.state,
+					),
 				)
 				.each((s) => this.deleteAndRemoveDevice(s));
 
@@ -61,8 +62,8 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 							simulator &&
 							s &&
 							simulator.id === s.id &&
-							simulator.state === s.state
-					)
+							simulator.state === s.state,
+					),
 				)
 				.each((s) => this.createAndAddDevice(s));
 		}
@@ -83,7 +84,7 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 			if (
 				!_.find(
 					this.availableSimulators,
-					(s) => s.imageIdentifier === simulator.imageIdentifier
+					(s) => s.imageIdentifier === simulator.imageIdentifier,
 				)
 			) {
 				lostSimulators.push(simulator);
@@ -110,7 +111,7 @@ export class IOSSimulatorDiscovery extends DeviceDiscovery {
 	private createAndAddDevice(simulator: Mobile.IiSimDevice): void {
 		this.cachedSimulators.push(_.cloneDeep(simulator));
 		this.addDevice(
-			this.$injector.resolve(IOSSimulator, { simulator: simulator })
+			this.$injector.resolve(IOSSimulator, { simulator: simulator }),
 		);
 	}
 

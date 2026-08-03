@@ -16,7 +16,7 @@ export class AnalyticsCommandParameter implements ICommandParameter {
 				return true;
 			default:
 				this.$errors.failWithHelp(
-					`The value '${validationValue}' is not valid. Valid values are 'enable', 'disable' and 'status'.`
+					`The value '${validationValue}' is not valid. Valid values are 'enable', 'disable' and 'status'.`,
 				);
 		}
 	}
@@ -29,7 +29,7 @@ class AnalyticsCommand implements ICommand {
 		private $errors: IErrors,
 		private $options: IOptions,
 		private settingName: string,
-		private humanReadableSettingName: string
+		private humanReadableSettingName: string,
 	) {}
 
 	public allowedParameters = [new AnalyticsCommandParameter(this.$errors)];
@@ -54,8 +54,8 @@ class AnalyticsCommand implements ICommand {
 					await this.$analyticsService.getStatusMessage(
 						this.settingName,
 						this.$options.json,
-						this.humanReadableSettingName
-					)
+						this.humanReadableSettingName,
+					),
 				);
 				break;
 		}
@@ -68,7 +68,7 @@ export class UsageReportingCommand extends AnalyticsCommand {
 		$logger: ILogger,
 		$errors: IErrors,
 		$options: IOptions,
-		$staticConfig: Config.IStaticConfig
+		$staticConfig: Config.IStaticConfig,
 	) {
 		super(
 			$analyticsService,
@@ -76,7 +76,7 @@ export class UsageReportingCommand extends AnalyticsCommand {
 			$errors,
 			$options,
 			$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
-			"Usage reporting"
+			"Usage reporting",
 		);
 	}
 }
@@ -88,7 +88,7 @@ export class ErrorReportingCommand extends AnalyticsCommand {
 		$logger: ILogger,
 		$errors: IErrors,
 		$options: IOptions,
-		$staticConfig: Config.IStaticConfig
+		$staticConfig: Config.IStaticConfig,
 	) {
 		super(
 			$analyticsService,
@@ -96,7 +96,7 @@ export class ErrorReportingCommand extends AnalyticsCommand {
 			$errors,
 			$options,
 			$staticConfig.ERROR_REPORT_SETTING_NAME,
-			"Error reporting"
+			"Error reporting",
 		);
 	}
 }

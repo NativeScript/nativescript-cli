@@ -7,7 +7,7 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 	constructor(
 		private iosSim: any,
 		private $fs: IFileSystem,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async listFiles(devicePath: string): Promise<void> {
@@ -17,7 +17,7 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 	public async getFile(
 		deviceFilePath: string,
 		appIdentifier: string,
-		outputFilePath?: string
+		outputFilePath?: string,
 	): Promise<void> {
 		if (outputFilePath) {
 			shelljs.cp("-f", deviceFilePath, outputFilePath);
@@ -26,7 +26,7 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async getFileContent(
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<string> {
 		const result = this.$fs.readText(deviceFilePath);
 		return result;
@@ -35,29 +35,29 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 	public async putFile(
 		localFilePath: string,
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		shelljs.cp("-f", localFilePath, deviceFilePath);
 	}
 
 	public async deleteFile(
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		shelljs.rm("-rf", deviceFilePath);
 	}
 
 	public async transferFiles(
 		deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		await Promise.all(
 			_.map(localToDevicePaths, (localToDevicePathData) =>
 				this.transferFile(
 					localToDevicePathData.getLocalPath(),
-					localToDevicePathData.getDevicePath()
-				)
-			)
+					localToDevicePathData.getDevicePath(),
+				),
+			),
 		);
 		return localToDevicePaths;
 	}
@@ -65,11 +65,11 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 	public async transferDirectory(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		projectFilesPath: string
+		projectFilesPath: string,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		const destinationPath = await deviceAppData.getDeviceProjectRootPath();
 		this.$logger.trace(
-			`Transferring from ${projectFilesPath} to ${destinationPath}`
+			`Transferring from ${projectFilesPath} to ${destinationPath}`,
 		);
 		const sourcePath = path.join(projectFilesPath, "*");
 		shelljs.cp("-Rf", sourcePath, destinationPath);
@@ -78,10 +78,10 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async transferFile(
 		localFilePath: string,
-		deviceFilePath: string
+		deviceFilePath: string,
 	): Promise<void> {
 		this.$logger.trace(
-			`Transferring from ${localFilePath} to ${deviceFilePath}`
+			`Transferring from ${localFilePath} to ${deviceFilePath}`,
 		);
 		if (this.$fs.getFsStats(localFilePath).isDirectory()) {
 			this.$fs.ensureDirectoryExists(deviceFilePath);
@@ -93,7 +93,7 @@ export class IOSSimulatorFileSystem implements Mobile.IDeviceFileSystem {
 
 	public updateHashesOnDevice(
 		hashes: IStringDictionary,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		return;
 	}

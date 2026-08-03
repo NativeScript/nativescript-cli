@@ -31,7 +31,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 		private $childProcess: IChildProcess,
 		private $logger: ILogger,
 		private $staticConfig: Config.IStaticConfig,
-		private $hostInfo: IHostInfo
+		private $hostInfo: IHostInfo,
 	) {}
 
 	public disableAnalytics = true;
@@ -47,7 +47,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 	@cache()
 	private get cliRunCommandsFile(): string {
 		let cliRunCommandsFile = this.getHomePath(
-			util.format(".%src", this.$staticConfig.CLIENT_NAME.toLowerCase())
+			util.format(".%src", this.$staticConfig.CLIENT_NAME.toLowerCase()),
 		);
 		if (this.$hostInfo.isWindows) {
 			// on Windows bash, file is incorrectly written as C:\Users\<username>, which leads to errors when trying to execute the script:
@@ -62,14 +62,14 @@ export class AutoCompletionService implements IAutoCompletionService {
 	private getTabTabObsoleteRegex(clientName: string): RegExp {
 		const tabTabStartPoint = util.format(
 			AutoCompletionService.TABTAB_COMPLETION_START_REGEX_PATTERN,
-			clientName.toLowerCase()
+			clientName.toLowerCase(),
 		);
 		const tabTabEndPoint = util.format(
 			AutoCompletionService.TABTAB_COMPLETION_END_REGEX_PATTERN,
-			clientName.toLowerCase()
+			clientName.toLowerCase(),
 		);
 		const tabTabRegex = new RegExp(
-			util.format("%s[\\s\\S]*%s", tabTabStartPoint, tabTabEndPoint)
+			util.format("%s[\\s\\S]*%s", tabTabStartPoint, tabTabEndPoint),
 		);
 		return tabTabRegex;
 	}
@@ -79,8 +79,8 @@ export class AutoCompletionService implements IAutoCompletionService {
 			util.format(
 				"%s[\\s\\S]*%s",
 				AutoCompletionService.GENERATED_TABTAB_COMPLETION_START,
-				AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
-			)
+				AutoCompletionService.GENERATED_TABTAB_COMPLETION_END,
+			),
 		);
 	}
 
@@ -94,19 +94,19 @@ export class AutoCompletionService implements IAutoCompletionService {
 				const text = this.$fs.readText(file);
 				let newText = text.replace(
 					this.getTabTabObsoleteRegex(this.$staticConfig.CLIENT_NAME),
-					""
+					"",
 				);
 				if (this.$staticConfig.CLIENT_NAME_ALIAS) {
 					newText = newText.replace(
 						this.getTabTabObsoleteRegex(this.$staticConfig.CLIENT_NAME_ALIAS),
-						""
+						"",
 					);
 				}
 
 				if (newText !== text) {
 					this.$logger.trace(
 						"Remove obsolete AutoCompletion from file %s.",
-						file
+						file,
 					);
 					this.$fs.writeFile(file, newText);
 				}
@@ -114,7 +114,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 				if (error.code !== "ENOENT") {
 					this.$logger.trace(
 						"Error while trying to disable autocompletion for '%s' file. Error is:\n%s",
-						error.toString()
+						error.toString(),
 					);
 				}
 			}
@@ -129,7 +129,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 
 			newText = newText.replace(
 				this.getTabTabObsoleteRegex("nativescript"),
-				""
+				"",
 			);
 
 			newText = newText.replace(this.getTabTabObsoleteRegex("tns"), "");
@@ -138,7 +138,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 		} catch (error) {
 			this.$logger.trace(
 				"Error while trying to disable autocompletion for '%s' file. Error is:\n%s",
-				error.toString()
+				error.toString(),
 			);
 
 			return text;
@@ -154,7 +154,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			"\n%s\n%s\n%s\n",
 			ns,
 			tns,
-			AutoCompletionService.GENERATED_TABTAB_COMPLETION_END
+			AutoCompletionService.GENERATED_TABTAB_COMPLETION_END,
 		);
 	}
 
@@ -162,16 +162,16 @@ export class AutoCompletionService implements IAutoCompletionService {
 	private get completionShellScriptContent() {
 		const startText = util.format(
 			AutoCompletionService.COMPLETION_START_COMMENT_PATTERN,
-			this.$staticConfig.CLIENT_NAME.toLowerCase()
+			this.$staticConfig.CLIENT_NAME.toLowerCase(),
 		);
 		const content = util.format(
 			"if [ -f %s ]; then \n    source %s \nfi",
 			this.cliRunCommandsFile,
-			this.cliRunCommandsFile
+			this.cliRunCommandsFile,
 		);
 		const endText = util.format(
 			AutoCompletionService.COMPLETION_END_COMMENT_PATTERN,
-			this.$staticConfig.CLIENT_NAME.toLowerCase()
+			this.$staticConfig.CLIENT_NAME.toLowerCase(),
 		);
 		return util.format("\n%s\n%s\n%s\n", startText, content, endText);
 	}
@@ -193,13 +193,13 @@ export class AutoCompletionService implements IAutoCompletionService {
 
 	public disableAutoCompletion(): void {
 		_.each(this.shellProfiles, (shellFile) =>
-			this.removeAutoCompletionFromShellScript(shellFile)
+			this.removeAutoCompletionFromShellScript(shellFile),
 		);
 		this.removeObsoleteAutoCompletion();
 
 		if (this.scriptsOk && this.scriptsUpdated) {
 			this.$logger.info(
-				"Restart your shell to disable command auto-completion."
+				"Restart your shell to disable command auto-completion.",
 			);
 		}
 	}
@@ -207,13 +207,13 @@ export class AutoCompletionService implements IAutoCompletionService {
 	public async enableAutoCompletion(): Promise<void> {
 		await this.updateCLIShellScript();
 		_.each(this.shellProfiles, (shellFile) =>
-			this.addAutoCompletionToShellScript(shellFile)
+			this.addAutoCompletionToShellScript(shellFile),
 		);
 		this.removeObsoleteAutoCompletion();
 
 		if (this.scriptsOk && this.scriptsUpdated) {
 			this.$logger.info(
-				"Restart your shell to enable command auto-completion."
+				"Restart your shell to enable command auto-completion.",
 			);
 		}
 	}
@@ -241,7 +241,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			this.$logger.trace(
 				"Error while checking is autocompletion enabled in file %s. Error is: '%s'",
 				fileName,
-				err.toString()
+				err.toString(),
 			);
 		}
 
@@ -253,7 +253,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			const text = this.$fs.readText(fileName);
 			return !!(
 				text.match(
-					this.getTabTabObsoleteRegex(this.$staticConfig.CLIENT_NAME)
+					this.getTabTabObsoleteRegex(this.$staticConfig.CLIENT_NAME),
 				) ||
 				text.match(this.getTabTabObsoleteRegex(this.$staticConfig.CLIENT_NAME))
 			);
@@ -261,7 +261,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			this.$logger.trace(
 				"Error while checking is obsolete autocompletion enabled in file %s. Error is: '%s'",
 				fileName,
-				err.toString()
+				err.toString(),
 			);
 		}
 	}
@@ -274,7 +274,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			) {
 				this.$logger.trace(
 					"AutoCompletion is not enabled in %s file. Trying to enable it.",
-					fileName
+					fileName,
 				);
 				this.$fs.appendFile(fileName, this.completionShellScriptContent);
 				this.scriptsUpdated = true;
@@ -282,7 +282,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 		} catch (err) {
 			this.$logger.info(
 				"Unable to update %s. Command-line completion might not work.",
-				fileName
+				fileName,
 			);
 			// When npm is installed with sudo, in some cases the installation cannot write to shell profiles
 			// Advise the user how to enable autocompletion after the installation is completed.
@@ -293,7 +293,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			) {
 				this.$logger.info(
 					"To enable command-line completion, run '$ %s autocomplete enable'.",
-					this.$staticConfig.CLIENT_NAME
+					this.$staticConfig.CLIENT_NAME,
 				);
 			}
 
@@ -307,7 +307,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			if (this.isNewAutoCompletionEnabledInFile(fileName)) {
 				this.$logger.trace(
 					"AutoCompletion is enabled in %s file. Trying to disable it.",
-					fileName
+					fileName,
 				);
 				let data = this.$fs.readText(fileName);
 				data = data.replace(this.completionShellScriptContent, "");
@@ -319,7 +319,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 			if (err.code !== "ENOENT") {
 				this.$logger.info(
 					"Failed to update %s. Auto-completion may still work or work incorrectly. ",
-					fileName
+					fileName,
 				);
 				this.$logger.info(err);
 				this.scriptsOk = false;
@@ -335,9 +335,9 @@ export class AutoCompletionService implements IAutoCompletionService {
 			if (this.$fs.exists(filePath)) {
 				const contents = this.$fs.readText(filePath);
 				const regExp = new RegExp(
-					AutoCompletionService.GENERATED_TABTAB_COMPLETION_START
+					AutoCompletionService.GENERATED_TABTAB_COMPLETION_START,
 				);
-				let matchCondition = contents.match(regExp);
+				const matchCondition = contents.match(regExp);
 
 				if (matchCondition) {
 					doUpdate = false;
@@ -350,20 +350,20 @@ export class AutoCompletionService implements IAutoCompletionService {
 				).toLowerCase();
 				const pathToExecutableFile = path.join(
 					__dirname,
-					`../../../bin/${clientExecutableFileName}.js`
+					`../../../bin/${clientExecutableFileName}.js`,
 				);
 
 				if (this.$fs.exists(filePath)) {
 					const existingText = this.$fs.readText(filePath);
 					let newText = existingText.replace(
 						this.getTabTabCompletionsRegex(),
-						""
+						"",
 					);
 					newText = this.removeOboleteTabTabCompletion(newText);
 					if (newText !== existingText) {
 						this.$logger.trace(
 							"Remove existing AutoCompletion from file %s.",
-							filePath
+							filePath,
 						);
 						this.$fs.writeFile(filePath, newText);
 					}
@@ -372,10 +372,10 @@ export class AutoCompletionService implements IAutoCompletionService {
 
 				this.$fs.appendFile(
 					filePath,
-					`\n${AutoCompletionService.GENERATED_TABTAB_COMPLETION_START}\n`
+					`\n${AutoCompletionService.GENERATED_TABTAB_COMPLETION_START}\n`,
 				);
 				await this.$childProcess.exec(
-					`"${process.argv[0]}" "${pathToExecutableFile}" completion_generate_script >> "${filePath}"`
+					`"${process.argv[0]}" "${pathToExecutableFile}" completion_generate_script >> "${filePath}"`,
 				);
 				this.$fs.appendFile(filePath, this.completionAliasDefinition);
 
@@ -384,7 +384,7 @@ export class AutoCompletionService implements IAutoCompletionService {
 		} catch (err) {
 			this.$logger.info(
 				"Failed to update %s. Auto-completion may not work. ",
-				filePath
+				filePath,
 			);
 			this.$logger.trace(err);
 			this.scriptsOk = false;

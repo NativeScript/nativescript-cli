@@ -30,7 +30,7 @@ declare global {
 		getPrepareData(
 			projectDir: string,
 			platform: string,
-			data: any
+			data: any,
 		): IPrepareData;
 	}
 
@@ -50,7 +50,7 @@ declare global {
 		prepareNativePlatform(
 			platformData: IPlatformData,
 			projectData: IProjectData,
-			prepareData: IPrepareData
+			prepareData: IPrepareData,
 		): Promise<boolean>;
 	}
 }

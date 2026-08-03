@@ -10,18 +10,18 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 	constructor(
 		private $errors: IErrors,
 		private $iOSNotification: IiOSNotification,
-		private $iOSNotificationService: IiOSNotificationService
+		private $iOSNotificationService: IiOSNotificationService,
 	) {}
 
 	public async executeAttachRequest(
 		device: Mobile.IiOSDevice,
 		timeout: number,
-		appId: string
+		appId: string,
 	): Promise<void> {
 		const deviceId = device.deviceInfo.identifier;
 		const mainRequestName = this.$iOSNotification.getAttachRequest(
 			appId,
-			deviceId
+			deviceId,
 		);
 		const readyRequestName = this.$iOSNotification.getReadyForAttach(appId);
 		await this.executeRequest(
@@ -29,27 +29,26 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 			readyRequestName,
 			appId,
 			deviceId,
-			timeout
+			timeout,
 		);
 	}
 
 	public async executeRefreshRequest(
 		device: Mobile.IiOSDevice,
 		timeout: number,
-		appId: string
+		appId: string,
 	): Promise<boolean> {
 		const deviceId = device.deviceInfo.identifier;
 		const mainRequestName = this.$iOSNotification.getRefreshRequest(appId);
-		const refreshRequestStartedName = this.$iOSNotification.getAppRefreshStarted(
-			appId
-		);
+		const refreshRequestStartedName =
+			this.$iOSNotification.getAppRefreshStarted(appId);
 
 		const result = await this.executeRequest(
 			mainRequestName,
 			refreshRequestStartedName,
 			appId,
 			deviceId,
-			timeout
+			timeout,
 		);
 
 		return result;
@@ -60,7 +59,7 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 		successfulyExecutedNotificationName: string,
 		appId: string,
 		deviceId: string,
-		timeout: number
+		timeout: number,
 	): Promise<boolean> {
 		let isSuccessful = false;
 
@@ -70,22 +69,23 @@ export class IOSSocketRequestExecutor implements IiOSSocketRequestExecutor {
 			const socket = await this.$iOSNotificationService.postNotification(
 				deviceId,
 				successfulyExecutedNotificationName,
-				constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE
+				constants.IOS_OBSERVE_NOTIFICATION_COMMAND_TYPE,
 			);
-			const notificationPromise = this.$iOSNotificationService.awaitNotification(
-				deviceId,
-				+socket,
-				timeout
-			);
+			const notificationPromise =
+				this.$iOSNotificationService.awaitNotification(
+					deviceId,
+					+socket,
+					timeout,
+				);
 			await this.$iOSNotificationService.postNotification(
 				deviceId,
-				mainRequestName
+				mainRequestName,
 			);
 			await notificationPromise;
 			isSuccessful = true;
 		} catch (e) {
 			this.$errors.fail(
-				`The application ${appId} does not appear to be running on ${deviceId} or is not built with debugging enabled. Try starting the application manually.`
+				`The application ${appId} does not appear to be running on ${deviceId} or is not built with debugging enabled. Try starting the application manually.`,
 			);
 		}
 

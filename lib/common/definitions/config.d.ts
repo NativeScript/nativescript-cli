@@ -1,4 +1,4 @@
-declare module Config {
+declare namespace Config {
 	interface IStaticConfig {
 		PROJECT_FILE_NAME: string;
 		CLIENT_NAME_KEY_IN_PROJECT_FILE?: string;

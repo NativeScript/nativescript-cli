@@ -17,7 +17,7 @@ export class VirtualBoxService implements Mobile.IVirtualBoxService {
 		private $childProcess: IChildProcess,
 		private $fs: IFileSystem,
 		private $hostInfo: IHostInfo,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async listVms(): Promise<Mobile.IVirtualBoxListVmsOutput> {
@@ -48,7 +48,7 @@ export class VirtualBoxService implements Mobile.IVirtualBoxService {
 	}
 
 	public async enumerateGuestProperties(
-		id: string
+		id: string,
 	): Promise<Mobile.IVirtualBoxEnumerateGuestPropertiesOutput> {
 		let result: ISpawnResult = null;
 		const vBoxManagePath = await this.getvBoxManagePath();
@@ -92,12 +92,12 @@ export class VirtualBoxService implements Mobile.IVirtualBoxService {
 				*/
 				const result: any = await getWinRegPropertyValue(
 					"\\Software\\Oracle\\VirtualBox",
-					"InstallDir"
+					"InstallDir",
 				);
 				searchPath = result && result.value ? result.value : null;
 			} catch (err) {
 				this.$logger.trace(
-					`Error while trying to get InstallDir property for \\Software\\Oracle\\VirtualBox. More info: ${err}.`
+					`Error while trying to get InstallDir property for \\Software\\Oracle\\VirtualBox. More info: ${err}.`,
 				);
 			}
 
@@ -124,7 +124,7 @@ export class VirtualBoxService implements Mobile.IVirtualBoxService {
 		];
 		const result = searchPaths
 			.map((searchPath) =>
-				path.join(searchPath, this.vBoxManageExecutableNames[process.platform])
+				path.join(searchPath, this.vBoxManageExecutableNames[process.platform]),
 			)
 			.find((searchPath) => this.$fs.exists(searchPath));
 		return result;

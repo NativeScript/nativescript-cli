@@ -9,27 +9,28 @@ interface IComposeCommandResult {
 
 export class DeviceAndroidDebugBridge
 	extends AndroidDebugBridge
-	implements Mobile.IDeviceAndroidDebugBridge {
+	implements Mobile.IDeviceAndroidDebugBridge
+{
 	constructor(
 		private identifier: string,
 		protected $childProcess: IChildProcess,
 		protected $errors: IErrors,
 		protected $logger: ILogger,
 		protected $staticConfig: Config.IStaticConfig,
-		protected $androidDebugBridgeResultHandler: Mobile.IAndroidDebugBridgeResultHandler
+		protected $androidDebugBridgeResultHandler: Mobile.IAndroidDebugBridgeResultHandler,
 	) {
 		super(
 			$childProcess,
 			$errors,
 			$logger,
 			$staticConfig,
-			$androidDebugBridgeResultHandler
+			$androidDebugBridgeResultHandler,
 		);
 	}
 
 	public async sendBroadcastToDevice(
 		action: string,
-		extras?: IStringDictionary
+		extras?: IStringDictionary,
 	): Promise<number> {
 		extras = extras || {};
 		const broadcastCommand = ["am", "broadcast", "-a", `${action}`];
@@ -47,7 +48,7 @@ export class DeviceAndroidDebugBridge
 	}
 
 	protected async composeCommand(
-		params: string[]
+		params: string[],
 	): Promise<IComposeCommandResult> {
 		return super.composeCommand(params, this.identifier);
 	}

@@ -357,9 +357,7 @@ describe("ApplicationManagerBase", () => {
 						},
 					);
 
-					/* tslint:disable:no-floating-promises */
 					applicationManager.checkForApplicationUpdates();
-					/* tslint:enable:no-floating-promises */
 				}),
 			);
 

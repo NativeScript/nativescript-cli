@@ -12,7 +12,7 @@ describe("userSettingsService", () => {
 	const profileDir = "my-profile-dir";
 	const expectedJsonFileSettingsFilePath = path.join(
 		profileDir,
-		"user-settings.json"
+		"user-settings.json",
 	);
 
 	const createTestInjector = (): IInjector => {
@@ -23,7 +23,7 @@ describe("userSettingsService", () => {
 
 		testInjector.register(
 			"jsonFileSettingsService",
-			JsonFileSettingsServiceMock
+			JsonFileSettingsServiceMock,
 		);
 		testInjector.register("userSettingsService", UserSettingsService);
 		return testInjector;
@@ -75,11 +75,11 @@ describe("userSettingsService", () => {
 
 			assert.deepStrictEqual(
 				dataPassedToJsonFileSettingsService,
-				testCase.expectedArgs
+				testCase.expectedArgs,
 			);
 			assert.equal(
 				jsonFileSettingsService.jsonFileSettingsPath,
-				expectedJsonFileSettingsFilePath
+				expectedJsonFileSettingsFilePath,
 			);
 		});
 	}

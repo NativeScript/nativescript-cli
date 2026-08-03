@@ -26,26 +26,26 @@ export class PlatformController implements IPlatformController {
 		private $projectDataService: IProjectDataService,
 		private $platformsDataService: IPlatformsDataService,
 		private $projectChangesService: IProjectChangesService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {}
 
 	public async addPlatform(
 		addPlatformData: IAddPlatformData,
-		projectData?: IProjectData
+		projectData?: IProjectData,
 	): Promise<void> {
 		const [platform, version] = addPlatformData.platform
 			.toLowerCase()
 			.split("@");
 		projectData ??= this.$projectDataService.getProjectData(
-			addPlatformData.projectDir
+			addPlatformData.projectDir,
 		);
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 
 		this.$logger.trace(
-			`Creating NativeScript project for the ${platform} platform`
+			`Creating NativeScript project for the ${platform} platform`,
 		);
 		this.$logger.trace(`Path: ${platformData.projectRoot}`);
 		this.$logger.trace(`Package: ${projectData.projectIdentifiers[platform]}`);
@@ -57,7 +57,7 @@ export class PlatformController implements IPlatformController {
 			platformData,
 			projectData,
 			addPlatformData.frameworkPath,
-			version
+			version,
 		);
 
 		this.$logger.trace("Determined package to install is", packageToInstall);
@@ -67,17 +67,17 @@ export class PlatformController implements IPlatformController {
 				projectData,
 				platformData,
 				packageToInstall,
-				addPlatformData
+				addPlatformData,
 			);
 
 		this.$fs.ensureDirectoryExists(
-			path.join(projectData.platformsDir, platform)
+			path.join(projectData.platformsDir, platform),
 		);
 
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			const gradlePropertiesPath = path.resolve(
 				platformData.projectRoot,
-				"gradle.properties"
+				"gradle.properties",
 			);
 			const commentHeader = "# App configuration";
 			const appPath = projectData.getAppDirectoryRelativePath();
@@ -108,35 +108,35 @@ export class PlatformController implements IPlatformController {
 			}
 		}
 		this.$logger.info(
-			`Platform ${platform} successfully added. v${installedPlatformVersion}`
+			`Platform ${platform} successfully added. v${installedPlatformVersion}`,
 		);
 	}
 
 	public async addPlatformIfNeeded(
 		addPlatformData: IAddPlatformData,
-		projectData?: IProjectData
+		projectData?: IProjectData,
 	): Promise<void> {
 		if (addPlatformData.hostProjectPath) {
 			this.$logger.trace(
-				"Not adding platform because --hostProjectPath is provided."
+				"Not adding platform because --hostProjectPath is provided.",
 			);
 			return;
 		}
 		const [platform] = addPlatformData.platform.toLowerCase().split("@");
 
 		projectData ??= this.$projectDataService.getProjectData(
-			addPlatformData.projectDir
+			addPlatformData.projectDir,
 		);
 
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 
 		const shouldAddPlatform = this.shouldAddPlatform(
 			platformData,
 			projectData,
-			addPlatformData.nativePrepare
+			addPlatformData.nativePrepare,
 		);
 		if (shouldAddPlatform) {
 			await this.addPlatform(addPlatformData, projectData);
@@ -147,20 +147,20 @@ export class PlatformController implements IPlatformController {
 		platformData: IPlatformData,
 		projectData: IProjectData,
 		frameworkPath?: string,
-		version?: string
+		version?: string,
 	): Promise<string> {
 		let result = null;
 		if (frameworkPath) {
 			if (!this.$fs.exists(frameworkPath)) {
 				this.$errors.fail(
-					`Invalid frameworkPath: ${frameworkPath}. Please ensure the specified frameworkPath exists.`
+					`Invalid frameworkPath: ${frameworkPath}. Please ensure the specified frameworkPath exists.`,
 				);
 			}
 			result = "file:" + path.resolve(frameworkPath);
 		} else {
 			const desiredRuntimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				platformData.platformNameLowerCase as SupportedPlatform
+				platformData.platformNameLowerCase as SupportedPlatform,
 			);
 
 			if (version) {
@@ -171,7 +171,7 @@ export class PlatformController implements IPlatformController {
 				// if no version is explicitly added, then we use the latest
 				desiredRuntimePackage.version =
 					await this.$packageInstallationManager.getLatestCompatibleVersion(
-						desiredRuntimePackage.name
+						desiredRuntimePackage.name,
 					);
 			}
 			// const currentPlatformData = this.$projectDataService.getNSValue(projectData.projectDir, platformData.frameworkPackageName);
@@ -186,11 +186,11 @@ export class PlatformController implements IPlatformController {
 	private shouldAddPlatform(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		nativePrepare: INativePrepare
+		nativePrepare: INativePrepare,
 	): boolean {
 		const platformName = platformData.platformNameLowerCase;
 		const hasPlatformDirectory = this.$fs.exists(
-			path.join(projectData.platformsDir, platformName)
+			path.join(projectData.platformsDir, platformName),
 		);
 
 		const shouldAddNativePlatform =
@@ -207,7 +207,7 @@ export class PlatformController implements IPlatformController {
 
 		if (hasPlatformDirectory && !shouldAddPlatform) {
 			const platformDirectoryItemCount = this.$fs.readDirectory(
-				path.join(projectData.platformsDir, platformName)
+				path.join(projectData.platformsDir, platformName),
 			).length;
 
 			// 2 is a magic number to approximate a valid platform folder
@@ -216,7 +216,7 @@ export class PlatformController implements IPlatformController {
 			if (platformDirectoryItemCount <= 2) {
 				this.$logger.warn(
 					`The platforms/${platformName} folder appears to be invalid. If the build fails, run 'ns clean' and rebuild the app.`,
-					{ wrapMessageWithBorders: true }
+					{ wrapMessageWithBorders: true },
 				);
 			}
 		}

@@ -10,7 +10,7 @@ export class GetFileCommand implements ICommand {
 		private $stringParameter: ICommandParameter,
 		private $projectData: IProjectData,
 		private $errors: IErrors,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [
@@ -33,7 +33,7 @@ export class GetFileCommand implements ICommand {
 			}
 			if (!this.$projectData.projectIdentifiers) {
 				this.$errors.fail(
-					"Please enter application identifier or execute this command in project."
+					"Please enter application identifier or execute this command in project.",
 				);
 			}
 		}
@@ -47,7 +47,7 @@ export class GetFileCommand implements ICommand {
 			await device.fileSystem.getFile(
 				args[0],
 				appIdentifier,
-				this.$options.file
+				this.$options.file,
 			);
 		};
 		await this.$devicesService.execute(action);
@@ -56,5 +56,5 @@ export class GetFileCommand implements ICommand {
 
 injector.registerCommand(
 	["device|get-file", "devices|get-file"],
-	GetFileCommand
+	GetFileCommand,
 );

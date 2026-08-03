@@ -15,7 +15,7 @@ export class ListDevicesCommand implements ICommand {
 		private $logger: ILogger,
 		private $stringParameter: ICommandParameter,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	public allowedParameters = [this.$stringParameter];
@@ -35,17 +35,17 @@ export class ListDevicesCommand implements ICommand {
 					`${
 						args[0]
 					} is not a valid device platform. The valid platforms are ${formatListOfNames(
-						this.$mobileHelper.platformNames
-					)}`
+						this.$mobileHelper.platformNames,
+					)}`,
 				);
 			}
 
-			const availableEmulatorsOutput = await this.$devicesService.getEmulatorImages(
-				{ platform }
-			);
-			const emulators = this.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(
-				availableEmulatorsOutput
-			);
+			const availableEmulatorsOutput =
+				await this.$devicesService.getEmulatorImages({ platform });
+			const emulators =
+				this.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(
+					availableEmulatorsOutput,
+				);
 			devices.available = emulators;
 
 			if (!this.$options.json) {
@@ -78,7 +78,7 @@ export class ListDevicesCommand implements ICommand {
 				"Status",
 				"Connection Type",
 			],
-			[]
+			[],
 		);
 		let action: (_device: Mobile.IDevice) => Promise<void>;
 		if (this.$options.json) {
@@ -124,7 +124,7 @@ export class ListDevicesCommand implements ICommand {
 				"Image Identifier",
 				// "Error Help",
 			],
-			[]
+			[],
 		);
 		for (const info of emulators) {
 			table.push([
@@ -146,15 +146,14 @@ injector.registerCommand(["device|*list", "devices|*list"], ListDevicesCommand);
 class ListAndroidDevicesCommand implements ICommand {
 	constructor(
 		private $injector: IInjector,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
 
 	public async execute(args: string[]): Promise<void> {
-		const listDevicesCommand: ICommand = this.$injector.resolve(
-			ListDevicesCommand
-		);
+		const listDevicesCommand: ICommand =
+			this.$injector.resolve(ListDevicesCommand);
 		const platform = this.$devicePlatformsConstants.Android;
 		await listDevicesCommand.execute([platform]);
 	}
@@ -162,21 +161,20 @@ class ListAndroidDevicesCommand implements ICommand {
 
 injector.registerCommand(
 	["device|android", "devices|android"],
-	ListAndroidDevicesCommand
+	ListAndroidDevicesCommand,
 );
 
 class ListiOSDevicesCommand implements ICommand {
 	constructor(
 		private $injector: IInjector,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
 
 	public async execute(args: string[]): Promise<void> {
-		const listDevicesCommand: ICommand = this.$injector.resolve(
-			ListDevicesCommand
-		);
+		const listDevicesCommand: ICommand =
+			this.$injector.resolve(ListDevicesCommand);
 		const platform = this.$devicePlatformsConstants.iOS;
 		await listDevicesCommand.execute([platform]);
 	}
