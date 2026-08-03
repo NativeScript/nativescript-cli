@@ -77,15 +77,29 @@ Execute Hooks In-Process
 
 When your hook is a Node.js script, the CLI executes it in-process. This gives you access to the entire internal state of the CLI and all of its functions.
 
-The CLI assumes that this is a CommonJS module and calls its single exported function with four parameters. The type of the parameters is described in the `.d.ts` files which are part of the CLI source code  [here](https://github.com/NativeScript/nativescript-cli/tree/master/lib/definitions) and  [here](https://github.com/telerik/mobile-cli-lib/tree/master/definitions).
+The CLI assumes that this is a CommonJS module and calls its single exported function.
 
-Parameter | Type | Description
----|---|---
-`$logger` | ILogger | Use the members of this class to show messages to the user cooperating with the CLI internal state.
-`$projectData` | IProjectData | Contains data about the project, such as project directory, ID, dependencies, etc.
-`$usbLiveSyncService` | ILiveSyncService | Use this variable to check whether a LiveSync or normal build is in progress.
-`hookArgs` | Any | Contains all the parameters of the original function in the CLI which is being hooked.
- 
+## Writing a hook
+
+Hooks run inside an injection context, so services come from `inject()` — the same API used everywhere else (see [dependency-injection.md](dependency-injection.md)). Declare a `hookArgs` parameter only if you need the payload of the operation being hooked.
+
+```JavaScript
+const { inject, DoctorService } = require("nativescript/contracts");
+
+module.exports = function (hookArgs) {
+	const doctorService = inject(DoctorService);
+	return doctorService.canExecuteLocalBuild();
+};
+```
+
+* `inject()` is valid in the synchronous part of the hook body — not after an `await`. Resolve what you need up front; for late lookups, grab the container first: `const injector = inject(Injector)` (`Injector` is exported from `nativescript/contracts` too), then `injector.get(...)` later.
+* `hookArgs` contains the parameters of the CLI function being hooked; its shape depends on the hook point. Declare it only when you need it — a hook may also take no parameters at all. A future typed hook API (`defineHook` with an explicit context object) will replace this parameter; it is the one remaining piece of the legacy convention.
+* Tokens resolve by class first and by their canonical name on a miss, so this works even if your dependency tree carries its own copy of `nativescript` — a duplicated token class still resolves to the running CLI's service.
+* Only a first tranche of services has typed tokens so far ([dependency-injection.md](dependency-injection.md#available-contracts) lists them); a service without a token is reachable by its registry name — `inject("logger")` — as a migration bridge.
+* If you build your hook in TypeScript, add `nativescript` as a `devDependency` and import the same names: `import { inject, DoctorService } from "nativescript/contracts"`.
+
+## The hook contract
+
 The hook must return a Promise. If the hook succeeds, it must fullfil the promise, but the fullfilment value is ignored.
 The hook can also reject the promise with an instance of Error. The returned error can have two optional members controlling the CLI.
  
@@ -95,8 +109,19 @@ Member | Type | Description
 `errorAsWarning` | Boolean | Set this to treat the returned error as warning. The CLI prints the error.message colored as a warning and continues executing the current command.
  
 If these two members are not set, the CLI prints the returned error colored as fatal error and stops executing the current command.
- 
-Furthermore, the global variable `$injector` of type `IInjector` provides access to the CLI Dependency Injector, through which all code services are available.
+
+## Legacy: parameter-name injection
+
+Historically, a hook received CLI services by naming them as parameters: the CLI parses the exported function's parameter names and injects the service registered under each name. Existing hooks written this way keep working unchanged, but **new hooks should use the pattern above** — parameter-name service injection is slated for deprecation, and hooks that use it are reported through the CLI's deprecation tracer (visible with `--log trace`, or as warnings with `NS_DEPRECATIONS=warn`).
+
+Parameter | Type | Description
+---|---|---
+`$logger` | ILogger | Use the members of this class to show messages to the user cooperating with the CLI internal state.
+`$projectData` | IProjectData | Contains data about the project, such as project directory, ID, dependencies, etc.
+`$usbLiveSyncService` | ILiveSyncService | Use this variable to check whether a LiveSync or normal build is in progress.
+`hookArgs` | Any | Contains all the parameters of the original function in the CLI which is being hooked.
+
+The type of the parameters is described in the `.d.ts` files which are part of the CLI source code [here](https://github.com/NativeScript/nativescript-cli/tree/master/lib/definitions). Any registered service name is injectable, not only the ones listed; the global variable `$injector` of type `IInjector` likewise remains available. A parameter the CLI cannot resolve causes the hook to be skipped with a warning.
 
 Commands with Hooking Support
 ==============================

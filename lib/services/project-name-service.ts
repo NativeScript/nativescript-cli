@@ -3,18 +3,21 @@ import { IProjectNameService } from "../declarations";
 import { IErrors } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { ProjectNameService as ProjectNameServiceContract } from "../contracts/project-name-service";
 
-export class ProjectNameService implements IProjectNameService {
+export class ProjectNameServiceImpl
+	implements IProjectNameService, ProjectNameServiceContract
+{
 	constructor(
 		private $projectNameValidator: IProjectNameValidator,
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $prompter: IPrompter
+		private $prompter: IPrompter,
 	) {}
 
 	public async ensureValidName(
 		projectName: string,
-		validateOptions?: { force: boolean }
+		validateOptions?: { force: boolean },
 	): Promise<string> {
 		if (validateOptions && validateOptions.force) {
 			return projectName;
@@ -24,7 +27,7 @@ export class ProjectNameService implements IProjectNameService {
 			return await this.promptForNewName(
 				"The project name is invalid.",
 				projectName,
-				validateOptions
+				validateOptions,
 			);
 		}
 
@@ -33,28 +36,28 @@ export class ProjectNameService implements IProjectNameService {
 		if (!this.checkIfNameStartsWithLetter(projectName)) {
 			if (!userCanInteract) {
 				this.$errors.fail(
-					"The project name does not start with letter and will fail to build for Android. If You want to create project with this name add --force to the create command."
+					"The project name does not start with letter and will fail to build for Android. If You want to create project with this name add --force to the create command.",
 				);
 			}
 
 			return await this.promptForNewName(
 				"The project name does not start with letter and will fail to build for Android.",
 				projectName,
-				validateOptions
+				validateOptions,
 			);
 		}
 
 		if (projectName.toUpperCase() === "APP") {
 			if (!userCanInteract) {
 				this.$errors.fail(
-					"You cannot build applications named 'app' in Xcode. Consider creating a project with different name. If You want to create project with this name add --force to the create command."
+					"You cannot build applications named 'app' in Xcode. Consider creating a project with different name. If You want to create project with this name add --force to the create command.",
 				);
 			}
 
 			return await this.promptForNewName(
 				"You cannot build applications named 'app' in Xcode. Consider creating a project with different name.",
 				projectName,
-				validateOptions
+				validateOptions,
 			);
 		}
 
@@ -69,27 +72,27 @@ export class ProjectNameService implements IProjectNameService {
 	private async promptForNewName(
 		warningMessage: string,
 		projectName: string,
-		validateOptions?: { force: boolean }
+		validateOptions?: { force: boolean },
 	): Promise<string> {
 		if (await this.promptForForceNameConfirm(warningMessage)) {
 			return projectName;
 		}
 
 		const newProjectName = await this.$prompter.getString(
-			"Enter the new project name:"
+			"Enter the new project name:",
 		);
 		return await this.ensureValidName(newProjectName, validateOptions);
 	}
 
 	private async promptForForceNameConfirm(
-		warningMessage: string
+		warningMessage: string,
 	): Promise<boolean> {
 		this.$logger.warn(warningMessage);
 
 		return await this.$prompter.confirm(
-			"Do you want to create the project with this name?"
+			"Do you want to create the project with this name?",
 		);
 	}
 }
 
-injector.register("projectNameService", ProjectNameService);
+injector.register("projectNameService", ProjectNameServiceImpl);

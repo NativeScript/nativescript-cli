@@ -1,5 +1,5 @@
 import { Yok } from "../lib/common/yok";
-import { ProjectNameService } from "../lib/services/project-name-service";
+import { ProjectNameServiceImpl as ProjectNameService } from "../lib/services/project-name-service";
 import { assert } from "chai";
 import { ErrorsStub, LoggerStub } from "./stubs";
 import { IProjectNameService } from "../lib/declarations";

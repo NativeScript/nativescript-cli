@@ -2,6 +2,7 @@ import * as path from "path";
 import * as util from "util";
 import * as _ from "lodash";
 import { annotate, getValueFromNestedObject } from "../helpers";
+import { reportDeprecation } from "../deprecation";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
 import { IOptions, IPerformanceService } from "../../declarations";
 import {
@@ -243,6 +244,20 @@ export class HooksService implements IHooksService {
 			if (projectDataHookArg) {
 				hookArguments["projectData"] = hookArguments["$projectData"] =
 					projectDataHookArg;
+			}
+
+			// Only param-name *service* injection is on the deprecation track; a
+			// hook declaring nothing but `hookArgs` (or no parameters) already
+			// follows the recommended pattern and must not be flagged.
+			const usesParamNameInjection = (<string[]>(
+				hookEntryPoint.$inject.args
+			)).some((argument) => argument !== this.hookArgsName);
+			if (usesParamNameInjection) {
+				reportDeprecation({
+					api: "hooks.param-name-signature",
+					detail: hook.fullPath,
+					logger: this.$logger,
+				});
 			}
 
 			const maybePromise = this.$injector.resolve(

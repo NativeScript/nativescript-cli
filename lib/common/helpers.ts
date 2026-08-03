@@ -558,11 +558,20 @@ export function decorateMethod(
 	};
 }
 
+/**
+ * @deprecated Emits the param-name hook payload contract (keyed off the
+ * decorated method's parameter names); slated for replacement by a typed
+ * hook API.
+ */
 export function hook(commandName: string) {
 	function getHooksService(self: any): IHooksService {
 		let hooksService: IHooksService = self.$hooksService;
 		if (!hooksService) {
-			const injector = self.$injector;
+			// The process-wide injector must stay the LAST resort: tests stub
+			// self.$hooksService / self.$injector, and a class migrated off
+			// property injection has neither — only then may it be used. It is
+			// required at call time because yok imports this module (cycle).
+			const injector = self.$injector || require("./yok").getInjector();
 			if (!injector) {
 				throw Error(
 					"Type with hooks needs to have either $hooksService or $injector injected.",
@@ -850,6 +859,12 @@ const FN_NAME_AND_ARGS =
 const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 
+/**
+ * @deprecated Discovers dependencies by regex-parsing constructor source text —
+ * the reason tests must run against tsc output and the CLI can never be
+ * bundled. Kept only for the legacy provider kind and param-name hook
+ * injection; never add new callers.
+ */
 export function annotate(fn: any) {
 	let $inject: any, fnText: string, argDecl: string[];
 

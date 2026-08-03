@@ -14,7 +14,15 @@ const release = process.argv.includes("--release");
 // packed, so they have to be mirrored into dist for `npm pack` to bundle them
 const BUNDLED = ["universal-analytics", "debug", "ms", "uuid"];
 
-const SIBLING_DIRS = ["resources", "docs", "config", "vendor", "bin", "setup"];
+const SIBLING_DIRS = [
+	"resources",
+	"docs",
+	"config",
+	"vendor",
+	"bin",
+	"setup",
+	"contracts",
+];
 // npm picks README/LICENSE/CHANGELOG up from the directory being packed, so
 // they have to exist inside dist or they silently drop out of the tarball
 const ROOT_FILES = [
@@ -37,7 +45,8 @@ function isExcluded(relPath) {
 		return false;
 	}
 	return RELEASE_EXCLUDES.some(
-		(excluded) => relPath === excluded || relPath.startsWith(excluded + path.sep)
+		(excluded) =>
+			relPath === excluded || relPath.startsWith(excluded + path.sep),
 	);
 }
 
@@ -97,7 +106,7 @@ copyTree(
 	"lib",
 	(relPath) =>
 		(!relPath.endsWith(".ts") || relPath.endsWith(".d.ts")) &&
-		!isCompilerOutput(relPath)
+		!isCompilerOutput(relPath),
 );
 
 for (const dir of SIBLING_DIRS) {
@@ -121,7 +130,7 @@ writeManifest();
 
 function writeManifest() {
 	const pkg = JSON.parse(
-		fs.readFileSync(path.join(rootDir, "package.json"), "utf8")
+		fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
 	);
 
 	// dist is the package root once published, so entrypoints lose the dist/
@@ -140,10 +149,10 @@ function writeManifest() {
 
 	fs.writeFileSync(
 		path.join(distDir, "package.json"),
-		JSON.stringify(pkg, null, 2) + "\n"
+		JSON.stringify(pkg, null, 2) + "\n",
 	);
 }
 
 console.log(
-	`assets: ${copied} copied, ${skipped} up to date${release ? " (release)" : ""}`
+	`assets: ${copied} copied, ${skipped} up to date${release ? " (release)" : ""}`,
 );
