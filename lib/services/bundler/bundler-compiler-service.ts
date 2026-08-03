@@ -480,12 +480,14 @@ export class BundlerCompilerService
 	}
 
 	private async shouldUsePreserveSymlinksOption(): Promise<boolean> {
-		// pnpm does not require symlink (https://github.com/nodejs/node-eps/issues/46#issuecomment-277373566)
+		// pnpm and Bun's isolated linker do not require symlink (https://github.com/nodejs/node-eps/issues/46#issuecomment-277373566)
 		// and it also does not work in some cases.
 		// Check https://github.com/NativeScript/nativescript-cli/issues/5259 for more information
 		const currentPackageManager =
 			await this.$packageManager.getPackageManagerName();
-		const res = currentPackageManager !== PackageManagers.pnpm;
+		const res =
+			currentPackageManager !== PackageManagers.pnpm &&
+			currentPackageManager !== PackageManagers.bun;
 		return res;
 	}
 
