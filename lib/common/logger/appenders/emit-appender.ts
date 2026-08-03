@@ -19,7 +19,7 @@ function emitAppender(layout: Function, emitter: EventEmitter) {
 
 export function configure(
 	config: Log4JSEmitAppenderConfiguration,
-	layouts: any
+	layouts: any,
 ) {
 	if (!config.emitter) {
 		throw new Error("Emitter must be passed to emit-appender");

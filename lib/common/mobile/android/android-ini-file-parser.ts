@@ -46,7 +46,7 @@ export class AndroidIniFileParser implements Mobile.IAndroidIniFileParser {
 				}
 				return result;
 			},
-			<Mobile.IAvdInfo>Object.create(null)
+			<Mobile.IAvdInfo>Object.create(null),
 		);
 	}
 

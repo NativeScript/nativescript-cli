@@ -16,7 +16,7 @@ export class XcodeSelectService implements IXcodeSelectService {
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
 		private $hostInfo: IHostInfo,
-		private $injector: IInjector
+		private $injector: IInjector,
 	) {}
 
 	public async getDeveloperDirectoryPath(): Promise<string> {
@@ -29,13 +29,13 @@ export class XcodeSelectService implements IXcodeSelectService {
 				["-print-path"],
 				"close",
 				{},
-				{ throwError: false }
+				{ throwError: false },
 			),
 			result = childProcess.stdout.trim();
 
 		if (!result) {
 			this.$errors.fail(
-				"Cannot find path to Xcode.app - make sure you've installed Xcode correctly."
+				"Cannot find path to Xcode.app - make sure you've installed Xcode correctly.",
 			);
 		}
 
@@ -52,7 +52,7 @@ export class XcodeSelectService implements IXcodeSelectService {
 		const xcodeVer = await sysInfo.getXcodeVersion();
 		if (!xcodeVer) {
 			this.$errors.fail(
-				"xcodebuild execution failed. Make sure that you have latest Xcode and tools installed."
+				"xcodebuild execution failed. Make sure that you have latest Xcode and tools installed.",
 			);
 		}
 

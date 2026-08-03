@@ -78,7 +78,7 @@ export abstract class ProjectDataService {
 	 * @param {Object} data Values to merge on top of the defaults.
 	 * @returns {string} The configuration as a JSON string.
 	 */
-	abstract getNsConfigDefaultContent(data?: Object): string;
+	abstract getNsConfigDefaultContent(data?: object): string;
 
 	/**
 	 * Gives information about the whole assets structure for both iOS and Android.
@@ -128,5 +128,5 @@ export abstract class ProjectDataService {
 	 * @returns {any} The value of the property.
 	 * @deprecated no longer used - will be removed in 8.0.
 	 */
-	abstract getNSValueFromContent(jsonData: Object, propertyName: string): any;
+	abstract getNSValueFromContent(jsonData: object, propertyName: string): any;
 }

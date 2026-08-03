@@ -24,7 +24,7 @@ export class VersionValidatorHelper {
 	private compareCoerceVersions(
 		version: string,
 		minVersion: string,
-		condition: Function
+		condition: Function,
 	): boolean {
 		return condition(semver.coerce(version), semver.coerce(minVersion));
 	}

@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "useTabs": true,
+  "printWidth": 80,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "lib/common/test/resources/**",
+    "lib/common/vendor/**",
+    "lib/common/bin/**",
+    "test/files/**"
+  ]
+}

@@ -103,9 +103,7 @@ function startLogcatHelper(
 	startOptions: { deviceIdentifier: string; pid?: string },
 ) {
 	const logcatHelper = injector.resolve<LogcatHelper>("logcatHelper");
-	/* tslint:disable:no-floating-promises */
 	logcatHelper.start(startOptions);
-	/* tslint:enable:no-floating-promises */
 }
 
 describe("logcat-helper", () => {

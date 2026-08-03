@@ -45,7 +45,7 @@ export abstract class PackageManager {
 	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
 	 * @return {Promise<any>}                Object, containing information about the package.
 	 */
-	abstract view(packageName: string, config: Object): Promise<any>;
+	abstract view(packageName: string, config: object): Promise<any>;
 
 	/**
 	 * Checks if the specified string is name of a packaged published in the NPM registry.

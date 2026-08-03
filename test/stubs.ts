@@ -1,5 +1,3 @@
-/* tslint:disable:no-empty */
-
 import * as util from "util";
 import { assert } from "chai";
 import { EventEmitter } from "events";
@@ -480,7 +478,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 		return "";
 	}
 
-	public async view(packageName: string, config: Object): Promise<any> {
+	public async view(packageName: string, config: object): Promise<any> {
 		return {};
 	}
 
@@ -958,7 +956,7 @@ export class ProjectDataServiceStub implements IProjectDataService {
 		return projectData;
 	}
 
-	getNsConfigDefaultContent(data?: Object): string {
+	getNsConfigDefaultContent(data?: object): string {
 		return JSON.stringify({ ...data });
 	}
 

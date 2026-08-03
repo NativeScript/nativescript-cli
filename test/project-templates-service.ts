@@ -23,7 +23,7 @@ function createTestInjector(
 		packageJsonContent?: any;
 		packageVersion?: string;
 		packageName?: string;
-	} = {}
+	} = {},
 ): IInjector {
 	const injector = new Yok();
 	injector.register("errors", stubs.ErrorsStub);
@@ -38,7 +38,7 @@ function createTestInjector(
 		public async install(
 			packageName: string,
 			pathToSave: string,
-			config: INodePackageManagerInstallOptions
+			config: INodePackageManagerInstallOptions,
 		): Promise<INpmInstallResultInfo> {
 			if (configuration.shouldNpmInstallThrow) {
 				throw new Error("NPM install throws error.");
@@ -47,7 +47,7 @@ function createTestInjector(
 			return { name: "Some Result", version: "1" };
 		}
 		async getPackageNameParts(
-			fullPackageName: string
+			fullPackageName: string,
 		): Promise<INpmPackageNameParts> {
 			return {
 				name: configuration.packageName || fullPackageName,
@@ -58,11 +58,13 @@ function createTestInjector(
 
 	injector.register("packageManager", NpmStub);
 
-	class NpmInstallationManagerStub extends stubs.PackageInstallationManagerStub {
+	class NpmInstallationManagerStub
+		extends stubs.PackageInstallationManagerStub
+	{
 		async install(
 			packageName: string,
 			pathToSave?: string,
-			options?: INpmInstallOptions
+			options?: INpmInstallOptions,
 		): Promise<string> {
 			if (configuration.shouldNpmInstallThrow) {
 				throw new Error("NPM install throws error.");
@@ -140,16 +142,17 @@ describe("project-templates-service", () => {
 		// });
 		it("uses defaultTemplate when undefined is passed as parameter", async () => {
 			const testInjector = createTestInjector();
-			const projectTemplatesService = testInjector.resolve<
-				IProjectTemplatesService
-			>("projectTemplatesService");
+			const projectTemplatesService =
+				testInjector.resolve<IProjectTemplatesService>(
+					"projectTemplatesService",
+				);
 			const { templateName } = await projectTemplatesService.prepareTemplate(
 				undefined, //constants.RESERVED_TEMPLATE_NAMES["default"],
-				"tempFolder"
+				"tempFolder",
 			);
 			assert.strictEqual(
 				templateName,
-				constants.RESERVED_TEMPLATE_NAMES["default"]
+				constants.RESERVED_TEMPLATE_NAMES["default"],
 			);
 			// assert.strictEqual(
 			// 	isDeleteDirectoryCalledForNodeModulesDir,
@@ -166,19 +169,18 @@ describe("project-templates-service", () => {
 
 			beforeEach(() => {
 				testInjector = createTestInjector({ shouldNpmInstallThrow: false });
-				analyticsService = testInjector.resolve<IAnalyticsService>(
-					"analyticsService"
-				);
+				analyticsService =
+					testInjector.resolve<IAnalyticsService>("analyticsService");
 				const fs = testInjector.resolve<IFileSystem>("fs");
 				fs.exists = (filePath: string) => false;
 				dataSentToGoogleAnalytics = [];
 				analyticsService.trackEventActionInGoogleAnalytics = async (
-					data: IEventActionData
+					data: IEventActionData,
 				): Promise<void> => {
 					dataSentToGoogleAnalytics.push(data);
 				};
 				projectTemplatesService = testInjector.resolve(
-					"projectTemplatesService"
+					"projectTemplatesService",
 				);
 			});
 
@@ -186,7 +188,7 @@ describe("project-templates-service", () => {
 				const templateName = "template-from-npm";
 				await projectTemplatesService.prepareTemplate(
 					templateName,
-					"tempFolder"
+					"tempFolder",
 				);
 				assert.deepStrictEqual(dataSentToGoogleAnalytics, [
 					{
@@ -206,13 +208,12 @@ describe("project-templates-service", () => {
 				const localTemplatePath = "/Users/username/localtemplate";
 				const fs = testInjector.resolve<IFileSystem>("fs");
 				fs.exists = (filePath: string): boolean => true;
-				const pacoteService = testInjector.resolve<IPacoteService>(
-					"pacoteService"
-				);
+				const pacoteService =
+					testInjector.resolve<IPacoteService>("pacoteService");
 				pacoteService.manifest = () => Promise.resolve({ name: templateName });
 				await projectTemplatesService.prepareTemplate(
 					localTemplatePath,
-					"tempFolder"
+					"tempFolder",
 				);
 				assert.deepStrictEqual(dataSentToGoogleAnalytics, [
 					{
@@ -233,13 +234,12 @@ describe("project-templates-service", () => {
 				const fs = testInjector.resolve<IFileSystem>("fs");
 				fs.exists = (localPath: string): boolean =>
 					path.basename(localPath) !== constants.PACKAGE_JSON_FILE_NAME;
-				const pacoteService = testInjector.resolve<IPacoteService>(
-					"pacoteService"
-				);
+				const pacoteService =
+					testInjector.resolve<IPacoteService>("pacoteService");
 				pacoteService.manifest = () => Promise.resolve({});
 				await projectTemplatesService.prepareTemplate(
 					localTemplatePath,
-					"tempFolder"
+					"tempFolder",
 				);
 				assert.deepStrictEqual(dataSentToGoogleAnalytics, [
 					{
@@ -287,16 +287,15 @@ describe("project-templates-service", () => {
 						packageVersion: testCase.expectedVersion,
 						packageName: testCase.expectedTemplateName,
 					});
-					const projectTemplatesService = testInjector.resolve<
-						IProjectTemplatesService
-					>("projectTemplatesService");
-					const {
-						version,
-						templateName,
-					} = await projectTemplatesService.prepareTemplate(
-						testCase.templateName,
-						"tempFolder"
-					);
+					const projectTemplatesService =
+						testInjector.resolve<IProjectTemplatesService>(
+							"projectTemplatesService",
+						);
+					const { version, templateName } =
+						await projectTemplatesService.prepareTemplate(
+							testCase.templateName,
+							"tempFolder",
+						);
 					assert.strictEqual(version, testCase.expectedVersion);
 					assert.strictEqual(templateName, testCase.expectedTemplateName);
 				});

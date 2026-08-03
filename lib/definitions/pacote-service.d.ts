@@ -11,7 +11,7 @@ declare global {
 		 */
 		manifest(
 			packageName: string,
-			options?: IPacoteManifestOptions
+			options?: IPacoteManifestOptions,
 		): Promise<any>;
 		/**
 		 * Downloads the specified package and extracts it in specified destination directory
@@ -21,7 +21,7 @@ declare global {
 		extractPackage(
 			packageName: string,
 			destinationDirectory: string,
-			options?: IPacoteExtractOptions
+			options?: IPacoteExtractOptions,
 		): Promise<void>;
 	}
 

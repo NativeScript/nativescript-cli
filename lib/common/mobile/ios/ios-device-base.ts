@@ -15,7 +15,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 	abstract isEmulator: boolean;
 	abstract isOnlyWiFiConnected: boolean;
 	abstract openDeviceLogStream(
-		options?: Mobile.IiOSLogStreamOptions
+		options?: Mobile.IiOSLogStreamOptions,
 	): Promise<void>;
 
 	@performanceLog()
@@ -23,7 +23,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		appId: string,
 		projectName: string,
 		projectDir: string,
-		ensureAppStarted: boolean = false
+		ensureAppStarted: boolean = false,
 	): Promise<net.Socket> {
 		return this.$lockService.executeActionWithLock(async () => {
 			if (this.cachedSockets[appId]) {
@@ -41,7 +41,7 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 				}
 			} catch (err) {
 				this.$logger.trace(
-					`Unable to start application ${appId} on device ${this.deviceInfo.identifier} in getDebugSocket method. Error is: ${err}`
+					`Unable to start application ${appId} on device ${this.deviceInfo.identifier} in getDebugSocket method. Error is: ${err}`,
 				);
 			}
 
@@ -57,14 +57,12 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 		}, `ios-debug-socket-${this.deviceInfo.identifier}-${appId}.lock`);
 	}
 
-	protected abstract getDebugSocketCore(
-		appId: string
-	): Promise<net.Socket>;
+	protected abstract getDebugSocketCore(appId: string): Promise<net.Socket>;
 
 	protected async attachToDebuggerFoundEvent(
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<void> {
 		await this.startDeviceLogProcess(projectName, projectDir);
 		await this.$iOSDebuggerPortService.attachToDebuggerPortFoundEvent(appId);
@@ -106,16 +104,16 @@ export abstract class IOSDeviceBase implements Mobile.IiOSDevice {
 
 	private async startDeviceLogProcess(
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<void> {
 		if (projectName) {
 			this.$deviceLogProvider.setProjectNameForDevice(
 				this.deviceInfo.identifier,
-				projectName
+				projectName,
 			);
 			this.$deviceLogProvider.setProjectDirForDevice(
 				this.deviceInfo.identifier,
-				projectDir
+				projectDir,
 			);
 		}
 

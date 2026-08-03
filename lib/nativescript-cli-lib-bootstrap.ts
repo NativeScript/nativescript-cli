@@ -10,7 +10,7 @@ injector.overrideAlreadyRequiredModule = true;
 injector.requirePublicClass("deviceEmitter", "./common/mobile/device-emitter");
 injector.requirePublicClass(
 	"deviceLogProvider",
-	"./common/mobile/device-log-emitter"
+	"./common/mobile/device-log-emitter",
 );
 
 injector.resolve<IStaticConfig>("staticConfig").disableAnalytics = true;

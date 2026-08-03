@@ -59,7 +59,7 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $logcatHelper: Mobile.ILogcatHelper,
-		private $injector: IInjector
+		private $injector: IInjector,
 	) {}
 
 	@cache()
@@ -69,11 +69,11 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		});
 		this.applicationManager = this.$injector.resolve(
 			applicationManagerPath.AndroidApplicationManager,
-			{ adb: this.adb, identifier: this.identifier }
+			{ adb: this.adb, identifier: this.identifier },
 		);
 		this.fileSystem = this.$injector.resolve(
 			fileSystemPath.AndroidDeviceFileSystem,
-			{ adb: this.adb }
+			{ adb: this.adb },
 		);
 		let details = await this.getDeviceDetails(["getprop"]);
 
@@ -111,12 +111,14 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 			: [DeviceConnectionType.USB];
 
 		if (this.isEmulator) {
-			this.deviceInfo.displayName = await this.$androidEmulatorServices.getRunningEmulatorName(
-				this.identifier
-			);
-			this.deviceInfo.imageIdentifier = await this.$androidEmulatorServices.getRunningEmulatorImageIdentifier(
-				this.identifier
-			);
+			this.deviceInfo.displayName =
+				await this.$androidEmulatorServices.getRunningEmulatorName(
+					this.identifier,
+				);
+			this.deviceInfo.imageIdentifier =
+				await this.$androidEmulatorServices.getRunningEmulatorImageIdentifier(
+					this.identifier,
+				);
 		}
 
 		this.$logger.trace(this.deviceInfo);
@@ -146,12 +148,12 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 	}
 
 	private async getDeviceDetails(
-		shellCommandArgs: string[]
+		shellCommandArgs: string[],
 	): Promise<IAndroidDeviceDetails> {
 		const parsedDetails: any = {};
 
 		this.$logger.trace(
-			`Trying to get information for Android device. Command is: ${shellCommandArgs}`
+			`Trying to get information for Android device. Command is: ${shellCommandArgs}`,
 		);
 
 		try {
@@ -161,16 +163,17 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 				// sample line is "ro.build.version.release=4.4" in /system/build.prop
 				// sample line from getprop is:  [ro.build.version.release]: [6.0]
 				// NOTE: some props do not have value: [ro.build.version.base_os]: []
-				const match = /(?:\[?ro\.build\.version|ro\.product|ro\.build)\.(.+?)]?(?:\:|=)(?:\s*?\[)?(.*?)]?$/.exec(
-					value
-				);
+				const match =
+					/(?:\[?ro\.build\.version|ro\.product|ro\.build)\.(.+?)]?(?::|=)(?:\s*?\[)?(.*?)]?$/.exec(
+						value,
+					);
 				if (match) {
 					parsedDetails[match[1]] = match[2];
 				}
 			});
 		} catch (err) {
 			this.$logger.trace(
-				`Error while getting details from Android device. Command is: ${shellCommandArgs}. Error is: ${err}`
+				`Error while getting details from Android device. Command is: ${shellCommandArgs}. Error is: ${err}`,
 			);
 		}
 
@@ -189,7 +192,8 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 	}
 
 	private async getType(): Promise<string> {
-		const runningEmulatorIds = await this.$androidEmulatorServices.getRunningEmulatorIds();
+		const runningEmulatorIds =
+			await this.$androidEmulatorServices.getRunningEmulatorIds();
 		if (
 			_.find(runningEmulatorIds, (emulatorId) => emulatorId === this.identifier)
 		) {

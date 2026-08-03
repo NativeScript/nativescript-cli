@@ -29,7 +29,7 @@ export class Prompter implements IPrompter {
 			if (!helpers.isInteractive()) {
 				if (_.some(questions, (s) => !s.default)) {
 					throw new Error(
-						"Console is not interactive and no default action specified."
+						"Console is not interactive and no default action specified.",
 					);
 				} else {
 					const result: any = {};
@@ -52,7 +52,7 @@ export class Prompter implements IPrompter {
 
 	public async getPassword(
 		message: string,
-		options?: IAllowEmpty
+		options?: IAllowEmpty,
 	): Promise<string> {
 		const schema: IPrompterQuestion = {
 			message,
@@ -70,7 +70,7 @@ export class Prompter implements IPrompter {
 
 	public async getString(
 		message: string,
-		options?: IPrompterOptions
+		options?: IPrompterOptions,
 	): Promise<string> {
 		const schema: IPrompterQuestion = {
 			message,
@@ -96,7 +96,7 @@ export class Prompter implements IPrompter {
 			| string[]
 			| { title: string; description?: string; value?: string }[],
 		multiple: boolean = false,
-		options: any = {}
+		options: any = {},
 	): Promise<string> {
 		const schema: IPrompterAnswers = {
 			message: promptMessage,
@@ -108,9 +108,8 @@ export class Prompter implements IPrompter {
 
 		const result = await this.get([schema]);
 
-		type ArrayElement<
-			ArrayType extends readonly unknown[]
-		> = ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
+		type ArrayElement<ArrayType extends readonly unknown[]> =
+			ArrayType extends readonly (infer ElementType)[] ? ElementType : never;
 
 		type Choice = ArrayElement<typeof choices>;
 
@@ -135,7 +134,7 @@ export class Prompter implements IPrompter {
 
 	public async promptForDetailedChoice(
 		promptMessage: string,
-		choices: { key: string; description: string }[]
+		choices: { key: string; description: string }[],
 	): Promise<string> {
 		const inquirerChoices = choices.map((choice) => {
 			return {
@@ -158,7 +157,7 @@ export class Prompter implements IPrompter {
 
 	public async confirm(
 		message: string,
-		defaultAction?: () => boolean
+		defaultAction?: () => boolean,
 	): Promise<boolean> {
 		const schema = {
 			type: "confirm",
@@ -231,21 +230,21 @@ export class Prompter implements IPrompter {
 			this.cleanListener(
 				stream,
 				memoryleakEvent.eventName,
-				memoryleakEvent.listenerName
-			)
+				memoryleakEvent.listenerName,
+			),
 		);
 	}
 
 	private cleanListener(
 		stream: NodeJS.WritableStream,
 		eventName: string,
-		listenerName: string
+		listenerName: string,
 	): void {
 		const eventListeners: any[] = process.stdout.listeners(eventName);
 
 		const listenerFunction: (...args: any[]) => void = _.find(
 			eventListeners,
-			(func: any) => func.name === listenerName
+			(func: any) => func.name === listenerName,
 		);
 
 		if (listenerFunction) {

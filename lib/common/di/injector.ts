@@ -27,7 +27,12 @@ export interface InjectOptions {
 }
 
 type ProviderKind =
-	"value" | "class" | "factory" | "lazyClass" | "legacyClass" | "multi";
+	| "value"
+	| "class"
+	| "factory"
+	| "lazyClass"
+	| "legacyClass"
+	| "multi";
 
 interface IProviderRecord {
 	displayName: string;

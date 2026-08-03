@@ -49,7 +49,7 @@ describe("logFilter", () => {
 			assert.deepStrictEqual(
 				logFilter.loggingLevel,
 				infoLogLevel,
-				"Default level should be INFO."
+				"Default level should be INFO.",
 			);
 		});
 
@@ -58,7 +58,7 @@ describe("logFilter", () => {
 			assert.deepStrictEqual(
 				logFilter.loggingLevel,
 				fullLogLevel,
-				"Default level should be FULL."
+				"Default level should be FULL.",
 			);
 		});
 
@@ -67,7 +67,7 @@ describe("logFilter", () => {
 			assert.deepStrictEqual(
 				logFilter.loggingLevel,
 				infoLogLevel,
-				"Default level should be INFO."
+				"Default level should be INFO.",
 			);
 		});
 
@@ -76,7 +76,7 @@ describe("logFilter", () => {
 			assert.deepStrictEqual(
 				logFilter.loggingLevel,
 				infoLogLevel,
-				"Default level should be INFO."
+				"Default level should be INFO.",
 			);
 		});
 	});
@@ -123,7 +123,7 @@ describe("logFilter", () => {
 				const actualData = logFilter.filterData(
 					"invalidPlatform",
 					testData,
-					null
+					null,
 				);
 				assert.deepStrictEqual(actualData, testData);
 			});

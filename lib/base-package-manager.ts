@@ -24,7 +24,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 		config?: IDictionary<string | boolean>,
 		path?: string,
 	): Promise<string>;
-	public abstract view(packageName: string, config: Object): Promise<any>;
+	public abstract view(packageName: string, config: object): Promise<any>;
 	public abstract search(
 		filter: string[],
 		config: IDictionary<string | boolean>,

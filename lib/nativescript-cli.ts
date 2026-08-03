@@ -14,7 +14,7 @@ if (process.platform === "win32") {
 			args[0] = replaceDashes(args[0] as string | string[]);
 		}
 
-		if (args.length == 2) {
+		if (args.length === 2) {
 			realcp(args[0] as string[], args[1] as string);
 		} else {
 			realcp(args[0] as string, args[1] as string[], args[2] as string);
@@ -70,7 +70,6 @@ process.on = (event: string, listener: any): any => {
 	}
 };
 
-/* tslint:disable:no-floating-promises */
 (async () => {
 	if (process.argv.includes("--get-yargs-completions")) {
 		// This is a special case when we want to get the yargs completions as fast as possible...
@@ -107,4 +106,3 @@ process.on = (event: string, listener: any): any => {
 	await commandDispatcher.dispatchCommand();
 	injector.dispose();
 })();
-/* tslint:enable:no-floating-promises */

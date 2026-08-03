@@ -10,7 +10,7 @@ class LocalToDevicePathData implements Mobile.ILocalToDevicePathData {
 		private filePath: string,
 		private localProjectRootPath: string,
 		private onDeviceFileName: string,
-		public deviceProjectRootPath: string
+		public deviceProjectRootPath: string,
 	) {}
 
 	public getLocalPath(): string {
@@ -22,7 +22,7 @@ class LocalToDevicePathData implements Mobile.ILocalToDevicePathData {
 			const devicePath = path.join(
 				this.deviceProjectRootPath,
 				path.dirname(this.getRelativeToProjectBasePath()),
-				this.onDeviceFileName
+				this.onDeviceFileName,
 			);
 			this.devicePath = helpers.fromWindowsRelativePathToUnix(devicePath);
 		}
@@ -34,7 +34,7 @@ class LocalToDevicePathData implements Mobile.ILocalToDevicePathData {
 		if (!this.relativeToProjectBasePath) {
 			this.relativeToProjectBasePath = path.relative(
 				this.localProjectRootPath,
-				this.filePath
+				this.filePath,
 			);
 		}
 
@@ -43,18 +43,19 @@ class LocalToDevicePathData implements Mobile.ILocalToDevicePathData {
 }
 
 export class LocalToDevicePathDataFactory
-	implements Mobile.ILocalToDevicePathDataFactory {
+	implements Mobile.ILocalToDevicePathDataFactory
+{
 	create(
 		filePath: string,
 		localProjectRootPath: string,
 		onDeviceFileName: string,
-		deviceProjectRootPath: string
+		deviceProjectRootPath: string,
 	): Mobile.ILocalToDevicePathData {
 		return new LocalToDevicePathData(
 			filePath,
 			localProjectRootPath,
 			onDeviceFileName,
-			deviceProjectRootPath
+			deviceProjectRootPath,
 		);
 	}
 }

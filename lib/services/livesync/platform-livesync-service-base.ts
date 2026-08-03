@@ -24,28 +24,28 @@ export abstract class PlatformLiveSyncServiceBase {
 		protected $platformsDataService: IPlatformsDataService,
 		protected $projectFilesManager: IProjectFilesManager,
 		private $devicePathProvider: IDevicePathProvider,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	public getDeviceLiveSyncService(
 		device: Mobile.IDevice,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): INativeScriptDeviceLiveSyncService {
 		const platform = device.deviceInfo.platform.toLowerCase();
 		const platformData = this.$platformsDataService.getPlatformData(
 			device.deviceInfo.platform,
-			projectData
+			projectData,
 		);
 		const frameworkVersion =
 			platformData.platformProjectService.getFrameworkVersion(projectData);
 		const key = getHash(
-			`${device.deviceInfo.identifier}${projectData.projectIdentifiers[platform]}${projectData.projectDir}${frameworkVersion}`
+			`${device.deviceInfo.identifier}${projectData.projectIdentifiers[platform]}${projectData.projectDir}${frameworkVersion}`,
 		);
 		if (!this._deviceLiveSyncServicesCache[key]) {
 			this._deviceLiveSyncServicesCache[key] = this._getDeviceLiveSyncService(
 				device,
 				projectData,
-				frameworkVersion
+				frameworkVersion,
 			);
 		}
 
@@ -55,61 +55,61 @@ export abstract class PlatformLiveSyncServiceBase {
 	protected abstract _getDeviceLiveSyncService(
 		device: Mobile.IDevice,
 		data: IProjectData,
-		frameworkVersion: string
+		frameworkVersion: string,
 	): INativeScriptDeviceLiveSyncService;
 
 	public async shouldRestart(
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo
+		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(
 			liveSyncInfo.deviceAppData.device,
-			projectData
+			projectData,
 		);
 		const shouldRestart = await deviceLiveSyncService.shouldRestart(
 			projectData,
-			liveSyncInfo
+			liveSyncInfo,
 		);
 		return shouldRestart;
 	}
 
 	public async syncAfterInstall(
 		device: Mobile.IDevice,
-		liveSyncInfo: ILiveSyncWatchInfo
+		liveSyncInfo: ILiveSyncWatchInfo,
 	): Promise<void> {
 		/* intentionally left blank */
 	}
 
 	public async restartApplication(
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo
+		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<void> {
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(
 			liveSyncInfo.deviceAppData.device,
-			projectData
+			projectData,
 		);
 		this.$logger.info(
-			`Restarting application on device ${liveSyncInfo.deviceAppData.device.deviceInfo.identifier}...`
+			`Restarting application on device ${liveSyncInfo.deviceAppData.device.deviceInfo.identifier}...`,
 		);
 		await deviceLiveSyncService.restartApplication(projectData, liveSyncInfo);
 	}
 
 	public async tryRefreshApplication(
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo
+		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
 		let didRefresh = true;
 		if (liveSyncInfo.isFullSync || liveSyncInfo.modifiedFilesData.length) {
 			const deviceLiveSyncService = this.getDeviceLiveSyncService(
 				liveSyncInfo.deviceAppData.device,
-				projectData
+				projectData,
 			);
 			this.$logger.info(
-				`Refreshing application on device ${liveSyncInfo.deviceAppData.device.deviceInfo.identifier}...`
+				`Refreshing application on device ${liveSyncInfo.deviceAppData.device.deviceInfo.identifier}...`,
 			);
 			didRefresh = await deviceLiveSyncService.tryRefreshApplication(
 				projectData,
-				liveSyncInfo
+				liveSyncInfo,
 			);
 		}
 
@@ -121,11 +121,11 @@ export abstract class PlatformLiveSyncServiceBase {
 		const device = syncInfo.device;
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(
 			device,
-			syncInfo.projectData
+			syncInfo.projectData,
 		);
 		const platformData = this.$platformsDataService.getPlatformData(
 			device.deviceInfo.platform,
-			projectData
+			projectData,
 		);
 		const deviceAppData = await this.getAppData(syncInfo);
 
@@ -135,14 +135,14 @@ export abstract class PlatformLiveSyncServiceBase {
 
 		const projectFilesPath = path.join(
 			platformData.appDestinationDirectoryPath,
-			this.$options.hostProjectModuleName
+			this.$options.hostProjectModuleName,
 		);
 		const localToDevicePaths =
 			await this.$projectFilesManager.createLocalToDevicePaths(
 				deviceAppData,
 				projectFilesPath,
 				null,
-				[]
+				[],
 			);
 		const modifiedFilesData = await this.transferFiles(
 			deviceAppData,
@@ -150,7 +150,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			projectFilesPath,
 			projectData,
 			syncInfo.liveSyncDeviceData,
-			{ isFullSync: true, force: syncInfo.force }
+			{ isFullSync: true, force: syncInfo.force },
 		);
 
 		return {
@@ -164,12 +164,12 @@ export abstract class PlatformLiveSyncServiceBase {
 	@performanceLog()
 	public async liveSyncWatchAction(
 		device: Mobile.IDevice,
-		liveSyncInfo: ILiveSyncWatchInfo
+		liveSyncInfo: ILiveSyncWatchInfo,
 	): Promise<ILiveSyncResultInfo> {
 		const projectData = liveSyncInfo.projectData;
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(
 			device,
-			projectData
+			projectData,
 		);
 		const syncInfo = _.merge({ device, watch: true }, liveSyncInfo);
 		const deviceAppData = await this.getAppData(syncInfo);
@@ -190,25 +190,25 @@ export abstract class PlatformLiveSyncServiceBase {
 			if (skippedFiles.length) {
 				this.$logger.trace(
 					"The following files will not be synced as they do not exist:",
-					skippedFiles
+					skippedFiles,
 				);
 			}
 
 			if (existingFiles.length) {
 				const platformData = this.$platformsDataService.getPlatformData(
 					device.deviceInfo.platform,
-					projectData
+					projectData,
 				);
 				const projectFilesPath = path.join(
 					platformData.appDestinationDirectoryPath,
-					this.$options.hostProjectModuleName
+					this.$options.hostProjectModuleName,
 				);
 				const localToDevicePaths =
 					await this.$projectFilesManager.createLocalToDevicePaths(
 						deviceAppData,
 						projectFilesPath,
 						existingFiles,
-						[]
+						[],
 					);
 				modifiedLocalToDevicePaths.push(...localToDevicePaths);
 				modifiedLocalToDevicePaths = await this.transferFiles(
@@ -217,7 +217,7 @@ export abstract class PlatformLiveSyncServiceBase {
 					projectFilesPath,
 					projectData,
 					liveSyncInfo.liveSyncDeviceData,
-					{ isFullSync: false, force: liveSyncInfo.force }
+					{ isFullSync: false, force: liveSyncInfo.force },
 				);
 			}
 		}
@@ -226,7 +226,7 @@ export abstract class PlatformLiveSyncServiceBase {
 			const filePaths = liveSyncInfo.filesToRemove;
 			const platformData = this.$platformsDataService.getPlatformData(
 				device.deviceInfo.platform,
-				projectData
+				projectData,
 			);
 
 			const mappedFiles = _(filePaths)
@@ -235,21 +235,21 @@ export abstract class PlatformLiveSyncServiceBase {
 				.value();
 			const projectFilesPath = path.join(
 				platformData.appDestinationDirectoryPath,
-				APP_FOLDER_NAME
+				APP_FOLDER_NAME,
 			);
 			const localToDevicePaths =
 				await this.$projectFilesManager.createLocalToDevicePaths(
 					deviceAppData,
 					projectFilesPath,
 					mappedFiles,
-					[]
+					[],
 				);
 			modifiedLocalToDevicePaths.push(...localToDevicePaths);
 
 			await deviceLiveSyncService.removeFiles(
 				deviceAppData,
 				localToDevicePaths,
-				projectFilesPath
+				projectFilesPath,
 			);
 		}
 
@@ -267,12 +267,12 @@ export abstract class PlatformLiveSyncServiceBase {
 		projectFilesPath: string,
 		projectData: IProjectData,
 		liveSyncDeviceData: ILiveSyncDeviceDescriptor,
-		options: ITransferFilesOptions
+		options: ITransferFilesOptions,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 		const deviceLiveSyncService = this.getDeviceLiveSyncService(
 			deviceAppData.device,
-			projectData
+			projectData,
 		);
 
 		transferredFiles = await deviceLiveSyncService.transferFiles(
@@ -281,31 +281,31 @@ export abstract class PlatformLiveSyncServiceBase {
 			projectFilesPath,
 			projectData,
 			liveSyncDeviceData,
-			options
+			options,
 		);
 
 		await deviceAppData.device.applicationManager.setTransferredAppFiles(
-			localToDevicePaths.map((l) => l.getLocalPath())
+			localToDevicePaths.map((l) => l.getLocalPath()),
 		);
 
 		this.logFilesSyncInformation(
 			transferredFiles,
 			"Successfully transferred %s on device %s.",
 			this.$logger.info,
-			deviceAppData.device.deviceInfo.identifier
+			deviceAppData.device.deviceInfo.identifier,
 		);
 
 		return transferredFiles;
 	}
 
 	public async getAppData(
-		syncInfo: IFullSyncInfo
+		syncInfo: IFullSyncInfo,
 	): Promise<Mobile.IDeviceAppData> {
 		const platform = syncInfo.device.deviceInfo.platform.toLowerCase();
 		const appIdentifier = syncInfo.projectData.projectIdentifiers[platform];
 		const deviceProjectRootOptions: IDeviceProjectRootOptions = _.assign(
 			{ appIdentifier },
-			syncInfo
+			syncInfo,
 		);
 		return {
 			appIdentifier,
@@ -314,10 +314,10 @@ export abstract class PlatformLiveSyncServiceBase {
 			getDeviceProjectRootPath: () =>
 				this.$devicePathProvider.getDeviceProjectRootPath(
 					syncInfo.device,
-					deviceProjectRootOptions
+					deviceProjectRootOptions,
 				),
 			deviceSyncZipPath: this.$devicePathProvider.getDeviceSyncZipPath(
-				syncInfo.device
+				syncInfo.device,
 			),
 			connectTimeout: syncInfo.connectTimeout,
 			projectDir: syncInfo.projectData.projectDir,
@@ -328,7 +328,7 @@ export abstract class PlatformLiveSyncServiceBase {
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		message: string,
 		action: Function,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): void {
 		if (localToDevicePaths && localToDevicePaths.length < 10) {
 			_.each(localToDevicePaths, (file: Mobile.ILocalToDevicePathData) => {
@@ -336,15 +336,15 @@ export abstract class PlatformLiveSyncServiceBase {
 					this.$logger,
 					util.format(
 						message,
-						color.yellow(path.basename(file.getLocalPath()))
+						color.yellow(path.basename(file.getLocalPath())),
 					),
-					deviceIdentifier
+					deviceIdentifier,
 				);
 			});
 		} else {
 			action.call(
 				this.$logger,
-				util.format(message, "all files", deviceIdentifier)
+				util.format(message, "all files", deviceIdentifier),
 			);
 		}
 	}

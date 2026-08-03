@@ -29,7 +29,7 @@ function createTestInjector(): IInjector {
 	injector.register("xcodebuildCommandService", {
 		executeCommand: async (
 			args: string[],
-			options: IXcodebuildCommandOptions
+			options: IXcodebuildCommandOptions,
 		) => {
 			actualBuildArgs = args;
 			actualBuildOptions = options;
@@ -55,7 +55,7 @@ describe("xcodebuildService", () => {
 			const buildResult = await xcodebuildService.buildForDevice(
 				platformData,
 				projectData,
-				{}
+				{},
 			);
 
 			const expectedBuildArgs = [
@@ -63,7 +63,7 @@ describe("xcodebuildService", () => {
 				"-archivePath",
 				path.join(
 					platformData.getBuildOutputPath(),
-					`${projectName}.xcarchive`
+					`${projectName}.xcarchive`,
 				),
 				"-exportPath",
 				exportOptionsPlistOutput.exportFileDir,
@@ -77,7 +77,7 @@ describe("xcodebuildService", () => {
 			});
 			assert.deepStrictEqual(
 				buildResult,
-				exportOptionsPlistOutput.exportFilePath
+				exportOptionsPlistOutput.exportFilePath,
 			);
 		});
 	});
@@ -113,7 +113,7 @@ describe("xcodebuildService", () => {
 			const buildResult = await xcodebuildService.buildForAppStore(
 				platformData,
 				projectData,
-				{}
+				{},
 			);
 
 			const expectedBuildArgs = [
@@ -121,7 +121,7 @@ describe("xcodebuildService", () => {
 				"-archivePath",
 				path.join(
 					platformData.getBuildOutputPath(),
-					`${projectName}.xcarchive`
+					`${projectName}.xcarchive`,
 				),
 				"-exportPath",
 				exportOptionsPlistOutput.exportFileDir,
@@ -133,7 +133,7 @@ describe("xcodebuildService", () => {
 			assert.deepStrictEqual(actualBuildOptions, { cwd: projectRoot });
 			assert.deepStrictEqual(
 				buildResult,
-				exportOptionsPlistOutput.exportFilePath
+				exportOptionsPlistOutput.exportFilePath,
 			);
 		});
 	});

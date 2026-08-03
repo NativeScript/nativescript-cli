@@ -18,7 +18,11 @@ import {
 } from "ts-morph";
 
 export type SupportedConfigValues =
-	string | number | boolean | { [key: string]: SupportedConfigValues } | any[];
+	| string
+	| number
+	| boolean
+	| { [key: string]: SupportedConfigValues }
+	| any[];
 
 export interface IConfigTransformer {
 	/**
@@ -281,7 +285,7 @@ export class ConfigTransformer implements IConfigTransformer {
 				if (!Node.isPropertyAssignment(property)) {
 					continue;
 				}
-				const name = property.getNameNode().getText().replace(/['\"]/g, "");
+				const name = property.getNameNode().getText().replace(/['"]/g, "");
 				result[name] = this.getInitializerValue(
 					property.getInitializerOrThrow(),
 				);
@@ -359,7 +363,7 @@ export class ConfigTransformer implements IConfigTransformer {
 				if (!Node.isPropertyAssignment(property)) {
 					continue;
 				}
-				const name = property.getNameNode().getText().replace(/['\"]/g, "");
+				const name = property.getNameNode().getText().replace(/['"]/g, "");
 				result[name] = this.getInitializerValue(
 					property.getInitializerOrThrow(),
 				);

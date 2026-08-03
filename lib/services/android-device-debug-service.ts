@@ -16,7 +16,8 @@ import * as _ from "lodash";
 
 export class AndroidDeviceDebugService
 	extends DebugServiceBase
-	implements IDeviceDebugService {
+	implements IDeviceDebugService
+{
 	private _packageName: string;
 	private deviceIdentifier: string;
 
@@ -33,7 +34,7 @@ export class AndroidDeviceDebugService
 		private $androidProcessService: Mobile.IAndroidProcessService,
 		private $staticConfig: IStaticConfig,
 		private $net: INet,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider
+		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 	) {
 		super(device, $devicesService);
 		this.deviceIdentifier = device.deviceInfo.identifier;
@@ -42,31 +43,31 @@ export class AndroidDeviceDebugService
 	@performanceLog()
 	public async debug(
 		debugData: IDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugResultInfo> {
 		this._packageName = debugData.applicationIdentifier;
 		const result = await this.debugCore(
 			debugData.applicationIdentifier,
-			debugOptions
+			debugOptions,
 		);
 
 		// TODO: extract this logic outside the debug service
 		if (debugOptions.start && !debugOptions.justlaunch) {
 			const pid = await this.$androidProcessService.getAppProcessId(
 				this.deviceIdentifier,
-				debugData.applicationIdentifier
+				debugData.applicationIdentifier,
 			);
 			if (pid) {
 				this.$deviceLogProvider.setApplicationPidForDevice(
 					this.deviceIdentifier,
-					pid
+					pid,
 				);
 				this.$deviceLogProvider.setProjectDirForDevice(
 					this.device.deviceInfo.identifier,
-					debugData.projectDir
+					debugData.projectDir,
 				);
 				const device = await this.$devicesService.getDevice(
-					this.deviceIdentifier
+					this.deviceIdentifier,
 				);
 				await device.openDeviceLogStream();
 			}
@@ -82,7 +83,7 @@ export class AndroidDeviceDebugService
 	private async removePortForwarding(packageName?: string): Promise<void> {
 		const port = await this.getForwardedDebugPort(
 			this.device.deviceInfo.identifier,
-			packageName || this._packageName
+			packageName || this._packageName,
 		);
 		return this.device.adb.executeCommand([
 			"forward",
@@ -94,7 +95,7 @@ export class AndroidDeviceDebugService
 	// TODO: Remove this method and reuse logic from androidProcessService
 	private async getForwardedDebugPort(
 		deviceId: string,
-		packageName: string
+		packageName: string,
 	): Promise<number> {
 		let port = -1;
 		const forwardsResult = await this.device.adb.executeCommand([
@@ -107,7 +108,7 @@ export class AndroidDeviceDebugService
 		//matches 123a188909e6czzc tcp:40001 localabstract:org.nativescript.testUnixSockets-debug
 		const regexp = new RegExp(
 			`(?:${deviceId} tcp:)([\\d]+)(?= localabstract:${unixSocketName})`,
-			"g"
+			"g",
 		);
 		const match = regexp.exec(forwardsResult);
 
@@ -130,7 +131,7 @@ export class AndroidDeviceDebugService
 	// TODO: Remove this method and reuse logic from androidProcessService
 	private async unixSocketForward(
 		local: number,
-		remote: string
+		remote: string,
 	): Promise<void> {
 		await this.device.adb.executeCommand([
 			"forward",
@@ -142,7 +143,7 @@ export class AndroidDeviceDebugService
 	@performanceLog()
 	private async debugCore(
 		appId: string,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugResultInfo> {
 		const result: IDebugResultInfo = { debugUrl: null };
 		if (debugOptions.stop) {
@@ -157,7 +158,7 @@ export class AndroidDeviceDebugService
 
 		const debugPort = await this.getForwardedDebugPort(
 			this.deviceIdentifier,
-			appId
+			appId,
 		);
 		await this.printDebugPort(this.deviceIdentifier, debugPort);
 
@@ -173,16 +174,16 @@ export class AndroidDeviceDebugService
 	// TODO: extract this logic outside the debug service
 	private async validateRunningApp(
 		deviceId: string,
-		packageName: string
+		packageName: string,
 	): Promise<void> {
 		if (!(await this.isAppRunning(packageName, deviceId))) {
 			this.$errors.fail(
-				`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled. Try starting the application manually.`
+				`The application ${packageName} does not appear to be running on ${deviceId} or is not built with debugging enabled. Try starting the application manually.`,
 			);
 		}
 	}
 
-	private async waitForDebugServer(appId: String): Promise<void> {
+	private async waitForDebugServer(appId: string): Promise<void> {
 		const debuggerStartedFilePath = `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${appId}-debugger-started`;
 		const waitText: string = `0 ${debuggerStartedFilePath}`;
 		let maxWait = 12;
@@ -212,11 +213,10 @@ export class AndroidDeviceDebugService
 
 	private async isAppRunning(
 		appIdentifier: string,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): Promise<boolean> {
-		const debuggableApps = await this.$androidProcessService.getDebuggableApps(
-			deviceIdentifier
-		);
+		const debuggableApps =
+			await this.$androidProcessService.getDebuggableApps(deviceIdentifier);
 
 		return !!_.find(debuggableApps, (a) => a.appIdentifier === appIdentifier);
 	}
@@ -225,5 +225,5 @@ export class AndroidDeviceDebugService
 injector.register(
 	"androidDeviceDebugService",
 	AndroidDeviceDebugService,
-	false
+	false,
 );

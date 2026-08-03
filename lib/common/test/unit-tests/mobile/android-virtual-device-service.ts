@@ -49,7 +49,7 @@ const avdManagerOutputWithInvalidDevice =
 function getValueFromIniFilesData(
 	propertyName: string,
 	iniFilePath: string,
-	iniFilesData: IDictionary<Mobile.IAvdInfo>
+	iniFilesData: IDictionary<Mobile.IAvdInfo>,
 ) {
 	return (
 		iniFilesData &&
@@ -64,22 +64,22 @@ function mockParseIniFile(iniFilePath: string, data: any) {
 			avdId: getValueFromIniFilesData(
 				"avdId",
 				iniFilePath,
-				data && data.iniFilesData
+				data && data.iniFilesData,
 			),
 			path: getValueFromIniFilesData(
 				"path",
 				iniFilePath,
-				data && data.iniFilesData
+				data && data.iniFilesData,
 			),
 			device: getValueFromIniFilesData(
 				"device",
 				iniFilePath,
-				data && data.iniFilesData
+				data && data.iniFilesData,
 			),
 			target: getValueFromIniFilesData(
 				"target",
 				iniFilePath,
-				data && data.iniFilesData
+				data && data.iniFilesData,
 			),
 			targetNum: 17,
 		};
@@ -94,7 +94,7 @@ function createTestInjector(data: {
 	const testInjector = new Yok();
 	testInjector.register(
 		"androidVirtualDeviceService",
-		AndroidVirtualDeviceService
+		AndroidVirtualDeviceService,
 	);
 	testInjector.register("androidIniFileParser", {
 		parseIniFile: (iniFilePath: string) => mockParseIniFile(iniFilePath, data),
@@ -264,7 +264,7 @@ describe("androidVirtualDeviceService", () => {
 						imageIdentifier: "Nexus_5_API_27",
 						version: "8.1.0",
 						model: "Nexus 5X",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result.devices[1],
@@ -273,7 +273,7 @@ describe("androidVirtualDeviceService", () => {
 						imageIdentifier: "Nexus_5X_API_28",
 						version: "9.0.0",
 						model: "Nexus 5X",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result.devices[2],
@@ -282,7 +282,7 @@ describe("androidVirtualDeviceService", () => {
 						imageIdentifier: "Nexus_6P_API_28",
 						version: "9.0.0",
 						model: "Nexus 6P",
-					})
+					}),
 				);
 				assert.deepStrictEqual(result.errors, []);
 			});
@@ -310,7 +310,7 @@ describe("androidVirtualDeviceService", () => {
 						identifier: "emulator-5554",
 						version: "8.1.0",
 						model: "Nexus 5X",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result[1],
@@ -319,7 +319,7 @@ describe("androidVirtualDeviceService", () => {
 						imageIdentifier: "Nexus_5X_API_28",
 						version: "9.0.0",
 						model: "Nexus 5X",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result[2],
@@ -328,7 +328,7 @@ describe("androidVirtualDeviceService", () => {
 						imageIdentifier: "Nexus_6P_API_28",
 						version: "9.0.0",
 						model: "Nexus 6P",
-					})
+					}),
 				);
 			});
 			// In this case we should fallback to list avd directory and should't report errors from avdmanager
@@ -382,7 +382,7 @@ describe("androidVirtualDeviceService", () => {
 						model: "Nexus 5X",
 						imageIdentifier: "Nexus_5_API_27",
 						version: "8.1.0",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result.devices[1],
@@ -391,7 +391,7 @@ describe("androidVirtualDeviceService", () => {
 						model: "Nexus 5X",
 						imageIdentifier: "Nexus_5X_API_28",
 						version: "9.0.0",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result.devices[2],
@@ -400,7 +400,7 @@ describe("androidVirtualDeviceService", () => {
 						model: "Nexus 6P",
 						imageIdentifier: "Nexus_6P_API_28",
 						version: "9.0.0",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result.devices[3],
@@ -409,7 +409,7 @@ describe("androidVirtualDeviceService", () => {
 						model: "Pixel 2 XL",
 						imageIdentifier: "Pixel_2_XL_API_28",
 						version: "9.0.0",
-					})
+					}),
 				);
 				assert.deepStrictEqual(result.errors, []);
 			});
@@ -419,11 +419,12 @@ describe("androidVirtualDeviceService", () => {
 					iniFilesData: getIniFilesData({ includePixel: true }),
 				};
 				const testInjector = createTestInjector(mockData);
-				const avdService = testInjector.resolve<
-					Mobile.IAndroidVirtualDeviceService
-				>("androidVirtualDeviceService");
+				const avdService =
+					testInjector.resolve<Mobile.IAndroidVirtualDeviceService>(
+						"androidVirtualDeviceService",
+					);
 				const androidIniFileParser = testInjector.resolve(
-					"androidIniFileParser"
+					"androidIniFileParser",
 				);
 				androidIniFileParser.parseIniFile = (iniFilePath: string) => {
 					if (iniFilePath.indexOf("Pixel_2_XL_API_28") !== -1) {
@@ -443,7 +444,7 @@ describe("androidVirtualDeviceService", () => {
 						model: "Nexus 5X",
 						imageIdentifier: "Nexus_5_API_27",
 						version: "8.1.0",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result.devices[1],
@@ -452,7 +453,7 @@ describe("androidVirtualDeviceService", () => {
 						model: "Nexus 5X",
 						imageIdentifier: "Nexus_5X_API_28",
 						version: "9.0.0",
-					})
+					}),
 				);
 				assert.deepStrictEqual(
 					result.devices[2],
@@ -461,7 +462,7 @@ describe("androidVirtualDeviceService", () => {
 						model: "Nexus 6P",
 						imageIdentifier: "Nexus_6P_API_28",
 						version: "9.0.0",
-					})
+					}),
 				);
 				assert.deepStrictEqual(result.errors, []);
 			});
@@ -474,19 +475,19 @@ describe("androidVirtualDeviceService", () => {
 		beforeEach(() => {
 			const testInjector = createTestInjector({});
 			androidVirtualDeviceService = testInjector.resolve(
-				"androidVirtualDeviceService"
+				"androidVirtualDeviceService",
 			);
 		});
 
 		it("should return [] when there are no running emulators", async () => {
 			const emulators = await androidVirtualDeviceService.getRunningEmulatorIds(
-				[]
+				[],
 			);
 			assert.deepStrictEqual(emulators, []);
 		});
 		it("should return the devices when there are running emulators", async () => {
 			const emulators = await androidVirtualDeviceService.getRunningEmulatorIds(
-				["emulator-5554	device", "emulator-5556	device"]
+				["emulator-5554	device", "emulator-5556	device"],
 			);
 			assert.deepStrictEqual(emulators, ["emulator-5554", "emulator-5556"]);
 		});

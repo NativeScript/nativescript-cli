@@ -27,7 +27,8 @@ import {
 
 export class UpdateController
 	extends UpdateControllerBase
-	implements IUpdateController {
+	implements IUpdateController
+{
 	static readonly updatableDependencies: IDependency[] = [
 		// dependencies
 		{
@@ -80,7 +81,7 @@ export class UpdateController
 		private $projectDataService: IProjectDataService,
 		private $projectBackupService: IProjectBackupService,
 		private $projectCleanupService: IProjectCleanupService,
-		private $terminalSpinnerService: ITerminalSpinnerService
+		private $terminalSpinnerService: ITerminalSpinnerService,
 	) {
 		super(
 			$fs,
@@ -88,14 +89,14 @@ export class UpdateController
 			$platformsDataService,
 			$packageInstallationManager,
 			$packageManager,
-			$pacoteService
+			$pacoteService,
 		);
 	}
 
 	public async update(updateOptions: IUpdateOptions): Promise<void> {
 		this.spinner = this.$terminalSpinnerService.createSpinner();
 		const projectData = this.$projectDataService.getProjectData(
-			updateOptions.projectDir
+			updateOptions.projectDir,
 		);
 		updateOptions.version = updateOptions.version || PackageVersion.LATEST;
 
@@ -125,28 +126,28 @@ export class UpdateController
 		this.$logger.info("");
 		this.$logger.printMarkdown(
 			"Project has been successfully updated. The next step is to run `ns run <platform>` to ensure everything is working properly." +
-				"\n\nPlease note that you may need additional changes to complete the update."
+				"\n\nPlease note that you may need additional changes to complete the update.",
 		);
 	}
 
 	public async shouldUpdate(updateOptions: IUpdateOptions): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(
-			updateOptions.projectDir
+			updateOptions.projectDir,
 		);
 		updateOptions.version = updateOptions.version || PackageVersion.LATEST;
 
 		for (const dependency of UpdateController.updatableDependencies) {
 			this.$logger.trace(
-				`Checking if ${dependency.packageName} needs to be updated...`
+				`Checking if ${dependency.packageName} needs to be updated...`,
 			);
 			const desiredVersion = await this.getVersionFromTagOrVersion(
 				dependency.packageName,
-				updateOptions.version
+				updateOptions.version,
 			);
 
 			if (typeof desiredVersion === "boolean") {
 				this.$logger.trace(
-					`Package ${dependency.packageName} does not have version/tag ${updateOptions.version}. Skipping.`
+					`Package ${dependency.packageName} does not have version/tag ${updateOptions.version}. Skipping.`,
 				);
 
 				continue;
@@ -155,12 +156,12 @@ export class UpdateController
 			const shouldUpdate = await this.shouldUpdateDependency(
 				projectData,
 				dependency,
-				desiredVersion
+				desiredVersion,
 			);
 
 			if (shouldUpdate) {
 				this.$logger.trace(
-					`shouldUpdate is true because '${dependency.packageName} needs to be updated.'`
+					`shouldUpdate is true because '${dependency.packageName} needs to be updated.'`,
 				);
 				return true;
 			}
@@ -171,7 +172,7 @@ export class UpdateController
 
 	private async updateDependencies(
 		projectData: IProjectData,
-		version: string
+		version: string,
 	): Promise<void> {
 		for (const dependency of UpdateController.updatableDependencies) {
 			await this.updateDependency(projectData, dependency, version);
@@ -181,7 +182,7 @@ export class UpdateController
 	private async updateDependency(
 		projectData: IProjectData,
 		dependency: IDependency,
-		version: string
+		version: string,
 	): Promise<void> {
 		if (!this.hasDependency(dependency, projectData)) {
 			return;
@@ -189,15 +190,15 @@ export class UpdateController
 
 		const desiredVersion = await this.getVersionFromTagOrVersion(
 			dependency.packageName,
-			version
+			version,
 		);
 
 		if (typeof desiredVersion === "boolean") {
 			this.$logger.info(
 				`  - ${color.yellow(
-					dependency.packageName
+					dependency.packageName,
 				)} does not have version/tag ${color.green(version)}. ` +
-					color.yellow("Skipping.")
+					color.yellow("Skipping."),
 			);
 
 			return;
@@ -206,7 +207,7 @@ export class UpdateController
 		const shouldUpdate = await this.shouldUpdateDependency(
 			projectData,
 			dependency,
-			desiredVersion
+			desiredVersion,
 		);
 
 		if (!shouldUpdate) {
@@ -233,36 +234,37 @@ export class UpdateController
 			dependency.packageName,
 			updatedVersion,
 			dependency.isDev,
-			projectData.projectDir
+			projectData.projectDir,
 		);
 
 		this.$logger.info(
 			`  - ${color.yellow(
-				dependency.packageName
-			)} has been updated to ${color.green(updatedVersion)}`
+				dependency.packageName,
+			)} has been updated to ${color.green(updatedVersion)}`,
 		);
 	}
 
 	private async shouldUpdateDependency(
 		projectData: IProjectData,
 		dependency: IDependency,
-		desiredVersion: string
+		desiredVersion: string,
 	): Promise<boolean> {
-		const installedVersion = await this.$packageInstallationManager.getInstalledDependencyVersion(
-			dependency.packageName,
-			projectData.projectDir
-		);
+		const installedVersion =
+			await this.$packageInstallationManager.getInstalledDependencyVersion(
+				dependency.packageName,
+				projectData.projectDir,
+			);
 
 		if (!installedVersion) {
 			return false;
 		}
 
-		return installedVersion != desiredVersion;
+		return installedVersion !== desiredVersion;
 	}
 
 	private async getVersionFromTagOrVersion(
 		packageName: string,
-		versionOrTag: string
+		versionOrTag: string,
 	): Promise<string | boolean> {
 		if (semver.valid(versionOrTag) || semver.validRange(versionOrTag)) {
 			return versionOrTag;
@@ -270,7 +272,7 @@ export class UpdateController
 
 		const version = await this.$packageManager.getTagVersion(
 			packageName,
-			versionOrTag
+			versionOrTag,
 		);
 
 		if (!version) {

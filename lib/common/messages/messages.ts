@@ -4,7 +4,6 @@
 
 import { injector } from "../yok";
 
-/* tslint:disable:all */
 export class Messages implements IMessages {
 	Devices = {
 		NotFoundDeviceByIdentifierErrorMessage:
@@ -16,4 +15,3 @@ export class Messages implements IMessages {
 	};
 }
 injector.register("messages", Messages);
-/* tslint:enable */

@@ -26,7 +26,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $projectDataService: IProjectDataService,
 		private $projectChangesService: IProjectChangesService,
-		private $prepareController: IPrepareController
+		private $prepareController: IPrepareController,
 	) {
 		super();
 	}
@@ -48,11 +48,11 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 		const platform = buildData.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(
-			buildData.projectDir
+			buildData.projectDir,
 		);
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 
 		const action = constants.TrackActionNames.Build;
@@ -76,7 +76,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 		if (buildData.clean) {
 			await platformData.platformProjectService.cleanProject(
-				platformData.projectRoot
+				platformData.projectRoot,
 			);
 		}
 
@@ -94,14 +94,14 @@ export class BuildController extends EventEmitter implements IBuildController {
 			platformData.platformProjectService.buildProject(
 				platformData.projectRoot,
 				projectData,
-				buildData
-			)
+				buildData,
+			),
 		);
 
 		const buildInfoFileDir = platformData.getBuildOutputPath(buildData);
 		this.$buildInfoFileService.saveLocalBuildInfo(
 			platformData,
-			buildInfoFileDir
+			buildInfoFileDir,
 		);
 
 		const endTime = performance.now();
@@ -112,14 +112,14 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 		const result = await this.$buildArtifactsService.getLatestAppPackagePath(
 			platformData,
-			buildData
+			buildData,
 		);
 
 		if (buildData.copyTo) {
 			this.$buildArtifactsService.copyLatestAppPackage(
 				buildData.copyTo,
 				platformData,
-				buildData
+				buildData,
 			);
 		} else {
 			this.$logger.info(`The build result is located at: ${result}`);
@@ -141,11 +141,11 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 	public async shouldBuild(buildData: IBuildData): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(
-			buildData.projectDir
+			buildData.projectDir,
 		);
 		const platformData = this.$platformsDataService.getPlatformData(
 			buildData.platform,
-			projectData
+			projectData,
 		);
 		const outputPath =
 			buildData.outputPath || platformData.getBuildOutputPath(buildData);
@@ -154,7 +154,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 			(await this.$projectChangesService.checkForChanges(
 				platformData,
 				projectData,
-				buildData
+				buildData,
 			));
 
 		if (changesInfo.changesRequireBuild) {
@@ -165,23 +165,21 @@ export class BuildController extends EventEmitter implements IBuildController {
 			return true;
 		}
 
-		const validBuildOutputData = platformData.getValidBuildOutputData(
-			buildData
-		);
+		const validBuildOutputData =
+			platformData.getValidBuildOutputData(buildData);
 		const packages = this.$buildArtifactsService.getAllAppPackages(
 			outputPath,
-			validBuildOutputData
+			validBuildOutputData,
 		);
 		if (packages.length === 0) {
 			return true;
 		}
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		const buildInfo = this.$buildInfoFileService.getLocalBuildInfo(
 			platformData,
-			buildData
+			buildData,
 		);
 		if (!prepareInfo || !buildInfo) {
 			return true;

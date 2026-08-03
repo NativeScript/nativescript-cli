@@ -25,7 +25,8 @@ export abstract class Prompter {
 	abstract promptForChoice(
 		promptMessage: string,
 		choices:
-			string[] | { title: string; description?: string; value?: string }[],
+			| string[]
+			| { title: string; description?: string; value?: string }[],
 		multiple?: boolean,
 		options?: any,
 	): Promise<string>;

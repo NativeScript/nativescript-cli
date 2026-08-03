@@ -102,14 +102,14 @@ export class LiveSyncTrackActionNames {
 	static DEVICE_INFO = `Device Info for ${liveSyncOperation}`;
 }
 
-export const PackageJsonKeysToKeep: Array<String> = [
+export const PackageJsonKeysToKeep: Array<string> = [
 	"name",
 	"main",
 	"android",
 	"version",
 	"pluginsData",
 ];
-export const TemplatesV2PackageJsonKeysToRemove: Array<String> = [
+export const TemplatesV2PackageJsonKeysToRemove: Array<string> = [
 	"name",
 	"version",
 	"displayName",
@@ -365,7 +365,9 @@ export const enum PlatformTypes {
 }
 
 export type SupportedPlatform =
-	PlatformTypes.ios | PlatformTypes.android | PlatformTypes.visionos;
+	| PlatformTypes.ios
+	| PlatformTypes.android
+	| PlatformTypes.visionos;
 
 export const PODFILE_NAME = "Podfile";
 

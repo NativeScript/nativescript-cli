@@ -36,7 +36,9 @@ describe("net", () => {
 				const listening = await new Promise<boolean>((resolve) => {
 					server.once("error", () => resolve(false));
 					const onListening = () => resolve(true);
-					host ? server.listen(0, host, onListening) : server.listen(0, onListening);
+					host
+						? server.listen(0, host, onListening)
+						: server.listen(0, onListening);
 				});
 				if (!listening) {
 					context.skip();
@@ -73,14 +75,14 @@ describe("net", () => {
 			testInjector: IInjector,
 			platform: string,
 			port?: number,
-			iteration?: number
+			iteration?: number,
 		): void => {
 			const childProcess = testInjector.resolve<IChildProcess>("childProcess");
 
 			childProcess.exec = async (
 				command: string,
 				options?: any,
-				execOptions?: IExecOptions
+				execOptions?: IExecOptions,
 			): Promise<any> => {
 				const platformsDataService: IDictionary<any> = {
 					linux: {
@@ -184,14 +186,13 @@ Active Connections
 
 				it("returns false when netstat command fails", async () => {
 					const testInjector = createTestInjector(platform);
-					const childProcess = testInjector.resolve<IChildProcess>(
-						"childProcess"
-					);
+					const childProcess =
+						testInjector.resolve<IChildProcess>("childProcess");
 					const error = new Error("test error");
 					childProcess.exec = async (
 						command: string,
 						options?: any,
-						execOptions?: IExecOptions
+						execOptions?: IExecOptions,
 					): Promise<any> => {
 						execCalledCount++;
 						return Promise.reject(error);
@@ -216,7 +217,7 @@ Active Connections
 			const net = testInjector.resolve<INet>(Net);
 			await assert.isRejected(
 				net.waitForPortToListen({ port: 18181, timeout: 50, interval: 1 }),
-				`Unable to check for free ports on ${invalidPlatform}. Supported platforms are: darwin, linux, win32`
+				`Unable to check for free ports on ${invalidPlatform}. Supported platforms are: darwin, linux, win32`,
 			);
 		});
 
@@ -227,7 +228,7 @@ Active Connections
 			const net = testInjector.resolve<INet>(Net);
 			await assert.isRejected(
 				net.waitForPortToListen(null),
-				"You must pass port and timeout for check."
+				"You must pass port and timeout for check.",
 			);
 		});
 	});

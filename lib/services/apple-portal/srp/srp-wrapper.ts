@@ -24,7 +24,7 @@ export interface ServerSRPCompleteRequest {
 	trustTokens: string[];
 }
 
-let srp = new Srp(Mode.GSA, Hash.SHA256, 2048);
+const srp = new Srp(Mode.GSA, Hash.SHA256, 2048);
 const stringToU8Array = (str: string) => new TextEncoder().encode(str);
 const base64ToU8Array = (str: string) =>
 	Uint8Array.from(Buffer.from(str, "base64"));
@@ -41,18 +41,18 @@ export class GSASRPAuthenticator {
 		let passHash = new Uint8Array(
 			await util.hash(srp.h, stringToU8Array(password) as any),
 		);
-		if (protocol == "s2k_fo") {
+		if (protocol === "s2k_fo") {
 			passHash = stringToU8Array(util.toHex(passHash)) as any;
 		}
 
-		let imported = await crypto.subtle.importKey(
+		const imported = await crypto.subtle.importKey(
 			"raw",
 			passHash,
 			{ name: "PBKDF2" },
 			false,
 			["deriveBits"],
 		);
-		let derived = await crypto.subtle.deriveBits(
+		const derived = await crypto.subtle.deriveBits(
 			{
 				name: "PBKDF2",
 				hash: { name: "SHA-256" },
@@ -73,7 +73,7 @@ export class GSASRPAuthenticator {
 			// provide fake passsword because we need to get data from server
 			new Uint8Array(),
 		);
-		let a = Buffer.from(util.bytesFromBigint(this.srpClient.A)).toString(
+		const a = Buffer.from(util.bytesFromBigint(this.srpClient.A)).toString(
 			"base64",
 		);
 		return {
@@ -89,12 +89,12 @@ export class GSASRPAuthenticator {
 		Pick<ServerSRPCompleteRequest, "m1" | "m2" | "c" | "accountName">
 	> {
 		if (!this.srpClient) throw new Error("Not initialized");
-		if (serverData.protocol != "s2k" && serverData.protocol != "s2k_fo")
+		if (serverData.protocol !== "s2k" && serverData.protocol !== "s2k_fo")
 			throw new Error("Unsupported protocol " + serverData.protocol);
-		let salt = base64ToU8Array(serverData.salt);
-		let serverPub = base64ToU8Array(serverData.b);
-		let iterations = serverData.iteration;
-		let derived = await this.derivePassword(
+		const salt = base64ToU8Array(serverData.salt);
+		const serverPub = base64ToU8Array(serverData.b);
+		const iterations = serverData.iteration;
+		const derived = await this.derivePassword(
 			serverData.protocol,
 			password,
 			salt,
@@ -102,9 +102,9 @@ export class GSASRPAuthenticator {
 		);
 		this.srpClient.p = derived;
 		await this.srpClient.generate(salt, serverPub);
-		let m1 = Buffer.from(this.srpClient._M).toString("base64");
-		let M2 = await this.srpClient.generateM2();
-		let m2 = Buffer.from(M2).toString("base64");
+		const m1 = Buffer.from(this.srpClient._M).toString("base64");
+		const M2 = await this.srpClient.generateM2();
+		const m2 = Buffer.from(M2).toString("base64");
 		return {
 			accountName: this.username,
 			m1,

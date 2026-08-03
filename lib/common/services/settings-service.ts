@@ -13,7 +13,7 @@ export class SettingsService implements ISettingsService {
 
 	constructor(
 		private $staticConfig: Config.IStaticConfig,
-		private $hostInfo: IHostInfo
+		private $hostInfo: IHostInfo,
 	) {
 		this._profileDir = this.getDefaultProfileDir();
 	}
@@ -39,7 +39,7 @@ export class SettingsService implements ISettingsService {
 			: path.join(homedir(), ".local", "share");
 		return path.join(
 			defaultProfileDirLocation,
-			this.$staticConfig.PROFILE_DIR_NAME
+			this.$staticConfig.PROFILE_DIR_NAME,
 		);
 	}
 }

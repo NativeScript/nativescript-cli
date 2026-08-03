@@ -29,7 +29,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		private $iosDeviceOperations: IIOSDeviceOperations,
 		private $options: IOptions,
 		protected $deviceLogProvider: Mobile.IDeviceLogProvider,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
 	) {
 		super($logger, $hooksService, $deviceLogProvider);
 	}
@@ -50,9 +50,9 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 			[this.device.deviceInfo.identifier],
 			(err: IOSDeviceLib.IDeviceError) => {
 				this.$errors.fail(
-					`Failed to install ${packageFilePath} on device with identifier ${err.deviceId}. Error is: ${err.message}`
+					`Failed to install ${packageFilePath} on device with identifier ${err.deviceId}. Error is: ${err.message}`,
 				);
-			}
+			},
 		);
 	}
 
@@ -63,14 +63,14 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		const applicationsOnDeviceInfo = _.first(
 			(await this.$iosDeviceOperations.apps([deviceIdentifier]))[
 				deviceIdentifier
-			]
+			],
 		);
 		const applicationsOnDevice = applicationsOnDeviceInfo
 			? applicationsOnDeviceInfo.response
 			: [];
 		this.$logger.trace(
 			"Result when getting applications information: ",
-			JSON.stringify(applicationsOnDevice, null, 2)
+			JSON.stringify(applicationsOnDevice, null, 2),
 		);
 
 		this.applicationsLiveSyncInfos = _.map(applicationsOnDevice, (app) => ({
@@ -88,26 +88,26 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 			[this.device.deviceInfo.identifier],
 			(err: IOSDeviceLib.IDeviceError) => {
 				this.$logger.warn(
-					`Failed to uninstall ${appIdentifier} on device with identifier ${err.deviceId}`
+					`Failed to uninstall ${appIdentifier} on device with identifier ${err.deviceId}`,
 				);
-			}
+			},
 		);
 
 		this.$logger.trace(
 			"Application %s has been uninstalled successfully.",
-			appIdentifier
+			appIdentifier,
 		);
 	}
 
 	public async startApplication(
-		appData: Mobile.IStartApplicationData
+		appData: Mobile.IStartApplicationData,
 	): Promise<void> {
 		if (!(await this.isApplicationInstalled(appData.appId))) {
 			this.$errors.fail(
 				"Invalid application id: %s. All available application ids are: %s%s ",
 				appData.appId,
 				EOL,
-				this.applicationsLiveSyncInfos.join(EOL)
+				this.applicationsLiveSyncInfos.join(EOL),
 			);
 		}
 
@@ -115,12 +115,12 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		await this.runApplicationCore(appData);
 
 		this.$logger.info(
-			`Successfully run application ${appData.appId} on device with ID ${this.device.deviceInfo.identifier}.`
+			`Successfully run application ${appData.appId} on device with ID ${this.device.deviceInfo.identifier}.`,
 		);
 	}
 
 	public async stopApplication(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		const { appId } = appData;
 
@@ -140,14 +140,14 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 			await action();
 		} catch (err) {
 			this.$logger.trace(
-				`Error when trying to stop application ${appId} on device ${this.device.deviceInfo.identifier}: ${err}. Retrying stop operation.`
+				`Error when trying to stop application ${appId} on device ${this.device.deviceInfo.identifier}: ${err}. Retrying stop operation.`,
 			);
 			await action();
 		}
 	}
 
 	public async restartApplication(
-		appData: Mobile.IStartApplicationData
+		appData: Mobile.IStartApplicationData,
 	): Promise<void> {
 		try {
 			await this.setDeviceLogData(appData);
@@ -156,22 +156,22 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		} catch (err) {
 			await this.$iOSNotificationService.postNotification(
 				this.device.deviceInfo.identifier,
-				`${appData.appId}:NativeScript.LiveSync.RestartApplication`
+				`${appData.appId}:NativeScript.LiveSync.RestartApplication`,
 			);
 			throw err;
 		}
 	}
 
 	private async setDeviceLogData(
-		appData: Mobile.IApplicationData
+		appData: Mobile.IApplicationData,
 	): Promise<void> {
 		this.$deviceLogProvider.setProjectNameForDevice(
 			this.device.deviceInfo.identifier,
-			appData.projectName
+			appData.projectName,
 		);
 		this.$deviceLogProvider.setProjectDirForDevice(
 			this.device.deviceInfo.identifier,
-			appData.projectDir
+			appData.projectDir,
 		);
 		if (!this.$options.justlaunch) {
 			await this.startDeviceLog();
@@ -179,7 +179,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 	}
 
 	private async runApplicationCore(
-		appData: Mobile.IStartApplicationData
+		appData: Mobile.IStartApplicationData,
 	): Promise<void> {
 		await this.detachNativeDebugger(appData.appId);
 
@@ -225,7 +225,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		const continueApp = () => lldb.stdin?.write("process continue\n");
 		const fallback = setTimeout(
 			continueApp,
-			IOSApplicationManager.LLDB_CONTINUE_TIMEOUT
+			IOSApplicationManager.LLDB_CONTINUE_TIMEOUT,
 		);
 		const done = () => {
 			settled = true;
@@ -255,7 +255,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		watch(lldb.stderr);
 
 		lldb.stdin?.write(
-			`device select ${this.device.deviceInfo.identifier}\ndevice process attach -p ${pid}\n`
+			`device select ${this.device.deviceInfo.identifier}\ndevice process attach -p ${pid}\n`,
 		);
 	}
 
@@ -270,14 +270,12 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 
 		if (lldb.pid && lldb.exitCode === null && lldb.signalCode === null) {
 			const exited = new Promise<void>((resolve) =>
-				lldb.once("exit", () => resolve())
+				lldb.once("exit", () => resolve()),
 			);
 			lldb.stdin?.end("process detach\nquit\n");
 			for (const signal of [null, "SIGTERM", "SIGKILL"] as const) {
 				if (signal) {
-					this.$logger.trace(
-						`lldb did not exit in time, sending ${signal}`
-					);
+					this.$logger.trace(`lldb did not exit in time, sending ${signal}`);
 					lldb.kill(signal);
 				}
 				const timeout = IOSApplicationManager.LLDB_EXIT_TIMEOUT;
@@ -290,7 +288,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 
 	private async exitsWithin(
 		exited: Promise<void>,
-		ms: number
+		ms: number,
 	): Promise<boolean> {
 		let timer: NodeJS.Timeout;
 		const timeout = new Promise<boolean>((resolve) => {
@@ -312,7 +310,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 	}
 
 	public getDebuggableAppViews(
-		appIdentifiers: string[]
+		appIdentifiers: string[],
 	): Promise<IDictionary<Mobile.IDebugWebViewInfo[]>> {
 		// Implement when we can find debuggable applications for iOS.
 		return Promise.resolve(null);
