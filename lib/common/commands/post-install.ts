@@ -10,7 +10,7 @@ export class PostInstallCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		this.$errors.fail(
-			"This command is deprecated. Use `ns dev-post-install-cli` instead"
+			"This command is deprecated. Use `ns dev-post-install-cli` instead",
 		);
 	}
 }

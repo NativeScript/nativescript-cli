@@ -47,7 +47,7 @@ export class ShiftA implements IKeyCommand {
 		private $logger: ILogger,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $childProcess: IChildProcess,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {}
 
 	getAndroidStudioPath(): string | null {
@@ -67,7 +67,7 @@ export class ShiftA implements IKeyCommand {
 				"Android",
 				"Android Studio",
 				"bin",
-				"studio64.exe"
+				"studio64.exe",
 			);
 			return fs.existsSync(studioPath) ? studioPath : null;
 		} else if (os === "linux") {
@@ -85,7 +85,7 @@ export class ShiftA implements IKeyCommand {
 
 		if (!fs.existsSync(androidDir)) {
 			const prepareCommand = injector.resolveCommand(
-				"prepare"
+				"prepare",
 			) as PrepareCommand;
 			await prepareCommand.execute([this.platform]);
 			if (this.isInteractive) {
@@ -102,7 +102,7 @@ export class ShiftA implements IKeyCommand {
 
 			if (!studioPath) {
 				this.$logger.error(
-					"Android Studio is not installed, or is not in a standard location. Use NATIVESCRIPT_ANDROID_STUDIO_PATH."
+					"Android Studio is not installed, or is not in a standard location. Use NATIVESCRIPT_ANDROID_STUDIO_PATH.",
 				);
 				return;
 			}
@@ -128,7 +128,7 @@ export class OpenAndroidCommand extends ShiftA {
 		$liveSyncCommandHelper: ILiveSyncCommandHelper,
 		$childProcess: IChildProcess,
 		$projectData: IProjectData,
-		private $options: IOptions
+		private $options: IOptions,
 	) {
 		super($logger, $liveSyncCommandHelper, $childProcess, $projectData);
 		this.isInteractive = false;
@@ -170,7 +170,7 @@ export class ShiftI implements IKeyCommand {
 		private $childProcess: IChildProcess,
 		private $projectData: IProjectData,
 		private $xcodeSelectService: IXcodeSelectService,
-		private $xcodebuildArgsService: IXcodebuildArgsService
+		private $xcodebuildArgsService: IXcodebuildArgsService,
 	) {}
 
 	async execute(): Promise<void> {
@@ -181,7 +181,7 @@ export class ShiftI implements IKeyCommand {
 
 			if (!fs.existsSync(iosDir)) {
 				const prepareCommand = injector.resolveCommand(
-					"prepare"
+					"prepare",
 				) as PrepareCommand;
 
 				await prepareCommand.execute(["ios"]);
@@ -190,11 +190,11 @@ export class ShiftI implements IKeyCommand {
 				}
 			}
 			const platformData = this.$iOSProjectService.getPlatformData(
-				this.$projectData
+				this.$projectData,
 			);
 			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
 				platformData,
-				this.$projectData
+				this.$projectData,
 			)[1];
 
 			if (fs.existsSync(xcprojectFile)) {
@@ -221,7 +221,7 @@ export class OpenIOSCommand extends ShiftI {
 		$projectData: IProjectData,
 		$xcodeSelectService: IXcodeSelectService,
 		$xcodebuildArgsService: IXcodebuildArgsService,
-		private $options: IOptions
+		private $options: IOptions,
 	) {
 		super(
 			$iOSProjectService,
@@ -229,7 +229,7 @@ export class OpenIOSCommand extends ShiftI {
 			$childProcess,
 			$projectData,
 			$xcodeSelectService,
-			$xcodebuildArgsService
+			$xcodebuildArgsService,
 		);
 		this.isInteractive = false;
 	}
@@ -271,7 +271,7 @@ export class ShiftV implements IKeyCommand {
 		private $projectData: IProjectData,
 		private $xcodeSelectService: IXcodeSelectService,
 		private $xcodebuildArgsService: IXcodebuildArgsService,
-		protected $options: IOptions
+		protected $options: IOptions,
 	) {}
 
 	async execute(): Promise<void> {
@@ -281,12 +281,12 @@ export class ShiftV implements IKeyCommand {
 			this.$projectData.initializeProjectData();
 			const visionOSDir = path.resolve(
 				this.$projectData.platformsDir,
-				"visionos"
+				"visionos",
 			);
 
 			if (!fs.existsSync(visionOSDir)) {
 				const prepareCommand = injector.resolveCommand(
-					"prepare"
+					"prepare",
 				) as PrepareCommand;
 
 				await prepareCommand.execute(["visionos"]);
@@ -295,11 +295,11 @@ export class ShiftV implements IKeyCommand {
 				}
 			}
 			const platformData = this.$iOSProjectService.getPlatformData(
-				this.$projectData
+				this.$projectData,
 			);
 			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
 				platformData,
-				this.$projectData
+				this.$projectData,
 			)[1];
 
 			if (fs.existsSync(xcprojectFile)) {
@@ -327,7 +327,7 @@ export class OpenVisionOSCommand extends ShiftV {
 		$projectData: IProjectData,
 		$xcodeSelectService: IXcodeSelectService,
 		$xcodebuildArgsService: IXcodebuildArgsService,
-		protected $options: IOptions
+		protected $options: IOptions,
 	) {
 		super(
 			$iOSProjectService,
@@ -336,7 +336,7 @@ export class OpenVisionOSCommand extends ShiftV {
 			$projectData,
 			$xcodeSelectService,
 			$xcodebuildArgsService,
-			$options
+			$options,
 		);
 		this.isInteractive = false;
 	}
@@ -356,16 +356,15 @@ export class R implements IKeyCommand {
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
 
 	async execute(platform: string): Promise<void> {
-		const devices = await this.$liveSyncCommandHelper.getDeviceInstances(
-			platform
-		);
+		const devices =
+			await this.$liveSyncCommandHelper.getDeviceInstances(platform);
 
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation(
 			devices,
 			platform,
 			{
 				restartLiveSync: true,
-			} as ILiveSyncCommandHelperAdditionalOptions
+			} as ILiveSyncCommandHelperAdditionalOptions,
 		);
 	}
 }
@@ -380,9 +379,8 @@ export class ShiftR implements IKeyCommand {
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
 
 	async execute(platform: string): Promise<void> {
-		const devices = await this.$liveSyncCommandHelper.getDeviceInstances(
-			platform
-		);
+		const devices =
+			await this.$liveSyncCommandHelper.getDeviceInstances(platform);
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation(
 			devices,
 			platform,
@@ -390,7 +388,7 @@ export class ShiftR implements IKeyCommand {
 				skipNativePrepare: false,
 				forceRebuildNativeApp: true,
 				restartLiveSync: true,
-			} as ILiveSyncCommandHelperAdditionalOptions
+			} as ILiveSyncCommandHelperAdditionalOptions,
 		);
 	}
 }
@@ -422,7 +420,7 @@ export class W implements IKeyCommand {
 			process.stdout.write(
 				paused
 					? color.gray("Paused watching file changes... Press 'w' to resume.")
-					: color.bgGreen("Resumed watching file changes")
+					: color.bgGreen("Resumed watching file changes"),
 			);
 		} catch (e) {}
 	}
@@ -437,7 +435,7 @@ export class C implements IKeyCommand {
 
 	constructor(
 		private $childProcess: IChildProcess,
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 	) {}
 
 	async execute(): Promise<void> {

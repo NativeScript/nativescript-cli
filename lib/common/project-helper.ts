@@ -11,7 +11,7 @@ export class ProjectHelper implements IProjectHelper {
 		private $fs: IFileSystem,
 		private $staticConfig: Config.IStaticConfig,
 		private $errors: IErrors,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	private cachedProjectDir = "";
@@ -27,7 +27,7 @@ export class ProjectHelper implements IProjectHelper {
 			this.$logger.trace("Looking for project in '%s'", projectDir);
 			const projectFilePath = path.join(
 				projectDir,
-				this.$staticConfig.PROJECT_FILE_NAME
+				this.$staticConfig.PROJECT_FILE_NAME,
 			);
 
 			if (
@@ -43,7 +43,7 @@ export class ProjectHelper implements IProjectHelper {
 			if (dir === projectDir) {
 				this.$logger.trace(
 					"No project found at or above '%s'.",
-					this.$options.path || path.resolve(".")
+					this.$options.path || path.resolve("."),
 				);
 				break;
 			}
@@ -68,7 +68,7 @@ export class ProjectHelper implements IProjectHelper {
 
 	public sanitizeName(appName: string): string {
 		const sanitizedName = _.filter(appName.split(""), (c) =>
-			/[a-zA-Z0-9]/.test(c)
+			/[a-zA-Z0-9]/.test(c),
 		).join("");
 		return sanitizedName;
 	}
@@ -83,7 +83,7 @@ export class ProjectHelper implements IProjectHelper {
 		} catch (err) {
 			this.$errors.fail(
 				"The project file is corrupted. Additional technical information: %s",
-				err
+				err,
 			);
 		}
 

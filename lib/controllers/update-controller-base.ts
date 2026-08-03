@@ -20,7 +20,7 @@ export class UpdateControllerBase {
 		protected $platformsDataService: IPlatformsDataService,
 		protected $packageInstallationManager: IPackageInstallationManager,
 		protected $packageManager: IPackageManager,
-		protected $pacoteService: IPacoteService
+		protected $pacoteService: IPacoteService,
 	) {
 		this.getPackageManifest = _.memoize(this._getPackageManifest, (...args) => {
 			return args.join("@");
@@ -30,7 +30,7 @@ export class UpdateControllerBase {
 	protected restoreBackup(
 		folders: string[],
 		backupDir: string,
-		projectDir: string
+		projectDir: string,
 	): void {
 		for (const folder of folders) {
 			this.$fs.deleteDirectory(path.join(projectDir, folder));
@@ -47,7 +47,7 @@ export class UpdateControllerBase {
 	protected backup(
 		folders: string[],
 		backupDir: string,
-		projectDir: string
+		projectDir: string,
 	): void {
 		this.$fs.deleteDirectory(backupDir);
 		this.$fs.createDirectory(backupDir);
@@ -62,7 +62,7 @@ export class UpdateControllerBase {
 
 	protected hasDependency(
 		dependency: IDependency,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean {
 		const devDependencies = Object.keys(projectData.devDependencies);
 		const dependencies = Object.keys(projectData.dependencies);
@@ -80,10 +80,11 @@ export class UpdateControllerBase {
 		projectData: IProjectData;
 	}): boolean {
 		const lowercasePlatform = platform.toLowerCase();
-		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
-			lowercasePlatform,
-			projectData
-		);
+		const currentPlatformVersion =
+			this.$platformCommandHelper.getCurrentPlatformVersion(
+				lowercasePlatform,
+				projectData,
+			);
 		return !!currentPlatformVersion;
 	}
 
@@ -95,19 +96,20 @@ export class UpdateControllerBase {
 		projectData: IProjectData;
 	}) {
 		const lowercasePlatform = platform.toLowerCase();
-		const currentPlatformVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
-			lowercasePlatform,
-			projectData
-		);
+		const currentPlatformVersion =
+			this.$platformCommandHelper.getCurrentPlatformVersion(
+				lowercasePlatform,
+				projectData,
+			);
 		const platformData = this.$platformsDataService.getPlatformData(
 			lowercasePlatform,
-			projectData
+			projectData,
 		);
 		if (currentPlatformVersion) {
 			return (
 				(await this.$packageInstallationManager.getMaxSatisfyingVersionSafe(
 					platformData.frameworkPackageName,
-					currentPlatformVersion
+					currentPlatformVersion,
 				)) || currentPlatformVersion
 			);
 		}
@@ -115,7 +117,7 @@ export class UpdateControllerBase {
 
 	private async _getPackageManifest(
 		templateName: string,
-		version: string
+		version: string,
 	): Promise<any> {
 		const packageVersion =
 			semver.valid(version) ||
@@ -124,11 +126,11 @@ export class UpdateControllerBase {
 		if (packageVersion && semver.valid(packageVersion)) {
 			return await this.$pacoteService.manifest(
 				`${templateName}@${packageVersion}`,
-				{ fullMetadata: true }
+				{ fullMetadata: true },
 			);
 		} else {
 			throw new Error(
-				`Failed to get information for package: ${templateName}@${version}`
+				`Failed to get information for package: ${templateName}@${version}`,
 			);
 		}
 	}

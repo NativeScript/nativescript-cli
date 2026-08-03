@@ -9,7 +9,7 @@ export class RunApplicationOnDeviceCommand implements ICommand {
 		private $errors: IErrors,
 		private $stringParameter: ICommandParameter,
 		private $staticConfig: Config.IStaticConfig,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [
@@ -26,7 +26,7 @@ export class RunApplicationOnDeviceCommand implements ICommand {
 		if (this.$devicesService.deviceCount > 1) {
 			this.$errors.failWithHelp(
 				"More than one device found. Specify device explicitly with --device option. To discover device ID, use $%s device command.",
-				this.$staticConfig.CLIENT_NAME.toLowerCase()
+				this.$staticConfig.CLIENT_NAME.toLowerCase(),
 			);
 		}
 
@@ -36,12 +36,12 @@ export class RunApplicationOnDeviceCommand implements ICommand {
 					appId: args[0],
 					projectName: args[1],
 					projectDir: null,
-				})
+				}),
 		);
 	}
 }
 
 injector.registerCommand(
 	["device|run", "devices|run"],
-	RunApplicationOnDeviceCommand
+	RunApplicationOnDeviceCommand,
 );

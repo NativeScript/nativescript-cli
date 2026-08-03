@@ -14,11 +14,11 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {}
 
 	public async startEmulator(
-		options: Mobile.IStartEmulatorOptions
+		options: Mobile.IStartEmulatorOptions,
 	): Promise<Mobile.IStartEmulatorOutput> {
 		let error = null;
 
@@ -31,7 +31,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 				const { devices } = await this.tryGetiOSSimDevices();
 				options.emulatorIdOrName = devices.find(
 					(device) =>
-						device.platform === this.$devicePlatformsConstants.visionOS
+						device.platform === this.$devicePlatformsConstants.visionOS,
 				)?.id;
 			}
 
@@ -62,20 +62,20 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 	}
 
 	public async getRunningEmulatorImageIdentifier(
-		emulatorId: string
+		emulatorId: string,
 	): Promise<string> {
 		return "";
 	}
 
 	public async postDarwinNotification(
 		notification: string,
-		deviceId: string
+		deviceId: string,
 	): Promise<void> {
 		return this.$iOSSimResolver.iOSSim.sendNotification(notification, deviceId);
 	}
 
 	public async connectToPort(
-		data: Mobile.IConnectToPortData
+		data: Mobile.IConnectToPortData,
 	): Promise<net.Socket> {
 		try {
 			// node v17+ resolves localhost to ::1 (ipv6) instead of 127.0.0.1 (ipv4)
@@ -127,7 +127,7 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 	}
 
 	private convertSimDeviceToDeviceInfo(
-		simDevice: Mobile.IiSimDevice
+		simDevice: Mobile.IiSimDevice,
 	): Mobile.IDeviceInfo {
 		return {
 			imageIdentifier: simDevice.id,

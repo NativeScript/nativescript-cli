@@ -12,18 +12,18 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		private $analyticsService: IAnalyticsService,
 		private $staticConfig: Config.IStaticConfig,
 		private $projectData: IProjectData,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async getBuildTaskArgs(
-		buildData: IAndroidBuildData
+		buildData: IAndroidBuildData,
 	): Promise<string[]> {
 		const args = this.getBaseTaskArgs(buildData);
 		args.unshift(this.getBuildTaskName(buildData));
 
 		if (
 			await this.$analyticsService.isEnabled(
-				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 			)
 		) {
 			args.push("-PgatherAnalyticsData=true");
@@ -52,7 +52,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 
 		args.push(
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
-			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
+			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		);
 		if (buildData.gradleArgs) {
 			args.push(buildData.gradleArgs);
@@ -64,7 +64,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 				`-PksPath=${path.resolve(buildData.keyStorePath)}`,
 				`-Palias=${buildData.keyStoreAlias}`,
 				`-Ppassword=${buildData.keyStoreAliasPassword}`,
-				`-PksPassword=${buildData.keyStorePassword}`
+				`-PksPassword=${buildData.keyStorePassword}`,
 			);
 		}
 

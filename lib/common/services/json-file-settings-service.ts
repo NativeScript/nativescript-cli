@@ -16,14 +16,14 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 		jsonFileSettingsPath: string,
 		private $fs: IFileSystem,
 		private $lockService: ILockService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {
 		this.jsonSettingsFilePath = jsonFileSettingsPath;
 	}
 
 	public async getSettingValue<T>(
 		settingName: string,
-		cacheOpts?: { cacheTimeout: number }
+		cacheOpts?: { cacheTimeout: number },
 	): Promise<T> {
 		const action = async (): Promise<T> => {
 			await this.loadUserSettingsFile();
@@ -52,14 +52,14 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 
 		return this.$lockService.executeActionWithLock<T>(
 			action,
-			this.lockFilePath
+			this.lockFilePath,
 		);
 	}
 
 	public async saveSetting<T>(
 		key: string,
 		value: T,
-		cacheOpts?: { useCaching: boolean }
+		cacheOpts?: { useCaching: boolean },
 	): Promise<void> {
 		const settingObject: any = {};
 		settingObject[key] = value;
@@ -77,13 +77,13 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 
 		return this.$lockService.executeActionWithLock<void>(
 			action,
-			this.lockFilePath
+			this.lockFilePath,
 		);
 	}
 
 	public saveSettings(
 		data?: any,
-		cacheOpts?: { useCaching: boolean }
+		cacheOpts?: { useCaching: boolean },
 	): Promise<void> {
 		const action = async (): Promise<void> => {
 			await this.loadUserSettingsFile();
@@ -100,7 +100,7 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 									time: Date.now(),
 									value: data[propertyName],
 									modifiedByCacheMechanism: true,
-							  }
+								}
 							: data[propertyName];
 				});
 
@@ -109,7 +109,7 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 
 		return this.$lockService.executeActionWithLock<void>(
 			action,
-			this.lockFilePath
+			this.lockFilePath,
 		);
 	}
 
@@ -122,7 +122,7 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 	private async loadUserSettingsData(): Promise<void> {
 		if (!this.$fs.exists(this.jsonSettingsFilePath)) {
 			const unexistingDirs = this.getUnexistingDirectories(
-				this.jsonSettingsFilePath
+				this.jsonSettingsFilePath,
 			);
 
 			this.$fs.writeFile(this.jsonSettingsFilePath, null);
@@ -142,7 +142,7 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 			this.jsonSettingsData = parseJson(data);
 		} catch (err) {
 			this.$logger.trace(
-				`Error while trying to parseJson ${data} data from ${this.jsonSettingsFilePath} file. Err is: ${err}`
+				`Error while trying to parseJson ${data} data from ${this.jsonSettingsFilePath} file. Err is: ${err}`,
 			);
 			this.$fs.deleteFile(this.jsonSettingsFilePath);
 		}

@@ -1,6 +1,6 @@
 interface IMarkingModeService {
 	handleMarkingModeFullDeprecation(
-		options: IMarkingModeFullDeprecationOptions
+		options: IMarkingModeFullDeprecationOptions,
 	): Promise<void>;
 }
 

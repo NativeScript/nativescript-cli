@@ -10,14 +10,14 @@ export class ResourcesUpdateCommand implements ICommand {
 	constructor(
 		private $projectData: IProjectData,
 		private $errors: IErrors,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService
+		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
 	) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
 		await this.$androidResourcesMigrationService.migrate(
-			this.$projectData.getAppResourcesDirectoryPath()
+			this.$projectData.getAppResourcesDirectoryPath(),
 		);
 	}
 
@@ -30,17 +30,17 @@ export class ResourcesUpdateCommand implements ICommand {
 		for (const platform of args) {
 			if (!this.$androidResourcesMigrationService.canMigrate(platform)) {
 				this.$errors.fail(
-					`The ${platform} does not need to have its resources updated.`
+					`The ${platform} does not need to have its resources updated.`,
 				);
 			}
 
 			if (
 				this.$androidResourcesMigrationService.hasMigrated(
-					this.$projectData.getAppResourcesDirectoryPath()
+					this.$projectData.getAppResourcesDirectoryPath(),
 				)
 			) {
 				this.$errors.fail(
-					"The App_Resources have already been updated for the Android platform."
+					"The App_Resources have already been updated for the Android platform.",
 				);
 			}
 		}

@@ -122,7 +122,7 @@ export class StaticConfig implements IStaticConfig {
 				["version"],
 				"exit",
 				undefined,
-				{ throwError: false }
+				{ throwError: false },
 			);
 
 			if (proc.stderr) {
@@ -160,7 +160,7 @@ export class StaticConfig implements IStaticConfig {
 			"resources",
 			"platform-tools",
 			"android",
-			process.platform
+			process.platform,
 		);
 		const pathToPackageJson = path.join(__dirname, "..", "package.json");
 		const nsCliVersion = require(pathToPackageJson).version;

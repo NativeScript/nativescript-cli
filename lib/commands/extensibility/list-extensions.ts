@@ -7,11 +7,12 @@ import { IExtensibilityService } from "../../common/definitions/extensibility";
 export class ListExtensionsCommand implements ICommand {
 	constructor(
 		private $extensibilityService: IExtensibilityService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
-		const installedExtensions = this.$extensibilityService.getInstalledExtensions();
+		const installedExtensions =
+			this.$extensibilityService.getInstalledExtensions();
 		if (_.keys(installedExtensions).length) {
 			this.$logger.info("Installed extensions:");
 			const data = _.map(installedExtensions, (version, name) => {

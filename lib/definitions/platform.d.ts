@@ -25,7 +25,7 @@ interface IBuildPlatformAction {
 	buildPlatform(
 		platform: string,
 		buildConfig: IBuildConfig,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<string>;
 }
 
@@ -38,7 +38,7 @@ interface IPlatformData {
 	appDestinationDirectoryPath: string;
 	getBuildOutputPath(options: IBuildOutputOptions): string;
 	getValidBuildOutputData(
-		buildOptions: IBuildOutputOptions
+		buildOptions: IBuildOutputOptions,
 	): IValidBuildOutputData;
 	frameworkDirectoriesExtensions?: string[];
 	frameworkDirectoriesNames?: string[];
@@ -56,9 +56,7 @@ interface IValidBuildOutputData {
 }
 
 interface IBuildOutputOptions
-	extends Partial<IBuildForDevice>,
-		IRelease,
-		Partial<IHasAndroidBundle> {
+	extends Partial<IBuildForDevice>, IRelease, Partial<IHasAndroidBundle> {
 	outputPath?: string;
 }
 
@@ -68,7 +66,7 @@ interface IPlatformsDataService {
 
 interface INodeModulesBuilder {
 	prepareNodeModules(
-		prepareNodeModulesData: IPrepareNodeModulesData
+		prepareNodeModulesData: IPrepareNodeModulesData,
 	): Promise<void>;
 }
 
@@ -80,7 +78,7 @@ interface IPrepareNodeModulesData {
 interface INodeModulesDependenciesBuilder {
 	getProductionDependencies(
 		projectPath: string,
-		ignore?: string[]
+		ignore?: string[],
 	): IDependencyData[];
 }
 
@@ -98,7 +96,7 @@ interface IBuildInfo {
 
 interface IPlatformEnvironmentRequirements {
 	checkEnvironmentRequirements(
-		input: ICheckEnvironmentRequirementsInput
+		input: ICheckEnvironmentRequirementsInput,
 	): Promise<ICheckEnvironmentRequirementsOutput>;
 }
 
@@ -124,11 +122,11 @@ interface IAddPlatformData extends IControllerDataBase {
 interface IPlatformController {
 	addPlatform(
 		addPlatformData: IAddPlatformData,
-		projectData?: IProjectData
+		projectData?: IProjectData,
 	): Promise<void>;
 	addPlatformIfNeeded(
 		addPlatformData: IAddPlatformData,
-		projectData?: IProjectData
+		projectData?: IProjectData,
 	): Promise<void>;
 }
 
@@ -137,11 +135,11 @@ interface IAddPlatformService {
 		projectData: IProjectData,
 		platformData: IPlatformData,
 		packageToInstall: string,
-		addPlatformData: IAddPlatformData
+		addPlatformData: IAddPlatformData,
 	): Promise<string>;
 	setPlatformVersion(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		frameworkVersion: string
+		frameworkVersion: string,
 	): Promise<void>;
 }

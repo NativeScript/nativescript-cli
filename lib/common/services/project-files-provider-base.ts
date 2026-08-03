@@ -8,29 +8,28 @@ import {
 	IProjectFileInfo,
 } from "../declarations";
 
-export abstract class ProjectFilesProviderBase
-	implements IProjectFilesProvider {
+export abstract class ProjectFilesProviderBase implements IProjectFilesProvider {
 	abstract isFileExcluded(filePath: string): boolean;
 	abstract mapFilePath(
 		filePath: string,
 		platform: string,
 		projectData: any,
-		projectFilesConfig: IProjectFilesConfig
+		projectFilesConfig: IProjectFilesConfig,
 	): string;
 
 	constructor(
 		private $mobileHelper: Mobile.IMobileHelper,
-		protected $options: IOptions
+		protected $options: IOptions,
 	) {}
 
 	public getPreparedFilePath(
 		filePath: string,
-		projectFilesConfig?: IProjectFilesConfig
+		projectFilesConfig?: IProjectFilesConfig,
 	): string {
 		const projectFileInfo = this.getProjectFileInfo(
 			filePath,
 			"",
-			projectFilesConfig
+			projectFilesConfig,
 		);
 		return path.join(path.dirname(filePath), projectFileInfo.onDeviceFileName);
 	}
@@ -38,7 +37,7 @@ export abstract class ProjectFilesProviderBase
 	public getProjectFileInfo(
 		filePath: string,
 		platform: string,
-		projectFilesConfig?: IProjectFilesConfig
+		projectFilesConfig?: IProjectFilesConfig,
 	): IProjectFileInfo {
 		if (!filePath) {
 			return {
@@ -51,7 +50,7 @@ export abstract class ProjectFilesProviderBase
 		let parsed = this.parseFile(
 			filePath,
 			this.$mobileHelper.platformNames,
-			platform || ""
+			platform || "",
 		);
 		const basicConfigurations = [
 			Configurations.Debug.toLowerCase(),
@@ -60,7 +59,7 @@ export abstract class ProjectFilesProviderBase
 		if (!parsed) {
 			const validValues = basicConfigurations.concat(
 					(projectFilesConfig && projectFilesConfig.additionalConfigurations) ||
-						[]
+						[],
 				),
 				value =
 					(projectFilesConfig && projectFilesConfig.configuration) ||
@@ -80,7 +79,7 @@ export abstract class ProjectFilesProviderBase
 	private parseFile(
 		filePath: string,
 		validValues: string[],
-		value: string
+		value: string,
 	): IProjectFileInfo {
 		const regex = util.format("^(.+?)[.](%s)([.].+?)$", validValues.join("|"));
 		const parsed = filePath.match(new RegExp(regex, "i"));

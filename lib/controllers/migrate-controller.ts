@@ -1278,7 +1278,7 @@ export class MigrateController
 			`./app/polyfills.ts`,
 		].map((possiblePath) => path.resolve(projectDir, possiblePath));
 
-		let polyfillsPath = possiblePaths.find((possiblePath) => {
+		const polyfillsPath = possiblePaths.find((possiblePath) => {
 			return this.$fs.exists(possiblePath);
 		});
 

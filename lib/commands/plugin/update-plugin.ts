@@ -9,7 +9,7 @@ export class UpdatePluginCommand implements ICommand {
 	constructor(
 		private $pluginsService: IPluginsService,
 		private $projectData: IProjectData,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -18,9 +18,8 @@ export class UpdatePluginCommand implements ICommand {
 		let pluginNames = args;
 
 		if (!pluginNames || args.length === 0) {
-			const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
-				this.$projectData
-			);
+			const installedPlugins =
+				await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
 			pluginNames = installedPlugins.map((p) => p.name);
 		}
 
@@ -36,10 +35,10 @@ export class UpdatePluginCommand implements ICommand {
 		}
 
 		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
-			this.$projectData
+			this.$projectData,
 		);
 		const installedPluginNames: string[] = installedPlugins.map(
-			(pl) => pl.name
+			(pl) => pl.name,
 		);
 
 		const pluginName = args[0].toLowerCase();

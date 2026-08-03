@@ -13,13 +13,16 @@ import { injector } from "../common/yok";
 export class TestInitializationService implements ITestInitializationService {
 	private configsPath = path.join(__dirname, "..", "..", "config");
 
-	constructor(private $errors: IErrors, private $fs: IFileSystem) {}
+	constructor(
+		private $errors: IErrors,
+		private $fs: IFileSystem,
+	) {}
 
 	@cache()
 	public getDependencies(selectedFramework: string): IDependencyInformation[] {
 		const dependenciesPath = path.join(
 			this.configsPath,
-			"test-dependencies.json"
+			"test-dependencies.json",
 		);
 		const allDependencies: {
 			name: string;
@@ -29,22 +32,25 @@ export class TestInitializationService implements ITestInitializationService {
 
 		const dependenciesVersionsPath = path.join(
 			this.configsPath,
-			"test-deps-versions-generated.json"
+			"test-deps-versions-generated.json",
 		);
 		const dependenciesVersions = this.$fs.readJson(dependenciesVersionsPath);
 
-		const targetFrameworkDependencies: IDependencyInformation[] = allDependencies
-			.filter(
-				(dependency) =>
-					!dependency.framework || dependency.framework === selectedFramework
-			)
-			.map((dependency) => {
-				const dependencyVersion = dependenciesVersions[dependency.name];
-				if (!dependencyVersion) {
-					this.$errors.fail(`'${dependency}' is not a registered dependency.`);
-				}
-				return { ...dependency, version: dependencyVersion };
-			});
+		const targetFrameworkDependencies: IDependencyInformation[] =
+			allDependencies
+				.filter(
+					(dependency) =>
+						!dependency.framework || dependency.framework === selectedFramework,
+				)
+				.map((dependency) => {
+					const dependencyVersion = dependenciesVersions[dependency.name];
+					if (!dependencyVersion) {
+						this.$errors.fail(
+							`'${dependency}' is not a registered dependency.`,
+						);
+					}
+					return { ...dependency, version: dependencyVersion };
+				});
 
 		return targetFrameworkDependencies;
 	}
@@ -57,7 +63,7 @@ export class TestInitializationService implements ITestInitializationService {
 		const configsPath = path.join(__dirname, "..", "..", "config");
 		const dependenciesPath = path.join(configsPath, "test-dependencies.json");
 		const allDependencies: { name: string; framework?: string }[] = JSON.parse(
-			fs.readFileSync(dependenciesPath, { encoding: "utf-8" })
+			fs.readFileSync(dependenciesPath, { encoding: "utf-8" }),
 		);
 		const frameworks = _.uniqBy(allDependencies, "framework")
 			.map((item) => item && item.framework)

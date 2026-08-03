@@ -6,7 +6,7 @@ import { PlatformTypes } from "../../constants";
 export class DoctorCommand implements ICommand {
 	constructor(
 		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
+		private $projectHelper: IProjectHelper,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -24,7 +24,7 @@ injector.registerCommand("doctor|*all", DoctorCommand);
 export class DoctorIosCommand implements ICommand {
 	constructor(
 		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
+		private $projectHelper: IProjectHelper,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -44,7 +44,7 @@ injector.registerCommand("doctor|ios", DoctorIosCommand);
 export class DoctorAndroidCommand implements ICommand {
 	constructor(
 		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
+		private $projectHelper: IProjectHelper,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];

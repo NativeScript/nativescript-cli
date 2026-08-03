@@ -20,18 +20,18 @@ export class ProjectCleanupService implements IProjectCleanupService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $projectHelper: IProjectHelper,
-		private $terminalSpinnerService: ITerminalSpinnerService
+		private $terminalSpinnerService: ITerminalSpinnerService,
 	) {}
 
 	public async clean(
 		pathsToClean: string[],
-		options?: IProjectCleanupOptions
+		options?: IProjectCleanupOptions,
 	): Promise<IProjectCleanupResult> {
 		this.spinner = this.$terminalSpinnerService.createSpinner({
 			isSilent: options?.silent,
 		});
 
-		let stats = options?.stats ? new Map<string, number>() : false;
+		const stats = options?.stats ? new Map<string, number>() : false;
 
 		let success = true;
 		for (const pathToClean of pathsToClean) {
@@ -39,10 +39,10 @@ export class ProjectCleanupService implements IProjectCleanupService {
 				(error) => {
 					this.$logger.trace(
 						`Encountered error while cleaning. Error is: ${error.message}.`,
-						error
+						error,
 					);
 					return { ok: false };
-				}
+				},
 			);
 			if (stats && "size" in cleanRes) {
 				stats.set(pathToClean, cleanRes.size);
@@ -63,7 +63,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 
 	public async cleanPath(
 		pathToClean: string,
-		options?: IProjectCleanupOptions
+		options?: IProjectCleanupOptions,
 	): Promise<IProjectPathCleanupResult> {
 		const dryRun = options?.dryRun ?? false;
 		const logPrefix = dryRun ? color.grey("(dry run) ") : "";
@@ -78,7 +78,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 
 		const filePath = path.resolve(this.$projectHelper.projectDir, pathToClean);
 		const displayPath = color.yellow(
-			`${path.relative(this.$projectHelper.projectDir, filePath)}`
+			`${path.relative(this.$projectHelper.projectDir, filePath)}`,
 		);
 
 		this.$logger.trace(`${logPrefix}Trying to clean '${filePath}'`);
@@ -93,13 +93,13 @@ export class ProjectCleanupService implements IProjectCleanupService {
 
 			if (stat.isDirectory()) {
 				this.$logger.trace(
-					`${logPrefix}Path '${filePath}' is a directory, deleting.`
+					`${logPrefix}Path '${filePath}' is a directory, deleting.`,
 				);
 				!dryRun && this.$fs.deleteDirectorySafe(filePath);
 				fileType = "directory";
 			} else {
 				this.$logger.trace(
-					`${logPrefix}Path '${filePath}' is a file, deleting.`
+					`${logPrefix}Path '${filePath}' is a file, deleting.`,
 				);
 				!dryRun && this.$fs.deleteFile(filePath);
 				fileType = "file";
@@ -122,7 +122,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 
 		this.$logger.trace(`${logPrefix}Path '${filePath}' not found, skipping.`);
 		this.spinner.info(
-			`${logPrefix}Skipping ${displayPath} because it doesn't exist.`
+			`${logPrefix}Skipping ${displayPath} because it doesn't exist.`,
 		);
 
 		if (options?.stats) {

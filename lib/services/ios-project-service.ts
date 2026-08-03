@@ -1115,7 +1115,7 @@ export class IOSProjectService
 			name = name.substr(1, name.length - 2);
 		}
 
-		return name.replace(/\\\"/g, '"');
+		return name.replace(/\\"/g, '"');
 	}
 
 	private getLibSubpathRelativeToProjectPath(
@@ -1135,7 +1135,7 @@ export class IOSProjectService
 
 	private getPbxProjPath(projectData: IProjectData): string {
 		if (this.$options.hostProjectPath) {
-			let xcodeProjectPath = this.$xcprojService.findXcodeProject(
+			const xcodeProjectPath = this.$xcprojService.findXcodeProject(
 				this.$options.hostProjectPath,
 			);
 			if (!xcodeProjectPath) {

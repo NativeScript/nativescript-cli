@@ -34,7 +34,7 @@ class AndroidDebugBridgeMock {
 
 	public async pushFile(
 		localFilePath: string,
-		deviceFilePath: string
+		deviceFilePath: string,
 	): Promise<void> {
 		await this.executeCommand(["push", localFilePath, deviceFilePath]);
 	}
@@ -49,17 +49,17 @@ class LocalToDevicePathDataMock {
 
 	public getDevicePath(): string {
 		return `${LiveSyncPaths.ANDROID_TMP_DIR_NAME}/${path.basename(
-			this.filePath
+			this.filePath,
 		)}`;
 	}
 }
 
-function mockFsStats(options: {
-	isDirectory: boolean;
-	isFile: boolean;
-}): (
-	filePath: string
-) => { isDirectory: () => boolean; isFile: () => boolean } {
+function mockFsStats(options: { isDirectory: boolean; isFile: boolean }): (
+	filePath: string,
+) => {
+	isDirectory: () => boolean;
+	isFile: () => boolean;
+} {
 	return (filePath: string) => ({
 		isDirectory: (): boolean => options.isDirectory,
 		isFile: (): boolean => options.isFile,
@@ -117,7 +117,7 @@ function setup(options?: { deviceAndroidVersion?: string }) {
 		`${projectRoot}/${unmodifiedFileName}`,
 	];
 	const localToDevicePaths = _.map(files, (file) =>
-		injector.resolve(LocalToDevicePathDataMock, { filePath: file })
+		injector.resolve(LocalToDevicePathDataMock, { filePath: file }),
 	);
 
 	const deviceAppData = createDeviceAppData(options.deviceAndroidVersion);
@@ -149,7 +149,7 @@ describe("AndroidDeviceFileSystem", () => {
 			await androidDeviceFileSystem.transferDirectory(
 				testSetup.deviceAppData,
 				testSetup.localToDevicePaths,
-				testSetup.projectRoot
+				testSetup.projectRoot,
 			);
 
 			assert.isTrue(isAdbPushExecuted);
@@ -164,7 +164,7 @@ describe("AndroidDeviceFileSystem", () => {
 			await androidDeviceFileSystem.transferDirectory(
 				testSetup.deviceAppData,
 				testSetup.localToDevicePaths,
-				testSetup.projectRoot
+				testSetup.projectRoot,
 			);
 
 			assert.isTrue(isAdbPushExecuted);
@@ -179,7 +179,7 @@ describe("AndroidDeviceFileSystem", () => {
 			await androidDeviceFileSystem.transferDirectory(
 				testSetup.deviceAppData,
 				testSetup.localToDevicePaths,
-				testSetup.projectRoot
+				testSetup.projectRoot,
 			);
 
 			assert.isTrue(isAdbPushExecuted);
@@ -194,7 +194,7 @@ describe("AndroidDeviceFileSystem", () => {
 			await androidDeviceFileSystem.transferDirectory(
 				testSetup.deviceAppData,
 				testSetup.localToDevicePaths,
-				testSetup.projectRoot
+				testSetup.projectRoot,
 			);
 
 			assert.isTrue(isAdbPushExecuted);

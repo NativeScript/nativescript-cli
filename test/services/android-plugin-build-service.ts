@@ -449,7 +449,7 @@ dependencies {
 		const gradleWrappersContent = fs.readText(
 			path.join(tempFolder, shortPluginName, "build.gradle"),
 		);
-		const androidVersionRegex = /com\.android\.tools\.build\:gradle\:(.*)['"]/g;
+		const androidVersionRegex = /com\.android\.tools\.build:gradle:(.*)['"]/g;
 		const androidVersion = androidVersionRegex.exec(gradleWrappersContent)[1];
 
 		// in case it's a variable, return expected - not perfect, but should be the correct behavior...
@@ -470,7 +470,7 @@ dependencies {
 				"gradle-wrapper.properties",
 			),
 		);
-		const gradleVersionRegex = /gradle\-(.*)\-bin\.zip\r?\n/g;
+		const gradleVersionRegex = /gradle-(.*)-bin\.zip\r?\n/g;
 		const gradleVersion = gradleVersionRegex.exec(buildGradleContent)[1];
 
 		return gradleVersion;

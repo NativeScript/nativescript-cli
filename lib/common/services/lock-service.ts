@@ -16,7 +16,7 @@ export class LockService implements ILockService {
 	private getAbsoluteLockFilePath(relativeLockFilePath: string) {
 		return path.join(
 			this.$settingsService.getProfileDir(),
-			relativeLockFilePath
+			relativeLockFilePath,
 		);
 	}
 
@@ -34,13 +34,13 @@ export class LockService implements ILockService {
 	constructor(
 		private $fs: IFileSystem,
 		private $settingsService: ISettingsService,
-		private $cleanupService: ICleanupService
+		private $cleanupService: ICleanupService,
 	) {}
 
 	public async executeActionWithLock<T>(
 		action: () => Promise<T>,
 		lockFilePath?: string,
-		lockOpts?: ILockOptions
+		lockOpts?: ILockOptions,
 	): Promise<T> {
 		const releaseFunc = await this.lock(lockFilePath, lockOpts);
 
@@ -54,11 +54,11 @@ export class LockService implements ILockService {
 
 	public async lock(
 		lockFilePath?: string,
-		lockOpts?: ILockOptions
+		lockOpts?: ILockOptions,
 	): Promise<() => void> {
 		const { filePath, fileOpts } = this.getLockFileSettings(
 			lockFilePath,
-			lockOpts
+			lockOpts,
 		);
 
 		for (const pathToClean of this.getPathsForCleanupAction(filePath)) {
@@ -99,7 +99,7 @@ export class LockService implements ILockService {
 
 	private getLockFileSettings(
 		filePath?: string,
-		fileOpts?: ILockOptions
+		fileOpts?: ILockOptions,
 	): { filePath: string; fileOpts: ILockOptions } {
 		if (filePath && !path.isAbsolute(filePath)) {
 			filePath = this.getAbsoluteLockFilePath(filePath);

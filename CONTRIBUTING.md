@@ -50,9 +50,10 @@ Before you submit a Pull Request, consider the following guidelines.
 ```bash
     npm test
 ```
-* Ensure that your code is formatted.
+* Ensure that your code is formatted and lints cleanly.
 ```bash
-    npm run prettier
+    npm run format
+    npm run lint
 ```
 * Commit your changes following the [commit message guidelines](https://github.com/NativeScript/NativeScript/blob/master/CONTRIBUTING.md#-commit-message-guidelines) (the commit message is used to generate release notes). 
 ```bash

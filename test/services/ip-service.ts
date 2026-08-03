@@ -15,7 +15,7 @@ describe("ipService", () => {
 		testInjector.register("httpClient", {
 			httpRequest: async (
 				options: any,
-				proxySettings?: IProxySettings
+				proxySettings?: IProxySettings,
 			): Promise<Server.IResponse> => <any>{},
 		});
 
@@ -31,7 +31,7 @@ describe("ipService", () => {
 			const httpRequestPassedOptions: any[] = [];
 			httpClient.httpRequest = async (
 				options: any,
-				proxySettings?: IProxySettings
+				proxySettings?: IProxySettings,
 			): Promise<Server.IResponse> => {
 				httpRequestPassedOptions.push(options);
 				return <any>{ body: JSON.stringify({ ip }) };
@@ -52,7 +52,7 @@ describe("ipService", () => {
 			const httpRequestPassedOptions: any[] = [];
 			httpClient.httpRequest = async (
 				options: any,
-				proxySettings?: IProxySettings
+				proxySettings?: IProxySettings,
 			): Promise<Server.IResponse> => {
 				httpRequestPassedOptions.push(options);
 				if (options.url === "https://api.myip.com") {
@@ -74,7 +74,7 @@ describe("ipService", () => {
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			assert.isTrue(
 				logger.traceOutput.indexOf(errMsgForMyipCom) !== -1,
-				`Trace output\n'${logger.traceOutput}'\ndoes not contain expected message:\n${errMsgForMyipCom}`
+				`Trace output\n'${logger.traceOutput}'\ndoes not contain expected message:\n${errMsgForMyipCom}`,
 			);
 		});
 
@@ -84,7 +84,7 @@ describe("ipService", () => {
 			const httpRequestPassedOptions: any[] = [];
 			httpClient.httpRequest = async (
 				options: any,
-				proxySettings?: IProxySettings
+				proxySettings?: IProxySettings,
 			): Promise<Server.IResponse> => {
 				httpRequestPassedOptions.push(options);
 				if (options.url === "https://api.myip.com") {
@@ -110,11 +110,11 @@ describe("ipService", () => {
 			const logger = testInjector.resolve<LoggerStub>("logger");
 			assert.isTrue(
 				logger.traceOutput.indexOf(errMsgForMyipCom) !== -1,
-				`Trace output\n'${logger.traceOutput}'\ndoes not contain expected message:\n${errMsgForMyipCom}`
+				`Trace output\n'${logger.traceOutput}'\ndoes not contain expected message:\n${errMsgForMyipCom}`,
 			);
 			assert.isTrue(
 				logger.traceOutput.indexOf(errMsgForIpifyOrg) !== -1,
-				`Trace output\n'${logger.traceOutput}'\ndoes not contain expected message:\n${errMsgForMyipCom}`
+				`Trace output\n'${logger.traceOutput}'\ndoes not contain expected message:\n${errMsgForMyipCom}`,
 			);
 		});
 
@@ -124,7 +124,7 @@ describe("ipService", () => {
 			let httpRequestCounter = 0;
 			httpClient.httpRequest = async (
 				options: any,
-				proxySettings?: IProxySettings
+				proxySettings?: IProxySettings,
 			): Promise<Server.IResponse> => {
 				httpRequestCounter++;
 				return <any>{ body: JSON.stringify({ ip }) };

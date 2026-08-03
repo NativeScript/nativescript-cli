@@ -17,7 +17,7 @@ export class UserSettingsService implements IUserSettingsService {
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
 		const userSettingsFilePath = path.join(
 			this.$settingsService.getProfileDir(),
-			"user-settings.json"
+			"user-settings.json",
 		);
 		return this.$injector.resolve("jsonFileSettingsService", {
 			jsonFileSettingsPath: userSettingsFilePath,
@@ -26,30 +26,30 @@ export class UserSettingsService implements IUserSettingsService {
 
 	constructor(
 		private $injector: IInjector,
-		private $settingsService: ISettingsService
+		private $settingsService: ISettingsService,
 	) {}
 
 	public getSettingValue<T>(
 		settingName: string,
-		cacheOpts?: ICacheTimeoutOpts
+		cacheOpts?: ICacheTimeoutOpts,
 	): Promise<T> {
 		return this.$jsonFileSettingsService.getSettingValue<T>(
 			settingName,
-			cacheOpts
+			cacheOpts,
 		);
 	}
 
 	public saveSetting<T>(
 		key: string,
 		value: T,
-		cacheOpts?: IUseCacheOpts
+		cacheOpts?: IUseCacheOpts,
 	): Promise<void> {
 		return this.$jsonFileSettingsService.saveSetting<T>(key, value, cacheOpts);
 	}
 
 	public saveSettings(
 		data: IDictionary<{}>,
-		cacheOpts?: IUseCacheOpts
+		cacheOpts?: IUseCacheOpts,
 	): Promise<void> {
 		return this.$jsonFileSettingsService.saveSettings(data, cacheOpts);
 	}

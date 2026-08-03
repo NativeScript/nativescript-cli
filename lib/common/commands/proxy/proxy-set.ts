@@ -35,7 +35,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 		protected $analyticsService: IAnalyticsService,
 		protected $logger: ILogger,
 		protected $options: IOptions,
-		protected $proxyService: IProxyService
+		protected $proxyService: IProxyService,
 	) {
 		super($analyticsService, $logger, $proxyService, proxySetCommandName);
 	}
@@ -49,7 +49,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 		if (noUrl) {
 			if (!isInteractive()) {
 				this.$errors.failWithHelp(
-					"Console is not interactive - you need to supply all command parameters."
+					"Console is not interactive - you need to supply all command parameters.",
 				);
 			} else {
 				urlString = await this.$prompter.getString("Url", {
@@ -61,13 +61,13 @@ export class ProxySetCommand extends ProxyCommandBase {
 		let urlObj = parse(urlString);
 		if ((!urlObj.protocol || !urlObj.hostname) && !isInteractive()) {
 			this.$errors.fail(
-				"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname."
+				"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname.",
 			);
 		}
 
 		while (!urlObj.protocol || !urlObj.hostname) {
 			this.$logger.warn(
-				"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname."
+				"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname.",
 			);
 			urlString = await this.$prompter.getString("Url", { allowEmpty: false });
 			urlObj = parse(urlString);
@@ -86,7 +86,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 				password !== authCredentials.password)
 		) {
 			this.$errors.fail(
-				"The credentials you have provided in the url address mismatch those passed as command line arguments."
+				"The credentials you have provided in the url address mismatch those passed as command line arguments.",
 			);
 		}
 		username = username || authCredentials.username;
@@ -95,11 +95,11 @@ export class ProxySetCommand extends ProxyCommandBase {
 		if (!isInteractive()) {
 			if (noPort) {
 				this.$errors.fail(
-					`The port you have specified (${port || "none"}) is not valid.`
+					`The port you have specified (${port || "none"}) is not valid.`,
 				);
 			} else if (this.isPasswordRequired(username, password)) {
 				this.$errors.failWithHelp(
-					"Console is not interactive - you need to supply all command parameters."
+					"Console is not interactive - you need to supply all command parameters.",
 				);
 			}
 		}
@@ -114,7 +114,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 
 		if (!username) {
 			this.$logger.info(
-				"In case your proxy requires authentication, please specify username and password. If authentication is not required, just leave it empty."
+				"In case your proxy requires authentication, please specify username and password. If authentication is not required, just leave it empty.",
 			);
 			username = await this.$prompter.getString("Username", {
 				defaultAction: () => "",
@@ -134,7 +134,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 
 		if (!this.$hostInfo.isWindows) {
 			this.$logger.warn(
-				`Note that storing credentials is not supported on ${platform()} yet.`
+				`Note that storing credentials is not supported on ${platform()} yet.`,
 			);
 		}
 
@@ -146,7 +146,7 @@ export class ProxySetCommand extends ProxyCommandBase {
 			EOL;
 
 		this.$logger.warn(
-			`${messageNote}Run '${clientName} proxy set --help' for more information.`
+			`${messageNote}Run '${clientName} proxy set --help' for more information.`,
 		);
 
 		await this.$proxyService.setCache(settings);

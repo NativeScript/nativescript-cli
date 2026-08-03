@@ -42,7 +42,6 @@ const logMessage = (msg: string, type?: FileLogMessageType): void => {
 	fileLogService.logData({ message: `[${uniqueId}] ${msg}`, type });
 };
 
-/* tslint:disable:no-floating-promises */
 (async () => {
 	try {
 		logMessage(`Requiring file ${jsFilePath}`);
@@ -77,4 +76,3 @@ const logMessage = (msg: string, type?: FileLogMessageType): void => {
 		);
 	}
 })();
-/* tslint:enable:no-floating-promises */

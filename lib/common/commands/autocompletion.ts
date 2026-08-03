@@ -7,7 +7,7 @@ export class AutoCompleteCommand implements ICommand {
 	constructor(
 		private $autoCompletionService: IAutoCompletionService,
 		private $logger: ILogger,
-		private $prompter: IPrompter
+		private $prompter: IPrompter,
 	) {}
 
 	public disableAnalytics = true;
@@ -24,13 +24,13 @@ export class AutoCompleteCommand implements ICommand {
 				}
 			} else {
 				this.$logger.info(
-					"If you are using bash or zsh, you can enable command-line completion."
+					"If you are using bash or zsh, you can enable command-line completion.",
 				);
 				const message = "Do you want to enable it now?";
 
 				const autoCompetionStatus = await this.$prompter.confirm(
 					message,
-					() => true
+					() => true,
 				);
 				if (autoCompetionStatus) {
 					await this.$autoCompletionService.enableAutoCompletion();
@@ -47,7 +47,7 @@ injector.registerCommand("autocomplete|*default", AutoCompleteCommand);
 export class DisableAutoCompleteCommand implements ICommand {
 	constructor(
 		private $autoCompletionService: IAutoCompletionService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public disableAnalytics = true;
@@ -66,7 +66,7 @@ injector.registerCommand("autocomplete|disable", DisableAutoCompleteCommand);
 export class EnableAutoCompleteCommand implements ICommand {
 	constructor(
 		private $autoCompletionService: IAutoCompletionService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public disableAnalytics = true;
@@ -85,7 +85,7 @@ injector.registerCommand("autocomplete|enable", EnableAutoCompleteCommand);
 export class AutoCompleteStatusCommand implements ICommand {
 	constructor(
 		private $autoCompletionService: IAutoCompletionService,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public disableAnalytics = true;

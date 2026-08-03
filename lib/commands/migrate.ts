@@ -11,7 +11,7 @@ export class MigrateCommand implements ICommand {
 		private $migrateController: IMigrateController,
 		private $staticConfig: Config.IStaticConfig,
 		private $projectData: IProjectData,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -24,14 +24,13 @@ export class MigrateCommand implements ICommand {
 				this.$devicePlatformsConstants.iOS,
 			],
 		};
-		const shouldMigrateResult = await this.$migrateController.shouldMigrate(
-			migrationData
-		);
+		const shouldMigrateResult =
+			await this.$migrateController.shouldMigrate(migrationData);
 
 		if (!shouldMigrateResult) {
 			const cliVersion = this.$staticConfig.version;
 			this.$logger.printMarkdown(
-				`__Project is compatible with NativeScript \`v${cliVersion}\`__`
+				`__Project is compatible with NativeScript \`v${cliVersion}\`__`,
 			);
 			return;
 		}

@@ -9,13 +9,13 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 	) {
 		super();
 	}
 
 	public async startLookingForDevices(
-		options?: Mobile.IDeviceLookingOptions
+		options?: Mobile.IDeviceLookingOptions,
 	): Promise<void> {
 		this.$logger.trace("Options for ios-device-discovery", options);
 
@@ -51,12 +51,12 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 			(deviceInfo: IOSDeviceLib.IDeviceActionInfo) => {
 				this.removeDevice(deviceInfo.deviceId);
 			},
-			options
+			options,
 		);
 	}
 
 	private createDevice(
-		deviceActionInfo: IOSDeviceLib.IDeviceActionInfo
+		deviceActionInfo: IOSDeviceLib.IDeviceActionInfo,
 	): IOSDevice {
 		const device = this.$injector.resolve(IOSDevice, {
 			deviceActionInfo: deviceActionInfo,

@@ -273,7 +273,7 @@ export class CleanCommand implements ICommand {
 		);
 		spinner.warn(`This action cannot be undone!`);
 
-		let confirmed = await this.$prompter.confirm(
+		const confirmed = await this.$prompter.confirm(
 			"Are you sure you want to clean the selected projects?",
 		);
 		if (!confirmed) {
@@ -337,7 +337,7 @@ export class CleanCommand implements ICommand {
 	private async getNSProjectPathsInDirectory(
 		dir = process.cwd(),
 	): Promise<string[]> {
-		let nsDirs: string[] = [];
+		const nsDirs: string[] = [];
 
 		const getFiles = async (dir: string) => {
 			if (dir.includes("node_modules")) {

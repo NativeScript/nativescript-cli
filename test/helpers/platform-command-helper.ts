@@ -65,12 +65,12 @@ describe("PlatformCommandHelper", () => {
 					await platformCommandHelper.addPlatforms(
 						[platform],
 						projectData,
-						null
+						null,
 					);
 
 					assert.isTrue(isAddPlatformCalled);
 				});
-			}
+			},
 		);
 		_.each(["ios", "android"], (platform) => {
 			it(`should fail if ${platform} platform is already installed`, async () => {
@@ -78,7 +78,7 @@ describe("PlatformCommandHelper", () => {
 
 				await assert.isRejected(
 					platformCommandHelper.addPlatforms([platform], projectData, ""),
-					`Platform ${platform} already added`
+					`Platform ${platform} already added`,
 				);
 			});
 		});
@@ -99,7 +99,7 @@ describe("PlatformCommandHelper", () => {
 				await platformCommandHelper.cleanPlatforms(
 					[platform],
 					injector.resolve("projectData"),
-					""
+					"",
 				);
 			});
 		});

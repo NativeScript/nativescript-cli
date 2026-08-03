@@ -3,7 +3,11 @@ import { getCurrentEpochTime, sleep } from "../../helpers";
 import { EOL } from "os";
 import * as _ from "lodash";
 import { LoggerConfigData } from "../../../constants";
-import { IChildProcess, IUserSettingsService, IUtils } from "../../declarations";
+import {
+	IChildProcess,
+	IUserSettingsService,
+	IUtils,
+} from "../../declarations";
 import { injector } from "../../yok";
 import * as semver from "semver";
 
@@ -197,7 +201,9 @@ export class AndroidEmulatorServices
 				emulator.imageIdentifier,
 			);
 			try {
-				const additionalArgs = await this.$userSettingsService.getSettingValue<string[]>("androidEmulatorStartArgs");
+				const additionalArgs = await this.$userSettingsService.getSettingValue<
+					string[]
+				>("androidEmulatorStartArgs");
 				if (additionalArgs?.length) {
 					startEmulatorArgs.push(...additionalArgs);
 				}

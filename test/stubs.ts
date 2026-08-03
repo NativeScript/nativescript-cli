@@ -1,5 +1,3 @@
-/* tslint:disable:no-empty */
-
 import * as util from "util";
 import { assert } from "chai";
 import { EventEmitter } from "events";
@@ -386,9 +384,7 @@ export class ErrorsStub implements IErrors {
 	): void {}
 }
 
-export class PackageInstallationManagerStub
-	implements IPackageInstallationManager
-{
+export class PackageInstallationManagerStub implements IPackageInstallationManager {
 	clearInspectorCache(): void {
 		return undefined;
 	}
@@ -477,7 +473,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 		return "";
 	}
 
-	public async view(packageName: string, config: Object): Promise<any> {
+	public async view(packageName: string, config: object): Promise<any> {
 		return {};
 	}
 
@@ -735,9 +731,7 @@ export class ProjectDataStub implements IProjectData {
 	}
 }
 
-export class AndroidPluginBuildServiceStub
-	implements IAndroidPluginBuildService
-{
+export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService {
 	buildAar(options: IPluginBuildOptions): Promise<boolean> {
 		return Promise.resolve(true);
 	}
@@ -1313,9 +1307,7 @@ export class CommandsService implements ICommandsService {
 	}
 }
 
-export class AndroidResourcesMigrationServiceStub
-	implements IAndroidResourcesMigrationService
-{
+export class AndroidResourcesMigrationServiceStub implements IAndroidResourcesMigrationService {
 	canMigrate(platformString: string): boolean {
 		return true;
 	}
@@ -1329,9 +1321,7 @@ export class AndroidResourcesMigrationServiceStub
 	}
 }
 
-export class AndroidBundleValidatorHelper
-	implements IAndroidBundleValidatorHelper
-{
+export class AndroidBundleValidatorHelper implements IAndroidBundleValidatorHelper {
 	validateDeviceApiLevel(device: Mobile.IDevice, buildData: IBuildData): void {
 		return;
 	}

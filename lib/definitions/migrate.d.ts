@@ -37,10 +37,10 @@ interface IMigrationDependency extends IDependency, IDependencyVersion {
 	shouldMigrateAction?: (
 		dependency: IMigrationDependency,
 		projectData: IProjectData,
-		loose: boolean
+		loose: boolean,
 	) => Promise<boolean>;
 	migrateAction?: (
 		projectData: IProjectData,
-		migrationBackupDirPath: string
+		migrationBackupDirPath: string,
 	) => Promise<IMigrationDependency[]>;
 }

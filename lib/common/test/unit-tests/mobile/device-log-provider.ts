@@ -580,8 +580,8 @@ level0_1: {
 								[
 									`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE LOG file:///app/bundle.js:284:20: multiline`,
 									`\tmessage`,
-									`\sfrom`,
-									`\t\sconsole.log`,
+									`sfrom`,
+									`\tsconsole.log`,
 								].join("\n"),
 							);
 							assertData(
@@ -589,8 +589,8 @@ level0_1: {
 								[
 									`CONSOLE LOG file: app/main-view-model.js:34:0 multiline`,
 									`\tmessage`,
-									`\sfrom`,
-									`\t\sconsole.log\n`,
+									`sfrom`,
+									`\tsconsole.log\n`,
 								].join("\n"),
 							);
 						});

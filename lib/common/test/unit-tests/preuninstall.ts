@@ -37,7 +37,7 @@ describe("preuninstall", () => {
 
 		testInjector.register("analyticsService", {
 			trackEventActionInGoogleAnalytics: async (
-				data: IEventActionData
+				data: IEventActionData,
 			): Promise<void> => undefined,
 			finishTracking: async (): Promise<void> => undefined,
 		});
@@ -56,9 +56,8 @@ describe("preuninstall", () => {
 			deletedFiles.push(pathToFile);
 		};
 
-		const preUninstallCommand: ICommand = testInjector.resolveCommand(
-			"dev-preuninstall"
-		);
+		const preUninstallCommand: ICommand =
+			testInjector.resolveCommand("dev-preuninstall");
 		await preUninstallCommand.execute([]);
 		assert.deepStrictEqual(deletedFiles, [
 			path.join(profileDir, "KillSwitches", "cli"),
@@ -94,12 +93,11 @@ describe("preuninstall", () => {
 		];
 
 		const testInjector = createTestInjector();
-		const analyticsService = testInjector.resolve<IAnalyticsService>(
-			"analyticsService"
-		);
+		const analyticsService =
+			testInjector.resolve<IAnalyticsService>("analyticsService");
 		let trackedData: IEventActionData[] = [];
 		analyticsService.trackEventActionInGoogleAnalytics = async (
-			data: IEventActionData
+			data: IEventActionData,
 		): Promise<void> => {
 			trackedData.push(data);
 		};
@@ -109,9 +107,8 @@ describe("preuninstall", () => {
 			isFinishTrackingCalled = true;
 		};
 
-		const preUninstallCommand: ICommand = testInjector.resolveCommand(
-			"dev-preuninstall"
-		);
+		const preUninstallCommand: ICommand =
+			testInjector.resolveCommand("dev-preuninstall");
 		for (const testCase of testData) {
 			helpers.isInteractive = () => testCase.isInteractive;
 			helpers.doesCurrentNpmCommandMatch = () =>
@@ -126,7 +123,7 @@ describe("preuninstall", () => {
 			]);
 			assert.isTrue(
 				isFinishTrackingCalled,
-				"At the end of the command, finishTracking must be called"
+				"At the end of the command, finishTracking must be called",
 			);
 			trackedData = [];
 		}
@@ -144,24 +141,24 @@ describe("preuninstall", () => {
 		};
 
 		const extensibilityService = testInjector.resolve<IExtensibilityService>(
-			"extensibilityService"
+			"extensibilityService",
 		);
 		let isRemoveAllExtensionsCalled = false;
 		extensibilityService.removeAllExtensions = () => {
 			isRemoveAllExtensionsCalled = true;
 		};
 
-		const packageInstallationManager = testInjector.resolve<
-			IPackageInstallationManager
-		>("packageInstallationManager");
+		const packageInstallationManager =
+			testInjector.resolve<IPackageInstallationManager>(
+				"packageInstallationManager",
+			);
 		let isClearInspectorCacheCalled = false;
 		packageInstallationManager.clearInspectorCache = () => {
 			isClearInspectorCacheCalled = true;
 		};
 
-		const preUninstallCommand: ICommand = testInjector.resolveCommand(
-			"dev-preuninstall"
-		);
+		const preUninstallCommand: ICommand =
+			testInjector.resolveCommand("dev-preuninstall");
 		await preUninstallCommand.execute([]);
 		assert.deepStrictEqual(deletedFiles, [
 			path.join(profileDir, "KillSwitches", "cli"),
@@ -169,11 +166,11 @@ describe("preuninstall", () => {
 
 		assert.isTrue(
 			isRemoveAllExtensionsCalled,
-			"When uninstall is called, `removeAllExtensions` method must be called"
+			"When uninstall is called, `removeAllExtensions` method must be called",
 		);
 		assert.isTrue(
 			isClearInspectorCacheCalled,
-			"When uninstall is called, `clearInspectorCache` method must be called"
+			"When uninstall is called, `clearInspectorCache` method must be called",
 		);
 	});
 

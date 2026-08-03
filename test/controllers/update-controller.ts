@@ -13,7 +13,7 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register(
 		"terminalSpinnerService",
-		stubs.TerminalSpinnerServiceStub
+		stubs.TerminalSpinnerServiceStub,
 	);
 	testInjector.register("projectData", {
 		projectDir,
@@ -56,7 +56,9 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 		addToPackageJson() {},
 	});
 
-	class PackageInstallationManagerStub extends stubs.PackageInstallationManagerStub {
+	class PackageInstallationManagerStub
+		extends stubs.PackageInstallationManagerStub
+	{
 		getInstalledDependencyVersion = async (packageName: string) => {
 			const projectData = testInjector.resolve("projectData");
 			const deps = {
@@ -73,7 +75,7 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 	}
 	testInjector.register(
 		"packageInstallationManager",
-		PackageInstallationManagerStub
+		PackageInstallationManagerStub,
 	);
 	testInjector.register("platformsDataService", stubs.NativeProjectDataStub);
 	testInjector.register("pacoteService", stubs.PacoteServiceStub);
@@ -94,7 +96,7 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 function assertCalled(stub: sinon.SinonStub, ...args: any[]) {
 	assert(
 		stub.calledWith(...args),
-		`Expected a call with (${args.join(", ")}).`
+		`Expected a call with (${args.join(", ")}).`,
 	);
 }
 
@@ -138,25 +140,24 @@ describe("update controller method tests", () => {
 
 		assert.isTrue(
 			hasError,
-			"expected updateController.update to throw an error"
+			"expected updateController.update to throw an error",
 		);
 		assert.isTrue(
 			backup._meta.createCalled,
-			"expected backup.create() to have been called"
+			"expected backup.create() to have been called",
 		);
 		assert.isFalse(cleanCalled, "clean called even though backup failed");
 		assert.isTrue(
 			backup._meta.removeCalled,
-			"expected backup.remove() to have been called"
+			"expected backup.remove() to have been called",
 		);
 	});
 
 	it("handles exact versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -175,9 +176,8 @@ describe("update controller method tests", () => {
 	it("handles range versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -196,9 +196,8 @@ describe("update controller method tests", () => {
 	it("handles range versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -217,9 +216,8 @@ describe("update controller method tests", () => {
 	it("handles latest tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -238,9 +236,8 @@ describe("update controller method tests", () => {
 	it("handles existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -259,9 +256,8 @@ describe("update controller method tests", () => {
 	it("handles non-existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -276,9 +272,8 @@ describe("update controller method tests", () => {
 	it("handles partially existing tag versions", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 
@@ -294,9 +289,8 @@ describe("update controller method tests", () => {
 	it("handles no version - falls back to latest", async () => {
 		const testInjector = createTestInjector();
 		const updateController = testInjector.resolve("updateController");
-		const pluginsService = testInjector.resolve<IPluginsService>(
-			"pluginsService"
-		);
+		const pluginsService =
+			testInjector.resolve<IPluginsService>("pluginsService");
 
 		const stub = sinon.stub(pluginsService, "addToPackageJson");
 

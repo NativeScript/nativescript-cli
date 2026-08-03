@@ -28,9 +28,7 @@ interface IiOSBuildData extends IBuildData {
 }
 
 interface IAndroidBuildData
-	extends IBuildData,
-		IAndroidSigningData,
-		IHasAndroidBundle {
+	extends IBuildData, IAndroidSigningData, IHasAndroidBundle {
 	gradlePath?: string;
 	gradleArgs?: string;
 }
@@ -56,35 +54,35 @@ interface IBuildDataService {
 interface IBuildArtifactsService {
 	getAllAppPackages(
 		buildOutputPath: string,
-		validBuildOutputData: IValidBuildOutputData
+		validBuildOutputData: IValidBuildOutputData,
 	): IApplicationPackage[];
 	getLatestAppPackagePath(
 		platformData: IPlatformData,
-		buildOutputOptions: IBuildOutputOptions
+		buildOutputOptions: IBuildOutputOptions,
 	): Promise<string>;
 	copyLatestAppPackage(
 		targetPath: string,
 		platformData: IPlatformData,
-		buildOutputOptions: IBuildOutputOptions
+		buildOutputOptions: IBuildOutputOptions,
 	): void;
 }
 
 interface IBuildInfoFileService {
 	getLocalBuildInfo(
 		platformData: IPlatformData,
-		buildData: IBuildData
+		buildData: IBuildData,
 	): IBuildInfo;
 	getDeviceBuildInfo(
 		device: Mobile.IDevice,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<IBuildInfo>;
 	saveLocalBuildInfo(
 		platformData: IPlatformData,
-		buildInfoFileDirname: string
+		buildInfoFileDirname: string,
 	): void;
 	saveDeviceBuildInfo(
 		device: Mobile.IDevice,
 		projectData: IProjectData,
-		outputFilePath: string
+		outputFilePath: string,
 	): Promise<void>;
 }

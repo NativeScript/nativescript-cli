@@ -9,7 +9,7 @@ export class HelpCommand implements ICommand {
 	constructor(
 		private $injector: IInjector,
 		private $helpService: IHelpService,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	public enableHooks = false;
@@ -24,7 +24,7 @@ export class HelpCommand implements ICommand {
 		let commandArguments = _.tail(args);
 		const hierarchicalCommand = this.$injector.buildHierarchicalCommand(
 			args[0],
-			commandArguments
+			commandArguments,
 		);
 		if (hierarchicalCommand) {
 			commandName = hierarchicalCommand.commandName;

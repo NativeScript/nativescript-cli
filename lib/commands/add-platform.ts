@@ -22,13 +22,13 @@ export class AddPlatformCommand
 		$platformValidationService: IPlatformValidationService,
 		$projectData: IProjectData,
 		$platformsDataService: IPlatformsDataService,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {
 		super(
 			$options,
 			$platformsDataService,
 			$platformValidationService,
-			$projectData
+			$projectData,
 		);
 		this.$projectData.initializeProjectData();
 	}
@@ -37,14 +37,14 @@ export class AddPlatformCommand
 		await this.$platformCommandHelper.addPlatforms(
 			args,
 			this.$projectData,
-			this.$options.frameworkPath
+			this.$options.frameworkPath,
 		);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
 		if (!args || args.length === 0) {
 			this.$errors.failWithHelp(
-				"No platform specified. Please specify a platform to add."
+				"No platform specified. Please specify a platform to add.",
 			);
 		}
 
@@ -55,11 +55,11 @@ export class AddPlatformCommand
 			if (
 				!this.$platformValidationService.isPlatformSupportedForOS(
 					arg,
-					this.$projectData
+					this.$projectData,
 				)
 			) {
 				this.$errors.fail(
-					`Applications for platform ${arg} cannot be built on this OS`
+					`Applications for platform ${arg} cannot be built on this OS`,
 				);
 			}
 

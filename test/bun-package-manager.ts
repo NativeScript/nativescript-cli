@@ -52,7 +52,7 @@ describe("node-package-manager", () => {
 				const testInjector = createTestInjector();
 				const npm = testInjector.resolve<BunPackageManager>("bun");
 				const templateNameParts = await npm.getPackageNameParts(
-					testCase.templateFullName
+					testCase.templateFullName,
 				);
 				assert.strictEqual(templateNameParts.name, testCase.expectedName);
 				assert.strictEqual(templateNameParts.version, testCase.expectedVersion);

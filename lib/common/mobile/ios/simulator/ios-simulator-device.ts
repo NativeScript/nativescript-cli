@@ -28,16 +28,16 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		private $iOSEmulatorServices: Mobile.IiOSSimulatorService,
 		private $iOSNotification: IiOSNotification,
 		private $iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		protected $logger: ILogger
+		protected $logger: ILogger,
 	) {
 		super();
 		this.applicationManager = this.$injector.resolve(
 			applicationManagerPath.IOSSimulatorApplicationManager,
-			{ iosSim: this.$iOSSimResolver.iOSSim, device: this }
+			{ iosSim: this.$iOSSimResolver.iOSSim, device: this },
 		);
 		this.fileSystem = this.$injector.resolve(
 			fileSystemPath.IOSSimulatorFileSystem,
-			{ iosSim: this.$iOSSimResolver.iOSSim }
+			{ iosSim: this.$iOSSimResolver.iOSSim },
 		);
 		this.deviceInfo = {
 			imageIdentifier: this.simulator.id,
@@ -65,7 +65,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 
 	@cache()
 	public async openDeviceLogStream(
-		options?: Mobile.IiOSLogStreamOptions
+		options?: Mobile.IiOSLogStreamOptions,
 	): Promise<void> {
 		options = options || {};
 		options.predicate = options.hasOwnProperty("predicate")
@@ -73,7 +73,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 			: constants.IOS_LOG_PREDICATE;
 		return this.$iOSSimulatorLogProvider.startLogProcess(
 			this.simulator.id,
-			options
+			options,
 		);
 	}
 
@@ -81,11 +81,11 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 		let socket: net.Socket;
 		const attachRequestMessage = this.$iOSNotification.getAttachRequest(
 			appId,
-			this.deviceInfo.identifier
+			this.deviceInfo.identifier,
 		);
 		await this.$iOSEmulatorServices.postDarwinNotification(
 			attachRequestMessage,
-			this.deviceInfo.identifier
+			this.deviceInfo.identifier,
 		);
 
 		// Retry posting the notification every five seconds, in case the AttachRequest
@@ -94,7 +94,7 @@ export class IOSSimulator extends IOSDeviceBase implements Mobile.IiOSDevice {
 			this.$iOSEmulatorServices
 				.postDarwinNotification(
 					attachRequestMessage,
-					this.deviceInfo.identifier
+					this.deviceInfo.identifier,
 				)
 				.catch((e) => this.$logger.error(e));
 		}, 5e3);

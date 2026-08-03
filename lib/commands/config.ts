@@ -38,7 +38,9 @@ export class ConfigListCommand implements ICommand {
 					.join("\n")
 			);
 		} else {
-			return color.yellow(typeof value === 'undefined' ? 'undefined' : value.toString());
+			return color.yellow(
+				typeof value === "undefined" ? "undefined" : value.toString(),
+			);
 		}
 	}
 }

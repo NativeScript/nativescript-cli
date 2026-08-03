@@ -3,11 +3,11 @@ interface ICommandsService {
 	allCommands(opts: { includeDevCommands: boolean }): string[];
 	tryExecuteCommand(
 		commandName: string,
-		commandArguments: string[]
+		commandArguments: string[],
 	): Promise<void>;
 	executeCommandUnchecked(
 		commandName: string,
-		commandArguments: string[]
+		commandArguments: string[],
 	): Promise<boolean>;
 }
 

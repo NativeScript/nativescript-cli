@@ -21,13 +21,13 @@ export default class StartService implements IStartService {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectData: IProjectData,
 		private $logger: ILogger,
-		private $staticConfig: IStaticConfig
+		private $staticConfig: IStaticConfig,
 	) {}
 
 	toggleVerbose(): void {
 		this.verbose = true;
 		this.$logger.info(
-			this.verbose ? `Verbose logging enabled` : `Verbose logging disabled`
+			this.verbose ? `Verbose logging enabled` : `Verbose logging disabled`,
 		);
 	}
 
@@ -49,7 +49,7 @@ export default class StartService implements IStartService {
 					NS_IS_INTERACTIVE: true,
 					...process.env,
 				},
-			}
+			},
 		);
 
 		(this as any)[platformLowerCase].stdout.on("data", (data: Buffer) => {
@@ -97,7 +97,7 @@ export default class StartService implements IStartService {
 	addKeyCommandOverrides() {
 		const keys: IValidKeyName[] = ["w", "r", "R"];
 
-		for (let key of keys) {
+		for (const key of keys) {
 			this.$keyCommandHelper.addOverride(key, async () => {
 				this.ios?.send(key);
 				this.android?.send(key);

@@ -201,7 +201,7 @@ and another one`,
 				commandArguments: [],
 			});
 			assert.isTrue(
-				injector.resolve("logger").output.indexOf("bla woot bla") >= 0
+				injector.resolve("logger").output.indexOf("bla woot bla") >= 0,
 			);
 		});
 
@@ -526,15 +526,14 @@ and another one`,
 		describe("extensions tests", () => {
 			const assertData = async (
 				expectedEnumerateFilesInDirectorySyncCalledCounter: number,
-				extensionsData?: IExtensionData[]
+				extensionsData?: IExtensionData[],
 			): Promise<void> => {
 				const injector = createTestInjector({
 					isProjectTypeResult: false,
 					isPlatformResult: true,
 				});
-				const $staticConfig = injector.resolve<Config.IStaticConfig>(
-					"staticConfig"
-				);
+				const $staticConfig =
+					injector.resolve<Config.IStaticConfig>("staticConfig");
 				$staticConfig.MAN_PAGES_DIR = "man_pages_dir";
 				$staticConfig.HTML_PAGES_DIR = "html_pages_dir";
 				$staticConfig.CLIENT_NAME = "client name";
@@ -558,7 +557,7 @@ and another one`,
 				});
 
 				const $extensibilityService = injector.resolve<IExtensibilityService>(
-					"extensibilityService"
+					"extensibilityService",
 				);
 				extensionsData = extensionsData || [];
 				extensionsData.push({
@@ -568,8 +567,8 @@ and another one`,
 					pathToExtension: "extension3path",
 				});
 
-				$extensibilityService.getInstalledExtensionsData = (): IExtensionData[] =>
-					extensionsData;
+				$extensibilityService.getInstalledExtensionsData =
+					(): IExtensionData[] => extensionsData;
 
 				const helpService = injector.resolve<IHelpService>("helpService");
 				await helpService.showCommandLineHelp({
@@ -582,7 +581,7 @@ and another one`,
 				assert.equal(
 					enumerateFilesInDirectorySyncCalledCounter,
 					expectedEnumerateFilesInDirectorySyncCalledCounter,
-					`The enumerateFilesInDirectorySync method must be called exactly ${enumerateFilesInDirectorySyncCalledCounter} times.`
+					`The enumerateFilesInDirectorySync method must be called exactly ${enumerateFilesInDirectorySyncCalledCounter} times.`,
 				);
 			};
 

@@ -6,7 +6,7 @@ export class StopApplicationOnDeviceCommand implements ICommand {
 	constructor(
 		private $devicesService: Mobile.IDevicesService,
 		private $stringParameter: ICommandParameter,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	allowedParameters: ICommandParameter[] = [
@@ -34,5 +34,5 @@ export class StopApplicationOnDeviceCommand implements ICommand {
 
 injector.registerCommand(
 	["device|stop", "devices|stop"],
-	StopApplicationOnDeviceCommand
+	StopApplicationOnDeviceCommand,
 );

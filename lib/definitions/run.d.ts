@@ -32,16 +32,16 @@ declare global {
 		installOnDevice(
 			device: Mobile.IDevice,
 			buildData: IBuildData,
-			packageFile?: string
+			packageFile?: string,
 		): Promise<void>;
 		installOnDeviceIfNeeded(
 			device: Mobile.IDevice,
 			buildData: IBuildData,
-			packageFile?: string
+			packageFile?: string,
 		): Promise<void>;
 		shouldInstall(
 			device: Mobile.IDevice,
-			buildData: IBuildData
+			buildData: IBuildData,
 		): Promise<boolean>;
 	}
 }

@@ -16,7 +16,8 @@ let currentPageReloadId = 0;
 
 export class IOSDeviceLiveSyncService
 	extends DeviceLiveSyncServiceBase
-	implements INativeScriptDeviceLiveSyncService {
+	implements INativeScriptDeviceLiveSyncService
+{
 	private static MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION = "6.1.0";
 
 	private socket: net.Socket;
@@ -28,14 +29,14 @@ export class IOSDeviceLiveSyncService
 		private $lockService: ILockService,
 		protected platformsDataService: IPlatformsDataService,
 		private $platformCommandHelper: IPlatformCommandHelper,
-		protected device: Mobile.IiOSDevice
+		protected device: Mobile.IiOSDevice,
 	) {
 		super(platformsDataService, device);
 	}
 
 	private canRefreshWithNotification(
 		projectData: IProjectData,
-		liveSyncInfo?: ILiveSyncResultInfo
+		liveSyncInfo?: ILiveSyncResultInfo,
 	): boolean {
 		if (liveSyncInfo && liveSyncInfo.forceRefreshWithSocket) {
 			return false;
@@ -45,20 +46,21 @@ export class IOSDeviceLiveSyncService
 			return false;
 		}
 
-		const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
-			this.$devicePlatformsConstants.iOS,
-			projectData
-		);
+		const currentRuntimeVersion =
+			this.$platformCommandHelper.getCurrentPlatformVersion(
+				this.$devicePlatformsConstants.iOS,
+				projectData,
+			);
 		const canRefresh = semver.gte(
 			semver.coerce(currentRuntimeVersion),
-			IOSDeviceLiveSyncService.MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION
+			IOSDeviceLiveSyncService.MIN_RUNTIME_VERSION_WITH_REFRESH_NOTIFICATION,
 		);
 
 		return canRefresh;
 	}
 
 	private async setupSocketIfNeeded(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<boolean> {
 		// TODO: persist the sockets per app in order to support LiveSync on multiple apps on the same device
 		if (this.socket) {
@@ -73,12 +75,12 @@ export class IOSDeviceLiveSyncService
 				appId,
 				projectData.projectName,
 				projectData.projectDir,
-				ensureAppStarted
+				ensureAppStarted,
 			);
 		} catch (err) {
 			this.$logger.trace(
 				`Error while connecting to the debug socket. Error is:`,
-				err
+				err,
 			);
 		}
 
@@ -94,21 +96,21 @@ export class IOSDeviceLiveSyncService
 	@performanceLog()
 	public async removeFiles(
 		deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<void> {
 		await Promise.all(
 			_.map(localToDevicePaths, (localToDevicePathData) =>
 				this.device.fileSystem.deleteFile(
 					localToDevicePathData.getDevicePath(),
-					deviceAppData.appIdentifier
-				)
-			)
+					deviceAppData.appIdentifier,
+				),
+			),
 		);
 	}
 
 	public async shouldRestart(
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo
+		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
 		let shouldRestart = false;
 		const deviceAppData = liveSyncInfo.deviceAppData;
@@ -120,7 +122,7 @@ export class IOSDeviceLiveSyncService
 				liveSyncInfo,
 				localToDevicePaths,
 				projectData,
-				deviceAppData.platform
+				deviceAppData.platform,
 			);
 			const isRefreshConnectionSetup =
 				this.canRefreshWithNotification(projectData, liveSyncInfo) ||
@@ -135,7 +137,7 @@ export class IOSDeviceLiveSyncService
 
 	public async tryRefreshApplication(
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo
+		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
 		let didRefresh = true;
 		const localToDevicePaths = liveSyncInfo.modifiedFilesData;
@@ -146,24 +148,24 @@ export class IOSDeviceLiveSyncService
 				(scriptRelatedFiles = _.concat(
 					scriptRelatedFiles,
 					localToDevicePaths.filter((file) =>
-						minimatch(file.getDevicePath(), pattern, { nocase: true })
-					)
-				))
+						minimatch(file.getDevicePath(), pattern, { nocase: true }),
+					),
+				)),
 		);
 
 		const scriptFiles = _.filter(localToDevicePaths, (localToDevicePath) =>
-			_.endsWith(localToDevicePath.getDevicePath(), ".js")
+			_.endsWith(localToDevicePath.getDevicePath(), ".js"),
 		);
 		const otherFiles = _.difference(
 			localToDevicePaths,
-			_.concat(scriptFiles, scriptRelatedFiles)
+			_.concat(scriptFiles, scriptRelatedFiles),
 		);
 
 		try {
 			if (otherFiles.length) {
 				didRefresh = await this.refreshApplicationCore(
 					projectData,
-					liveSyncInfo
+					liveSyncInfo,
 				);
 			}
 		} catch (e) {
@@ -175,7 +177,7 @@ export class IOSDeviceLiveSyncService
 
 	private async refreshApplicationCore(
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo
+		liveSyncInfo: ILiveSyncResultInfo,
 	) {
 		let didRefresh = true;
 		if (this.canRefreshWithNotification(projectData, liveSyncInfo)) {
@@ -197,7 +199,7 @@ export class IOSDeviceLiveSyncService
 			didRefresh = await this.$iOSSocketRequestExecutor.executeRefreshRequest(
 				this.device,
 				5,
-				projectData.projectIdentifiers.ios
+				projectData.projectIdentifiers.ios,
 			);
 		}, `ios-device-livesync-${this.device.deviceInfo.identifier}-${projectData.projectIdentifiers.ios}.lock`);
 
@@ -206,7 +208,7 @@ export class IOSDeviceLiveSyncService
 
 	public async restartApplication(
 		projectData: IProjectData,
-		liveSyncInfo: ILiveSyncResultInfo
+		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<void> {
 		await this.device.applicationManager.restartApplication({
 			appId: liveSyncInfo.deviceAppData.appIdentifier,

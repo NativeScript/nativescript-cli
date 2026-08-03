@@ -4,7 +4,7 @@ interface IApplePortalSessionService {
 	createWebSession(contentProviderId: number): Promise<string>;
 	createUserSession(
 		credentials: ICredentials,
-		opts?: IAppleCreateUserSessionOptions
+		opts?: IAppleCreateUserSessionOptions,
 	): Promise<IApplePortalUserDetail>;
 }
 
@@ -16,14 +16,14 @@ interface IApplePortalCookieService {
 
 interface IApplePortalApplicationService {
 	getApplications(
-		user: IApplePortalUserDetail
+		user: IApplePortalUserDetail,
 	): Promise<IApplePortalApplicationSummary[]>;
 	getApplicationsByProvider(
-		contentProviderId: number
+		contentProviderId: number,
 	): Promise<IApplePortalApplication>;
 	getApplicationByBundleId(
 		user: IApplePortalUserDetail,
-		bundleId: string
+		bundleId: string,
 	): Promise<IApplePortalApplicationSummary>;
 }
 

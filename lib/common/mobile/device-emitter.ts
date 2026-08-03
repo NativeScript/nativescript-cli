@@ -9,7 +9,7 @@ import { injector } from "../yok";
 export class DeviceEmitter extends EventEmitter {
 	constructor(
 		private $deviceLogProvider: EventEmitter,
-		private $devicesService: Mobile.IDevicesService
+		private $devicesService: Mobile.IDevicesService,
 	) {
 		super();
 
@@ -24,24 +24,22 @@ export class DeviceEmitter extends EventEmitter {
 				this.attachApplicationChangedHandlers(device);
 
 				// await: Do not await as this will require to mark the lambda with async keyword, but there's no way to await the lambda itself.
-				/* tslint:disable:no-floating-promises */
 				device.openDeviceLogStream();
-				/* tslint:enable:no-floating-promises */
-			}
+			},
 		);
 
 		this.$devicesService.on(
 			DeviceDiscoveryEventNames.DEVICE_LOST,
 			(device: Mobile.IDevice) => {
 				this.emit(DeviceDiscoveryEventNames.DEVICE_LOST, device.deviceInfo);
-			}
+			},
 		);
 
 		this.$devicesService.on(
 			DeviceDiscoveryEventNames.DEVICE_UPDATED,
 			(device: Mobile.IDevice) => {
 				this.emit(DeviceDiscoveryEventNames.DEVICE_UPDATED, device.deviceInfo);
-			}
+			},
 		);
 
 		this.$deviceLogProvider.on("data", (identifier: string, data: any) => {
@@ -52,14 +50,14 @@ export class DeviceEmitter extends EventEmitter {
 			EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND,
 			(emulator: Mobile.IDeviceInfo) => {
 				this.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_FOUND, emulator);
-			}
+			},
 		);
 
 		this.$devicesService.on(
 			EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST,
 			(emulator: Mobile.IDeviceInfo) => {
 				this.emit(EmulatorDiscoveryNames.EMULATOR_IMAGE_LOST, emulator);
-			}
+			},
 		);
 	}
 
@@ -70,9 +68,9 @@ export class DeviceEmitter extends EventEmitter {
 				this.emit(
 					"applicationInstalled",
 					device.deviceInfo.identifier,
-					appIdentifier
+					appIdentifier,
 				);
-			}
+			},
 		);
 
 		device.applicationManager.on(
@@ -81,68 +79,68 @@ export class DeviceEmitter extends EventEmitter {
 				this.emit(
 					"applicationUninstalled",
 					device.deviceInfo.identifier,
-					appIdentifier
+					appIdentifier,
 				);
-			}
+			},
 		);
 
 		device.applicationManager.on(
 			"debuggableAppFound",
 			(debuggableAppInfo: Mobile.IDeviceApplicationInformation) => {
 				this.emit("debuggableAppFound", debuggableAppInfo);
-			}
+			},
 		);
 
 		device.applicationManager.on(
 			"debuggableAppLost",
 			(debuggableAppInfo: Mobile.IDeviceApplicationInformation) => {
 				this.emit("debuggableAppLost", debuggableAppInfo);
-			}
+			},
 		);
 
 		device.applicationManager.on(
 			"debuggableViewFound",
 			(
 				appIdentifier: string,
-				debuggableWebViewInfo: Mobile.IDebugWebViewInfo
+				debuggableWebViewInfo: Mobile.IDebugWebViewInfo,
 			) => {
 				this.emit(
 					"debuggableViewFound",
 					device.deviceInfo.identifier,
 					appIdentifier,
-					debuggableWebViewInfo
+					debuggableWebViewInfo,
 				);
-			}
+			},
 		);
 
 		device.applicationManager.on(
 			"debuggableViewLost",
 			(
 				appIdentifier: string,
-				debuggableWebViewInfo: Mobile.IDebugWebViewInfo
+				debuggableWebViewInfo: Mobile.IDebugWebViewInfo,
 			) => {
 				this.emit(
 					"debuggableViewLost",
 					device.deviceInfo.identifier,
 					appIdentifier,
-					debuggableWebViewInfo
+					debuggableWebViewInfo,
 				);
-			}
+			},
 		);
 
 		device.applicationManager.on(
 			"debuggableViewChanged",
 			(
 				appIdentifier: string,
-				debuggableWebViewInfo: Mobile.IDebugWebViewInfo
+				debuggableWebViewInfo: Mobile.IDebugWebViewInfo,
 			) => {
 				this.emit(
 					"debuggableViewChanged",
 					device.deviceInfo.identifier,
 					appIdentifier,
-					debuggableWebViewInfo
+					debuggableWebViewInfo,
 				);
-			}
+			},
 		);
 	}
 }

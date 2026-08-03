@@ -17,12 +17,12 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $tempService: ITempService,
-		private $injector: IInjector
+		private $injector: IInjector,
 	) {}
 
 	public async listFiles(
 		devicePath: string,
-		appIdentifier?: string
+		appIdentifier?: string,
 	): Promise<any> {
 		let listCommandArgs = ["ls", "-a", devicePath];
 		if (appIdentifier) {
@@ -35,7 +35,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	public async getFile(
 		deviceFilePath: string,
 		appIdentifier: string,
-		outputPath?: string
+		outputPath?: string,
 	): Promise<void> {
 		const stdout = !outputPath;
 
@@ -65,7 +65,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async getFileContent(
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<string> {
 		const result = await this.adb.executeShellCommand(["cat", deviceFilePath]);
 		return result;
@@ -74,26 +74,26 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	public async putFile(
 		localFilePath: string,
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		await this.adb.pushFile(localFilePath, deviceFilePath);
 	}
 
 	public async transferFiles(
 		deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		const directoriesToChmod: string[] = [];
 		const transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 		const action = async (
-			localToDevicePathData: Mobile.ILocalToDevicePathData
+			localToDevicePathData: Mobile.ILocalToDevicePathData,
 		) => {
 			const fstat = this.$fs.getFsStats(localToDevicePathData.getLocalPath());
 			if (fstat.isFile()) {
 				const devicePath = localToDevicePathData.getDevicePath();
 				await this.adb.pushFile(
 					localToDevicePathData.getLocalPath(),
-					devicePath
+					devicePath,
 				);
 				transferredFiles.push(localToDevicePathData);
 			} else if (fstat.isDirectory()) {
@@ -105,7 +105,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		await executeActionByChunks<Mobile.ILocalToDevicePathData>(
 			localToDevicePaths,
 			DEFAULT_CHUNK_SIZE,
-			action
+			action,
 		);
 
 		const dirsChmodAction = (directoryToChmod: string) =>
@@ -114,7 +114,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		await executeActionByChunks<string>(
 			_.uniq(directoriesToChmod),
 			DEFAULT_CHUNK_SIZE,
-			dirsChmodAction
+			dirsChmodAction,
 		);
 
 		return transferredFiles;
@@ -123,14 +123,14 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	public async transferDirectory(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		projectFilesPath: string
+		projectFilesPath: string,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		// starting from Android 9, adb push is throwing an exception when there are subfolders
 		// the check could be removed when we start supporting only runtime versions with sockets
 		const minAndroidWithoutAdbPushDir = "9.0.0";
 		const isAdbPushDirSupported = semver.lt(
 			semver.coerce(deviceAppData.device.deviceInfo.version),
-			minAndroidWithoutAdbPushDir
+			minAndroidWithoutAdbPushDir,
 		);
 		const deviceProjectDir = await deviceAppData.getDeviceProjectRootPath();
 		let transferredLocalToDevicePaths: Mobile.ILocalToDevicePathData[] = [];
@@ -144,7 +144,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 		if (transferredLocalToDevicePaths.length) {
 			const filesToChmodOnDevice = transferredLocalToDevicePaths.map(
-				(localToDevicePath) => localToDevicePath.getDevicePath()
+				(localToDevicePath) => localToDevicePath.getDevicePath(),
 			);
 			await this.chmodFiles(deviceProjectDir, filesToChmodOnDevice);
 		}
@@ -154,15 +154,15 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	private async chmodFiles(
 		deviceProjectRoot: string,
-		filesToChmodOnDevice: string[]
+		filesToChmodOnDevice: string[],
 	) {
 		const commandsDeviceFilePath = this.$mobileHelper.buildDevicePath(
 			deviceProjectRoot,
-			"nativescript.commands.sh"
+			"nativescript.commands.sh",
 		);
 		await this.createFileOnDevice(
 			commandsDeviceFilePath,
-			`chmod 0777 ${filesToChmodOnDevice.join(" ")}`
+			`chmod 0777 ${filesToChmodOnDevice.join(" ")}`,
 		);
 		await this.adb.executeShellCommand([commandsDeviceFilePath]);
 	}
@@ -171,19 +171,19 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		this.$logger.trace("Changed hashes are:", localToDevicePaths);
 		const transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 		const transferFileAction = async (
-			localToDevicePathData: Mobile.ILocalToDevicePathData
+			localToDevicePathData: Mobile.ILocalToDevicePathData,
 		) => {
 			transferredFiles.push(localToDevicePathData);
 			await this.transferFile(
 				localToDevicePathData.getLocalPath(),
-				localToDevicePathData.getDevicePath()
+				localToDevicePathData.getDevicePath(),
 			);
 		};
 
 		await executeActionByChunks<Mobile.ILocalToDevicePathData>(
 			localToDevicePaths,
 			DEFAULT_CHUNK_SIZE,
-			transferFileAction
+			transferFileAction,
 		);
 
 		return transferredFiles;
@@ -191,7 +191,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async transferFile(
 		localPath: string,
-		devicePath: string
+		devicePath: string,
 	): Promise<void> {
 		this.$logger.trace(`Transfering ${localPath} to ${devicePath}`);
 		const stats = this.$fs.getFsStats(localPath);
@@ -204,7 +204,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async createFileOnDevice(
 		deviceFilePath: string,
-		fileContent: string
+		fileContent: string,
 	): Promise<void> {
 		const hostTmpDir = await this.$tempService.mkdirSync("application-");
 		const commandsFileHostPath = path.join(hostTmpDir, "temp.commands.file");
@@ -217,21 +217,21 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async deleteFile(
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		await this.adb.executeShellCommand(["rm", "-rf", deviceFilePath]);
 	}
 
 	public async updateHashesOnDevice(
 		hashes: IStringDictionary,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		const deviceHashService = this.getDeviceHashService(appIdentifier);
 		await deviceHashService.uploadHashFileToDevice(hashes);
 	}
 
 	public getDeviceHashService(
-		appIdentifier: string
+		appIdentifier: string,
 	): Mobile.IAndroidDeviceHashService {
 		if (!this._deviceHashServices[appIdentifier]) {
 			this._deviceHashServices[appIdentifier] = this.$injector.resolve(
@@ -239,7 +239,7 @@ export class AndroidDeviceFileSystem implements Mobile.IDeviceFileSystem {
 				{
 					adb: this.adb,
 					appIdentifier,
-				}
+				},
 			);
 		}
 

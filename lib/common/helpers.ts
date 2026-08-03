@@ -117,7 +117,7 @@ export function regExpEscape(input: string): string {
 }
 
 export function getShortPluginName(pluginName: string): string {
-	return sanitizePluginName(pluginName).replace(/[\-]/g, "_");
+	return sanitizePluginName(pluginName).replace(/[-]/g, "_");
 }
 
 function sanitizePluginName(pluginName: string): string {
@@ -153,10 +153,9 @@ export function deferPromise<T>(): IDeferPromise<T> {
 	let reject: (reason?: any) => void;
 	let isResolved = false;
 	let isRejected = false;
-	let promise: Promise<T>;
 	let result: T | PromiseLike<T>;
 
-	promise = new Promise<T>((innerResolve, innerReject) => {
+	const promise = new Promise<T>((innerResolve, innerReject) => {
 		resolve = (value?: T | PromiseLike<T>) => {
 			isResolved = true;
 			result = value;
@@ -519,7 +518,7 @@ export function decorateMethod(
 	after: (method2: any, self2: any, result2: any, args2: any[]) => Promise<any>,
 ) {
 	return (
-		target: Object,
+		target: object,
 		propertyKey: string,
 		descriptor: TypedPropertyDescriptor<Function>,
 	) => {
@@ -853,9 +852,9 @@ export function getFormattedMilliseconds(date: Date): string {
 //THE SOFTWARE.
 
 const CLASS_NAME = /class\s+([A-Z].+?)(?:\s+.*?)?\{/;
-const CONSTRUCTOR_ARGS = /constructor\s*([^\(]*)\(\s*([^\)]*)\)/m;
+const CONSTRUCTOR_ARGS = /constructor\s*([^(]*)\(\s*([^)]*)\)/m;
 const FN_NAME_AND_ARGS =
-	/^(?:function)?\s*([^\(]*)\(\s*([^\)]*)\)\s*(=>)?\s*[{_]/m;
+	/^(?:function)?\s*([^(]*)\(\s*([^)]*)\)\s*(=>)?\s*[{_]/m;
 const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 

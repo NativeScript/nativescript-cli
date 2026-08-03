@@ -43,7 +43,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 		private $liveSyncProcessDataService: ILiveSyncProcessDataService,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $projectDataService: IProjectDataService
+		private $projectDataService: IProjectDataService,
 	) {
 		super();
 	}
@@ -52,18 +52,18 @@ export class DebugController extends EventEmitter implements IDebugController {
 	public async startDebug(debugData: IDebugData): Promise<IDebugInformation> {
 		const { debugOptions: options } = debugData;
 		const device = this.$devicesService.getDeviceByIdentifier(
-			debugData.deviceIdentifier
+			debugData.deviceIdentifier,
 		);
 
 		if (!device) {
 			this.$errors.fail(
-				`Cannot find device with identifier ${debugData.deviceIdentifier}.`
+				`Cannot find device with identifier ${debugData.deviceIdentifier}.`,
 			);
 		}
 
 		if (device.deviceInfo.status !== CONNECTED_STATUS) {
 			this.$errors.fail(
-				`The device with identifier ${debugData.deviceIdentifier} is unreachable. Make sure it is Trusted and try again.`
+				`The device with identifier ${debugData.deviceIdentifier} is unreachable. Make sure it is Trusted and try again.`,
 			);
 		}
 
@@ -81,18 +81,18 @@ export class DebugController extends EventEmitter implements IDebugController {
 
 		if (
 			!(await device.applicationManager.isApplicationInstalled(
-				debugData.applicationIdentifier
+				debugData.applicationIdentifier,
 			))
 		) {
 			this.$errors.fail(
-				`The application ${debugData.applicationIdentifier} is not installed on device with identifier ${debugData.deviceIdentifier}.`
+				`The application ${debugData.applicationIdentifier} is not installed on device with identifier ${debugData.deviceIdentifier}.`,
 			);
 		}
 
 		const debugService = this.getDeviceDebugService(device);
 		if (!debugService) {
 			this.$errors.fail(
-				`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`
+				`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`,
 			);
 		}
 
@@ -101,12 +101,12 @@ export class DebugController extends EventEmitter implements IDebugController {
 
 		return this.getDebugInformation(
 			debugResultInfo,
-			device.deviceInfo.identifier
+			device.deviceInfo.identifier,
 		);
 	}
 
 	public enableDebugging(
-		enableDebuggingData: IEnableDebuggingData
+		enableDebuggingData: IEnableDebuggingData,
 	): Promise<IDebugInformation>[] {
 		const { deviceIdentifiers } = enableDebuggingData;
 
@@ -114,27 +114,26 @@ export class DebugController extends EventEmitter implements IDebugController {
 			this.enableDebuggingCore(
 				enableDebuggingData.projectDir,
 				deviceIdentifier,
-				enableDebuggingData.debugOptions
-			)
+				enableDebuggingData.debugOptions,
+			),
 		);
 	}
 
 	public async disableDebugging(
-		disableDebuggingData: IDisableDebuggingData
+		disableDebuggingData: IDisableDebuggingData,
 	): Promise<void> {
 		const { deviceIdentifiers, projectDir } = disableDebuggingData;
 
 		for (const deviceIdentifier of deviceIdentifiers) {
-			const liveSyncProcessInfo = this.$liveSyncProcessDataService.getPersistedData(
-				projectDir
-			);
+			const liveSyncProcessInfo =
+				this.$liveSyncProcessDataService.getPersistedData(projectDir);
 			if (liveSyncProcessInfo.currentSyncAction) {
 				await liveSyncProcessInfo.currentSyncAction;
 			}
 
 			const currentDeviceDescriptor = this.getDeviceDescriptor(
 				projectDir,
-				deviceIdentifier
+				deviceIdentifier,
 			);
 
 			if (currentDeviceDescriptor) {
@@ -144,11 +143,11 @@ export class DebugController extends EventEmitter implements IDebugController {
 			}
 
 			const currentDevice = this.$devicesService.getDeviceByIdentifier(
-				currentDeviceDescriptor.identifier
+				currentDeviceDescriptor.identifier,
 			);
 			if (!currentDevice) {
 				this.$errors.fail(
-					`Couldn't disable debugging for ${deviceIdentifier}. Could not find device.`
+					`Couldn't disable debugging for ${deviceIdentifier}. Could not find device.`,
 				);
 			}
 
@@ -159,7 +158,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 	}
 
 	public async attachDebugger(
-		attachDebuggerData: IAttachDebuggerData
+		attachDebuggerData: IAttachDebuggerData,
 	): Promise<IDebugInformation> {
 		// Default values
 		if (attachDebuggerData.debugOptions) {
@@ -179,12 +178,12 @@ export class DebugController extends EventEmitter implements IDebugController {
 		}
 
 		const projectData = this.$projectDataService.getProjectData(
-			attachDebuggerData.projectDir
+			attachDebuggerData.projectDir,
 		);
 		const debugData = this.$debugDataService.getDebugData(
 			attachDebuggerData.deviceIdentifier,
 			projectData,
-			attachDebuggerData.debugOptions
+			attachDebuggerData.debugOptions,
 		);
 		// const platformData = this.$platformsDataService.getPlatformData(settings.platform, projectData);
 
@@ -193,7 +192,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 		const debugInfo = await this.startDebug(debugData);
 		const result = this.printDebugInformation(
 			debugInfo,
-			attachDebuggerData.debugOptions.forceDebuggerAttachedEvent
+			attachDebuggerData.debugOptions.forceDebuggerAttachedEvent,
 		);
 		return result;
 	}
@@ -202,11 +201,11 @@ export class DebugController extends EventEmitter implements IDebugController {
 	public async enableDebuggingCoreWithoutWaitingCurrentAction(
 		projectDir: string,
 		deviceIdentifier: string,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugInformation> {
 		const deviceDescriptor = this.getDeviceDescriptor(
 			projectDir,
-			deviceIdentifier
+			deviceIdentifier,
 		);
 		if (!deviceDescriptor) {
 			this.$errors.fail(`Couldn't enable debugging for ${deviceIdentifier}`);
@@ -215,9 +214,8 @@ export class DebugController extends EventEmitter implements IDebugController {
 		deviceDescriptor.debuggingEnabled = true;
 		deviceDescriptor.debugOptions = debugOptions;
 
-		const currentDeviceInstance = this.$devicesService.getDeviceByIdentifier(
-			deviceIdentifier
-		);
+		const currentDeviceInstance =
+			this.$devicesService.getDeviceByIdentifier(deviceIdentifier);
 		const attachDebuggerData: IAttachDebuggerData = {
 			deviceIdentifier,
 			isEmulator: currentDeviceInstance.isEmulator,
@@ -233,7 +231,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 		} catch (err) {
 			this.$logger.trace(
 				"Couldn't attach debugger, will modify options and try again.",
-				err
+				err,
 			);
 			attachDebuggerData.debugOptions.start = false;
 			try {
@@ -241,7 +239,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 			} catch (innerErr) {
 				this.$logger.trace(
 					"Couldn't attach debugger with modified options.",
-					innerErr
+					innerErr,
 				);
 				throw err;
 			}
@@ -252,7 +250,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 
 	public printDebugInformation(
 		debugInformation: IDebugInformation,
-		fireDebuggerAttachedEvent: boolean = true
+		fireDebuggerAttachedEvent: boolean = true,
 	): IDebugInformation {
 		if (!!debugInformation.url) {
 			if (fireDebuggerAttachedEvent) {
@@ -261,8 +259,8 @@ export class DebugController extends EventEmitter implements IDebugController {
 
 			this.$logger.info(
 				color.green(
-					`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`
-				)
+					`To start debugging, open the following URL in Chrome:${EOL}${debugInformation.url}${EOL}`,
+				),
 			);
 		}
 
@@ -277,14 +275,13 @@ export class DebugController extends EventEmitter implements IDebugController {
 
 	private getDeviceDescriptor(
 		projectDir: string,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): ILiveSyncDeviceDescriptor {
-		const deviceDescriptors = this.$liveSyncProcessDataService.getDeviceDescriptors(
-			projectDir
-		);
+		const deviceDescriptors =
+			this.$liveSyncProcessDataService.getDeviceDescriptors(projectDir);
 		const currentDeviceDescriptor = _.find(
 			deviceDescriptors,
-			(d) => d.identifier === deviceIdentifier
+			(d) => d.identifier === deviceIdentifier,
 		);
 
 		return currentDeviceDescriptor;
@@ -294,21 +291,19 @@ export class DebugController extends EventEmitter implements IDebugController {
 		if (!this._platformDebugServices[device.deviceInfo.identifier]) {
 			const devicePlatform = device.deviceInfo.platform;
 			if (this.$mobileHelper.isiOSPlatform(devicePlatform)) {
-				this._platformDebugServices[
-					device.deviceInfo.identifier
-				] = this.$injector.resolve("iOSDeviceDebugService", { device });
+				this._platformDebugServices[device.deviceInfo.identifier] =
+					this.$injector.resolve("iOSDeviceDebugService", { device });
 			} else if (this.$mobileHelper.isAndroidPlatform(devicePlatform)) {
-				this._platformDebugServices[
-					device.deviceInfo.identifier
-				] = this.$injector.resolve("androidDeviceDebugService", { device });
+				this._platformDebugServices[device.deviceInfo.identifier] =
+					this.$injector.resolve("androidDeviceDebugService", { device });
 			} else {
 				this.$errors.fail(
-					DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING
+					DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING,
 				);
 			}
 
 			this.attachConnectionErrorHandlers(
-				this._platformDebugServices[device.deviceInfo.identifier]
+				this._platformDebugServices[device.deviceInfo.identifier],
 			);
 		}
 
@@ -316,20 +311,20 @@ export class DebugController extends EventEmitter implements IDebugController {
 	}
 
 	private attachConnectionErrorHandlers(
-		platformDebugService: IDeviceDebugService
+		platformDebugService: IDeviceDebugService,
 	) {
 		let connectionErrorHandler = (e: Error) =>
 			this.emit(CONNECTION_ERROR_EVENT_NAME, e);
 		connectionErrorHandler = connectionErrorHandler.bind(this);
 		platformDebugService.on(
 			CONNECTION_ERROR_EVENT_NAME,
-			connectionErrorHandler
+			connectionErrorHandler,
 		);
 	}
 
 	private getDebugInformation(
 		debugResultInfo: IDebugResultInfo,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): IDebugInformation {
 		const debugInfo: IDebugInformation = {
 			url: debugResultInfo.debugUrl,
@@ -352,11 +347,10 @@ export class DebugController extends EventEmitter implements IDebugController {
 	private async enableDebuggingCore(
 		projectDir: string,
 		deviceIdentifier: string,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugInformation> {
-		const liveSyncProcessInfo = this.$liveSyncProcessDataService.getPersistedData(
-			projectDir
-		);
+		const liveSyncProcessInfo =
+			this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		if (liveSyncProcessInfo && liveSyncProcessInfo.currentSyncAction) {
 			await liveSyncProcessInfo.currentSyncAction;
 		}
@@ -364,7 +358,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 		return this.enableDebuggingCoreWithoutWaitingCurrentAction(
 			projectDir,
 			deviceIdentifier,
-			debugOptions
+			debugOptions,
 		);
 	}
 }

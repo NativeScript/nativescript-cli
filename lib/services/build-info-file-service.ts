@@ -13,12 +13,12 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 		private $devicePathProvider: IDevicePathProvider,
 		private $fs: IFileSystem,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $projectChangesService: IProjectChangesService
+		private $projectChangesService: IProjectChangesService,
 	) {}
 
 	public getLocalBuildInfo(
 		platformData: IPlatformData,
-		buildData: IBuildData
+		buildData: IBuildData,
 	): IBuildInfo {
 		const outputPath =
 			buildData.outputPath || platformData.getBuildOutputPath(buildData);
@@ -37,17 +37,17 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 
 	public async getDeviceBuildInfo(
 		device: Mobile.IDevice,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<IBuildInfo> {
 		const deviceFilePath = await this.getDeviceBuildInfoFilePath(
 			device,
-			projectData
+			projectData,
 		);
 		try {
 			const deviceFileContent = await this.$mobileHelper.getDeviceFileContent(
 				device,
 				deviceFilePath,
-				projectData
+				projectData,
 			);
 			return JSON.parse(deviceFileContent);
 		} catch (e) {
@@ -57,13 +57,12 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 
 	public saveLocalBuildInfo(
 		platformData: IPlatformData,
-		buildInfoFileDirname: string
+		buildInfoFileDirname: string,
 	): void {
 		const buildInfoFile = path.join(buildInfoFileDirname, buildInfoFileName);
 
-		const prepareInfo = this.$projectChangesService.getPrepareInfo(
-			platformData
-		);
+		const prepareInfo =
+			this.$projectChangesService.getPrepareInfo(platformData);
 		const buildInfo: IBuildInfo = {
 			prepareTime: prepareInfo.changesRequireBuildTime,
 			buildTime: new Date().toString(),
@@ -75,11 +74,11 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 	public async saveDeviceBuildInfo(
 		device: Mobile.IDevice,
 		projectData: IProjectData,
-		outputFilePath: string
+		outputFilePath: string,
 	): Promise<void> {
 		const deviceFilePath = await this.getDeviceBuildInfoFilePath(
 			device,
-			projectData
+			projectData,
 		);
 		const appIdentifier =
 			projectData.projectIdentifiers[device.deviceInfo.platform.toLowerCase()];
@@ -87,24 +86,22 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 		await device.fileSystem.putFile(
 			path.join(outputFilePath, buildInfoFileName),
 			deviceFilePath,
-			appIdentifier
+			appIdentifier,
 		);
 	}
 
 	private async getDeviceBuildInfoFilePath(
 		device: Mobile.IDevice,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<string> {
 		const platform = device.deviceInfo.platform.toLowerCase();
-		const deviceRootPath = await this.$devicePathProvider.getDeviceProjectRootPath(
-			device,
-			{
+		const deviceRootPath =
+			await this.$devicePathProvider.getDeviceProjectRootPath(device, {
 				appIdentifier: projectData.projectIdentifiers[platform],
 				getDirname: true,
-			}
-		);
+			});
 		const result = helpers.fromWindowsRelativePathToUnix(
-			path.join(deviceRootPath, buildInfoFileName)
+			path.join(deviceRootPath, buildInfoFileName),
 		);
 
 		return result;

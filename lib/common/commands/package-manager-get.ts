@@ -6,7 +6,7 @@ export class PackageManagerGetCommand implements ICommand {
 	constructor(
 		private $errors: IErrors,
 		private $logger: ILogger,
-		private $userSettingsService: IUserSettingsService
+		private $userSettingsService: IUserSettingsService,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
@@ -15,16 +15,15 @@ export class PackageManagerGetCommand implements ICommand {
 		if (args && args.length) {
 			this.$errors.failWithHelp(
 				`The arguments '${args.join(
-					" "
-				)}' are not valid for the 'package-manager get' command.`
+					" ",
+				)}' are not valid for the 'package-manager get' command.`,
 			);
 		}
 
-		const result = await this.$userSettingsService.getSettingValue(
-			"packageManager"
-		);
+		const result =
+			await this.$userSettingsService.getSettingValue("packageManager");
 		this.$logger.printMarkdown(
-			`Your current package manager is \`${result || "npm"}\`.`
+			`Your current package manager is \`${result || "npm"}\`.`,
 		);
 	}
 }

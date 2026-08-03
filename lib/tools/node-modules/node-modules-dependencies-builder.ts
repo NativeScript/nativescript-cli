@@ -14,9 +14,7 @@ interface IDependencyDescription {
 	depth: number;
 }
 
-export class NodeModulesDependenciesBuilder
-	implements INodeModulesDependenciesBuilder
-{
+export class NodeModulesDependenciesBuilder implements INodeModulesDependenciesBuilder {
 	public constructor(private $fs: IFileSystem) {}
 
 	public getProductionDependencies(

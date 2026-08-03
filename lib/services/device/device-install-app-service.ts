@@ -23,25 +23,25 @@ export class DeviceInstallAppService {
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $projectDataService: IProjectDataService,
-		private $platformsDataService: IPlatformsDataService
+		private $platformsDataService: IPlatformsDataService,
 	) {}
 
 	public async installOnDevice(
 		device: Mobile.IDevice,
 		buildData: IBuildData,
-		packageFile?: string
+		packageFile?: string,
 	): Promise<void> {
 		this.$logger.info(
-			`Installing on device ${device.deviceInfo.identifier}...`
+			`Installing on device ${device.deviceInfo.identifier}...`,
 		);
 
 		const platform = device.deviceInfo.platform.toLowerCase();
 		const projectData = this.$projectDataService.getProjectData(
-			buildData.projectDir
+			buildData.projectDir,
 		);
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
@@ -53,13 +53,13 @@ export class DeviceInstallAppService {
 		if (!packageFile) {
 			packageFile = await this.$buildArtifactsService.getLatestAppPackagePath(
 				platformData,
-				buildData
+				buildData,
 			);
 		}
 
 		await platformData.platformProjectService.cleanDeviceTempFolder(
 			device.deviceInfo.identifier,
-			projectData
+			projectData,
 		);
 
 		const appIdentifier = projectData.projectIdentifiers[platform];
@@ -69,7 +69,7 @@ export class DeviceInstallAppService {
 		await device.applicationManager.reinstallApplication(
 			appIdentifier,
 			packageFile,
-			buildData
+			buildData,
 		);
 
 		await this.updateHashesOnDevice({
@@ -83,19 +83,19 @@ export class DeviceInstallAppService {
 			await this.$buildInfoFileService.saveDeviceBuildInfo(
 				device,
 				projectData,
-				outputFilePath
+				outputFilePath,
 			);
 		}
 
 		this.$logger.info(
-			`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`
+			`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`,
 		);
 	}
 
 	public async installOnDeviceIfNeeded(
 		device: Mobile.IDevice,
 		buildData: IBuildData,
-		packageFile?: string
+		packageFile?: string,
 	): Promise<void> {
 		const shouldInstall = await this.shouldInstall(device, buildData);
 		if (shouldInstall) {
@@ -105,31 +105,29 @@ export class DeviceInstallAppService {
 
 	public async shouldInstall(
 		device: Mobile.IDevice,
-		buildData: IBuildData
+		buildData: IBuildData,
 	): Promise<boolean> {
 		const projectData = this.$projectDataService.getProjectData(
-			buildData.projectDir
+			buildData.projectDir,
 		);
 		const platformData = this.$platformsDataService.getPlatformData(
 			device.deviceInfo.platform,
-			projectData
+			projectData,
 		);
 		const platform = device.deviceInfo.platform;
 		if (
 			!(await device.applicationManager.isApplicationInstalled(
-				projectData.projectIdentifiers[platform.toLowerCase()]
+				projectData.projectIdentifiers[platform.toLowerCase()],
 			))
 		) {
 			return true;
 		}
 
-		const deviceBuildInfo: IBuildInfo = await this.$buildInfoFileService.getDeviceBuildInfo(
-			device,
-			projectData
-		);
+		const deviceBuildInfo: IBuildInfo =
+			await this.$buildInfoFileService.getDeviceBuildInfo(device, projectData);
 		const localBuildInfo = this.$buildInfoFileService.getLocalBuildInfo(
 			platformData,
-			{ ...buildData, buildForDevice: !device.isEmulator }
+			{ ...buildData, buildForDevice: !device.isEmulator },
 		);
 
 		return (

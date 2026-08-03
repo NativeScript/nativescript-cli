@@ -43,7 +43,7 @@ class PlatformData implements IPlatformData {
 	platformNameLowerCase = "android";
 	platformProjectService: IPlatformProjectService = <any>{
 		validate: async (
-			projectData: IProjectData
+			projectData: IProjectData,
 		): Promise<IValidatePlatformOutput> => {
 			return {
 				checkEnvironmentRequirementsOutput: {
@@ -84,7 +84,7 @@ class ErrorsNoFailStub implements IErrors {
 
 	async beginCommand(
 		action: () => Promise<boolean>,
-		printHelpCommand: () => Promise<void>
+		printHelpCommand: () => Promise<void>,
 	): Promise<boolean> {
 		let result = false;
 		try {
@@ -111,7 +111,7 @@ class ErrorsNoFailStub implements IErrors {
 		parsed: any,
 		knownOpts: any,
 		shorthands: any,
-		clientName?: string
+		clientName?: string,
 	): void {
 		/* intentionally left blank */
 	}
@@ -145,7 +145,7 @@ function createTestInjector() {
 	testInjector.register("logger", stubs.LoggerStub);
 	testInjector.register(
 		"packageInstallationManager",
-		stubs.PackageInstallationManagerStub
+		stubs.PackageInstallationManagerStub,
 	);
 	testInjector.register("projectData", stubs.ProjectDataStub);
 	testInjector.register("platformsDataService", PlatformsDataService);
@@ -156,19 +156,19 @@ function createTestInjector() {
 	testInjector.register("commands-service", CommandsServiceLib.CommandsService);
 	testInjector.registerCommand(
 		"platform|add",
-		PlatformAddCommandLib.AddPlatformCommand
+		PlatformAddCommandLib.AddPlatformCommand,
 	);
 	testInjector.registerCommand(
 		"platform|remove",
-		PlatformRemoveCommandLib.RemovePlatformCommand
+		PlatformRemoveCommandLib.RemovePlatformCommand,
 	);
 	testInjector.registerCommand(
 		"platform|update",
-		PlatformUpdateCommandLib.UpdatePlatformCommand
+		PlatformUpdateCommandLib.UpdatePlatformCommand,
 	);
 	testInjector.registerCommand(
 		"platform|clean",
-		PlatformCleanCommandLib.CleanCommand
+		PlatformCleanCommandLib.CleanCommand,
 	);
 	testInjector.register("resources", {});
 	testInjector.register("commandsService", {
@@ -188,13 +188,13 @@ function createTestInjector() {
 	});
 	testInjector.register(
 		"projectFilesManager",
-		ProjectFilesManagerLib.ProjectFilesManager
+		ProjectFilesManagerLib.ProjectFilesManager,
 	);
 	testInjector.register("hooksService", stubs.HooksServiceStub);
 
 	testInjector.register(
 		"localToDevicePathDataFactory",
-		LocalToDevicePathDataFactory
+		LocalToDevicePathDataFactory,
 	);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("projectFilesProvider", ProjectFilesProvider);
@@ -204,7 +204,7 @@ function createTestInjector() {
 	testInjector.register("childProcess", ChildProcessLib.ChildProcess);
 	testInjector.register(
 		"projectChangesService",
-		ProjectChangesLib.ProjectChangesService
+		ProjectChangesLib.ProjectChangesService,
 	);
 	testInjector.register("analyticsService", {
 		track: async () => async (): Promise<any[]> => undefined,
@@ -229,7 +229,7 @@ function createTestInjector() {
 		checkEnvironmentRequirements: async (
 			platform?: string,
 			projectDir?: string,
-			runtimeVersion?: string
+			runtimeVersion?: string,
 		): Promise<ICheckEnvironmentRequirementsOutput> => {
 			return {
 				canExecute: true,
@@ -241,7 +241,7 @@ function createTestInjector() {
 		extractPackage: async (
 			packageName: string,
 			destinationDirectory: string,
-			options?: IPacoteExtractOptions
+			options?: IPacoteExtractOptions,
 		): Promise<void> => undefined,
 	});
 	testInjector.register("optionsTracker", {
@@ -280,7 +280,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not passed", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -296,7 +296,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						if (commandName !== "help") {
@@ -316,7 +316,7 @@ describe("Platform Service Tests", () => {
 			it("is executed when platform is valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -332,7 +332,7 @@ describe("Platform Service Tests", () => {
 			it("is executed when all platforms are valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -351,7 +351,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when at least one platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -372,7 +372,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not passed", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -388,7 +388,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -406,7 +406,7 @@ describe("Platform Service Tests", () => {
 			it("is executed when platform is valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -421,7 +421,7 @@ describe("Platform Service Tests", () => {
 			it("is executed when all platforms are valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -440,7 +440,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when at least one platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -467,7 +467,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not passed", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -483,7 +483,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -502,7 +502,7 @@ describe("Platform Service Tests", () => {
 				let commandsExecutedCount = 0;
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -525,7 +525,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not added", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -542,7 +542,7 @@ describe("Platform Service Tests", () => {
 				let commandsExecutedCount = 0;
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -569,7 +569,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when at least one platform is not added", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -592,7 +592,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when at least one platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -630,7 +630,7 @@ describe("Platform Service Tests", () => {
 				assert.deepStrictEqual(
 					platformActions,
 					expectedPlatformActions,
-					"Expected `remove ios`, `add ios` calls to the platformService."
+					"Expected `remove ios`, `add ios` calls to the platformService.",
 				);
 			});
 		});
@@ -639,7 +639,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not passed", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -655,7 +655,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -673,7 +673,7 @@ describe("Platform Service Tests", () => {
 			it("is executed when platform is valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -689,7 +689,7 @@ describe("Platform Service Tests", () => {
 			it("is executed when all platforms are valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;
@@ -708,7 +708,7 @@ describe("Platform Service Tests", () => {
 			it("is not executed when at least one platform is not valid", async () => {
 				isCommandExecuted = false;
 				commandsService.executeCommandUnchecked = async (
-					commandName: string
+					commandName: string,
 				): Promise<boolean> => {
 					if (commandName !== "help") {
 						isCommandExecuted = true;

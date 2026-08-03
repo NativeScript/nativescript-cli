@@ -40,8 +40,8 @@ function removeFileHashes(hashes: IStringDictionary) {
 			!!_.find(
 				hashes,
 				(newHash: string, newFilePath: string) =>
-					newHash === hash && newFilePath === filePath
-			)
+					newHash === hash && newFilePath === filePath,
+			),
 	);
 	return result;
 }
@@ -100,7 +100,7 @@ describe("filesHashService", () => {
 				const filesHashService = mockFilesHashService(testCase.newHashes);
 				const changes = await filesHashService.getChanges(
 					_.keys(testCase.newHashes),
-					testCase.oldHashes
+					testCase.oldHashes,
 				);
 				assert.deepStrictEqual(changes, testCase.expectedChanges);
 			});
@@ -113,11 +113,11 @@ describe("filesHashService", () => {
 				const filesHashService = mockFilesHashService(testCase.newHashes);
 				const hasChanges = filesHashService.hasChangesInShasums(
 					testCase.newHashes,
-					testCase.oldHashes
+					testCase.oldHashes,
 				);
 				assert.deepStrictEqual(
 					hasChanges,
-					!!_.keys(testCase.expectedChanges).length
+					!!_.keys(testCase.expectedChanges).length,
 				);
 			});
 		});

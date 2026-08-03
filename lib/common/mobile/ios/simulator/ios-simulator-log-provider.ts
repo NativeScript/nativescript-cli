@@ -10,7 +10,8 @@ import { injector } from "../../../yok";
 
 export class IOSSimulatorLogProvider
 	extends EventEmitter
-	implements Mobile.IiOSSimulatorLogProvider, IDisposable, IShouldDispose {
+	implements Mobile.IiOSSimulatorLogProvider, IDisposable, IShouldDispose
+{
 	public shouldDispose: boolean;
 	private simulatorsLoggingEnabled: IDictionary<boolean> = {};
 	private simulatorsLogProcess: IDictionary<ChildProcess> = {};
@@ -19,7 +20,7 @@ export class IOSSimulatorLogProvider
 		private $iOSSimResolver: Mobile.IiOSSimResolver,
 		private $logger: ILogger,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider
+		private $deviceLogProvider: Mobile.IDeviceLogProvider,
 	) {
 		super();
 		this.shouldDispose = true;
@@ -31,20 +32,21 @@ export class IOSSimulatorLogProvider
 
 	public async startLogProcess(
 		deviceId: string,
-		options?: Mobile.IiOSLogStreamOptions
+		options?: Mobile.IiOSLogStreamOptions,
 	): Promise<void> {
 		if (!this.simulatorsLoggingEnabled[deviceId]) {
-			const deviceLogChildProcess: ChildProcess = await this.$iOSSimResolver.iOSSim.getDeviceLogProcess(
-				deviceId,
-				options ? options.predicate : null
-			);
+			const deviceLogChildProcess: ChildProcess =
+				await this.$iOSSimResolver.iOSSim.getDeviceLogProcess(
+					deviceId,
+					options ? options.predicate : null,
+				);
 
 			const action = (data: Buffer | string) => {
 				const message = data.toString();
 				this.$deviceLogProvider.logData(
 					message,
 					this.$devicePlatformsConstants.iOS,
-					deviceId
+					deviceId,
 				);
 			};
 
@@ -55,7 +57,7 @@ export class IOSSimulatorLogProvider
 
 				deviceLogChildProcess.once("error", (err) => {
 					this.$logger.trace(
-						`Error is thrown for device with identifier ${deviceId}. More info: ${err.message}.`
+						`Error is thrown for device with identifier ${deviceId}. More info: ${err.message}.`,
 					);
 					this.simulatorsLoggingEnabled[deviceId] = false;
 				});
@@ -82,7 +84,7 @@ export class IOSSimulatorLogProvider
 					if (logProcess) {
 						logProcess.kill(signal);
 					}
-				}
+				},
 			);
 		}
 	}

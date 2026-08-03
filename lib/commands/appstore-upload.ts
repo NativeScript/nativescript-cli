@@ -34,14 +34,14 @@ export class PublishIOS implements ICommand {
 		private $hostInfo: IHostInfo,
 		private $errors: IErrors,
 		private $buildController: BuildController,
-		private $platformValidationService: IPlatformValidationService
+		private $platformValidationService: IPlatformValidationService,
 	) {
 		this.$projectData.initializeProjectData();
 	}
 
 	public async execute(args: string[]): Promise<void> {
 		await this.$itmsTransporterService.validate(
-			this.$options.appleApplicationSpecificPassword
+			this.$options.appleApplicationSpecificPassword,
 		);
 
 		const username =
@@ -59,11 +59,11 @@ export class PublishIOS implements ICommand {
 				sessionBase64: this.$options.appleSessionBase64,
 				requireInteractiveConsole: true,
 				requireApplicationSpecificPassword: true,
-			}
+			},
 		);
 		if (!user.areCredentialsValid) {
 			this.$errors.fail(
-				`Invalid username and password combination. Used '${username}' as the username.`
+				`Invalid username and password combination. Used '${username}' as the username.`,
 			);
 		}
 
@@ -75,7 +75,7 @@ export class PublishIOS implements ICommand {
 
 		if (!mobileProvisionIdentifier && !ipaFilePath) {
 			this.$logger.warn(
-				"No mobile provision identifier set. A default mobile provision will be used. You can set one in app/App_Resources/iOS/build.xcconfig"
+				"No mobile provision identifier set. A default mobile provision will be used. You can set one in app/App_Resources/iOS/build.xcconfig",
 			);
 		}
 
@@ -88,7 +88,7 @@ export class PublishIOS implements ICommand {
 				// This is not very correct as if we build multiple targets we will try to sign all of them using the signing identity here.
 				this.$logger.info(
 					"Building .ipa with the selected mobile provision and/or certificate. " +
-						mobileProvisionIdentifier
+						mobileProvisionIdentifier,
 				);
 
 				this.$options.provision = mobileProvisionIdentifier;
@@ -96,17 +96,17 @@ export class PublishIOS implements ICommand {
 				const buildData = new IOSBuildData(
 					this.$projectData.projectDir,
 					platform,
-					{ ...this.$options.argv, buildForAppStore: true, watch: false }
+					{ ...this.$options.argv, buildForAppStore: true, watch: false },
 				);
 				ipaFilePath = await this.$buildController.prepareAndBuild(buildData);
 			} else {
 				this.$logger.info(
-					"No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission."
+					"No .ipa, mobile provision or certificate set. Perfect! Now we'll build .xcarchive and let Xcode pick the distribution certificate and provisioning profile for you when exporting .ipa for AppStore submission.",
 				);
 				const buildData = new IOSBuildData(
 					this.$projectData.projectDir,
 					platform,
-					{ ...this.$options.argv, buildForAppStore: true, watch: false }
+					{ ...this.$options.argv, buildForAppStore: true, watch: false },
 				);
 				ipaFilePath = await this.$buildController.prepareAndBuild(buildData);
 				this.$logger.info(`Export at: ${ipaFilePath}`);
@@ -133,11 +133,11 @@ export class PublishIOS implements ICommand {
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				this.$devicePlatformsConstants.iOS,
-				this.$projectData
+				this.$projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`
+				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`,
 			);
 		}
 

@@ -8,7 +8,7 @@ export class ProxyGetCommand extends ProxyCommandBase {
 	constructor(
 		protected $analyticsService: IAnalyticsService,
 		protected $logger: ILogger,
-		protected $proxyService: IProxyService
+		protected $proxyService: IProxyService,
 	) {
 		super($analyticsService, $logger, $proxyService, proxyGetCommandName);
 	}

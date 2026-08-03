@@ -18,12 +18,12 @@ export class HmrStatusService implements IHmrStatusService {
 	constructor(
 		private $logParserService: ILogParserService,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public getHmrStatus(
 		deviceId: string,
-		operationHash: string
+		operationHash: string,
 	): Promise<number> {
 		return new Promise((resolve, reject) => {
 			const key = `${deviceId}${operationHash}`;
@@ -95,7 +95,7 @@ export class HmrStatusService implements IHmrStatusService {
 
 	private handleHmrStatusFound(
 		matches: RegExpMatchArray,
-		deviceId: string
+		deviceId: string,
 	): void {
 		const message = matches[1].trim();
 		const hash = matches[2];
@@ -134,7 +134,7 @@ export class HmrStatusService implements IHmrStatusService {
 	private setData(
 		deviceId: string,
 		operationHash: string,
-		status?: Number
+		status?: number,
 	): void {
 		const key = `${deviceId}${operationHash}`;
 

@@ -31,7 +31,7 @@ export class PackageManager implements IPackageManager {
 		private $bun: INodePackageManager,
 		private $logger: ILogger,
 		private $userSettingsService: IUserSettingsService,
-		private $projectConfigService: IProjectConfigService
+		private $projectConfigService: IProjectConfigService,
 	) {}
 
 	@cache()
@@ -50,7 +50,7 @@ export class PackageManager implements IPackageManager {
 	public install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo> {
 		return this.packageManager.install(packageName, pathToSave, config);
 	}
@@ -59,20 +59,20 @@ export class PackageManager implements IPackageManager {
 	public uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
-		path?: string
+		path?: string,
 	): Promise<string> {
 		return this.packageManager.uninstall(packageName, config, path);
 	}
 	@exported("packageManager")
 	@invokeInit()
-	public view(packageName: string, config: Object): Promise<any> {
+	public view(packageName: string, config: object): Promise<any> {
 		return this.packageManager.view(packageName, config);
 	}
 	@exported("packageManager")
 	@invokeInit()
 	public search(
 		filter: string[],
-		config: IDictionary<string | boolean>
+		config: IDictionary<string | boolean>,
 	): Promise<string> {
 		return this.packageManager.search(filter, config);
 	}
@@ -89,14 +89,14 @@ export class PackageManager implements IPackageManager {
 
 	@invokeInit()
 	public async getPackageFullName(
-		packageNameParts: INpmPackageNameParts
+		packageNameParts: INpmPackageNameParts,
 	): Promise<string> {
 		return this.packageManager.getPackageFullName(packageNameParts);
 	}
 
 	@invokeInit()
 	public async getPackageNameParts(
-		fullPackageName: string
+		fullPackageName: string,
 	): Promise<INpmPackageNameParts> {
 		return this.packageManager.getPackageNameParts(fullPackageName);
 	}
@@ -113,7 +113,7 @@ export class PackageManager implements IPackageManager {
 
 	public async getTagVersion(
 		packageName: string,
-		tag: string
+		tag: string,
 	): Promise<string> {
 		let version: string = null;
 		if (!tag) {
@@ -125,7 +125,7 @@ export class PackageManager implements IPackageManager {
 			version = result[tag];
 		} catch (err) {
 			this.$logger.trace(
-				`Error while getting tag version from view command: ${err}`
+				`Error while getting tag version from view command: ${err}`,
 			);
 			const registryData = await this.getRegistryPackageData(packageName);
 			version = registryData["dist-tags"][tag];
@@ -140,7 +140,7 @@ export class PackageManager implements IPackageManager {
 			pm = await this.$userSettingsService.getSettingValue("packageManager");
 		} catch (err) {
 			this.$errors.fail(
-				`Unable to read package manager config from user settings ${err}`
+				`Unable to read package manager config from user settings ${err}`,
 			);
 		}
 
@@ -150,7 +150,7 @@ export class PackageManager implements IPackageManager {
 
 			if (configPm) {
 				this.$logger.trace(
-					`Determined packageManager to use from user config is: ${configPm}`
+					`Determined packageManager to use from user config is: ${configPm}`,
 				);
 				pm = configPm;
 			}
@@ -158,7 +158,7 @@ export class PackageManager implements IPackageManager {
 			// ignore error, but log info
 			this.$logger.trace(
 				"Tried to read cli.packageManager from project config and failed. Error is: ",
-				err
+				err,
 			);
 		}
 

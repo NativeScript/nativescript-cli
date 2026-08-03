@@ -17,17 +17,17 @@ export abstract class BasePackageManager implements INodePackageManager {
 	public abstract install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 	public abstract uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
-		path?: string
+		path?: string,
 	): Promise<string>;
-	public abstract view(packageName: string, config: Object): Promise<any>;
+	public abstract view(packageName: string, config: object): Promise<any>;
 	public abstract search(
 		filter: string[],
-		config: IDictionary<string | boolean>
+		config: IDictionary<string | boolean>,
 	): Promise<string>;
 	public abstract searchNpms(keyword: string): Promise<INpmsResult>;
 	public abstract getRegistryPackageData(packageName: string): Promise<any>;
@@ -38,7 +38,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 		protected $fs: IFileSystem,
 		private $hostInfo: IHostInfo,
 		private $pacoteService: IPacoteService,
-		private packageManager: string
+		private packageManager: string,
 	) {}
 
 	public async isRegistered(packageName: string): Promise<boolean> {
@@ -65,7 +65,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 	}
 
 	public async getPackageNameParts(
-		fullPackageName: string
+		fullPackageName: string,
 	): Promise<INpmPackageNameParts> {
 		// support <reserved_name>@<version> syntax, for example typescript@1.0.0
 		// support <scoped_package_name>@<version> syntax, for example @nativescript/vue-template@1.0.0
@@ -84,7 +84,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 	}
 
 	public async getPackageFullName(
-		packageNameParts: INpmPackageNameParts
+		packageNameParts: INpmPackageNameParts,
 	): Promise<string> {
 		return packageNameParts.version
 			? `${packageNameParts.name}@${packageNameParts.version}`
@@ -104,7 +104,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 	protected async processPackageManagerInstall(
 		packageName: string,
 		params: string[],
-		opts: { cwd: string; isInstallingAllDependencies: boolean }
+		opts: { cwd: string; isInstallingAllDependencies: boolean },
 	): Promise<INpmInstallResultInfo> {
 		const npmExecutable = this.getPackageManagerExecutableName();
 		const stdioValue = isInteractive() ? "inherit" : "pipe";

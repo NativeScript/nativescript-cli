@@ -11,7 +11,7 @@ export class AddPluginCommand implements ICommand {
 	constructor(
 		private $pluginsService: IPluginsService,
 		private $projectData: IProjectData,
-		private $errors: IErrors
+		private $errors: IErrors,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -26,13 +26,13 @@ export class AddPluginCommand implements ICommand {
 		}
 
 		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
-			this.$projectData
+			this.$projectData,
 		);
 		const pluginName = args[0].toLowerCase();
 		if (
 			_.some(
 				installedPlugins,
-				(plugin: IPluginData) => plugin.name.toLowerCase() === pluginName
+				(plugin: IPluginData) => plugin.name.toLowerCase() === pluginName,
 			)
 		) {
 			this.$errors.fail(`Plugin "${pluginName}" is already installed.`);

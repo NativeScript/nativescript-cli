@@ -55,7 +55,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("projectConfigService", ProjectConfigServiceStub);
 	testInjector.register(
 		"packageInstallationManager",
-		PackageInstallationManagerLib.PackageInstallationManager
+		PackageInstallationManagerLib.PackageInstallationManager,
 	);
 
 	return testInjector;
@@ -64,7 +64,7 @@ function createTestInjector(): IInjector {
 function mockNpm(
 	testInjector: IInjector,
 	versions: string[],
-	latestVersion: string
+	latestVersion: string,
 ) {
 	testInjector.register("npm", {
 		view: async (packageName: string, config: any): Promise<string[]> => {
@@ -274,7 +274,7 @@ describe("Npm installation manager tests", () => {
 				mockNpm(
 					testInjector,
 					currentTestData.versions,
-					currentTestData.packageLatestVersion
+					currentTestData.packageLatestVersion,
 				);
 
 				// Mock staticConfig.version
@@ -283,7 +283,7 @@ describe("Npm installation manager tests", () => {
 
 				// Mock packageInstallationManager.getLatestVersion
 				const packageInstallationManager = testInjector.resolve(
-					"packageInstallationManager"
+					"packageInstallationManager",
 				);
 				packageInstallationManager.getLatestVersion = (packageName: string) =>
 					Promise.resolve(currentTestData.packageLatestVersion);
@@ -291,11 +291,11 @@ describe("Npm installation manager tests", () => {
 				const actualLatestCompatibleVersion =
 					await packageInstallationManager.getLatestCompatibleVersion(
 						"",
-						currentTestData.referenceVersion
+						currentTestData.referenceVersion,
 					);
 				assert.equal(
 					actualLatestCompatibleVersion,
-					currentTestData.expectedResult
+					currentTestData.expectedResult,
 				);
 			});
 		});

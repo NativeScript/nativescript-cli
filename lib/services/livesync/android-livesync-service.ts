@@ -27,7 +27,7 @@ export class AndroidLiveSyncService
 		$devicePathProvider: IDevicePathProvider,
 		$fs: IFileSystem,
 		$logger: ILogger,
-		$options: IOptions
+		$options: IOptions,
 	) {
 		super(
 			$fs,
@@ -35,46 +35,46 @@ export class AndroidLiveSyncService
 			$platformsDataService,
 			$projectFilesManager,
 			$devicePathProvider,
-			$options
+			$options,
 		);
 	}
 
 	protected _getDeviceLiveSyncService(
 		device: Mobile.IDevice,
 		data: IProjectDir,
-		frameworkVersion: string
+		frameworkVersion: string,
 	): INativeScriptDeviceLiveSyncService {
 		if (
 			semver.gt(
 				frameworkVersion,
-				AndroidLiveSyncService.MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION
+				AndroidLiveSyncService.MIN_SOCKETS_LIVESYNC_RUNTIME_VERSION,
 			)
 		) {
 			return this.$injector.resolve<INativeScriptDeviceLiveSyncService>(
 				AndroidDeviceSocketsLiveSyncService,
-				{ device, data }
+				{ device, data },
 			);
 		}
 
 		return this.$injector.resolve<INativeScriptDeviceLiveSyncService>(
 			AndroidDeviceLiveSyncService,
-			{ device, data }
+			{ device, data },
 		);
 	}
 
 	@performanceLog()
 	public async liveSyncWatchAction(
 		device: Mobile.IDevice,
-		liveSyncInfo: ILiveSyncWatchInfo
+		liveSyncInfo: ILiveSyncWatchInfo,
 	): Promise<IAndroidLiveSyncResultInfo> {
 		const liveSyncResult = await super.liveSyncWatchAction(
 			device,
-			liveSyncInfo
+			liveSyncInfo,
 		);
 		const result = await this.finalizeSync(
 			device,
 			liveSyncInfo.projectData,
-			liveSyncResult
+			liveSyncResult,
 		);
 
 		return result;
@@ -82,13 +82,13 @@ export class AndroidLiveSyncService
 
 	@performanceLog()
 	public async fullSync(
-		syncInfo: IFullSyncInfo
+		syncInfo: IFullSyncInfo,
 	): Promise<IAndroidLiveSyncResultInfo> {
 		const liveSyncResult = await super.fullSync(syncInfo);
 		const result = await this.finalizeSync(
 			syncInfo.device,
 			syncInfo.projectData,
-			liveSyncResult
+			liveSyncResult,
 		);
 		return result;
 	}
@@ -96,14 +96,14 @@ export class AndroidLiveSyncService
 	private async finalizeSync(
 		device: Mobile.IDevice,
 		projectData: IProjectData,
-		liveSyncResult: ILiveSyncResultInfo
+		liveSyncResult: ILiveSyncResultInfo,
 	): Promise<IAndroidLiveSyncResultInfo> {
 		const liveSyncService = <IAndroidNativeScriptDeviceLiveSyncService>(
 			this.getDeviceLiveSyncService(device, projectData)
 		);
 		const finalizeResult = await liveSyncService.finalizeSync(
 			liveSyncResult,
-			projectData
+			projectData,
 		);
 		const result = _.extend(liveSyncResult, finalizeResult);
 		return result;

@@ -14,7 +14,7 @@ describe("config.json", () => {
 		assert.deepStrictEqual(
 			data,
 			expectedData,
-			"Data in config.json is not correct. Is this expected?"
+			"Data in config.json is not correct. Is this expected?",
 		);
 	});
 });

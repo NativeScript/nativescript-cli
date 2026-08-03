@@ -12,7 +12,7 @@ export class DebugDataService implements IDebugDataService {
 	public getDebugData(
 		deviceIdentifier: string,
 		projectData: IProjectData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): IDebugData {
 		const device = this.$devicesService.getDeviceByIdentifier(deviceIdentifier);
 

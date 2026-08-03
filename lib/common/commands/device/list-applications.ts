@@ -9,7 +9,7 @@ export class ListApplicationsCommand implements ICommand {
 	constructor(
 		private $devicesService: Mobile.IDevicesService,
 		private $logger: ILogger,
-		private $options: IOptions
+		private $options: IOptions,
 	) {}
 
 	allowedParameters: ICommandParameter[] = [];
@@ -22,16 +22,17 @@ export class ListApplicationsCommand implements ICommand {
 		const output: string[] = [];
 
 		const action = async (device: Mobile.IDevice) => {
-			const applications = await device.applicationManager.getInstalledApplications();
+			const applications =
+				await device.applicationManager.getInstalledApplications();
 			output.push(
 				util.format(
 					"%s=====Installed applications on device with UDID '%s' are:",
 					EOL,
-					device.deviceInfo.identifier
-				)
+					device.deviceInfo.identifier,
+				),
 			);
 			_.each(applications, (applicationId: string) =>
-				output.push(applicationId)
+				output.push(applicationId),
 			);
 		};
 		await this.$devicesService.execute(action);
@@ -41,5 +42,5 @@ export class ListApplicationsCommand implements ICommand {
 }
 injector.registerCommand(
 	["device|list-applications", "devices|list-applications"],
-	ListApplicationsCommand
+	ListApplicationsCommand,
 );

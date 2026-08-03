@@ -25,11 +25,11 @@ describe("jsonFileSettingsService", () => {
 			},
 			setCurrentUserAsOwner: async (
 				path: string,
-				owner: string
+				owner: string,
 			): Promise<void> => undefined,
 			readText: (
 				filename: string,
-				encoding?: IReadFileOptions | string
+				encoding?: IReadFileOptions | string,
 			): string => JSON.stringify(dataInFile[filename]),
 			deleteFile: (filePath: string): void => {
 				deletedFiles.push(filePath);
@@ -38,7 +38,7 @@ describe("jsonFileSettingsService", () => {
 				filename: string,
 				data: any,
 				space?: string,
-				encoding?: string
+				encoding?: string,
 			): void => {
 				dataPassedToWriteJson.push({ filename, data });
 			},
@@ -47,7 +47,7 @@ describe("jsonFileSettingsService", () => {
 			executeActionWithLock: async (
 				action: () => Promise<any>,
 				lockFilePath?: string,
-				lockOpts?: ILockOptions
+				lockOpts?: ILockOptions,
 			): Promise<any> => {
 				return action();
 			},
@@ -70,12 +70,13 @@ describe("jsonFileSettingsService", () => {
 			dataInFile = { [jsonFileSettingsPath]: { prop1: 1 } };
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
-			const result = await jsonFileSettingsService.getSettingValue<number>(
-				"prop1"
-			);
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
+			const result =
+				await jsonFileSettingsService.getSettingValue<number>("prop1");
 			assert.equal(result, 1);
 		});
 
@@ -83,12 +84,13 @@ describe("jsonFileSettingsService", () => {
 			dataInFile = { [jsonFileSettingsPath]: { prop1: 1 } };
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
-			const result = await jsonFileSettingsService.getSettingValue<number>(
-				"prop2"
-			);
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
+			const result =
+				await jsonFileSettingsService.getSettingValue<number>("prop2");
 			assert.equal(result, null);
 		});
 
@@ -105,12 +107,13 @@ describe("jsonFileSettingsService", () => {
 			};
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
-			const result = await jsonFileSettingsService.getSettingValue<number>(
-				"prop1"
-			);
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
+			const result =
+				await jsonFileSettingsService.getSettingValue<number>("prop1");
 			assert.equal(result, 1);
 		});
 
@@ -118,12 +121,14 @@ describe("jsonFileSettingsService", () => {
 			dataInFile = { [jsonFileSettingsPath]: { prop1: 1 } };
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			const result = await jsonFileSettingsService.getSettingValue<number>(
 				"prop1",
-				{ cacheTimeout: 10000 }
+				{ cacheTimeout: 10000 },
 			);
 			assert.equal(result, null);
 		});
@@ -141,12 +146,14 @@ describe("jsonFileSettingsService", () => {
 			};
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			const result = await jsonFileSettingsService.getSettingValue<number>(
 				"prop1",
-				{ cacheTimeout: 100000 }
+				{ cacheTimeout: 100000 },
 			);
 			assert.equal(result, 1);
 		});
@@ -164,9 +171,11 @@ describe("jsonFileSettingsService", () => {
 			};
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 
 			const result = await new Promise((resolve, reject) => {
 				setTimeout(() => {
@@ -183,9 +192,11 @@ describe("jsonFileSettingsService", () => {
 	describe("saveSettings", () => {
 		it("writes passed data without cache when cache data is not passed", async () => {
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			const settingsToSave: any = {
 				prop1: {
 					innerProp1: 1,
@@ -210,9 +221,11 @@ describe("jsonFileSettingsService", () => {
 			};
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			const settingsToSave: any = {
 				prop1: {
 					innerProp1: 1,
@@ -241,9 +254,11 @@ describe("jsonFileSettingsService", () => {
 			const time = 1234;
 			Date.now = () => time;
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			const settingsToSave: any = {
 				prop1: {
 					innerProp1: 1,
@@ -281,9 +296,11 @@ describe("jsonFileSettingsService", () => {
 			const timeForPassedData = 123;
 			Date.now = () => time;
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			const settingsToSave: any = {
 				prop1: {
 					time: timeForPassedData,
@@ -324,9 +341,11 @@ describe("jsonFileSettingsService", () => {
 	describe("saveSetting", () => {
 		it("writes passed data without cache when cache data is not passed", async () => {
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 
 			await jsonFileSettingsService.saveSetting("prop1", {
 				innerProp1: 1,
@@ -341,14 +360,16 @@ describe("jsonFileSettingsService", () => {
 			const time = 1234;
 			Date.now = () => time;
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 
 			await jsonFileSettingsService.saveSetting(
 				"prop1",
 				{ innerProp1: 1 },
-				{ useCaching: true }
+				{ useCaching: true },
 			);
 
 			assert.deepStrictEqual(dataPassedToWriteJson, [
@@ -372,9 +393,11 @@ describe("jsonFileSettingsService", () => {
 			const timeForPassedData = 123;
 			Date.now = () => time;
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 
 			await jsonFileSettingsService.saveSetting(
 				"prop1",
@@ -385,7 +408,7 @@ describe("jsonFileSettingsService", () => {
 						innerProp1: 1,
 					},
 				},
-				{ useCaching: true }
+				{ useCaching: true },
 			);
 
 			assert.deepStrictEqual(dataPassedToWriteJson, [
@@ -411,9 +434,11 @@ describe("jsonFileSettingsService", () => {
 				[jsonFileSettingsPath]: { prop1: 1, prop2: { innerProp1: 2 } },
 			};
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			await jsonFileSettingsService.removeSetting("prop2");
 			assert.deepStrictEqual(dataPassedToWriteJson, [
 				{
@@ -443,9 +468,11 @@ describe("jsonFileSettingsService", () => {
 			};
 
 			const testInjector = createTestInjector();
-			const jsonFileSettingsService = testInjector.resolve<
-				IJsonFileSettingsService
-			>("jsonFileSettingsService", { jsonFileSettingsPath });
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath },
+				);
 			await jsonFileSettingsService.removeSetting("prop2");
 			assert.deepStrictEqual(dataPassedToWriteJson, [
 				{

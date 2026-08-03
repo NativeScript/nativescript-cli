@@ -45,7 +45,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 
 		let destination = "generic/platform=iOS Simulator";
 
-		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
+		const isvisionOS = this.$devicePlatformsConstants.isvisionOS(
 			buildConfig.platform,
 		);
 
@@ -90,7 +90,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			projectData.projectName + ".xcarchive",
 		);
 		let destination = "generic/platform=iOS";
-		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
+		const isvisionOS = this.$devicePlatformsConstants.isvisionOS(
 			buildConfig.platform,
 		);
 

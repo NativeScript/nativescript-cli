@@ -9,14 +9,14 @@ interface IPluginsService {
 		plugin: string,
 		version: string,
 		isDev: boolean,
-		projectDir: string
+		projectDir: string,
 	): void;
 	removeFromPackageJson(plugin: string, projectDir: string): void;
 	getAllInstalledPlugins(projectData: IProjectData): Promise<IPluginData[]>;
 	getAllProductionPlugins(
 		projectData: IProjectData,
 		platform: string,
-		dependencies?: IDependencyData[]
+		dependencies?: IDependencyData[],
 	): IPluginData[];
 	ensureAllDependenciesAreInstalled(projectData: IProjectData): Promise<void>;
 
@@ -26,10 +26,10 @@ interface IPluginsService {
 	 * @returns {IPackageJsonDepedenciesResult}
 	 */
 	getDependenciesFromPackageJson(
-		projectDir: string
+		projectDir: string,
 	): IPackageJsonDepedenciesResult;
 	preparePluginNativeCode(
-		preparePluginNativeCodeData: IPreparePluginNativeCodeData
+		preparePluginNativeCodeData: IPreparePluginNativeCodeData,
 	): Promise<void>;
 	isNativeScriptPlugin(pluginPackageJsonPath: string): boolean;
 }

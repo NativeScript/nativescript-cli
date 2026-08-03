@@ -14,15 +14,13 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 
-export class PlatformEnvironmentRequirements
-	implements IPlatformEnvironmentRequirements
-{
+export class PlatformEnvironmentRequirements implements IPlatformEnvironmentRequirements {
 	constructor(
 		private $doctorService: IDoctorService,
 		private $errors: IErrors,
 		private $analyticsService: IAnalyticsService,
 		// @ts-ignore - required by the hook helper!
-		private $injector: IInjector
+		private $injector: IInjector,
 	) {}
 
 	private static MISSING_LOCAL_SETUP_MESSAGE =
@@ -30,7 +28,7 @@ export class PlatformEnvironmentRequirements
 
 	@hook("checkEnvironment")
 	public async checkEnvironmentRequirements(
-		input: ICheckEnvironmentRequirementsInput
+		input: ICheckEnvironmentRequirementsInput,
 	): Promise<ICheckEnvironmentRequirementsOutput> {
 		const { platform, projectDir, runtimeVersion } = input;
 
@@ -104,5 +102,5 @@ export class PlatformEnvironmentRequirements
 
 injector.register(
 	"platformEnvironmentRequirements",
-	PlatformEnvironmentRequirements
+	PlatformEnvironmentRequirements,
 );

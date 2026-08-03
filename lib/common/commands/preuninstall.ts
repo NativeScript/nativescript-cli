@@ -26,7 +26,7 @@ export class PreUninstallCommand implements ICommand {
 		private $fs: IFileSystem,
 		// private $opener: IOpener,
 		private $packageInstallationManager: IPackageInstallationManager,
-		private $settingsService: ISettingsService
+		private $settingsService: ISettingsService,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -49,7 +49,7 @@ export class PreUninstallCommand implements ICommand {
 		}
 
 		this.$fs.deleteFile(
-			path.join(this.$settingsService.getProfileDir(), "KillSwitches", "cli")
+			path.join(this.$settingsService.getProfileDir(), "KillSwitches", "cli"),
 		);
 		await this.$analyticsService.finishTracking();
 	}

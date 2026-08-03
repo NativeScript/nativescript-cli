@@ -10,7 +10,7 @@ export class UninstallExtensionCommand implements ICommand {
 	constructor(
 		private $extensibilityService: IExtensibilityService,
 		private $stringParameterBuilder: IStringParameterBuilder,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -21,7 +21,7 @@ export class UninstallExtensionCommand implements ICommand {
 
 	allowedParameters: ICommandParameter[] = [
 		this.$stringParameterBuilder.createMandatoryParameter(
-			"You have to provide a valid name for extension that you want to uninstall."
+			"You have to provide a valid name for extension that you want to uninstall.",
 		),
 	];
 }

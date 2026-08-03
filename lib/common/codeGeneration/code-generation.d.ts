@@ -1,6 +1,6 @@
 import { IDictionary } from "../declarations";
 
-declare module CodeGeneration {
+declare namespace CodeGeneration {
 	interface IModel {
 		id: string;
 		properties: IDictionary<IModelProperty>;

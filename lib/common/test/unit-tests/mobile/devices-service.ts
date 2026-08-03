@@ -297,9 +297,7 @@ function mockSetInterval(testCaseCallback?: Function): void {
 			await callback();
 		};
 
-		/* tslint:disable:no-floating-promises */
 		execution();
-		/* tslint:enable:no-floating-promises */
 
 		return nodeJsTimer;
 	};
@@ -2412,9 +2410,7 @@ describe("devicesService", () => {
 					await callback();
 				};
 
-				/* tslint:disable:no-floating-promises */
 				execution();
-				/* tslint:enable:no-floating-promises */
 
 				return {
 					ref: () => {

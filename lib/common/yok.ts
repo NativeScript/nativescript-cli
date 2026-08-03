@@ -470,12 +470,11 @@ export class Yok extends Injector implements IInjector {
 	 * @deprecated Legacy command-registry lookup.
 	 */
 	public resolveCommand(name: string): ICommand {
-		let command: ICommand;
 		const commandModuleName = this.createCommandName(name);
 		if (!this.has(commandModuleName)) {
 			return null;
 		}
-		command = this.resolve(commandModuleName);
+		const command: ICommand = this.resolve(commandModuleName);
 
 		return command;
 	}
@@ -484,13 +483,12 @@ export class Yok extends Injector implements IInjector {
 	 * @deprecated Legacy command-registry lookup.
 	 */
 	public resolveKeyCommand(name: string): IKeyCommand {
-		let command: IKeyCommand;
 		const commandModuleName = this.createKeyCommandName(name);
 		if (!this.has(commandModuleName)) {
 			return null;
 		}
 
-		command = this.resolve(commandModuleName);
+		const command: IKeyCommand = this.resolve(commandModuleName);
 
 		return command;
 	}
