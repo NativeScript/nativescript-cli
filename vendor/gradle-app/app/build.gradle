@@ -1087,6 +1087,129 @@ task 'validateAppIdMatch' {
     }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////
+////////////////////////// COMPILE-TIME BYTECODE ///////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////
+//
+// For RELEASE builds, replace the plain-JS app bundle in the merged assets with
+// pre-compiled bytecode for the active JS engine (Hermes today; QuickJS/QuickJS-NG/
+// PrimJS are wired but gated off until their compilers + runtime support land).
+// The files keep their .js names, so module resolution is unaffected; the runtime
+// detects the engine's bytecode magic at load time (see js_run_bytecode_file /
+// ModuleInternal) and runs it directly instead of parsing + compiling source,
+// which greatly improves TTI.
+//
+// The engine-generic driver decides whether the selected engine has a usable
+// compiler for the build host, so this task simply runs it for every release
+// build and lets it no-op when there's nothing to do. It only touches the
+// merged-assets build intermediate, never the app source.
+//
+// Requires the runtime's gradle.properties to declare `ns_engine`; without it
+// the task is a no-op (older runtimes ship no bytecode compiler).
+//
+// Disable for a release build with:  -PnsBytecodeDisabled
+// Force-enable for a debug build with: -PnsBytecodeForce
+// Enable source maps with:           -PnsBytecodeSourceMaps
+//
+// Overridable paths:
+//   -PbytecodeToolsDir=<dir>          — the bytecode-compiler tools folder
+//   -PbytecodeCompilerBinary=<path>   — force a specific compiler binary
+//   -PnodePath=<path>                 — the node executable
+
+def bytecodeDisabled = project.hasProperty("nsBytecodeDisabled") || project.hasProperty("bytecodeDisabled")
+// Force bytecode compilation even for debug builds. Bytecode is a release-only
+// feature by default; this opt-in flag makes debug builds compile to bytecode
+// too, which is handy for testing/debugging the bytecode path itself.
+def bytecodeForced = project.hasProperty("nsBytecodeForce") || project.hasProperty("bytecodeForce")
+// A release build is not reliably signalled by -Prelease (the CLI runs
+// assembleRelease/bundleRelease without it), so detect it from the requested
+// task names — the same heuristic the rest of this file uses.
+def isReleaseBuild = project.hasProperty("release") ||
+        project.gradle.startParameter.taskNames.any { it.toLowerCase().contains("release") }
+// The engine name comes from the runtime's gradle.properties (ns_engine). Older
+// runtimes don't declare it and have no bytecode compiler at all, so the whole
+// feature stays off unless the property is present.
+def bytecodeEngine = project.hasProperty("ns_engine") ? ns_engine as String : null
+project.ext.bytecodeEnabled = bytecodeEngine != null && (isReleaseBuild || bytecodeForced) && !bytecodeDisabled
+
+// Announce the bytecode status once at configuration time so it's obvious in the
+// build log whether ahead-of-time bytecode will be produced.
+if (project.ext.bytecodeEnabled) {
+    def buildKind = isReleaseBuild ? "release build" : "debug build (forced via -PnsBytecodeForce)"
+    outLogger.withStyle(Style.SuccessHeader).println "\t + [bytecode] ENABLED for ${buildKind} (engine: ${bytecodeEngine})"
+    outLogger.withStyle(Style.Info).println "\t   ~ app JS will be compiled to bytecode after asset merge (if ${bytecodeEngine} has a compiler for this host)."
+    outLogger.withStyle(Style.Info).println "\t   ~ disable with -PnsBytecodeDisabled"
+} else if (bytecodeEngine != null) {
+    def bytecodeReason = bytecodeDisabled ? "disabled via -PnsBytecodeDisabled"
+            : "debug build (release-only feature; force with -PnsBytecodeForce)"
+    outLogger.withStyle(Style.Info).println "\t ~ [bytecode] DISABLED — ${bytecodeReason}; shipping plain JS. isReleaseBuid: ${isReleaseBuild};"
+}
+
+// The compiler tooling ships in the framework template under build-tools; fall
+// back to the in-repo location when building the runtime itself (test-app).
+def resolveBytecodeToolsDir = { ->
+    if (project.hasProperty("bytecodeToolsDir")) return bytecodeToolsDir as String
+    def candidates = [
+            "$rootDir/build-tools/bytecode-compiler" as String,
+            "$rootDir/../tools/bytecode-compiler" as String,
+    ]
+    return candidates.find { new File(it).exists() } ?: candidates[0]
+}
+def resolveNodePath = { ->
+    project.hasProperty("nodePath") ? nodePath as String : "node"
+}
+
+task compileBytecode {
+    // No inputs/outputs declared on purpose: the task is cheap and idempotent
+    // (it skips files that are already bytecode) and must re-run whenever the
+    // merged assets are refreshed.
+    onlyIf { project.ext.bytecodeEnabled }
+    doLast {
+        def appDir = getMergedAssetsOutputPath() + "/app"
+        if (!new File(appDir).exists()) {
+            outLogger.withStyle(Style.Info).println "\t ~ [bytecode] no merged app assets at ${appDir}, skipping"
+            return
+        }
+        def toolsDir = resolveBytecodeToolsDir()
+        def script = "$toolsDir/compile-bytecode.js"
+        def node = resolveNodePath()
+        def sourceMaps = project.hasProperty("nsBytecodeSourceMaps")
+        // Resilient by default: a file that fails to compile is left as plain JS
+        // (the runtime loads source directly) and the build continues. Opt into
+        // fail-the-build behaviour with -PnsBytecodeStrict.
+        def strict = project.hasProperty("nsBytecodeStrict")
+
+        outLogger.withStyle(Style.SuccessHeader).println "\t + [bytecode] compiling app JS → ${bytecodeEngine} bytecode"
+        outLogger.withStyle(Style.Info).println "\t   ~ engine:      ${bytecodeEngine}"
+        outLogger.withStyle(Style.Info).println "\t   ~ app assets:  ${appDir}"
+        outLogger.withStyle(Style.Info).println "\t   ~ driver:      ${script}"
+        if (project.hasProperty("bytecodeCompilerBinary")) {
+            outLogger.withStyle(Style.Info).println "\t   ~ compiler:    ${bytecodeCompilerBinary}"
+        }
+        outLogger.withStyle(Style.Info).println "\t   ~ source maps: ${sourceMaps ? "on" : "off"}"
+        outLogger.withStyle(Style.Info).println "\t   ~ on error:    ${strict ? "fail the build (strict)" : "skip file, keep source"}"
+
+        def cmd = [node, script, "--app", appDir, "--engine", bytecodeEngine]
+        if (project.hasProperty("bytecodeCompilerBinary")) {
+            cmd += ["--compiler", bytecodeCompilerBinary as String]
+        }
+        if (sourceMaps) {
+            cmd += ["--source-maps"]
+        }
+        if (!strict) {
+            cmd += ["--keep-going"]
+        }
+        // The driver prints its own "[bytecode] ... compiled N file(s)" summary to
+        // stdout, which surfaces in the build log below.
+        exec {
+            commandLine cmd
+        }
+        outLogger.withStyle(Style.SuccessHeader).println "\t + [bytecode] done."
+    }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////// OPTIONAL TASKS //////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1138,6 +1261,37 @@ tasks.configureEach({ DefaultTask currentTask ->
 
     if (currentTask =~ /merge.*Assets/) {
         currentTask.dependsOn(buildMetadata)
+        // Compile the freshly-merged app JS to engine bytecode right after the
+        // assets are merged (the onlyIf guard makes this a no-op unless it's a
+        // release build with bytecode enabled). Packaging is made to wait for it below.
+        currentTask.finalizedBy(compileBytecode)
+        compileBytecode.mustRunAfter(currentTask)
+
+    }
+
+    // The asset pipeline is: merge*Assets -> compress*Assets -> package*. The
+    // compress task reads the merged assets and zips each file into a `.js.jar`
+    // that is what actually lands in the APK/App Bundle. It only depends on the
+    // merge task, so without this it can run BEFORE compileBytecode and end up
+    // compressing plain source — the compiled bytecode in the merged assets then
+    // never reaches the package. Force compression to wait for compileBytecode so
+    // the order is merge -> compileBytecode -> compress -> package. (No cycle:
+    // compileBytecode only mustRunAfter the merge task, never the compress task.)
+    // Debug's compress*Assets task is included so a force-enabled (-PnsBytecodeForce)
+    // debug build compresses the compiled bytecode rather than plain source. The
+    // task is a no-op via compileBytecode's onlyIf guard when bytecode is off.
+    if (currentTask.name == "compressReleaseAssets" || currentTask.name == "compressDebugAssets") {
+        currentTask.dependsOn(compileBytecode)
+    }
+
+    // Ensure the final APK/App Bundle packaging picks up the compiled bytecode.
+    // Match the packaging tasks by exact name — a broad /package.*Release/ also
+    // matches packageReleaseResources, which is upstream of buildMetadata ->
+    // mergeReleaseAssets -> compileBytecode and creates a circular dependency.
+    // Debug packaging is wired too so a force-enabled debug build ships bytecode;
+    // compileBytecode's onlyIf keeps it a no-op for ordinary debug builds.
+    if (currentTask.name in ["packageRelease", "packageReleaseBundle", "packageDebug", "packageDebugBundle"]) {
+        currentTask.dependsOn(compileBytecode)
     }
 
     // ensure buildMetadata is done before R8 to allow custom proguard from metadata
