@@ -17,6 +17,7 @@ import { ICleanupService } from "../definitions/cleanup-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
+import { SystemWarningsSeverity } from "../definitions/system-warnings";
 
 export class DebugPlatformCommand
 	extends ValidatePlatformCommandBase

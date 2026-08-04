@@ -1,4 +1,4 @@
-import type { SupportedPlatform } from "../constants";
+import type { BuildNames, SupportedPlatform } from "../constants";
 import {
 	IAndroidBuildOptionsSettings,
 	IProvision,
@@ -133,6 +133,10 @@ interface INsConfigIOS extends INsConfigPlaform {
 	 * List packages to be included in the iOS build.
 	 */
 	SPMPackages?: Array<IOSSPMPackage>;
+	/**
+	 * Custom runtime package name
+	 */
+	runtimePackageName?: string;
 }
 
 interface INSConfigVisionOS extends INsConfigIOS {}
@@ -178,6 +182,9 @@ interface INsConfigAndroid extends INsConfigPlaform {
 
 	plugins?:{ [k:string]: { aarSuffix?: string } };
 
+	/**
+	 * Custom runtime package name
+	 */
 	runtimePackageName?: string;
 
 	ignoredNativeDependencies?: string[];
@@ -207,6 +214,13 @@ interface INsConfig {
 	hooks?: INsConfigHooks[];
 	projectName?: string;
 	corePackageName?: string;
+	/**
+	 * Legacy keys still found in user configs. Declared so the
+	 * runtime-package.json generation (PrepareController) can strip them
+	 * via destructuring without losing type safety.
+	 */
+	webpackPackageName?: string;
+	buildPath?: string;
 }
 
 interface IProjectData extends ICreateProjectData {
@@ -618,9 +632,7 @@ interface INativePrepare {
 }
 
 interface IBuildConfig
-	extends IAndroidBuildOptionsSettings,
-		IiOSBuildConfig,
-		IProjectDir {
+	extends IAndroidBuildOptionsSettings, IiOSBuildConfig, IProjectDir {
 	clean?: boolean;
 	architectures?: string[];
 	buildOutputStdio?: string;
@@ -632,7 +644,8 @@ interface IBuildConfig
  * Describes iOS-specific build configuration properties
  */
 interface IiOSBuildConfig
-	extends IBuildForDevice,
+	extends
+		IBuildForDevice,
 		IiCloudContainerEnvironment,
 		IDeviceIdentifier,
 		IProvision,
@@ -812,11 +825,6 @@ interface ICocoaPodsPlatformManager {
 	): { replacedContent: string; podfilePlatformData: IPodfilePlatformData };
 }
 
-declare const enum BuildNames {
-	debug = "Debug",
-	release = "Release",
-}
-
 interface IXcodeTargetBuildConfigurationProperty {
 	name: string;
 	value: any;
@@ -882,6 +890,7 @@ interface IAddExtensionsFromPathOptions extends IAddTargetFromPathOptions {
 
 interface IAddWatchAppFromPathOptions extends IAddTargetFromPathOptions {
 	watchAppFolderPath: string;
+	disableStubBinary?: boolean;
 }
 
 interface IRemoveExtensionsOptions {
@@ -921,7 +930,6 @@ interface IWatchAppJSONConfig {
 	modules: IWatchAppConfigModule[];
 	SPMPackages?: Array<IOSSPMPackage>;
 }
-
 
 interface IRubyFunction {
 	functionName: string;

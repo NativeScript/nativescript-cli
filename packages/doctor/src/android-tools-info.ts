@@ -33,6 +33,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"android-34",
 			"android-35",
 			"android-36",
+			"android-36.1",
 		];
 
 		const isRuntimeVersionLessThan = (targetVersion: string) => {
@@ -656,21 +657,5 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 
 		this._cachedRuntimeVersion = runtimeVersion;
 		return runtimeVersion;
-	}
-
-	private getMaxSupportedCompileVersion(
-		config: Partial<NativeScriptDoctor.IProjectDir> & {
-			runtimeVersion?: string;
-		},
-	): number {
-		if (
-			config.runtimeVersion &&
-			semver.lt(semver.coerce(config.runtimeVersion), "6.1.0")
-		) {
-			return 28;
-		}
-		return this.parseAndroidSdkString(
-			_.last(this.getSupportedTargets(config.projectDir).sort()),
-		);
 	}
 }

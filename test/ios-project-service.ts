@@ -241,6 +241,7 @@ function createTestInjector(
 	testInjector.register("tempService", TempServiceStub);
 	testInjector.register("spmService", {
 		applySPMPackages: () => Promise.resolve(),
+		ensureSPMDependenciesResolved: () => Promise.resolve(),
 	});
 
 	return testInjector;
@@ -267,7 +268,13 @@ function createPackageJson(
 		.writeJson(join(projectPath, "package.json"), packageJsonData);
 }
 
-describe("Cocoapods support", () => {
+// These suites only define tests on macOS - each body is internally gated on
+// darwin. Marking the suite skipped elsewhere is what keeps the runner from
+// erroring on an empty suite; an empty suite is only tolerated when skipped.
+const describeOnMacOS =
+	require("os").platform() === "darwin" ? describe : describe.skip;
+
+describeOnMacOS("Cocoapods support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping Cocoapods tests. They cannot work on windows");
 	} else {
@@ -656,7 +663,7 @@ describe("Cocoapods support", () => {
 	}
 });
 
-describe("Source code support", () => {
+describeOnMacOS("Source code support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log(
 			"Skipping Source code in plugin tests. They cannot work on windows",
@@ -977,7 +984,7 @@ describe("Source code support", () => {
 	}
 });
 
-describe("Static libraries support", () => {
+describeOnMacOS("Static libraries support", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log("Skipping static library tests. They work only on darwin.");
 		return;
@@ -1035,12 +1042,26 @@ describe("Static libraries support", () => {
 			fs.writeFile(join(staticLibraryHeadersPath, header), "");
 		});
 
-		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
-		// Read the generated modulemap and verify it.
-		let modulemap = fs.readFile(
-			join(staticLibraryHeadersPath, "module.modulemap"),
+		// The modulemap is written into a CLI-managed dir (not next to the
+		// headers / not in node_modules) and references the headers in place.
+		const modulemapDir = join(projectPath, ".plugins", libraryName);
+		const generated = iOSProjectService.generateModulemap(
+			staticLibraryHeadersPath,
+			libraryName,
+			modulemapDir,
 		);
-		const headerCommands = _.map(headers, (value) => `header "${value}"`);
+		assert.isTrue(generated);
+
+		// Read the generated modulemap and verify it.
+		let modulemap = fs.readFile(join(modulemapDir, "module.modulemap"));
+		const headerCommands = _.map(
+			headers,
+			(value) =>
+				`header "${path.relative(
+					modulemapDir,
+					join(staticLibraryHeadersPath, value),
+				)}"`,
+		);
 		const modulemapExpectation = `module ${libraryName} { explicit module ${libraryName} { ${headerCommands.join(
 			" ",
 		)} } }`;
@@ -1051,13 +1072,16 @@ describe("Static libraries support", () => {
 		_.each(headers, (header) => {
 			fs.deleteFile(join(staticLibraryHeadersPath, header));
 		});
-		iOSProjectService.generateModulemap(staticLibraryHeadersPath, libraryName);
+		const regenerated = iOSProjectService.generateModulemap(
+			staticLibraryHeadersPath,
+			libraryName,
+			modulemapDir,
+		);
+		assert.isFalse(regenerated);
 
 		let error: any;
 		try {
-			modulemap = fs.readFile(
-				join(staticLibraryHeadersPath, "module.modulemap"),
-			);
+			modulemap = fs.readFile(join(modulemapDir, "module.modulemap"));
 		} catch (err) {
 			error = err;
 		}
@@ -1089,7 +1113,7 @@ describe("Relative paths", () => {
 	});
 });
 
-describe("Merge Project XCConfig files", () => {
+describeOnMacOS("Merge Project XCConfig files", () => {
 	if (require("os").platform() !== "darwin") {
 		console.log(
 			"Skipping 'Merge Project XCConfig files' tests. They can work only on macOS",
@@ -1181,6 +1205,45 @@ describe("Merge Project XCConfig files", () => {
 				assertPropertyValues(expected, destinationFilePath, testInjector);
 			});
 		}
+	});
+
+	it("The app's build.xcconfig wins over a plugin's", async () => {
+		fs.writeFile(
+			appResourcesXcconfigPath,
+			`CLANG_CXX_LANGUAGE_STANDARD = c++20${EOL}`,
+		);
+
+		const pluginPlatformsFolderPath = join(projectPath, "somePlugin", "ios");
+		fs.writeFile(
+			join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME),
+			`CLANG_CXX_LANGUAGE_STANDARD = c++17${EOL}GCC_C_LANGUAGE_STANDARD = gnu17${EOL}`,
+		);
+
+		const pluginsService = testInjector.resolve("pluginsService");
+		pluginsService.getAllProductionPlugins = () => [
+			{
+				name: "somePlugin",
+				pluginPlatformsFolderPath: () => pluginPlatformsFolderPath,
+			},
+		];
+
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
+
+		_.each(
+			xcconfigService.getPluginsXcconfigFilePaths(projectRoot),
+			(destinationFilePath) => {
+				assertPropertyValues(
+					{
+						// The app pinned this, so the plugin's c++17 must not win.
+						CLANG_CXX_LANGUAGE_STANDARD: "c++20",
+						// Keys the app says nothing about still come from the plugin.
+						GCC_C_LANGUAGE_STANDARD: "gnu17",
+					},
+					destinationFilePath,
+					testInjector,
+				);
+			},
+		);
 	});
 
 	it("Adds the entitlements property if not set by the user", async () => {

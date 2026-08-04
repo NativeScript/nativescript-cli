@@ -2,11 +2,16 @@
 	"compilerOptions": {
 		"target": "ES2018",
 		"module": "commonjs",
+		// rootDir is explicit so output keeps the lib/ and test/ layout; without
+		// it tsc infers the common source root and flattens everything
+		"rootDir": ".",
+		"outDir": "dist",
 		"sourceMap": true,
 		"declaration": false,
 		"removeComments": false,
 		"noImplicitAny": true,
 		"experimentalDecorators": true,
+		"isolatedModules": true,
 		"skipLibCheck": true,
 		"alwaysStrict": true,
 		"noUnusedLocals": true,

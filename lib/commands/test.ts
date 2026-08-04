@@ -9,12 +9,11 @@ import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import {
-	OptionType,
 	IAnalyticsService,
 	IErrors,
 	IDictionary,
-	ErrorCodes,
 } from "../common/declarations";
+import { ErrorCodes, OptionType } from "../common/enums";
 import { ICleanupService } from "../definitions/cleanup-service";
 import { injector } from "../common/yok";
 
@@ -47,19 +46,18 @@ abstract class TestCommandBase {
 				sdk: this.$options.sdk,
 			});
 
-			const selectedDeviceForDebug = await this.$devicesService.pickSingleDevice(
-				{
+			const selectedDeviceForDebug =
+				await this.$devicesService.pickSingleDevice({
 					onlyEmulators: this.$options.emulator,
 					onlyDevices: this.$options.forDevice,
 					deviceId: this.$options.device,
-				}
-			);
+				});
 			devices = [selectedDeviceForDebug];
 			// const debugData = this.getDebugData(platform, projectData, deployOptions, { device: selectedDeviceForDebug.deviceInfo.identifier });
 			// await this.$debugService.debug(debugData, this.$options);
 		} else {
 			devices = await this.$liveSyncCommandHelper.getDeviceInstances(
-				this.platform
+				this.platform,
 			);
 		}
 
@@ -69,25 +67,26 @@ abstract class TestCommandBase {
 		this.$options.env.unitTesting = true;
 
 		const liveSyncInfo = this.$liveSyncCommandHelper.getLiveSyncData(
-			this.$projectData.projectDir
+			this.$projectData.projectDir,
 		);
 
 		const deviceDebugMap: IDictionary<boolean> = {};
 		devices.forEach(
 			(device) =>
-				(deviceDebugMap[device.deviceInfo.identifier] = this.$options.debugBrk)
+				(deviceDebugMap[device.deviceInfo.identifier] = this.$options.debugBrk),
 		);
 
-		const deviceDescriptors = await this.$liveSyncCommandHelper.createDeviceDescriptors(
-			devices,
-			this.platform,
-			<any>{ deviceDebugMap }
-		);
+		const deviceDescriptors =
+			await this.$liveSyncCommandHelper.createDeviceDescriptors(
+				devices,
+				this.platform,
+				<any>{ deviceDebugMap },
+			);
 
 		await this.$testExecutionService.startKarmaServer(
 			this.platform,
 			liveSyncInfo,
-			deviceDescriptors
+			deviceDescriptors,
 		);
 		// if we got here, it means karma exited with exit code 0 (success)
 		process.exit(0);
@@ -100,7 +99,7 @@ abstract class TestCommandBase {
 				// because the Runtime does not watch for the `/data/local/tmp<appId>-livesync-in-progress` file deletion.
 				// The App is closing itself after each test execution and the bug will be reproducible on each LiveSync.
 				this.$errors.fail(
-					"The `--hmr` option is not supported for this command."
+					"The `--hmr` option is not supported for this command.",
 				);
 			}
 
@@ -112,23 +111,21 @@ abstract class TestCommandBase {
 
 		this.$projectData.initializeProjectData();
 		this.$analyticsService.setShouldDispose(
-			this.$options.justlaunch || !this.$options.watch
+			this.$options.justlaunch || !this.$options.watch,
 		);
 		this.$cleanupService.setShouldDispose(
-			this.$options.justlaunch || !this.$options.watch
+			this.$options.justlaunch || !this.$options.watch,
 		);
 
-		const output = await this.$platformEnvironmentRequirements.checkEnvironmentRequirements(
-			{
+		const output =
+			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
 				platform: this.platform,
 				projectDir: this.$projectData.projectDir,
 				options: this.$options,
-			}
-		);
+			});
 
-		const canStartKarmaServer = await this.$testExecutionService.canStartKarmaServer(
-			this.$projectData
-		);
+		const canStartKarmaServer =
+			await this.$testExecutionService.canStartKarmaServer(this.$projectData);
 		if (!canStartKarmaServer) {
 			this.$errors.fail({
 				formatStr:
@@ -154,7 +151,7 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 		protected $cleanupService: ICleanupService,
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		protected $devicesService: Mobile.IDevicesService,
-		protected $migrateController: IMigrateController
+		protected $migrateController: IMigrateController,
 	) {
 		super();
 	}
@@ -195,7 +192,7 @@ class TestIosCommand extends TestCommandBase implements ICommand {
 		protected $cleanupService: ICleanupService,
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		protected $devicesService: Mobile.IDevicesService,
-		protected $migrateController: IMigrateController
+		protected $migrateController: IMigrateController,
 	) {
 		super();
 	}

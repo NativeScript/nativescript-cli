@@ -14,6 +14,10 @@ import {
 	IJSCleanupMessage,
 } from "../detached-processes/cleanup-process-definitions";
 import { injector } from "../common/yok";
+import {
+	CleanupProcessMessage,
+	DetachedProcessMessages,
+} from "../detached-processes/detached-process-enums";
 
 export class CleanupService implements ICleanupService {
 	private static CLEANUP_PROCESS_START_TIMEOUT = 10 * 1000;
@@ -23,7 +27,7 @@ export class CleanupService implements ICleanupService {
 	constructor(
 		$options: IOptions,
 		private $staticConfig: Config.IStaticConfig,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
 	) {
 		this.pathToCleanupLogFile = $options.cleanupLogFile;
 	}
@@ -31,7 +35,7 @@ export class CleanupService implements ICleanupService {
 	public shouldDispose = true;
 
 	public async addCleanupCommand(
-		commandInfo: ISpawnCommandInfo
+		commandInfo: ISpawnCommandInfo,
 	): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<ISpawnCommandCleanupMessage>{
@@ -41,7 +45,7 @@ export class CleanupService implements ICleanupService {
 	}
 
 	public async removeCleanupCommand(
-		commandInfo: ISpawnCommandInfo
+		commandInfo: ISpawnCommandInfo,
 	): Promise<void> {
 		const cleanupProcess = await this.getCleanupProcess();
 		cleanupProcess.send(<ISpawnCommandCleanupMessage>{
@@ -136,7 +140,7 @@ export class CleanupService implements ICleanupService {
 				{
 					stdio: ["ignore", "ignore", "ignore", "ipc"],
 					detached: true,
-				}
+				},
 			);
 
 			cleanupProcess.unref();

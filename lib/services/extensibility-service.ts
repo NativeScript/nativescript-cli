@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import { cache } from "../common/decorators";
 import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
+import { reportDeprecation } from "../common/deprecation";
 import { INodePackageManager, INpmsSingleResultData } from "../declarations";
 import {
 	IFileSystem,
@@ -144,6 +145,11 @@ export class ExtensibilityService implements IExtensibilityService {
 			await this.assertExtensionIsInstalled(extensionName);
 
 			const pathToExtension = this.getPathToExtension(extensionName);
+			reportDeprecation({
+				api: "extensions.require-time-registration",
+				detail: extensionName,
+				logger: this.$logger,
+			});
 			this.$requireService.require(pathToExtension);
 			return this.getInstalledExtensionData(extensionName);
 		} catch (error) {

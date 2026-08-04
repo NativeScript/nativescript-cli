@@ -24,16 +24,19 @@ import {
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { DoctorService as DoctorServiceContract } from "../contracts/doctor-service";
 import { color } from "../color";
 import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service";
 
-export class DoctorService implements IDoctorService {
+export class DoctorServiceImpl
+	implements IDoctorService, DoctorServiceContract
+{
 	private static DarwinSetupScriptLocation = path.join(
 		__dirname,
 		"..",
 		"..",
 		"setup",
-		"mac-startup-shell-script.sh"
+		"mac-startup-shell-script.sh",
 	);
 	private static WindowsSetupScriptExecutable = "powershell.exe";
 	private static WindowsSetupScriptArguments = [
@@ -50,7 +53,7 @@ export class DoctorService implements IDoctorService {
 	private get jsonFileSettingsPath(): string {
 		return path.join(
 			this.$settingsService.getProfileDir(),
-			"doctor-cache.json"
+			"doctor-cache.json",
 		);
 	}
 
@@ -58,7 +61,7 @@ export class DoctorService implements IDoctorService {
 	private get $jsonFileSettingsService(): IJsonFileSettingsService {
 		return this.$injector.resolve<IJsonFileSettingsService>(
 			"jsonFileSettingsService",
-			{ jsonFileSettingsPath: this.jsonFileSettingsPath }
+			{ jsonFileSettingsPath: this.jsonFileSettingsPath },
 		);
 	}
 
@@ -72,11 +75,11 @@ export class DoctorService implements IDoctorService {
 		private $fs: IFileSystem,
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService,
-		private $settingsService: ISettingsService
+		private $settingsService: ISettingsService,
 	) {}
 
 	public async printWarnings(configOptions?: {
-		trackResult: boolean;
+		trackResult?: boolean;
 		projectDir?: string;
 		runtimeVersion?: string;
 		options?: IOptions;
@@ -96,17 +99,17 @@ export class DoctorService implements IDoctorService {
 				text: `Getting environment information ${EOL}`,
 			},
 			() =>
-				this.getInfos({ forceCheck: configOptions.forceCheck }, getInfosData)
+				this.getInfos({ forceCheck: configOptions.forceCheck }, getInfosData),
 		);
 
 		const warnings = infos.filter(
-			(info) => info.type === constants.WARNING_TYPE_NAME
+			(info) => info.type === constants.WARNING_TYPE_NAME,
 		);
 		const hasWarnings = warnings.length > 0;
 
 		const hasAndroidWarnings =
 			warnings.filter((warning) =>
-				_.includes(warning.platforms, constants.ANDROID_PLATFORM_NAME)
+				_.includes(warning.platforms, constants.ANDROID_PLATFORM_NAME),
 			).length > 0;
 		if (hasAndroidWarnings) {
 			this.printPackageManagerTip();
@@ -126,18 +129,18 @@ export class DoctorService implements IDoctorService {
 			this.$logger.info(color.bold("No issues were detected."));
 			await this.$jsonFileSettingsService.saveSetting(
 				this.getKeyForConfiguration(getInfosData),
-				infos
+				infos,
 			);
 			this.printInfosCore(infos);
 		}
 
 		try {
 			await this.$versionsService.printVersionsInformation(
-				configOptions.platform
+				configOptions.platform,
 			);
 		} catch (err) {
 			this.$logger.error(
-				"Cannot get the latest versions information from npm. Please try again later."
+				"Cannot get the latest versions information from npm. Please try again later.",
 			);
 		}
 
@@ -146,7 +149,7 @@ export class DoctorService implements IDoctorService {
 
 		await this.$injector
 			.resolve<IPlatformEnvironmentRequirements>(
-				"platformEnvironmentRequirements"
+				"platformEnvironmentRequirements",
 			)
 			.checkEnvironmentRequirements({
 				platform: configOptions.platform,
@@ -171,20 +174,21 @@ export class DoctorService implements IDoctorService {
 		}
 
 		this.$logger.info(
-			"Running the setup script to try and automatically configure your environment."
+			"Running the setup script to try and automatically configure your environment.",
 		);
 
+		let result: ISpawnResult;
 		if (this.$hostInfo.isDarwin) {
-			await this.runSetupScriptCore(
-				DoctorService.DarwinSetupScriptLocation,
-				[]
+			result = await this.runSetupScriptCore(
+				DoctorServiceImpl.DarwinSetupScriptLocation,
+				[],
 			);
 		}
 
 		if (this.$hostInfo.isWindows) {
-			await this.runSetupScriptCore(
-				DoctorService.WindowsSetupScriptExecutable,
-				DoctorService.WindowsSetupScriptArguments
+			result = await this.runSetupScriptCore(
+				DoctorServiceImpl.WindowsSetupScriptExecutable,
+				DoctorServiceImpl.WindowsSetupScriptArguments,
 			);
 		}
 
@@ -192,6 +196,8 @@ export class DoctorService implements IDoctorService {
 			action: TrackActionNames.RunSetupScript,
 			additionalData: "Finished",
 		});
+
+		return result;
 	}
 
 	public async canExecuteLocalBuild(configuration?: {
@@ -200,6 +206,7 @@ export class DoctorService implements IDoctorService {
 		runtimeVersion?: string;
 		forceCheck?: boolean;
 	}): Promise<boolean> {
+		configuration = configuration || {};
 		await this.$analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.CheckLocalBuildSetup,
 			additionalData: "Starting",
@@ -211,7 +218,7 @@ export class DoctorService implements IDoctorService {
 		};
 		const infos = await this.getInfos(
 			{ forceCheck: configuration && configuration.forceCheck },
-			sysInfoConfig
+			sysInfoConfig,
 		);
 		const warnings = this.filterInfosByType(infos, constants.WARNING_TYPE_NAME);
 		const hasWarnings = warnings.length > 0;
@@ -228,7 +235,7 @@ export class DoctorService implements IDoctorService {
 			infos.map((info) => this.$logger.trace(info.message));
 			await this.$jsonFileSettingsService.saveSetting(
 				this.getKeyForConfiguration(sysInfoConfig),
-				infos
+				infos,
 			);
 		}
 
@@ -243,27 +250,26 @@ export class DoctorService implements IDoctorService {
 	public checkForDeprecatedShortImportsInAppDir(projectDir: string): void {
 		if (projectDir) {
 			try {
-				const files = this.$projectDataService.getAppExecutableFiles(
-					projectDir
-				);
+				const files =
+					this.$projectDataService.getAppExecutableFiles(projectDir);
 				const shortImports = this.getDeprecatedShortImportsInFiles(
 					files,
-					projectDir
+					projectDir,
 				);
 				if (shortImports.length) {
 					this.$logger.printMarkdown(
-						"Detected short imports in your application. Please note that `short imports are deprecated` since NativeScript 5.2.0. More information can be found in this blogpost https://www.nativescript.org/blog/say-goodbye-to-short-imports-in-nativescript"
+						"Detected short imports in your application. Please note that `short imports are deprecated` since NativeScript 5.2.0. More information can be found in this blogpost https://www.nativescript.org/blog/say-goodbye-to-short-imports-in-nativescript",
 					);
 					shortImports.forEach((shortImport) => {
 						this.$logger.printMarkdown(
-							`In file \`${shortImport.file}\` line \`${shortImport.line}\` is short import. Add \`tns-core-modules/\` in front of the required/imported module.`
+							`In file \`${shortImport.file}\` line \`${shortImport.line}\` is short import. Add \`tns-core-modules/\` in front of the required/imported module.`,
 						);
 					});
 				}
 			} catch (err) {
 				this.$logger.trace(
 					`Unable to validate if project has short imports. Error is`,
-					err
+					err,
 				);
 			}
 		}
@@ -271,7 +277,7 @@ export class DoctorService implements IDoctorService {
 
 	protected getDeprecatedShortImportsInFiles(
 		files: string[],
-		projectDir: string
+		projectDir: string,
 	): { file: string; line: string }[] {
 		const shortImportRegExp = this.getShortImportRegExp(projectDir);
 		const shortImports: { file: string; line: string }[] = [];
@@ -280,13 +286,13 @@ export class DoctorService implements IDoctorService {
 			const fileContent = this.$fs.readText(file);
 			const strippedComments = helpers.stripComments(fileContent);
 			const linesToCheck = _.flatten(
-				strippedComments.split(/\r?\n/).map((line) => line.split(";"))
+				strippedComments.split(/\r?\n/).map((line) => line.split(";")),
 			);
 
 			const linesWithRequireStatements = linesToCheck.filter(
 				(line) =>
 					/\btns-core-modules\b/.exec(line) === null &&
-					(/\bimport\b/.exec(line) || /\brequire\b/.exec(line))
+					(/\bimport\b/.exec(line) || /\brequire\b/.exec(line)),
 			);
 
 			for (const line of linesWithRequireStatements) {
@@ -305,14 +311,14 @@ export class DoctorService implements IDoctorService {
 		const pathToTnsCoreModules = path.join(
 			projectDir,
 			NODE_MODULES_FOLDER_NAME,
-			TNS_CORE_MODULES_NAME
+			TNS_CORE_MODULES_NAME,
 		);
 		const coreModulesSubDirs = this.$fs
 			.readDirectory(pathToTnsCoreModules)
 			.filter((entry) =>
 				this.$fs
 					.getFsStats(path.join(pathToTnsCoreModules, entry))
-					.isDirectory()
+					.isDirectory(),
 			);
 
 		const stringRegularExpressionsPerDir = coreModulesSubDirs.map((c) => {
@@ -332,13 +338,13 @@ export class DoctorService implements IDoctorService {
 
 	private async runSetupScriptCore(
 		executablePath: string,
-		setupScriptArgs: string[]
+		setupScriptArgs: string[],
 	): Promise<ISpawnResult> {
 		return this.$childProcess.spawnFromEvent(
 			executablePath,
 			setupScriptArgs,
 			"close",
-			{ stdio: "inherit" }
+			{ stdio: "inherit" },
 		);
 	}
 
@@ -346,12 +352,12 @@ export class DoctorService implements IDoctorService {
 		if (this.$hostInfo.isWindows) {
 			this.$logger.info(
 				"TIP: To avoid setting up the necessary environment variables, you can use the chocolatey package manager to install the Android SDK and its dependencies." +
-					EOL
+					EOL,
 			);
 		} else if (this.$hostInfo.isDarwin) {
 			this.$logger.info(
 				"TIP: To avoid setting up the necessary environment variables, you can use the Homebrew package manager to install the Android SDK and its dependencies." +
-					EOL
+					EOL,
 			);
 		}
 	}
@@ -390,20 +396,20 @@ export class DoctorService implements IDoctorService {
 
 	private filterInfosByType(
 		infos: NativeScriptDoctor.IInfo[],
-		type: string
+		type: string,
 	): NativeScriptDoctor.IInfo[] {
 		return infos.filter((info) => info.type === type);
 	}
 
 	private getKeyForConfiguration(
-		sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig
+		sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig,
 	): string {
 		const nativeScriptData =
 			sysInfoConfig &&
 			sysInfoConfig.projectDir &&
 			JSON.stringify(
 				this.$fs.readJson(path.join(sysInfoConfig.projectDir, "package.json"))
-					.nativescript
+					.nativescript,
 			);
 		const delimiter = "__";
 		const key = [
@@ -426,7 +432,7 @@ export class DoctorService implements IDoctorService {
 
 	private async getInfos(
 		cacheConfig: { forceCheck: boolean },
-		sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig
+		sysInfoConfig?: NativeScriptDoctor.ISysInfoConfig,
 	): Promise<NativeScriptDoctor.IInfo[]> {
 		const key = this.getKeyForConfiguration(sysInfoConfig);
 
@@ -434,13 +440,13 @@ export class DoctorService implements IDoctorService {
 			? null
 			: await this.$jsonFileSettingsService.getSettingValue<
 					NativeScriptDoctor.IInfo[]
-			  >(key);
+				>(key);
 
 		this.$logger.trace(
 			`getInfos cacheConfig options:`,
 			cacheConfig,
 			" current info from cache: ",
-			infosFromCache
+			infosFromCache,
 		);
 
 		const infos = infosFromCache || (await doctor.getInfos(sysInfoConfig));
@@ -448,4 +454,4 @@ export class DoctorService implements IDoctorService {
 		return infos;
 	}
 }
-injector.register("doctorService", DoctorService);
+injector.register("doctorService", DoctorServiceImpl);

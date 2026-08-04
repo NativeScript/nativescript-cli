@@ -13,7 +13,8 @@ import {
 import { IPlatformsDataService } from "../definitions/platform";
 import { IBuildController, IBuildDataService } from "../definitions/build";
 import { IMigrateController } from "../definitions/migrate";
-import { IErrors, OptionType } from "../common/declarations";
+import { IErrors } from "../common/declarations";
+import { OptionType } from "../common/enums";
 import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { injector } from "../common/yok";
 

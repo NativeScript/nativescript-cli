@@ -17,6 +17,11 @@ export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
 export const WEBPACK_PLUGIN_NAME = "@nativescript/webpack";
 export const RSPACK_PLUGIN_NAME = "@nativescript/rspack";
+// Project-relative directory the Vite bundler writes its build output to
+// before the CLI copies it into the platforms app folder. Mirrors the
+// default value computed in `@nativescript/vite`'s base configuration
+// (`process.env.NS_VITE_DIST_DIR || '.ns-vite-build'`).
+export const VITE_DIST_FOLDER_NAME = ".ns-vite-build";
 export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const UI_MOBILE_BASE_NAME = "@nativescript/ui-mobile-base";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
@@ -173,9 +178,7 @@ export class ITMSConstants {
 	static altoolExecutableName = "altool";
 }
 
-class ItunesConnectApplicationTypesClass
-	implements IiTunesConnectApplicationType
-{
+class ItunesConnectApplicationTypesClass implements IiTunesConnectApplicationType {
 	public iOS = "iOS App";
 	public Mac = "Mac OS X App";
 }
@@ -215,6 +218,15 @@ export const DEBUGGER_ATTACHED_EVENT_NAME = "debuggerAttached";
 export const DEBUGGER_DETACHED_EVENT_NAME = "debuggerDetached";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
+export const BUNDLETOOL_CACHE_DIRNAME = "bundletool";
+export const BUNDLETOOL_VERSION = "1.18.2";
+// sha256 of bundletool-all-<BUNDLETOOL_VERSION>.jar as published on GitHub;
+// must be updated together with BUNDLETOOL_VERSION or the download is rejected
+export const BUNDLETOOL_SHA256 =
+	"378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584";
+export const BUNDLETOOL_RELEASES_URL =
+	"https://github.com/google/bundletool/releases/download";
+export const BUNDLETOOL_PATH_ENV_VAR = "NS_BUNDLETOOL_PATH";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
 const ANDROID_SIGNING_REQUIRED_MESSAGE =
 	"you need to specify all --key-store-* options.";
@@ -410,7 +422,7 @@ export enum IOSNativeTargetTypes {
 	watchApp = "watch_app",
 	watchExtension = "watch_extension",
 	appExtension = "app_extension",
-	application = 'application',
+	application = "application",
 }
 
 const pathToLoggerAppendersDir = join(
@@ -503,4 +515,9 @@ export enum PackageManagers {
 	yarn = "yarn",
 	yarn2 = "yarn2",
 	bun = "bun",
+}
+
+export enum BuildNames {
+	debug = "Debug",
+	release = "Release",
 }

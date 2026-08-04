@@ -3,7 +3,6 @@ import { EOL } from "os";
 import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
-import { Helpers } from "./helpers";
 import * as semver from "semver";
 
 export class Doctor implements NativeScriptDoctor.IDoctor {
@@ -11,17 +10,16 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 
 	constructor(
 		private androidLocalBuildRequirements: AndroidLocalBuildRequirements,
-		private helpers: Helpers,
 		private hostInfo: HostInfo,
 		private iOSLocalBuildRequirements: IosLocalBuildRequirements,
 		private sysInfo: NativeScriptDoctor.ISysInfo,
-		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo
+		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
 	) {}
 
 	public async canExecuteLocalBuild(
 		platform: string,
 		projectDir?: string,
-		runtimeVersion?: string
+		runtimeVersion?: string,
 	): Promise<boolean> {
 		this.validatePlatform(platform);
 
@@ -30,7 +28,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		) {
 			return await this.androidLocalBuildRequirements.checkRequirements(
 				projectDir,
-				runtimeVersion
+				runtimeVersion,
 			);
 		} else if (
 			platform.toLowerCase() === Constants.IOS_PLATFORM_NAME.toLowerCase()
@@ -42,7 +40,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	}
 
 	public async getInfos(
-		config?: NativeScriptDoctor.ISysInfoConfig
+		config?: NativeScriptDoctor.ISysInfoConfig,
 	): Promise<NativeScriptDoctor.IInfo[]> {
 		let result: NativeScriptDoctor.IInfo[] = [];
 		const sysInfoData = await this.sysInfo.getSysInfo(config);
@@ -57,8 +55,8 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				this.getAndroidInfos(
 					sysInfoData,
 					config && config.projectDir,
-					config && config.androidRuntimeVersion
-				)
+					config && config.androidRuntimeVersion,
+				),
 			);
 		}
 
@@ -85,7 +83,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	}
 
 	public async getWarnings(
-		config?: NativeScriptDoctor.ISysInfoConfig
+		config?: NativeScriptDoctor.ISysInfoConfig,
 	): Promise<NativeScriptDoctor.IWarning[]> {
 		const info = await this.getInfos(config);
 		return info
@@ -96,7 +94,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	private getAndroidInfos(
 		sysInfoData: NativeScriptDoctor.ISysInfoData,
 		projectDir?: string,
-		runtimeVersion?: string
+		runtimeVersion?: string,
 	): NativeScriptDoctor.IInfo[] {
 		let result: NativeScriptDoctor.IInfo[] = [];
 
@@ -144,7 +142,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				warnings: this.androidToolsInfo.validateJavacVersion(
 					sysInfoData.javacVersion,
 					projectDir,
-					runtimeVersion
+					runtimeVersion,
 				),
 				infoMessage: "Javac is installed and is configured properly.",
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
@@ -164,14 +162,14 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					EOL +
 					"described in http://docs.oracle.com/javase/8/docs/technotes/guides/install/install_overview.html (for JDK 8).",
 				platforms: [Constants.ANDROID_PLATFORM_NAME],
-			})
+			}),
 		);
 
 		return result;
 	}
 
 	private async getiOSInfos(
-		sysInfoData: NativeScriptDoctor.ISysInfoData
+		sysInfoData: NativeScriptDoctor.ISysInfoData,
 	): Promise<NativeScriptDoctor.IInfo[]> {
 		let result: NativeScriptDoctor.IInfo[] = [];
 		if (this.hostInfo.isDarwin) {
@@ -216,7 +214,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 					warningMessage: "CocoaPods update required.",
 					additionalInformation: `You are using CocoaPods version ${sysInfoData.cocoaPodsVer} which does not support Xcode ${sysInfoData.xcodeVer} yet.${EOL}${EOL}You can update your cocoapods by running $sudo gem install cocoapods from a terminal.${EOL}${EOL}In order for the NativeScript CLI to be able to work correctly with this setup you need to install xcproj command line tool and add it to your PATH.Xcproj can be installed with homebrew by running $ brew install xcproj from the terminal`,
 					platforms: [Constants.IOS_PLATFORM_NAME],
-				})
+				}),
 			);
 
 			if (sysInfoData.xcodeVer && sysInfoData.cocoaPodsVer) {
@@ -230,7 +228,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 						additionalInformation:
 							"Verify that CocoaPods are configured properly.",
 						platforms: [Constants.IOS_PLATFORM_NAME],
-					})
+					}),
 				);
 			}
 
@@ -241,7 +239,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 						!semver.valid(sysInfoData.cocoaPodsVer) ||
 						!semver.lt(
 							sysInfoData.cocoaPodsVer,
-							Doctor.MIN_SUPPORTED_POD_VERSION
+							Doctor.MIN_SUPPORTED_POD_VERSION,
 						),
 					infoMessage: `Your current CocoaPods version is newer than ${Doctor.MIN_SUPPORTED_POD_VERSION}.`,
 					warningMessage: `Your current CocoaPods version is earlier than ${Doctor.MIN_SUPPORTED_POD_VERSION}.`,
@@ -260,7 +258,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 						EOL +
 						`Error while validating Python packages. Error is: ${sysInfoData.pythonInfo.installationErrorMessage}`,
 					platforms: [Constants.IOS_PLATFORM_NAME],
-				})
+				}),
 			);
 
 			if (sysInfoData.xcodeVer) {
@@ -272,7 +270,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 						additionalInformation:
 							"To build your application for iOS, update your Xcode.",
 						platforms: [Constants.IOS_PLATFORM_NAME],
-					})
+					}),
 				);
 			}
 		}
@@ -322,7 +320,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	}
 
 	private convertWarningToInfo(
-		warning: NativeScriptDoctor.IWarning
+		warning: NativeScriptDoctor.IWarning,
 	): NativeScriptDoctor.IInfo {
 		return {
 			message: warning.warning,
@@ -333,7 +331,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	}
 
 	private convertInfoToWarning(
-		info: NativeScriptDoctor.IInfo
+		info: NativeScriptDoctor.IInfo,
 	): NativeScriptDoctor.IWarning {
 		return {
 			warning: info.message,
@@ -345,7 +343,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	private isPlatformSupported(platform: string): boolean {
 		return (
 			Constants.SUPPORTED_PLATFORMS.map((pl) => pl.toLowerCase()).indexOf(
-				platform.toLowerCase()
+				platform.toLowerCase(),
 			) !== -1
 		);
 	}
@@ -358,8 +356,8 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		if (!this.isPlatformSupported(platform)) {
 			throw new Error(
 				`Platform ${platform} is not supported.The supported platforms are: ${Constants.SUPPORTED_PLATFORMS.join(
-					", "
-				)} `
+					", ",
+				)} `,
 			);
 		}
 	}

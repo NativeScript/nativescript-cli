@@ -2,7 +2,7 @@ import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { CreateProjectCommand } from "../lib/commands/create-project";
 import { StringCommandParameter } from "../lib/common/command-params";
-import * as helpers from "../lib/common/helpers";
+import { setIsInteractive } from "../lib/common/helpers";
 import * as constants from "../lib/constants";
 import { assert } from "chai";
 import { PrompterStub } from "./stubs";
@@ -132,7 +132,7 @@ class ProjectServiceMock implements IProjectService {
 	}
 
 	async createProject(
-		projectOptions: IProjectSettings
+		projectOptions: IProjectSettings,
 	): Promise<ICreateProjectData> {
 		createProjectCalledWithForce = projectOptions.force;
 		selectedTemplateName = projectOptions.template;
@@ -220,14 +220,17 @@ describe("Project commands tests", () => {
 
 	beforeEach(() => {
 		testInjector = createTestInjector();
-		// @ts-expect-error
-		helpers.isInteractive = () => true;
+		setIsInteractive(() => true);
 		isProjectCreated = false;
 		validateProjectCallsCount = 0;
 		createProjectCalledWithForce = false;
 		selectedTemplateName = undefined;
 		options = testInjector.resolve("$options");
 		createProjectCommand = testInjector.resolve("$createCommand");
+	});
+
+	afterEach(() => {
+		setIsInteractive();
 	});
 
 	describe("#CreateProjectCommand", () => {
@@ -366,7 +369,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"@nativescript/template-hello-world-ng"
+				"@nativescript/template-hello-world-ng",
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -382,7 +385,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"@nativescript/template-drawer-navigation-ts"
+				"@nativescript/template-drawer-navigation-ts",
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -398,7 +401,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"@nativescript/template-tab-navigation"
+				"@nativescript/template-tab-navigation",
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -414,7 +417,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"@nativescript/template-drawer-navigation-vue"
+				"@nativescript/template-drawer-navigation-vue",
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -430,7 +433,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"@nativescript/template-blank-react"
+				"@nativescript/template-blank-react",
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);
@@ -446,7 +449,7 @@ describe("Project commands tests", () => {
 
 			assert.deepStrictEqual(
 				selectedTemplateName,
-				"@nativescript/template-blank-svelte"
+				"@nativescript/template-blank-svelte",
 			);
 			assert.equal(validateProjectCallsCount, 1);
 			assert.isTrue(createProjectCalledWithForce);

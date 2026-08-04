@@ -35,10 +35,6 @@ interface IiTunesConnectApplicationType {
  * Their values are the names of the methods in universnal-analytics that have to be called to track this type of data.
  * Also known as Hit Type: https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#t
  */
-declare const enum GoogleAnalyticsDataType {
-	Page = "pageview",
-	Event = "event",
-}
 
 /**
  * Descibes iTunes Connect applications
@@ -170,7 +166,7 @@ declare module Server {
 		httpRequest(url: string): Promise<IResponse>;
 		httpRequest(
 			options: any,
-			proxySettings?: IProxySettings
+			proxySettings?: IProxySettings,
 		): Promise<IResponse>;
 	}
 
@@ -196,79 +192,14 @@ interface IShouldDispose {
 /**
  * Describes the type of data sent to analytics service.
  */
-declare const enum TrackingTypes {
-	/**
-	 * Defines that the data contains information for initialization of a new Analytics monitor.
-	 */
-	Initialization = "initialization",
-
-	/**
-	 * Defines that the data contains exception that should be tracked.
-	 */
-	Exception = "exception",
-
-	/**
-	 * Defines that the data contains the answer of the question if user allows to be tracked.
-	 */
-	AcceptTrackFeatureUsage = "acceptTrackFeatureUsage",
-
-	/**
-	 * Defines data that will be tracked to Google Analytics.
-	 */
-	GoogleAnalyticsData = "googleAnalyticsData",
-
-	/**
-	 * Defines that the broker process should send all the pending information to Analytics.
-	 * After that the process should send information it has finished tracking and die gracefully.
-	 */
-	FinishTracking = "FinishTracking",
-}
 
 /**
  * Describes the status of the current Analytics status, i.e. has the user allowed to be tracked.
  */
-declare const enum AnalyticsStatus {
-	/**
-	 * User has allowed to be tracked.
-	 */
-	enabled = "enabled",
-
-	/**
-	 * User has declined to be tracked.
-	 */
-	disabled = "disabled",
-
-	/**
-	 * User has not been asked to allow feature and error tracking.
-	 */
-	notConfirmed = "not confirmed",
-}
 
 /**
  * Describes types of options that manage -- flags.
  */
-declare const enum OptionType {
-	/**
-	 * String option
-	 */
-	String = "string",
-	/**
-	 * Boolean option
-	 */
-	Boolean = "boolean",
-	/**
-	 * Number option
-	 */
-	Number = "number",
-	/**
-	 * Array option
-	 */
-	Array = "array",
-	/**
-	 * Object option
-	 */
-	Object = "object",
-}
 
 /**
  * Describes options that can be passed to fs.readFile method.
@@ -289,13 +220,13 @@ interface IFileSystem {
 	zipFiles(
 		zipFile: string,
 		files: string[],
-		zipPathCallback: (path: string) => string
+		zipPathCallback: (path: string) => string,
 	): Promise<void>;
 	unzip(
 		zipFile: string,
 		destinationDir: string,
 		options?: { overwriteExisitingFiles?: boolean; caseSensitive?: boolean },
-		fileFilters?: string[]
+		fileFilters?: string[],
 	): Promise<void>;
 
 	/**
@@ -351,7 +282,7 @@ interface IFileSystem {
 
 	futureFromEvent(
 		eventEmitter: NodeJS.EventEmitter,
-		event: string
+		event: string,
 	): Promise<any>;
 
 	/**
@@ -424,7 +355,7 @@ interface IFileSystem {
 		filename: string,
 		data: any,
 		space?: string,
-		encoding?: string
+		encoding?: string,
 	): void;
 
 	/**
@@ -450,7 +381,7 @@ interface IFileSystem {
 	isEmptyDir(directoryPath: string): boolean;
 
 	isRelativePath(
-		path: string
+		path: string,
 	): boolean /* feels so lonely here, I don't have a Future */;
 
 	/**
@@ -523,7 +454,7 @@ interface IFileSystem {
 			start?: number;
 			end?: number;
 			highWaterMark?: number;
-		}
+		},
 	): NodeJS.ReadableStream;
 	createWriteStream(
 		path: string,
@@ -531,7 +462,7 @@ interface IFileSystem {
 			flags?: string;
 			encoding?: string;
 			string?: string;
-		}
+		},
 	): any;
 
 	/**
@@ -546,7 +477,10 @@ interface IFileSystem {
 	enumerateFilesInDirectorySync(
 		directoryPath: string,
 		filterCallback?: (file: string, stat: IFsStats) => boolean,
-		opts?: { enumerateDirectories?: boolean; includeEmptyDirectories?: boolean }
+		opts?: {
+			enumerateDirectories?: boolean;
+			includeEmptyDirectories?: boolean;
+		},
 	): string[];
 
 	/**
@@ -557,7 +491,7 @@ interface IFileSystem {
 	 */
 	getFileShasum(
 		fileName: string,
-		options?: { algorithm?: string; encoding?: "hex" | "base64" }
+		options?: { algorithm?: string; encoding?: "hex" | "base64" },
 	): Promise<string>;
 
 	// shell.js wrappers
@@ -626,7 +560,7 @@ interface IErrors {
 	failWithHelp(opts: IFailOptions, ...args: any[]): never;
 	beginCommand(
 		action: () => Promise<boolean>,
-		printCommandHelp: () => Promise<void>
+		printCommandHelp: () => Promise<void>,
 	): Promise<boolean>;
 	verifyHeap(message: string): void;
 	printCallStack: boolean;
@@ -656,18 +590,6 @@ interface ICommandOptions {
 	disableCommandHelpSuggestion?: boolean;
 }
 
-declare const enum ErrorCodes {
-	UNCAUGHT = 120,
-	UNKNOWN = 127,
-	INVALID_ARGUMENT = 128,
-	RESOURCE_PROBLEM = 129,
-	KARMA_FAIL = 130,
-	UNHANDLED_REJECTION_FAILURE = 131,
-	DELETED_KILL_FILE = 132,
-	TESTS_INIT_REQUIRED = 133,
-	ALL_DEVICES_DISCONNECTED = 134,
-}
-
 interface IFutureDispatcher {
 	run(): void;
 	dispatch(action: () => Promise<void>): void;
@@ -691,33 +613,33 @@ interface IChildProcess extends NodeJS.EventEmitter {
 	exec(
 		command: string,
 		options?: any,
-		execOptions?: IExecOptions
+		execOptions?: IExecOptions,
 	): Promise<any>;
 	execFile<T>(command: string, args: string[]): Promise<T>;
 	spawn(
 		command: string,
 		args?: string[],
-		options?: any
+		options?: any,
 	): child_process.ChildProcess; // it returns child_process.ChildProcess you can safely cast to it
 	spawnFromEvent(
 		command: string,
 		args: string[],
 		event: string,
 		options?: any,
-		spawnFromEventOptions?: ISpawnFromEventOptions
+		spawnFromEventOptions?: ISpawnFromEventOptions,
 	): Promise<ISpawnResult>;
 	trySpawnFromCloseEvent(
 		command: string,
 		args: string[],
 		options?: any,
-		spawnFromEventOptions?: ISpawnFromEventOptions
+		spawnFromEventOptions?: ISpawnFromEventOptions,
 	): Promise<ISpawnResult>;
 	tryExecuteApplication(
 		command: string,
 		args: string[],
 		event: string,
 		errorMessage: string,
-		condition?: (childProcess: any) => boolean
+		condition?: (childProcess: any) => boolean,
 	): Promise<any>;
 	/**
 	 * This is a special case of the child_process.spawn() functionality for spawning Node.js processes.
@@ -739,7 +661,7 @@ interface IChildProcess extends NodeJS.EventEmitter {
 			silent?: boolean;
 			uid?: number;
 			gid?: number;
-		}
+		},
 	): any;
 }
 
@@ -781,7 +703,7 @@ interface IAnalyticsService {
 	getStatusMessage(
 		settingName: string,
 		jsonFormat: boolean,
-		readableSettingName: string
+		readableSettingName: string,
 	): Promise<string>;
 	isEnabled(settingName: string): Promise<boolean>;
 	finishTracking(): Promise<void>;
@@ -828,7 +750,7 @@ interface IPrompterOptions extends IAllowEmpty {
 type IPrompterAnswers<T extends string = string> = { [id in T]: any };
 
 interface IPrompterQuestion<
-	T extends IPrompterAnswers<any> = IPrompterAnswers<any>
+	T extends IPrompterAnswers<any> = IPrompterAnswers<any>,
 > {
 	type?: string;
 	name?: string;
@@ -839,7 +761,7 @@ interface IPrompterQuestion<
 	filter?(input: any, answers: T): any;
 	validate?(
 		input: any,
-		answers?: T
+		answers?: T,
 	): boolean | string | Promise<boolean | string>;
 }
 
@@ -906,11 +828,11 @@ interface IHooksService {
 	hookArgsName: string;
 	executeBeforeHooks(
 		commandName: string,
-		hookArguments?: IDictionary<any>
+		hookArguments?: IDictionary<any>,
 	): Promise<void>;
 	executeAfterHooks(
 		commandName: string,
-		hookArguments?: IDictionary<any>
+		hookArguments?: IDictionary<any>,
 	): Promise<void>;
 }
 
@@ -938,9 +860,7 @@ interface IRejectUnauthorized {
  * Proxy settings required for http request.
  */
 interface IProxySettings
-	extends IRejectUnauthorized,
-		ICredentials,
-		IProxySettingsBase {
+	extends IRejectUnauthorized, ICredentials, IProxySettingsBase {
 	/**
 	 * Hostname of the machine used for proxy.
 	 */
@@ -1077,7 +997,7 @@ interface ISystemWarning {
 
 interface ISysInfo {
 	getSysInfo(
-		config?: NativeScriptDoctor.ISysInfoConfig
+		config?: NativeScriptDoctor.ISysInfoConfig,
 	): Promise<NativeScriptDoctor.ISysInfoData>;
 	/**
 	 * Returns the currently installed version of Xcode.
@@ -1443,14 +1363,14 @@ interface IProjectFilesManager {
 		projectFilesPath: string,
 		excludedProjectDirsAndFiles?: string[],
 		filter?: (filePath: string, stat: IFsStats) => boolean,
-		opts?: any
+		opts?: any,
 	): string[];
 	/**
 	 * Checks if the file is excluded
 	 */
 	isFileExcluded(
 		filePath: string,
-		excludedProjectDirsAndFiles?: string[]
+		excludedProjectDirsAndFiles?: string[],
 	): boolean;
 	/**
 	 * Returns an object that maps every local file path to device file path
@@ -1461,7 +1381,7 @@ interface IProjectFilesManager {
 		projectFilesPath: string,
 		files: string[],
 		excludedProjectDirsAndFiles: string[],
-		projectFilesConfig?: IProjectFilesConfig
+		projectFilesConfig?: IProjectFilesConfig,
 	): Promise<Mobile.ILocalToDevicePathData[]>;
 
 	/**
@@ -1476,7 +1396,7 @@ interface IProjectFilesManager {
 		directoryPath: string,
 		platform: string,
 		projectFilesConfig?: IProjectFilesConfig,
-		excludedDirs?: string[]
+		excludedDirs?: string[],
 	): void;
 }
 
@@ -1492,7 +1412,7 @@ interface IProjectFilesProvider {
 		filePath: string,
 		platform: string,
 		projectData: any,
-		projectFilesConfig?: IProjectFilesConfig
+		projectFilesConfig?: IProjectFilesConfig,
 	): string;
 
 	/**
@@ -1505,7 +1425,7 @@ interface IProjectFilesProvider {
 	getProjectFileInfo(
 		filePath: string,
 		platform: string,
-		projectFilesConfig: IProjectFilesConfig
+		projectFilesConfig: IProjectFilesConfig,
 	): IProjectFileInfo;
 	/**
 	 * Parses file by removing platform or configuration from its name.
@@ -1515,7 +1435,7 @@ interface IProjectFilesProvider {
 	 */
 	getPreparedFilePath(
 		filePath: string,
-		projectFilesConfig: IProjectFilesConfig
+		projectFilesConfig: IProjectFilesConfig,
 	): string;
 }
 
@@ -1617,7 +1537,7 @@ interface INet {
 	 * @returns {boolean} true in case port is in LISTEN state, false otherwise.
 	 */
 	waitForPortToListen(
-		waitForPortListenData: IWaitForPortListenData
+		waitForPortListenData: IWaitForPortListenData,
 	): Promise<boolean>;
 }
 
@@ -1685,7 +1605,7 @@ interface IiOSNotificationService {
 	awaitNotification(
 		deviceIdentifier: string,
 		socket: number,
-		timeout: number
+		timeout: number,
 	): Promise<string>;
 
 	/**
@@ -1698,7 +1618,7 @@ interface IiOSNotificationService {
 	postNotification(
 		deviceIdentifier: string,
 		notification: string,
-		commandType?: string
+		commandType?: string,
 	): Promise<number>;
 }
 

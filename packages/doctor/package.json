@@ -2,26 +2,30 @@
   "name": "@nativescript/doctor",
   "version": "2.0.17",
   "description": "Library that helps identifying if the environment can be used for development of {N} apps.",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "types": "./typings/nativescript-doctor.d.ts",
   "files": [
-    "src/**/*.js",
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
     "resources",
     "typings",
     "CHANGELOG.md",
     "NOTICE.txt"
   ],
   "scripts": {
-    "clean": "npx rimraf node_modules package-lock.json && npm i && grunt clean",
-    "build": "grunt",
-    "build.all": "grunt ts:devall",
-    "prepack": "grunt pack",
-    "test": "istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "clean": "npx rimraf node_modules package-lock.json && npm i && npm run clean.build",
+    "clean.build": "node scripts/clean.js",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepack": "npm run clean.build && npm test && tsc -p tsconfig.release.json",
+    "test": "tsc -p tsconfig.test.json && vitest run",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "test-watch": "vitest"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NativeScript/nativescript-doctor.git"
+    "url": "git+https://github.com/NativeScript/nativescript-cli.git",
+    "directory": "packages/doctor"
   },
   "keywords": [
     "NativeScript",
@@ -37,13 +41,12 @@
   ],
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/NativeScript/nativescript-doctor/issues"
+    "url": "https://github.com/NativeScript/nativescript-cli/issues"
   },
-  "homepage": "https://github.com/NativeScript/nativescript-doctor#readme",
+  "homepage": "https://github.com/NativeScript/nativescript-cli/tree/main/packages/doctor#readme",
   "devDependencies": {
     "@types/chai": "5.2.2",
     "@types/lodash": "4.17.21",
-    "@types/mocha": "10.0.10",
     "@types/semver": "7.7.1",
     "@types/shelljs": "0.8.17",
     "@types/temp": "0.9.4",
@@ -51,24 +54,15 @@
     "@types/yauzl": "2.10.3",
     "chai": "5.3.3",
     "conventional-changelog-cli": "^5.0.0",
-    "grunt": "1.6.1",
-    "grunt-contrib-clean": "2.0.1",
-    "grunt-contrib-watch": "1.1.0",
-    "grunt-shell": "4.0.0",
-    "grunt-ts": "6.0.0-beta.22",
-    "grunt-tslint": "5.0.2",
-    "istanbul": "0.4.5",
-    "mocha": "11.7.5",
     "rimraf": "6.1.2",
-    "tslint": "6.1.3",
-    "tslint-microsoft-contrib": "6.2.0",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "vitest": "^4.1.10"
   },
   "dependencies": {
-    "lodash": "4.17.21",
+    "lodash": "^4.18.1",
     "semver": "7.7.3",
     "shelljs": "0.10.0",
     "winreg": "1.2.5",
-    "yauzl": "3.2.0"
+    "yauzl": "^3.4.0"
   }
 }

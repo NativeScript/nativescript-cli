@@ -23,14 +23,12 @@ import {
 import { IBasePluginData } from "../definitions/plugins";
 import { injector } from "../common/yok";
 import { EOL } from "os";
-import {
-	format as prettierFormat,
-	resolveConfig as resolvePrettierConfig,
-} from "prettier";
 import { cache, exported } from "../common/decorators";
 import { IOptions } from "../declarations";
 import * as semver from "semver/preload";
 import { ICleanupService } from "../definitions/cleanup-service";
+
+type PrettierModule = typeof import("prettier");
 
 export class ProjectConfigService implements IProjectConfigService {
 	private forceUsingNewConfig: boolean = false;
@@ -273,27 +271,7 @@ export default {
 				configContent,
 			);
 			const newContent = transformer.setValue(key, value);
-			const prettierOptions = (await resolvePrettierConfig(
-				this.projectHelper.projectDir,
-				{ editorconfig: true },
-			)) || {
-				semi: false,
-				singleQuote: true,
-			};
-			this.$logger.trace(
-				"updating config, prettier options: ",
-				prettierOptions,
-			);
-			this.$fs.writeFile(
-				configFilePath,
-				await prettierFormat(newContent, {
-					...prettierOptions,
-					parser: "typescript",
-					// note: we don't use plugins here, since we are only formatting ts files, and they are supported by default
-					// and this also causes issues with certain plugins, like prettier-plugin-tailwindcss.
-					plugins: [],
-				}),
-			);
+			this.$fs.writeFile(configFilePath, await this.formatConfig(newContent));
 		} catch (error) {
 			this.$logger.error(`Failed to update config.` + error);
 		} finally {
@@ -315,6 +293,61 @@ export default {
 				return false;
 			}
 			return true;
+		}
+	}
+
+	/**
+	 * Resolved from the project first: the formatting options come from the
+	 * project's own prettier/editorconfig setup, so the project's prettier version
+	 * is the one that understands them. Required lazily - a broken or missing
+	 * prettier must not take down the CLI, since this is a core service.
+	 */
+	private loadPrettier(): PrettierModule {
+		const projectDir = this.projectHelper.projectDir;
+
+		if (projectDir) {
+			try {
+				return require(require.resolve("prettier", { paths: [projectDir] }));
+			} catch (error) {
+				this.$logger.trace(
+					"Could not load prettier from the project, using the bundled one.",
+					error,
+				);
+			}
+		}
+
+		return require("prettier");
+	}
+
+	private async formatConfig(content: string): Promise<string> {
+		try {
+			const prettier = this.loadPrettier();
+			const prettierOptions = (await prettier.resolveConfig(
+				this.projectHelper.projectDir,
+				{ editorconfig: true },
+			)) || {
+				semi: false,
+				singleQuote: true,
+			};
+			this.$logger.trace(
+				"updating config, prettier options: ",
+				prettierOptions,
+			);
+
+			// awaiting covers both prettier 2 (sync) and prettier 3 (async) format
+			return await prettier.format(content, {
+				...prettierOptions,
+				parser: "typescript",
+				// note: we don't use plugins here, since we are only formatting ts files, and they are supported by default
+				// and this also causes issues with certain plugins, like prettier-plugin-tailwindcss.
+				plugins: [],
+			});
+		} catch (error) {
+			this.$logger.warn(
+				"Could not format the config with prettier - it will be written unformatted.",
+			);
+			this.$logger.trace("prettier failed with: ", error);
+			return content;
 		}
 	}
 

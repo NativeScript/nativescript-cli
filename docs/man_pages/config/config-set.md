@@ -31,6 +31,8 @@ General | `$ ns config set <key> <value>`
 * Setting whole objects is not supported. Update individual keys instead. For example, use:
 	`$ ns config set android.codeCache true`
 
+<% if(isHtml) { %>
+
 ### Related Commands
 
 Command | Description

@@ -36,7 +36,7 @@ const defaultDeviceIdentifier = "Nexus5";
 class PlatformDebugService extends EventEmitter /* implements IPlatformDebugService */ {
 	public async debug(
 		debugData: IDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugResultInfo> {
 		return { debugUrl: fakeChromeDebugUrl };
 	}
@@ -63,7 +63,7 @@ interface IDebugTestData {
 }
 
 const getDefaultDeviceInformation = (
-	platform?: string
+	platform?: string,
 ): IDebugTestDeviceInfo => ({
 	deviceInfo: {
 		status: constants.CONNECTED_STATUS,
@@ -86,7 +86,7 @@ const getDefaultTestData = (platform?: string): IDebugTestData => ({
 
 describe("debugController", () => {
 	const getTestInjectorForTestConfiguration = (
-		testData: IDebugTestData
+		testData: IDebugTestData,
 	): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("devicesService", {
@@ -97,12 +97,12 @@ describe("debugController", () => {
 
 							applicationManager: {
 								isApplicationInstalled: async (
-									appIdentifier: string
+									appIdentifier: string,
 								): Promise<boolean> => testData.isApplicationInstalledOnDevice,
 							},
 
 							isEmulator: testData.deviceInformation.isEmulator,
-					  }
+						}
 					: null;
 			},
 		});
@@ -145,13 +145,14 @@ describe("debugController", () => {
 		testInjector.register("prepareDataService", PrepareDataService);
 		testInjector.register("prepareNativePlatformService", {});
 		testInjector.register("projectDataService", ProjectDataService);
+		testInjector.register("projectData", stubs.ProjectDataStub);
 		testInjector.register("fs", {});
 		testInjector.register("staticConfig", StaticConfig);
 		testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 		testInjector.register("androidResourcesMigrationService", {});
 		testInjector.register(
 			"liveSyncProcessDataService",
-			LiveSyncProcessDataService
+			LiveSyncProcessDataService,
 		);
 
 		return testInjector;
@@ -170,7 +171,7 @@ describe("debugController", () => {
 			const assertIsRejected = async (
 				testData: IDebugTestData,
 				expectedError: string,
-				userSpecifiedOptions?: IDebugOptions
+				userSpecifiedOptions?: IDebugOptions,
 			): Promise<void> => {
 				const testInjector = getTestInjectorForTestConfiguration(testData);
 				const debugController = testInjector.resolve(DebugController);
@@ -178,7 +179,7 @@ describe("debugController", () => {
 				const debugData = getDebugData();
 				await assert.isRejected(
 					debugController.startDebug(debugData, userSpecifiedOptions),
-					expectedError
+					expectedError,
 				);
 			};
 
@@ -196,7 +197,7 @@ describe("debugController", () => {
 
 				await assertIsRejected(
 					testData,
-					"is unreachable. Make sure it is Trusted "
+					"is unreachable. Make sure it is Trusted ",
 				);
 			});
 
@@ -206,7 +207,7 @@ describe("debugController", () => {
 
 				await assertIsRejected(
 					testData,
-					"is not installed on device with identifier"
+					"is not installed on device with identifier",
 				);
 			});
 
@@ -216,12 +217,12 @@ describe("debugController", () => {
 
 				await assertIsRejected(
 					testData,
-					DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING
+					DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING,
 				);
 			});
 
 			const assertIsRejectedWhenPlatformDebugServiceFails = async (
-				platform: string
+				platform: string,
 			): Promise<void> => {
 				const testData = getDefaultTestData();
 				testData.deviceInformation.deviceInfo.platform = platform;
@@ -229,11 +230,11 @@ describe("debugController", () => {
 				const testInjector = getTestInjectorForTestConfiguration(testData);
 				const expectedErrorMessage = "Platform specific error";
 				const platformDebugService = testInjector.resolve<IDeviceDebugService>(
-					`${platform}DeviceDebugService`
+					`${platform}DeviceDebugService`,
 				);
 				platformDebugService.debug = async (
 					data: IDebugData,
-					debugOptions: IDebugOptions
+					debugOptions: IDebugOptions,
 				): Promise<any> => {
 					throw new Error(expectedErrorMessage);
 				};
@@ -243,7 +244,7 @@ describe("debugController", () => {
 				const debugData = getDebugData();
 				await assert.isRejected(
 					debugController.startDebug(debugData, null),
-					expectedErrorMessage
+					expectedErrorMessage,
 				);
 			};
 
@@ -277,16 +278,17 @@ describe("debugController", () => {
 						message: "my message",
 						code: 2048,
 					};
-					const platformDebugService = testInjector.resolve<
-						IDeviceDebugService
-					>(`${platform}DeviceDebugService`);
+					const platformDebugService =
+						testInjector.resolve<IDeviceDebugService>(
+							`${platform}DeviceDebugService`,
+						);
 					platformDebugService.emit(
 						CONNECTION_ERROR_EVENT_NAME,
-						expectedErrorData
+						expectedErrorData,
 					);
 					assert.deepStrictEqual(
 						dataRaisedForConnectionError,
-						expectedErrorData
+						expectedErrorData,
 					);
 				});
 			});
@@ -338,12 +340,11 @@ describe("debugController", () => {
 						testData.deviceInformation.deviceInfo.platform = "iOS";
 
 						const testInjector = getTestInjectorForTestConfiguration(testData);
-						const analyticsService = testInjector.resolve<IAnalyticsService>(
-							"analyticsService"
-						);
+						const analyticsService =
+							testInjector.resolve<IAnalyticsService>("analyticsService");
 						let dataTrackedToGA: IEventActionData = null;
 						analyticsService.trackEventActionInGoogleAnalytics = async (
-							data: IEventActionData
+							data: IEventActionData,
 						): Promise<void> => {
 							dataTrackedToGA = data;
 						};
@@ -351,11 +352,10 @@ describe("debugController", () => {
 						const debugController = testInjector.resolve(DebugController);
 						const debugData = getDebugData(testCase.debugOptions);
 						await debugController.startDebug(debugData);
-						const devicesService = testInjector.resolve<Mobile.IDevicesService>(
-							"devicesService"
-						);
+						const devicesService =
+							testInjector.resolve<Mobile.IDevicesService>("devicesService");
 						const device = devicesService.getDeviceByIdentifier(
-							testData.deviceInformation.deviceInfo.identifier
+							testData.deviceInformation.deviceInfo.identifier,
 						);
 
 						const expectedData = JSON.stringify(
@@ -366,16 +366,16 @@ describe("debugController", () => {
 								projectDir: debugData.projectDir,
 							},
 							null,
-							2
+							2,
 						);
 
 						// Use JSON.stringify as the compared objects link to new instances of different classes.
 						assert.deepStrictEqual(
 							JSON.stringify(dataTrackedToGA, null, 2),
-							expectedData
+							expectedData,
 						);
 					});
-				}
+				},
 			);
 		});
 	});

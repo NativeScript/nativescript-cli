@@ -1,0 +1,10 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"sourceMap": false,
+		"removeComments": true,
+		"declaration": true
+	},
+	"include": ["lib/"],
+	"exclude": ["lib/common/test"]
+}

@@ -1,7 +1,7 @@
 {
   "name": "@akylas/nativescript-cli",
   "main": "./lib/nativescript-cli-lib.js",
-  "version": "9.0.8",
+  "version": "9.1.0-alpha.15",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
@@ -11,41 +11,27 @@
     "tns": "./bin/tns"
   },
   "files": [
-    "bin/*",
-    "config",
-    "docs",
-    "!docs/html",
-    "lib",
-    "!lib/**/*.ts",
-    "lib/**/*.d.ts",
-    "!lib/**/*.js.map",
-    "!lib/common/test",
-    "!lib/common/docs/fonts",
-    "!node_modules",
-    "patches",
-    "resources",
-    "setup",
-    "vendor",
-    "postinstall.js",
-    "preuninstall.js"
+    "dist"
   ],
   "scripts": {
     "clean": "npx rimraf node_modules package-lock.json && npm run setup",
-    "build": "grunt",
-    "build.all": "grunt test",
+    "clean.build": "node scripts/clean.js",
+    "build": "node scripts/clean.js --dist-only && npm run tsc && node scripts/generate-test-deps.js && node scripts/copy-assets.js",
+    "build.all": "npm test",
     "dev": "tsc --watch",
     "setup": "npm i --ignore-scripts && npx husky",
-    "test": "npm run tsc && mocha --config=test/.mocharc.yml",
-    "postinstall": "patch-package && node postinstall.js",
+    "test": "npm run build && vitest run",
+    "postinstall": "node postinstall.js",
     "preuninstall": "node preuninstall.js",
-    "prepack": "grunt prepare",
-    "pack": "grunt pack",
-    "mocha": "mocha",
+    "prepack": "node scripts/guard-root-pack.js",
+    "docs-jekyll": "node scripts/build-docs.js",
     "tsc": "tsc",
-    "test-watch": "node ./dev/tsc-to-mocha-watch.js",
+    "test-watch": "node ./dev/tsc-to-vitest-watch.js",
     "release": "standard-version",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}"
+    "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}",
+    "build.release": "npm run clean.build && tsc -p tsconfig.release.json && node scripts/generate-test-deps.js && node scripts/copy-assets.js --release && node scripts/set-ga-id.js live --dir dist && node scripts/set-ga-id.js verify --dir dist",
+    "pack.release": "npm run build.release && npm pack ./dist"
   },
   "repository": {
     "type": "git",
@@ -61,9 +47,8 @@
     "@nativescript/doctor": "2.0.17",
     "@nativescript/hook": "3.0.5",
     "@npmcli/arborist": "9.1.8",
-    "@nstudio/trapezedev-project": "7.2.4",
     "@rigor789/resolve-package-path": "1.0.7",
-    "axios": "1.13.5",
+    "axios": "1.18.1",
     "byline": "5.0.0",
     "chokidar": "^3.6.0",
     "cli-table3": "0.6.5",
@@ -73,7 +58,7 @@
     "email-validator": "2.0.4",
     "esprima": "4.0.1",
     "font-finder": "1.1.0",
-    "ios-device-lib": "0.9.4",
+    "ios-device-lib": "0.9.5",
     "ios-mobileprovision-finder": "1.2.1",
     "ios-sim-portable": "4.5.1",
     "jimp": "1.6.0",
@@ -81,7 +66,7 @@
     "log4js": "6.9.1",
     "marked": "15.0.12",
     "marked-terminal": "7.3.0",
-    "minimatch": "10.2.4",
+    "minimatch": "10.2.6",
     "mkdirp": "3.0.1",
     "mute-stream": "2.0.0",
     "nativescript-dev-xcode": "0.8.2",
@@ -91,7 +76,7 @@
     "pbxproj-dom": "1.2.0",
     "plist": "3.1.0",
     "plist-merge-patch": "0.2.0",
-    "prettier": "3.7.3",
+    "prettier": "3.9.6",
     "prompts": "2.4.2",
     "proper-lockfile": "4.1.2",
     "proxy-lib": "0.4.1",
@@ -99,17 +84,17 @@
     "qrcode-terminal": "0.12.0",
     "semver": "7.7.3",
     "shelljs": "0.10.0",
-    "simple-git": "3.30.0",
+    "simple-git": "3.36.0",
     "simple-plist": "1.4.0",
-    "source-map": "0.7.6",
-    "tar": "7.5.9",
+    "source-map": "0.8.0",
+    "tar": "7.5.22",
     "ts-morph": "25.0.1",
     "tunnel": "0.0.6",
     "typescript": "5.7.3",
     "universal-analytics": "0.5.3",
     "uuid": "11.1.0",
     "winreg": "1.2.5",
-    "ws": "8.18.3",
+    "ws": "8.21.1",
     "xml2js": "0.6.2",
     "yargs": "17.7.2",
     "yazl": "^3.3.1"
@@ -134,7 +119,7 @@
     "@types/shelljs": "^0.8.11",
     "@types/sinon": "^17.0.3",
     "@types/tabtab": "^3.0.2",
-    "@types/tar": "6.1.13",
+    "@types/tar": "7.0.87",
     "@types/tunnel": "0.0.7",
     "@types/universal-analytics": "0.4.8",
     "@types/uuid": "^10.0.0",
@@ -147,39 +132,31 @@
     "chai-as-promised": "8.0.2",
     "conventional-changelog-cli": "^5.0.0",
     "fast-check": "3.23.2",
-    "grunt": "1.6.1",
-    "grunt-contrib-clean": "2.0.1",
-    "grunt-contrib-copy": "1.0.0",
-    "grunt-contrib-watch": "1.1.0",
-    "grunt-shell": "4.0.0",
-    "grunt-template": "1.0.0",
-    "grunt-ts": "6.0.0-beta.22",
     "husky": "9.1.7",
-    "istanbul": "0.4.5",
     "lint-staged": "~15.5.2",
-    "mocha": "11.7.5",
-    "patch-package": "^8.0.1",
     "sinon": "19.0.5",
     "source-map-support": "0.5.21",
     "standard-version": "9.5.0",
+    "vitest": "^4.1.10",
     "xml2js": ">=0.5.0"
   },
   "optionalDependencies": {
     "fsevents": "*"
   },
+  "bundleDependencies": [
+    "universal-analytics"
+  ],
   "overrides": {
     "@conventional-changelog/git-client": "2.5.1",
+    "@ts-morph/common@0.26.1": {
+      "minimatch": "10.2.4"
+    },
+    "uuid": "11.1.0",
     "jimp": {
       "xml2js": "0.6.2"
     },
     "npm-watch": {
       "nodemon": "3.0.3"
-    },
-    "grunt": {
-      "minimatch": "3.1.5"
-    },
-    "globule": {
-      "minimatch": "3.1.5"
     },
     "replace": {
       "minimatch": "3.1.5"

@@ -5,10 +5,10 @@ import * as _ from "lodash";
 import {
 	IDictionary,
 	IDashedOption,
-	OptionType,
 	IErrors,
 	ISettingsService,
 } from "./common/declarations";
+import { OptionType } from "./common/enums";
 import { injector } from "./common/yok";
 import { APP_FOLDER_NAME } from "./constants";
 export class Options {

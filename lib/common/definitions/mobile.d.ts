@@ -264,8 +264,7 @@ declare global {
 		 * Describes different options for filtering device logs.
 		 */
 		interface IDeviceLogOptions
-			extends IDictionary<string | boolean>,
-				Partial<IProjectDir> {
+			extends IDictionary<string | boolean>, Partial<IProjectDir> {
 			/**
 			 * Process id of the application on the device.
 			 */
@@ -290,8 +289,7 @@ declare global {
 		 * Describes required methods for getting iOS Simulator's logs.
 		 */
 		interface IiOSSimulatorLogProvider
-			extends NodeJS.EventEmitter,
-				IShouldDispose {
+			extends NodeJS.EventEmitter, IShouldDispose {
 			/**
 			 * Starts the process for getting simulator logs and emits and DEVICE_LOG_EVENT_NAME event.
 			 * @param {string} deviceId The unique identifier of the device.
@@ -435,6 +433,16 @@ declare global {
 
 		interface IDeviceFileSystem {
 			listFiles(devicePath: string, appIdentifier?: string): Promise<any>;
+			/**
+			 * Returns the entries of a directory inside the application's
+			 * sandbox, or null when the directory cannot be read. Currently
+			 * implemented only for physical iOS devices (AFC), where it backs
+			 * the post-transfer livesync verification.
+			 */
+			getDirectoryEntries?(
+				devicePath: string,
+				appIdentifier: string,
+			): Promise<string[] | null>;
 			getFile(
 				deviceFilePath: string,
 				appIdentifier: string,
@@ -539,8 +547,7 @@ declare global {
 		/**
 		 * Describes options that can be passed to devices service's initialization method.
 		 */
-		interface IDevicesServicesInitializationOptions
-			extends Partial<IDeviceLookingOptions> {
+		interface IDevicesServicesInitializationOptions extends Partial<IDeviceLookingOptions> {
 			/**
 			 * If passed will start an emulator if necesasry.
 			 */
@@ -1267,8 +1274,7 @@ declare global {
 		}
 
 		interface IDeviceLookingOptions
-			extends IHasEmulatorOption,
-				IHasDetectionInterval {
+			extends IHasEmulatorOption, IHasDetectionInterval {
 			shouldReturnImmediateResult: boolean;
 			platform: string;
 			fullDiscovery?: boolean;
@@ -1394,8 +1400,7 @@ declare global {
 		/**
 		 * Describes information about application on device.
 		 */
-		interface IDeviceApplicationInformation
-			extends IDeviceApplicationInformationBase {
+		interface IDeviceApplicationInformation extends IDeviceApplicationInformationBase {
 			/**
 			 * The framework of the project (Cordova or NativeScript).
 			 */
