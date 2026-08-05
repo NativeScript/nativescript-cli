@@ -934,5 +934,6 @@ declare class AppleWidgetUtils extends NSObject {
 	}
 }
 
-injector.registerCommand(["widget"], WidgetCommand);
+// No flat "widget": the subcommand registration below synthesizes the parent
+// dispatcher, and WidgetCommand serves as WidgetIOSCommand's base class.
 injector.registerCommand(["widget|ios"], WidgetIOSCommand);

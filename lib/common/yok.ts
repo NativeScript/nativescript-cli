@@ -87,6 +87,12 @@ export class Yok extends Injector implements IInjector {
 	 * registered, not because child requires ran out of order.
 	 */
 	private synthesizedParents = new Set<string>();
+	/**
+	 * Parents whose record is only the placeholder requireCommand creates so a
+	 * child's module can be loaded through the parent name. The dispatcher is
+	 * meant to replace it once that module registers itself.
+	 */
+	private placeholderParents = new Set<string>();
 	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
 	private hierarchicalCommands: IDictionary<string[]> = {};
 
@@ -126,6 +132,7 @@ export class Yok extends Injector implements IInjector {
 				commands.length > 1 &&
 				!this.has(this.createCommandName(commands[0]))
 			) {
+				this.placeholderParents.add(commands[0]);
 				this.require(this.createCommandName(commands[0]), file);
 				if (commands[1] && !commandName.match(/\|\*/)) {
 					this.require(this.createCommandName(commandName), file);
@@ -260,7 +267,7 @@ export class Yok extends Injector implements IInjector {
 					this.hierarchicalCommands[parentCommandName].push(subCommandName);
 				}
 
-				this.createHierarchicalCommand(parentCommandName);
+				this.createHierarchicalCommand(parentCommandName, name);
 			}
 		});
 	}
@@ -343,7 +350,27 @@ export class Yok extends Injector implements IInjector {
 		}
 	}
 
-	private createHierarchicalCommand(name: string) {
+	private createHierarchicalCommand(name: string, triggeredBy?: string) {
+		if (
+			this.has(this.createCommandName(name)) &&
+			!this.synthesizedParents.has(name) &&
+			!this.placeholderParents.has(name)
+		) {
+			// Overwriting would make the registered command unreachable, which is
+			// strictly worse than leaving the subcommand unrouted.
+			const logger = this.get("logger", { optional: true });
+			if (logger) {
+				logger.warn(
+					`'${name}' is already registered as a command of its own, so no ` +
+						`subcommand dispatcher was created for it${
+							triggeredBy ? ` and '${triggeredBy}' cannot be reached` : ""
+						}. Rename one of the two.`,
+				);
+			}
+
+			return;
+		}
+
 		this.synthesizedParents.add(name);
 		const factory = () => {
 			return {
