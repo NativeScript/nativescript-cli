@@ -15,7 +15,7 @@ export class Options {
 	private static DASHED_OPTION_REGEX = /(.+?)([A-Z])(.*)/;
 	private static NONDASHED_OPTION_REGEX = /(.+?)[-]([a-zA-Z])(.*)/;
 
-	private optionsWhiteList = ["timeout", "_", "$0"]; // These options shouldn't be validated
+	private optionsWhiteList = ["_", "$0"]; // yargs artifacts, not options
 	private globalOptions: IDictionary<IDashedOption> = {
 		log: { type: OptionType.String, hasSensitiveValue: false },
 		verbose: { type: OptionType.Boolean, hasSensitiveValue: false },

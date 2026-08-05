@@ -137,6 +137,24 @@ describe("options", () => {
 			assert.isTrue(isExecutionStopped);
 		});
 
+		it("breaks execution when the timeout option has no value", () => {
+			process.argv.push("--timeout");
+			const options = createOptions(testInjector);
+			options.validateOptions();
+			process.argv.pop();
+			assert.isTrue(isExecutionStopped);
+		});
+
+		it("does not break execution when the timeout option has a value", () => {
+			process.argv.push("--timeout");
+			process.argv.push("500");
+			const options = createOptions(testInjector);
+			options.validateOptions();
+			process.argv.pop();
+			process.argv.pop();
+			assert.isFalse(isExecutionStopped);
+		});
+
 		it("breaks execution when valid option has value with spaces only", () => {
 			process.argv.push("--path");
 			process.argv.push("  ");
