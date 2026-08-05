@@ -12,6 +12,7 @@ export type { IContractOptions } from "./contract";
 export { provide, provideLazy } from "./providers";
 export type {
 	Provider,
+	InternalProvider,
 	ProviderToken,
 	Type,
 	AbstractType,

@@ -37,7 +37,9 @@ export interface ILegacyClassProvider extends IBaseProvider<any> {
 
 /**
  * Deferred side-effect loader (Yok's `require(name, path)`): running it is
- * expected to register the real resolver onto this same record.
+ * expected to register the real resolver onto this same record. Container
+ * internals only — a record left with nothing but a loader resolves to an
+ * error, so it is deliberately kept out of `Provider`.
  */
 export interface ILazyRequireProvider extends IBaseProvider<any> {
 	useLazyRequire: () => void;
@@ -48,8 +50,10 @@ export type Provider<T = any> =
 	| IValueProvider<T>
 	| IFactoryProvider<T>
 	| ILazyClassProvider<T>
-	| ILegacyClassProvider
-	| ILazyRequireProvider;
+	| ILegacyClassProvider;
+
+/** The provider forms the container accepts, including the unpublished ones. */
+export type InternalProvider<T = any> = Provider<T> | ILazyRequireProvider;
 
 /** Enforces at compile time that the implementation satisfies the token. */
 export const provide = <T>(
