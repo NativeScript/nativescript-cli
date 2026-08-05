@@ -475,6 +475,18 @@ export class Yok extends Injector implements IInjector {
 
 		shared = shared === undefined ? true : shared;
 		if (_.isFunction(resolver)) {
+			if (resolver.length === 0 && !resolver.prototype) {
+				// A prototype-less zero-parameter function (an arrow factory) cannot
+				// be `new`ed and has no parameters to resolve, so annotate() would
+				// contribute nothing — register it as a plain factory.
+				super.register({
+					provide: nameOrProviders,
+					useFactory: <() => any>resolver,
+					shared,
+				});
+				return;
+			}
+
 			// Classes and factory functions alike: the legacy provider kind
 			// annotate()s the resolver and calls or news it by casing.
 			super.register({

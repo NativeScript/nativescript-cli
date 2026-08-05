@@ -59,4 +59,25 @@ describe("yok: command registration", () => {
 			]);
 		});
 	});
+
+	describe("register with a zero-parameter arrow factory", () => {
+		it("resolves by calling the factory, without annotate()", () => {
+			const factory = () => ({ value: 42 });
+			injector.register("arrowFactoryService", factory);
+
+			const instance = injector.resolve("arrowFactoryService");
+
+			assert.strictEqual(instance.value, 42);
+			assert.isUndefined((<any>factory).$inject);
+		});
+
+		it("stays shared by default", () => {
+			injector.register("sharedArrowFactoryService", () => ({}));
+
+			assert.strictEqual(
+				injector.resolve("sharedArrowFactoryService"),
+				injector.resolve("sharedArrowFactoryService"),
+			);
+		});
+	});
 });
