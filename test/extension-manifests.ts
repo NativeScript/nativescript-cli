@@ -461,10 +461,14 @@ describe("extension manifests", () => {
 	describe("commands declared as defineCommand modules", () => {
 		const contractsPath = require.resolve("../lib/contracts");
 
-		const definitionModule = (commandName: string, marker: string): string =>
+		const definitionModule = (
+			commandName: string,
+			marker: string,
+			exportAs: string = "module.exports",
+		): string =>
 			`const { defineCommand } = require(${JSON.stringify(contractsPath)});
 			global.__nsmCapture.loadedModules.push(${JSON.stringify(marker)});
-			module.exports = defineCommand({
+			${exportAs} = defineCommand({
 				name: ${JSON.stringify(commandName)},
 				arguments: "any",
 				async run(ctx) {
@@ -500,29 +504,365 @@ describe("extension manifests", () => {
 			]);
 		});
 
-		it("resolves the hierarchical parent dispatcher before any child module has loaded", async () => {
+		it("resolves the hierarchical parent dispatcher without loading any child module", async () => {
 			const extensionName = "nsm-defp-ext";
 			writeExtension(
 				extensionName,
-				{ commands: { "nsmdefp|go": "./dist/go.js" } },
+				{
+					commands: {
+						"nsmdefp|go": "./dist/go.js",
+						"nsmdefp|stop": "./dist/stop.js",
+					},
+				},
 				{
 					"main.js": mainModule("defp-main"),
 					"dist/go.js": definitionModule("nsmdefp|go", "defp-go"),
+					"dist/stop.js": definitionModule("nsmdefp|stop", "defp-stop"),
 				},
 			);
 
 			const extensibilityService = resolveService(testInjector);
 			await extensibilityService.loadExtension(extensionName);
 
-			// Dispatch hits the parent first; its record must load the child module
-			// so the dispatcher the child's registration synthesizes exists.
 			const parent = <any>testInjector.resolveCommand("nsmdefp");
 			assert.isOk(parent);
 			assert.isTrue(parent.isHierarchicalCommand);
-			assert.include(capture.loadedModules, "defp-go");
+			assert.deepEqual(capture.loadedModules, []);
+			assert.deepEqual(testInjector.getChildrenCommandsNames("nsmdefp"), [
+				"go",
+				"stop",
+			]);
 
-			const child = testInjector.resolveCommand("nsmdefp|go");
-			assert.isOk(child);
+			assert.isOk(testInjector.resolveCommand("nsmdefp|go"));
+			assert.deepEqual(capture.loadedModules, ["defp-go"]);
+		});
+
+		it("registers a definition under the manifest key and warns about a disagreeing name", async () => {
+			const extensionName = "nsm-defname-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmdefname|run": "./dist/run.js" } },
+				{
+					"main.js": mainModule("defname-main"),
+					"dist/run.js": definitionModule("something|else", "defname-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			const command = testInjector.resolveCommand("nsmdefname|run");
+			assert.isOk(command);
+			await command.execute([]);
+			assert.deepEqual(capture.executed, [{ marker: "defname-run", args: [] }]);
+			assert.isNull(testInjector.resolveCommand("something|else"));
+
+			const warnOutput = getLogger(testInjector).warnOutput;
+			assert.include(warnOutput, "nsmdefname|run");
+			assert.include(warnOutput, "something|else");
+			assert.include(warnOutput, extensionName);
+		});
+
+		it("adapts a definition exported as the module's default", async () => {
+			const extensionName = "nsm-defdefault-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmdefdefault|hello": "./dist/hello.js" } },
+				{
+					"main.js": mainModule("defdefault-main"),
+					"dist/hello.js": definitionModule(
+						"nsmdefdefault|hello",
+						"defdefault-hello",
+						"exports.default",
+					),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			const command = testInjector.resolveCommand("nsmdefdefault|hello");
+			assert.isOk(command);
+			await command.execute([]);
+			assert.deepEqual(capture.executed, [
+				{ marker: "defdefault-hello", args: [] },
+			]);
+		});
+
+		it("routes two aliases of one command to the same module", async () => {
+			const extensionName = "nsm-alias-ext";
+			writeExtension(
+				extensionName,
+				{
+					commands: {
+						"nsmalias|run": "./dist/run.js",
+						"nsmalias|r": "./dist/run.js",
+					},
+				},
+				{
+					"main.js": mainModule("alias-main"),
+					"dist/run.js": definitionModule("nsmalias|run", "alias-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.isOk(testInjector.resolveCommand("nsmalias|run"));
+			const aliased = testInjector.resolveCommand("nsmalias|r");
+			assert.isOk(aliased);
+
+			await aliased.execute(["x"]);
+			assert.deepEqual(capture.executed, [
+				{ marker: "alias-run", args: ["x"] },
+			]);
+		});
+	});
+
+	describe("manifest entry values", () => {
+		it("accepts an object entry carrying the module path and ignores its other keys", async () => {
+			const extensionName = "nsm-envelope-ext";
+			writeExtension(
+				extensionName,
+				{
+					commands: {
+						"nsmenvelope|run": <any>{
+							path: "./run.js",
+							somethingAddedLater: true,
+						},
+					},
+				},
+				{
+					"main.js": mainModule("envelope-main"),
+					"run.js": commandModule("nsmenvelope|run", "envelope-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.deepEqual(capture.loadedModules, []);
+			assert.isOk(testInjector.resolveCommand("nsmenvelope|run"));
+			assert.deepEqual(capture.loadedModules, ["envelope-run"]);
+		});
+
+		it("warns about and skips an object entry without a usable path", async () => {
+			const extensionName = "nsm-envelope-bad-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmenvelopebad|run": <any>{ module: "./run.js" } } },
+				{ "main.js": mainModule("envelope-bad-main") },
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.include(getLogger(testInjector).warnOutput, "nsmenvelopebad|run");
+			assert.isNull(testInjector.resolveCommand("nsmenvelopebad|run"));
+		});
+	});
+
+	describe("manifest keys the CLI cannot route", () => {
+		it("rejects a key that is not lower case", async () => {
+			const extensionName = "nsm-case-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmCase|Run": "./run.js" } },
+				{
+					"main.js": mainModule("case-main"),
+					"run.js": commandModule("nsmcase|run", "case-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			const warnOutput = getLogger(testInjector).warnOutput;
+			assert.include(warnOutput, "nsmCase|Run");
+			assert.include(warnOutput, "nsmcase|run");
+			assert.include(warnOutput, extensionName);
+			assert.isNull(testInjector.resolveCommand("nsmCase|Run"));
+			assert.isNull(testInjector.resolveCommand("nsmcase|run"));
+		});
+
+		it("rejects a key already in use as the parent of its own subcommands", async () => {
+			const extensionName = "nsm-parentclash-ext";
+			writeExtension(
+				extensionName,
+				{
+					commands: {
+						"nsmparentclash|run": "./run.js",
+						nsmparentclash: "./flat.js",
+					},
+				},
+				{
+					"main.js": mainModule("parentclash-main"),
+					"run.js": commandModule("nsmparentclash|run", "parentclash-run"),
+					"flat.js": commandModule("nsmparentclash", "parentclash-flat"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			const warnOutput = getLogger(testInjector).warnOutput;
+			assert.include(warnOutput, "nsmparentclash");
+			assert.include(warnOutput, "parent of its subcommands");
+
+			const parent = <any>testInjector.resolveCommand("nsmparentclash");
+			assert.isTrue(parent.isHierarchicalCommand);
+			assert.deepEqual(capture.loadedModules, []);
+		});
+
+		it("reports a command the CLI itself provides without naming internals", async () => {
+			const extensionName = "nsm-builtin-ext";
+			class BuiltInCommand {
+				public allowedParameters: any[] = [];
+				public async execute(): Promise<void> {
+					return undefined;
+				}
+			}
+			testInjector.registerCommand("nsmbuiltin", BuiltInCommand);
+
+			writeExtension(
+				extensionName,
+				{ commands: { nsmbuiltin: "./run.js" } },
+				{
+					"main.js": mainModule("builtin-main"),
+					"run.js": commandModule("nsmbuiltin", "builtin-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			const warnOutput = getLogger(testInjector).warnOutput;
+			assert.include(warnOutput, "already provided by the CLI");
+			assert.include(warnOutput, extensionName);
+			assert.notInclude(warnOutput, "commands.");
+
+			assert.instanceOf(
+				testInjector.resolveCommand("nsmbuiltin"),
+				BuiltInCommand,
+			);
+			assert.deepEqual(capture.loadedModules, []);
+		});
+	});
+
+	describe("loading an already loaded extension", () => {
+		it("does not report the extension as conflicting with itself", async () => {
+			const extensionName = "nsm-reload-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmreload|run": "./run.js" } },
+				{
+					"main.js": mainModule("reload-main"),
+					"run.js": commandModule("nsmreload|run", "reload-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.equal(getLogger(testInjector).warnOutput, "");
+			assert.isOk(testInjector.resolveCommand("nsmreload|run"));
+		});
+	});
+
+	describe("a manifest declaring no commands to load", () => {
+		it("loads nothing at all for an empty commands map", async () => {
+			const extensionName = "nsm-optout-ext";
+			writeExtension(
+				extensionName,
+				{ commands: {} },
+				{ "main.js": mainModule("optout-main") },
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			const extensionData =
+				await extensibilityService.loadExtension(extensionName);
+
+			assert.deepStrictEqual(requiredPaths, []);
+			assert.deepStrictEqual(capture.loadedModules, []);
+			assert.notInclude(getLogger(testInjector).traceOutput, DEPRECATION_API);
+			assert.deepStrictEqual(extensionData.commands, []);
+		});
+	});
+
+	describe("a module that fails to provide its command", () => {
+		it("names the extension and the module when the module throws", async () => {
+			const extensionName = "nsm-throwing-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmthrowing|run": "./run.js" } },
+				{
+					"main.js": mainModule("throwing-main"),
+					"run.js": `throw new Error("kaboom");`,
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.throws(
+				() => testInjector.resolveCommand("nsmthrowing|run"),
+				/nsmthrowing\|run[\s\S]*nsm-throwing-ext[\s\S]*run\.js[\s\S]*kaboom/,
+			);
+		});
+
+		it("names the extension and the module when the module registers nothing", async () => {
+			const extensionName = "nsm-silent-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmsilent|run": "./run.js" } },
+				{
+					"main.js": mainModule("silent-main"),
+					"run.js": `module.exports = { notADefinition: true };`,
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.throws(
+				() => testInjector.resolveCommand("nsmsilent|run"),
+				/nsmsilent\|run[\s\S]*nsm-silent-ext[\s\S]*run\.js/,
+			);
+		});
+	});
+
+	describe("default commands", () => {
+		it("registers the default before its siblings whatever the key order", async () => {
+			const extensionName = "nsm-defaults-ext";
+			writeExtension(
+				extensionName,
+				{
+					commands: {
+						"nsmdefaults|other": "./other.js",
+						"nsmdefaults|*default": "./default.js",
+					},
+				},
+				{
+					"main.js": mainModule("defaults-main"),
+					"other.js": commandModule("nsmdefaults|other", "defaults-other"),
+					"default.js": commandModule(
+						"nsmdefaults|*default",
+						"defaults-default",
+					),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.equal(getLogger(testInjector).warnOutput, "");
+			assert.deepEqual(testInjector.getChildrenCommandsNames("nsmdefaults"), [
+				"*default",
+				"other",
+			]);
+			assert.isOk(testInjector.resolveCommand("nsmdefaults|*default"));
+			assert.deepEqual(capture.loadedModules, ["defaults-default"]);
 		});
 	});
 });

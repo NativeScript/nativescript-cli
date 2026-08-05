@@ -6,6 +6,7 @@ import { createRegExp, regExpEscape } from "../common/helpers";
 import { reportDeprecation } from "../common/deprecation";
 import { INodePackageManager, INpmsSingleResultData } from "../declarations";
 import {
+	IDictionary,
 	IFileSystem,
 	ISettingsService,
 	IStringDictionary,
@@ -22,8 +23,9 @@ import { IInjector } from "../common/definitions/yok";
 import { CommandsDelimiters } from "../common/constants";
 import { inject } from "../common/di/inject";
 import { CommandRegistry } from "../common/contracts";
-import { isCommandDefinition } from "../common/define-command";
-import { createCommandFromDefinition } from "../common/services/command-definition-adapter";
+import type { DeferredCommandRejection } from "../common/contracts";
+import { DefinedCommand, isCommandDefinition } from "../common/define-command";
+import { registerDefinitionAs } from "../common/services/command-definition-adapter";
 
 function isNonEmptyString(value: any): boolean {
 	return typeof value === "string" && value.trim().length > 0;
@@ -31,6 +33,44 @@ function isNonEmptyString(value: any): boolean {
 
 function isCommandsMap(commands: any): boolean {
 	return !!commands && typeof commands === "object" && !Array.isArray(commands);
+}
+
+/**
+ * A manifest entry is either the module path or an envelope carrying it under
+ * `path`. Unknown envelope keys are ignored on purpose: a CLI released today
+ * must keep loading manifests that grow new keys tomorrow.
+ */
+function getEntryModulePath(value: any): string {
+	if (isNonEmptyString(value)) {
+		return value;
+	}
+
+	if (
+		value &&
+		typeof value === "object" &&
+		!Array.isArray(value) &&
+		isNonEmptyString(value.path)
+	) {
+		return value.path;
+	}
+
+	return null;
+}
+
+const isDefaultCommandName = (name: string): boolean =>
+	name.indexOf(CommandsDelimiters.DefaultHierarchicalCommand) !== -1;
+
+function describeRejection(rejection: DeferredCommandRejection): string {
+	switch (rejection.reason) {
+		case "invalid-name":
+			return rejection.detail;
+		case "claimed":
+			return `it is already registered by extension ${rejection.owner}`;
+		case "built-in":
+			return "it is already provided by the CLI";
+		case "subcommand-parent":
+			return "it is already in use as the parent of its subcommands";
+	}
 }
 
 /**
@@ -55,9 +95,6 @@ function getDeclaredCommandNames(
 
 export class ExtensibilityService implements IExtensibilityService {
 	private customPathToExtensions: string = null;
-
-	/** Command name -> name of the extension whose manifest claimed it first. */
-	private manifestCommandOwners: IStringDictionary = {};
 
 	private commandRegistry = inject(CommandRegistry);
 
@@ -316,11 +353,11 @@ export class ExtensibilityService implements IExtensibilityService {
 
 	/**
 	 * Returns the `nativescript.commands` value of an extension only when it is a
-	 * map of command name to module path. Any other shape (the legacy array of
+	 * map of command name to module. Any other shape (the legacy array of
 	 * command names, a missing key, an unreadable package.json) yields null and
 	 * keeps the extension on the eager require path.
 	 */
-	private getDeclaredCommandsMap(extensionName: string): IStringDictionary {
+	private getDeclaredCommandsMap(extensionName: string): IDictionary<any> {
 		let commands: any;
 
 		try {
@@ -340,7 +377,7 @@ export class ExtensibilityService implements IExtensibilityService {
 	}
 
 	/**
-	 * Registers each declared command as a deferred require of its own module, so
+	 * Registers each declared command as a deferred load of its own module, so
 	 * nothing from the extension is loaded until one of its commands is executed.
 	 * A module may either register itself on load (a legacy-style
 	 * `$injector.registerCommand(<name>, <class>)` at the top level) or export a
@@ -350,69 +387,93 @@ export class ExtensibilityService implements IExtensibilityService {
 	private registerDeclaredCommands(
 		extensionName: string,
 		pathToExtension: string,
-		commands: IStringDictionary,
+		commands: IDictionary<any>,
 	): void {
-		for (const commandName of _.keys(commands)) {
-			const modulePath = commands[commandName];
+		// Manifest key order carries no meaning, so a parent's default command is
+		// registered before its siblings rather than wherever the author put it.
+		const commandNames = _.sortBy(_.keys(commands), (commandName) =>
+			isDefaultCommandName(commandName) ? 0 : 1,
+		);
 
-			if (!isNonEmptyString(commandName) || !isNonEmptyString(modulePath)) {
+		for (const commandName of commandNames) {
+			const modulePath = getEntryModulePath(commands[commandName]);
+
+			if (!isNonEmptyString(commandName) || !modulePath) {
 				this.$logger.warn(
 					`Extension ${extensionName} declares an invalid command in its nativescript.commands: '${commandName}': ${JSON.stringify(
-						modulePath,
-					)}. Both the command name and the path to its module must be non-empty strings. Skipping this command.`,
+						commands[commandName],
+					)}. The command name must be a non-empty string and its value either the path to its module or an object with a non-empty 'path'. Skipping this command.`,
 				);
 				continue;
 			}
 
 			const absoluteModulePath = path.join(pathToExtension, modulePath);
-			const parentName = commandName.split(
-				CommandsDelimiters.HierarchicalCommand,
-			)[0];
-			const parentWasAbsent =
-				parentName !== commandName &&
-				!this.$injector.has(`commands.${parentName}`);
-
-			try {
-				this.commandRegistry.requireCommand(commandName, absoluteModulePath);
-			} catch (err) {
-				const owner = this.manifestCommandOwners[commandName];
-				const ownerInfo = owner
-					? ` It is already registered by extension ${owner}.`
-					: "";
-				this.$logger.warn(
-					`Extension ${extensionName} is unable to register command ${commandName}.${ownerInfo} Error: ${err.message}`,
-				);
-				continue;
-			}
-
-			// requireCommand's own loader only require()s the module for its side
-			// effects, which covers self-registering modules but not definition
-			// exports. The override must also land on a parent record this entry
-			// just created: dispatch resolves the parent BEFORE any child module
-			// has loaded, and the parent dispatcher only comes into existence once
-			// a child's registerCommand runs.
-			const loader = () => {
-				const exported = require(absoluteModulePath);
-				const candidate = (exported && exported.default) ?? exported;
-				if (isCommandDefinition(candidate)) {
-					this.commandRegistry.registerCommand(commandName, () =>
-						createCommandFromDefinition(<any>candidate),
-					);
-				}
-			};
-			this.$injector.register({
-				provide: `commands.${commandName}`,
-				useLazyRequire: loader,
+			const result = this.commandRegistry.registerDeferredCommand(commandName, {
+				owner: extensionName,
+				source: absoluteModulePath,
+				load: () =>
+					this.loadDeclaredCommand(
+						extensionName,
+						commandName,
+						absoluteModulePath,
+					),
 			});
-			if (parentWasAbsent) {
-				this.$injector.register({
-					provide: `commands.${parentName}`,
-					useLazyRequire: loader,
-				});
-			}
 
-			this.manifestCommandOwners[commandName] = extensionName;
+			if (!result.registered) {
+				this.$logger.warn(
+					`Extension ${extensionName} is unable to register command '${commandName}': ${describeRejection(
+						result.rejection,
+					)}.`,
+				);
+			}
 		}
+	}
+
+	/**
+	 * Runs on the first resolution of one declared command. Definition modules
+	 * are registered here rather than by the module itself, which is what lets
+	 * the manifest key stay authoritative for routing.
+	 */
+	private loadDeclaredCommand(
+		extensionName: string,
+		commandName: string,
+		absoluteModulePath: string,
+	): void {
+		const exported = require(absoluteModulePath);
+		const candidate = (exported && exported.default) ?? exported;
+
+		if (!isCommandDefinition(candidate)) {
+			return;
+		}
+
+		this.warnOnDeclaredNameMismatch(
+			extensionName,
+			commandName,
+			absoluteModulePath,
+			candidate,
+		);
+		registerDefinitionAs(commandName, candidate, this.$injector);
+	}
+
+	private warnOnDeclaredNameMismatch(
+		extensionName: string,
+		commandName: string,
+		absoluteModulePath: string,
+		definition: DefinedCommand<any>,
+	): void {
+		const declaredNames = Array.isArray(definition.name)
+			? definition.name
+			: [definition.name];
+
+		if (_.includes(declaredNames, commandName)) {
+			return;
+		}
+
+		this.$logger.warn(
+			`Extension ${extensionName} declares command '${commandName}' in its package.json, but the definition in ${absoluteModulePath} names itself '${declaredNames.join(
+				"', '",
+			)}'. The command runs as '${commandName}' - the manifest decides how it is invoked.`,
+		);
 	}
 
 	private getPathToExtension(extensionName: string): string {
