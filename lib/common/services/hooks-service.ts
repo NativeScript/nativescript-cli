@@ -213,7 +213,19 @@ export class HooksService implements IHooksService {
 				const { default: hookFn } = await import(hook.fullPath);
 				hookEntryPoint = hookFn;
 			} else {
-				hookEntryPoint = require(hook.fullPath);
+				const hookModule = require(hook.fullPath);
+				// transpiled ES modules expose the hook as `exports.default`.
+				hookEntryPoint =
+					hookModule && typeof hookModule.default === "function"
+						? hookModule.default
+						: hookModule;
+			}
+
+			if (typeof hookEntryPoint !== "function") {
+				this.$logger.warn(
+					`${hook.fullPath} will NOT be executed because it does not export a function.`,
+				);
+				return;
 			}
 
 			this.$logger.trace(`Validating ${hookName} arguments.`);
@@ -462,33 +474,44 @@ export class HooksService implements IHooksService {
 
 	private shouldExecuteInProcess(scriptSource: string): boolean {
 		try {
-			const esprima = require("esprima");
-			const ast = esprima.parse(scriptSource);
+			// required lazily so that CLI startup does not pay the cost of loading
+			// the TypeScript compiler, which is only needed when a hook runs.
+			const ts = require("typescript");
+			const sourceFile = ts.createSourceFile(
+				"hook.js",
+				scriptSource,
+				ts.ScriptTarget.Latest,
+				/* setParentNodes */ false,
+				ts.ScriptKind.JS,
+			);
 
-			let inproc = false;
-			ast.body.forEach((statement: any) => {
-				if (
-					statement.type !== "ExpressionStatement" ||
-					statement.expression.type !== "AssignmentExpression"
-				) {
-					return;
+			const isExportsTarget = (node: any): boolean => {
+				if (!ts.isPropertyAccessExpression(node)) {
+					return false;
 				}
 
-				const left = statement.expression.left;
-				if (
-					left.type === "MemberExpression" &&
-					left.object &&
-					left.object.type === "Identifier" &&
-					left.object.name === "module" &&
-					left.property &&
-					left.property.type === "Identifier" &&
-					left.property.name === "exports"
-				) {
-					inproc = true;
+				if (!ts.isIdentifier(node.expression)) {
+					return false;
 				}
+
+				const object = node.expression.text;
+				const property = node.name.text;
+
+				return (
+					(object === "module" && property === "exports") ||
+					(object === "exports" && property === "default")
+				);
+			};
+
+			return sourceFile.statements.some((statement: any) => {
+				return (
+					ts.isExpressionStatement(statement) &&
+					ts.isBinaryExpression(statement.expression) &&
+					statement.expression.operatorToken.kind ===
+						ts.SyntaxKind.EqualsToken &&
+					isExportsTarget(statement.expression.left)
+				);
 			});
-
-			return inproc;
 		} catch (err) {
 			return false;
 		}

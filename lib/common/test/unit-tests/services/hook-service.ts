@@ -143,6 +143,157 @@ describe("hooks-service", () => {
 		);
 	});
 
+	it("should run hooks using syntax newer than ES2017", async () => {
+		const projectName = "projectDirectory";
+		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
+
+		const testInjector = createTestInjector({ projectDir: projectPath });
+
+		const script = [
+			`class Message {`,
+			`	text = "after-prepare hook is running";`,
+			`}`,
+			`module.exports = function ($logger, hookArgs) {`,
+			`	const message = new Message();`,
+			`	$logger.info(message?.text ?? "fallback");`,
+			`};`,
+		].join("\n");
+
+		fs.mkdirSync(path.join(projectPath, "hooks"));
+		fs.mkdirSync(path.join(projectPath, "hooks/after-prepare"));
+		fs.writeFileSync(
+			path.join(projectPath, "hooks/after-prepare/hook.js"),
+			script,
+		);
+
+		service = testInjector.resolve("$hooksService");
+
+		await service.executeAfterHooks("prepare", { hookArgs: {} });
+
+		assert.equal(
+			testInjector.resolve("$logger").output,
+			"after-prepare hook is running\n",
+		);
+	});
+
+	it("should run hooks transpiled from a default export", async () => {
+		const projectName = "projectDirectory";
+		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
+
+		const testInjector = createTestInjector({ projectDir: projectPath });
+
+		const script = [
+			`"use strict";`,
+			`Object.defineProperty(exports, "__esModule", { value: true });`,
+			`exports.default = function ($logger, hookArgs) {`,
+			`	$logger.info("after-prepare hook is running");`,
+			`};`,
+		].join("\n");
+
+		fs.mkdirSync(path.join(projectPath, "hooks"));
+		fs.mkdirSync(path.join(projectPath, "hooks/after-prepare"));
+		fs.writeFileSync(
+			path.join(projectPath, "hooks/after-prepare/hook.js"),
+			script,
+		);
+
+		service = testInjector.resolve("$hooksService");
+
+		await service.executeAfterHooks("prepare", { hookArgs: {} });
+
+		assert.equal(
+			testInjector.resolve("$logger").output,
+			"after-prepare hook is running\n",
+		);
+	});
+
+	it("should not run in-process hooks that do not export a function", async () => {
+		const projectName = "projectDirectory";
+		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
+
+		const testInjector = createTestInjector({ projectDir: projectPath });
+
+		const script = [`module.exports = { name: "not-a-hook" };`].join("\n");
+
+		fs.mkdirSync(path.join(projectPath, "hooks"));
+		fs.mkdirSync(path.join(projectPath, "hooks/after-prepare"));
+		fs.writeFileSync(
+			path.join(projectPath, "hooks/after-prepare/hook.js"),
+			script,
+		);
+
+		service = testInjector.resolve("$hooksService");
+
+		await service.executeAfterHooks("prepare", { hookArgs: {} });
+
+		expect(testInjector.resolve("$logger").warnOutput).to.have.string(
+			"does not export a function",
+		);
+	});
+
+	describe("in-process detection", () => {
+		const shouldExecuteInProcess = (source: string): boolean => {
+			const testInjector = createTestInjector();
+			const hooksService = testInjector.resolve("$hooksService");
+			return (<any>hooksService).shouldExecuteInProcess(source);
+		};
+
+		it("detects module.exports assignments alongside modern syntax", () => {
+			assert.isTrue(
+				shouldExecuteInProcess(
+					[
+						`class Message { text = "hi"; }`,
+						`module.exports = function ($logger) {`,
+						`	$logger.info(new Message()?.text ?? "fallback");`,
+						`};`,
+					].join("\n"),
+				),
+			);
+		});
+
+		it("detects exports.default assignments", () => {
+			assert.isTrue(
+				shouldExecuteInProcess(
+					[
+						`"use strict";`,
+						`Object.defineProperty(exports, "__esModule", { value: true });`,
+						`exports.default = function ($logger) {};`,
+					].join("\n"),
+				),
+			);
+		});
+
+		it("ignores scripts without an export assignment", () => {
+			assert.isFalse(
+				shouldExecuteInProcess(
+					[
+						`var fs = require("fs");`,
+						`fs.writeFileSync("test.txt", "test");`,
+					].join("\n"),
+				),
+			);
+		});
+
+		it("ignores nested and unrelated assignments", () => {
+			assert.isFalse(
+				shouldExecuteInProcess(
+					[
+						`function register() {`,
+						`	module.exports = function () {};`,
+						`}`,
+						`exports.named = function () {};`,
+						`module.other = function () {};`,
+					].join("\n"),
+				),
+			);
+		});
+
+		it("does not throw on unparseable sources", () => {
+			assert.isFalse(shouldExecuteInProcess(`}{ this is not ((javascript`));
+			assert.isFalse(shouldExecuteInProcess(<any>null));
+		});
+	});
+
 	it("should run non-hook files", async () => {
 		const projectName = "projectDirectory";
 		const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));

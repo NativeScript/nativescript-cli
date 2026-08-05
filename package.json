@@ -55,7 +55,6 @@
     "convert-source-map": "2.0.0",
     "detect-newline": "3.1.0",
     "email-validator": "2.0.4",
-    "esprima": "4.0.1",
     "font-finder": "1.1.0",
     "ios-device-lib": "0.9.5",
     "ios-mobileprovision-finder": "1.2.1",
