@@ -11,7 +11,7 @@ For the NativeScript CLI to execute your hooks, you must place them in the `hook
 
 You can attach the hook before or after `prepare` operations or to `--watch` operations. 
 
-Note that `watch` hooks can be executed only at the time of running `--watch` operations. The `watch` hooks are the last thing executed before launching the file system watcher which tracks for changes to your code.
+Note that `watch` hooks can be executed only at the time of running `--watch` operations. The `before-watch` hooks are the last thing executed before launching the file system watcher which tracks for changes to your code.
 
 Your hooks must conform to the following naming and placement conventions:
 
@@ -36,26 +36,28 @@ Your hooks must conform to the following naming and placement conventions:
             ├── hook1 (this is an executable file)
             └── hook2 (this is an executable file)
     ```
-* If you want to attach a hook for `--watch` operations, you must place the hook in the root of the `hooks` subdirectory. The file must be named `watch`. For example:
+* If you want to attach a hook for `--watch` operations, you must place the hook in the root of the `hooks` subdirectory. The file must be named `before-watch` or `after-watch`. For example:
 
     ```
     my-app/
     ├── index.js
     ├── package.json
     └── hooks/
-        └── watch.js (this is a Node.js script)
+        └── before-watch.js (this is a Node.js script)
     ```
-* If you want to attach multiple hooks for `--watch` operations, you must place them inside a `watch` subdirectory of the `hooks` subdirectory. You can specify any meaningful name for the the hooks inside the subdirectory. For example:
+* If you want to attach multiple hooks for `--watch` operations, you must place them inside a `before-watch` or `after-watch` subdirectory of the `hooks` subdirectory. You can specify any meaningful name for the the hooks inside the subdirectory. For example:
 
     ```
     my-app/
     ├── index.js
     ├── package.json
     └── hooks/
-        └── watch (a directory)
+        └── before-watch (a directory)
             ├── hook1 (this is an executable file)
             └── hook2 (this is an executable file)
     ```
+
+    A file named plainly `watch` is never executed: like every other hook point, the watch hooks are addressed by the `before-`/`after-` names above.
 
 > **NOTE:** When multiple hooks are attached to a single event (i.e. multiple hooks are stored in dedicated subdirectories), at the specified time, the CLI executes each hook one by one. However, the order of hook execution is not strict and might change over command executions.
 
@@ -81,16 +83,29 @@ The CLI assumes that this is a CommonJS module and calls the hook it exports —
 
 ## Writing a hook
 
-Export a hook definition built with `defineHook`. It takes the hook point in the usual naming convention (`before-prepare`, `after-watch`) and a handler that receives a context object.
+Export a hook definition built with `defineHook`. It takes the hook point in the usual naming convention (`before-prepare`, `after-watch`) and a `run` handler that receives a context object.
 
 ```JavaScript
 const { defineHook, inject, DoctorService } = require("nativescript/contracts");
 
-module.exports = defineHook("before-prepare", async (ctx) => {
-	const doctorService = inject(DoctorService);
-	await doctorService.canExecuteLocalBuild();
+module.exports = defineHook({
+	name: "before-prepare",
+	run: async (ctx) => {
+		const doctorService = inject(DoctorService);
+		await doctorService.canExecuteLocalBuild();
+	},
 });
 ```
+
+`defineHook(name, run)` is shorthand for the same definition:
+
+```JavaScript
+module.exports = defineHook("before-prepare", async (ctx) => { /* ... */ });
+```
+
+`defineHook` validates its input immediately: a missing or non-string `name`, a missing or non-function `run`, and unknown fields all throw at definition time, naming the definition and both accepted forms.
+
+The `name` decides when the hook fires and must match the hook point the file is placed at. A definition whose `name` disagrees with its location is **skipped with a warning** rather than run at the wrong point. Export exactly one definition (or one plain function) per file — an array export is rejected.
 
 Services come from `inject()` — the same API used everywhere else (see [dependency-injection.md](dependency-injection.md)):
 
@@ -98,6 +113,8 @@ Services come from `inject()` — the same API used everywhere else (see [depend
 * Tokens resolve by class first and by their canonical name on a miss, so this works even if your dependency tree carries its own copy of `nativescript` — a duplicated token class still resolves to the running CLI's service.
 * Only a first tranche of services has typed tokens so far ([dependency-injection.md](dependency-injection.md#available-contracts) lists them); a service without a token is reachable by its registry name — `inject("logger")` — as a migration bridge.
 * If you build your hook in TypeScript, add `nativescript` as a `devDependency` and import the same names: `import { defineHook, inject, DoctorService } from "nativescript/contracts"`. An `.mjs` hook can `export default defineHook(...)`.
+
+### `ctx.payload`
 
 `ctx.payload` holds the parameters of the CLI operation being hooked; its shape depends on the hook point. It is the CLI's own object, so mutating it influences the operation:
 
@@ -107,7 +124,19 @@ module.exports = defineHook("before-build-task-args", (ctx) => {
 });
 ```
 
-`ctx.wrap(middleware)` puts a middleware around the hooked method. The middleware receives the method's arguments and a `next` callback; call `next` to continue, or return without calling it to short-circuit the method entirely. Register it from a `before-` hook.
+Not every invocation carries one. The `before-<command>`/`after-<command>` hooks fired around command dispatch (`before-build`, `after-run`, …) pass no arguments at all, so `ctx.payload` is `undefined` there. Treat it as optional — in TypeScript it is typed `TPayload | undefined`:
+
+```TypeScript
+import { defineHook } from "nativescript/contracts";
+
+export default defineHook<{ args: string[] }>("before-build-task-args", (ctx) => {
+	ctx.payload?.args.push("--offline");
+});
+```
+
+### `ctx.wrap(middleware)`
+
+`ctx.wrap(middleware)` puts a middleware around the hooked method. The middleware receives the method's arguments and a `next` callback; call `next` to continue, or return without calling it to short-circuit the method entirely.
 
 ```JavaScript
 module.exports = defineHook("before-prepare", (ctx) => {
@@ -118,7 +147,15 @@ module.exports = defineHook("before-prepare", (ctx) => {
 });
 ```
 
-`ctx.abort(message)` stops the hook and fails the command. Pass `{ asWarning: true }` to print the message as a warning and let the command continue instead.
+Only a hook point that actually folds middlewares around a method can honor `wrap()`, so it is available **only in the before-phase of the wrappable hook points** listed below. Calling it anywhere else — from any `after-` hook, or from a before-hook at a non-wrappable point — throws an error naming the hook point instead of registering a middleware that would never run.
+
+The wrappable hook points are:
+
+`before-buildAndroid` · `before-buildAndroidPlugin` · `before-buildIOS` · `before-checkEnvironment` · `before-checkForChanges` · `before-install` · `before-prepare` · `before-prepareNativeApp` · `before-resolveCommand` · `before-watch` · `before-watchPatterns`
+
+### `ctx.abort(message)`
+
+`ctx.abort(message)` stops the hook and fails the command. Pass `{ asWarning: true }` to print the message as a warning and let the command continue instead. The message is required in practice — calling `abort()` without one falls back to a message naming the hook point.
 
 ```JavaScript
 module.exports = defineHook("before-prepare", (ctx) => {
@@ -142,18 +179,18 @@ module.exports = function (hookArgs) {
 ## The hook contract
 
 The hook must return a Promise. If the hook succeeds, it must fullfil the promise, but the fullfilment value is ignored.
-The hook can also reject the promise with an instance of Error. The returned error can have two optional members controlling the CLI.
- 
+The hook can also reject the promise with an instance of Error. The returned error can carry two members that together downgrade the rejection to a warning.
+
 Member | Type | Description
 ---|---|---
-`stopExecution` | Boolean | Set this to `false` to let the CLI continue executing this command.
-`errorAsWarning` | Boolean | Set this to treat the returned error as warning. The CLI prints the error.message colored as a warning and continues executing the current command.
- 
-If these two members are not set, the CLI prints the returned error colored as fatal error and stops executing the current command.
+`errorAsWarning` | Boolean | Must be exactly `true`. The CLI prints the error.message colored as a warning and continues executing the current command.
+`stopExecution` | Boolean | Must be present and of type Boolean. It only enables the check — setting it alone, with either value, changes nothing.
+
+**Both** members are required: the CLI continues only when `errorAsWarning === true` *and* `stopExecution` is a Boolean. Otherwise it prints the returned error colored as a fatal error and stops executing the current command.
 
 A plain-function hook can also return a function, which the CLI folds into a middleware chain around the hooked method.
 
-With `defineHook` neither convention is needed: `ctx.abort` replaces throwing an error carrying `stopExecution`/`errorAsWarning`, and `ctx.wrap` replaces returning a function.
+With `defineHook` neither convention is needed, and neither applies: `ctx.abort` replaces throwing an error carrying `stopExecution`/`errorAsWarning`, and `ctx.wrap` replaces returning a function. A definition whose `run` returns a function is warned about — the returned function is not used as a middleware.
 
 ## Legacy: parameter-name injection
 
