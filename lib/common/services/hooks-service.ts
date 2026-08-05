@@ -4,7 +4,7 @@ import * as _ from "lodash";
 import { annotate, getValueFromNestedObject } from "../helpers";
 import { reportDeprecation } from "../deprecation";
 import { createHookInvocation, isHookDefinition } from "../define-hook";
-import type { HookMiddleware, IHookDefinition } from "../define-hook";
+import type { HookMiddleware, HookDefinition } from "../define-hook";
 import { runInInjectionContext } from "../di/inject";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
 import { IOptions, IPerformanceService } from "../../declarations";
@@ -17,6 +17,7 @@ import {
 	IErrors,
 	IProjectHelper,
 	IStringDictionary,
+	IHookExecutionOptions,
 } from "../declarations";
 import {
 	INsConfigHooks,
@@ -99,10 +100,16 @@ export class HooksService implements IHooksService {
 	public executeBeforeHooks(
 		commandName: string,
 		hookArguments?: IDictionary<any>,
-	): Promise<void> {
+		options?: IHookExecutionOptions,
+	): Promise<HookMiddleware[]> {
 		const beforeHookName = `before-${HooksService.formatHookName(commandName)}`;
 		const traceMessage = `BeforeHookName for command ${commandName} is ${beforeHookName}`;
-		return this.executeHooks(beforeHookName, traceMessage, hookArguments);
+		return this.executeHooks(
+			beforeHookName,
+			traceMessage,
+			hookArguments,
+			!!(options && options.consumesMiddlewares),
+		);
 	}
 
 	public executeAfterHooks(
@@ -111,13 +118,14 @@ export class HooksService implements IHooksService {
 	): Promise<void> {
 		const afterHookName = `after-${HooksService.formatHookName(commandName)}`;
 		const traceMessage = `AfterHookName for command ${commandName} is ${afterHookName}`;
-		return this.executeHooks(afterHookName, traceMessage, hookArguments);
+		return this.executeHooks(afterHookName, traceMessage, hookArguments, false);
 	}
 
 	private async executeHooks(
 		hookName: string,
 		traceMessage: string,
-		hookArguments?: IDictionary<any>,
+		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
 	): Promise<any> {
 		if (this.$config.DISABLE_HOOKS || !this.$options.hooks) {
 			return;
@@ -143,6 +151,7 @@ export class HooksService implements IHooksService {
 						hooksDirectory,
 						hookName,
 						hookArguments,
+						consumesMiddlewares,
 					),
 				);
 			}
@@ -156,6 +165,7 @@ export class HooksService implements IHooksService {
 						hookName,
 						hook,
 						hookArguments,
+						consumesMiddlewares,
 					),
 				);
 			}
@@ -176,7 +186,8 @@ export class HooksService implements IHooksService {
 		directoryPath: string,
 		hookName: string,
 		hook: IHook,
-		hookArguments?: IDictionary<any>,
+		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
 	): Promise<any> {
 		hookArguments = hookArguments || {};
 
@@ -229,12 +240,21 @@ export class HooksService implements IHooksService {
 			const definitionCandidate =
 				(hookEntryPoint && hookEntryPoint.default) ?? hookEntryPoint;
 
+			// Reserved: a future release may accept several definitions from one
+			// file, so an array must not silently do nothing until then.
+			if (Array.isArray(definitionCandidate)) {
+				throw new Error(
+					`${hook.fullPath} exports an array, which is not a supported hook entry point. Export a single hook definition or function per file.`,
+				);
+			}
+
 			if (isHookDefinition(definitionCandidate)) {
 				result = await this.executeHookDefinition(
 					definitionCandidate,
 					hookName,
 					hook,
 					hookArguments,
+					consumesMiddlewares,
 				);
 			} else if (typeof hookEntryPoint !== "function") {
 				// A definition is a plain object, so this guard has to stay below the
@@ -353,23 +373,37 @@ export class HooksService implements IHooksService {
 	}
 
 	private async executeHookDefinition(
-		definition: IHookDefinition,
+		definition: HookDefinition,
 		hookName: string,
 		hook: IHook,
 		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
 	): Promise<HookMiddleware[] | undefined> {
+		// The name decides when a hook fires, so a disagreeing one is a mistake
+		// with no safe reading — running it anyway would fire it at a point its
+		// author never wrote it for.
 		if (definition.name !== hookName) {
-			this.$logger.trace(
-				`Hook ${hook.fullPath} defines "${definition.name}" but its file name places it at the "${hookName}" hook point; running it there.`,
+			this.$logger.warn(
+				`${hook.fullPath} will NOT be executed: it defines the "${definition.name}" hook but is placed at the "${hookName}" hook point.`,
 			);
+			return;
 		}
 
-		const { context, middlewares } = createHookInvocation(hookArguments);
+		const { context, middlewares } = createHookInvocation(hookArguments, {
+			hookName,
+			consumesMiddlewares,
+		});
 
 		try {
-			await runInInjectionContext(this.$injector, () =>
-				definition.handler(context),
+			const returnedValue = await runInInjectionContext(this.$injector, () =>
+				definition.run(context),
 			);
+
+			if (typeof returnedValue === "function") {
+				this.$logger.warn(
+					`${hook.fullPath} returned a function. Returning a middleware is the legacy convention and is ignored for hook definitions — use ctx.wrap() instead.`,
+				);
+			}
 		} catch (err) {
 			if (
 				err &&
@@ -392,7 +426,8 @@ export class HooksService implements IHooksService {
 	private async executeHooksInDirectory(
 		directoryPath: string,
 		hookName: string,
-		hookArguments?: IDictionary<any>,
+		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
 	): Promise<any[]> {
 		hookArguments = hookArguments || {};
 		const results: any[] = [];
@@ -405,6 +440,7 @@ export class HooksService implements IHooksService {
 				hookName,
 				hook,
 				hookArguments,
+				consumesMiddlewares,
 			);
 
 			if (result) {

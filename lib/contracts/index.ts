@@ -28,8 +28,9 @@ export { ProjectNameService } from "./project-name-service";
 
 export { defineHook, isHookDefinition } from "../common/define-hook";
 export type {
-	IHookContext,
-	IHookDefinition,
+	HookContext,
+	HookDefinition,
+	HookDefinitionInput,
 	HookHandler,
 	HookMiddleware,
 } from "../common/define-hook";

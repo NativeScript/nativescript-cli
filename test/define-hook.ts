@@ -8,6 +8,7 @@ import { hook } from "../lib/common/helpers";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IHooksService } from "../lib/common/declarations";
 import { LoggerStub, ErrorsStub } from "./stubs";
+import { defineHook, isHookDefinition } from "../lib/common/define-hook";
 
 // Hook fixtures load the API the way a real hook does — through the published
 // `nativescript/contracts` entry point — so the marker symbol, the context
@@ -308,7 +309,7 @@ describe("defineHook", () => {
 		assert.strictEqual(capture.payload, payload);
 	});
 
-	it("runs a definition whose name differs from the hook point and traces the mismatch", async () => {
+	it("skips a definition whose name differs from the hook point, with a warning", async () => {
 		writeHook(
 			projectDir,
 			"before-case11",
@@ -320,8 +321,173 @@ describe("defineHook", () => {
 
 		await hooksService().executeBeforeHooks("case11");
 
-		assert.isTrue(capture.ran);
-		assert.include(logger().traceOutput, `defines "before-something-else"`);
-		assert.include(logger().traceOutput, `"before-case11" hook point`);
+		assert.isUndefined(capture.ran);
+		assert.include(logger().warnOutput, `defines the "before-something-else"`);
+		assert.include(logger().warnOutput, `"before-case11" hook point`);
+	});
+
+	it("accepts the object bag form", async () => {
+		writeHook(
+			projectDir,
+			"before-case12",
+			`const { defineHook } = require(${JSON.stringify(apiPath)});
+			module.exports = defineHook({
+				name: "before-case12",
+				run: (ctx) => {
+					global.__hookCapture.payload = ctx.payload;
+				},
+			});`,
+		);
+
+		const payload = { fromBag: true };
+		await hooksService().executeBeforeHooks("case12", { hookArgs: payload });
+
+		assert.strictEqual(capture.payload, payload);
+	});
+
+	it("rejects a wrap() at a hook point that consumes no middlewares", async () => {
+		writeHook(
+			projectDir,
+			"before-case13",
+			`const { defineHook } = require(${JSON.stringify(apiPath)});
+			module.exports = defineHook("before-case13", (ctx) => {
+				ctx.wrap((args, next) => next(...args));
+			});`,
+		);
+
+		await assert.isRejected(
+			hooksService().executeBeforeHooks("case13"),
+			/ctx\.wrap\(\) is not available at the "before-case13" hook point/,
+		);
+	});
+
+	it("rejects a wrap() from an after-hook", async () => {
+		writeHook(
+			projectDir,
+			"after-case14",
+			`const { defineHook } = require(${JSON.stringify(apiPath)});
+			module.exports = defineHook("after-case14", (ctx) => {
+				ctx.wrap((args, next) => next(...args));
+			});`,
+		);
+
+		await assert.isRejected(
+			hooksService().executeAfterHooks("case14"),
+			/ctx\.wrap\(\) is not available at the "after-case14" hook point/,
+		);
+	});
+
+	it("defaults the abort() message instead of failing with Error(undefined)", async () => {
+		writeHook(
+			projectDir,
+			"before-case15",
+			`const { defineHook } = require(${JSON.stringify(apiPath)});
+			module.exports = defineHook("before-case15", (ctx) => {
+				ctx.abort();
+			});`,
+		);
+
+		await assert.isRejected(
+			hooksService().executeBeforeHooks("case15"),
+			/The "before-case15" hook aborted without a message\./,
+		);
+	});
+
+	it("warns when a definition returns a function instead of calling ctx.wrap()", async () => {
+		writeHook(
+			projectDir,
+			"before-case16",
+			`const { defineHook } = require(${JSON.stringify(apiPath)});
+			module.exports = defineHook("before-case16", () => {
+				return () => "legacy middleware";
+			});`,
+		);
+
+		await hooksService().executeBeforeHooks("case16");
+
+		assert.include(logger().warnOutput, "returned a function");
+	});
+
+	it("rejects an array export, naming the file", async () => {
+		const fullPath = writeHook(
+			projectDir,
+			"before-case17",
+			`const { defineHook } = require(${JSON.stringify(apiPath)});
+			module.exports = [defineHook("before-case17", () => {})];`,
+		);
+
+		await assert.isRejected(
+			hooksService().executeBeforeHooks("case17"),
+			new RegExp(
+				`${fullPath.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} exports an array`,
+			),
+		);
+	});
+});
+
+describe("defineHook validation", () => {
+	// The negative cases are exactly the ones the types reject, so they need an
+	// untyped view of the same function.
+	const defineHookUnsafe: any = defineHook;
+
+	it("carries the payload generic through to ctx.payload", () => {
+		const definition = defineHook<{ args: string[] }>(
+			"before-build-task-args",
+			(ctx) => {
+				// Compile-time: `payload` is `{ args: string[] } | undefined`, so it
+				// needs narrowing before use.
+				assert.isUndefined(ctx.payload?.args);
+			},
+		);
+
+		assert.isTrue(isHookDefinition(definition));
+	});
+
+	it("rejects a bag with an unknown field, naming it and the accepted forms", () => {
+		assert.throws(
+			() => defineHookUnsafe({ name: "before-prepare", handler: () => {} }),
+			/unknown field "handler".*Supported fields: "name", "run".*Accepted forms/s,
+		);
+	});
+
+	it("rejects a bag with no run", () => {
+		assert.throws(
+			() => defineHookUnsafe({ name: "before-prepare" }),
+			/"before-prepare".*requires "run" to be a function/,
+		);
+	});
+
+	it("rejects a bag with no name", () => {
+		assert.throws(
+			() => defineHookUnsafe({ run: () => {} }),
+			/requires a non-empty "name"/,
+		);
+	});
+
+	it("rejects the positional form without a handler function", () => {
+		assert.throws(
+			() => defineHookUnsafe("before-prepare"),
+			/"before-prepare".*requires a handler function as its second argument/,
+		);
+	});
+
+	it("rejects a non-object, non-string argument", () => {
+		assert.throws(
+			() => defineHookUnsafe(undefined),
+			/called with an unsupported argument/,
+		);
+	});
+
+	it("keeps the marker through a spread, so derived definitions stay recognizable", () => {
+		const definition = defineHook("before-prepare", () => {});
+		const derived = { ...definition, name: "before-build" };
+
+		assert.isTrue(isHookDefinition(definition));
+		assert.isTrue(isHookDefinition(derived));
+		assert.equal(derived.name, "before-build");
+	});
+
+	it("does not recognize a hand-rolled object", () => {
+		assert.isFalse(isHookDefinition({ name: "before-prepare", run: () => {} }));
 	});
 });
