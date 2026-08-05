@@ -18,11 +18,7 @@ import {
 } from "ts-morph";
 
 export type SupportedConfigValues =
-	| string
-	| number
-	| boolean
-	| { [key: string]: SupportedConfigValues }
-	| any[];
+	string | number | boolean | { [key: string]: SupportedConfigValues } | any[];
 
 export interface IConfigTransformer {
 	/**
@@ -68,7 +64,7 @@ export class ConfigTransformer implements IConfigTransformer {
 						).getExpressionIfKind(SyntaxKind.BinaryExpression);
 						const leftSide = expression.getLeft() as PropertyAccessExpression;
 						if (leftSide.getFullText().trim() === "module.exports") {
-							exportValue = expression.getRight();
+							exportValue = this.unwrapObjectLiteral(expression.getRight());
 							return true;
 						}
 					}
@@ -80,18 +76,37 @@ export class ConfigTransformer implements IConfigTransformer {
 			const exports = this.config
 				.getDefaultExportSymbolOrThrow()
 				.getDeclarations()[0] as ExportAssignment;
-			const expr = exports.getExpression();
-			exportValue =
-				expr.getChildCount() > 0
-					? (expr.getChildAtIndex(0) as ObjectLiteralExpression)
-					: expr;
+			exportValue = this.unwrapObjectLiteral(exports.getExpression());
 		}
 
-		if (!Node.isObjectLiteralExpression(exportValue)) {
+		if (!exportValue) {
 			throw new Error("default export must be an object!");
 		}
 
 		return exportValue;
+	}
+
+	/**
+	 * Strips the type assertions and parentheses a config may wrap its object in
+	 * - `{...} as NativeScriptConfig`, `satisfies`, `<any>{...}`, `({...})` and
+	 * any nesting of those - none of which change the exported object.
+	 * @returns the object literal, or undefined if the export is not one.
+	 */
+	private unwrapObjectLiteral(node: Node): ObjectLiteralExpression {
+		if (Node.isObjectLiteralExpression(node)) {
+			return node;
+		}
+
+		if (
+			Node.isParenthesizedExpression(node) ||
+			Node.isAsExpression(node) ||
+			Node.isSatisfiesExpression(node) ||
+			Node.isTypeAssertion(node)
+		) {
+			return this.unwrapObjectLiteral(node.getExpression());
+		}
+
+		return undefined;
 	}
 
 	private getProperty(
