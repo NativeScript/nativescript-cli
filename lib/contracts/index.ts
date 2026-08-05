@@ -35,10 +35,12 @@ export {
 	arrayOption,
 } from "../common/define-command";
 export type {
-	ICommandDefinition,
-	ICommandContext,
-	ICommandOptionSpec,
-	ICommandOptionsSchema,
+	CommandDefinition,
+	DefinedCommand,
+	CommandContext,
+	CommandOptionSpec,
+	DefaultedCommandOptionSpec,
+	CommandOptionsSchema,
 	CommandOptionSpecInit,
 	CommandOptionType,
 	CommandOptionValues,

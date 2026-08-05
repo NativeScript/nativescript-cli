@@ -4,11 +4,14 @@ import { runInInjectionContext } from "../di/inject";
 import { IDictionary, IDashedOption } from "../declarations";
 import { IInjector } from "../definitions/yok";
 import { ICommand } from "../definitions/commands";
+import { CommandRegistry } from "../contracts/command-registry";
 import {
+	CommandContext,
+	CommandDefinition,
 	CommandOptionType,
-	ICommandContext,
-	ICommandDefinition,
-	ICommandOptionsSchema,
+	CommandOptionsSchema,
+	DefinedCommand,
+	isCommandDefinition,
 } from "../define-command";
 
 const OPTION_TYPES: IDictionary<OptionType> = {
@@ -18,29 +21,12 @@ const OPTION_TYPES: IDictionary<OptionType> = {
 	array: OptionType.Array,
 };
 
-/**
- * Wraps a declarative definition in the ICommand shape the legacy registry and
- * CommandsService expect.
- *
- * Constraint worth knowing before changing the canExecute mapping: the moment
- * an ICommand exposes `canExecute`, CommandsService returns its verdict and
- * skips `allowedParameters` validation entirely. So `canExecute` is emitted
- * only when the definition supplies one or opts into `arguments: "any"` — the
- * adapter then owns argument validation wholesale. With `arguments: "none"`
- * and no user `canExecute` the property is omitted, which lets the framework's
- * own empty-`allowedParameters` check reject stray positional arguments.
- */
-export function createCommandFromDefinition<
-	TSchema extends ICommandOptionsSchema,
->(
-	definition: ICommandDefinition<TSchema>,
-	targetInjector: IInjector = injector,
-): ICommand {
-	const schema = definition.options || <TSchema>{};
-	const optionNames = Object.keys(schema);
-
+const compileOptions = (
+	schema: CommandOptionsSchema,
+): IDictionary<IDashedOption> => {
 	const dashedOptions: IDictionary<IDashedOption> = {};
-	for (const optionName of optionNames) {
+
+	for (const optionName of Object.keys(schema)) {
 		const spec = schema[optionName];
 		const dashedOption: IDashedOption = {
 			type: OPTION_TYPES[<CommandOptionType>spec.type],
@@ -62,63 +48,150 @@ export function createCommandFromDefinition<
 		dashedOptions[optionName] = dashedOption;
 	}
 
-	// Resolved per call: the options service only holds parsed values once
-	// validateOptions has run for this command.
-	const buildContext = (args: string[]): ICommandContext<TSchema> => {
+	return dashedOptions;
+};
+
+/**
+ * A command option that shadows a CLI-wide one wins the re-parse for this
+ * command only, so the two spellings mean different things depending on what
+ * the user typed first. Warned rather than rejected while the policy is open.
+ */
+const warnOnCliOptionCollisions = (
+	targetInjector: IInjector,
+	definition: CommandDefinition<any>,
+	optionNames: string[],
+	optionsService: any,
+): void => {
+	const cliOptions = optionsService && optionsService.options;
+	if (!cliOptions) {
+		return;
+	}
+
+	const collisions = optionNames.filter((optionName) => cliOptions[optionName]);
+	if (!collisions.length) {
+		return;
+	}
+
+	const logger = targetInjector.get("logger", { optional: true });
+	if (!logger) {
+		return;
+	}
+
+	const commandName = Array.isArray(definition.name)
+		? definition.name[0]
+		: definition.name;
+	logger.warn(
+		`Command '${commandName}' declares option(s) ${collisions
+			.map((name) => `'--${name}'`)
+			.join(", ")} that the CLI already defines globally. The command's ` +
+			`declaration wins while the command runs; rename them to avoid it.`,
+	);
+};
+
+/**
+ * Wraps a declarative definition in the ICommand shape the legacy registry and
+ * CommandsService expect.
+ *
+ * The compiled command always exposes `canExecute`, because CommandsService
+ * skips `allowedParameters` entirely once it is present: the adapter enforces
+ * the declared `arguments` policy itself and only then consults the
+ * definition's own `canExecute`, so the two fields compose.
+ */
+export function createCommandFromDefinition<
+	TSchema extends CommandOptionsSchema,
+>(
+	definition: CommandDefinition<TSchema>,
+	targetInjector: IInjector = injector,
+): ICommand {
+	const schema = definition.options || <TSchema>{};
+	const optionNames = Object.keys(schema);
+	const dashedOptions = compileOptions(schema);
+
+	// Only a definition that declares options may depend on the options service
+	// being registered - a bare command must work without one.
+	const optionsService: any = optionNames.length
+		? targetInjector.resolve("options")
+		: null;
+
+	warnOnCliOptionCollisions(
+		targetInjector,
+		definition,
+		optionNames,
+		optionsService,
+	);
+
+	// Read per call rather than snapshotted here: the options service only holds
+	// this command's parsed values once validateOptions has run for it.
+	const buildContext = (args: string[]): CommandContext<TSchema> => {
 		const options: any = {};
-		// Only a definition that declares options may depend on the options
-		// service being registered - a bare command must work without one.
-		if (optionNames.length) {
-			const optionsService: any = targetInjector.resolve("options");
-			for (const optionName of optionNames) {
-				options[optionName] = optionsService
-					? optionsService[optionName]
-					: undefined;
-			}
+		for (const optionName of optionNames) {
+			options[optionName] = optionsService[optionName];
 		}
 
 		return { args, options };
 	};
 
-	const command: ICommand = {
+	const acceptsArguments = definition.arguments === "any";
+
+	return {
 		allowedParameters: [],
 		dashedOptions,
+		...(definition.disableAnalytics === undefined
+			? {}
+			: { disableAnalytics: definition.disableAnalytics }),
+		...(definition.enableHooks === undefined
+			? {}
+			: { enableHooks: definition.enableHooks }),
+		canExecute: async (args: string[]): Promise<boolean> => {
+			if (!acceptsArguments && args.length) {
+				targetInjector
+					.resolve("errors")
+					.failWithHelp("This command doesn't accept parameters.");
+				return false;
+			}
+
+			const refine = definition.canExecute;
+			if (!refine) {
+				return true;
+			}
+
+			// Same first-await rule as execute: runInInjectionContext is
+			// synchronous, so inject() is available up to the first await.
+			return await runInInjectionContext(targetInjector, () =>
+				refine.call(definition, buildContext(args)),
+			);
+		},
 		execute: async (args: string[]): Promise<void> => {
-			// runInInjectionContext is synchronous, so inject() is available while
-			// run() executes up to its first await, and not after it.
 			await runInInjectionContext(targetInjector, () =>
 				definition.run(buildContext(args)),
 			);
 		},
 	};
-
-	if (definition.canExecute || definition.arguments === "any") {
-		command.canExecute = async (args: string[]): Promise<boolean> =>
-			definition.canExecute
-				? await definition.canExecute(buildContext(args))
-				: true;
-	}
-
-	if (definition.disableAnalytics !== undefined) {
-		command.disableAnalytics = definition.disableAnalytics;
-	}
-
-	if (definition.enableHooks !== undefined) {
-		command.enableHooks = definition.enableHooks;
-	}
-
-	return command;
 }
 
-export function registerCommandDefinition<
-	TSchema extends ICommandOptionsSchema,
->(
-	definition: ICommandDefinition<TSchema>,
+export function registerCommandDefinition<TSchema extends CommandOptionsSchema>(
+	definition: DefinedCommand<TSchema>,
 	targetInjector: IInjector = injector,
 ): void {
-	// An arrow function resolver is invoked as a factory rather than new-ed, and
-	// its result is cached as the command instance.
-	targetInjector.registerCommand(<any>definition.name, () =>
-		createCommandFromDefinition(definition, targetInjector),
-	);
+	if (!isCommandDefinition(definition)) {
+		throw new Error(
+			"registerCommandDefinition() takes the result of defineCommand(); " +
+				"the value passed carries no command-definition marker.",
+		);
+	}
+
+	// The registry facet rather than the injector itself, so a child injector
+	// that provides its own CommandRegistry receives the registration.
+	const registry = targetInjector.get(CommandRegistry);
+	const names = Array.isArray(definition.name)
+		? definition.name
+		: [definition.name];
+
+	for (const name of names) {
+		// A prototype-less zero-parameter function registers as a useFactory
+		// provider, so the command is built on first resolution and cached.
+		registry.registerCommand(name, () =>
+			createCommandFromDefinition(definition, targetInjector),
+		);
+	}
 }
