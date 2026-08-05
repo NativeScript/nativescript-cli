@@ -13,7 +13,7 @@ Builds the project for Android and produces an APK that you can manually deploy 
 
 Usage | Synopsis
 ---|---
-General | `$ ns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--static-bindings] [--copy-to <File Path>] [--env.*]] [--aab]`
+General | `$ ns build android [--compileSdk <API Level>] [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--copy-to <File Path>] [--env.*]] [--aab]`
 
 ### Options
 

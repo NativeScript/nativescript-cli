@@ -27,11 +27,6 @@ export class PrepareCommand
 			default: false,
 			hasSensitiveValue: false,
 		},
-		whatever: {
-			type: OptionType.Boolean,
-			default: false,
-			hasSensitiveValue: false,
-		},
 	};
 
 	constructor(
