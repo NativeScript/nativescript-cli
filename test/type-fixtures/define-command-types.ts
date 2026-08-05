@@ -55,6 +55,8 @@ defineCommand({
 	name: "typefixture|no-options",
 	run(ctx) {
 		expectExactType<IsExact<typeof ctx.args, string[]>>();
+		// `never` is what lets fail() end a branch without a return.
+		expectExactType<IsExact<ReturnType<typeof ctx.fail>, never>>();
 
 		// @ts-expect-error - nothing is declared, so any access is a typo
 		ctx.options.anything;

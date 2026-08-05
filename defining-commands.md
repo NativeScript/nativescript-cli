@@ -155,7 +155,11 @@ const buildOptions = {
 the CLI itself. Declaring one of those names in a command's schema makes the
 command's declaration win for the duration of that command, which means the
 same flag means different things depending on which command is running. The CLI
-warns at registration naming the collision; pick another name.
+warns at registration naming both sides of the collision; pick another name.
+
+Aliases count too, in both directions: an `alias: "p"` collides with `--path`'s
+shorthand just as `output: stringOption()` would collide with a CLI-wide
+`--output`.
 
 ### How validation behaves
 
@@ -211,10 +215,10 @@ arguments even when it supplies a `canExecute`, and a `canExecute` that only
 inspects options cannot accidentally widen what the command accepts.
 
 `canExecute` receives a context of the same shape as `run`'s — the same
-`args` and the same declared options, built freshly for the call — and returns
-a boolean (or a promise of one). Returning `false` aborts the command and
-prints a help suggestion; throwing surfaces your own error message, which is
-usually the friendlier choice.
+`args`, the same declared options and the same `fail` — built freshly for the
+call, and returns a boolean (or a promise of one). Returning `false` aborts the
+command and prints a bare help suggestion; `ctx.fail(message)` aborts it with
+your own message, which is usually the friendlier choice.
 
 `canExecute` runs inside a dependency-injection context, on the same terms as
 `run`: `inject()` is valid up to the first `await`.
@@ -228,11 +232,38 @@ The run context
   (including any subcommand segments) has been consumed.
 - `ctx.options` — the current value of each declared option, read at the moment
   the command executes.
+- `ctx.fail(message)` — fails the command with `message` and a usage help
+  suggestion.
 
 `run` may be synchronous or `async`; the CLI awaits the result and treats a
-rejection as a command failure. Throwing is how a definition fails a command;
-`$errors.failWithHelp` from the injected `errors` service adds the help
-suggestion.
+rejection as a command failure.
+
+### Failing a command
+
+`ctx.fail(message)` is the idiomatic way to stop a command:
+
+```ts
+defineCommand({
+	name: "widget|add",
+	arguments: "any",
+	options: { output: stringOption() },
+	async run(ctx) {
+		if (!ctx.options.output) {
+			ctx.fail("--output is required.");
+		}
+
+		/* ... */
+	},
+});
+```
+
+It is available on the `canExecute` context as well, and it returns `never`, so
+it can end a branch without a `return`. The message must be a non-empty string.
+
+Throwing is equivalent and keeps working — `ctx.fail` is sugar over the
+`errors` service's `failWithHelp`, which is what adds the "Run `ns widget add
+--help`" line. Throw when you already have an `Error` to propagate; call
+`ctx.fail` when you are writing the message.
 
 `run` starts inside a dependency-injection context, so `inject()` works
 directly:

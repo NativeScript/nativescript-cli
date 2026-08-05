@@ -70,6 +70,8 @@ export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
 	args: string[];
 	/** Current value of every option declared in the schema, and nothing else. */
 	options: CommandOptionValues<TSchema>;
+	/** Fails the command with `message` and the usage help suggestion. */
+	fail(message: string): never;
 }
 
 export interface CommandDefinition<TSchema extends CommandOptionsSchema = {}> {

@@ -496,26 +496,58 @@ describe("defineCommand", () => {
 			assert.deepEqual(command.dashedOptions, {});
 		});
 
-		it("warns when a declared option shadows a CLI-wide one", () => {
+		it("warns when a declared option or alias shadows a CLI-wide one", () => {
 			const testInjector = createTestInjector({
-				options: { verbose: { type: "boolean" } },
+				options: {
+					verbose: { type: "boolean" },
+					path: { type: "string", alias: "p" },
+				},
 			});
 
 			createCommandFromDefinition(
 				defineCommand({
 					name: "dctestshadow",
-					options: { verbose: booleanOption(), fresh: booleanOption() },
+					options: {
+						verbose: booleanOption(),
+						output: stringOption({ alias: ["p", "o"] }),
+						fresh: booleanOption({ alias: "f" }),
+					},
 					run: (): void => undefined,
 				}),
 				testInjector,
 			);
 
 			const logger: LoggerStub = testInjector.resolve("logger");
-			assert.match(
+			assert.include(
 				logger.warnOutput,
-				/Command 'dctestshadow' declares option\(s\) '--verbose' that the CLI already defines globally/,
+				"'--verbose' with the CLI option '--verbose'",
+			);
+			assert.include(
+				logger.warnOutput,
+				"alias '-p' of '--output' with the CLI option '--path'",
 			);
 			assert.notInclude(logger.warnOutput, "--fresh");
+			assert.notInclude(logger.warnOutput, "'-o'");
+		});
+
+		it("stays quiet when nothing collides", () => {
+			const testInjector = createTestInjector({
+				options: { path: { type: "string", alias: "p" } },
+			});
+
+			createCommandFromDefinition(
+				defineCommand({
+					name: "dctestnoshadow",
+					options: { output: stringOption({ alias: ["o", "out"] }) },
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			assert.strictEqual(
+				(<LoggerStub>testInjector.resolve("logger")).warnOutput,
+				"",
+			);
 		});
 	});
 
@@ -614,6 +646,81 @@ describe("defineCommand", () => {
 			);
 
 			assert.isTrue(await command.canExecute(["anything"]));
+		});
+	});
+
+	describe("ctx.fail", () => {
+		const createFailInjector = (): IInjector => {
+			const testInjector = createTestInjector();
+			testInjector.register("errors", {
+				failWithHelp: (message: string) => {
+					throw new Error(`with help: ${message}`);
+				},
+			});
+			return testInjector;
+		};
+
+		it("fails the command from run, through failWithHelp", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailrun",
+					run: (ctx) => ctx.fail("no project found"),
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(
+				command.execute([]),
+				/with help: no project found/,
+			);
+		});
+
+		it("fails the command from canExecute, through failWithHelp", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailcan",
+					arguments: "any",
+					canExecute: (ctx) =>
+						ctx.args.length === 1 || ctx.fail("expected one argument"),
+					run: (): void => undefined,
+				}),
+				createFailInjector(),
+			);
+
+			assert.isTrue(await command.canExecute(["one"]));
+			await assert.isRejected(
+				command.canExecute([]),
+				/with help: expected one argument/,
+			);
+		});
+
+		it("rejects a message that carries nothing", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailempty",
+					run: (ctx) => ctx.fail("  "),
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(
+				command.execute([]),
+				/ctx.fail\(\) for command 'dctestfailempty' requires a non-empty message/,
+			);
+		});
+
+		it("still lets a thrown error through unchanged", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestthrow",
+					run: () => {
+						throw new Error("raw failure");
+					},
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(command.execute([]), /^raw failure$/);
 		});
 	});
 

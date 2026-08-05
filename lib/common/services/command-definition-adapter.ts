@@ -1,7 +1,7 @@
 import { OptionType } from "../enums";
 import { injector } from "../yok";
 import { runInInjectionContext } from "../di/inject";
-import { IDictionary, IDashedOption } from "../declarations";
+import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { IInjector } from "../definitions/yok";
 import { ICommand } from "../definitions/commands";
 import { CommandRegistry } from "../contracts/command-registry";
@@ -51,15 +51,18 @@ const compileOptions = (
 	return dashedOptions;
 };
 
+const aliasList = (alias: string | string[]): string[] =>
+	alias === undefined ? [] : Array.isArray(alias) ? alias : [alias];
+
 /**
  * A command option that shadows a CLI-wide one wins the re-parse for this
- * command only, so the two spellings mean different things depending on what
- * the user typed first. Warned rather than rejected while the policy is open.
+ * command only, so the same spelling means different things depending on which
+ * command is running. Warned rather than rejected while the policy is open.
  */
 const warnOnCliOptionCollisions = (
 	targetInjector: IInjector,
 	definition: CommandDefinition<any>,
-	optionNames: string[],
+	schema: CommandOptionsSchema,
 	optionsService: any,
 ): void => {
 	const cliOptions = optionsService && optionsService.options;
@@ -67,7 +70,32 @@ const warnOnCliOptionCollisions = (
 		return;
 	}
 
-	const collisions = optionNames.filter((optionName) => cliOptions[optionName]);
+	// Every spelling the CLI already answers to, mapped to the option owning it.
+	const cliSpellings: IDictionary<string> = {};
+	for (const cliName of Object.keys(cliOptions)) {
+		cliSpellings[cliName] = cliName;
+		for (const alias of aliasList(cliOptions[cliName].alias)) {
+			cliSpellings[alias] = cliName;
+		}
+	}
+
+	const collisions: string[] = [];
+	for (const optionName of Object.keys(schema)) {
+		if (cliSpellings[optionName]) {
+			collisions.push(
+				`'--${optionName}' with the CLI option '--${cliSpellings[optionName]}'`,
+			);
+		}
+
+		for (const alias of aliasList(schema[optionName].alias)) {
+			if (cliSpellings[alias]) {
+				collisions.push(
+					`alias '-${alias}' of '--${optionName}' with the CLI option '--${cliSpellings[alias]}'`,
+				);
+			}
+		}
+	}
+
 	if (!collisions.length) {
 		return;
 	}
@@ -81,10 +109,9 @@ const warnOnCliOptionCollisions = (
 		? definition.name[0]
 		: definition.name;
 	logger.warn(
-		`Command '${commandName}' declares option(s) ${collisions
-			.map((name) => `'--${name}'`)
-			.join(", ")} that the CLI already defines globally. The command's ` +
-			`declaration wins while the command runs; rename them to avoid it.`,
+		`Command '${commandName}' declares options that collide with CLI-wide ` +
+			`ones: ${collisions.join("; ")}. The command's declaration wins while ` +
+			`the command runs; rename them to avoid it.`,
 	);
 };
 
@@ -113,12 +140,22 @@ export function createCommandFromDefinition<
 		? targetInjector.resolve("options")
 		: null;
 
-	warnOnCliOptionCollisions(
-		targetInjector,
-		definition,
-		optionNames,
-		optionsService,
-	);
+	warnOnCliOptionCollisions(targetInjector, definition, schema, optionsService);
+
+	const commandName = Array.isArray(definition.name)
+		? definition.name[0]
+		: definition.name;
+
+	const fail = (message: string): never => {
+		if (typeof message !== "string" || !message.trim()) {
+			throw new Error(
+				`ctx.fail() for command '${commandName}' requires a non-empty message.`,
+			);
+		}
+
+		const errors: IErrors = targetInjector.resolve("errors");
+		return errors.failWithHelp(message);
+	};
 
 	// Read per call rather than snapshotted here: the options service only holds
 	// this command's parsed values once validateOptions has run for it.
@@ -128,7 +165,7 @@ export function createCommandFromDefinition<
 			options[optionName] = optionsService[optionName];
 		}
 
-		return { args, options };
+		return { args, options, fail };
 	};
 
 	const acceptsArguments = definition.arguments === "any";
@@ -144,10 +181,7 @@ export function createCommandFromDefinition<
 			: { enableHooks: definition.enableHooks }),
 		canExecute: async (args: string[]): Promise<boolean> => {
 			if (!acceptsArguments && args.length) {
-				targetInjector
-					.resolve("errors")
-					.failWithHelp("This command doesn't accept parameters.");
-				return false;
+				fail("This command doesn't accept parameters.");
 			}
 
 			const refine = definition.canExecute;
