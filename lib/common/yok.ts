@@ -239,7 +239,28 @@ export class Yok extends Injector implements IInjector {
 			this.register(this.createCommandName(name), resolver);
 
 			if (commands.length > 1) {
-				this.createHierarchicalCommand(commands[0]);
+				const parentCommandName = commands[0];
+				const subCommandName = _.tail(commands).join(
+					CommandsDelimiters.HierarchicalCommand,
+				);
+
+				if (!this.hierarchicalCommands[parentCommandName]) {
+					this.hierarchicalCommands[parentCommandName] = [];
+				}
+
+				// Guarded: the legacy flow reaches here twice for one command —
+				// requireCommand records the subcommand, then the required module
+				// registers itself through this method.
+				if (
+					!_.includes(
+						this.hierarchicalCommands[parentCommandName],
+						subCommandName,
+					)
+				) {
+					this.hierarchicalCommands[parentCommandName].push(subCommandName);
+				}
+
+				this.createHierarchicalCommand(parentCommandName);
 			}
 		});
 	}
