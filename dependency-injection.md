@@ -110,6 +110,13 @@ throws. `self` and `skipSelf` cannot be combined. There is deliberately no
 `host` option: it is an Angular component-tree concept with no analog in the
 CLI's injector hierarchy.
 
+The injection context is shared process-wide. If a hook or extension module
+ends up resolving a *duplicated* copy of the CLI (a nested `nativescript`
+install, or a project-local copy under a globally-run CLI), its `inject()`
+still resolves against the running CLI's context — with a one-time warning,
+because a duplicated copy loads the CLI twice. Declaring `nativescript` as a
+`peerDependency` lets the running copy be shared instead.
+
 Registering: providers
 ----------------------
 
