@@ -104,7 +104,17 @@ jobs:
           echo NPM_TAG=$NPM_TAG >> $GITHUB_OUTPUT
           echo IS_RELEASE=$IS_RELEASE >> $GITHUB_OUTPUT
 
+      - name: Check analytics is configured
+        env:
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
+        run: |
+          if [ -z "$GA_API_SECRET" ]; then
+            echo "::warning::GA_API_SECRET is not set, so this release reports no analytics."
+          fi
+
       - name: Build nativescript
+        env:
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: npm run pack.release
 
       - name: Upload npm package artifact

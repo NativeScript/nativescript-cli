@@ -2,12 +2,22 @@ const fs = require("fs");
 const path = require("path");
 const EOL = require("os").EOL;
 
-const GA_TRACKING_IDS = {
-  dev: "UA-111455-51",
-  live: "UA-111455-44",
+// GA4 measurement ids (G-XXXXXXXXXX). Leaving these empty disables analytics in
+// the produced build - the provider skips every hit when either value is unset.
+const GA_MEASUREMENT_IDS = {
+  dev: "",
+  live: "G-T4P12SN9HJ",
 };
 
-const GA_KEY = "GA_TRACKING_ID";
+// The api secret pairs with the measurement id and is a credential, so it is
+// read from the environment at release time rather than committed here.
+const API_SECRET_ENV = {
+  dev: "GA_API_SECRET_DEV",
+  live: "GA_API_SECRET",
+};
+
+const MEASUREMENT_ID_KEY = "GA_MEASUREMENT_ID";
+const API_SECRET_KEY = "GA_API_SECRET";
 const rootDir = path.join(__dirname, "..");
 
 // Releases flip the id inside dist/ rather than in the working tree, so a failed
@@ -24,12 +34,27 @@ function readConfig() {
 const mode = process.argv[2];
 
 if (mode === "verify") {
-  if (readConfig()[GA_KEY] !== GA_TRACKING_IDS.live) {
-    throw new Error(`Google Analytics id is not configured correctly in ${configPath}`);
+  const config = readConfig();
+
+  if (!GA_MEASUREMENT_IDS.live) {
+    console.warn(
+      `Warning: no GA4 measurement id is configured in ${__filename}, so this build reports no analytics.`
+    );
+  } else if (config[MEASUREMENT_ID_KEY] !== GA_MEASUREMENT_IDS.live) {
+    throw new Error(
+      `Google Analytics measurement id is not configured correctly in ${configPath}`
+    );
+  } else if (!config[API_SECRET_KEY]) {
+    // not fatal: the provider skips every hit without it, so the build is sound
+    // and merely reports nothing - the same state a release ships today
+    console.warn(
+      `Warning: $${API_SECRET_ENV.live} is not set, so this build reports no analytics.`
+    );
   }
 } else if (mode === "live" || mode === "dev") {
   const config = readConfig();
-  config[GA_KEY] = GA_TRACKING_IDS[mode];
+  config[MEASUREMENT_ID_KEY] = GA_MEASUREMENT_IDS[mode];
+  config[API_SECRET_KEY] = process.env[API_SECRET_ENV[mode]] || "";
   fs.writeFileSync(configPath, JSON.stringify(config, null, "\t") + EOL);
 } else {
   console.error(

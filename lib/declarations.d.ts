@@ -505,7 +505,8 @@ interface IStaticConfig extends Config.IStaticConfig {}
 interface IConfiguration extends Config.IConfig {
 	ANDROID_DEBUG_UI: string;
 	USE_POD_SANDBOX: boolean;
-	GA_TRACKING_ID: string;
+	GA_MEASUREMENT_ID: string;
+	GA_API_SECRET: string;
 }
 
 interface IApplicationPackage {
