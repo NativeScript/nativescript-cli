@@ -16,6 +16,11 @@ import {
 	ModuleRegistry,
 	PublicApiBuilder,
 } from "./contracts";
+import type {
+	DeferredCommandOptions,
+	DeferredCommandRejection,
+	DeferredCommandResult,
+} from "./contracts";
 
 /**
  * The legacy global facade binding. New code should obtain the container via
@@ -23,6 +28,10 @@ import {
  * every legacy member on it is individually marked @deprecated.
  */
 export let injector: IInjector;
+
+function rejected(rejection: DeferredCommandRejection): DeferredCommandResult {
+	return { registered: false, rejection };
+}
 
 function forEachName(names: any, action: (name: string) => void): void {
 	if (_.isString(names)) {
@@ -95,10 +104,12 @@ export class Yok extends Injector implements IInjector {
 	private placeholderParents = new Set<string>();
 	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
 	private hierarchicalCommands: IDictionary<string[]> = {};
+	/** Deferred command name -> the owner that claimed it first. */
+	private deferredCommandOwners: IDictionary<string> = {};
 
 	/**
-	 * @deprecated Path-based command registration; slated for replacement by
-	 * manifest-declared commands.
+	 * @deprecated Path-based command registration; use registerDeferredCommand,
+	 * which routes without loading and reports conflicts structurally.
 	 */
 	public requireCommand(names: any, file: string): void {
 		forEachName(names, (commandName) => {
@@ -143,6 +154,86 @@ export class Yok extends Injector implements IInjector {
 				this.require(this.createCommandName(commandName), file);
 			}
 		});
+	}
+
+	public registerDeferredCommand(
+		name: string,
+		options: DeferredCommandOptions,
+	): DeferredCommandResult {
+		if (name !== name.toLowerCase()) {
+			return rejected({
+				reason: "invalid-name",
+				detail:
+					`command names are matched in lower case, so '${name}' can never ` +
+					`be dispatched; declare it as '${name.toLowerCase()}'`,
+			});
+		}
+
+		const claimedBy = this.deferredCommandOwners[name];
+		if (claimedBy) {
+			return claimedBy === options.owner
+				? { registered: true }
+				: rejected({ reason: "claimed", owner: claimedBy });
+		}
+
+		const commandRecordName = this.createCommandName(name);
+		if (this.has(commandRecordName)) {
+			return rejected(
+				this.synthesizedParents.has(name)
+					? { reason: "subcommand-parent" }
+					: { reason: "built-in" },
+			);
+		}
+
+		super.register({
+			provide: commandRecordName,
+			useLazyRequire: () => {
+				try {
+					options.load();
+				} catch (err) {
+					throw new Error(
+						`Unable to load command '${name}' of ${options.owner} from ` +
+							`${options.source}: ${err.message}`,
+					);
+				}
+
+				if (!this.hasResolver(commandRecordName)) {
+					throw new Error(
+						`Command '${name}' of ${options.owner} was not registered when ` +
+							`${options.source} loaded. The module must export a ` +
+							`defineCommand() definition or register the command itself.`,
+					);
+				}
+			},
+		});
+		this.deferredCommandOwners[name] = options.owner;
+
+		const commands = name.split(CommandsDelimiters.HierarchicalCommand);
+		if (commands.length > 1) {
+			const parentCommandName = commands[0];
+			const subCommandName = _.tail(commands).join(
+				CommandsDelimiters.HierarchicalCommand,
+			);
+
+			if (!this.hierarchicalCommands[parentCommandName]) {
+				this.hierarchicalCommands[parentCommandName] = [];
+			}
+
+			if (
+				!_.includes(
+					this.hierarchicalCommands[parentCommandName],
+					subCommandName,
+				)
+			) {
+				this.hierarchicalCommands[parentCommandName].push(subCommandName);
+			}
+
+			// The dispatcher routes off the recorded subcommand names alone, so
+			// reaching a sibling never loads this entry's module.
+			this.createHierarchicalCommand(parentCommandName, name);
+		}
+
+		return { registered: true };
 	}
 
 	/**
@@ -227,7 +318,7 @@ export class Yok extends Injector implements IInjector {
 			// Yok replaced the whole record on an allowed re-require, dropping any
 			// resolver and cached instances with it — preserved via remove().
 			this.remove(name);
-			this.register({
+			super.register({
 				provide: name,
 				useLazyRequire: () => require(dependencyPath),
 			});
