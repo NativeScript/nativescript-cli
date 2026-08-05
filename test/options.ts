@@ -243,9 +243,11 @@ describe("options", () => {
 		});
 
 		it("breaks execution when valid array option has value with length 0", () => {
-			process.argv.push("--config");
+			process.argv.push("--test1");
 			const options = createOptions(testInjector);
-			options.validateOptions();
+			options.validateOptions({
+				test1: { type: OptionType.Array, hasSensitiveValue: false },
+			});
 			process.argv.pop();
 			assert.isTrue(isExecutionStopped);
 		});

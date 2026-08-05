@@ -172,8 +172,6 @@ export class Options {
 			},
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
 			avd: { type: OptionType.String, hasSensitiveValue: true },
-			// check not used
-			config: { type: OptionType.Array, hasSensitiveValue: false },
 			insecure: {
 				type: OptionType.Boolean,
 				alias: "k",
