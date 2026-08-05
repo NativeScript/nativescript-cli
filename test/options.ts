@@ -391,6 +391,7 @@ function createOptionsWithProfileDir(defaultProfileDir?: string): IOptions {
 	const testInjector = new Yok();
 	testInjector.register("errors", {});
 	testInjector.register("staticConfig", {});
+	testInjector.register("logger", { warn: (): void => undefined });
 	let valuePassedToSetSettings: string;
 	testInjector.register("settingsService", {
 		setSettings: (settings: IConfigurationSettings): any => {

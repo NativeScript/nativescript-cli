@@ -17,6 +17,13 @@ interface ICommand extends ICommandOptions {
 	isHierarchicalCommand?: boolean;
 
 	/**
+	 * Set on commands that forward their options to another CLI: the options
+	 * they accept are not knowable from this CLI's option dictionary, so
+	 * validating them here would reject the other CLI's flags.
+	 */
+	skipOptionsValidation?: boolean;
+
+	/**
 	 * Describes the action that will be executed after the command succeeds.
 	 * @param {string[]} args Arguments passed to the command.
 	 * @returns {Promise<void>}

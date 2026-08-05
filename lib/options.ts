@@ -68,6 +68,7 @@ export class Options {
 	constructor(
 		private $errors: IErrors,
 		private $settingsService: ISettingsService,
+		private $logger: ILogger,
 	) {
 		this.options = _.extend({}, this.commonOptions, this.globalOptions);
 		this.setArgv();
@@ -261,60 +262,96 @@ export class Options {
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
 	): void {
 		this.setupOptions(commandSpecificDashedOptions);
-		const parsed: any = {};
-		for (const key of Object.keys(this.argv)) {
-			const optionName = `${this.argv[key]}`;
-			parsed[optionName] = this.getOptionValue(optionName);
-		}
 
-		_.each(parsed, (value: any, originalOptionName: string) => {
-			// when this.options are passed to yargs, it returns all of them and the ones that are not part of process.argv are set to undefined.
-			if (value === undefined) {
-				return;
+		const validated: string[] = [];
+		for (const originalOptionName of Object.keys(this.argv)) {
+			const optionValue = this.getOptionValue(originalOptionName);
+			// yargs reports every declared option; the ones that are not part of
+			// process.argv come back undefined.
+			if (optionValue === undefined) {
+				continue;
 			}
 
 			const optionName = this.getCorrectOptionName(originalOptionName);
 
-			if (!_.includes(this.optionsWhiteList, optionName)) {
-				if (!this.isOptionSupported(optionName)) {
-					this.$errors.failWithHelp(
-						`The option '${originalOptionName}' is not supported.`,
-					);
-				}
-
-				const optionType = this.getOptionType(optionName),
-					optionValue = parsed[optionName];
-
-				if (_.isArray(optionValue) && optionType !== OptionType.Array) {
-					this.$errors.failWithHelp(
-						"The '%s' option requires a single value.",
-						originalOptionName,
-					);
-				} else if (
-					optionType === OptionType.String &&
-					helpers.isNullOrWhitespace(optionValue)
-				) {
-					this.$errors.failWithHelp(
-						"The option '%s' requires non-empty value.",
-						originalOptionName,
-					);
-				} else if (
-					optionType === OptionType.Array &&
-					optionValue.length === 0
-				) {
-					this.$errors.failWithHelp(
-						`The option '${originalOptionName}' requires one or more values, separated by a space.`,
-					);
-				}
+			if (_.includes(this.optionsWhiteList, optionName)) {
+				continue;
 			}
-		});
+
+			// yargs emits both the dashed and the camelCase spelling of every flag.
+			// Unknown options have no declaration to normalize against, so key the
+			// dedupe off the camelCase form both spellings collapse to.
+			const dedupeKey = this.getNonDashedOptionName(optionName);
+			if (_.includes(validated, dedupeKey)) {
+				continue;
+			}
+			validated.push(dedupeKey);
+
+			if (!this.isOptionSupported(optionName)) {
+				this.reportInvalidOption(
+					`The option '${this.getReportedOptionName(
+						originalOptionName,
+					)}' is not supported.`,
+				);
+				continue;
+			}
+
+			const optionType = this.getOptionType(optionName);
+
+			if (_.isArray(optionValue) && optionType !== OptionType.Array) {
+				this.reportInvalidOption(
+					`The '${originalOptionName}' option requires a single value.`,
+				);
+			} else if (
+				optionType === OptionType.String &&
+				helpers.isNullOrWhitespace(optionValue)
+			) {
+				this.reportInvalidOption(
+					`The option '${originalOptionName}' requires non-empty value.`,
+				);
+			} else if (optionType === OptionType.Array && optionValue.length === 0) {
+				this.reportInvalidOption(
+					`The option '${originalOptionName}' requires one or more values, separated by a space.`,
+				);
+			}
+		}
+	}
+
+	// yargs strips the `no-` prefix off a negated flag, so an undeclared
+	// `--no-foo` surfaces as `foo` and would otherwise be reported under a name
+	// the user never typed.
+	private getReportedOptionName(optionName: string): string {
+		return process.argv.indexOf(`--no-${optionName}`) !== -1
+			? `no-${optionName}`
+			: optionName;
+	}
+
+	private reportInvalidOption(message: string): void {
+		if (process.env.NS_STRICT_OPTIONS === "error") {
+			this.$errors.failWithHelp(message);
+			return;
+		}
+
+		this.$logger.warn(
+			`${message} This will become an error in a future release. Set NS_STRICT_OPTIONS=error to preview that behavior.`,
+		);
 	}
 
 	private getCorrectOptionName(optionName: string): string {
-		const secondaryOptionName = this.getNonDashedOptionName(optionName);
-		return _.includes(this.optionNames, secondaryOptionName)
-			? secondaryOptionName
-			: optionName;
+		const nonDashedName = this.getNonDashedOptionName(optionName);
+		if (_.includes(this.optionNames, nonDashedName)) {
+			return nonDashedName;
+		}
+
+		// A few options are declared with a literal dashed key (vision-ng and
+		// friends). yargs still reports both spellings, so the camelCase one has
+		// to resolve back to the dashed declaration.
+		const dashedName = this.getDashedOptionName(optionName);
+		if (_.includes(this.optionNames, dashedName)) {
+			return dashedName;
+		}
+
+		return optionName;
 	}
 
 	private getOptionType(optionName: string): string {
