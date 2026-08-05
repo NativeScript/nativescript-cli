@@ -47,7 +47,7 @@ export class ProjectService implements IProjectService {
 		private $projectTemplatesService: IProjectTemplatesService,
 		private $tempService: ITempService,
 		private $staticConfig: IStaticConfig,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
 	) {}
 
 	public async validateProjectName(opts: {
@@ -58,7 +58,7 @@ export class ProjectService implements IProjectService {
 		let projectName = opts.projectName;
 		if (!projectName) {
 			this.$errors.failWithHelp(
-				"You must specify <App name> when creating a new project."
+				"You must specify <App name> when creating a new project.",
 			);
 		}
 
@@ -76,7 +76,7 @@ export class ProjectService implements IProjectService {
 	@exported("projectService")
 	@performanceLog()
 	public async createProject(
-		projectOptions: IProjectSettings
+		projectOptions: IProjectSettings,
 	): Promise<ICreateProjectData> {
 		const projectName = await this.validateProjectName({
 			projectName: projectOptions.projectName,
@@ -85,7 +85,7 @@ export class ProjectService implements IProjectService {
 		});
 		const projectDir = this.getValidProjectDir(
 			projectOptions.pathToProject,
-			projectName
+			projectName,
 		);
 
 		this.$fs.createDirectory(projectDir);
@@ -94,16 +94,17 @@ export class ProjectService implements IProjectService {
 			projectOptions.appId ||
 			this.$projectHelper.generateDefaultAppId(
 				projectName,
-				constants.DEFAULT_APP_IDENTIFIER_PREFIX
+				constants.DEFAULT_APP_IDENTIFIER_PREFIX,
 			);
 		this.$logger.trace(
-			`Creating a new NativeScript project with name ${projectName} and id ${appId} at location ${projectDir}`
+			`Creating a new NativeScript project with name ${projectName} and id ${appId} at location ${projectDir}`,
 		);
 
 		const projectCreationData = await this.createProjectCore({
 			template: projectOptions.template,
 			projectDir,
 			ignoreScripts: projectOptions.ignoreScripts,
+			legacyPeerDeps: projectOptions.legacyPeerDeps,
 			appId: appId,
 			projectName,
 		});
@@ -123,12 +124,12 @@ export class ProjectService implements IProjectService {
 				await this.$childProcess.exec(`git init ${projectDir}`);
 				await this.$childProcess.exec(`git -C ${projectDir} add --all`);
 				await this.$childProcess.exec(
-					`git -C ${projectDir} commit --no-verify -m "init"`
+					`git -C ${projectDir} commit --no-verify -m "init"`,
 				);
 			} catch (err) {
 				this.$logger.trace(
 					"Unable to initialize git repository. Error is: ",
-					err
+					err,
 				);
 			}
 		}
@@ -141,9 +142,8 @@ export class ProjectService implements IProjectService {
 	@exported("projectService")
 	public isValidNativeScriptProject(pathToProject?: string): boolean {
 		try {
-			const projectData = this.$projectDataService.getProjectData(
-				pathToProject
-			);
+			const projectData =
+				this.$projectDataService.getProjectData(pathToProject);
 
 			return (
 				!!projectData &&
@@ -160,7 +160,7 @@ export class ProjectService implements IProjectService {
 
 	private getValidProjectDir(
 		pathToProject: string,
-		projectName: string
+		projectName: string,
 	): string {
 		const selectedPath = path.resolve(pathToProject || ".");
 		const projectDir = path.join(selectedPath, projectName);
@@ -169,7 +169,7 @@ export class ProjectService implements IProjectService {
 	}
 
 	private async createProjectCore(
-		projectCreationSettings: IProjectCreationSettings
+		projectCreationSettings: IProjectCreationSettings,
 	): Promise<ICreateProjectData> {
 		const {
 			template,
@@ -177,12 +177,13 @@ export class ProjectService implements IProjectService {
 			appId,
 			projectName,
 			ignoreScripts,
+			legacyPeerDeps,
 		} = projectCreationSettings;
 
 		try {
 			const templateData = await this.$projectTemplatesService.prepareTemplate(
 				template,
-				projectDir
+				projectDir,
 			);
 
 			await this.extractTemplate(projectDir, templateData);
@@ -197,6 +198,7 @@ export class ProjectService implements IProjectService {
 				disableNpmInstall: false,
 				frameworkPath: null,
 				ignoreScripts,
+				legacyPeers: legacyPeerDeps,
 			});
 		} catch (err) {
 			this.$fs.deleteDirectory(projectDir);
@@ -213,7 +215,7 @@ export class ProjectService implements IProjectService {
 	@performanceLog()
 	private async extractTemplate(
 		projectDir: string,
-		templateData: ITemplateData
+		templateData: ITemplateData,
 	): Promise<void> {
 		this.$fs.ensureDirectoryExists(projectDir);
 
@@ -226,42 +228,39 @@ export class ProjectService implements IProjectService {
 	@performanceLog()
 	public async ensureAppResourcesExist(projectDir: string): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
-		const appResourcesDestinationPath = projectData.getAppResourcesDirectoryPath(
-			projectDir
-		);
+		const appResourcesDestinationPath =
+			projectData.getAppResourcesDirectoryPath(projectDir);
 
 		if (!this.$fs.exists(appResourcesDestinationPath)) {
 			this.$logger.trace(
-				"Project does not have App_Resources - fetching from default template."
+				"Project does not have App_Resources - fetching from default template.",
 			);
 			this.$fs.createDirectory(appResourcesDestinationPath);
 			const tempDir = await this.$tempService.mkdirSync("ns-default-template");
 			// the template installed doesn't have App_Resources -> get from a default template
 			await this.$pacoteService.extractPackage(
 				constants.RESERVED_TEMPLATE_NAMES["default"],
-				tempDir
+				tempDir,
 			);
-			const templateProjectData = this.$projectDataService.getProjectData(
-				tempDir
-			);
-			const templateAppResourcesDir = templateProjectData.getAppResourcesDirectoryPath(
-				tempDir
-			);
+			const templateProjectData =
+				this.$projectDataService.getProjectData(tempDir);
+			const templateAppResourcesDir =
+				templateProjectData.getAppResourcesDirectoryPath(tempDir);
 			this.$fs.copyFile(
 				path.join(templateAppResourcesDir, "*"),
-				appResourcesDestinationPath
+				appResourcesDestinationPath,
 			);
 		}
 	}
 
 	@performanceLog()
 	private alterPackageJsonData(
-		projectCreationSettings: IProjectCreationSettings
+		projectCreationSettings: IProjectCreationSettings,
 	): void {
 		const { projectDir, projectName } = projectCreationSettings;
 		const projectFilePath = path.join(
 			projectDir,
-			this.$staticConfig.PROJECT_FILE_NAME
+			this.$staticConfig.PROJECT_FILE_NAME,
 		);
 
 		let packageJsonData = this.$fs.readJson(projectFilePath);

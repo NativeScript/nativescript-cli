@@ -25,7 +25,7 @@ export class NodePackageManager extends BasePackageManager {
 		$hostInfo: IHostInfo,
 		private $logger: ILogger,
 		private $httpClient: Server.IHttpClient,
-		$pacoteService: IPacoteService
+		$pacoteService: IPacoteService,
 	) {
 		super($childProcess, $fs, $hostInfo, $pacoteService, "npm");
 	}
@@ -34,11 +34,15 @@ export class NodePackageManager extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo> {
 		if (config.disableNpmInstall) {
 			return;
 		}
+		if (config.legacyPeers) {
+			config["legacy-peer-deps"] = true;
+		}
+		delete (config as any).legacyPeers;
 		if (config.ignoreScripts) {
 			config["ignore-scripts"] = true;
 		}
@@ -67,7 +71,7 @@ export class NodePackageManager extends BasePackageManager {
 			if (config.frameworkPath) {
 				relativePathFromCwdToSource = relative(
 					config.frameworkPath,
-					pathToSave
+					pathToSave,
 				);
 				if (this.$fs.exists(relativePathFromCwdToSource)) {
 					packageName = relativePathFromCwdToSource;
@@ -79,7 +83,7 @@ export class NodePackageManager extends BasePackageManager {
 			const result = await this.processPackageManagerInstall(
 				packageName,
 				params,
-				{ cwd, isInstallingAllDependencies }
+				{ cwd, isInstallingAllDependencies },
 			);
 			return result;
 		} catch (err) {
@@ -104,7 +108,7 @@ export class NodePackageManager extends BasePackageManager {
 	public async uninstall(
 		packageName: string,
 		config?: any,
-		path?: string
+		path?: string,
 	): Promise<string> {
 		const flags = this.getFlagsString(config, false);
 		return this.$childProcess.exec(`npm uninstall ${packageName} ${flags}`, {
@@ -126,7 +130,7 @@ export class NodePackageManager extends BasePackageManager {
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(
-				`npm view ${packageName} ${flags}`
+				`npm view ${packageName} ${flags}`,
 			);
 		} catch (e) {
 			this.$errors.fail(e.message);
@@ -142,7 +146,7 @@ export class NodePackageManager extends BasePackageManager {
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
 		// TODO: Fix the generation of url - in case it contains @ or / , the call may fail.
 		const httpRequestResult = await this.$httpClient.httpRequest(
-			`https://api.npms.io/v2/search?q=keywords:${keyword}`
+			`https://api.npms.io/v2/search?q=keywords:${keyword}`,
 		);
 		const result: INpmsResult = JSON.parse(httpRequestResult.body);
 		return result;
@@ -152,15 +156,15 @@ export class NodePackageManager extends BasePackageManager {
 		const registry = await this.$childProcess.exec(`npm config get registry`);
 		const url = registry.trim() + packageName;
 		this.$logger.trace(
-			`Trying to get data from npm registry for package ${packageName}, url is: ${url}`
+			`Trying to get data from npm registry for package ${packageName}, url is: ${url}`,
 		);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
 		this.$logger.trace(
-			`Successfully received data from npm registry for package ${packageName}. Response data is: ${responseData}`
+			`Successfully received data from npm registry for package ${packageName}. Response data is: ${responseData}`,
 		);
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(
-			`Successfully parsed data from npm registry for package ${packageName}.`
+			`Successfully parsed data from npm registry for package ${packageName}.`,
 		);
 		return jsonData;
 	}

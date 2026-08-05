@@ -24,8 +24,16 @@ describe("projectService", () => {
 		/* tslint:disable:no-empty */
 		const getTestInjector = (opts: { projectName: string }): IInjector => {
 			const testInjector = new yok.Yok();
+			let lastInstallConfig: any = null;
 			testInjector.register("packageManager", {
-				install: async () => {},
+				install: async (
+					_packageName: string,
+					_pathToSave: string,
+					config: any,
+				) => {
+					lastInstallConfig = config;
+				},
+				_getLastInstallConfig: () => lastInstallConfig,
 			});
 			testInjector.register("errors", ErrorsStub);
 			testInjector.register("fs", {
@@ -79,7 +87,7 @@ describe("projectService", () => {
 			testInjector.register("hooksService", {
 				executeAfterHooks: async (
 					commandName: string,
-					hookArguments?: IDictionary<any>
+					hookArguments?: IDictionary<any>,
 				): Promise<void> => undefined,
 			});
 			testInjector.register("pacoteService", {
@@ -104,7 +112,7 @@ describe("projectService", () => {
 			const projectName = invalidProjectName;
 			const testInjector = getTestInjector({ projectName });
 			const projectService = testInjector.resolve<IProjectService>(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			const projectDir = path.join(dirToCreateProject, projectName);
 			const projectCreationData = await projectService.createProject({
@@ -112,6 +120,31 @@ describe("projectService", () => {
 				pathToProject: dirToCreateProject,
 				force: true,
 				template: constants.RESERVED_TEMPLATE_NAMES["default"],
+			});
+
+			it("passes legacyPeerDeps to package manager install", async () => {
+				const projectName = invalidProjectName;
+				const testInjector = getTestInjector({ projectName });
+				const projectService = testInjector.resolve<IProjectService>(
+					ProjectServiceLib.ProjectService,
+				);
+
+				await projectService.createProject({
+					projectName: projectName,
+					pathToProject: dirToCreateProject,
+					force: true,
+					template: constants.RESERVED_TEMPLATE_NAMES["default"],
+					legacyPeerDeps: true,
+				});
+
+				const installConfig = testInjector
+					.resolve("packageManager")
+					._getLastInstallConfig();
+				assert.isOk(
+					installConfig,
+					"Expected package manager install to be called",
+				);
+				assert.isTrue(installConfig.legacyPeers);
 			});
 
 			assert.deepStrictEqual(projectCreationData, {
@@ -125,7 +158,7 @@ describe("projectService", () => {
 			const testInjector = getTestInjector({ projectName });
 			const options = testInjector.resolve<IOptions>("options");
 			const projectService = testInjector.resolve<IProjectService>(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			const projectDir = path.join(dirToCreateProject, projectName);
 
@@ -145,7 +178,7 @@ describe("projectService", () => {
 					`git init ${projectDir}`,
 					`git -C ${projectDir} add --all`,
 					`git -C ${projectDir} commit --no-verify -m "init"`,
-				]
+				],
 			);
 		});
 
@@ -154,7 +187,7 @@ describe("projectService", () => {
 			const testInjector = getTestInjector({ projectName });
 			const options = testInjector.resolve<IOptions>("options");
 			const projectService = testInjector.resolve<IProjectService>(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 
 			// simulate --no-git
@@ -169,22 +202,21 @@ describe("projectService", () => {
 
 			assert.deepEqual(
 				testInjector.resolve("childProcess")._getExecutedCommands(),
-				[]
+				[],
 			);
 		});
 
 		it("fails when invalid name is passed when projectNameService fails", async () => {
 			const projectName = invalidProjectName;
 			const testInjector = getTestInjector({ projectName });
-			const projectNameService = testInjector.resolve<IProjectNameService>(
-				"projectNameService"
-			);
+			const projectNameService =
+				testInjector.resolve<IProjectNameService>("projectNameService");
 			const err = new Error("Invalid name");
 			projectNameService.ensureValidName = (name: string) => {
 				throw err;
 			};
 			const projectService = testInjector.resolve<IProjectService>(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			await assert.isRejected(
 				projectService.createProject({
@@ -192,7 +224,7 @@ describe("projectService", () => {
 					pathToProject: dirToCreateProject,
 					template: constants.RESERVED_TEMPLATE_NAMES["default"],
 				}),
-				err.message
+				err.message,
 			);
 		});
 
@@ -202,7 +234,7 @@ describe("projectService", () => {
 			const fs = testInjector.resolve<IFileSystem>("fs");
 			fs.isEmptyDir = (name: string) => false;
 			const projectService = testInjector.resolve<IProjectService>(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			await assert.isRejected(
 				projectService.createProject({
@@ -212,8 +244,8 @@ describe("projectService", () => {
 				}),
 				`Path already exists and is not empty ${path.join(
 					dirToCreateProject,
-					projectName
-				)}`
+					projectName,
+				)}`,
 			);
 		});
 	});
@@ -243,7 +275,7 @@ describe("projectService", () => {
 			testInjector.register("hooksService", {
 				executeAfterHooks: async (
 					commandName: string,
-					hookArguments?: IDictionary<any>
+					hookArguments?: IDictionary<any>,
 				): Promise<void> => undefined,
 			});
 			testInjector.register("pacoteService", {
@@ -264,16 +296,15 @@ describe("projectService", () => {
 			});
 
 			const projectService: IProjectService = testInjector.resolve(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			assert.isTrue(projectService.isValidNativeScriptProject("some-dir"));
 		});
 
 		it("returns correct data when multiple calls are executed", () => {
 			const testInjector = getTestInjector();
-			const projectDataService = testInjector.resolve<IProjectDataService>(
-				"projectDataService"
-			);
+			const projectDataService =
+				testInjector.resolve<IProjectDataService>("projectDataService");
 			const projectData: any = {
 				projectDir: "projectDir",
 				projectId: "projectId",
@@ -282,7 +313,7 @@ describe("projectService", () => {
 
 			let returnedProjectData: any = null;
 			projectDataService.getProjectData = (
-				projectDir?: string
+				projectDir?: string,
 			): IProjectData => {
 				projectData.projectDir = projectDir;
 				returnedProjectData = projectData;
@@ -290,7 +321,7 @@ describe("projectService", () => {
 			};
 
 			const projectService: IProjectService = testInjector.resolve(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			assert.isTrue(projectService.isValidNativeScriptProject("some-dir"));
 			assert.equal(returnedProjectData.projectDir, "some-dir");
@@ -298,7 +329,7 @@ describe("projectService", () => {
 			assert.equal(returnedProjectData.projectDir, "some-dir-2");
 
 			projectDataService.getProjectData = (
-				projectDir?: string
+				projectDir?: string,
 			): IProjectData => {
 				throw new Error("Err");
 			};
@@ -315,7 +346,7 @@ describe("projectService", () => {
 			});
 
 			const projectService: IProjectService = testInjector.resolve(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
 		});
@@ -326,7 +357,7 @@ describe("projectService", () => {
 			});
 
 			const projectService: IProjectService = testInjector.resolve(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
 		});
@@ -337,7 +368,7 @@ describe("projectService", () => {
 			});
 
 			const projectService: IProjectService = testInjector.resolve(
-				ProjectServiceLib.ProjectService
+				ProjectServiceLib.ProjectService,
 			);
 			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
 		});
