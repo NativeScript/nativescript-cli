@@ -278,10 +278,9 @@ export class Options {
 				continue;
 			}
 
-			// yargs emits both the dashed and the camelCase spelling of every flag.
-			// Unknown options have no declaration to normalize against, so key the
-			// dedupe off the camelCase form both spellings collapse to.
-			const dedupeKey = this.getNonDashedOptionName(optionName);
+			// yargs emits every spelling of a flag: dashed, camelCase and, for an
+			// aliased option, the alias. Collapse them so one flag is reported once.
+			const dedupeKey = this.getCanonicalOptionName(optionName);
 			if (_.includes(validated, dedupeKey)) {
 				continue;
 			}
@@ -315,6 +314,21 @@ export class Options {
 				);
 			}
 		}
+	}
+
+	// The name every spelling of an option collapses to. Unknown options keep
+	// their own name; there is no declaration to resolve them against.
+	private getCanonicalOptionName(optionName: string): string {
+		const correctName = this.getCorrectOptionName(optionName);
+		if (this.options[correctName]) {
+			return this.getNonDashedOptionName(correctName);
+		}
+
+		const aliasedName = _.findKey(
+			this.options,
+			(opt) => opt.alias === correctName,
+		);
+		return this.getNonDashedOptionName(aliasedName || correctName);
 	}
 
 	// yargs strips the `no-` prefix off a negated flag, so an undeclared
