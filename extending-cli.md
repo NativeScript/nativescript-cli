@@ -153,15 +153,27 @@ The wrappable hook points are:
 
 `before-buildAndroid` · `before-buildAndroidPlugin` · `before-buildIOS` · `before-checkEnvironment` · `before-checkForChanges` · `before-install` · `before-prepare` · `before-prepareNativeApp` · `before-resolveCommand` · `before-watch` · `before-watchPatterns`
 
-### `ctx.abort(message)`
+### `ctx.fail(message)` and `ctx.skip(message)`
 
-`ctx.abort(message)` stops the hook and fails the command. Pass `{ asWarning: true }` to print the message as a warning and let the command continue instead. The message is required in practice — calling `abort()` without one falls back to a message naming the hook point.
+Both end the handler immediately — nothing after the call runs — and differ in what happens to the command.
+
+`ctx.fail(message)` fails the command, printing `message` as the error:
 
 ```JavaScript
 module.exports = defineHook("before-prepare", (ctx) => {
-	ctx.abort("Nothing to prepare.", { asWarning: true });
+	ctx.fail("The generated bundle is missing; run the bundler first.");
 });
 ```
+
+`ctx.skip(message)` prints `message` as a warning and lets the command continue:
+
+```JavaScript
+module.exports = defineHook("before-prepare", (ctx) => {
+	ctx.skip("Nothing to prepare.");
+});
+```
+
+The message is required in practice — calling either without one falls back to a message naming the hook point and the method.
 
 ### Plain function hooks
 
@@ -190,7 +202,7 @@ Member | Type | Description
 
 A plain-function hook can also return a function, which the CLI folds into a middleware chain around the hooked method.
 
-With `defineHook` neither convention is needed, and neither applies: `ctx.abort` replaces throwing an error carrying `stopExecution`/`errorAsWarning`, and `ctx.wrap` replaces returning a function. A definition whose `run` returns a function is warned about — the returned function is not used as a middleware.
+With `defineHook` neither convention is needed, and neither applies: `ctx.fail`/`ctx.skip` replace throwing an error carrying `stopExecution`/`errorAsWarning`, and `ctx.wrap` replaces returning a function. A definition whose `run` returns a function is warned about — the returned function is not used as a middleware.
 
 ## Legacy: parameter-name injection
 

@@ -224,35 +224,39 @@ describe("defineHook", () => {
 		assert.isUndefined(capture.originalRan);
 	});
 
-	it("logs a warning and continues when the handler aborts with asWarning", async () => {
+	it("warns and continues the command when the handler skips, stopping the handler", async () => {
 		writeHook(
 			projectDir,
 			"before-case7",
 			`const { defineHook } = require(${JSON.stringify(apiPath)});
 			module.exports = defineHook("before-case7", async (ctx) => {
-				ctx.abort("soft-abort", { asWarning: true });
+				ctx.skip("soft-skip");
+				global.__hookCapture.afterSkip = true;
 			});`,
 		);
 
 		await hooksService().executeBeforeHooks("case7");
 
-		assert.include(logger().warnOutput, "soft-abort");
+		assert.include(logger().warnOutput, "soft-skip");
+		assert.isUndefined(capture.afterSkip);
 	});
 
-	it("fails the command when the handler aborts without asWarning", async () => {
+	it("fails the command when the handler fails, stopping the handler", async () => {
 		writeHook(
 			projectDir,
 			"before-case8",
 			`const { defineHook } = require(${JSON.stringify(apiPath)});
 			module.exports = defineHook("before-case8", async (ctx) => {
-				ctx.abort("hard-abort");
+				ctx.fail("hard-fail");
+				global.__hookCapture.afterFail = true;
 			});`,
 		);
 
 		await assert.isRejected(
 			hooksService().executeBeforeHooks("case8"),
-			/hard-abort/,
+			/hard-fail/,
 		);
+		assert.isUndefined(capture.afterFail);
 	});
 
 	it("keeps a legacy param-name hook on the old path, and never reports a definition hook", async () => {
@@ -377,19 +381,37 @@ describe("defineHook", () => {
 		);
 	});
 
-	it("defaults the abort() message instead of failing with Error(undefined)", async () => {
+	it("defaults the fail() message instead of failing with Error(undefined)", async () => {
 		writeHook(
 			projectDir,
 			"before-case15",
 			`const { defineHook } = require(${JSON.stringify(apiPath)});
 			module.exports = defineHook("before-case15", (ctx) => {
-				ctx.abort();
+				ctx.fail();
 			});`,
 		);
 
 		await assert.isRejected(
 			hooksService().executeBeforeHooks("case15"),
-			/The "before-case15" hook aborted without a message\./,
+			/The "before-case15" hook called ctx\.fail\(\) without a message\./,
+		);
+	});
+
+	it("defaults the skip() message", async () => {
+		writeHook(
+			projectDir,
+			"before-case18",
+			`const { defineHook } = require(${JSON.stringify(apiPath)});
+			module.exports = defineHook("before-case18", (ctx) => {
+				ctx.skip();
+			});`,
+		);
+
+		await hooksService().executeBeforeHooks("case18");
+
+		assert.include(
+			logger().warnOutput,
+			'The "before-case18" hook called ctx.skip() without a message.',
 		);
 	});
 

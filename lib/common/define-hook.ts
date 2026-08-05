@@ -42,10 +42,20 @@ export interface HookContext<TPayload = any> {
 	wrap(middleware: HookMiddleware): void;
 
 	/**
-	 * Stops the hook. With `asWarning`, the CLI logs the message and continues
-	 * the command; otherwise the command fails.
+	 * Ends the handler and fails the command with `message`.
+	 *
+	 * Typed `never` because it stops the handler by throwing, so nothing after
+	 * the call runs.
 	 */
-	abort(message: string, opts?: { asWarning?: boolean }): never;
+	fail(message: string): never;
+
+	/**
+	 * Ends the handler and logs `message` as a warning; the command continues.
+	 *
+	 * Typed `never` because it stops the handler by throwing, so nothing after
+	 * the call runs — only the command outlives it.
+	 */
+	skip(message: string): never;
 }
 
 export type HookHandler<TPayload = any> = (
@@ -209,22 +219,29 @@ export function createHookInvocation<TPayload = any>(
 
 			middlewares.push(middleware);
 		},
-		abort(message: string, opts?: { asWarning?: boolean }): never {
-			const text =
-				typeof message === "string" && message.trim().length
-					? message
-					: `The "${hookName}" hook aborted without a message.`;
-			const error: any = new Error(text);
-			if (opts && opts.asWarning) {
-				// The pair the hooks service checks for to downgrade a rejection.
-				error.stopExecution = false;
-				error.errorAsWarning = true;
-			}
+		fail(message: string): never {
+			throw new Error(hookMessage(message, hookName, "fail"));
+		},
+		skip(message: string): never {
+			const error: any = new Error(hookMessage(message, hookName, "skip"));
+			// The pair the hooks service checks for to downgrade a rejection.
+			error.stopExecution = false;
+			error.errorAsWarning = true;
 			throw error;
 		},
 	};
 
 	return { context, middlewares };
+}
+
+function hookMessage(
+	message: string,
+	hookName: string,
+	method: string,
+): string {
+	return typeof message === "string" && message.trim().length
+		? message
+		: `The "${hookName}" hook called ctx.${method}() without a message.`;
 }
 
 function derivePayload(hookArguments: any): any {
