@@ -1034,4 +1034,81 @@ const test = require("./test");`,
 			assert.isTrue(helpers.isInteractive());
 		});
 	});
+
+	describe("decorateMethod", () => {
+		const decorate = (middlewares: Function[], sink: Function): Function => {
+			const descriptor: TypedPropertyDescriptor<Function> = { value: sink };
+			helpers.decorateMethod(
+				async () => middlewares,
+				async (method, self, result) => result,
+			)(null, "method", descriptor);
+			return descriptor.value;
+		};
+
+		it("passes the original args and the sink to a single middleware", async () => {
+			let received: any[];
+			const middleware = async (args: any[], next: Function) => {
+				received = args;
+				return next.apply(null, ["replaced"]);
+			};
+			const decorated = decorate([middleware], async function (...args: any[]) {
+				return args;
+			});
+
+			const result = await decorated.call({}, "original");
+
+			assert.deepStrictEqual(received, ["original"]);
+			assert.deepStrictEqual(result, ["replaced"]);
+		});
+
+		it("forwards args changed by every middleware, not only the innermost", async () => {
+			const seen: { [key: string]: any[] } = {};
+			// The last middleware in the array is the outermost link, so it runs
+			// first.
+			const runsSecond = async (args: any[], next: Function) => {
+				seen.second = args.slice();
+				return next.apply(null, args.concat("second"));
+			};
+			const runsFirst = async (args: any[], next: Function) => {
+				seen.first = args.slice();
+				return next.apply(null, args.concat("first"));
+			};
+			const decorated = decorate(
+				[runsSecond, runsFirst],
+				async function (...args: any[]) {
+					seen.sink = args;
+					return "done";
+				},
+			);
+
+			const result = await decorated.call({}, "start");
+
+			assert.deepStrictEqual(seen.first, ["start"]);
+			assert.deepStrictEqual(seen.second, ["start", "first"]);
+			assert.deepStrictEqual(seen.sink, ["start", "first", "second"]);
+			assert.strictEqual(result, "done");
+		});
+
+		it("keeps the current args when a middleware calls next() without arguments", async () => {
+			const seen: { [key: string]: any[] } = {};
+			const inner = async (args: any[], next: Function) => {
+				seen.inner = args.slice();
+				return next.apply(null, args);
+			};
+			const outer = async (args: any[], next: Function) => {
+				return next();
+			};
+			const decorated = decorate(
+				[inner, outer],
+				async function (...args: any[]) {
+					seen.sink = args;
+				},
+			);
+
+			await decorated.call({}, "kept");
+
+			assert.deepStrictEqual(seen.inner, ["kept"]);
+			assert.deepStrictEqual(seen.sink, ["kept"]);
+		});
+	});
 });
