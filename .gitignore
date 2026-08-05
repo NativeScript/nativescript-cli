@@ -92,3 +92,13 @@ config/test-deps-versions-generated.json
 
 # build output
 /dist
+
+# local secrets, filled in from .env.example
+.env
+.env.*
+!.env.example
+
+# Claude Code local state - worktrees and per-user settings. Ignoring the
+# contents rather than the directory keeps shared settings.json committable.
+.claude/*
+!.claude/settings.json

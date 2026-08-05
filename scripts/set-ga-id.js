@@ -2,6 +2,12 @@ const fs = require("fs");
 const path = require("path");
 const EOL = require("os").EOL;
 
+// a real environment always wins over .env, so CI secrets are never shadowed
+require("dotenv").config({
+  path: path.join(__dirname, "..", ".env"),
+  quiet: true,
+});
+
 // GA4 measurement ids (G-XXXXXXXXXX). Leaving these empty disables analytics in
 // the produced build - the provider skips every hit when either value is unset.
 const GA_MEASUREMENT_IDS = {

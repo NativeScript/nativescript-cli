@@ -10,10 +10,6 @@ const rootDir = path.join(__dirname, "..");
 const distDir = path.join(rootDir, "dist");
 const release = process.argv.includes("--release");
 
-// bundleDependencies are resolved from node_modules next to the manifest being
-// packed, so they have to be mirrored into dist for `npm pack` to bundle them
-const BUNDLED = ["universal-analytics", "debug", "ms", "uuid"];
-
 const SIBLING_DIRS = [
 	"resources",
 	"docs",
@@ -120,10 +116,6 @@ if (!release) {
 
 for (const file of ROOT_FILES) {
 	copyFile(path.join(rootDir, file), path.join(distDir, file));
-}
-
-for (const dep of BUNDLED) {
-	copyTree(path.join("node_modules", dep));
 }
 
 writeManifest();

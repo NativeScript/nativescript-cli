@@ -60,8 +60,8 @@
     "ios-device-lib": "0.9.5",
     "ios-mobileprovision-finder": "1.2.1",
     "ios-sim-portable": "4.5.1",
-    "jimp": "1.6.0",
-    "lodash": "4.17.23",
+    "jimp": "1.6.1",
+    "lodash": "4.18.1",
     "log4js": "6.9.1",
     "marked": "15.0.12",
     "marked-terminal": "7.3.0",
@@ -87,11 +87,10 @@
     "simple-plist": "1.4.0",
     "source-map": "0.8.0",
     "tar": "7.5.22",
-    "ts-morph": "25.0.1",
+    "ts-morph": "28.0.0",
     "tunnel": "0.0.6",
     "typescript": "5.7.3",
-    "universal-analytics": "0.5.3",
-    "uuid": "11.1.0",
+    "uuid": "11.1.1",
     "winreg": "1.2.5",
     "ws": "8.21.1",
     "xml2js": "0.6.2",
@@ -116,11 +115,10 @@
     "@types/retry": "0.12.5",
     "@types/semver": "7.7.1",
     "@types/shelljs": "^0.8.11",
-    "@types/sinon": "^17.0.3",
+    "@types/sinon": "^22.0.0",
     "@types/tabtab": "^3.0.2",
     "@types/tar": "7.0.87",
     "@types/tunnel": "0.0.7",
-    "@types/universal-analytics": "0.4.8",
     "@types/uuid": "^10.0.0",
     "@types/ws": "8.18.1",
     "@types/xml2js": "0.4.14",
@@ -130,35 +128,17 @@
     "chai": "5.3.3",
     "chai-as-promised": "8.0.2",
     "conventional-changelog-cli": "^5.0.0",
+    "dotenv": "17.4.2",
     "fast-check": "3.23.2",
     "husky": "9.1.7",
     "lint-staged": "~15.5.2",
-    "sinon": "19.0.5",
+    "sinon": "22.1.0",
     "source-map-support": "0.5.21",
     "vitest": "^4.1.10",
     "xml2js": ">=0.5.0"
   },
   "optionalDependencies": {
     "fsevents": "*"
-  },
-  "bundleDependencies": [
-    "universal-analytics"
-  ],
-  "overrides": {
-    "@conventional-changelog/git-client": "2.5.1",
-    "@ts-morph/common@0.26.1": {
-      "minimatch": "10.2.4"
-    },
-    "uuid": "11.1.0",
-    "jimp": {
-      "xml2js": "0.6.2"
-    },
-    "npm-watch": {
-      "nodemon": "3.0.3"
-    },
-    "replace": {
-      "minimatch": "3.1.5"
-    }
   },
   "analyze": true,
   "license": "Apache-2.0",
