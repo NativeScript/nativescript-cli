@@ -42,6 +42,10 @@ types — needs `nativescript` declared twice:
 - The **dev dependency** is what makes `require("nativescript/contracts")`
   resolve while you build and test the extension. It is not installed for your
   users.
+- Developing against a **prerelease** CLI? Semver ranges without a prerelease
+  tag never match one — `9.1.0-alpha.15` does not satisfy `>=9.1.0` — so pin
+  the exact prerelease as your dev dependency and keep the stable floor in
+  `peerDependencies`.
 
 Never declare `nativescript` as a plain dependency.
 
