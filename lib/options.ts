@@ -77,8 +77,9 @@ export class Options {
 	public get shorthands(): string[] {
 		const result: string[] = [];
 		_.each(_.keys(this.options), (optionName) => {
-			if (this.options[optionName].alias) {
-				result.push(this.options[optionName].alias);
+			const alias = this.options[optionName].alias;
+			if (alias) {
+				result.push(...(_.isArray(alias) ? alias : [alias]));
 			}
 		});
 		return result;
@@ -324,9 +325,8 @@ export class Options {
 			return this.getNonDashedOptionName(correctName);
 		}
 
-		const aliasedName = _.findKey(
-			this.options,
-			(opt) => opt.alias === correctName,
+		const aliasedName = _.findKey(this.options, (opt) =>
+			this.hasAlias(opt, correctName),
 		);
 		return this.getNonDashedOptionName(aliasedName || correctName);
 	}
@@ -375,8 +375,16 @@ export class Options {
 	}
 
 	private tryGetOptionByAliasName(aliasName: string) {
-		const option = _.find(this.options, (opt) => opt.alias === aliasName);
+		const option = _.find(this.options, (opt) => this.hasAlias(opt, aliasName));
 		return option;
+	}
+
+	// yargs accepts an option's `alias` as a single string or an array of them,
+	// so every alias lookup has to cope with both.
+	private hasAlias(option: IDashedOption, aliasName: string): boolean {
+		return _.isArray(option.alias)
+			? _.includes(option.alias, aliasName)
+			: option.alias === aliasName;
 	}
 
 	private isOptionSupported(option: string): boolean {
