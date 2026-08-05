@@ -16,25 +16,51 @@ import {
 import { IPlatformData } from "../definitions/platform";
 import { IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
-import { MobileProject } from "@nstudio/trapezedev-project";
 import { Minimatch } from "minimatch";
 
 const sourceExtensions = [
-    '.swift', '.m', '.mm', '.c', '.cpp', '.cc', '.cxx', '.h', '.hpp'
+	".swift",
+	".m",
+	".mm",
+	".c",
+	".cpp",
+	".cc",
+	".cxx",
+	".h",
+	".hpp",
 ];
 const resourceExtensions = [
-    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.pdf',  // Images
-    '.ttf', '.otf', '.woff', '.woff2',                 // Fonts
-    '.xcassets',                                        // Asset catalogs
-    '.storyboard', '.xib',                             // Interface files
-    '.strings', '.stringsdict',                        // Localization
-    '.json', '.xml', '.plist',                         // Data files
-    '.m4a', '.mp3', '.wav', '.caf',                    // Audio
-    '.mp4', '.mov',                                     // Video
-    '.bundle',                                          // Resource bundles
+	".png",
+	".jpg",
+	".jpeg",
+	".gif",
+	".svg",
+	".pdf", // Images
+	".ttf",
+	".otf",
+	".woff",
+	".woff2", // Fonts
+	".xcassets", // Asset catalogs
+	".storyboard",
+	".xib", // Interface files
+	".strings",
+	".stringsdict", // Localization
+	".json",
+	".xml",
+	".plist", // Data files
+	".m4a",
+	".mp3",
+	".wav",
+	".caf", // Audio
+	".mp4",
+	".mov", // Video
+	".bundle", // Resource bundles
 ];
 const CONFIG_FILE_EXTENSION = "extension.json";
-const RESOURCES_TO_IGNORE = [CONFIG_FILE_EXTENSION, 'node_modules'];
+const RESOURCES_TO_IGNORE = [
+    CONFIG_FILE_EXTENSION, 
+    'node_modules'
+];
 
 export class IOSExtensionsService implements IIOSExtensionsService {
     constructor(
@@ -42,18 +68,28 @@ export class IOSExtensionsService implements IIOSExtensionsService {
         protected $pbxprojDomXcode: IPbxprojDomXcode,
         protected $xcode: IXcode,
         private $iOSNativeTargetService: IIOSNativeTargetService,
-        private $logger: ILogger
+        private $logger: ILogger,
+		private $spmPbxprojService: ISPMPbxprojService,
     ) {}
 
-    private addResourceFile(project: IXcode.project, path: string, opt: Record<string, string>, group = 'ExtensionResources') {
-        const file = (project as any).addResourceFile(path, opt, group);
-        (project as any).addToResourcesPbxGroup(file, group);
-    }
-
-    private addSourceFile(project: IXcode.project, path: string, opt: Record<string, string>, group = 'ExtensionSrc') {
-        const file = (project as any).addSourceFile(path, opt, group);
-        (project as any).addToResourcesPbxGroup(file, group);
-    }
+    private addResourceFile(
+		project: IXcode.project,
+		path: string,
+		opt: Record<string, string>,
+		group = "WatchResources",
+	) {
+		const file = (project as any).addResourceFile(path, opt, group);
+		(project as any).addToResourcesPbxGroup(file, group);
+	}
+	private addSourceFile(
+		project: IXcode.project,
+		path: string,
+		opt: Record<string, string>,
+		group = "WatchSrc",
+	) {
+		const file = (project as any).addSourceFile(path, opt, group);
+		(project as any).addToResourcesPbxGroup(file, group);
+	}
 
     public async addExtensionsFromPath({
         extensionsFolderPath,
@@ -390,7 +426,7 @@ export class IOSExtensionsService implements IIOSExtensionsService {
         project: IXcode.project,
         platformData: IPlatformData,
         groupName: string,
-        excludePatterns?: string[]
+        excludePatterns?: string[],
     ): void {
         try {
             if (!this.$fs.exists(folderPath)) {
@@ -419,7 +455,7 @@ export class IOSExtensionsService implements IIOSExtensionsService {
         project: IXcode.project,
         platformData: IPlatformData,
         groupName: string,
-        excludePatterns?: string[]
+        excludePatterns?: string[],
     ): void {
         const items = this.$fs.readDirectory(dirPath);
 
@@ -921,48 +957,62 @@ export class IOSExtensionsService implements IIOSExtensionsService {
         return false;
     }
 
+    /**
+     * Apply SPM packages to watch app targets
+     */
     private async applySPMPackagesToTargets(
         targetNames: string[],
         platformData: IPlatformData,
         basedir: string,
-        spmPackages: any[]
+        watchSPMPackages: any[],
     ): Promise<void> {
         try {
-            if (spmPackages.length === 0) {
+            this.$logger.debug(
+                `applySPMPackagesToTargets ${JSON.stringify(watchSPMPackages)}`,
+            );
+            if (watchSPMPackages.length === 0) {
                 return;
             }
 
             this.$logger.debug(
-                `Applying ${spmPackages.length} SPM package(s) to targets:${targetNames}`
+                `Applying ${watchSPMPackages.length} SPM package(s) to targets:${targetNames}`,
             );
 
-            const project = new MobileProject(platformData.projectRoot, {
-                ios: {
-                    path: ".",
-                },
-                enableAndroid: false,
-            });
-            await project.load();
-
-            if (!project.ios) {
-                this.$logger.debug("No iOS project found via trapeze");
-                return;
-            }
-
-            for (const pkg of spmPackages) {
+            // Add SPM packages to each watch target
+            const assignments: IosSPMPackageAssignment[] = [];
+            for (const pkg of watchSPMPackages) {
                 if ("path" in pkg) {
                     pkg.path = path.resolve(basedir, pkg.path);
                 }
 
+                this.$logger.debug(
+                    `Adding SPM package ${JSON.stringify(pkg)} to targets ${targetNames}`,
+                );
                 for (const targetName of targetNames) {
-                    project.ios.addSPMPackage(targetName, pkg);
+                    assignments.push({ targetName, package: pkg });
                 }
             }
 
-            await project.commit();
-            this.$logger.debug(`Successfully applied SPM packages to targets ${targetNames}`);
+            if (
+                !this.$spmPbxprojService.addPackages(
+                    platformData.projectRoot,
+                    assignments,
+                )
+            ) {
+                this.$logger.debug(
+                    `No SPM packages were applied to targets ${targetNames}`,
+                );
+                return;
+            }
+
+            this.$logger.debug(
+                `Successfully applied SPM packages to targets ${targetNames}`,
+            );
         } catch (err) {
-            this.$logger.debug(`Error applying SPM packages to targets ${targetNames}`, err);
+            this.$logger.debug(
+                `Error applying SPM packages to targets ${targetNames} "`,
+                err,
+            );
         }
     }
 
