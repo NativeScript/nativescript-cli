@@ -14,6 +14,63 @@ var path = require("path"),
 
 require(path.join(pathToCommon, "verify-node-version")).verifyNodeVersion();
 
+// Prefer a project-local CLI install when one is resolvable from the current
+// directory: the project pins its own nativescript version, and running the
+// invoked (typically global) copy against it means two CLI versions
+// disagreeing about one project. The probe must never break the CLI - any
+// failure falls through to the invoked copy. Opt out per invocation with
+// --no-local-cli or NS_CLI_NO_LOCAL=1; NS_CLI_LOCAL_DELEGATED marks the
+// handed-off process so the local copy never delegates again.
+var noLocalFlagIndex = process.argv.indexOf("--no-local-cli");
+if (noLocalFlagIndex !== -1) {
+	process.argv.splice(noLocalFlagIndex, 1);
+}
+
+if (
+	!process.env.NS_CLI_LOCAL_DELEGATED &&
+	!process.env.NS_CLI_NO_LOCAL &&
+	noLocalFlagIndex === -1
+) {
+	var localEntry = null;
+	var localVersion = null;
+	var localDir = null;
+	try {
+		var localPackageJsonPath = require.resolve("nativescript/package.json", {
+			paths: [process.cwd()],
+		});
+		var ownPackageJsonPath = path.join(__dirname, "..", "package.json");
+		// realpath both sides so an npm-linked or symlinked install of the
+		// same copy is not mistaken for a different one.
+		if (
+			fs.realpathSync(localPackageJsonPath) !==
+			fs.realpathSync(ownPackageJsonPath)
+		) {
+			localDir = path.dirname(localPackageJsonPath);
+			var candidate = path.join(localDir, "bin", "tns");
+			if (fs.existsSync(candidate)) {
+				localEntry = candidate;
+				localVersion = require(localPackageJsonPath).version;
+			}
+		}
+	} catch (err) {
+		// No local install resolvable from cwd - run the invoked copy.
+	}
+
+	if (localEntry) {
+		process.env.NS_CLI_LOCAL_DELEGATED = "1";
+		// stderr, so scripts parsing stdout (e.g. `ns --version`) are unaffected.
+		console.error(
+			"Using the project-local nativescript@" +
+				localVersion +
+				" (" +
+				localDir +
+				").",
+		);
+		require(localEntry);
+		return;
+	}
+}
+
 var pathToCliExecutable = path.join(pathToLib, "nativescript-cli.js");
 
 require(pathToCliExecutable);
