@@ -219,19 +219,35 @@ export class TypingsCommand implements ICommand {
 			path.resolve(this.$projectData.projectDir, "typings", "ios"),
 		);
 
+		const env: Record<string, string> = {
+			...process.env,
+			TNS_TYPESCRIPT_DECLARATIONS_PATH: path.resolve(
+				this.$projectData.projectDir,
+				"typings",
+				"ios",
+			),
+		};
+
+		if (this.$options.yaml) {
+			const yamlDir = path.resolve(this.$options.yaml);
+			this.$fs.ensureDirectoryExists(yamlDir);
+			env.NS_DEBUG_METADATA_PATH = yamlDir;
+			this.$logger.info(`Metadata YAML output will be written to: ${yamlDir}`);
+		}
+
+		if (this.$options.jsonMetadata) {
+			const jsonDir = path.resolve(this.$options.jsonMetadata);
+			this.$fs.ensureDirectoryExists(jsonDir);
+			env.NS_JSON_METADATA_PATH = jsonDir;
+			this.$logger.info(`Metadata JSON output will be written to: ${jsonDir}`);
+		}
+
 		await this.$childProcess.spawnFromEvent(
 			"node",
 			[this.$staticConfig.cliBinPath, "build", "ios"],
 			"exit",
 			{
-				env: {
-					...process.env,
-					TNS_TYPESCRIPT_DECLARATIONS_PATH: path.resolve(
-						this.$projectData.projectDir,
-						"typings",
-						"ios",
-					),
-				},
+				env,
 				stdio: "inherit",
 			},
 		);

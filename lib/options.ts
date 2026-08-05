@@ -244,6 +244,8 @@ export class Options {
 			jar: { type: OptionType.String, hasSensitiveValue: true },
 			aar: { type: OptionType.String, hasSensitiveValue: true },
 			filter: { type: OptionType.String, hasSensitiveValue: true },
+			yaml: { type: OptionType.String, hasSensitiveValue: false },
+			jsonMetadata: { type: OptionType.String, hasSensitiveValue: false },
 			git: {
 				type: OptionType.Boolean,
 				hasSensitiveValue: false,
