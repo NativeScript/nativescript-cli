@@ -6,7 +6,7 @@ import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
 import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
-import { PlistSession, Reporter } from "plist-merge-patch";
+import { PlistSession, Reporter } from "../tools/plist-merge/plist-session";
 import { EOL } from "os";
 import * as plist from "plist";
 import * as fastGlob from "fast-glob";
