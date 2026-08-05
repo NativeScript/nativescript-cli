@@ -187,6 +187,52 @@ describe("di: forwardRef", () => {
 	});
 });
 
+describe("di: cross-copy injection context", () => {
+	// inject.js has no runtime imports, so a copied file loaded from another
+	// path is a genuine second instance of the module — the same situation as
+	// a nested nativescript install serving a hook or extension module.
+	const loadSecondCopy = (): any => {
+		const fs = require("fs");
+		const os = require("os");
+		const path = require("path");
+		const source = require.resolve("../lib/common/di/inject.js");
+		const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ns-di-copy-"));
+		const target = path.join(dir, "inject.js");
+		fs.copyFileSync(source, target);
+		return require(target);
+	};
+
+	it("a second copy's inject() resolves against the running copy's context, with a one-time warning", () => {
+		const copyB = loadSecondCopy();
+		const warnings: string[] = [];
+		const loggerValue = {
+			warn: (message: string) => warnings.push(message),
+		};
+		const injector = new Injector([
+			{ provide: "logger", useValue: loggerValue },
+		]);
+
+		runInInjectionContext(injector, () => {
+			// The running copy serving its own context never warns.
+			assert.strictEqual(inject("logger"), loggerValue);
+			assert.equal(warnings.length, 0);
+
+			// The second copy resolves through the shared slot — and warns once.
+			assert.strictEqual(copyB.inject("logger"), loggerValue);
+			assert.strictEqual(copyB.inject("logger"), loggerValue);
+		});
+
+		assert.equal(warnings.length, 1);
+		assert.include(warnings[0], "second copy of the NativeScript CLI");
+		assert.include(warnings[0], "peerDependency");
+	});
+
+	it("a second copy outside any context still throws the teaching error", () => {
+		const copyB = loadSecondCopy();
+		assert.throws(() => copyB.inject("logger"), /injection context/);
+	});
+});
+
 describe("di: inject options", () => {
 	it("optional resolves to null for an unknown token, and normally for a known one", () => {
 		const injector = new Injector([provide(Greeter, GreeterImpl)]);
