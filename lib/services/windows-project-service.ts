@@ -562,6 +562,57 @@ export class WindowsProjectService
 		catch (err) {
 			this.$logger.warn(`dotnet-tool check failed: ${err}`);
 		}
+
+		// Source protection: seal the just-written webpack output (app/) into an encrypted
+		// app.nsbundle via nsbundle_pack.
+		// Release builds only — HMR/LiveSync dev builds patch app/ incrementally, which a sealed
+		// container can't do, and --release/--hmr are already mutually exclusive CLI flags.
+		// Never fatal: a missing tool or failed pack just leaves the plaintext app/ folder, which
+		// the .csproj already falls back to via Condition="Exists('app.nsbundle')".
+		try {
+			const isRelease = !!(_prepareData as any)?.release;
+			const wantsSourceProtect =
+				(this.$options as any).sourceProtect ??
+				projectData?.nsConfig?.windows?.sourceProtect ??
+				false;
+			if (isRelease && wantsSourceProtect) {
+				const arch = process.arch === "arm64" ? "arm64" : "x64";
+				const packCandidates = [
+					process.env.NSBUNDLE_PACK_PATH,
+					path.join(platformData.projectRoot, "tools", `nsbundle_pack-${arch}.exe`),
+					path.join(platformData.projectRoot, "tools", "nsbundle_pack.exe"),
+				].filter(Boolean as any);
+				let packExe: string | null = null;
+				for (const p of packCandidates) {
+					if (p && fs.existsSync(p)) { packExe = p as string; break; }
+				}
+				if (packExe) {
+					const keyHex =
+						(this.$options as any).sourceProtectKeyHex ||
+						process.env.NS_WINDOWS_BUNDLE_KEY;
+					const args = [
+						"--input", path.join(appProjectDir, "app"),
+						"--output", path.join(appProjectDir, "app.nsbundle"),
+					];
+					if (keyHex) { args.push("--key-hex", keyHex); }
+					this.$logger.info(`Running nsbundle_pack (source protection): ${packExe}`);
+					try {
+						const result = await this.$childProcess.spawnFromEvent(packExe, args, "close", { cwd: platformData.projectRoot }, { throwError: false });
+						if (result && result.stdout) { this.$logger.info(result.stdout); }
+					}
+					catch (err) {
+						this.$logger.warn(`nsbundle_pack execution failed: ${err}`);
+					}
+				}
+				else {
+					this.$logger.info("Source protection requested but nsbundle_pack.exe was not found under tools/ — skipping (plaintext app/ will be packaged).");
+				}
+			}
+		}
+		catch (err) {
+			this.$logger.warn(`Source protection check failed: ${err}`);
+		}
+
 		const pluginsDir = path.join(appProjectDir, "plugins");
 
 		// Ensure plugins directory exists inside the platform app folder (where csproj expects it)

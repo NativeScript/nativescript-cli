@@ -96,6 +96,34 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 				this.$logger.warn(`[Windows] Pre-install uninstall failed: ${err}`);
 			}
 		}
+		// Two distinct artifact shapes reach here (see WindowsProjectService's
+		// getValidBuildOutputData): a debug build resolves to the loose bin/ output's
+		// AppxManifest.xml, meant for `-Register` (in-place dev registration — no signature
+		// validation, matches "AppxManifest.xml triggers Add-AppxPackage -Register (dev flow)");
+		// a release build resolves to the packaged .msix/.msixupload under AppPackages/, which
+		// `-Register` rejects outright ("An invalid manifest file name was passed to this
+		// function") and which instead needs a plain package install via `-Path` — exactly what
+		// the generated Install.ps1/Add-AppDevPackage.ps1 next to it do. A `-Path` install of an
+		// unsigned release package still fails signature validation (0x800B0100); that's expected
+		// — pass `--certificate`/`--certificate-thumbprint` at build time for a sideloadable
+		// release package, this isn't something the install step can paper over.
+		const isLooseManifest = packageFilePath.toLowerCase().endsWith("appxmanifest.xml");
+		let addAppxCommand: string;
+		if (isLooseManifest) {
+			addAppxCommand = `Add-AppxPackage -ForceApplicationShutdown -Register -Path "${packageFilePath}"`;
+		} else {
+			// Thread through any Dependencies\<arch>\*.msix (e.g. the Windows App SDK runtime
+			// framework package) the same way Add-AppDevPackage.ps1 does via `-DependencyPath` —
+			// needed on a machine that doesn't already have that framework package installed.
+			const arch = process.arch === "arm64" ? "arm64" : "x64";
+			const dependencyDir = path.join(path.dirname(packageFilePath), "Dependencies", arch);
+			const dependencyGlob = path.join(dependencyDir, "*.msix");
+			addAppxCommand = fs.existsSync(dependencyDir)
+				? `$deps = Get-ChildItem -Path "${dependencyGlob}" -ErrorAction SilentlyContinue; ` +
+					`if ($deps) { Add-AppxPackage -Path "${packageFilePath}" -DependencyPath $deps.FullName -ForceApplicationShutdown } ` +
+					`else { Add-AppxPackage -Path "${packageFilePath}" -ForceApplicationShutdown }`
+				: `Add-AppxPackage -Path "${packageFilePath}" -ForceApplicationShutdown`;
+		}
 		await this.$childProcess.spawnFromEvent(
 			"powershell.exe",
 			[
@@ -103,7 +131,7 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 				"-ExecutionPolicy",
 				"Bypass",
 				"-Command",
-				`Add-AppxPackage -ForceApplicationShutdown -Register -Path "${packageFilePath}"`,
+				addAppxCommand,
 			],
 			"close",
 			{},

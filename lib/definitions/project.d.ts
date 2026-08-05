@@ -134,7 +134,14 @@ interface INsConfigIOS extends INsConfigPlaform {
 
 interface INSConfigVisionOS extends INsConfigIOS {}
 
-interface INsConfigWindows extends INsConfigPlaform {}
+interface INsConfigWindows extends INsConfigPlaform {
+	/**
+	 * Seal the app's webpack output into an encrypted app.nsbundle instead of shipping it as
+	 * plaintext. Only takes effect on release builds; overridable per-invocation with
+	 * --source-protect / --no-source-protect.
+	 */
+	sourceProtect?: boolean;
+}
 
 interface INsConfigAndroid extends INsConfigPlaform {
 	v8Flags?: string;

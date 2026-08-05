@@ -210,6 +210,8 @@ export class Options {
 			},
 			storeUpload: { type: OptionType.Boolean, hasSensitiveValue: false },
 			msixbundle: { type: OptionType.Boolean, hasSensitiveValue: false },
+			sourceProtect: { type: OptionType.Boolean, hasSensitiveValue: false },
+			sourceProtectKeyHex: { type: OptionType.String, hasSensitiveValue: true },
 			arch: { type: OptionType.String, hasSensitiveValue: false },
 			release: {
 				type: OptionType.Boolean,

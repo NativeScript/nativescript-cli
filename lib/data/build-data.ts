@@ -52,6 +52,8 @@ export class WindowsBuildData extends BuildData {
 	public storeUpload: boolean;
 	public msixBundle: boolean;
 	public architectures: string[];
+	public sourceProtect: boolean;
+	public sourceProtectKeyHex: string;
 
 	constructor(projectDir: string, platform: string, data: any) {
 		super(projectDir, platform, data);
@@ -64,6 +66,8 @@ export class WindowsBuildData extends BuildData {
 		this.architectures = data.arch
 			? [data.arch]
 			: data.architectures ?? ["x64"];
+		this.sourceProtect = data.sourceProtect;
+		this.sourceProtectKeyHex = data.sourceProtectKeyHex;
 	}
 }
 
