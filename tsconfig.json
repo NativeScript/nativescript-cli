@@ -18,5 +18,9 @@
 		"lib": ["ESNext"],
 		"strict": false
 	},
-	"include": ["lib/", "test/"]
+	// test/type-fixtures has its own strict tsconfig and is compiled by the test
+	// that asserts on it; building it here would emit a testless file into dist
+	// and drop the strictness those assertions depend on
+	"include": ["lib/", "test/"],
+	"exclude": ["test/type-fixtures/"]
 }

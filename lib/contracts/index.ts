@@ -26,6 +26,25 @@ export type {
 export { DoctorService } from "./doctor-service";
 export { ProjectNameService } from "./project-name-service";
 
+export {
+	defineCommand,
+	isCommandDefinition,
+	booleanOption,
+	stringOption,
+	numberOption,
+	arrayOption,
+} from "../common/define-command";
+export type {
+	CommandDefinition,
+	DefinedCommand,
+	CommandContext,
+	CommandOptionSpec,
+	DefaultedCommandOptionSpec,
+	CommandOptionsSchema,
+	CommandOptionSpecInit,
+	CommandOptionType,
+	CommandOptionValues,
+} from "../common/define-command";
 export { defineHook, isHookDefinition } from "../common/define-hook";
 export type {
 	HookContext,
