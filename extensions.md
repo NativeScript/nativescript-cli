@@ -15,7 +15,8 @@ of them. That makes the manifest below the most important file in an extension:
 it is what the CLI reads on startup, and it decides whether your code is loaded
 eagerly or only when one of your commands is actually executed.
 
-## Depending on the CLI
+Depending on the CLI
+--------------------
 
 An extension that imports anything from the CLI — `defineCommand`, `inject`, the
 types — needs `nativescript` declared twice:
@@ -63,7 +64,8 @@ searches npm for it when it needs to suggest an extension for an unknown command
 > heading; declaring the peer dependency now is what makes an extension ready
 > for it.
 
-## Declaring commands
+Declaring commands
+------------------
 
 Commands are declared in the `commands` key of the `nativescript` key of the
 extension's `package.json`. Two shapes are accepted.
@@ -162,7 +164,8 @@ instead. Run any command with `--log trace` to see which installed extensions
 still rely on it, or set `NS_DEPRECATIONS=warn` to have those reports printed
 as warnings.
 
-## Writing a command module
+Writing a command module
+------------------------
 
 The recommended shape is a module exporting a `defineCommand` definition (see
 [defining-commands.md](defining-commands.md)) — the CLI adapts and registers it
@@ -202,7 +205,8 @@ the command itself, executing that command fails with an error naming the
 extension, the command and the module — the entry points at the wrong file, or
 the file is not doing what the entry promises.
 
-## Command names
+Command names
+-------------
 
 Command names use `|` to express hierarchy, so `"hello|world"` is invoked as
 `ns hello world`. Prefixing the last segment with `*` marks a default
@@ -233,7 +237,8 @@ An alias is a second entry pointing at the same module:
 
 Both names route to the same module, which is loaded once.
 
-## When two extensions want the same command
+When two extensions want the same command
+-----------------------------------------
 
 The first extension to claim a command name keeps it; later claimants are
 reported with a warning naming both extensions and the command, and their entry
@@ -247,7 +252,8 @@ extension name wins. The exception is `ns extension install`: that invocation
 loads the freshly installed extension after all the others, so a conflict it
 would win on the next invocation goes the other way that one time.
 
-## Suggesting an extension for an unknown command
+Suggesting an extension for an unknown command
+----------------------------------------------
 
 When a user types a command the CLI does not know, it searches npm for packages
 carrying the `nativescript:extension` keyword, reads the `nativescript.commands`
@@ -260,12 +266,13 @@ default command also matches its short form: an extension declaring
 Both manifest shapes participate in this matching. If a match is found, the CLI
 tells the user which extension provides the command and how to install it:
 
-```
+```text
 The command hello world is registered in extension nativescript-hello.
 You can install it by executing 'ns extension install nativescript-hello'
 ```
 
-## Documentation
+Documentation
+-------------
 
 Point the `docs` key of the `nativescript` key at a directory of `.md` files to
 have the CLI's help system pick up the help for your commands.
