@@ -615,6 +615,7 @@ export function hook(commandName: string) {
 			return hooksService.executeBeforeHooks(
 				commandName,
 				prepareArguments(method, args, hooksService),
+				{ consumesMiddlewares: true },
 			);
 		},
 		async (method: any, self: any, resultPromise: any, args: any[]) => {
