@@ -26,7 +26,12 @@ export type DeferredCommandRejection =
 	/** The CLI itself provides the command. */
 	| { reason: "built-in" }
 	/** The name is in use as the dispatcher for subcommands under it. */
-	| { reason: "subcommand-parent" };
+	| { reason: "subcommand-parent" }
+	/**
+	 * The name's direct parent is a command of its own, so no dispatcher can be
+	 * built for it and the name could never be reached.
+	 */
+	| { reason: "parent-is-command"; parent: string };
 
 /**
  * Outcome of a deferred registration. Callers branch on `rejection.reason`

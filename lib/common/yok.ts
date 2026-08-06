@@ -103,9 +103,11 @@ export class Yok extends Injector implements IInjector {
 	 */
 	private placeholderParents = new Set<string>();
 	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
-	private hierarchicalCommands: IDictionary<string[]> = {};
+	// Keyed by command names, which extensions choose freely: a null prototype
+	// keeps a name like 'constructor' from reading back as an inherited member.
+	private hierarchicalCommands: IDictionary<string[]> = Object.create(null);
 	/** Deferred command name -> the owner that claimed it first. */
-	private deferredCommandOwners: IDictionary<string> = {};
+	private deferredCommandOwners: IDictionary<string> = Object.create(null);
 
 	/**
 	 * @deprecated Path-based command registration; use registerDeferredCommand,
@@ -185,6 +187,22 @@ export class Yok extends Injector implements IInjector {
 			);
 		}
 
+		const commands = name.split(CommandsDelimiters.HierarchicalCommand);
+		const parentCommandName = commands.length > 1 ? commands[0] : null;
+		if (
+			parentCommandName &&
+			this.has(this.createCommandName(parentCommandName)) &&
+			!this.synthesizedParents.has(parentCommandName) &&
+			!this.placeholderParents.has(parentCommandName)
+		) {
+			// Mirrors createHierarchicalCommand's refusal to overwrite a real
+			// command: no dispatcher gets created, so this name is unreachable.
+			return rejected({
+				reason: "parent-is-command",
+				parent: parentCommandName,
+			});
+		}
+
 		super.register({
 			provide: commandRecordName,
 			useLazyRequire: () => {
@@ -208,9 +226,7 @@ export class Yok extends Injector implements IInjector {
 		});
 		this.deferredCommandOwners[name] = options.owner;
 
-		const commands = name.split(CommandsDelimiters.HierarchicalCommand);
-		if (commands.length > 1) {
-			const parentCommandName = commands[0];
+		if (parentCommandName) {
 			const subCommandName = _.tail(commands).join(
 				CommandsDelimiters.HierarchicalCommand,
 			);

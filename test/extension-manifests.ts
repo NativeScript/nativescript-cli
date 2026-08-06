@@ -714,6 +714,54 @@ describe("extension manifests", () => {
 			assert.deepEqual(capture.loadedModules, []);
 		});
 
+		it("rejects a subcommand whose parent is a command of its own", async () => {
+			const extensionName = "nsm-parentcmd-ext";
+			writeExtension(
+				extensionName,
+				{
+					commands: {
+						nsmparentcmd: "./flat.js",
+						"nsmparentcmd|run": "./run.js",
+					},
+				},
+				{
+					"main.js": mainModule("parentcmd-main"),
+					"flat.js": commandModule("nsmparentcmd", "parentcmd-flat"),
+					"run.js": commandModule("nsmparentcmd|run", "parentcmd-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			const warnOutput = getLogger(testInjector).warnOutput;
+			assert.include(warnOutput, extensionName);
+			assert.include(warnOutput, "nsmparentcmd|run");
+			assert.include(warnOutput, "already registered as a command of its own");
+			assert.notInclude(warnOutput, "no subcommand dispatcher was created");
+
+			assert.isNull(testInjector.resolveCommand("nsmparentcmd|run"));
+			assert.isUndefined(
+				testInjector.getChildrenCommandsNames("nsmparentcmd"),
+				"The rejected subcommand must not be recorded under its parent.",
+			);
+
+			const command = <any>testInjector.resolveCommand("nsmparentcmd");
+			assert.isNotOk(command.isHierarchicalCommand);
+			await command.execute([]);
+			assert.deepEqual(capture.executed, [
+				{ marker: "parentcmd-flat", args: [] },
+			]);
+
+			// Ownership of a rejected name is not recorded, so the same extension
+			// is told again rather than treated as the owner on the next load.
+			await extensibilityService.loadExtension(extensionName);
+			assert.equal(
+				getLogger(testInjector).warnOutput.split("nsmparentcmd|run").length - 1,
+				2,
+			);
+		});
+
 		it("reports a command the CLI itself provides without naming internals", async () => {
 			const extensionName = "nsm-builtin-ext";
 			class BuiltInCommand {
@@ -746,6 +794,63 @@ describe("extension manifests", () => {
 				BuiltInCommand,
 			);
 			assert.deepEqual(capture.loadedModules, []);
+		});
+	});
+
+	describe("manifest keys that name an Object prototype member", () => {
+		it("registers a flat command named after a prototype member", async () => {
+			const extensionName = "nsm-proto-flat-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { constructor: "./run.js" } },
+				{
+					"main.js": mainModule("proto-flat-main"),
+					"run.js": commandModule("constructor", "proto-flat-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.equal(getLogger(testInjector).warnOutput, "");
+
+			const command = testInjector.resolveCommand("constructor");
+			assert.isOk(command);
+			await command.execute([]);
+			assert.deepEqual(capture.executed, [
+				{ marker: "proto-flat-run", args: [] },
+			]);
+		});
+
+		it("routes a subcommand whose parent names a prototype member", async () => {
+			const extensionName = "nsm-proto-parent-ext";
+			writeExtension(
+				extensionName,
+				{ commands: { "constructor|run": "./run.js" } },
+				{
+					"main.js": mainModule("proto-parent-main"),
+					"run.js": commandModule("constructor|run", "proto-parent-run"),
+				},
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			assert.equal(getLogger(testInjector).warnOutput, "");
+			assert.deepEqual(testInjector.getChildrenCommandsNames("constructor"), [
+				"run",
+			]);
+
+			const parent = <any>testInjector.resolveCommand("constructor");
+			assert.isTrue(parent.isHierarchicalCommand);
+			assert.deepEqual(capture.loadedModules, []);
+
+			const command = testInjector.resolveCommand("constructor|run");
+			assert.isOk(command);
+			await command.execute([]);
+			assert.deepEqual(capture.executed, [
+				{ marker: "proto-parent-run", args: [] },
+			]);
 		});
 	});
 

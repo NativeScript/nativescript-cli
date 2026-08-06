@@ -70,6 +70,8 @@ function describeRejection(rejection: DeferredCommandRejection): string {
 			return "it is already provided by the CLI";
 		case "subcommand-parent":
 			return "it is already in use as the parent of its subcommands";
+		case "parent-is-command":
+			return `'${rejection.parent}' is already registered as a command of its own, so the subcommand could never be reached`;
 	}
 }
 
