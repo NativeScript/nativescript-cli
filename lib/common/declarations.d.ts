@@ -824,12 +824,23 @@ interface IAutoCompletionService {
 	isObsoleteAutoCompletionEnabled(): boolean;
 }
 
+interface IHookExecutionOptions {
+	/**
+	 * Set by call sites that fold the returned middlewares around a method (the
+	 * `@hook` decorator). Where nothing consumes them, `ctx.wrap()` rejects
+	 * instead of registering a middleware that would never run.
+	 */
+	consumesMiddlewares?: boolean;
+}
+
 interface IHooksService {
 	hookArgsName: string;
+	/** Resolves with the middlewares hooks registered through `ctx.wrap()`. */
 	executeBeforeHooks(
 		commandName: string,
 		hookArguments?: IDictionary<any>,
-	): Promise<void>;
+		options?: IHookExecutionOptions,
+	): Promise<import("./define-hook").HookMiddleware[]>;
 	executeAfterHooks(
 		commandName: string,
 		hookArguments?: IDictionary<any>,

@@ -45,3 +45,11 @@ export type {
 	CommandOptionType,
 	CommandOptionValues,
 } from "../common/define-command";
+export { defineHook, isHookDefinition } from "../common/define-hook";
+export type {
+	HookContext,
+	HookDefinition,
+	HookDefinitionInput,
+	HookHandler,
+	HookMiddleware,
+} from "../common/define-hook";

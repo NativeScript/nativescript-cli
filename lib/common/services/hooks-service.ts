@@ -3,6 +3,9 @@ import * as util from "util";
 import * as _ from "lodash";
 import { annotate, getValueFromNestedObject } from "../helpers";
 import { reportDeprecation } from "../deprecation";
+import { createHookInvocation, isHookDefinition } from "../define-hook";
+import type { HookMiddleware, HookDefinition } from "../define-hook";
+import { runInInjectionContext } from "../di/inject";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
 import { IOptions, IPerformanceService } from "../../declarations";
 import {
@@ -14,6 +17,7 @@ import {
 	IErrors,
 	IProjectHelper,
 	IStringDictionary,
+	IHookExecutionOptions,
 } from "../declarations";
 import {
 	INsConfigHooks,
@@ -96,10 +100,16 @@ export class HooksService implements IHooksService {
 	public executeBeforeHooks(
 		commandName: string,
 		hookArguments?: IDictionary<any>,
-	): Promise<void> {
+		options?: IHookExecutionOptions,
+	): Promise<HookMiddleware[]> {
 		const beforeHookName = `before-${HooksService.formatHookName(commandName)}`;
 		const traceMessage = `BeforeHookName for command ${commandName} is ${beforeHookName}`;
-		return this.executeHooks(beforeHookName, traceMessage, hookArguments);
+		return this.executeHooks(
+			beforeHookName,
+			traceMessage,
+			hookArguments,
+			!!(options && options.consumesMiddlewares),
+		);
 	}
 
 	public executeAfterHooks(
@@ -108,13 +118,14 @@ export class HooksService implements IHooksService {
 	): Promise<void> {
 		const afterHookName = `after-${HooksService.formatHookName(commandName)}`;
 		const traceMessage = `AfterHookName for command ${commandName} is ${afterHookName}`;
-		return this.executeHooks(afterHookName, traceMessage, hookArguments);
+		return this.executeHooks(afterHookName, traceMessage, hookArguments, false);
 	}
 
 	private async executeHooks(
 		hookName: string,
 		traceMessage: string,
-		hookArguments?: IDictionary<any>,
+		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
 	): Promise<any> {
 		if (this.$config.DISABLE_HOOKS || !this.$options.hooks) {
 			return;
@@ -140,6 +151,7 @@ export class HooksService implements IHooksService {
 						hooksDirectory,
 						hookName,
 						hookArguments,
+						consumesMiddlewares,
 					),
 				);
 			}
@@ -153,6 +165,7 @@ export class HooksService implements IHooksService {
 						hookName,
 						hook,
 						hookArguments,
+						consumesMiddlewares,
 					),
 				);
 			}
@@ -173,7 +186,8 @@ export class HooksService implements IHooksService {
 		directoryPath: string,
 		hookName: string,
 		hook: IHook,
-		hookArguments?: IDictionary<any>,
+		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
 	): Promise<any> {
 		hookArguments = hookArguments || {};
 
@@ -221,80 +235,105 @@ export class HooksService implements IHooksService {
 						: hookModule;
 			}
 
-			if (typeof hookEntryPoint !== "function") {
+			// Covers both a `.mjs` default export and tsc's CommonJS emit of
+			// `export default`, whose value lands under `.default`.
+			const definitionCandidate =
+				(hookEntryPoint && hookEntryPoint.default) ?? hookEntryPoint;
+
+			// Reserved: a future release may accept several definitions from one
+			// file, so an array must not silently do nothing until then.
+			if (Array.isArray(definitionCandidate)) {
+				throw new Error(
+					`${hook.fullPath} exports an array, which is not a supported hook entry point. Export a single hook definition or function per file.`,
+				);
+			}
+
+			if (isHookDefinition(definitionCandidate)) {
+				result = await this.executeHookDefinition(
+					definitionCandidate,
+					hookName,
+					hook,
+					hookArguments,
+					consumesMiddlewares,
+				);
+			} else if (typeof hookEntryPoint !== "function") {
+				// A definition is a plain object, so this guard has to stay below the
+				// definition check.
 				this.$logger.warn(
 					`${hook.fullPath} will NOT be executed because it does not export a function.`,
 				);
 				return;
-			}
+			} else {
+				this.$logger.trace(`Validating ${hookName} arguments.`);
 
-			this.$logger.trace(`Validating ${hookName} arguments.`);
-
-			const invalidArguments = this.validateHookArguments(
-				hookEntryPoint,
-				hook.fullPath,
-			);
-
-			if (invalidArguments.length) {
-				this.$logger.warn(
-					`${
-						hook.fullPath
-					} will NOT be executed because it has invalid arguments - ${color.grey(
-						invalidArguments.join(", "),
-					)}.`,
+				const invalidArguments = this.validateHookArguments(
+					hookEntryPoint,
+					hook.fullPath,
 				);
-				return;
-			}
 
-			// HACK for backwards compatibility:
-			// In case $projectData wasn't resolved by the time we got here (most likely we got here without running a command but through a service directly)
-			// then it is probably passed as a hookArg
-			// if that is the case then pass it directly to the hook instead of trying to resolve $projectData via injector
-			// This helps make hooks stateless
-			const projectDataHookArg =
-				hookArguments["hookArgs"] && hookArguments["hookArgs"]["projectData"];
-			if (projectDataHookArg) {
-				hookArguments["projectData"] = hookArguments["$projectData"] =
-					projectDataHookArg;
-			}
-
-			// Only param-name *service* injection is on the deprecation track; a
-			// hook declaring nothing but `hookArgs` (or no parameters) already
-			// follows the recommended pattern and must not be flagged.
-			const usesParamNameInjection = (<string[]>(
-				hookEntryPoint.$inject.args
-			)).some((argument) => argument !== this.hookArgsName);
-			if (usesParamNameInjection) {
-				reportDeprecation({
-					api: "hooks.param-name-signature",
-					detail: hook.fullPath,
-					logger: this.$logger,
-				});
-			}
-
-			const maybePromise = this.$injector.resolve(
-				hookEntryPoint,
-				hookArguments,
-			);
-			if (maybePromise) {
-				this.$logger.trace("Hook promises to signal completion");
-				try {
-					result = await maybePromise;
-				} catch (err) {
-					if (
-						err &&
-						_.isBoolean(err.stopExecution) &&
-						err.errorAsWarning === true
-					) {
-						this.$logger.warn(err.message || err);
-					} else {
-						// Print the actual error with its callstack, so it is easy to find out which hooks is causing troubles.
-						this.$logger.error(err);
-						throw err || new Error(`Failed to execute hook: ${hook.fullPath}.`);
-					}
+				if (invalidArguments.length) {
+					this.$logger.warn(
+						`${
+							hook.fullPath
+						} will NOT be executed because it has invalid arguments - ${color.grey(
+							invalidArguments.join(", "),
+						)}.`,
+					);
+					return;
 				}
 
-				this.$logger.trace("Hook completed");
+				// HACK for backwards compatibility:
+				// In case $projectData wasn't resolved by the time we got here (most likely we got here without running a command but through a service directly)
+				// then it is probably passed as a hookArg
+				// if that is the case then pass it directly to the hook instead of trying to resolve $projectData via injector
+				// This helps make hooks stateless
+				const projectDataHookArg =
+					hookArguments["hookArgs"] && hookArguments["hookArgs"]["projectData"];
+				if (projectDataHookArg) {
+					hookArguments["projectData"] = hookArguments["$projectData"] =
+						projectDataHookArg;
+				}
+
+				// Only param-name *service* injection is on the deprecation track; a
+				// hook declaring nothing but `hookArgs` (or no parameters) already
+				// follows the recommended pattern and must not be flagged.
+				const usesParamNameInjection = (<string[]>(
+					hookEntryPoint.$inject.args
+				)).some((argument) => argument !== this.hookArgsName);
+				if (usesParamNameInjection) {
+					reportDeprecation({
+						api: "hooks.param-name-signature",
+						detail: hook.fullPath,
+						logger: this.$logger,
+					});
+				}
+
+				const maybePromise = this.$injector.resolve(
+					hookEntryPoint,
+					hookArguments,
+				);
+				if (maybePromise) {
+					this.$logger.trace("Hook promises to signal completion");
+					try {
+						result = await maybePromise;
+					} catch (err) {
+						if (
+							err &&
+							_.isBoolean(err.stopExecution) &&
+							err.errorAsWarning === true
+						) {
+							this.$logger.warn(err.message || err);
+						} else {
+							// Print the actual error with its callstack, so it is easy to find out which hooks is causing troubles.
+							this.$logger.error(err);
+							throw (
+								err || new Error(`Failed to execute hook: ${hook.fullPath}.`)
+							);
+						}
+					}
+
+					this.$logger.trace("Hook completed");
+				}
 			}
 		} else {
 			const environment = this.prepareEnvironment(hook.fullPath);
@@ -333,10 +372,62 @@ export class HooksService implements IHooksService {
 		return result;
 	}
 
+	private async executeHookDefinition(
+		definition: HookDefinition,
+		hookName: string,
+		hook: IHook,
+		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
+	): Promise<HookMiddleware[] | undefined> {
+		// The name decides when a hook fires, so a disagreeing one is a mistake
+		// with no safe reading — running it anyway would fire it at a point its
+		// author never wrote it for.
+		if (definition.name !== hookName) {
+			this.$logger.warn(
+				`${hook.fullPath} will NOT be executed: it defines the "${definition.name}" hook but is placed at the "${hookName}" hook point.`,
+			);
+			return;
+		}
+
+		const { context, middlewares } = createHookInvocation(hookArguments, {
+			hookName,
+			consumesMiddlewares,
+		});
+
+		try {
+			const returnedValue = await runInInjectionContext(this.$injector, () =>
+				definition.run(context),
+			);
+
+			if (typeof returnedValue === "function") {
+				this.$logger.warn(
+					`${hook.fullPath} returned a function. Returning a middleware is the legacy convention and is ignored for hook definitions — use ctx.wrap() instead.`,
+				);
+			}
+		} catch (err) {
+			if (
+				err &&
+				_.isBoolean(err.stopExecution) &&
+				err.errorAsWarning === true
+			) {
+				this.$logger.warn(err.message || err);
+			} else {
+				// Print the actual error with its callstack, so it is easy to find out which hooks is causing troubles.
+				this.$logger.error(err);
+				throw err || new Error(`Failed to execute hook: ${hook.fullPath}.`);
+			}
+		}
+
+		this.$logger.trace("Hook completed");
+
+		return middlewares.length ? middlewares : undefined;
+	}
+
 	private async executeHooksInDirectory(
 		directoryPath: string,
 		hookName: string,
-		hookArguments?: IDictionary<any>,
+		hookArguments: IDictionary<any>,
+		consumesMiddlewares: boolean,
 	): Promise<any[]> {
 		hookArguments = hookArguments || {};
 		const results: any[] = [];
@@ -349,6 +440,7 @@ export class HooksService implements IHooksService {
 				hookName,
 				hook,
 				hookArguments,
+				consumesMiddlewares,
 			);
 
 			if (result) {
@@ -356,7 +448,10 @@ export class HooksService implements IHooksService {
 			}
 		}
 
-		return results;
+		// executeHooks flattens the per-directory results exactly once, so a hook
+		// returning several middlewares must contribute them individually or they
+		// stay nested one level too deep for decorateMethod's function filter.
+		return _.flatten(results);
 	}
 
 	private getCustomHooksByName(hookName: string): IHook[] {

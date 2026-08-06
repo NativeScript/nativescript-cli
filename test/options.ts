@@ -137,6 +137,24 @@ describe("options", () => {
 			assert.isTrue(isExecutionStopped);
 		});
 
+		it("breaks execution when the timeout option has no value", () => {
+			process.argv.push("--timeout");
+			const options = createOptions(testInjector);
+			options.validateOptions();
+			process.argv.pop();
+			assert.isTrue(isExecutionStopped);
+		});
+
+		it("does not break execution when the timeout option has a value", () => {
+			process.argv.push("--timeout");
+			process.argv.push("500");
+			const options = createOptions(testInjector);
+			options.validateOptions();
+			process.argv.pop();
+			process.argv.pop();
+			assert.isFalse(isExecutionStopped);
+		});
+
 		it("breaks execution when valid option has value with spaces only", () => {
 			process.argv.push("--path");
 			process.argv.push("  ");
@@ -225,9 +243,11 @@ describe("options", () => {
 		});
 
 		it("breaks execution when valid array option has value with length 0", () => {
-			process.argv.push("--config");
+			process.argv.push("--test1");
 			const options = createOptions(testInjector);
-			options.validateOptions();
+			options.validateOptions({
+				test1: { type: OptionType.Array, hasSensitiveValue: false },
+			});
 			process.argv.pop();
 			assert.isTrue(isExecutionStopped);
 		});
