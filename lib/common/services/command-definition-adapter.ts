@@ -203,6 +203,26 @@ export function createCommandFromDefinition<
 	};
 }
 
+/**
+ * Registers a definition under an externally chosen command name. Extension
+ * manifests route by their own key, which need not be the definition's own
+ * name, so the name is a parameter rather than read off the definition.
+ */
+export function registerDefinitionAs<TSchema extends CommandOptionsSchema>(
+	name: string,
+	definition: DefinedCommand<TSchema>,
+	targetInjector: IInjector = injector,
+): void {
+	// The registry facet rather than the injector itself, so a child injector
+	// that provides its own CommandRegistry receives the registration.
+	const registry = targetInjector.get(CommandRegistry);
+	// A prototype-less zero-parameter function registers as a useFactory
+	// provider, so the command is built on first resolution and cached.
+	registry.registerCommand(name, () =>
+		createCommandFromDefinition(definition, targetInjector),
+	);
+}
+
 export function registerCommandDefinition<TSchema extends CommandOptionsSchema>(
 	definition: DefinedCommand<TSchema>,
 	targetInjector: IInjector = injector,
@@ -214,18 +234,11 @@ export function registerCommandDefinition<TSchema extends CommandOptionsSchema>(
 		);
 	}
 
-	// The registry facet rather than the injector itself, so a child injector
-	// that provides its own CommandRegistry receives the registration.
-	const registry = targetInjector.get(CommandRegistry);
 	const names = Array.isArray(definition.name)
 		? definition.name
 		: [definition.name];
 
 	for (const name of names) {
-		// A prototype-less zero-parameter function registers as a useFactory
-		// provider, so the command is built on first resolution and cached.
-		registry.registerCommand(name, () =>
-			createCommandFromDefinition(definition, targetInjector),
-		);
+		registerDefinitionAs(name, definition, targetInjector);
 	}
 }

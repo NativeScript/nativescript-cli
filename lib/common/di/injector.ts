@@ -2,7 +2,12 @@ import { annotate } from "../helpers";
 import { getContractName } from "./contract";
 import { resolveForwardRef } from "./forward-ref";
 import { runInInjectionContext } from "./inject";
-import type { Provider, ProviderToken, Type } from "./providers";
+import type {
+	InternalProvider,
+	Provider,
+	ProviderToken,
+	Type,
+} from "./providers";
 
 type TokenKey = string | Function;
 
@@ -131,7 +136,7 @@ export class Injector {
 	}
 
 	/** Merge-mutate: re-registering a key updates the existing record in place. */
-	public register(providers: Provider | Provider[]): void {
+	public register(providers: InternalProvider | InternalProvider[]): void {
 		const list = Array.isArray(providers) ? providers : [providers];
 		for (const provider of list) {
 			const keys = this.keysFor(provider.provide);
@@ -170,6 +175,16 @@ export class Injector {
 
 	public has(token: ProviderToken): boolean {
 		return !!this.findRecord(token);
+	}
+
+	/**
+	 * Whether the token can actually produce a value. A record carrying only a
+	 * pending loader answers `has()` but resolves to an error, so the deferred
+	 * paths use this to tell "loaded and registered" from "loaded and silent".
+	 */
+	protected hasResolver(token: ProviderToken): boolean {
+		const found = this.findRecord(token);
+		return !!found && found.record.kind !== undefined;
 	}
 
 	/** First cached instance for a token, without triggering construction. */
@@ -230,7 +245,10 @@ export class Injector {
 		return name !== undefined ? [token, name] : [token];
 	}
 
-	private applyProvider(record: IProviderRecord, provider: Provider): void {
+	private applyProvider(
+		record: IProviderRecord,
+		provider: InternalProvider,
+	): void {
 		record.shared = provider.shared === undefined ? true : provider.shared;
 
 		if ("useLazyRequire" in provider) {

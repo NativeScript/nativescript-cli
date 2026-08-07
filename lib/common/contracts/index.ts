@@ -5,6 +5,11 @@
 // physically extracted — at which point the provider is swapped and consumers
 // keep working unchanged.
 export { CommandRegistry } from "./command-registry";
+export type {
+	DeferredCommandOptions,
+	DeferredCommandRejection,
+	DeferredCommandResult,
+} from "./command-registry";
 export { KeyCommandRegistry } from "./key-command-registry";
 export { ModuleRegistry } from "./module-registry";
 export { PublicApiBuilder } from "./public-api-builder";

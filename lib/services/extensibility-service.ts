@@ -6,6 +6,7 @@ import { createRegExp, regExpEscape } from "../common/helpers";
 import { reportDeprecation } from "../common/deprecation";
 import { INodePackageManager, INpmsSingleResultData } from "../declarations";
 import {
+	IDictionary,
 	IFileSystem,
 	ISettingsService,
 	IStringDictionary,
@@ -18,9 +19,86 @@ import {
 	IGetExtensionCommandInfoParams,
 } from "../common/definitions/extensibility";
 import { injector } from "../common/yok";
+import { IInjector } from "../common/definitions/yok";
+import { CommandsDelimiters } from "../common/constants";
+import { inject } from "../common/di/inject";
+import { CommandRegistry } from "../common/contracts";
+import type { DeferredCommandRejection } from "../common/contracts";
+import { DefinedCommand, isCommandDefinition } from "../common/define-command";
+import { registerDefinitionAs } from "../common/services/command-definition-adapter";
+
+function isNonEmptyString(value: any): boolean {
+	return typeof value === "string" && value.trim().length > 0;
+}
+
+function isCommandsMap(commands: any): boolean {
+	return !!commands && typeof commands === "object" && !Array.isArray(commands);
+}
+
+/**
+ * A manifest entry is either the module path or an envelope carrying it under
+ * `path`. Unknown envelope keys are ignored on purpose: a CLI released today
+ * must keep loading manifests that grow new keys tomorrow.
+ */
+function getEntryModulePath(value: any): string {
+	if (isNonEmptyString(value)) {
+		return value;
+	}
+
+	if (
+		value &&
+		typeof value === "object" &&
+		!Array.isArray(value) &&
+		isNonEmptyString(value.path)
+	) {
+		return value.path;
+	}
+
+	return null;
+}
+
+const isDefaultCommandName = (name: string): boolean =>
+	name.indexOf(CommandsDelimiters.DefaultHierarchicalCommand) !== -1;
+
+function describeRejection(rejection: DeferredCommandRejection): string {
+	switch (rejection.reason) {
+		case "invalid-name":
+			return rejection.detail;
+		case "claimed":
+			return `it is already registered by extension ${rejection.owner}`;
+		case "built-in":
+			return "it is already provided by the CLI";
+		case "subcommand-parent":
+			return "it is already in use as the parent of its subcommands";
+		case "parent-is-command":
+			return `'${rejection.parent}' is already registered as a command of its own, so the subcommand could never be reached`;
+	}
+}
+
+/**
+ * Reads the names of the commands an extension contributes out of either shape
+ * of `nativescript.commands` - the legacy array of names, or the map of name to
+ * module path.
+ */
+function getDeclaredCommandNames(
+	commands: any,
+	opts?: { copy: boolean },
+): string[] {
+	if (Array.isArray(commands)) {
+		return opts && opts.copy ? commands.slice() : commands;
+	}
+
+	if (isCommandsMap(commands)) {
+		return _.keys(commands);
+	}
+
+	return null;
+}
 
 export class ExtensibilityService implements IExtensibilityService {
 	private customPathToExtensions: string = null;
+
+	private commandRegistry = inject(CommandRegistry);
 
 	private get pathToPackageJson(): string {
 		return path.join(this.pathToExtensions, constants.PACKAGE_JSON_FILE_NAME);
@@ -43,6 +121,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		private $packageManager: INodePackageManager,
 		private $settingsService: ISettingsService,
 		private $requireService: IRequireService,
+		private $injector: IInjector,
 	) {}
 
 	public async installExtension(
@@ -132,12 +211,23 @@ export class ExtensibilityService implements IExtensibilityService {
 			packageJsonData.nativescript &&
 			packageJsonData.nativescript.docs &&
 			path.join(pathToExtension, packageJsonData.nativescript.docs);
-		return {
+		const result: IExtensionData = {
 			extensionName: packageJsonData.name,
 			version: packageJsonData.version,
 			docs,
 			pathToExtension,
 		};
+
+		const commands = getDeclaredCommandNames(
+			packageJsonData &&
+				packageJsonData.nativescript &&
+				packageJsonData.nativescript.commands,
+		);
+		if (commands) {
+			result.commands = commands;
+		}
+
+		return result;
 	}
 
 	public async loadExtension(extensionName: string): Promise<IExtensionData> {
@@ -145,12 +235,23 @@ export class ExtensibilityService implements IExtensibilityService {
 			await this.assertExtensionIsInstalled(extensionName);
 
 			const pathToExtension = this.getPathToExtension(extensionName);
-			reportDeprecation({
-				api: "extensions.require-time-registration",
-				detail: extensionName,
-				logger: this.$logger,
-			});
-			this.$requireService.require(pathToExtension);
+			const commandsMap = this.getDeclaredCommandsMap(extensionName);
+
+			if (commandsMap) {
+				this.registerDeclaredCommands(
+					extensionName,
+					pathToExtension,
+					commandsMap,
+				);
+			} else {
+				reportDeprecation({
+					api: "extensions.require-time-registration",
+					detail: extensionName,
+					logger: this.$logger,
+				});
+				this.$requireService.require(pathToExtension);
+			}
+
 			return this.getInstalledExtensionData(extensionName);
 		} catch (error) {
 			this.$logger.warn(
@@ -200,10 +301,13 @@ export class ExtensibilityService implements IExtensibilityService {
 					await this.$packageManager.getRegistryPackageData(extensionName);
 				const latestPackageData =
 					registryData.versions[registryData["dist-tags"].latest];
-				const commands: string[] =
+				const commands = getDeclaredCommandNames(
 					latestPackageData &&
-					latestPackageData.nativescript &&
-					latestPackageData.nativescript.commands;
+						latestPackageData.nativescript &&
+						latestPackageData.nativescript.commands,
+					// The |* synthesis below pushes into this array.
+					{ copy: true },
+				);
 				if (commands && commands.length) {
 					// For each default command we need to add its short syntax in the array of commands.
 					// For example in case there's a default command called devices list, the commands array will contain devices|*list.
@@ -247,6 +351,131 @@ export class ExtensibilityService implements IExtensibilityService {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns the `nativescript.commands` value of an extension only when it is a
+	 * map of command name to module. Any other shape (the legacy array of
+	 * command names, a missing key, an unreadable package.json) yields null and
+	 * keeps the extension on the eager require path.
+	 */
+	private getDeclaredCommandsMap(extensionName: string): IDictionary<any> {
+		let commands: any;
+
+		try {
+			const packageJsonData = this.getExtensionPackageJsonData(extensionName);
+			commands =
+				packageJsonData &&
+				packageJsonData.nativescript &&
+				packageJsonData.nativescript.commands;
+		} catch (err) {
+			this.$logger.trace(
+				`Unable to read the package.json of extension ${extensionName}. Error is: ${err}`,
+			);
+			return null;
+		}
+
+		return isCommandsMap(commands) ? commands : null;
+	}
+
+	/**
+	 * Registers each declared command as a deferred load of its own module, so
+	 * nothing from the extension is loaded until one of its commands is executed.
+	 * A module may either register itself on load (a legacy-style
+	 * `$injector.registerCommand(<name>, <class>)` at the top level) or export a
+	 * `defineCommand` definition, which the deferred loader adapts and registers
+	 * under the manifest key.
+	 */
+	private registerDeclaredCommands(
+		extensionName: string,
+		pathToExtension: string,
+		commands: IDictionary<any>,
+	): void {
+		// Manifest key order carries no meaning, so a parent's default command is
+		// registered before its siblings rather than wherever the author put it.
+		const commandNames = _.sortBy(_.keys(commands), (commandName) =>
+			isDefaultCommandName(commandName) ? 0 : 1,
+		);
+
+		for (const commandName of commandNames) {
+			const modulePath = getEntryModulePath(commands[commandName]);
+
+			if (!isNonEmptyString(commandName) || !modulePath) {
+				this.$logger.warn(
+					`Extension ${extensionName} declares an invalid command in its nativescript.commands: '${commandName}': ${JSON.stringify(
+						commands[commandName],
+					)}. The command name must be a non-empty string and its value either the path to its module or an object with a non-empty 'path'. Skipping this command.`,
+				);
+				continue;
+			}
+
+			const absoluteModulePath = path.join(pathToExtension, modulePath);
+			const result = this.commandRegistry.registerDeferredCommand(commandName, {
+				owner: extensionName,
+				source: absoluteModulePath,
+				load: () =>
+					this.loadDeclaredCommand(
+						extensionName,
+						commandName,
+						absoluteModulePath,
+					),
+			});
+
+			if (!result.registered) {
+				this.$logger.warn(
+					`Extension ${extensionName} is unable to register command '${commandName}': ${describeRejection(
+						result.rejection,
+					)}.`,
+				);
+			}
+		}
+	}
+
+	/**
+	 * Runs on the first resolution of one declared command. Definition modules
+	 * are registered here rather than by the module itself, which is what lets
+	 * the manifest key stay authoritative for routing.
+	 */
+	private loadDeclaredCommand(
+		extensionName: string,
+		commandName: string,
+		absoluteModulePath: string,
+	): void {
+		const exported = require(absoluteModulePath);
+		const candidate = (exported && exported.default) ?? exported;
+
+		if (!isCommandDefinition(candidate)) {
+			return;
+		}
+
+		this.warnOnDeclaredNameMismatch(
+			extensionName,
+			commandName,
+			absoluteModulePath,
+			candidate,
+		);
+		registerDefinitionAs(commandName, candidate, this.$injector);
+	}
+
+	private warnOnDeclaredNameMismatch(
+		extensionName: string,
+		commandName: string,
+		absoluteModulePath: string,
+		definition: DefinedCommand<any>,
+	): void {
+		const declaredNames = Array.isArray(definition.name)
+			? definition.name
+			: [definition.name];
+
+		if (_.includes(declaredNames, commandName)) {
+			return;
+		}
+
+		this.$logger.warn(
+			`Extension ${extensionName} declares command '${commandName}' in its package.json, but the definition in ${absoluteModulePath} names itself '${declaredNames.join(
+				"', '",
+			)}'. The command runs as '${commandName}' - the manifest decides how it is invoked.`,
+		);
 	}
 
 	private getPathToExtension(extensionName: string): string {
