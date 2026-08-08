@@ -211,8 +211,8 @@ injector.requireCommand("dev-test|android", "./commands/test");
 injector.requireCommand("dev-test|ios", "./commands/test");
 injector.requireCommand("test|android", "./commands/test");
 injector.requireCommand("test|ios", "./commands/test");
-// injector.requireCommand("test|vision", "./commands/test");
-// injector.requireCommand("test|visionos", "./commands/test");
+injector.requireCommand("test|vision", "./commands/test");
+injector.requireCommand("test|visionos", "./commands/test");
 injector.requireCommand("test|init", "./commands/test-init");
 injector.requireCommand("dev-generate-help", "./commands/generate-help");
 

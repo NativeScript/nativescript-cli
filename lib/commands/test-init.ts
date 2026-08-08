@@ -345,7 +345,7 @@ class TestInitCommand implements ICommand {
 		const closingNotes = isVitest
 			? [
 					color.yellow(
-						`Note: emulator/simulator test runs connect over the local loopback. When testing on a physical Android device, keep it connected over USB (adb reverse is set up automatically); for a physical iOS device, pass a reachable 'url' to the coordinator in your test entry.`,
+						`Note: emulator/simulator test runs connect over the local loopback. When testing on a physical Android device, keep it connected over USB (adb reverse is set up automatically); for a physical iOS or visionOS device, pass a reachable 'url' to the coordinator in your test entry.`,
 					),
 					"",
 					"",
@@ -353,6 +353,7 @@ class TestInitCommand implements ICommand {
 					"",
 					`  ${greyDollarSign} ${color.green("ns test ios")}`,
 					`  ${greyDollarSign} ${color.green("ns test android")}`,
+					`  ${greyDollarSign} ${color.green("ns test visionos")}`,
 					"",
 					`or directly through Vitest (editor extensions, CI):`,
 					"",
