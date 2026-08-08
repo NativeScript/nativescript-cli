@@ -3,7 +3,11 @@ import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 } from "../constants";
-import { IProjectData, ITestExecutionService } from "../definitions/project";
+import {
+	IProjectData,
+	ITestExecutionService,
+	IVitestExecutionService,
+} from "../definitions/project";
 import { IOptions } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import { IMigrateController } from "../definitions/migrate";
@@ -26,6 +30,7 @@ abstract class TestCommandBase {
 	protected abstract platform: string;
 	protected abstract $projectData: IProjectData;
 	protected abstract $testExecutionService: ITestExecutionService;
+	protected abstract $vitestExecutionService: IVitestExecutionService;
 	protected abstract $analyticsService: IAnalyticsService;
 	protected abstract $options: IOptions;
 	protected abstract $platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
@@ -34,8 +39,22 @@ abstract class TestCommandBase {
 	protected abstract $liveSyncCommandHelper: ILiveSyncCommandHelper;
 	protected abstract $devicesService: Mobile.IDevicesService;
 	protected abstract $migrateController: IMigrateController;
+	protected abstract $logger: ILogger;
 
 	public async execute(args: string[]): Promise<void> {
+		if (this.$vitestExecutionService.isVitestProject(this.$projectData)) {
+			await this.$vitestExecutionService.startTestRun(
+				this.platform,
+				this.$projectData,
+			);
+			process.exit(0);
+		}
+
+		this.$logger.warn(
+			"Karma-based unit testing is deprecated and will be removed in a future release. " +
+				"Re-initialize your tests with '$ ns test init --framework vitest' to migrate.",
+		);
+
 		let devices = [];
 		if (this.$options.debugBrk) {
 			await this.$devicesService.initialize({
@@ -124,6 +143,20 @@ abstract class TestCommandBase {
 				options: this.$options,
 			});
 
+		if (this.$vitestExecutionService.isVitestProject(this.$projectData)) {
+			const canStartTestRun = this.$vitestExecutionService.canStartTestRun(
+				this.$projectData,
+			);
+			if (!canStartTestRun) {
+				this.$errors.fail({
+					formatStr:
+						"Error: In order to run unit tests, your project must already be configured by running $ ns test init.",
+					errorCode: ErrorCodes.TESTS_INIT_REQUIRED,
+				});
+			}
+			return output.canExecute && canStartTestRun;
+		}
+
 		const canStartKarmaServer =
 			await this.$testExecutionService.canStartKarmaServer(this.$projectData);
 		if (!canStartKarmaServer) {
@@ -144,6 +177,7 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 	constructor(
 		protected $projectData: IProjectData,
 		protected $testExecutionService: ITestExecutionService,
+		protected $vitestExecutionService: IVitestExecutionService,
 		protected $analyticsService: IAnalyticsService,
 		protected $options: IOptions,
 		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
@@ -152,6 +186,7 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		protected $devicesService: Mobile.IDevicesService,
 		protected $migrateController: IMigrateController,
+		protected $logger: ILogger,
 	) {
 		super();
 	}
@@ -185,6 +220,7 @@ class TestIosCommand extends TestCommandBase implements ICommand {
 	constructor(
 		protected $projectData: IProjectData,
 		protected $testExecutionService: ITestExecutionService,
+		protected $vitestExecutionService: IVitestExecutionService,
 		protected $analyticsService: IAnalyticsService,
 		protected $options: IOptions,
 		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
@@ -193,6 +229,7 @@ class TestIosCommand extends TestCommandBase implements ICommand {
 		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		protected $devicesService: Mobile.IDevicesService,
 		protected $migrateController: IMigrateController,
+		protected $logger: ILogger,
 	) {
 		super();
 	}

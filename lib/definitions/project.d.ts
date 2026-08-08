@@ -683,6 +683,12 @@ interface ITestExecutionService {
 	canStartKarmaServer(projectData: IProjectData): Promise<boolean>;
 }
 
+interface IVitestExecutionService {
+	isVitestProject(projectData: IProjectData): boolean;
+	canStartTestRun(projectData: IProjectData): boolean;
+	startTestRun(platform: string, projectData: IProjectData): Promise<void>;
+}
+
 interface ITestInitializationService {
 	getDependencies(framework: string): IDependencyInformation[];
 	getFrameworkNames(): string[];

@@ -203,6 +203,10 @@ injector.requireCommand("deploy", "./commands/deploy");
 injector.requireCommand("embed", "./commands/embedding/embed");
 
 injector.require("testExecutionService", "./services/test-execution-service");
+injector.require(
+	"vitestExecutionService",
+	"./services/vitest-execution-service",
+);
 injector.requireCommand("dev-test|android", "./commands/test");
 injector.requireCommand("dev-test|ios", "./commands/test");
 injector.requireCommand("test|android", "./commands/test");
