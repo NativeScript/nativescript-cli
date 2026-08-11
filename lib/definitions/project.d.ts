@@ -448,9 +448,15 @@ interface IProjectConfigInformation {
 interface IProjectConfigService {
 	/**
 	 * read the nativescript.config.(js|ts) file
+	 * @param options.suppressWarnings pass when reading a config that is not
+	 * the user's project (e.g. a plugin package, which may legitimately ship
+	 * compiled .js artifacts next to its .ts config)
 	 * @returns {INsConfig} the parsed config data
 	 */
-	readConfig(projectDir?: string): INsConfig;
+	readConfig(
+		projectDir?: string,
+		options?: { suppressWarnings?: boolean },
+	): INsConfig;
 	/**
 	 * Get value for a given config key path
 	 * @param key the property key path
@@ -479,7 +485,10 @@ interface IProjectConfigService {
 	 */
 	setForceUsingLegacyConfig(force: boolean): boolean;
 
-	detectProjectConfigs(projectDir?: string): IProjectConfigInformation;
+	detectProjectConfigs(
+		projectDir?: string,
+		options?: { suppressWarnings?: boolean },
+	): IProjectConfigInformation;
 
 	getDefaultTSConfig(appId: string, appPath: string): string;
 
