@@ -184,7 +184,7 @@ export class AddPlatformService implements IAddPlatformService {
 		frameworkDirPath: string,
 		frameworkVersion: string
 	): Promise<void> {
-		// projectRoot already accounts for hostProjectPath and platforms/macos.
+		// projectRoot already accounts for hostProjectPath and platforms/catalyst.
 		this.$fs.deleteDirectory(platformData.projectRoot);
 		//if iosHost - dont create project
 		await platformData.platformProjectService.createProject(

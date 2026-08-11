@@ -81,7 +81,7 @@ const getPlatformSdkName = (buildData: IBuildData): string => {
 
 	if (
 		buildData &&
-		injector.resolve("devicePlatformsConstants").ismacOS(buildData.platform)
+		injector.resolve("devicePlatformsConstants").isCatalyst(buildData.platform)
 	) {
 		return CatalystPlatformSdkName;
 	}
@@ -167,7 +167,7 @@ export class IOSProjectService
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
 			);
 			// Mac Catalyst keeps every iOS convention; only the platform root differs.
-			const platform = this.$mobileHelper.ismacOSPlatform(requestedPlatform)
+			const platform = this.$mobileHelper.isCatalystPlatform(requestedPlatform)
 				? this.$devicePlatformsConstants.iOS
 				: requestedPlatform;
 			const projectRoot = this.$options.hostProjectPath
@@ -201,7 +201,7 @@ export class IOSProjectService
 				): IValidBuildOutputData => {
 					// Mac Catalyst produces a .app, never an .ipa.
 					const forDevice =
-						!this.$mobileHelper.ismacOSPlatform(requestedPlatform) &&
+						!this.$mobileHelper.isCatalystPlatform(requestedPlatform) &&
 						(!buildOptions ||
 							!!buildOptions.buildForDevice ||
 							!!buildOptions.buildForAppStore);
@@ -469,7 +469,7 @@ export class IOSProjectService
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
-		if (this.$devicePlatformsConstants.ismacOS(buildData.platform)) {
+		if (this.$devicePlatformsConstants.isCatalyst(buildData.platform)) {
 			// Signing is handled by `-allowProvisioningUpdates`: Mac Catalyst needs a
 			// macOS provisioning profile, which the iOS signing service cannot pick.
 			await attachAwaitDetach(

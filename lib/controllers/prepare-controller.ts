@@ -97,7 +97,7 @@ export class PrepareController extends EventEmitter {
 		return this.prepareCore(prepareData, projectData);
 	}
 
-	// Catalyst reports iOS in platform data, but events must say macos.
+	// Catalyst reports iOS in platform data, but events must say catalyst.
 	private getRequestedPlatform(prepareData: IPrepareData): string {
 		return prepareData.platform.toLowerCase();
 	}

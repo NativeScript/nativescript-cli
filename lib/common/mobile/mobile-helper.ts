@@ -21,7 +21,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			this.$devicePlatformsConstants.iOS,
 			this.$devicePlatformsConstants.Android,
 			this.$devicePlatformsConstants.visionOS,
-			this.$devicePlatformsConstants.macOS,
+			this.$devicePlatformsConstants.Catalyst,
 		];
 	}
 
@@ -49,10 +49,10 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		);
 	}
 
-	public ismacOSPlatform(platform: string): boolean {
+	public isCatalystPlatform(platform: string): boolean {
 		return !!(
 			platform &&
-			this.$devicePlatformsConstants.macOS.toLowerCase() ===
+			this.$devicePlatformsConstants.Catalyst.toLowerCase() ===
 				platform.toLowerCase()
 		);
 	}
@@ -61,7 +61,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		return (
 			this.isiOSPlatform(platform) ||
 			this.isvisionOSPlatform(platform) ||
-			this.ismacOSPlatform(platform)
+			this.isCatalystPlatform(platform)
 		);
 	}
 
@@ -72,8 +72,8 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			return "iOS";
 		} else if (this.isvisionOSPlatform(platform)) {
 			return "visionOS";
-		} else if (this.ismacOSPlatform(platform)) {
-			return "macOS";
+		} else if (this.isCatalystPlatform(platform)) {
+			return "Catalyst";
 		}
 
 		return undefined;

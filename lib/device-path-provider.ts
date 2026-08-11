@@ -17,7 +17,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 		options: IDeviceProjectRootOptions
 	): Promise<string> {
 		let projectRoot = "";
-		if (this.$mobileHelper.ismacOSPlatform(device.deviceInfo.platform)) {
+		if (this.$mobileHelper.isCatalystPlatform(device.deviceInfo.platform)) {
 			projectRoot = (<Mobile.IMacCatalystDevice>device).applicationBundlePath;
 			if (!projectRoot) {
 				this.$errors.fail("Unable to get application path on device.");

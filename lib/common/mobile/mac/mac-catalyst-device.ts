@@ -42,7 +42,7 @@ export class MacCatalystDevice implements Mobile.IMacCatalystDevice {
 			model: "Mac",
 			version: os.release(),
 			vendor: "Apple",
-			platform: this.$devicePlatformsConstants.macOS,
+			platform: this.$devicePlatformsConstants.Catalyst,
 			status: constants.CONNECTED_STATUS,
 			errorHelp: null,
 			isTablet: false,
@@ -81,7 +81,7 @@ export class MacCatalystDevice implements Mobile.IMacCatalystDevice {
 
 	private getBuiltApplicationBundlePath(): string {
 		const projectData = this.$projectDataService.getProjectData();
-		const platform = this.$devicePlatformsConstants.macOS;
+		const platform = this.$devicePlatformsConstants.Catalyst;
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform.toLowerCase(),
 			projectData,

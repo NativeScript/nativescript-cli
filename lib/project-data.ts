@@ -326,7 +326,7 @@ export class ProjectData implements IProjectData {
 				ios: "",
 				android: "",
 				visionos: "",
-				macos: "",
+				catalyst: "",
 			};
 		}
 
@@ -335,7 +335,7 @@ export class ProjectData implements IProjectData {
 			android: config.id,
 			visionos: config.id,
 			// Mac Catalyst ships under the iOS bundle identifier by default.
-			macos: config.id,
+			catalyst: config.id,
 		};
 
 		if (config.ios && config.ios.id) {
@@ -348,10 +348,10 @@ export class ProjectData implements IProjectData {
 			identifier.visionos = config.visionos.id;
 		}
 		if (config.ios && config.ios.id) {
-			identifier.macos = config.ios.id;
+			identifier.catalyst = config.ios.id;
 		}
-		if (config.macos && config.macos.id) {
-			identifier.macos = config.macos.id;
+		if (config.catalyst && config.catalyst.id) {
+			identifier.catalyst = config.catalyst.id;
 		}
 
 		return identifier;

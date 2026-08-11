@@ -26,7 +26,7 @@ export class MacCatalystDeviceDiscovery extends DeviceDiscovery {
 		if (
 			!options ||
 			!options.platform ||
-			!this.$mobileHelper.ismacOSPlatform(options.platform)
+			!this.$mobileHelper.isCatalystPlatform(options.platform)
 		) {
 			return;
 		}

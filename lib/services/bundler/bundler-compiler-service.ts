@@ -579,8 +579,8 @@ export class BundlerCompilerService
 					this.$options.hostProjectModuleName,
 				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
 			});
-		} else if (this.$mobileHelper.ismacOSPlatform(prepareData.platform)) {
-			// Bundler hardcodes platforms/ios; Catalyst prepares into platforms/macos.
+		} else if (this.$mobileHelper.isCatalystPlatform(prepareData.platform)) {
+			// Bundler hardcodes platforms/ios; Catalyst prepares into platforms/catalyst.
 			Object.assign(options.env, {
 				USER_PROJECT_PLATFORMS_IOS: platformData.projectRoot,
 			});

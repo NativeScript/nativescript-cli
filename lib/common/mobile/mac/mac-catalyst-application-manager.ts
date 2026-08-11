@@ -134,7 +134,7 @@ export class MacCatalystApplicationManager extends ApplicationManagerBase {
 		const action = (data: Buffer | string) => {
 			this.$deviceLogProvider.logData(
 				data.toString(),
-				this.$devicePlatformsConstants.macOS,
+				this.$devicePlatformsConstants.Catalyst,
 				this.device.deviceInfo.identifier,
 			);
 		};

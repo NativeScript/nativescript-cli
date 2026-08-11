@@ -188,7 +188,7 @@ export class PlatformController implements IPlatformController {
 		projectData: IProjectData,
 		nativePrepare: INativePrepare
 	): boolean {
-		// Mac Catalyst reports iOS but prepares into platforms/macos.
+		// Mac Catalyst reports iOS but prepares into platforms/catalyst.
 		const platformDirectory = platformData.projectRoot;
 		const platformName = path.basename(platformDirectory);
 		const hasPlatformDirectory = this.$fs.exists(platformDirectory);

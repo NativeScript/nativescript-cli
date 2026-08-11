@@ -282,7 +282,7 @@ injector.registerCommand("build|visionos", BuildVisionOsCommand);
 /**
  * Builds the iOS target against the macOS SDK as a Mac Catalyst app.
  */
-export class BuildMacOsCommand extends BuildIosCommand implements ICommand {
+export class BuildCatalystCommand extends BuildIosCommand implements ICommand {
 	constructor(
 		protected $options: IOptions,
 		$errors: IErrors,
@@ -311,12 +311,12 @@ export class BuildMacOsCommand extends BuildIosCommand implements ICommand {
 
 	public async execute(args: string[]): Promise<void> {
 		await this.executeCore([
-			this.$devicePlatformsConstants.macOS.toLowerCase(),
+			this.$devicePlatformsConstants.Catalyst.toLowerCase(),
 		]);
 	}
 
 	public async canExecute(args: string[]): Promise<boolean> {
-		const platform = this.$devicePlatformsConstants.macOS;
+		const platform = this.$devicePlatformsConstants.Catalyst;
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
 				projectDir: this.$projectData.projectDir,
@@ -335,4 +335,4 @@ export class BuildMacOsCommand extends BuildIosCommand implements ICommand {
 	}
 }
 
-injector.registerCommand("build|macos", BuildMacOsCommand);
+injector.registerCommand("build|catalyst", BuildCatalystCommand);
