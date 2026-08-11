@@ -17,6 +17,21 @@ export class DevicePathProvider implements IDevicePathProvider {
 		options: IDeviceProjectRootOptions
 	): Promise<string> {
 		let projectRoot = "";
+		if (this.$mobileHelper.ismacOSPlatform(device.deviceInfo.platform)) {
+			projectRoot = (<Mobile.IMacCatalystDevice>device).applicationBundlePath;
+			if (!projectRoot) {
+				this.$errors.fail("Unable to get application path on device.");
+			}
+
+			// Catalyst keeps its payload under Contents/Resources, not the bundle root.
+			projectRoot = path.join(projectRoot, "Contents", "Resources");
+			if (!options.getDirname) {
+				projectRoot = path.join(projectRoot, APP_FOLDER_NAME);
+			}
+
+			return projectRoot;
+		}
+
 		if (this.$mobileHelper.isApplePlatform(device.deviceInfo.platform)) {
 			projectRoot = device.isEmulator
 				? await this.$iOSSimResolver.iOSSim.getApplicationPath(

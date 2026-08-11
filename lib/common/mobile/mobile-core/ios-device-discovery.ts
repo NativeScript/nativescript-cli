@@ -23,6 +23,8 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 			options &&
 			options.platform &&
 			(!this.$mobileHelper.isApplePlatform(options.platform) ||
+				// macOS runs on this machine, not over usbmux.
+				this.$mobileHelper.ismacOSPlatform(options.platform) ||
 				options.emulator)
 		) {
 			return;

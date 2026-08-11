@@ -360,12 +360,14 @@ export const enum PlatformTypes {
 	ios = "ios",
 	android = "android",
 	visionos = "visionos",
+	macos = "macos",
 }
 
 export type SupportedPlatform =
 	| PlatformTypes.ios
 	| PlatformTypes.android
-	| PlatformTypes.visionos;
+	| PlatformTypes.visionos
+	| PlatformTypes.macos;
 
 export const PODFILE_NAME = "Podfile";
 

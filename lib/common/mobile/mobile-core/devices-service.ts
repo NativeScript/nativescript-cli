@@ -56,6 +56,7 @@ export class DevicesService
 		private $emulatorHelper: Mobile.IEmulatorHelper,
 		private $prompter: IPrompter,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $macCatalystDeviceDiscovery: Mobile.IDeviceDiscovery,
 	) {
 		super();
 		this.attachToKnownDeviceDiscoveryEvents();
@@ -64,6 +65,7 @@ export class DevicesService
 			this.$iOSDeviceDiscovery,
 			this.$androidDeviceDiscovery,
 			this.$iOSSimulatorDiscovery,
+			this.$macCatalystDeviceDiscovery,
 		];
 	}
 
@@ -324,6 +326,7 @@ export class DevicesService
 			this.$iOSSimulatorDiscovery,
 			this.$iOSDeviceDiscovery,
 			this.$androidDeviceDiscovery,
+			this.$macCatalystDeviceDiscovery,
 		].forEach(this.attachToDeviceDiscoveryEvents.bind(this));
 	}
 

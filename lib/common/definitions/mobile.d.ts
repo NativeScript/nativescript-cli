@@ -138,6 +138,13 @@ declare global {
 			destroyAllSockets(): Promise<void>;
 		}
 
+		interface IMacCatalystDevice extends IDevice {
+			/**
+			 * Absolute path of the built .app bundle this device runs and syncs into.
+			 */
+			applicationBundlePath: string;
+		}
+
 		interface IAndroidDevice extends IDevice {
 			adb: Mobile.IDeviceAndroidDebugBridge;
 			init(): Promise<void>;
@@ -1204,6 +1211,7 @@ declare global {
 			isAndroidPlatform(platform: string): boolean;
 			isiOSPlatform(platform: string): boolean;
 			isvisionOSPlatform(platform: string): boolean;
+			ismacOSPlatform(platform: string): boolean;
 			isApplePlatform(platform: string): boolean;
 			normalizePlatformName(platform: string): string;
 			validatePlatformName(platform: string): string;
@@ -1248,10 +1256,12 @@ declare global {
 			iOS: string;
 			Android: string;
 			visionOS: string;
+			macOS: string;
 
 			isiOS(value: string): boolean;
 			isAndroid(value: string): boolean;
 			isvisionOS(value: string): boolean;
+			ismacOS(value: string): boolean;
 		}
 
 		interface IDeviceApplication {

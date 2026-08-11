@@ -70,11 +70,10 @@ export class AddPlatformService implements IAddPlatformService {
 
 			return frameworkVersion;
 		} catch (err) {
-			const platformPath = path.join(
-				projectData.platformsDir,
-				platformData.platformNameLowerCase
-			);
-			this.$fs.deleteDirectory(platformPath);
+			// hostProjectPath is the user's own project; never delete it.
+			if (!this.$options.hostProjectPath) {
+				this.$fs.deleteDirectory(platformData.projectRoot);
+			}
 			throw err;
 		} finally {
 			spinner.stop();
@@ -185,15 +184,8 @@ export class AddPlatformService implements IAddPlatformService {
 		frameworkDirPath: string,
 		frameworkVersion: string
 	): Promise<void> {
-		// here we should use ios OR android
-		const platformDir =
-			this.$options.hostProjectPath ??
-			path.join(
-				projectData.platformsDir,
-				platformData.normalizedPlatformName.toLowerCase()
-			);
-
-		this.$fs.deleteDirectory(platformDir);
+		// projectRoot already accounts for hostProjectPath and platforms/macos.
+		this.$fs.deleteDirectory(platformData.projectRoot);
 		//if iosHost - dont create project
 		await platformData.platformProjectService.createProject(
 			path.resolve(frameworkDirPath),

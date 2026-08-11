@@ -188,10 +188,10 @@ export class PlatformController implements IPlatformController {
 		projectData: IProjectData,
 		nativePrepare: INativePrepare
 	): boolean {
-		const platformName = platformData.platformNameLowerCase;
-		const hasPlatformDirectory = this.$fs.exists(
-			path.join(projectData.platformsDir, platformName)
-		);
+		// Mac Catalyst reports iOS but prepares into platforms/macos.
+		const platformDirectory = platformData.projectRoot;
+		const platformName = path.basename(platformDirectory);
+		const hasPlatformDirectory = this.$fs.exists(platformDirectory);
 
 		const shouldAddNativePlatform =
 			!nativePrepare || !nativePrepare.skipNativePrepare;
@@ -206,9 +206,8 @@ export class PlatformController implements IPlatformController {
 			(shouldAddNativePlatform && requiresNativePlatformAdd);
 
 		if (hasPlatformDirectory && !shouldAddPlatform) {
-			const platformDirectoryItemCount = this.$fs.readDirectory(
-				path.join(projectData.platformsDir, platformName)
-			).length;
+			const platformDirectoryItemCount =
+				this.$fs.readDirectory(platformDirectory).length;
 
 			// 2 is a magic number to approximate a valid platform folder
 			// any valid platform should contain at least 2 files/folders

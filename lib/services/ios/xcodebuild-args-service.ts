@@ -12,6 +12,7 @@ import { IPlatformData } from "../../definitions/platform";
 import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import * as _ from "lodash";
+import * as semver from "semver";
 
 import {
 	DevicePlatformSdkName,
@@ -21,6 +22,8 @@ import {
 } from "../ios-project-service";
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
+	private static readonly MIN_CATALYST_DEPLOYMENT_TARGET = "13.1";
+
 	constructor(
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $devicesService: Mobile.IDevicesService,
@@ -29,6 +32,36 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		private $logger: ILogger,
 		private $xcconfigService: IXcconfigService,
 	) {}
+
+	public getBuildForCatalystArgs(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		buildConfig: IBuildConfig,
+	): string[] {
+		// Forced because the runtime template only sets the legacy UIKITFORMAC alias.
+		return [
+			"-destination",
+			"platform=macOS,variant=Mac Catalyst",
+			"build",
+			"-configuration",
+			buildConfig.release ? Configurations.Release : Configurations.Debug,
+			"-allowProvisioningUpdates",
+			"SUPPORTS_MACCATALYST=YES",
+			// no `-sdk` here: the destination already selects macOS + the Mac Catalyst
+			// variant, and forcing an SDK on top of it makes xcodebuild pick iphoneos
+			"BUILD_DIR=" + path.join(platformData.projectRoot, constants.BUILD_DIR),
+			"SHARED_PRECOMPS_DIR=" +
+				path.join(platformData.projectRoot, constants.BUILD_DIR, "sharedpch"),
+		]
+			.concat(
+				// the deployment target is re-added below, clamped to what Catalyst supports
+				this
+					.getXcodeProjectArgs(platformData, projectData)
+					.filter((arg) => !arg.startsWith("IPHONEOS_DEPLOYMENT_TARGET=")),
+			)
+			.concat(this.getCatalystDeploymentTargetArgs(projectData))
+			.concat(this.getBuildLoggingArgs());
+	}
 
 	public async getBuildForSimulatorArgs(
 		platformData: IPlatformData,
@@ -252,6 +285,44 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 
 	private getBuildLoggingArgs(): string[] {
 		return this.$logger.getLevel() === "INFO" ? ["-quiet"] : [];
+	}
+
+	/**
+	 * Mac Catalyst starts at iOS 13.1, so a project that still targets an older iOS
+	 * cannot be built as-is. Raise the deployment target for the Catalyst build only
+	 * rather than failing — the iOS build keeps whatever the app has chosen.
+	 * `MACCATALYST_DEPLOYMENT_TARGET` is passed alongside because the runtime's
+	 * metadata generator reads it and older runtimes crash when it is unset.
+	 */
+	private getCatalystDeploymentTargetArgs(projectData: IProjectData): string[] {
+		const buildSettingsFilePath = path.join(
+			projectData.appResourcesDirectoryPath,
+			this.$devicePlatformsConstants.iOS,
+			constants.BUILD_XCCONFIG_FILE_NAME,
+		);
+		const projectDeploymentTarget = this.$xcconfigService.readPropertyValue(
+			buildSettingsFilePath,
+			"IPHONEOS_DEPLOYMENT_TARGET",
+		);
+		const minimum = XcodebuildArgsService.MIN_CATALYST_DEPLOYMENT_TARGET;
+		let deploymentTarget = projectDeploymentTarget;
+
+		if (
+			!deploymentTarget ||
+			semver.lt(semver.coerce(deploymentTarget), semver.coerce(minimum))
+		) {
+			if (deploymentTarget) {
+				this.$logger.warn(
+					`Mac Catalyst requires iOS ${minimum} or higher. Building the Mac Catalyst app with IPHONEOS_DEPLOYMENT_TARGET=${minimum} instead of the project's ${deploymentTarget}.`,
+				);
+			}
+			deploymentTarget = minimum;
+		}
+
+		return [
+			`IPHONEOS_DEPLOYMENT_TARGET=${deploymentTarget}`,
+			`MACCATALYST_DEPLOYMENT_TARGET=${deploymentTarget}`,
+		];
 	}
 
 	private getBuildCommonArgs(

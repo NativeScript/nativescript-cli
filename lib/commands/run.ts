@@ -223,3 +223,32 @@ export class RunVisionOSCommand extends RunIosCommand {
 
 injector.registerCommand("run|vision", RunVisionOSCommand);
 injector.registerCommand("run|visionos", RunVisionOSCommand);
+
+/**
+ * Runs the Mac Catalyst build of the app on this machine.
+ */
+export class RunMacOSCommand extends RunIosCommand {
+	public get platform(): string {
+		return this.$devicePlatformsConstants.macOS;
+	}
+
+	constructor(
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $errors: IErrors,
+		protected $injector: IInjector,
+		protected $options: IOptions,
+		protected $platformValidationService: IPlatformValidationService,
+		protected $projectDataService: IProjectDataService,
+	) {
+		super(
+			$devicePlatformsConstants,
+			$errors,
+			$injector,
+			$options,
+			$platformValidationService,
+			$projectDataService,
+		);
+	}
+}
+
+injector.registerCommand("run|macos", RunMacOSCommand);
