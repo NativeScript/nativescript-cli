@@ -36,7 +36,7 @@ class TestInitCommand implements ICommand {
 		private $resources: IResourceLoader,
 		private $pluginsService: IPluginsService,
 		private $logger: ILogger,
-		private $testInitializationService: ITestInitializationService
+		private $testInitializationService: ITestInitializationService,
 	) {
 		this.$projectData.initializeProjectData();
 	}
@@ -48,11 +48,11 @@ class TestInitCommand implements ICommand {
 			this.$options.framework ||
 			(await this.$prompter.promptForChoice(
 				"Select testing framework:",
-				TESTING_FRAMEWORKS
+				TESTING_FRAMEWORKS,
 			));
 		if (TESTING_FRAMEWORKS.indexOf(frameworkToInstall) === -1) {
 			this.$errors.failWithHelp(
-				`Unknown or unsupported unit testing framework: ${frameworkToInstall}.`
+				`Unknown or unsupported unit testing framework: ${frameworkToInstall}.`,
 			);
 		}
 
@@ -64,19 +64,18 @@ class TestInitCommand implements ICommand {
 
 		let modulesToInstall: IDependencyInformation[] = [];
 		try {
-			modulesToInstall = this.$testInitializationService.getDependencies(
-				frameworkToInstall
-			);
+			modulesToInstall =
+				this.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
 			this.$errors.fail(
-				`Unable to install the unit testing dependencies. Error: '${err.message}'`
+				`Unable to install the unit testing dependencies. Error: '${err.message}'`,
 			);
 		}
 
 		modulesToInstall = modulesToInstall.filter(
 			(moduleToInstall) =>
 				!moduleToInstall.projectType ||
-				moduleToInstall.projectType === projectFilesExtension
+				moduleToInstall.projectType === projectFilesExtension,
 		);
 
 		for (const mod of modulesToInstall) {
@@ -101,7 +100,7 @@ class TestInitCommand implements ICommand {
 			for (const peerDependency in modulePeerDependencies) {
 				const isPeerDependencyExcluded = _.includes(
 					mod.excludedPeerDependencies,
-					peerDependency
+					peerDependency,
 				);
 				if (isPeerDependencyExcluded) {
 					continue;
@@ -122,7 +121,7 @@ class TestInitCommand implements ICommand {
 							frameworkPath: this.$options.frameworkPath,
 							ignoreScripts: this.$options.ignoreScripts,
 							path: this.$options.path,
-						}
+						},
 					);
 				} catch (e) {
 					this.$logger.error(e.message);
@@ -130,9 +129,11 @@ class TestInitCommand implements ICommand {
 			}
 		}
 
+		// The Karma client only exists in the v4 line — v5+ is Vitest-only, so
+		// an unpinned install would break these setups once v5 is `latest`.
 		await this.$pluginsService.add(
-			"@nativescript/unit-test-runner",
-			this.$projectData
+			"@nativescript/unit-test-runner@^4.0.0",
+			this.$projectData,
 		);
 
 		this.$logger.clearScreen();
@@ -142,11 +143,11 @@ class TestInitCommand implements ICommand {
 		const testsDir = path.join(this.$projectData.appDirectoryPath, "tests");
 		const projectTestsDir = path.relative(
 			this.$projectData.projectDir,
-			testsDir
+			testsDir,
 		);
 		const relativeTestsDir = path.relative(
 			this.$projectData.appDirectoryPath,
-			testsDir
+			testsDir,
 		);
 		let shouldCreateSampleTests = true;
 		if (this.$fs.exists(testsDir)) {
@@ -157,8 +158,8 @@ class TestInitCommand implements ICommand {
 						`Note: The "${projectTestsDir}" directory already exists, will not create example tests in the project.`,
 						`You may create "${specFilenamePattern}" files anywhere you'd like.`,
 						"",
-					].join("\n")
-				)
+					].join("\n"),
+				),
 			);
 			shouldCreateSampleTests = false;
 		}
@@ -170,7 +171,7 @@ class TestInitCommand implements ICommand {
 			.map((fw) => `'${fw}'`)
 			.join(", ");
 		const testFiles = `'${fromWindowsRelativePathToUnix(
-			relativeTestsDir
+			relativeTestsDir,
 		)}/**/*${projectFilesExtension}'`;
 		const karmaConfTemplate = this.$resources.readText("test/karma.conf.js");
 		const karmaConf = _.template(karmaConfTemplate)({
@@ -182,43 +183,43 @@ class TestInitCommand implements ICommand {
 		this.$fs.writeFile(path.join(projectDir, "karma.conf.js"), karmaConf);
 
 		const exampleFilePath = this.$resources.resolvePath(
-			`test/example.${frameworkToInstall}${projectFilesExtension}`
+			`test/example.${frameworkToInstall}${projectFilesExtension}`,
 		);
 		const targetExampleTestPath = path.join(
 			testsDir,
-			`example.spec${projectFilesExtension}`
+			`example.spec${projectFilesExtension}`,
 		);
 
 		if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
 			this.$fs.copyFile(exampleFilePath, targetExampleTestPath);
 			const targetExampleTestRelativePath = path.relative(
 				projectDir,
-				targetExampleTestPath
+				targetExampleTestPath,
 			);
 			bufferedLogs.push(
-				`Added example test: ${color.yellow(targetExampleTestRelativePath)}`
+				`Added example test: ${color.yellow(targetExampleTestRelativePath)}`,
 			);
 		}
 
 		// test main entry
 		const testMainResourcesPath = this.$resources.resolvePath(
-			`test/test-main${projectFilesExtension}`
+			`test/test-main${projectFilesExtension}`,
 		);
 		const testMainPath = path.join(
 			this.$projectData.appDirectoryPath,
-			`test${projectFilesExtension}`
+			`test${projectFilesExtension}`,
 		);
 
 		if (!this.$fs.exists(testMainPath)) {
 			this.$fs.copyFile(testMainResourcesPath, testMainPath);
 			const testMainRelativePath = path.relative(projectDir, testMainPath);
 			bufferedLogs.push(
-				`Main test entrypoint created: ${color.yellow(testMainRelativePath)}`
+				`Main test entrypoint created: ${color.yellow(testMainRelativePath)}`,
 			);
 		}
 
 		const testTsConfigTemplate = this.$resources.readText(
-			"test/tsconfig.spec.json"
+			"test/tsconfig.spec.json",
 		);
 		const testTsConfig = _.template(testTsConfigTemplate)({
 			basePath: this.$projectData.getAppDirectoryRelativePath(),
@@ -226,7 +227,7 @@ class TestInitCommand implements ICommand {
 
 		this.$fs.writeFile(
 			path.join(projectDir, "tsconfig.spec.json"),
-			testTsConfig
+			testTsConfig,
 		);
 		bufferedLogs.push(`Added/replaced ${color.yellow("tsconfig.spec.json")}`);
 
@@ -242,11 +243,11 @@ class TestInitCommand implements ICommand {
 				...bufferedLogs,
 				"",
 				color.yellow(
-					`Note: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly.`
+					`Note: @nativescript/unit-test-runner was included in "dependencies" as a convenience to automatically adjust your app's Info.plist on iOS and AndroidManifest.xml on Android to ensure the socket connects properly.`,
 				),
 				"",
 				color.yellow(
-					`For production you may want to move to "devDependencies" and manage the settings yourself.`
+					`For production you may want to move to "devDependencies" and manage the settings yourself.`,
 				),
 				"",
 				"",
@@ -255,7 +256,7 @@ class TestInitCommand implements ICommand {
 				`  ${greyDollarSign} ${color.green("ns test ios")}`,
 				`  ${greyDollarSign} ${color.green("ns test android")}`,
 				"",
-			].join("\n")
+			].join("\n"),
 		);
 	}
 }
