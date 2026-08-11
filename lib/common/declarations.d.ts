@@ -1552,6 +1552,12 @@ interface IDependencyInformation {
 	version?: string;
 	projectType?: string;
 	excludedPeerDependencies?: string[];
+	/**
+	 * Install into "dependencies" instead of "devDependencies". Required for
+	 * packages with native code — the CLI integrates plugin platform files
+	 * (pods, aars) only for regular dependencies.
+	 */
+	saveInDependencies?: boolean;
 }
 
 /**
