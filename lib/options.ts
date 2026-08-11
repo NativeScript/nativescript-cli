@@ -99,6 +99,7 @@ export class Options {
 			framework: { type: OptionType.String, hasSensitiveValue: false },
 			frameworkVersion: { type: OptionType.String, hasSensitiveValue: false },
 			forDevice: { type: OptionType.Boolean, hasSensitiveValue: false },
+			catalyst: { type: OptionType.Boolean, hasSensitiveValue: false },
 			iCloudContainerEnvironment: {
 				type: OptionType.String,
 				hasSensitiveValue: false,

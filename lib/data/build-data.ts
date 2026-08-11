@@ -33,6 +33,7 @@ export class IOSBuildData extends BuildData implements IiOSBuildData {
 	public buildForAppStore: boolean;
 	public iCloudContainerEnvironment: string;
 	public hostProjectPath: string;
+	public catalyst: boolean;
 
 	constructor(projectDir: string, platform: string, data: any) {
 		super(projectDir, platform, data);
@@ -43,6 +44,7 @@ export class IOSBuildData extends BuildData implements IiOSBuildData {
 		this.buildForAppStore = data.buildForAppStore;
 		this.iCloudContainerEnvironment = data.iCloudContainerEnvironment;
 		this.hostProjectPath = data.hostProjectPath;
+		this.catalyst = data.catalyst;
 	}
 }
 

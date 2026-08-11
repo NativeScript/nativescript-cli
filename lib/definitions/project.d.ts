@@ -659,6 +659,10 @@ interface IiOSBuildConfig
 	 * Code sign identity used for build. If not set iPhone Developer is used as a default when building for device.
 	 */
 	codeSignIdentity?: string;
+	/**
+	 * Build a native macOS app with Mac Catalyst instead of an iOS app.
+	 */
+	catalyst?: boolean;
 }
 
 /**

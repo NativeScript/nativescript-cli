@@ -69,12 +69,20 @@ export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
 export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
+// Not an SDK name — Xcode names the Mac Catalyst products directory
+// `<Configuration>-maccatalyst`, and the build output path is derived from it.
+export const CatalystPlatformSdkName = "maccatalyst";
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
 const getPlatformSdkName = (buildData: IBuildData): string => {
 	const forDevice =
 		!buildData || buildData.buildForDevice || buildData.buildForAppStore;
+
+	if (buildData && (<{ catalyst?: boolean }>buildData).catalyst) {
+		return CatalystPlatformSdkName;
+	}
+
 	const isvisionOS = injector
 		.resolve("devicePlatformsConstants")
 		.isvisionOS(buildData.platform);
@@ -452,7 +460,20 @@ export class IOSProjectService
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
-		if (buildData.buildForDevice) {
+		if (buildData.catalyst) {
+			// Signing is handled by `-allowProvisioningUpdates`: Mac Catalyst needs a
+			// macOS provisioning profile, which the iOS signing service cannot pick.
+			await attachAwaitDetach(
+				constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.$xcodebuildService.buildForCatalyst(
+					platformData,
+					projectData,
+					<any>buildData,
+				),
+			);
+		} else if (buildData.buildForDevice) {
 			await this.$iOSSigningService.setupSigningForDevice(
 				projectRoot,
 				projectData,
