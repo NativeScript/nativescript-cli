@@ -258,12 +258,31 @@ import { inject, DoctorService } from "nativescript/contracts";
 Available contracts
 -------------------
 
-The first tranche, growing as services migrate:
+Growing as services migrate. Every token below is a typed alias onto the
+registration it names — resolving by token and resolving by the legacy name
+return the same instance.
+
+The contract is also the single source of truth for the service's shape: the
+ambient interface the CLI has always published extends it (`interface ILogger
+extends Logger {}`), so the two cannot drift apart. Add a member to the
+contract and every existing caller sees it.
 
 | Token | Legacy name |
 |---|---|
+| `ChildProcess` | `childProcess` |
+| `DevicesService` | `devicesService` |
 | `DoctorService` | `doctorService` |
+| `Errors` | `errors` |
+| `FileSystem` | `fs` |
+| `HostInfo` | `hostInfo` |
+| `HttpClient` | `httpClient` |
+| `Logger` | `logger` |
+| `PackageManager` | `packageManager` |
+| `ProjectData` | `projectData` |
+| `ProjectDataService` | `projectDataService` |
 | `ProjectNameService` | `projectNameService` |
+| `Prompter` | `prompter` |
+| `TempService` | `tempService` |
 
 Related guides
 --------------

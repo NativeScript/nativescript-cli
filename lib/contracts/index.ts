@@ -23,8 +23,20 @@ export type {
 	AbstractType,
 } from "../common/di/providers";
 
+export { ChildProcess } from "./child-process";
+export { DevicesService } from "./devices-service";
 export { DoctorService } from "./doctor-service";
+export { Errors } from "./errors";
+export { FileSystem } from "./file-system";
+export { HostInfo } from "./host-info";
+export { HttpClient } from "./http-client";
+export { Logger } from "./logger";
+export { PackageManager } from "./package-manager";
+export { ProjectData } from "./project-data";
+export { ProjectDataService } from "./project-data-service";
 export { ProjectNameService } from "./project-name-service";
+export { Prompter } from "./prompter";
+export { TempService } from "./temp-service";
 
 export {
 	defineCommand,
