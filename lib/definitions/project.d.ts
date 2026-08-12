@@ -18,6 +18,8 @@ import {
 } from "../common/declarations";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
 import * as constants from "../constants";
+import type { ProjectData } from "../contracts/project-data";
+import type { ProjectDataService } from "../contracts/project-data-service";
 
 interface IProjectName {
 	/**
@@ -209,165 +211,9 @@ interface INsConfig {
 	buildPath?: string;
 }
 
-interface IProjectData extends ICreateProjectData {
-	platformsDir: string;
-	projectFilePath: string;
-	projectId: string;
-	projectIdentifiers?: Mobile.IProjectIdentifier;
-	dependencies: any;
-	ignoredDependencies?: string[];
-	devDependencies: IStringDictionary;
-	appDirectoryPath: string;
-	appResourcesDirectoryPath: string;
-	projectType: string;
-	packageJsonData: any;
-	nsConfig: INsConfig;
-	androidManifestPath: string;
-	appGradlePath: string;
-	gradleFilesDirectoryPath: string;
-	infoPlistPath: string;
-	buildXcconfigPath: string;
-	podfilePath: string;
-	initialized?: boolean;
-	/**
-	 * Defines if the project is a code sharing one.
-	 * Value is true when project has nativescript.config and it has `shared: true` in it.
-	 */
-	isShared: boolean;
-	/**
-	 * Specifies the bundler used to build the application.
-	 *
-	 * - `"webpack"`: Uses Webpack for traditional bundling.
-	 * - `"rspack"`: Uses Rspack for fast bundling.
-	 * - `"vite"`: Uses Vite for fast bundling.
-	 *
-	 * @default "webpack"
-	 */
-	bundler: BundlerType;
-	/**
-	 * @deprecated Use bundlerConfigPath
-	 * Defines the path to the configuration file passed to webpack process.
-	 * By default this is the webpack.config.js at the root of the application.
-	 * The value can be changed by setting `webpackConfigPath` in nativescript.config.
-	 */
-	webpackConfigPath: string;
-	/**
-	 * Defines the path to the bundler configuration file passed to the compiler.
-	 * The value can be changed by setting `bundlerConfigPath` in nativescript.config.
-	 */
-	bundlerConfigPath: string;
-	projectName: string;
+interface IProjectData extends ProjectData {}
 
-	/**
-	 * Initializes project data with the given project directory. If none supplied defaults to --path option or cwd.
-	 * @param {string} projectDir Project root directory.
-	 * @returns {void}
-	 */
-	initializeProjectData(projectDir?: string): void;
-	initializeProjectDataFromContent(
-		packageJsonContent: string,
-		projectDir?: string,
-	): void;
-	getAppDirectoryPath(projectDir?: string): string;
-	getAppDirectoryRelativePath(): string;
-	getAppResourcesDirectoryPath(projectDir?: string): string;
-	getAppResourcesRelativeDirectoryPath(): string;
-}
-
-interface IProjectDataService {
-	/**
-	 * Returns a value from `nativescript` key in project's package.json.
-	 * @param {string} projectDir The project directory - the place where the root package.json is located.
-	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
-	 * @returns {any} The value of the property.
-	 */
-	getNSValue(projectDir: string, propertyName: string): any;
-
-	/**
-	 * Sets a value in the `nativescript` key in a project's package.json.
-	 * @param {string} projectDir The project directory - the place where the root package.json is located.
-	 * @param {string} key Key to be added to `nativescript` key in project's package.json.
-	 * @param {any} value Value of the key to be added to `nativescript` key in project's package.json.
-	 * @returns {void}
-	 */
-	setNSValue(projectDir: string, key: string, value: any): void;
-
-	/**
-	 * Removes a property from `nativescript` key in project's package.json.
-	 * @param {string} projectDir The project directory - the place where the root package.json is located.
-	 * @param {string} propertyName The name of the property to be removed from `nativescript` key.
-	 * @returns {void}
-	 */
-	removeNSProperty(projectDir: string, propertyName: string): void;
-
-	/**
-	 * Removes a property from `nativescript.config`.
-	 * @param {string} projectDir The project directory - the place where the `nativescript.config` is located.
-	 * @param {string} propertyName The name of the property to be removed.
-	 * @returns {void}
-	 */
-	removeNSConfigProperty(projectDir: string, propertyName: string): void;
-
-	/**
-	 * Removes dependency from package.json
-	 * @param {string} projectDir The project directory - the place where the root package.json is located.
-	 * @param {string} dependencyName Name of the dependency that has to be removed.
-	 * @returns {void}
-	 */
-	removeDependency(projectDir: string, dependencyName: string): void;
-
-	getProjectData(projectDir?: string): IProjectData;
-
-	/**
-	 * Gives information about the whole assets structure for both iOS and Android.
-	 * For each of the platforms, the returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages (only for iOS).
-	 * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
-	 * @returns {Promise<IAssetsStructure>} An object describing the current asset structure.
-	 */
-	getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure>;
-
-	/**
-	 * Gives information about the whole assets structure for iOS.
-	 * The returned object will contain icons, splashBackgrounds, splashCenterImages and splashImages.
-	 * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
-	 * @returns {Promise<IAssetGroup>} An object describing the current asset structure for iOS.
-	 */
-	getIOSAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
-
-	/**
-	 * Gives information about the whole assets structure for Android.
-	 * The returned object will contain icons, splashBackgrounds and splashCenterImages.
-	 * @param {IProjectDir} opts Object with a single property - projectDir. This is the root directory where NativeScript project is located.
-	 * @returns {Promise<IAssetGroup>} An object describing the current asset structure for Android.
-	 */
-	getAndroidAssetsStructure(opts: IProjectDir): Promise<IAssetGroup>;
-
-	/**
-	 * Returns array with paths to all `.js` or `.ts` files in application's app directory.
-	 * @param {string} projectDir Path to application.
-	 * @returns {string[]} Array of paths to `.js` or `.ts` files.
-	 */
-	getAppExecutableFiles(projectDir: string): string[];
-
-	/**
-	 * Returns package details for runtime, respecting the nativescript key for legacy projects
-	 * @param {string} projectDir Path to application.
-	 * @param {string} platform Platform key
-	 */
-	getRuntimePackage(
-		projectDir: string,
-		platform: SupportedPlatform,
-	): IBasePluginData;
-
-	/**
-	 * Returns a value from `nativescript` key in project's package.json.
-	 * @param {string} jsonData The project directory - the place where the root package.json is located.
-	 * @param {string} propertyName The name of the property to be checked in `nativescript` key.
-	 * @returns {any} The value of the property.
-	 * @deprecated no longer used - will be removed in 8.0.
-	 */
-	getNSValueFromContent(jsonData: Object, propertyName: string): any;
-}
+interface IProjectDataService extends ProjectDataService {}
 
 interface IProjectCleanupService {
 	/**

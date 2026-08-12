@@ -11,6 +11,7 @@ import {
 	IHasEmulatorOption,
 	IDisposable,
 } from "../declarations";
+import type { DevicesService } from "../../contracts/devices-service";
 
 declare global {
 	export module Mobile {
@@ -587,107 +588,7 @@ declare global {
 			[platform: string]: string;
 		}
 
-		interface IDevicesService extends NodeJS.EventEmitter, IPlatform {
-			hasDevices: boolean;
-			deviceCount: number;
-
-			execute<T>(
-				action: (device: Mobile.IDevice) => Promise<T>,
-				canExecute?: (dev: Mobile.IDevice) => boolean,
-				options?: { allowNoDevices?: boolean },
-			): Promise<IDeviceActionResult<T>[]>;
-
-			/**
-			 * Initializes DevicesService, so after that device operations could be executed.
-			 * @param {IDevicesServicesInitializationOptions} data Defines the options which will be used for whole devicesService.
-			 * @return {Promise<void>}
-			 */
-			initialize(data?: IDevicesServicesInitializationOptions): Promise<void>;
-
-			/**
-			 * Add an IDeviceDiscovery instance which will from now on report devices. The instance should implement IDeviceDiscovery and raise "deviceFound" and "deviceLost" events.
-			 * @param {IDeviceDiscovery} deviceDiscovery Instance, implementing IDeviceDiscovery and raising raise "deviceFound" and "deviceLost" events.
-			 * @return {void}
-			 */
-			addDeviceDiscovery(deviceDiscovery: IDeviceDiscovery): void;
-			getDevices(): Mobile.IDeviceInfo[];
-
-			/**
-			 * Gets device instance by specified identifier or number.
-			 * @param {string} deviceOption The specified device identifier or number.
-			 * @returns {Promise<Mobile.IDevice>} Instance of IDevice.
-			 */
-			getDevice(deviceOption: string): Promise<Mobile.IDevice>;
-			getDevicesForPlatform(platform: string): Mobile.IDevice[];
-			getDeviceInstances(): Mobile.IDevice[];
-			getDeviceByDeviceOption(): Mobile.IDevice;
-			isAndroidDevice(device: Mobile.IDevice): boolean;
-			isiOSDevice(device: Mobile.IDevice): boolean;
-			isiOSSimulator(device: Mobile.IDevice): boolean;
-			isOnlyiOSSimultorRunning(): boolean;
-			isAppInstalledOnDevices(
-				deviceIdentifiers: string[],
-				appIdentifier: string,
-				framework: string,
-				projectDir: string,
-			): Promise<IAppInstalledInfo>[];
-			setLogLevel(logLevel: string, deviceIdentifier?: string): void;
-			deployOnDevices(
-				deviceIdentifiers: string[],
-				packageFile: string,
-				packageName: string,
-				framework: string,
-				projectDir: string,
-			): Promise<void>[];
-			getDeviceByIdentifier(identifier: string): Mobile.IDevice;
-			mapAbstractToTcpPort(
-				deviceIdentifier: string,
-				appIdentifier: string,
-				framework: string,
-			): Promise<string>;
-			getDebuggableApps(
-				deviceIdentifiers: string[],
-			): Promise<Mobile.IDeviceApplicationInformation[]>[];
-			getDebuggableViews(
-				deviceIdentifier: string,
-				appIdentifier: string,
-			): Promise<Mobile.IDebugWebViewInfo[]>;
-
-			/**
-			 * Returns all applications installed on the specified device.
-			 * @param {string} deviceIdentifer The identifier of the device for which to get installed applications.
-			 * @returns {Promise<string[]>} Array of all application identifiers of the apps installed on device.
-			 */
-			getInstalledApplications(deviceIdentifier: string): Promise<string[]>;
-
-			/**
-			 * Returns all available iOS and/or Android emulators.
-			 * @param options The options that can be passed to filter the result.
-			 * @returns {Promise<Mobile.IListEmulatorsOutput>} Dictionary with the following format: { ios: { devices: Mobile.IDeviceInfo[], errors: string[] }, android: { devices: Mobile.IDeviceInfo[], errors: string[]}}.
-			 */
-			getEmulatorImages(
-				options?: Mobile.IListEmulatorsOptions,
-			): Promise<Mobile.IListEmulatorsOutput>;
-
-			/**
-			 * Starts an emulator by provided options.
-			 * @param options
-			 * @returns {Promise<string[]>} - Returns array of errors.
-			 */
-			startEmulator(options?: IStartEmulatorOptions): Promise<string[]>;
-
-			/**
-			 * Returns a single device based on the specified options. If more than one devices are matching,
-			 * prompts the user for a manual choice or returns the first one for non interactive terminals.
-			 */
-			pickSingleDevice(
-				options: IPickSingleDeviceOptions,
-			): Promise<Mobile.IDevice>;
-
-			getPlatformsFromDeviceDescriptors(
-				deviceDescriptors: ILiveSyncDeviceDescriptor[],
-			): string[];
-		}
+		interface IDevicesService extends DevicesService {}
 
 		interface IPickSingleDeviceOptions {
 			/**
