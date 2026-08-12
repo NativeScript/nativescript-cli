@@ -270,11 +270,6 @@ interface ICommandOptions {
 	disableCommandHelpSuggestion?: boolean;
 }
 
-interface IFutureDispatcher {
-	run(): void;
-	dispatch(action: () => Promise<void>): void;
-}
-
 interface ICommandDispatcher {
 	dispatchCommand(): Promise<void>;
 }
@@ -282,11 +277,6 @@ interface ICommandDispatcher {
 interface ICancellationService extends IDisposable {
 	begin(name: string): Promise<void>;
 	end(name: string): void;
-}
-
-interface IQueue<T> {
-	enqueue(item: T): void;
-	dequeue(): Promise<T>;
 }
 
 interface IChildProcess extends ChildProcess {}
@@ -556,10 +546,6 @@ interface IProxyService {
 	 * @returns {Promise<string>} Info about the proxy.
 	 */
 	getInfo(): Promise<string>;
-}
-
-interface IQrCodeGenerator {
-	generateDataUri(data: string): Promise<string>;
 }
 
 interface IQrCodeImageData {

@@ -501,30 +501,6 @@ interface IiOSBuildConfig
 	codeSignIdentity?: string;
 }
 
-/**
- * Describes service used for building a project locally.
- */
-interface ILocalBuildService {
-	/**
-	 * Builds a project locally.
-	 * @param {string} platform Platform for which to build.
-	 * @param {IPlatformBuildData} platformBuildOptions Additional options for controlling the build.
-	 * @return {Promise<string>} Path to the build output.
-	 */
-	build(
-		platform: string,
-		platformBuildOptions: IPlatformBuildData,
-	): Promise<string>;
-	/**
-	 * Removes build artifacts specific to the platform
-	 * @param {ICleanNativeAppData} data Data describing the clean app process
-	 * @returns {void}
-	 */
-	cleanNativeApp(data: ICleanNativeAppData): Promise<void>;
-}
-
-interface ICleanNativeAppData extends IProjectDir, IPlatform {}
-
 interface IValidatePlatformOutput {
 	checkEnvironmentRequirementsOutput: ICheckEnvironmentRequirementsOutput;
 }

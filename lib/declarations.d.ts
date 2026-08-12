@@ -1167,10 +1167,6 @@ interface IRuntimeGradleVersions {
 	gradleAndroidPluginVersion?: string;
 }
 
-interface INetworkConnectivityValidator {
-	validate(): Promise<void>;
-}
-
 interface IPlatformValidationService {
 	/**
 	 * Ensures the passed platform is a valid one (from the supported ones)

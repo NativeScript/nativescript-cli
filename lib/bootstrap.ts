@@ -309,10 +309,6 @@ injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
 injector.require("platformCommandHelper", "./helpers/platform-command-helper");
 injector.require("optionsTracker", "./helpers/options-track-helper");
 
-injector.requirePublicClass(
-	"localBuildService",
-	"./services/local-build-service",
-);
 injector.require("LiveSyncSocket", "./services/livesync/livesync-socket");
 injector.requirePublicClass(
 	"androidLivesyncTool",
@@ -413,18 +409,10 @@ injector.require("hmrStatusService", "./services/hmr-status-service");
 
 injector.require("pacoteService", "./services/pacote-service");
 injector.require(
-	"qrCodeTerminalService",
-	"./services/qr-code-terminal-service",
-);
-injector.require(
 	"testInitializationService",
 	"./services/test-initialization-service",
 );
 
-injector.require(
-	"networkConnectivityValidator",
-	"./helpers/network-connectivity-validator",
-);
 injector.requirePublic("cleanupService", "./services/cleanup-service");
 
 injector.require(
