@@ -9,6 +9,11 @@ export {
 	clearMintedContractNames,
 } from "./contract";
 export type { IContractOptions } from "./contract";
+export {
+	InjectionToken,
+	getInjectionTokenName,
+	INJECTION_TOKEN_NAME,
+} from "./injection-token";
 export { provide, provideLazy } from "./providers";
 export type {
 	Provider,

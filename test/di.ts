@@ -4,6 +4,7 @@ import {
 	inject,
 	runInInjectionContext,
 	Contract,
+	InjectionToken,
 	provide,
 	forwardRef,
 } from "../lib/common/di";
@@ -62,6 +63,146 @@ describe("di: tokens and resolution", () => {
 		);
 
 		assert.strictEqual(injector.get(<any>DuplicatedCopy), original);
+	});
+});
+
+describe("di: InjectionToken", () => {
+	// A module namespace object — the case that has no class to decorate.
+	const moduleValue = { parse: () => "parsed" };
+	const MODULE_TOKEN = new InjectionToken<typeof moduleValue>(
+		"diTestModuleToken",
+	);
+
+	it("resolves one singleton via the token, the name, and the $-prefixed name", () => {
+		const injector = new Injector([
+			{ provide: MODULE_TOKEN, useValue: moduleValue },
+		]);
+
+		assert.strictEqual(injector.get(MODULE_TOKEN), moduleValue);
+		assert.strictEqual(injector.get("diTestModuleToken"), moduleValue);
+		assert.strictEqual(injector.get("$diTestModuleToken"), moduleValue);
+	});
+
+	it("finds a registration made under the legacy name only", () => {
+		// The shape lib/node/xcode.ts registers today: a name, no token in sight.
+		const injector = new Injector([
+			{ provide: "diTestModuleToken", useValue: moduleValue },
+		]);
+
+		assert.strictEqual(injector.get(MODULE_TOKEN), moduleValue);
+	});
+
+	it("resolves a factory-backed token to one instance across all spellings", () => {
+		let builds = 0;
+		const injector = new Injector([
+			{
+				provide: MODULE_TOKEN,
+				useFactory: () => {
+					builds++;
+					return moduleValue;
+				},
+			},
+		]);
+
+		const first = injector.get(MODULE_TOKEN);
+		assert.strictEqual(injector.get("diTestModuleToken"), first);
+		assert.strictEqual(injector.get("$diTestModuleToken"), first);
+		assert.equal(builds, 1);
+	});
+
+	it("strips a leading $ from the description", () => {
+		const token = new InjectionToken("$diTestDollarToken");
+
+		assert.equal(token.description, "diTestDollarToken");
+		const injector = new Injector([{ provide: token, useValue: moduleValue }]);
+		assert.strictEqual(injector.get("diTestDollarToken"), moduleValue);
+	});
+
+	it("resolves through a child scope, which can shadow it by name", () => {
+		const childValue = { parse: () => "child" };
+		const root = new Injector([
+			{ provide: MODULE_TOKEN, useValue: moduleValue },
+		]);
+		const child = root.createChild();
+
+		assert.strictEqual(child.get(MODULE_TOKEN), moduleValue);
+
+		const shadowing = root.createChild([
+			{ provide: "diTestModuleToken", useValue: childValue },
+		]);
+		assert.strictEqual(shadowing.get(MODULE_TOKEN), childValue);
+		assert.strictEqual(root.get(MODULE_TOKEN), moduleValue);
+	});
+
+	it("honours optional on a miss", () => {
+		const injector = new Injector();
+
+		assert.isNull(injector.get(MODULE_TOKEN, { optional: true }));
+		runInInjectionContext(injector, () => {
+			assert.isNull(inject(MODULE_TOKEN, { optional: true }));
+		});
+	});
+
+	it("names the token in an unresolvable error", () => {
+		const injector = new Injector();
+
+		assert.throws(
+			() => injector.get(MODULE_TOKEN),
+			/unable to resolve InjectionToken\(diTestModuleToken\)/,
+		);
+	});
+
+	it("names the token in a cyclic dependency report", () => {
+		const CYCLE_TOKEN = new InjectionToken("diTestCycleToken");
+		class CycleConsumer {
+			constructor(public $diTestCycleToken: any) {}
+		}
+		const injector = new Injector([
+			{ provide: CYCLE_TOKEN, useLegacyClass: CycleConsumer },
+		]);
+
+		assert.throws(
+			() => injector.get(CYCLE_TOKEN),
+			/InjectionToken\(diTestCycleToken\) -> InjectionToken\(diTestCycleToken\)/,
+		);
+	});
+
+	it("throws on a duplicate description at construction time", () => {
+		assert.throws(
+			() => new InjectionToken("diTestModuleToken"),
+			/already used by an injection token/,
+		);
+	});
+
+	it("throws when a description collides with a contract name", () => {
+		assert.throws(
+			() => new InjectionToken("diTestGreeter"),
+			/already used by contract 'Greeter'/,
+		);
+	});
+
+	it("throws when a contract name collides with a token description", () => {
+		assert.throws(() => {
+			@Contract({ name: "diTestModuleToken" })
+			abstract class Collides {}
+			void Collides;
+		}, /already used by an injection token/);
+	});
+
+	it("recognizes a token minted by a duplicated copy of the module", () => {
+		const injector = new Injector([
+			{ provide: MODULE_TOKEN, useValue: moduleValue },
+		]);
+
+		// Same Symbol.for marker, its own object — what a second CLI copy mints.
+		const duplicatedCopy = {};
+		Object.defineProperty(
+			duplicatedCopy,
+			Symbol.for("nativescript:di:injectionTokenName"),
+			{ value: "diTestModuleToken" },
+		);
+
+		assert.strictEqual(injector.get(<any>duplicatedCopy), moduleValue);
 	});
 });
 

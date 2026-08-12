@@ -1,6 +1,6 @@
 import { assert } from "chai";
 import { getContractName, Injector, provide } from "../lib/common/di";
-import type { ProviderToken } from "../lib/common/di";
+import type { InjectionToken, ProviderToken } from "../lib/common/di";
 import {
 	ChildProcess,
 	DevicesService,
@@ -16,6 +16,8 @@ import {
 	ProjectNameService,
 	Prompter,
 	TempService,
+	PBXPROJ_DOM_XCODE,
+	XCODE,
 } from "../lib/contracts";
 import { Yok } from "../lib/common/yok";
 import { Logger as LoggerImpl } from "../lib/common/logger/logger";
@@ -85,6 +87,30 @@ describe("contracts tranche", () => {
 		]);
 
 		assert.strictEqual(injector.get(TempService), instance);
+	});
+
+	describe("injection tokens", () => {
+		const tokens: [InjectionToken<any>, string][] = [
+			[XCODE, "xcode"],
+			[PBXPROJ_DOM_XCODE, "pbxprojDomXcode"],
+		];
+
+		for (const [token, legacyName] of tokens) {
+			it(`aliases '${legacyName}' by token, by name and by $-spelling`, () => {
+				assert.equal(token.description, legacyName);
+
+				// The registration these tokens alias is a module namespace object
+				// made by `injector.register(name, module)` under lib/node/.
+				const moduleValue = {};
+				const injector = new Injector([
+					{ provide: legacyName, useValue: moduleValue },
+				]);
+
+				assert.strictEqual(injector.get(token), moduleValue);
+				assert.strictEqual(injector.get(legacyName), moduleValue);
+				assert.strictEqual(injector.get(`$${legacyName}`), moduleValue);
+			});
+		}
 	});
 
 	describe("against a real Yok container", () => {
