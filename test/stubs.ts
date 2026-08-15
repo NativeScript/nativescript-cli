@@ -939,6 +939,20 @@ export class ProjectDataServiceStub implements IProjectDataService {
 		return projectData;
 	}
 
+	getProjectDataFromContent(
+		packageJsonContent: string,
+		projectDir?: string,
+	): IProjectData {
+		const projectData = new ProjectDataStub();
+		projectData.initializeProjectDataFromContent();
+
+		return projectData;
+	}
+
+	getNsConfigDefaultContent(data?: Object): string {
+		return JSON.stringify({ ...data });
+	}
+
 	async getAssetsStructure(opts: IProjectDir): Promise<IAssetsStructure> {
 		return null;
 	}

@@ -1359,7 +1359,13 @@ export class IOSProjectService
 					constants.CONFIG_FILE_NAME_TS,
 				);
 				if (this.$fs.exists(pluginConfigPath)) {
-					const config = this.$projectConfigService.readConfig(plugin.fullPath);
+					// Plugin packages may ship compiled .js artifacts next to their
+					// .ts config; the dual-config warning is guidance for the user's
+					// own project and would be misleading here.
+					const config = this.$projectConfigService.readConfig(
+						plugin.fullPath,
+						{ suppressWarnings: true },
+					);
 					const packages = _.get(
 						config,
 						`${platformData.platformNameLowerCase}.SPMPackages`,

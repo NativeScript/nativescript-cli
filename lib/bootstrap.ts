@@ -205,12 +205,16 @@ injector.requireCommand("deploy", "./commands/deploy");
 injector.requireCommand("embed", "./commands/embedding/embed");
 
 injector.require("testExecutionService", "./services/test-execution-service");
+injector.require(
+	"vitestExecutionService",
+	"./services/vitest-execution-service",
+);
 injector.requireCommand("dev-test|android", "./commands/test");
 injector.requireCommand("dev-test|ios", "./commands/test");
 injector.requireCommand("test|android", "./commands/test");
 injector.requireCommand("test|ios", "./commands/test");
-// injector.requireCommand("test|vision", "./commands/test");
-// injector.requireCommand("test|visionos", "./commands/test");
+injector.requireCommand("test|vision", "./commands/test");
+injector.requireCommand("test|visionos", "./commands/test");
 injector.requireCommand("test|init", "./commands/test-init");
 injector.requireCommand("dev-generate-help", "./commands/generate-help");
 
@@ -307,10 +311,6 @@ injector.require("deployCommandHelper", "./helpers/deploy-command-helper");
 injector.require("platformCommandHelper", "./helpers/platform-command-helper");
 injector.require("optionsTracker", "./helpers/options-track-helper");
 
-injector.requirePublicClass(
-	"localBuildService",
-	"./services/local-build-service",
-);
 injector.require("LiveSyncSocket", "./services/livesync/livesync-socket");
 injector.requirePublicClass(
 	"androidLivesyncTool",
@@ -411,18 +411,10 @@ injector.require("hmrStatusService", "./services/hmr-status-service");
 
 injector.require("pacoteService", "./services/pacote-service");
 injector.require(
-	"qrCodeTerminalService",
-	"./services/qr-code-terminal-service",
-);
-injector.require(
 	"testInitializationService",
 	"./services/test-initialization-service",
 );
 
-injector.require(
-	"networkConnectivityValidator",
-	"./helpers/network-connectivity-validator",
-);
 injector.requirePublic("cleanupService", "./services/cleanup-service");
 
 injector.require(

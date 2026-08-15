@@ -91,7 +91,10 @@ export default {
 		);
 	}
 
-	public detectProjectConfigs(projectDir?: string): IProjectConfigInformation {
+	public detectProjectConfigs(
+		projectDir?: string,
+		options?: { suppressWarnings?: boolean },
+	): IProjectConfigInformation {
 		// allow overriding config name with env variable or --config (or -c)
 		let configName: string | boolean =
 			process.env.NATIVESCRIPT_CONFIG_NAME ?? this.$options.config;
@@ -154,9 +157,11 @@ export default {
 		const hasNSConfig = !!NSConfigPath && hasExistingConfig;
 		const usingNSConfig = !(hasTSConfig || hasJSConfig);
 
-		if (hasTSConfig && hasJSConfig) {
+		if (hasTSConfig && hasJSConfig && !options?.suppressWarnings) {
 			this.$logger.warn(
-				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file. Defaulting to ${CONFIG_FILE_NAME_TS}.`,
+				`You have both a ${CONFIG_FILE_NAME_JS} and ${CONFIG_FILE_NAME_TS} file in ${path.dirname(
+					TSConfigPath,
+				)}. Defaulting to ${CONFIG_FILE_NAME_TS}.`,
 			);
 		}
 
@@ -172,8 +177,11 @@ export default {
 	}
 
 	@exported("projectConfigService")
-	public readConfig(projectDir?: string): INsConfig {
-		const info = this.detectProjectConfigs(projectDir);
+	public readConfig(
+		projectDir?: string,
+		options?: { suppressWarnings?: boolean },
+	): INsConfig {
+		const info = this.detectProjectConfigs(projectDir, options);
 
 		if (
 			this.forceUsingLegacyConfig ||

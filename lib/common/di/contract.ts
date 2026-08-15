@@ -19,7 +19,30 @@ export interface IContractOptions {
 // Per module instance on purpose: a duplicated CLI copy in an extensions tree
 // carries its own registry, so contracts redeclared by another copy never
 // false-positive here.
-const mintedNames = new Map<string, Function>();
+const mintedNames = new Map<string, object>();
+
+function describeOwner(owner: object): string {
+	if (typeof owner === "function") {
+		return `contract '${owner.name || "<anonymous>"}'`;
+	}
+	return "an injection token";
+}
+
+/**
+ * Claims a token name for `owner`. Both `@Contract` and `InjectionToken` mint
+ * here so the two kinds share one namespace: a contract and a token that claim
+ * the same name would be two tokens silently aliasing one registration.
+ */
+export function mintTokenName(name: string, owner: object): void {
+	const existing = mintedNames.get(name);
+	if (existing && existing !== owner) {
+		throw new Error(
+			`Token name '${name}' is already used by ${describeOwner(existing)}. ` +
+				`Token names must be unique — a duplicate silently aliases two tokens.`,
+		);
+	}
+	mintedNames.set(name, owner);
+}
 
 /**
  * Marks an abstract class as a DI token. The decorated class resolves by
@@ -31,15 +54,7 @@ export function Contract(
 ): (target: Function) => void {
 	const { name } = options;
 	return (target: Function): void => {
-		const existing = mintedNames.get(name);
-		if (existing && existing !== target) {
-			throw new Error(
-				`@Contract name '${name}' is already used by '${
-					existing.name || "another contract"
-				}'. Token names must be unique — a duplicate silently aliases two contracts.`,
-			);
-		}
-		mintedNames.set(name, target);
+		mintTokenName(name, target);
 		Object.defineProperty(target, CONTRACT_NAME, {
 			value: name,
 			writable: false,
@@ -64,7 +79,10 @@ export function getContractName(token: any): string | undefined {
 	return undefined;
 }
 
-/** Test seam — the duplicate-name registry otherwise persists per process. */
+/**
+ * Test seam — the duplicate-name registry (contracts and injection tokens
+ * alike) otherwise persists per process.
+ */
 export function clearMintedContractNames(): void {
 	mintedNames.clear();
 }

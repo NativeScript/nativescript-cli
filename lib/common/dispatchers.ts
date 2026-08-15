@@ -1,14 +1,10 @@
 import * as _ from "lodash";
-import * as queue from "./queue";
 import * as path from "path";
 import { hook } from "./helpers";
 import {
 	ICommandDispatcher,
 	ICancellationService,
 	ISysInfo,
-	IFutureDispatcher,
-	IQueue,
-	IErrors,
 } from "./declarations";
 import { IOptions, IPackageManager, IVersionsService } from "../declarations";
 import { IInjector } from "./definitions/yok";
@@ -29,7 +25,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 		private $options: IOptions,
 		private $versionsService: IVersionsService,
 		private $packageManager: IPackageManager,
-		private $terminalSpinnerService: ITerminalSpinnerService
+		private $terminalSpinnerService: ITerminalSpinnerService,
 	) {}
 
 	public async dispatchCommand(): Promise<void> {
@@ -45,7 +41,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 					__dirname,
 					"..",
 					"..",
-					"package.json"
+					"package.json",
 				),
 			});
 			this.$logger.trace("System information:");
@@ -76,7 +72,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 
 		await this.$commandsService.tryExecuteCommand(
 			commandName,
-			commandArguments
+			commandArguments,
 		);
 	}
 
@@ -84,7 +80,7 @@ export class CommandDispatcher implements ICommandDispatcher {
 	private async resolveCommand(
 		commandName: string,
 		commandArguments: string[],
-		argv: string[]
+		argv: string[],
 	) {
 		// just a hook point
 		return { commandName, commandArguments, argv };
@@ -142,39 +138,16 @@ export class CommandDispatcher implements ICommandDispatcher {
 				nativescriptCliVersion.latestVersion,
 				{
 					loose: true,
-				}
+				},
 			)
 		) {
 			// up-to-date
 			spinner.succeed("Up to date.");
 		} else {
 			spinner.info(
-				`New version of NativeScript CLI is available (${nativescriptCliVersion.latestVersion}), run '${updateCommand}' to update.`
+				`New version of NativeScript CLI is available (${nativescriptCliVersion.latestVersion}), run '${updateCommand}' to update.`,
 			);
 		}
 	}
 }
 injector.register("commandDispatcher", CommandDispatcher);
-
-class FutureDispatcher implements IFutureDispatcher {
-	private actions: IQueue<any>;
-
-	public constructor(private $errors: IErrors) {}
-
-	public async run(): Promise<void> {
-		if (this.actions) {
-			this.$errors.fail("You cannot run a running future dispatcher.");
-		}
-		this.actions = new queue.Queue<any>();
-
-		while (true) {
-			const action = await this.actions.dequeue();
-			await action();
-		}
-	}
-
-	public dispatch(action: () => Promise<void>) {
-		this.actions.enqueue(action);
-	}
-}
-injector.register("dispatcher", FutureDispatcher, false);
