@@ -42,6 +42,7 @@ export { ProjectDataService } from "./project-data-service";
 export { ProjectNameService } from "./project-name-service";
 export { Prompter } from "./prompter";
 export { TempService } from "./temp-service";
+export { ViteHmrPortService } from "./vite-hmr-port-service";
 
 export { PBXPROJ_DOM_XCODE } from "./pbxproj-dom-xcode";
 export { XCODE } from "./xcode";

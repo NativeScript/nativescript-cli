@@ -54,6 +54,9 @@ function createTestInjector(
 	testInjector.register("fs", {
 		exists: (filePath: string) => true,
 	});
+	testInjector.register("viteHmrPortService", {
+		getPort: async () => 5173,
+	});
 
 	return testInjector;
 }
@@ -243,13 +246,23 @@ describe("BundlerCompilerService", () => {
 	});
 
 	describe("getViteDistOutputPath", () => {
-		it("uses the current default directory when NS_VITE_DIST_DIR is unset", () => {
+		it("stages each platform in its own directory when NS_VITE_DIST_DIR is unset", () => {
 			const previous = process.env.NS_VITE_DIST_DIR;
 			try {
 				delete process.env.NS_VITE_DIST_DIR;
 				assert.strictEqual(
-					(<any>bundlerCompilerService).getViteDistOutputPath("/project"),
-					path.join("/project", ".ns-vite-build"),
+					(<any>bundlerCompilerService).getViteDistOutputPath(
+						"/project",
+						"ios",
+					),
+					path.join("/project", ".ns-vite-build", "ios"),
+				);
+				assert.strictEqual(
+					(<any>bundlerCompilerService).getViteDistOutputPath(
+						"/project",
+						"android",
+					),
+					path.join("/project", ".ns-vite-build", "android"),
 				);
 			} finally {
 				if (previous === undefined) {
@@ -260,13 +273,16 @@ describe("BundlerCompilerService", () => {
 			}
 		});
 
-		it("uses NS_VITE_DIST_DIR for platform-isolated output", () => {
+		it("uses NS_VITE_DIST_DIR verbatim when set", () => {
 			const previous = process.env.NS_VITE_DIST_DIR;
 			try {
-				process.env.NS_VITE_DIST_DIR = ".ns-vite-build/android";
+				process.env.NS_VITE_DIST_DIR = "custom-dist";
 				assert.strictEqual(
-					(<any>bundlerCompilerService).getViteDistOutputPath("/project"),
-					path.join("/project", ".ns-vite-build", "android"),
+					(<any>bundlerCompilerService).getViteDistOutputPath(
+						"/project",
+						"ios",
+					),
+					path.join("/project", "custom-dist"),
 				);
 			} finally {
 				if (previous === undefined) {
@@ -275,6 +291,53 @@ describe("BundlerCompilerService", () => {
 					process.env.NS_VITE_DIST_DIR = previous;
 				}
 			}
+		});
+	});
+
+	describe("getViteChildEnv", () => {
+		let previous: string;
+		beforeEach(() => {
+			previous = process.env.NS_VITE_DIST_DIR;
+			delete process.env.NS_VITE_DIST_DIR;
+			(<any>bundlerCompilerService).getBundler = () => "vite";
+			testInjector.resolve("viteHmrPortService").getPort = async (
+				platform: string,
+			) => (platform === "ios" ? 5173 : 5174);
+		});
+		afterEach(() => {
+			if (previous === undefined) {
+				delete process.env.NS_VITE_DIST_DIR;
+			} else {
+				process.env.NS_VITE_DIST_DIR = previous;
+			}
+		});
+
+		it("hands HMR sessions the platform's staging dir and resolved port", async () => {
+			assert.deepEqual(
+				await (<any>bundlerCompilerService).getViteChildEnv("android", {
+					watch: true,
+					hmr: true,
+				}),
+				{ NS_VITE_DIST_DIR: ".ns-vite-build/android", NS_HMR_PORT: "5174" },
+			);
+		});
+
+		it("does not resolve a port for builds that run no dev server", async () => {
+			assert.deepEqual(
+				await (<any>bundlerCompilerService).getViteChildEnv("ios", {
+					watch: true,
+					hmr: false,
+				}),
+				{ NS_VITE_DIST_DIR: ".ns-vite-build/ios" },
+			);
+			assert.deepEqual(
+				await (<any>bundlerCompilerService).getViteChildEnv("ios", {
+					watch: true,
+					hmr: true,
+					release: true,
+				}),
+				{ NS_VITE_DIST_DIR: ".ns-vite-build/ios" },
+			);
 		});
 	});
 
@@ -399,7 +462,7 @@ describe("BundlerCompilerService", () => {
 
 				assert.deepEqual(copies, [
 					{
-						distOutput: path.join("/project", ".ns-vite-build"),
+						distOutput: path.join("/project", ".ns-vite-build", "android"),
 						destDir: path.join("/project/platforms/android", "app"),
 						failOnError: true,
 					},

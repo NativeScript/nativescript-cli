@@ -16,6 +16,7 @@ import {
 	ProjectNameService,
 	Prompter,
 	TempService,
+	ViteHmrPortService,
 	PBXPROJ_DOM_XCODE,
 	XCODE,
 } from "../lib/contracts";
@@ -40,6 +41,7 @@ const tranche: [ProviderToken<any>, string][] = [
 	[ProjectNameService, "projectNameService"],
 	[Prompter, "prompter"],
 	[TempService, "tempService"],
+	[ViteHmrPortService, "viteHmrPortService"],
 ];
 
 describe("contracts tranche", () => {

@@ -419,6 +419,10 @@ injector.require(
 	"bundlerCompilerService",
 	"./services/bundler/bundler-compiler-service",
 );
+injector.require(
+	"viteHmrPortService",
+	"./services/bundler/vite-hmr-port-service",
+);
 
 injector.require(
 	"applePortalSessionService",

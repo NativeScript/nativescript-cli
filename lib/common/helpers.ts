@@ -362,6 +362,18 @@ export function toBoolean(str: any): boolean {
 	return !!(str && str.toString && str.toString().toLowerCase() === "true");
 }
 
+/**
+ * Reads an opt-in environment flag: any value other than empty / `0` /
+ * `false` / `off` / `no` turns it on.
+ */
+export function isTruthyEnvFlag(value: string | undefined): boolean {
+	if (typeof value !== "string") {
+		return false;
+	}
+	const v = value.trim().toLowerCase();
+	return !!v && v !== "0" && v !== "false" && v !== "off" && v !== "no";
+}
+
 export function block(operation: () => void): void {
 	if (isInteractive()) {
 		(<ReadStream>process.stdin).setRawMode(false);

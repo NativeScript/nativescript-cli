@@ -33,6 +33,7 @@ import {
 	IHostInfo,
 } from "../../common/declarations";
 import { ICleanupService } from "../../definitions/cleanup-service";
+import { ViteHmrPortService } from "../../contracts/vite-hmr-port-service";
 import { injector } from "../../common/yok";
 import {
 	resolvePackagePath,
@@ -79,15 +80,26 @@ export class BundlerCompilerService
 		private $packageManager: IPackageManager,
 		private $packageInstallationManager: IPackageInstallationManager, // private $sharedEventBus: ISharedEventBus
 		private $projectConfigService: IProjectConfigService,
+		private $viteHmrPortService: ViteHmrPortService,
 	) {
 		super();
 	}
 
-	private getViteDistOutputPath(projectDir: string): string {
-		return path.join(
-			projectDir,
-			process.env.NS_VITE_DIST_DIR || VITE_DIST_FOLDER_NAME,
+	/**
+	 * Project-relative directory Vite stages its output in before the CLI
+	 * copies it into the platform app. Each platform gets its own directory
+	 * so concurrent iOS and Android sessions (separate terminals or one
+	 * `ns run`) never overwrite each other's bundle or vendor manifest.
+	 * `NS_VITE_DIST_DIR` overrides it verbatim.
+	 */
+	private getViteDistRelativeDir(platform: string): string {
+		return (
+			process.env.NS_VITE_DIST_DIR || `${VITE_DIST_FOLDER_NAME}/${platform}`
 		);
+	}
+
+	private getViteDistOutputPath(projectDir: string, platform: string): string {
+		return path.join(projectDir, this.getViteDistRelativeDir(platform));
 	}
 
 	private getViteBuildPaths(
@@ -95,7 +107,10 @@ export class BundlerCompilerService
 		projectData: IProjectData,
 	) {
 		return {
-			distOutput: this.getViteDistOutputPath(projectData.projectDir),
+			distOutput: this.getViteDistOutputPath(
+				projectData.projectDir,
+				platformData.platformNameLowerCase,
+			),
 			destDir: path.join(
 				platformData.appDestinationDirectoryPath,
 				this.$options.hostProjectModuleName,
@@ -566,6 +581,12 @@ export class BundlerCompilerService
 			...process.env,
 			NATIVESCRIPT_WEBPACK_ENV: JSON.stringify(envData),
 			NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
+			...(isVite
+				? await this.getViteChildEnv(
+						platformData.platformNameLowerCase,
+						prepareData,
+					)
+				: {}),
 		};
 		if (this.$hostInfo.isWindows) {
 			Object.assign(options.env, { APPDATA: process.env.appData });
@@ -595,16 +616,46 @@ export class BundlerCompilerService
 		return childProcess;
 	}
 
-	private getViteHmrPort(): number {
-		const fromEnv = Number(process.env.NS_HMR_PORT);
-		return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 5173;
+	/**
+	 * Whether this prepare runs the long-lived Vite HMR dev server (vite +
+	 * HMR + watch, not release).
+	 */
+	private isViteHmrSession(prepareData: IPrepareData): boolean {
+		return (
+			this.getBundler() === "vite" &&
+			!!prepareData.watch &&
+			!!prepareData.hmr &&
+			!prepareData.release
+		);
+	}
+
+	/**
+	 * Environment both Vite children (the build watcher and the dev server)
+	 * must share for a platform: the staging directory, and — for HMR
+	 * sessions — the dev-server port. The port is resolved here, once, and
+	 * handed to `@nativescript/vite` as `NS_HMR_PORT`, so the URLs baked into
+	 * `bundle.mjs`, the server's bind and the `adb reverse` tunnel all match.
+	 */
+	private async getViteChildEnv(
+		platform: string,
+		prepareData: IPrepareData,
+	): Promise<IStringDictionary> {
+		const env: IStringDictionary = {
+			NS_VITE_DIST_DIR: this.getViteDistRelativeDir(platform),
+		};
+		if (this.isViteHmrSession(prepareData)) {
+			env.NS_HMR_PORT = String(
+				await this.$viteHmrPortService.getPort(platform),
+			);
+		}
+		return env;
 	}
 
 	/**
 	 * Spawn and manage the Vite dev server (`vite serve`) for HMR.
 	 *
 	 * Why the CLI owns this. With Vite, HMR needs a long-lived dev server
-	 * (HTTP + the `/ns-hmr` websocket on port 5173) that the device fetches
+	 * (HTTP + the `/ns-hmr` websocket) that the device fetches
 	 * modules and hot updates from — it is SEPARATE from the
 	 * `vite build --watch` process that emits the `bundle.mjs` bootstrap
 	 * baked into the app. Historically users wired this up themselves with
@@ -626,10 +677,7 @@ export class BundlerCompilerService
 		prepareData: IPrepareData,
 	): Promise<void> {
 		try {
-			if (this.getBundler() !== "vite") {
-				return;
-			}
-			if (!prepareData.watch || !prepareData.hmr || prepareData.release) {
+			if (!this.isViteHmrSession(prepareData)) {
 				return;
 			}
 			const key = platformData.platformNameLowerCase;
@@ -637,18 +685,8 @@ export class BundlerCompilerService
 				return;
 			}
 
-			const port = this.getViteHmrPort();
-			// One dev server per port. Simultaneous multi-platform HMR in a
-			// single CLI invocation would collide on 5173 — that case still
-			// needs a distinct NS_HMR_PORT per platform, so skip + warn rather
-			// than fail to bind.
-			const collidingPlatform = Object.keys(this.viteServeProcesses)[0];
-			if (collidingPlatform) {
-				this.$logger.warn(
-					`Vite dev server already running for '${collidingPlatform}' on port ${port}; skipping a second server for '${key}'. For simultaneous multi-platform HMR, set a distinct NS_HMR_PORT per platform.`,
-				);
-				return;
-			}
+			const viteEnv = await this.getViteChildEnv(key, prepareData);
+			const port = Number(viteEnv.NS_HMR_PORT);
 
 			const envData = this.buildEnvData(
 				platformData.platformNameLowerCase,
@@ -690,6 +728,7 @@ export class BundlerCompilerService
 				env: {
 					...process.env,
 					NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
+					...viteEnv,
 				},
 			};
 			if (this.$hostInfo.isWindows) {
