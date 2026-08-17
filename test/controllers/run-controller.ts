@@ -134,6 +134,9 @@ function createTestInjector() {
 	injector.register("staticConfig", {
 		getAdbFilePath: async () => "adb",
 	});
+	injector.register("viteHmrPortService", {
+		getPort: async () => 5173,
+	});
 
 	const devicesService = injector.resolve("devicesService");
 	devicesService.getDevicesForPlatform = () =>

@@ -324,6 +324,7 @@ contract and every existing caller sees it.
 | `ProjectNameService` | `projectNameService` |
 | `Prompter` | `prompter` |
 | `TempService` | `tempService` |
+| `ViteHmrPortService` | `viteHmrPortService` |
 
 And the injection tokens, for registrations that are not classes:
 

@@ -7,6 +7,7 @@ import {
 	USER_INTERACTION_NEEDED_EVENT_NAME,
 } from "../constants";
 import { cache, performanceLog } from "../common/decorators";
+import { isTruthyEnvFlag } from "../common/helpers";
 import { EventEmitter } from "events";
 import * as util from "util";
 import * as _ from "lodash";
@@ -22,6 +23,7 @@ import {
 	IDictionary,
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
+import { ViteHmrPortService } from "../contracts/vite-hmr-port-service";
 import { injector } from "../common/yok";
 
 export class RunController extends EventEmitter implements IRunController {
@@ -58,6 +60,7 @@ export class RunController extends EventEmitter implements IRunController {
 		private $projectChangesService: IProjectChangesService,
 		protected $projectDataService: IProjectDataService,
 		private $staticConfig: Config.IStaticConfig,
+		private $viteHmrPortService: ViteHmrPortService,
 	) {
 		super();
 	}
@@ -692,18 +695,20 @@ export class RunController extends EventEmitter implements IRunController {
 			// Respect the user's explicit opt-out — they want the
 			// `10.0.2.2` / LAN path, so don't create a tunnel or claim one
 			// exists.
-			if (this.isTruthyEnvFlag(process.env.NS_HMR_NO_ADB_REVERSE)) {
+			if (isTruthyEnvFlag(process.env.NS_HMR_NO_ADB_REVERSE)) {
 				return;
 			}
 			// `NS_HMR_PREFER_LAN_HOST` means the dev wants LAN routing
 			// (physical device over Wi-Fi); the dev-host resolver suppresses
 			// the adb-reverse path for it, so don't bother wiring one.
-			if (this.isTruthyEnvFlag(process.env.NS_HMR_PREFER_LAN_HOST)) {
+			if (isTruthyEnvFlag(process.env.NS_HMR_PREFER_LAN_HOST)) {
 				return;
 			}
 
 			const serial = device.deviceInfo.identifier;
-			const port = this.getViteHmrPort();
+			const port = await this.$viteHmrPortService.getPort(
+				device.deviceInfo.platform,
+			);
 
 			if (phase === "pre-build") {
 				// Decide the origin baked into bundle.mjs. Hand the bundler our
@@ -733,7 +738,7 @@ export class RunController extends EventEmitter implements IRunController {
 			// + install (fresh emulators reconnect as they settle), silently
 			// dropping the early mapping. We only bother when we actually told
 			// the bundle to use `127.0.0.1` (READY set during pre-build).
-			if (!this.isTruthyEnvFlag(process.env.NS_ADB_REVERSE_READY)) {
+			if (!isTruthyEnvFlag(process.env.NS_ADB_REVERSE_READY)) {
 				return;
 			}
 			const ok = await this.ensureAndroidReverse(device, serial, port);
@@ -792,22 +797,6 @@ export class RunController extends EventEmitter implements IRunController {
 			}
 		}
 		return false;
-	}
-
-	private getViteHmrPort(): number {
-		// The Vite dev server defaults to 5173; the bundler reads the same
-		// default. If a project runs Vite on a different port, the dev sets
-		// `NS_HMR_PORT` so the CLI reverses the matching port.
-		const fromEnv = Number(process.env.NS_HMR_PORT);
-		return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 5173;
-	}
-
-	private isTruthyEnvFlag(value: string | undefined): boolean {
-		if (typeof value !== "string") {
-			return false;
-		}
-		const v = value.trim().toLowerCase();
-		return !!v && v !== "0" && v !== "false" && v !== "off" && v !== "no";
 	}
 
 	private async syncChangedDataOnDevices(
