@@ -47,6 +47,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			buildConfig.release ? Configurations.Release : Configurations.Debug,
 			"-allowProvisioningUpdates",
 			"SUPPORTS_MACCATALYST=YES",
+			// Sandbox needs a provisioning profile, debug runs have none.
+			...(buildConfig.release ? [] : ["ENABLE_APP_SANDBOX=NO"]),
+			// Metadata generation needs UIKit, which lives under iOSSupport.
+			"OTHER_CFLAGS=$(inherited) -iframework " +
+				"$(SDKROOT)/System/iOSSupport/System/Library/Frameworks",
 			// no `-sdk` here: the destination already selects macOS + the Mac Catalyst
 			// variant, and forcing an SDK on top of it makes xcodebuild pick iphoneos
 			"BUILD_DIR=" + path.join(platformData.projectRoot, constants.BUILD_DIR),

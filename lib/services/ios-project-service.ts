@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 import * as shell from "shelljs";
 import * as _ from "lodash";
 import * as constants from "../constants";
@@ -166,7 +167,7 @@ export class IOSProjectService
 			const requestedPlatform = this.$mobileHelper.normalizePlatformName(
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
 			);
-			// Mac Catalyst ships no runtime of its own, it reuses the iOS one.
+			// Hooks and plugins switch on the iOS name, Catalyst must keep it.
 			const runtimePlatform = this.$mobileHelper.isCatalystPlatform(
 				requestedPlatform,
 			)
@@ -182,8 +183,8 @@ export class IOSProjectService
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
-				normalizedPlatformName: requestedPlatform,
-				platformNameLowerCase: requestedPlatform.toLowerCase(),
+				normalizedPlatformName: runtimePlatform,
+				platformNameLowerCase: runtimePlatform.toLowerCase(),
 				appDestinationDirectoryPath: path.join(
 					projectRoot,
 					projectData.projectName,
@@ -427,6 +428,57 @@ export class IOSProjectService
 		if (this.$fs.exists(xcframeworksFilePath)) {
 			await this.$fs.unzip(xcframeworksFilePath, internalDirPath);
 			this.$fs.deleteFile(xcframeworksFilePath);
+			this.restoreVersionedFrameworkSymlinks(internalDirPath);
+		}
+	}
+
+	/**
+	 * Recreates the symlink layout of versioned frameworks after extraction.
+	 */
+	private restoreVersionedFrameworkSymlinks(rootPath: string): void {
+		// Runtimes zip macOS style frameworks flattened, which breaks codesign.
+		const frameworks = fastGlob.sync("**/*.framework", {
+			cwd: rootPath,
+			onlyDirectories: true,
+			absolute: true,
+			deep: 4,
+		});
+
+		for (const frameworkPath of frameworks) {
+			const versionsPath = path.join(frameworkPath, "Versions");
+			if (!this.$fs.exists(versionsPath)) {
+				continue;
+			}
+
+			const versions = this.$fs
+				.readDirectory(versionsPath)
+				.filter((name) => name !== "Current");
+			if (!versions.length) {
+				continue;
+			}
+
+			const version = versions.includes("A") ? "A" : versions[0];
+			const currentPath = path.join(versionsPath, "Current");
+			if (!fs.lstatSync(currentPath, { throwIfNoEntry: false })?.isSymbolicLink()) {
+				shell.rm("-rf", currentPath);
+				fs.symlinkSync(version, currentPath);
+			}
+
+			for (const name of this.$fs.readDirectory(
+				path.join(versionsPath, version),
+			)) {
+				const topLevelPath = path.join(frameworkPath, name);
+				if (
+					fs
+						.lstatSync(topLevelPath, { throwIfNoEntry: false })
+						?.isSymbolicLink()
+				) {
+					continue;
+				}
+
+				shell.rm("-rf", topLevelPath);
+				fs.symlinkSync(path.join("Versions", "Current", name), topLevelPath);
+			}
 		}
 	}
 
