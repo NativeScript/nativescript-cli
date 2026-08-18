@@ -38,6 +38,7 @@ Attach the debug tools to a running app in the native emulator | `$ ns debug and
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
+* `--no-filter-devices-arch` - If set, builds every ABI instead of only the ones the connected devices report. The narrowing only applies when the app's gradle configuration acts on the `abiFilters` property, and `ns build` never narrows.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>

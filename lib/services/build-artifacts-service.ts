@@ -75,7 +75,12 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		return [];
 	}
 
-	public copyLatestAppPackage(
+	/**
+	 * Copies what the build produced to `targetPath`. A build can produce more
+	 * than one package - an app split per ABI - so a directory target receives
+	 * all of them, while a single file target receives the universal one.
+	 */
+	public copyAppPackages(
 		targetPath: string,
 		platformData: IPlatformData,
 		buildOutputOptions: IBuildOutputOptions
@@ -85,26 +90,36 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		const outputPath =
 			buildOutputOptions.outputPath ||
 			platformData.getBuildOutputPath(buildOutputOptions);
-		const applicationPackage = this.getLatestApplicationPackage(
+		const applicationPackages = this.getAllAppPackages(
 			outputPath,
 			platformData.getValidBuildOutputData(buildOutputOptions)
 		);
-		const packageFile = applicationPackage.packageName;
 
 		this.$fs.ensureDirectoryExists(path.dirname(targetPath));
 
-		if (
-			this.$fs.exists(targetPath) &&
-			this.$fs.getFsStats(targetPath).isDirectory()
-		) {
-			const sourceFileName = path.basename(packageFile);
+		const targetIsDirectory =
+			(this.$fs.exists(targetPath) &&
+				this.$fs.getFsStats(targetPath).isDirectory()) ||
+			!path.extname(targetPath);
+
+		let packagesToCopy = applicationPackages;
+		if (!targetIsDirectory && applicationPackages.length > 1) {
 			this.$logger.trace(
-				`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`
+				`Specified target path: '${targetPath}' is a single file, but the build produced ${applicationPackages.length} packages. Only the universal one will be copied.`
 			);
-			targetPath = path.join(targetPath, sourceFileName);
+			packagesToCopy = applicationPackages.filter((pack) =>
+				path.basename(pack.packageName).includes("universal")
+			);
 		}
-		this.$fs.copyFile(packageFile, targetPath);
-		this.$logger.info(`Copied file '${packageFile}' to '${targetPath}'.`);
+
+		_.each(packagesToCopy, (pack) => {
+			const packageFile = pack.packageName;
+			const targetFilePath = targetIsDirectory
+				? path.join(targetPath, path.basename(packageFile))
+				: targetPath;
+			this.$fs.copyFile(packageFile, targetFilePath);
+			this.$logger.info(`Copied file '${packageFile}' to '${targetFilePath}'.`);
+		});
 	}
 
 	private getLatestApplicationPackage(
