@@ -359,7 +359,7 @@ export class PluginsService implements IPluginsService {
 			dependencies ||
 			this.$nodeModulesDependenciesBuilder.getProductionDependencies(
 				projectData.projectDir,
-				projectData.ignoredDependencies,
+				projectData.getIgnoredDependencies(platform),
 			);
 
 		if (_.isEmpty(dependencies)) {

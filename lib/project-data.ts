@@ -348,6 +348,30 @@ export class ProjectData implements IProjectData {
 		return identifier;
 	}
 
+	public getIgnoredDependencies(platform?: string): string[] {
+		const ignored = this.nsConfig?.ignoredNativeDependencies ?? [];
+		if (!platform || !this.nsConfig) {
+			return ignored;
+		}
+
+		switch (platform.toLowerCase()) {
+			case constants.PlatformTypes.ios:
+				return ignored.concat(
+					this.nsConfig.ios?.ignoredNativeDependencies ?? [],
+				);
+			case constants.PlatformTypes.visionos:
+				return ignored.concat(
+					this.nsConfig.visionos?.ignoredNativeDependencies ?? [],
+				);
+			case constants.PlatformTypes.android:
+				return ignored.concat(
+					this.nsConfig.android?.ignoredNativeDependencies ?? [],
+				);
+			default:
+				return ignored;
+		}
+	}
+
 	private getProjectType(): string {
 		let detectedProjectType = _.find(
 			ProjectData.PROJECT_TYPES,

@@ -404,7 +404,7 @@ export class PrepareController extends EventEmitter {
 		const dependencies = this.$nodeModulesDependenciesBuilder
 			.getProductionDependencies(
 				projectData.projectDir,
-				projectData.ignoredDependencies,
+				projectData.getIgnoredDependencies(platformData.platformNameLowerCase),
 			)
 			.filter((dep) => dep.nativescript);
 		const pluginsNativeDirectories = dependencies.map((dep) =>
