@@ -8,6 +8,7 @@ import {
 import { ICheckEnvironmentRequirementsOutput, IPlatformData } from "./platform";
 import { IPluginData, IBasePluginData } from "./plugins";
 import {
+	IDictionary,
 	IStringDictionary,
 	IProjectDir,
 	IDeviceIdentifier,
@@ -179,6 +180,21 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	 * Custom runtime package name
 	 */
 	runtimePackageName?: string;
+
+	/**
+	 * Per plugin build options, keyed by the plugin's npm package name.
+	 */
+	plugins?: IDictionary<INsConfigAndroidPlugin>;
+}
+
+interface INsConfigAndroidPlugin {
+	/**
+	 * Appended to the plugin name before it is shortened into the name of the
+	 * produced `.aar`. The npm scope is dropped when shortening, so
+	 * `@foo/plugin` and `@bar/plugin` both build a `plugin.aar` and overwrite
+	 * each other - a suffix tells them apart.
+	 */
+	aarSuffix?: string;
 }
 
 interface INsConfigHooks {
