@@ -1,3 +1,3 @@
 interface IDeployController {
-	deploy(data: IRunData): Promise<void>;
+	deploy(data: IDeployData): Promise<void>;
 }

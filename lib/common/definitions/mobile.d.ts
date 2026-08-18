@@ -532,7 +532,7 @@ declare global {
 		}
 
 		interface IiOSSimulatorDiscovery extends IDeviceDiscovery {
-			checkForAvailableSimulators(): Promise<void>;
+			checkForAvailableSimulators(): Promise<IDeviceInfo[]>;
 		}
 
 		interface IAndroidDeviceDiscovery extends IDeviceDiscovery {

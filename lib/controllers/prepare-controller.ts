@@ -52,7 +52,10 @@ interface IPlatformWatcherData {
 	};
 }
 
-export class PrepareController extends EventEmitter {
+export class PrepareController
+	extends EventEmitter
+	implements IPrepareController
+{
 	private watchersData: IDictionary<IDictionary<IPlatformWatcherData>> = {};
 	private isInitialPrepareReady = false;
 	private persistedData: IFilesChangeEventData[] = [];

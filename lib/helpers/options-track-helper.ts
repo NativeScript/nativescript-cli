@@ -1,6 +1,6 @@
 import * as path from "path";
 import { TrackActionNames } from "../constants";
-import { IOptions } from "../declarations";
+import { IOptions, IOptionsTracker } from "../declarations";
 import {
 	IAnalyticsService,
 	IDictionary,
@@ -10,7 +10,7 @@ import { OptionType } from "../common/enums";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 
-export class OptionsTracker {
+export class OptionsTracker implements IOptionsTracker {
 	public static PASSWORD_DETECTION_STRING = "password";
 	public static PRIVATE_REPLACE_VALUE = "private";
 	public static PATH_REPLACE_VALUE = "_localpath";
