@@ -789,20 +789,22 @@ export class BundlerCompilerService
 		const platformKey = platform.toLowerCase();
 		const envData = Object.assign({}, env, { [platformKey]: true });
 
-		// Bundlers only know the base platforms, so Catalyst also flags ios.
-		if (this.$mobileHelper.isCatalystPlatform(platformKey)) {
-			envData[PlatformTypes.ios] = true;
+		// Platform data reports iOS, so the flag comes from the request.
+		if (this.$mobileHelper.isCatalystPlatform(prepareData.platform)) {
+			envData[PlatformTypes.catalyst] = true;
 		}
 
 		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();
 		const appResourcesPath = projectData.getAppResourcesRelativeDirectoryPath();
+		const buildPath = projectData.getBuildRelativeDirectoryPath();
 
 		Object.assign(
 			envData,
 			appId && { appId },
 			appPath && { appPath },
 			appResourcesPath && { appResourcesPath },
+			buildPath && { buildPath },
 			{
 				nativescriptLibPath: path.resolve(
 					__dirname,
@@ -1072,7 +1074,7 @@ export class BundlerCompilerService
 				return path.resolve(packagePath, "bin", "vite.js");
 			}
 		} else if (this.isModernBundler(projectData)) {
-			const packagePath = resolvePackagePath(`@nativescript/${bundler}`, {
+			const packagePath = resolvePackagePath(this.getBundlerPackageName(), {
 				paths: [projectData.projectDir],
 			});
 
@@ -1092,15 +1094,31 @@ export class BundlerCompilerService
 		return path.resolve(packagePath, "bin", "webpack.js");
 	}
 
+	// Forks such as @akylas/nativescript-webpack replace the default package.
+	private getBundlerPackageName(): string {
+		const bundler = this.getBundler();
+		if (bundler !== "webpack") {
+			return `@nativescript/${bundler}`;
+		}
+
+		return this.$projectConfigService.getValue(
+			"webpackPackageName",
+			WEBPACK_PLUGIN_NAME,
+		);
+	}
+
 	private isModernBundler(projectData: IProjectData): boolean {
 		const bundler = this.getBundler();
 		switch (bundler) {
 			case "rspack":
 				return true;
 			default:
-				const packageJSONPath = resolvePackageJSONPath(WEBPACK_PLUGIN_NAME, {
-					paths: [projectData.projectDir],
-				});
+				const packageJSONPath = resolvePackageJSONPath(
+					this.getBundlerPackageName(),
+					{
+						paths: [projectData.projectDir],
+					},
+				);
 
 				if (packageJSONPath) {
 					const packageData = this.$fs.readJson(packageJSONPath);
