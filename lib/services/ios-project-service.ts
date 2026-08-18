@@ -166,8 +166,10 @@ export class IOSProjectService
 			const requestedPlatform = this.$mobileHelper.normalizePlatformName(
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
 			);
-			// Mac Catalyst keeps every iOS convention; only the platform root differs.
-			const platform = this.$mobileHelper.isCatalystPlatform(requestedPlatform)
+			// Mac Catalyst ships no runtime of its own, it reuses the iOS one.
+			const runtimePlatform = this.$mobileHelper.isCatalystPlatform(
+				requestedPlatform,
+			)
 				? this.$devicePlatformsConstants.iOS
 				: requestedPlatform;
 			const projectRoot = this.$options.hostProjectPath
@@ -175,13 +177,13 @@ export class IOSProjectService
 				: path.join(projectData.platformsDir, requestedPlatform.toLowerCase());
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				platform.toLowerCase() as constants.SupportedPlatform,
+				runtimePlatform.toLowerCase() as constants.SupportedPlatform,
 			);
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
-				normalizedPlatformName: platform,
-				platformNameLowerCase: platform.toLowerCase(),
+				normalizedPlatformName: requestedPlatform,
+				platformNameLowerCase: requestedPlatform.toLowerCase(),
 				appDestinationDirectoryPath: path.join(
 					projectRoot,
 					projectData.projectName,

@@ -11,6 +11,7 @@ import {
 	PackageManagers,
 	CONFIG_FILE_NAME_DISPLAY,
 	VITE_DIST_FOLDER_NAME,
+	PlatformTypes,
 } from "../../constants";
 import {
 	IPackageManager,
@@ -787,6 +788,11 @@ export class BundlerCompilerService
 		const { env } = prepareData;
 		const platformKey = platform.toLowerCase();
 		const envData = Object.assign({}, env, { [platformKey]: true });
+
+		// Bundlers only know the base platforms, so Catalyst also flags ios.
+		if (this.$mobileHelper.isCatalystPlatform(platformKey)) {
+			envData[PlatformTypes.ios] = true;
+		}
 
 		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();

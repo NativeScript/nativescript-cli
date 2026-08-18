@@ -1,7 +1,7 @@
 import { ChildProcess } from "child_process";
 import * as path from "path";
 import { ApplicationManagerBase } from "../application-manager-base";
-import { hook } from "../../helpers";
+import { hook, sleep } from "../../helpers";
 import { cache } from "../../decorators";
 import { IOS_LOG_PREDICATE } from "../../constants";
 import {
@@ -65,11 +65,25 @@ export class MacCatalystApplicationManager extends ApplicationManagerBase {
 	public async stopApplication(
 		appData: Mobile.IApplicationData,
 	): Promise<void> {
+		const executablePath = this.getExecutablePath();
+		await this.signalApplication(executablePath, "TERM", appData);
+		if (await this.waitForApplicationExit(executablePath)) {
+			return;
+		}
+		await this.signalApplication(executablePath, "KILL", appData);
+		await this.waitForApplicationExit(executablePath);
+	}
+
+	private async signalApplication(
+		executablePath: string,
+		signal: string,
+		appData: Mobile.IApplicationData,
+	): Promise<void> {
 		try {
 			// Anchored so it never matches our own log stream process.
 			await this.$childProcess.spawnFromEvent(
 				"pkill",
-				["-f", `^${this.getExecutablePath()}$`],
+				[`-${signal}`, "-f", `^${executablePath}$`],
 				"close",
 			);
 		} catch (err) {
@@ -77,6 +91,32 @@ export class MacCatalystApplicationManager extends ApplicationManagerBase {
 			this.$logger.trace(
 				`Nothing to stop for ${appData.appId}. More info: ${err.message}`,
 			);
+		}
+	}
+
+	// Returning before the old instance dies makes open -n spawn a duplicate.
+	private async waitForApplicationExit(
+		executablePath: string,
+	): Promise<boolean> {
+		for (let attempt = 0; attempt < 40; attempt++) {
+			if (!(await this.isApplicationRunning(executablePath))) {
+				return true;
+			}
+			await sleep(50);
+		}
+		return false;
+	}
+
+	private async isApplicationRunning(executablePath: string): Promise<boolean> {
+		try {
+			await this.$childProcess.spawnFromEvent(
+				"pgrep",
+				["-f", `^${executablePath}$`],
+				"close",
+			);
+			return true;
+		} catch (err) {
+			return false;
 		}
 	}
 
