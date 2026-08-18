@@ -8,12 +8,12 @@ import {
 	NODE_MODULES_FOLDER_NAME,
 	TNS_CORE_MODULES_NAME,
 } from "../constants";
+import { DoctorService } from "../contracts/doctor-service";
 import { doctor, constants } from "@nativescript/doctor";
 import { IProjectDataService } from "../definitions/project";
 import { IVersionsService, IOptions } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import {
-	IDoctorService,
 	IAnalyticsService,
 	IHostInfo,
 	IChildProcess,
@@ -27,7 +27,7 @@ import { injector } from "../common/yok";
 import { color } from "../color";
 import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service";
 
-export class DoctorServiceImpl implements IDoctorService {
+export class DoctorServiceImpl implements DoctorService {
 	private static DarwinSetupScriptLocation = path.join(
 		__dirname,
 		"..",
