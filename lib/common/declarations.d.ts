@@ -4,6 +4,7 @@ import {
 	IEventActionData,
 	IGoogleAnalyticsData,
 } from "./definitions/google-analytics";
+import type { DoctorService } from "../contracts/doctor-service";
 import type { ChildProcess } from "../contracts/child-process";
 import type { Errors } from "../contracts/errors";
 import type { FileSystem } from "../contracts/file-system";
@@ -816,44 +817,7 @@ interface IDashedOption {
  * Code behind of the "doctor" command
  * @interface
  */
-interface IDoctorService {
-	/**
-	 * Verifies the host OS configuration and prints warnings to the users
-	 * @param configOptions: defines if the result should be tracked by Analytics
-	 * @returns {Promise<void>}
-	 */
-	printWarnings(configOptions?: {
-		trackResult?: boolean;
-		projectDir?: string;
-		runtimeVersion?: string;
-		options?: IOptions;
-		forceCheck?: boolean;
-		platform?: string;
-	}): Promise<void>;
-	/**
-	 * Runs the setup script on host machine
-	 * @returns {Promise<ISpawnResult>}
-	 */
-	runSetupScript(): Promise<ISpawnResult>;
-	/**
-	 * Checks if the envrironment is properly configured and it is possible to execute local builds
-	 * @returns {Promise<boolean>} true if the environment is properly configured for local builds
-	 * @param {object} configuration
-	 */
-	canExecuteLocalBuild(configuration?: {
-		platform?: string;
-		projectDir?: string;
-		runtimeVersion?: string;
-		forceCheck?: boolean;
-	}): Promise<boolean>;
-
-	/**
-	 * Checks and notifies users for deprecated short imports in their applications.
-	 * @param {string} projectDir Path to the application.
-	 * @returns {void}
-	 */
-	checkForDeprecatedShortImportsInAppDir(projectDir: string): void;
-}
+interface IDoctorService extends DoctorService {}
 
 interface IUtils {
 	getParsedTimeout(defaultTimeout: number): number;

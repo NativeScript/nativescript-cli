@@ -19,6 +19,7 @@ import {
 } from "./common/declarations";
 import { IExtensionData } from "./common/definitions/extensibility";
 import { IApplePortalUserDetail } from "./services/apple-portal/definitions";
+import type { ProjectNameService } from "./contracts/project-name-service";
 import type { PackageManager } from "./contracts/package-manager";
 
 interface INodePackageManager {
@@ -970,18 +971,7 @@ interface IVersionsService {
 /**
  * Describes methods for project name.
  */
-interface IProjectNameService {
-	/**
-	 * Ensures the passed project name is valid. If the project name is not valid prompts for actions.
-	 * @param {string} projectName project name to be checked.
-	 * @param {IOptions} validateOptions current command options.
-	 * @return {Promise<string>} returns the selected name of the project.
-	 */
-	ensureValidName(
-		projectName: string,
-		validateOptions?: { force: boolean },
-	): Promise<string>;
-}
+interface IProjectNameService extends ProjectNameService {}
 
 /**
  * Describes options that can be passed to xcprojService.verifyXcproj method.

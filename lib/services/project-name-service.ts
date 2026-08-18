@@ -3,11 +3,8 @@ import { IProjectNameService } from "../declarations";
 import { IErrors } from "../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
-import { ProjectNameService as ProjectNameServiceContract } from "../contracts/project-name-service";
 
-export class ProjectNameServiceImpl
-	implements IProjectNameService, ProjectNameServiceContract
-{
+export class ProjectNameServiceImpl implements IProjectNameService {
 	constructor(
 		private $projectNameValidator: IProjectNameValidator,
 		private $errors: IErrors,

@@ -24,13 +24,10 @@ import {
 import { IJsonFileSettingsService } from "../common/definitions/json-file-settings-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
-import { DoctorService as DoctorServiceContract } from "../contracts/doctor-service";
 import { color } from "../color";
 import { ITerminalSpinnerService } from "../definitions/terminal-spinner-service";
 
-export class DoctorServiceImpl
-	implements IDoctorService, DoctorServiceContract
-{
+export class DoctorServiceImpl implements IDoctorService {
 	private static DarwinSetupScriptLocation = path.join(
 		__dirname,
 		"..",
