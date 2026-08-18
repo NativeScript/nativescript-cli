@@ -167,6 +167,7 @@ declare module Server {
 		error?: Error;
 	}
 
+	/** @deprecated Kept so existing annotations compile; use the {@link HttpClient} contract. */
 	interface IHttpClient extends HttpClient {}
 
 	interface IRequestResponseData {
@@ -215,6 +216,7 @@ interface IReadFileOptions {
 	flag?: string;
 }
 
+/** @deprecated Kept so existing annotations compile; use the {@link FileSystem} contract. */
 interface IFileSystem extends FileSystem {}
 
 // duplicated from fs.Stats, because I cannot import it here
@@ -245,6 +247,7 @@ interface IOpener {
 	open(filename: string, appname?: string): void;
 }
 
+/** @deprecated Kept so existing annotations compile; use the {@link Errors} contract. */
 interface IErrors extends Errors {}
 
 interface IFailOptions {
@@ -280,6 +283,7 @@ interface ICancellationService extends IDisposable {
 	end(name: string): void;
 }
 
+/** @deprecated Kept so existing annotations compile; use the {@link ChildProcess} contract. */
 interface IChildProcess extends ChildProcess {}
 
 interface IExecOptions {
@@ -681,6 +685,7 @@ interface ISysInfo {
 	getXcodeWarning(): Promise<string>;
 }
 
+/** @deprecated Kept so existing annotations compile; use the {@link HostInfo} contract. */
 interface IHostInfo extends HostInfo {}
 
 // tslint:disable-next-line:interface-name
@@ -817,6 +822,7 @@ interface IDashedOption {
  * Code behind of the "doctor" command
  * @interface
  */
+/** @deprecated Kept so existing annotations compile; use the {@link DoctorService} contract. */
 interface IDoctorService extends DoctorService {}
 
 interface IUtils {

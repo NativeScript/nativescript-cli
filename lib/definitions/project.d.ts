@@ -211,8 +211,10 @@ interface INsConfig {
 	buildPath?: string;
 }
 
+/** @deprecated Kept so existing annotations compile; use the {@link ProjectData} contract. */
 interface IProjectData extends ProjectData {}
 
+/** @deprecated Kept so existing annotations compile; use the {@link ProjectDataService} contract. */
 interface IProjectDataService extends ProjectDataService {}
 
 interface IProjectCleanupService {

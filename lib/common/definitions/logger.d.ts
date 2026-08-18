@@ -15,6 +15,7 @@ declare global {
 		appenderOptions?: IAppenderOptions;
 	}
 
+	/** @deprecated Kept so existing annotations compile; use the {@link Logger} contract. */
 	interface ILogger extends Logger {}
 
 	interface Log4JSAppenderConfiguration extends Configuration {

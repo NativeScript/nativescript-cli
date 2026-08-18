@@ -588,6 +588,7 @@ declare global {
 			[platform: string]: string;
 		}
 
+		/** @deprecated Kept so existing annotations compile; use the {@link DevicesService} contract. */
 		interface IDevicesService extends DevicesService {}
 
 		interface IPickSingleDeviceOptions {

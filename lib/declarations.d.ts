@@ -110,6 +110,7 @@ interface INodePackageManager {
 	getCachePath(): Promise<string>;
 }
 
+/** @deprecated Kept so existing annotations compile; use the {@link PackageManager} contract. */
 interface IPackageManager extends PackageManager {}
 
 interface IPerformanceService {
@@ -971,6 +972,7 @@ interface IVersionsService {
 /**
  * Describes methods for project name.
  */
+/** @deprecated Kept so existing annotations compile; use the {@link ProjectNameService} contract. */
 interface IProjectNameService extends ProjectNameService {}
 
 /**

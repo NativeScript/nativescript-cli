@@ -9,4 +9,5 @@ export type AffixOptions = {
 /**
  * Declares wrapped functions of temp module
  */
+/** @deprecated Kept so existing annotations compile; use the {@link TempService} contract. */
 export interface ITempService extends TempService {}
