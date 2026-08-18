@@ -282,6 +282,14 @@ export class ProjectData implements IProjectData {
 		return this.resolveToProjectDir(appRelativePath, projectDir);
 	}
 
+	public getBuildRelativeDirectoryPath(): string {
+		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]) {
+			return this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY];
+		}
+
+		return constants.PLATFORMS_DIR_NAME;
+	}
+
 	public getAppDirectoryRelativePath(): string {
 		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_APP_ENTRY]) {
 			return this.nsConfig[constants.CONFIG_NS_APP_ENTRY];

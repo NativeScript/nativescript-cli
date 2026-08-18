@@ -89,4 +89,6 @@ export abstract class ProjectData {
 	abstract getAppResourcesDirectoryPath(projectDir?: string): string;
 
 	abstract getAppResourcesRelativeDirectoryPath(): string;
+
+	abstract getBuildRelativeDirectoryPath(): string;
 }
