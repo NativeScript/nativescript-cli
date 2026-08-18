@@ -179,6 +179,25 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	 * Custom runtime package name
 	 */
 	runtimePackageName?: string;
+
+	/**
+	 * Pin the gradle wrapper to a specific gradle version, overriding the one
+	 * shipped by the android runtime.
+	 */
+	gradleVersion?: string;
+
+	/**
+	 * Additional arguments passed to every gradle invocation (app and plugin
+	 * builds). Merged with the ones passed on the command line through
+	 * `--gradleArgs`.
+	 */
+	gradleArgs?: string[];
+
+	/**
+	 * Package providing the gradle files copied over the ones shipped by the
+	 * android runtime. Defaults to the files bundled with the CLI.
+	 */
+	gradleFilesPackageName?: string;
 }
 
 interface INsConfigHooks {

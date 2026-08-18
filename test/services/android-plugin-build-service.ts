@@ -109,6 +109,9 @@ describe("androidPluginBuildService", () => {
 		testInjector.register("watchIgnoreListService", {
 			addFileToIgnoreList: () => ({}),
 		});
+		testInjector.register("gradleBuildArgsService", {
+			getBuildLoggingArgs: (): string[] => [],
+		});
 
 		fs = testInjector.resolve("fs");
 		androidBuildPluginService = testInjector.resolve<AndroidPluginBuildService>(
