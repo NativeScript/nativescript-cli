@@ -19,6 +19,7 @@ import {
 } from "./common/declarations";
 import { IExtensionData } from "./common/definitions/extensibility";
 import { IApplePortalUserDetail } from "./services/apple-portal/definitions";
+import type { PackageManager } from "./contracts/package-manager";
 
 interface INodePackageManager {
 	/**
@@ -108,21 +109,7 @@ interface INodePackageManager {
 	getCachePath(): Promise<string>;
 }
 
-interface IPackageManager extends INodePackageManager {
-	/**
-	 * Gets the name of the package manager used for the current process.
-	 * It can be read from the user settings or by passing -- option.
-	 */
-	getPackageManagerName(): Promise<string>;
-
-	/**
-	 * Gets the version corresponding to the tag for the package
-	 * @param {string} packageName The name of the package.
-	 * @param {string} tag The tag which we need the version of.
-	 * @returns {string} The version corresponding to the tag
-	 */
-	getTagVersion(packageName: string, tag: string): Promise<string>;
-}
+interface IPackageManager extends PackageManager {}
 
 interface IPerformanceService {
 	// Will process the data based on the command options (--performance flag and user-reporting setting)
@@ -1178,10 +1165,6 @@ interface IAssetsGenerationService {
 interface IRuntimeGradleVersions {
 	gradleVersion?: string;
 	gradleAndroidPluginVersion?: string;
-}
-
-interface INetworkConnectivityValidator {
-	validate(): Promise<void>;
 }
 
 interface IPlatformValidationService {

@@ -2,6 +2,7 @@ import { annotate } from "../helpers";
 import { getContractName } from "./contract";
 import { resolveForwardRef } from "./forward-ref";
 import { runInInjectionContext } from "./inject";
+import { getInjectionTokenName } from "./injection-token";
 import type {
 	InternalProvider,
 	Provider,
@@ -9,7 +10,7 @@ import type {
 	Type,
 } from "./providers";
 
-type TokenKey = string | Function;
+type TokenKey = string | object;
 
 export interface InjectOptions {
 	/** Resolve to null instead of throwing when the token is not registered. */
@@ -241,7 +242,7 @@ export class Injector {
 		if (typeof token === "string") {
 			return [normalizeName(token)];
 		}
-		const name = getContractName(token);
+		const name = tokenNameOf(token);
 		return name !== undefined ? [token, name] : [token];
 	}
 
@@ -294,7 +295,7 @@ export class Injector {
 		if (direct) {
 			return direct;
 		}
-		const name = getContractName(token);
+		const name = tokenNameOf(token);
 		return name !== undefined ? this.providers.get(name) : undefined;
 	}
 
@@ -412,9 +413,23 @@ function normalizeName(name: string): string {
 	return name[0] === "$" ? name.slice(1) : name;
 }
 
+/** The name a non-string token aliases in the legacy registry, if it has one. */
+function tokenNameOf(token: ProviderToken): string | undefined {
+	const injectionTokenName = getInjectionTokenName(token);
+	return injectionTokenName !== undefined
+		? injectionTokenName
+		: getContractName(token);
+}
+
 function displayNameOf(token: ProviderToken): string {
 	if (typeof token === "string") {
 		return normalizeName(token);
 	}
-	return getContractName(token) || token.name || "<anonymous class>";
+	const injectionTokenName = getInjectionTokenName(token);
+	if (injectionTokenName !== undefined) {
+		return `InjectionToken(${injectionTokenName})`;
+	}
+	return (
+		getContractName(token) || (<Function>token).name || "<anonymous class>"
+	);
 }

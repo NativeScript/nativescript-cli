@@ -1,7 +1,10 @@
+import type { InjectionToken } from "./injection-token";
+
 export type Type<T> = new (...args: any[]) => T;
 export type AbstractType<T> = abstract new (...args: any[]) => T;
 
-export type ProviderToken<T = any> = string | Type<T> | AbstractType<T>;
+export type ProviderToken<T = any> =
+	string | Type<T> | AbstractType<T> | InjectionToken<T>;
 
 interface IBaseProvider<T> {
 	provide: ProviderToken<T>;
@@ -57,11 +60,11 @@ export type InternalProvider<T = any> = Provider<T> | ILazyRequireProvider;
 
 /** Enforces at compile time that the implementation satisfies the token. */
 export const provide = <T>(
-	token: AbstractType<T> | string,
+	token: AbstractType<T> | InjectionToken<T> | string,
 	impl: Type<T>,
 ): Provider<T> => ({ provide: token, useClass: impl });
 
 export const provideLazy = <T>(
-	token: AbstractType<T> | string,
+	token: AbstractType<T> | InjectionToken<T> | string,
 	load: () => Type<T>,
 ): Provider<T> => ({ provide: token, useLazyClass: load });

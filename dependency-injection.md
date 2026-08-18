@@ -63,6 +63,45 @@ Rules:
 - Implementations do not become tokens by extending or implementing a contract;
   only the decorated class itself is a token.
 
+Tokens for non-classes: `InjectionToken`
+----------------------------------------
+
+Some registrations have no class to decorate — an imported module namespace, a
+plain value, a function. `InjectionToken` is the typed key for those:
+
+```ts
+import { InjectionToken, inject } from "nativescript/contracts";
+
+export const XCODE = new InjectionToken<typeof import("nativescript-dev-xcode")>(
+	"xcode",
+);
+
+class ProjectPatcher {
+	private xcode = inject(XCODE); // typeof import("nativescript-dev-xcode")
+}
+```
+
+The description **is** the registry name, exactly as a contract's name is, so a
+token is a typed alias onto an existing registration and nothing has to change
+where the value is registered — `injector.register("xcode", xcode)` keeps
+serving `inject(XCODE)`. A leading `$` in the description is stripped.
+
+Names are minted in the same registry `@Contract` uses, so a token and a
+contract cannot claim the same name: the second one **throws at load time**,
+rather than silently aliasing one registration under two tokens.
+
+Tokens are used anywhere a contract class is — `inject()`, `get()`, `provide()`
+and the provider literals:
+
+```ts
+{ provide: XCODE, useValue: xcode }
+{ provide: XCODE, useFactory: () => require("nativescript-dev-xcode") }
+```
+
+Prefer a `@Contract` class when the dependency is a service: it also carries
+the service's shape. Reach for `InjectionToken` only when there is nothing to
+decorate.
+
 Resolving: `inject()` and `Injector`
 ------------------------------------
 
@@ -90,10 +129,10 @@ class EnvironmentChecker {
 }
 ```
 
-`Injector.get()` accepts a contract class, a string name, or a `$`-prefixed
-string name — all three return the same instance. The string forms exist for
-interoperability with the legacy registry; use the class token whenever one
-exists.
+`Injector.get()` accepts a contract class, an `InjectionToken`, a string name,
+or a `$`-prefixed string name — all of them return the same instance. The
+string forms exist for interoperability with the legacy registry; use the token
+whenever one exists.
 
 Both `inject()` and `get()` take Angular-shaped options as their second
 argument:
@@ -155,7 +194,8 @@ instance. Transient instances are still retained by the container so
 String keys are accepted anywhere a token is (`{ provide: "logger", useValue }`)
 — that is how the legacy facade registers, and how per-call overrides address
 not-yet-migrated dependencies. New registrations should mint a `@Contract`
-token instead of a new string name.
+class, or an `InjectionToken` when there is no class to decorate, instead of a
+new string name.
 
 For per-call construction with overrides (a fresh instance of a class with some
 dependencies replaced), use `createInstance`:
@@ -173,16 +213,17 @@ owns them and never see the per-call providers.
 Resolution semantics
 --------------------
 
-- Lookup is **class object first, token name on a miss**, checked per injector
-  level before delegating to the parent. Both keys index the same provider
-  record, so re-registering a service by its string name (as plugins are
-  documented to do with `$logger`) stays visible to `inject(Logger)` consumers.
+- Lookup is **token identity first, token name on a miss**, checked per
+  injector level before delegating to the parent. Both keys index the same
+  provider record, so re-registering a service by its string name (as plugins
+  are documented to do with `$logger`) stays visible to `inject(Logger)`
+  consumers. This holds for `@Contract` classes and `InjectionToken`s alike.
 - A leading `$` is stripped from string tokens: `get("$fs")` and `get("fs")`
   are the same registration.
-- The name fallback also makes **duplicated contract copies interchangeable**:
-  if an extension's dependency tree carries its own copy of a contract class,
-  that copy resolves to the same provider by name. "Works locally, breaks when
-  installed" is not a failure mode of this design.
+- The name fallback also makes **duplicated token copies interchangeable**: if
+  an extension's dependency tree carries its own copy of a contract class or
+  injection token, that copy resolves to the same provider by name. "Works
+  locally, breaks when installed" is not a failure mode of this design.
 - Cyclic dependencies fail with the full resolution path
   (`Cyclic dependency detected on dependency 'a'. Resolution path: a -> b -> a`).
 
@@ -258,12 +299,38 @@ import { inject, DoctorService } from "nativescript/contracts";
 Available contracts
 -------------------
 
-The first tranche, growing as services migrate:
+Growing as services migrate. Every token below is a typed alias onto the
+registration it names — resolving by token and resolving by the legacy name
+return the same instance.
+
+The contract is also the single source of truth for the service's shape: the
+ambient interface the CLI has always published extends it (`interface ILogger
+extends Logger {}`), so the two cannot drift apart. Add a member to the
+contract and every existing caller sees it.
 
 | Token | Legacy name |
 |---|---|
+| `ChildProcess` | `childProcess` |
+| `DevicesService` | `devicesService` |
 | `DoctorService` | `doctorService` |
+| `Errors` | `errors` |
+| `FileSystem` | `fs` |
+| `HostInfo` | `hostInfo` |
+| `HttpClient` | `httpClient` |
+| `Logger` | `logger` |
+| `PackageManager` | `packageManager` |
+| `ProjectData` | `projectData` |
+| `ProjectDataService` | `projectDataService` |
 | `ProjectNameService` | `projectNameService` |
+| `Prompter` | `prompter` |
+| `TempService` | `tempService` |
+
+And the injection tokens, for registrations that are not classes:
+
+| Token | Legacy name | Value |
+|---|---|---|
+| `XCODE` | `xcode` | the `nativescript-dev-xcode` module |
+| `PBXPROJ_DOM_XCODE` | `pbxprojDomXcode` | the `pbxproj-dom/xcode` module |
 
 Related guides
 --------------

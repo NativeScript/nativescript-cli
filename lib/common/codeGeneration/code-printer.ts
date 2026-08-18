@@ -2,7 +2,6 @@ import * as _ from "lodash";
 import { EOL } from "os";
 import { CodeEntityType } from "./code-entity";
 import { CodeGeneration } from "./code-generation";
-import { injector } from "../yok";
 
 export class CodePrinter {
 	private static INDENT_CHAR = "\t";
@@ -12,7 +11,7 @@ export class CodePrinter {
 
 	public composeBlock(
 		block: CodeGeneration.IBlock,
-		indentSize?: number
+		indentSize?: number,
 	): string {
 		indentSize = indentSize === undefined ? 0 : indentSize;
 		let content = this.getIndentation(indentSize);
@@ -27,12 +26,12 @@ export class CodePrinter {
 			if (codeEntity.codeEntityType === CodeEntityType.Line) {
 				content += this.composeLine(
 					<CodeGeneration.ILine>codeEntity,
-					indentSize + 1
+					indentSize + 1,
 				);
 			} else if (codeEntity.codeEntityType === CodeEntityType.Block) {
 				content += this.composeBlock(
 					<CodeGeneration.IBlock>codeEntity,
-					indentSize + 1
+					indentSize + 1,
 				);
 			}
 		});
@@ -59,4 +58,3 @@ export class CodePrinter {
 		return content;
 	}
 }
-injector.register("swaggerCodePrinter", CodePrinter);
