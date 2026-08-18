@@ -571,6 +571,11 @@ interface IEmbedOptions {
 }
 
 interface IAndroidOptions extends IEmbedOptions {
+	/**
+	 * The product flavor to build, when the app declares any. `--gradleFlavor foo`
+	 * runs `assembleFooDebug` instead of `assembleDebug`.
+	 */
+	gradleFlavor: string;
 	gradlePath: string;
 	gradleArgs: string;
 }

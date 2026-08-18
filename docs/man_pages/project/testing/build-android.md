@@ -34,6 +34,7 @@ General | `$ ns build android [--compileSdk <API Level>] [--key-store-path <File
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the build will produce an Android App Bundle(`.aab`) file.
+* `--gradleFlavor` - Builds the given product flavor, when the app declares any. `--gradleFlavor foo` runs the `assembleFooDebug`/`assembleFooRelease` gradle task instead of `assembleDebug`/`assembleRelease`.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 * `--path <Directory>` - Specifies the directory that contains the project. If not set, the project is searched for in the current directory and all directories above it.
 
