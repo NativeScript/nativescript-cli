@@ -44,9 +44,16 @@ export class XcconfigService implements IXcconfigService {
 		}
 
 		// A key already present in the destination wins, so the incoming one is
-		// dropped. Report the drops whose values actually differ: a silently
-		// discarded setting is otherwise indistinguishable from one that was
-		// never written, which makes a plugin pinning e.g.
+		// dropped, unless the kept value references $(inherited), which asks
+		// for the setting to be added to rather than replaced. Those accumulate,
+		// or a search path list such as HEADER_SEARCH_PATHS would keep only
+		// whichever file was merged first and the build would fail on headers
+		// the plugins and the pods do ship. The incoming marker is stripped so
+		// it stays at the front of the merged value.
+		//
+		// Report the drops whose values actually differ: a silently discarded
+		// setting is otherwise indistinguishable from one that was never
+		// written, which makes a plugin pinning e.g.
 		// CLANG_CXX_LANGUAGE_STANDARD very hard to track down.
 		//
 		// The paths are passed as argv rather than interpolated: they come from
@@ -55,15 +62,24 @@ export class XcconfigService implements IXcconfigService {
 		const mergeScript = `require 'xcodeproj'
 		require 'json'
 		destination, source = ARGV
+		inherited = /\\$[({]inherited[)}]/
 		userConfig = Xcodeproj::Config.new(destination)
 		existingConfig = Xcodeproj::Config.new(source)
 		conflicts = []
 		userConfig.attributes.each do |key, kept|
-			if existingConfig.attributes.key?(key)
-				ignored = existingConfig.attributes[key]
-				conflicts << { 'key' => key, 'kept' => kept.to_s, 'ignored' => ignored.to_s } if ignored.to_s != kept.to_s
-				existingConfig.attributes.delete(key)
+			next unless existingConfig.attributes.key?(key)
+			incoming = existingConfig.attributes[key]
+			if kept.to_s =~ inherited
+				appended = incoming.to_s.gsub(inherited, '').strip
+				if appended.empty?
+					existingConfig.attributes.delete(key)
+				else
+					existingConfig.attributes[key] = appended
+				end
+				next
 			end
+			conflicts << { 'key' => key, 'kept' => kept.to_s, 'ignored' => incoming.to_s } if incoming.to_s != kept.to_s
+			existingConfig.attributes.delete(key)
 		end
 		userConfig.merge(existingConfig).save_as(Pathname.new(destination))
 		print '${XcconfigService.CONFLICT_MARKER}' + JSON.generate(conflicts)`;

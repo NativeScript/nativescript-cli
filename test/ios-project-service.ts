@@ -1246,6 +1246,86 @@ describeOnMacOS("Merge Project XCConfig files", () => {
 		);
 	});
 
+	it("Accumulates $(inherited) settings across the app, the plugins and the pods", async () => {
+		fs.writeFile(
+			appResourcesXcconfigPath,
+			`HEADER_SEARCH_PATHS = $(inherited) "$(SRCROOT)/AppHeaders"${EOL}`,
+		);
+
+		const pluginPlatformsFolderPath = join(projectPath, "somePlugin", "ios");
+		fs.writeFile(
+			join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME),
+			`HEADER_SEARCH_PATHS = $(inherited) "$(SRCROOT)/PluginHeaders"${EOL}`,
+		);
+
+		const pluginsService = testInjector.resolve("pluginsService");
+		pluginsService.getAllProductionPlugins = () => [
+			{
+				name: "somePlugin",
+				pluginPlatformsFolderPath: () => pluginPlatformsFolderPath,
+			},
+		];
+
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
+
+		// The pods xcconfig is merged in a later prepare step, once `pod install`
+		// has produced it.
+		const podXcconfigPath = join(projectPath, "pods.xcconfig");
+		fs.writeFile(
+			podXcconfigPath,
+			`HEADER_SEARCH_PATHS = $(inherited) "\${PODS_ROOT}/Headers/Public"${EOL}`,
+		);
+
+		for (const destinationFilePath of _.values(
+			xcconfigService.getPluginsXcconfigFilePaths(projectRoot),
+		)) {
+			await xcconfigService.mergeFiles(podXcconfigPath, destinationFilePath);
+
+			assertPropertyValues(
+				{
+					HEADER_SEARCH_PATHS:
+						'$(inherited) "$(SRCROOT)/AppHeaders" "$(SRCROOT)/PluginHeaders" "${PODS_ROOT}/Headers/Public"',
+				},
+				destinationFilePath,
+				testInjector,
+			);
+		}
+	});
+
+	it("The app's build.xcconfig replaces a plugin's list setting when it drops $(inherited)", async () => {
+		fs.writeFile(
+			appResourcesXcconfigPath,
+			`HEADER_SEARCH_PATHS = "$(SRCROOT)/OnlyMine"${EOL}`,
+		);
+
+		const pluginPlatformsFolderPath = join(projectPath, "somePlugin", "ios");
+		fs.writeFile(
+			join(pluginPlatformsFolderPath, BUILD_XCCONFIG_FILE_NAME),
+			`HEADER_SEARCH_PATHS = $(inherited) "$(SRCROOT)/PluginHeaders"${EOL}`,
+		);
+
+		const pluginsService = testInjector.resolve("pluginsService");
+		pluginsService.getAllProductionPlugins = () => [
+			{
+				name: "somePlugin",
+				pluginPlatformsFolderPath: () => pluginPlatformsFolderPath,
+			},
+		];
+
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
+
+		_.each(
+			xcconfigService.getPluginsXcconfigFilePaths(projectRoot),
+			(destinationFilePath) => {
+				assertPropertyValues(
+					{ HEADER_SEARCH_PATHS: '"$(SRCROOT)/OnlyMine"' },
+					destinationFilePath,
+					testInjector,
+				);
+			},
+		);
+	});
+
 	it("Adds the entitlements property if not set by the user", async () => {
 		for (const release in [true, false]) {
 			const realExistsFunction = testInjector.resolve("fs").exists;
