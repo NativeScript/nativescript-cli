@@ -52,7 +52,7 @@ if (onlyX86) {
     outLogger.withStyle(Style.Info).println "OnlyX86 build triggered."
 }
 
-def DEFAULT_ABIS = ["x86", "x86_64", "armeabi-v7a", "arm64-v8a"]
+def DEFAULT_ABIS = ["x86_64", "armeabi-v7a", "arm64-v8a"]
 // -PabiFilters=<abi>[,<abi>] narrows the build down to those abis. The CLI passes the abis of the
 // devices it is about to deploy to, unless --no-filter-devices-arch was given.
 def requestedAbis = project.hasProperty("abiFilters")
@@ -88,11 +88,13 @@ def SBG_BINDINGS_NAME = "sbg-bindings.txt"
 def SBG_INTERFACE_NAMES = "sbg-interface-names.txt"
 def INPUT_JS_DIR = "$projectDir/src/main/assets/app"
 def OUTPUT_JAVA_DIR = "$projectDir/src/main/java"
+def APP_DIR = "$projectDir/src/main/assets/app"
 
 //metadata generator
 def MDG_OUTPUT_DIR = "mdg-output-dir.txt"
 def MDG_JAVA_DEPENDENCIES = "mdg-java-dependencies.txt"
 def METADATA_OUT_PATH = "$projectDir/src/main/assets/metadata"
+def METADATA_KEEP_RULES = layout.buildDirectory.file("nativescript/metadata-keep-rules.pro").get().asFile.absolutePath
 def METADATA_JAVA_OUT = "mdg-java-out.txt"
 
 // paths to jar libraries
@@ -109,14 +111,19 @@ def computeBuildToolsVersion = { ->
 
 def enableAnalytics = (project.hasProperty("gatherAnalyticsData") && project.gatherAnalyticsData == "true")
 def enableVerboseMDG = project.gradle.startParameter.logLevel.name() == 'DEBUG'
+
 def analyticsFilePath = "$rootDir/analytics/build-statistics.json"
 def analyticsCollector = project.ext.AnalyticsCollector.withOutputPath(analyticsFilePath)
 if (enableAnalytics) {
     analyticsCollector.markUseKotlinPropertyInApp(true)
     analyticsCollector.writeAnalyticsFile()
 }
-
 project.ext.selectedBuildType = project.hasProperty("release") ? "release" : "debug"
+
+// The engine name comes from the runtime's gradle.properties (ns_engine). Older
+// runtimes don't declare it and have no bytecode compiler at all, so the whole
+// feature stays off unless the property is present.
+def napiEngine = project.hasProperty("ns_engine") ? ns_engine as String : null
 
 buildscript {
     def applyBuildScriptConfigurations = { ->
@@ -256,6 +263,19 @@ android {
         jniLibs.srcDirs = ["$projectDir/libs/jni", "$projectDir/snapshot-build/build/ndk-build/libs"]
     }
 
+    packagingOptions {
+        // The Hermes engine build pulls in fbjni, which ships its own
+        // libc++_shared.so alongside the one the runtime module already
+        // packages. The runtime module resolves this for its own merge, but the
+        // app merges the runtime's jniLibs with fbjni's, so it needs the same
+        // rule or :app:mergeDebugNativeLibs fails with "2 files found with path
+        // lib/<abi>/libc++_shared.so". Both copies are the NDK's, so either is
+        // fine. libfbjni.so collides the same way: the runtime module packages a
+        // copy from its jniLibs and the fbjni prefab supplies another.
+        pickFirst "**/libc++_shared.so"
+        pickFirst "**/libfbjni.so"
+    }
+
     signingConfigs {
         release {
             if (project.hasProperty("ksPath") &&
@@ -281,6 +301,17 @@ android {
         }
         release {
             signingConfig signingConfigs.release
+
+            // Shrink the dex with the same set the metadata was filtered to.
+            // Only together with -PnsFilterMetadata: without the generated keep
+            // rules R8 cannot see that JS reaches these classes at all, and
+            // would strip everything the app depends on.
+            if (project.hasProperty("nsFilterMetadata")) {
+                minifyEnabled true
+                proguardFiles getDefaultProguardFile("proguard-android.txt"),
+                        METADATA_KEEP_RULES
+            }
+
         }
     }
 
@@ -502,8 +533,112 @@ if (failOnCompilationWarningsEnabled()) {
 ///////////////////////////// EXECUTION PHASE /////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////
 
+// Compiles the app's own Java so the static binding generator can see it.
+//
+// Without this the generator detects an `extend` of an app class perfectly --
+// 48 rows for com.tns.tests.Button1 alone -- and then generates nothing for it,
+// because it cannot load the base class to read its methods. Only classes from
+// android.jar and the AAR dependencies got bindings; everything the app itself
+// declared fell through to being dexed on the device at run time.
+//
+// It cannot simply depend on the normal javac task: that one consumes the
+// generator's output, so the dependency would be circular. This compiles the
+// same sources *minus* the generated bindings into a scratch directory nothing
+// else reads, which breaks the cycle.
+//
+// Best-effort by design. A source that fails here (most often a Java class
+// referring to a Kotlin one, which is not compiled at this point) simply is not
+// on the generator's classpath, which is exactly today's behaviour for it. The
+// real javac still compiles everything and still fails the build if it cannot.
+task compileAppClassesForSbg {
+    dependsOn "collectAllJars"
+
+    def outDir = layout.buildDirectory.dir("nativescript/sbg-app-classes").get().asFile
+    def sourceRoot = file(OUTPUT_JAVA_DIR)
+
+    inputs.files(fileTree(sourceRoot) { include "**/*.java"; exclude "com/tns/gen/**" })
+    outputs.dir(outDir)
+
+    doLast {
+        def sources = []
+        sourceRoot.eachFileRecurse { f ->
+            if (f.isFile() && f.name.endsWith(".java")
+                    && !f.absolutePath.contains("${File.separator}com${File.separator}tns${File.separator}gen${File.separator}")) {
+                sources.add(f.absolutePath)
+            }
+        }
+
+        if (sources.isEmpty()) {
+            return
+        }
+
+        outDir.deleteDir()
+        outDir.mkdirs()
+
+        // The classpath collectAllJars just wrote, plus whatever the runtime
+        // module has already produced -- com.tns.* is what the app's own
+        // classes extend.
+        def cp = []
+        def depsFile = file("$BUILD_TOOLS_PATH/$SBG_JAVA_DEPENDENCIES")
+        if (depsFile.exists()) {
+            depsFile.eachLine { line -> if (line.trim()) cp.add(line.trim()) }
+        }
+        def runtimeProject = findProject(':runtime')
+        if (runtimeProject != null) {
+            runtimeProject.fileTree(runtimeProject.buildDir) {
+                include "intermediates/javac/**/classes"
+                include "tmp/kotlin-classes/**"
+            }.visit { d -> if (d.directory) cp.add(d.file.absolutePath) }
+        }
+
+        def argsFile = new File(outDir.parentFile, "sbg-javac-args.txt")
+        argsFile.text = sources.collect { "\"${it.replace('\\', '/')}\"" }.join("\n")
+
+        def cmd = ["javac", "-proc:none", "-nowarn", "-g",
+                   "-source", "17", "-target", "17",
+                   "-d", outDir.absolutePath]
+        if (!cp.isEmpty()) {
+            cmd.addAll(["-cp", cp.join(File.pathSeparator)])
+        }
+        cmd.add("@${argsFile.absolutePath}".toString())
+
+        def process = new ProcessBuilder(cmd.collect { it.toString() })
+                .redirectErrorStream(true).start()
+        def errors = 0
+        process.inputStream.eachLine { line -> if (line.contains("error:")) errors++ }
+        process.waitFor()
+
+        def produced = 0
+        if (outDir.exists()) {
+            outDir.eachFileRecurse { f -> if (f.isFile() && f.name.endsWith(".class")) produced++ }
+        }
+        outLogger.withStyle(Style.Info).println(
+                "\t ~ [sbg] compiled ${produced} app class file(s) for binding generation" +
+                (errors > 0 ? " (${errors} source(s) skipped -- see above)" : ""))
+    }
+}
+
+// Name generated bindings after what they contain rather than after the extend()
+// call site. Off by default; an app opts in with -PuseContentBindings, or with
+//
+//     project.ext.useContentBindings = true
+//
+// in App_Resources/Android/app.gradle or before-plugins.gradle. The value drives
+// both halves of the scheme from one place: the static binding generator (which
+// writes the names) and the runtime (which looks them up, via the app config
+// written by writeRuntimeAppConfig). -Pcontent-keyed-bindings is the older
+// spelling, kept because it is what a runtime build passes to :runtime.
+def nsContentKeyedBindings = ["useContentBindings", "content-keyed-bindings"].any { name ->
+    project.hasProperty(name) &&
+            (project.property(name).toString().isEmpty()
+                    || Boolean.parseBoolean(project.property(name).toString()))
+}
+
 task runSbg(type: BuildToolTask) {
     dependsOn "collectAllJars"
+    if (napiEngine != null) {
+        dependsOn "compileAppClassesForSbg"
+    }
     def rootPath = ""
     if (!findProject(':static-binding-generator').is(null)) {
         rootPath = Paths.get(project(':static-binding-generator').projectDir.path, "build/libs").toString()
@@ -522,6 +657,19 @@ task runSbg(type: BuildToolTask) {
 
     if (failOnCompilationWarningsEnabled()) {
         paramz.add("-show-deprecation-warnings")
+    }
+    if (napiEngine != null) {
+        if (ns_engine == "PRIMJS") {
+            paramz.add("-line-column-primjs")
+        }
+
+        // The generated names and the names the runtime looks up are two halves of
+        // one scheme, and half of it is a silent LookedUpClassNotFound. The other
+        // half is no longer a runtime rebuild: writeRuntimeAppConfig hands the same
+        // value to the runtime through the app's package.json.
+        if (nsContentKeyedBindings) {
+            paramz.add("-content-keyed-bindings")
+        }
     }
 
     setOutputs outLogger
@@ -699,6 +847,9 @@ task 'collectAllJars' {
 
         new File("$BUILD_TOOLS_PATH/$SBG_JAVA_DEPENDENCIES").withWriter { out ->
             allJarPaths.each { out.println it }
+            // The app's own classes, compiled by compileAppClassesForSbg. A
+            // directory rather than a jar; the generator reads both.
+            out.println layout.buildDirectory.dir("nativescript/sbg-app-classes").get().asFile.absolutePath
         }
         new File("$BUILD_TOOLS_PATH/$MDG_JAVA_DEPENDENCIES").withWriter { out ->
             allJarPaths.each {
@@ -719,13 +870,172 @@ task 'collectAllJars' {
     }
 }
 
-task copyMetadataFilters {
-    outputs.files("$BUILD_TOOLS_PATH/whitelist.mdg", "$BUILD_TOOLS_PATH/blacklist.mdg")
-    // use an explicit copy task here because the copy task itselfs marks the whole built-tools as an output!
-    copy {
-        from file("$rootDir/whitelist.mdg"), file("$rootDir/blacklist.mdg")
-        into "$BUILD_TOOLS_PATH"
+// Derives whitelist.mdg from the app's own JS, so metadata carries only what
+// the app can reach. Opt-in: without -PnsFilterMetadata the seed is removed and
+// the generator emits everything, which is the behaviour every existing build
+// already has.
+//
+// The seed is only a starting point -- the generator closes over supertypes,
+// nested classes and signature types before dropping anything, and fails the
+// build if that closure turns out to be unsound. See docs/metadata-filtering.md.
+def nsFilterMetadata = project.hasProperty("nsFilterMetadata")
+
+// Build-owned, and deliberately NOT $rootDir/whitelist.mdg: that path belongs to
+// the app. An app may ship its own hand-written whitelist.mdg / blacklist.mdg
+// and filter without -PnsFilterMetadata at all, exactly as it could before the
+// generated seed existed -- writing the seed there overwrote that file, and
+// turning filtering off deleted it.
+def nsGeneratedSeed = file("$projectDir/build/nativescript/generated-whitelist.mdg")
+
+task generateMetadataSeed {
+    def seedScript = "$BUILD_TOOLS_PATH/metadata-filter/seed.js"
+    def generatedSeed = nsGeneratedSeed
+
+    inputs.property("enabled", nsFilterMetadata)
+    inputs.dir(APP_DIR)
+    inputs.files(fileTree("$projectDir/src/main/res"))
+    inputs.files(fileTree("$BUILD_TOOLS_PATH/metadata-filter") { include "*.js" })
+    outputs.file(generatedSeed)
+
+    doLast {
+        if (!nsFilterMetadata) {
+            // Leaving a stale seed behind would keep filtering on for a build
+            // that did not ask for it -- the confusing direction to fail. Only
+            // the generated file is removed; an app's own whitelist.mdg is
+            // untouched and still filters.
+            if (generatedSeed.exists()) {
+                generatedSeed.delete()
+                outLogger.withStyle(Style.Info).println "\t ~ metadata filtering off; removed the generated seed"
+            }
+            return
+        }
+
+        generatedSeed.parentFile.mkdirs()
+
+        def cmd = ["node", seedScript, APP_DIR,
+                   "--manifest", "$projectDir/src/main/AndroidManifest.xml",
+                   "--out", generatedSeed.absolutePath]
+
+        // Custom views, fragments and behaviours are named in resource XML and
+        // instantiated by the framework; nothing in the JS mentions them.
+        def resDir = file("$projectDir/src/main/res")
+        if (resDir.exists()) {
+            cmd.addAll(["--res", resDir.absolutePath])
+        }
+
+        def bindings = file("$BUILD_TOOLS_PATH/$SBG_BINDINGS_NAME")
+        if (bindings.exists()) {
+            cmd.addAll(["--sbg-bindings", bindings.absolutePath])
+        }
+
+        // This app ships files that are invalid on purpose, to test how the
+        // loader reports them. Anywhere else an unparseable file disables
+        // filtering for the whole build.
+        cmd.addAll(["--allow-unparseable", "shared/Require/SyntaxErrorInModule",
+                    "--allow-unparseable", "shared/Workers/WorkerInvalidSyntax"])
+
+        // ProcessBuilder needs real Strings; interpolated paths are GStrings.
+        def process = new ProcessBuilder(cmd.collect { it.toString() })
+                .redirectErrorStream(true).start()
+        process.inputStream.eachLine { outLogger.withStyle(Style.Info).println "\t ~ [metadata-seed] $it" }
+        if (process.waitFor() != 0) {
+            throw new GradleException("NativeScript: metadata seed generation failed.")
+        }
     }
+}
+
+// Device-free guard against the one part of the seed that is written by hand.
+// Wired into `check` so it runs in CI: the runtime naming a new class from
+// native code is otherwise invisible until an app built with filtering on hits
+// the code path that needs it.
+task checkMetadataRuntimeKeepList {
+    group = "verification"
+    description = "Verifies RUNTIME_KEEP covers every class the runtime resolves by name."
+
+    def runtimeSources = ["$rootDir/../../../NativeScript/ffi/jni/jsi",
+                          "$rootDir/../../../NativeScript/runtime/android/jsi"]
+    def script = "$BUILD_TOOLS_PATH/metadata-filter/check-runtime-keeplist.js"
+
+    inputs.files(fileTree("$BUILD_TOOLS_PATH/metadata-filter") { include "*.js" })
+    runtimeSources.each { dir ->
+        if (file(dir).exists()) {
+            inputs.files(fileTree(dir) { include "**/*.cpp", "**/*.h" })
+        }
+    }
+    outputs.upToDateWhen { false }
+
+    doLast {
+        def cmd = ["node", script] + runtimeSources.findAll { file(it).exists() }
+        def process = new ProcessBuilder(cmd.collect { it.toString() })
+                .redirectErrorStream(true).start()
+        process.inputStream.eachLine { outLogger.withStyle(Style.Info).println "\t ~ [keeplist] $it" }
+        if (process.waitFor() != 0) {
+            throw new GradleException(
+                    "NativeScript: the metadata runtime keep-list is out of date. " +
+                    "Add the classes listed above to RUNTIME_KEEP in " +
+                    "build-tools/metadata-filter/seed.js.")
+        }
+    }
+}
+if (napiEngine != null) {
+    tasks.matching { it.name == "check" }.configureEach { it.dependsOn(checkMetadataRuntimeKeepList) }
+}
+
+task copyMetadataFilters {
+
+    if (napiEngine != null) {
+        dependsOn generateMetadataSeed
+
+        // Declared so the task re-runs when a filter file appears or disappears.
+        // Without inputs it has none to compare, stays up to date on the strength
+        // of its outputs alone, and leaves the previous build's filter in place --
+        // which silently keeps filtering on for a build that turned it off.
+        inputs.files("$rootDir/whitelist.mdg", "$rootDir/blacklist.mdg", nsGeneratedSeed)
+        outputs.files("$BUILD_TOOLS_PATH/whitelist.mdg", "$BUILD_TOOLS_PATH/blacklist.mdg")
+
+        // Copies at execution time, not configuration time: the seed does not exist
+        // until generateMetadataSeed has run. Files.copy rather than project.copy,
+        // which Gradle 9 no longer allows during execution.
+        doLast {
+            // The whitelist MDG reads is the app's own file, the generated seed, or
+            // both concatenated. Either alone is a complete filter: an app with a
+            // hand-written whitelist and no -PnsFilterMetadata filters by its list
+            // (and MDG leaves it alone -- see enforceClosure in buildMetadata),
+            // while a build with the flag and no app file filters by the seed.
+            def whitelistParts = []
+            def appWhitelist = file("$rootDir/whitelist.mdg")
+            if (appWhitelist.exists()) {
+                whitelistParts.add(appWhitelist.text)
+            }
+            if (nsFilterMetadata && nsGeneratedSeed.exists()) {
+                whitelistParts.add(nsGeneratedSeed.text)
+            }
+
+            def whitelistTarget = file("$BUILD_TOOLS_PATH/whitelist.mdg")
+            if (whitelistParts.isEmpty()) {
+                whitelistTarget.delete()
+            } else {
+                whitelistTarget.text = whitelistParts.join("\n")
+            }
+
+            def blacklistSource = file("$rootDir/blacklist.mdg")
+            def blacklistTarget = file("$BUILD_TOOLS_PATH/blacklist.mdg")
+            if (blacklistSource.exists()) {
+                Files.copy(blacklistSource.toPath(), blacklistTarget.toPath(),
+                        StandardCopyOption.REPLACE_EXISTING)
+            } else {
+                blacklistTarget.delete()
+            }
+        }
+    } else {
+        outputs.files("$BUILD_TOOLS_PATH/whitelist.mdg", "$BUILD_TOOLS_PATH/blacklist.mdg")
+        // use an explicit copy task here because the copy task itselfs marks the whole built-tools as an output!
+        copy {
+            from file("$rootDir/whitelist.mdg"), file("$rootDir/blacklist.mdg")
+            into "$BUILD_TOOLS_PATH"
+        }
+    }
+
 }
 
 task 'copyMetadata' {
@@ -941,6 +1251,21 @@ task buildMetadata(type: BuildToolTask) {
     // use explicit inputs as the above makes the whole build-tools directory an input!
     inputs.files("$BUILD_TOOLS_PATH/whitelist.mdg", "$BUILD_TOOLS_PATH/blacklist.mdg")
 
+    outLogger.withStyle(Style.SuccessHeader).println "\t + buildMetadata"
+    if (napiEngine != null) {
+
+        // The generator itself decides what the metadata contains, so a change to
+        // it has to invalidate the output. Without this the task stays up-to-date
+        // across a generator rebuild and silently ships the previous run's tree.
+        inputs.files(Paths.get(rootPath, "android-metadata-generator.jar").toString())
+
+        // R8 keep rules derived from the same retained set as the metadata. Build
+        // output, not an asset -- shipping it would put 100KB+ of build input in
+        // the APK.
+        outputs.file(METADATA_KEEP_RULES)
+        outLogger.withStyle(Style.SuccessHeader).println "\t + output ${METADATA_KEEP_RULES}"
+    }
+
     def classesDir = layout.buildDirectory.dir("intermediates/javac").get().asFile
     if (classesDir.exists()) {
         inputs.dir(classesDir)
@@ -1036,50 +1361,134 @@ task buildMetadata(type: BuildToolTask) {
             paramz.add("verbose")
         }
 
+        if (napiEngine != null) {
+
+            paramz.add("proguardOut=$METADATA_KEEP_RULES")
+
+            // Grow the whitelist into a closure, and fail the build if that closure
+            // is unsound, only when the seed is the one we generated. An app's own
+            // whitelist.mdg is filtered as authored -- see the comment on
+            // generateMetadataSeed and Builder.applyClosureIfRequested.
+            if (nsFilterMetadata) {
+                paramz.add("enforceClosure=true")
+            }
+        }
+
         args paramz.toArray()
     }
 }
 
 task generateTypescriptDefinitions(type: BuildToolTask) {
-    if (!findProject(':dts-generator').is(null)) {
-        dependsOn ':dts-generator:jar'
-    }
+    if (napiEngine != null) {
+        // allJarLibraries is filled by collectAllJars at execution time; without
+        // this the generator was invoked with an empty -input and failed. The task
+        // has been off by default, so nothing exercised it.
+        dependsOn "collectAllJars"
 
-    def paramz = new ArrayList<String>()
-    def includeDirs = ["com.android.support", "/platforms/" + android.compileSdkVersion]
-
-    workingDir "$BUILD_TOOLS_PATH"
-    mainClass = "-jar"
-
-    doFirst {
-        delete "$TYPINGS_PATH"
-
-        paramz.add("dts-generator.jar")
-        paramz.add("-input")
-
-        for (String jarPath : allJarLibraries) {
-            // don't generate typings for runtime jars and classes
-            if (shouldIncludeDirForTypings(jarPath, includeDirs)) {
-                paramz.add(jarPath)
-            }
+        def dtsGeneratorJar = "dts-generator.jar"
+        if (!findProject(':dts-generator').is(null)) {
+            dependsOn ':dts-generator:jar'
+            dtsGeneratorJar = Paths.get(project(':dts-generator').projectDir.path,
+                    "build/libs/dts-generator.jar").toString()
         }
 
-        paramz.add("-output")
-        paramz.add("$TYPINGS_PATH")
+        def paramz = new ArrayList<String>()
+        def includeDirs = ["com.android.support", "/platforms/" + android.compileSdkVersion]
 
-        new File("$TYPINGS_PATH").mkdirs()
+        workingDir "$BUILD_TOOLS_PATH"
+        mainClass = "-jar"
 
-        logger.info("Task generateTypescriptDefinitions: Call dts-generator.jar with arguments: " + paramz.toString().replaceAll(',', ''))
-        outLogger.withStyle(Style.SuccessHeader).println "Task generateTypescriptDefinitions: Call dts-generator.jar with arguments: " + paramz.toString().replaceAll(',', '')
+        // Declared so Gradle can skip the task outright when no jar has changed,
+        // which is what makes generating typings by default affordable: the common
+        // build does no work at all, and a classpath change costs one full run.
+        //
+        // Keyed on the jars' *contents*, not the list of paths -- a dependency
+        // upgrade keeps the same path and would otherwise go unnoticed.
+        inputs.dir(extractedDependenciesDir).withPropertyName("dependencyJars")
+        inputs.file(android.sdkDirectory.getAbsolutePath() + "/platforms/"
+                + android.compileSdkVersion + "/android.jar").withPropertyName("androidJar")
+        if (!findProject(':dts-generator').is(null)) {
+            // By path, not by task: the other project is not configured yet, so
+            // tasks.named("jar") would fail during evaluation.
+            inputs.files(fileTree("${project(':dts-generator').projectDir}/build/libs") {
+                include "*.jar"
+            }).withPropertyName("generator")
+        }
+        outputs.dir(TYPINGS_PATH).withPropertyName("typings")
 
-        setOutputs outLogger
+        doFirst {
+            delete "$TYPINGS_PATH"
 
-        args paramz.toArray()
+            paramz.add(dtsGeneratorJar)
+            paramz.add("-input")
+
+            for (String jarPath : allJarLibraries) {
+                // don't generate typings for runtime jars and classes
+                if (shouldIncludeDirForTypings(jarPath, includeDirs)) {
+                    paramz.add(jarPath)
+                }
+            }
+
+            paramz.add("-output")
+            paramz.add("$TYPINGS_PATH")
+
+            new File("$TYPINGS_PATH").mkdirs()
+
+            logger.info("Task generateTypescriptDefinitions: Call dts-generator.jar with arguments: " + paramz.toString().replaceAll(',', ''))
+            outLogger.withStyle(Style.SuccessHeader).println "Task generateTypescriptDefinitions: Call dts-generator.jar with arguments: " + paramz.toString().replaceAll(',', '')
+
+            setOutputs outLogger
+
+            args paramz.toArray()
+        }
+    } else {
+        if (!findProject(':dts-generator').is(null)) {
+            dependsOn ':dts-generator:jar'
+        }
+
+        def paramz = new ArrayList<String>()
+        def includeDirs = ["com.android.support", "/platforms/" + android.compileSdkVersion]
+
+        workingDir "$BUILD_TOOLS_PATH"
+        mainClass = "-jar"
+
+        doFirst {
+            delete "$TYPINGS_PATH"
+
+            paramz.add("dts-generator.jar")
+            paramz.add("-input")
+
+            for (String jarPath : allJarLibraries) {
+                // don't generate typings for runtime jars and classes
+                if (shouldIncludeDirForTypings(jarPath, includeDirs)) {
+                    paramz.add(jarPath)
+                }
+            }
+
+            paramz.add("-output")
+            paramz.add("$TYPINGS_PATH")
+
+            new File("$TYPINGS_PATH").mkdirs()
+
+            logger.info("Task generateTypescriptDefinitions: Call dts-generator.jar with arguments: " + paramz.toString().replaceAll(',', ''))
+            outLogger.withStyle(Style.SuccessHeader).println "Task generateTypescriptDefinitions: Call dts-generator.jar with arguments: " + paramz.toString().replaceAll(',', '')
+
+            setOutputs outLogger
+
+            args paramz.toArray()
+        }
     }
+    
 }
 
+// Off by default: the dts-generator walks the whole compile classpath, which is
+// slow, and most builds never look at the output. TypeScript users who need the
+// typings to call anything native opt in per build with -PgenerateTypings
+// (bare, or =true); -PgenerateTypings=false is still an explicit no.
 generateTypescriptDefinitions.onlyIf {
-    (project.hasProperty("generateTypings") && Boolean.parseBoolean(project.generateTypings)) || PASSED_TYPINGS_PATH != null
+    project.hasProperty("generateTypings") &&
+            (project.generateTypings.toString().isEmpty()
+                    || Boolean.parseBoolean(project.generateTypings.toString()))
 }
 
 collectAllJars.finalizedBy(generateTypescriptDefinitions)
@@ -1166,20 +1575,17 @@ def bytecodeForced = project.hasProperty("nsBytecodeForce") || project.hasProper
 // task names — the same heuristic the rest of this file uses.
 def isReleaseBuild = project.hasProperty("release") ||
         project.gradle.startParameter.taskNames.any { it.toLowerCase().contains("release") }
-// The engine name comes from the runtime's gradle.properties (ns_engine). Older
-// runtimes don't declare it and have no bytecode compiler at all, so the whole
-// feature stays off unless the property is present.
-def bytecodeEngine = project.hasProperty("ns_engine") ? ns_engine as String : null
-project.ext.bytecodeEnabled = bytecodeEngine != null && (isReleaseBuild || bytecodeForced) && !bytecodeDisabled
+
+project.ext.bytecodeEnabled = napiEngine != null && (isReleaseBuild || bytecodeForced) && !bytecodeDisabled
 
 // Announce the bytecode status once at configuration time so it's obvious in the
 // build log whether ahead-of-time bytecode will be produced.
 if (project.ext.bytecodeEnabled) {
     def buildKind = isReleaseBuild ? "release build" : "debug build (forced via -PnsBytecodeForce)"
-    outLogger.withStyle(Style.SuccessHeader).println "\t + [bytecode] ENABLED for ${buildKind} (engine: ${bytecodeEngine})"
-    outLogger.withStyle(Style.Info).println "\t   ~ app JS will be compiled to bytecode after asset merge (if ${bytecodeEngine} has a compiler for this host)."
+    outLogger.withStyle(Style.SuccessHeader).println "\t + [bytecode] ENABLED for ${buildKind} (engine: ${napiEngine})"
+    outLogger.withStyle(Style.Info).println "\t   ~ app JS will be compiled to bytecode after asset merge (if ${napiEngine} has a compiler for this host)."
     outLogger.withStyle(Style.Info).println "\t   ~ disable with -PnsBytecodeDisabled"
-} else if (bytecodeEngine != null) {
+} else if (napiEngine != null) {
     def bytecodeReason = bytecodeDisabled ? "disabled via -PnsBytecodeDisabled"
             : "debug build (release-only feature; force with -PnsBytecodeForce)"
     outLogger.withStyle(Style.Info).println "\t ~ [bytecode] DISABLED — ${bytecodeReason}; shipping plain JS. isReleaseBuid: ${isReleaseBuild};"
@@ -1219,8 +1625,8 @@ task compileBytecode {
         // fail-the-build behaviour with -PnsBytecodeStrict.
         def strict = project.hasProperty("nsBytecodeStrict")
 
-        outLogger.withStyle(Style.SuccessHeader).println "\t + [bytecode] compiling app JS → ${bytecodeEngine} bytecode"
-        outLogger.withStyle(Style.Info).println "\t   ~ engine:      ${bytecodeEngine}"
+        outLogger.withStyle(Style.SuccessHeader).println "\t + [bytecode] compiling app JS → ${napiEngine} bytecode"
+        outLogger.withStyle(Style.Info).println "\t   ~ engine:      ${napiEngine}"
         outLogger.withStyle(Style.Info).println "\t   ~ app assets:  ${appDir}"
         outLogger.withStyle(Style.Info).println "\t   ~ driver:      ${script}"
         if (project.hasProperty("bytecodeCompilerBinary")) {
@@ -1229,7 +1635,7 @@ task compileBytecode {
         outLogger.withStyle(Style.Info).println "\t   ~ source maps: ${sourceMaps ? "on" : "off"}"
         outLogger.withStyle(Style.Info).println "\t   ~ on error:    ${strict ? "fail the build (strict)" : "skip file, keep source"}"
 
-        def cmd = [node, script, "--app", appDir, "--engine", bytecodeEngine]
+        def cmd = [node, script, "--app", appDir, "--engine", napiEngine]
         if (project.hasProperty("bytecodeCompilerBinary")) {
             cmd += ["--compiler", bytecodeCompilerBinary as String]
         }
@@ -1300,6 +1706,33 @@ tasks.configureEach({ DefaultTask currentTask ->
 
     if (currentTask =~ /merge.*Assets/) {
         currentTask.dependsOn(buildMetadata)
+        // Hand the runtime what it cannot infer, by patching the app's
+        // package.json where the assets were merged -- the app's own source file
+        // is never touched, and AppConfig already reads this one at startup.
+        //
+        // Driven off this task's own outputs rather than
+        // getMergedAssetsOutputPath(), which follows the pinned
+        // project.ext.selectedBuildType and so names the release assets even in
+        // a debug build.
+        currentTask.doLast {
+            if (!nsContentKeyedBindings) return
+            currentTask.outputs.files.files.each { File out ->
+                if (out.path.contains("${File.separator}incremental${File.separator}")) return
+                def packageJson = new File(out, "app/package.json")
+                if (!packageJson.exists()) return
+
+                def json = new JsonSlurper().parseText(packageJson.text)
+                def androidConfig = json.android ?: [:]
+                // The static binding generator wrote the class names during this
+                // same build; the runtime has to look them up the same way.
+                androidConfig.contentKeyedBindings = true
+                json.android = androidConfig
+                packageJson.text = JsonOutput.prettyPrint(JsonOutput.toJson(json))
+
+                outLogger.withStyle(Style.SuccessHeader).println \
+                        "\t + [bindings] content-keyed bindings on (generator + runtime)"
+            }
+        }
         // Compile the freshly-merged app JS to engine bytecode right after the
         // assets are merged (the onlyIf guard makes this a no-op unless it's a
         // release build with bytecode enabled). Packaging is made to wait for it below.
@@ -1333,9 +1766,11 @@ tasks.configureEach({ DefaultTask currentTask ->
         currentTask.dependsOn(compileBytecode)
     }
 
-    // ensure buildMetadata is done before R8 to allow custom proguard from metadata
-    if (currentTask =~ /minify(Debug|Release)WithR8/) {
-        buildMetadata.finalizedBy(currentTask)
+    // R8 consumes metadata-keep-rules.pro, which buildMetadata writes. Without
+    // this ordering R8 either reads the previous build's rules or fails on a
+    // missing file, and either way strips classes the app reaches from JS.
+    if (currentTask =~ /minify.*WithR8/) {
+        currentTask.dependsOn(buildMetadata)
     }
     
     if (currentTask =~ /assemble.*Debug/ || currentTask =~ /assemble.*Release/) {
