@@ -49,6 +49,7 @@ import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 import { AndroidPrepareData } from "../data/prepare-data";
 import { IProjectChangesInfo } from "../definitions/project-changes";
+import { getDevicesAbis } from "./android/devices-abis";
 
 interface NativeDependency {
 	name: string;
@@ -695,6 +696,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
 				gradleArgs: this.$options.gradleArgs,
+				abiFilters: this.getPluginsAbiFilters(),
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
@@ -708,6 +710,27 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			this.$androidPluginBuildService.migrateIncludeGradle(options);
 		}
+	}
+
+	/**
+	 * The ABIs passed to the gradle build of a plugin built from source. Opt-in
+	 * (`--filter-plugins-devices-arch`): nothing in the gradle files the CLI
+	 * generates for a plugin acts on `abiFilters`, so this is only useful for a
+	 * plugin whose own `include.gradle` reads the property - a long native build
+	 * can then skip the ABIs this run is not going to deploy to.
+	 */
+	private getPluginsAbiFilters(): string[] {
+		if (!this.$options.filterPluginsDevicesArch) {
+			return null;
+		}
+
+		const abis = getDevicesAbis(
+			this.$devicesService,
+			this.$devicePlatformsConstants.Android,
+			{ device: this.$options.device, emulator: this.$options.emulator }
+		);
+
+		return abis.length ? abis : null;
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {

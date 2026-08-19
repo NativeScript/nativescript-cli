@@ -19,6 +19,7 @@ import {
 	IFileSystem,
 	IProjectDir,
 } from "../../lib/common/declarations";
+import { IPluginBuildOptions } from "../../lib/definitions/android-plugin-migrator";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -408,5 +409,93 @@ describe("androidProjectService", () => {
 				]);
 			});
 		});
+	});
+});
+
+describe("androidProjectService plugins abi filtering", () => {
+	const createDevice = (
+		identifier: string,
+		abis: string[],
+		isEmulator = false
+	): any => ({
+		deviceInfo: { identifier, abis, platform: "android" },
+		isEmulator,
+	});
+
+	const preparePluginNativeCode = async (
+		options: any,
+		devices: any[]
+	): Promise<IPluginBuildOptions> => {
+		const testInjector = createTestInjector();
+		let pluginBuildOptions: IPluginBuildOptions = null;
+		testInjector.register("androidPluginBuildService", {
+			buildAar: async (opts: IPluginBuildOptions): Promise<boolean> => {
+				pluginBuildOptions = opts;
+				return false;
+			},
+			migrateIncludeGradle: (): boolean => false,
+		});
+		testInjector.register("options", {
+			hostProjectModuleName: "app",
+			...options,
+		});
+		testInjector.register("devicesService", {
+			getDevicesForPlatform: (): any[] => devices,
+		});
+		testInjector.register("devicePlatformsConstants", { Android: "Android" });
+
+		const androidProjectService: IPlatformProjectService = testInjector.resolve(
+			"androidProjectService"
+		);
+		await androidProjectService.preparePluginNativeCode(
+			<any>{
+				name: "my-plugin",
+				pluginPlatformsFolderPath: (): string => "pluginPlatformsDir",
+			},
+			<any>{ projectDir: "projectDir", platformsDir: "platformsDir" }
+		);
+
+		return pluginBuildOptions;
+	};
+
+	it("passes the abis of the connected devices when the option is set", async () => {
+		const options = await preparePluginNativeCode(
+			{ filterPluginsDevicesArch: true },
+			[
+				createDevice("device1", ["arm64-v8a", "armeabi-v7a"]),
+				createDevice("emulator1", ["x86_64", "x86"], true),
+			]
+		);
+
+		assert.deepStrictEqual(options.abiFilters, ["arm64-v8a", "x86_64"]);
+	});
+
+	it("passes the abi of the selected device only", async () => {
+		const options = await preparePluginNativeCode(
+			{ filterPluginsDevicesArch: true, device: "device1" },
+			[
+				createDevice("device1", ["arm64-v8a"]),
+				createDevice("emulator1", ["x86_64"], true),
+			]
+		);
+
+		assert.deepStrictEqual(options.abiFilters, ["arm64-v8a"]);
+	});
+
+	it("passes no abis when the option is not set", async () => {
+		const options = await preparePluginNativeCode({}, [
+			createDevice("device1", ["arm64-v8a"]),
+		]);
+
+		assert.isNull(options.abiFilters);
+	});
+
+	it("passes no abis when no device reports its abis", async () => {
+		const options = await preparePluginNativeCode(
+			{ filterPluginsDevicesArch: true },
+			[createDevice("device1", [])]
+		);
+
+		assert.isNull(options.abiFilters);
 	});
 });

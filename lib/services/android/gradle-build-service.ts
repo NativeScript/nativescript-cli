@@ -9,6 +9,7 @@ import {
 import { IAndroidBuildData } from "../../definitions/build";
 import { IChildProcess } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { getDevicesAbis } from "./devices-abis";
 import * as _ from "lodash";
 
 export class GradleBuildService
@@ -75,22 +76,10 @@ export class GradleBuildService
 			return;
 		}
 
-		let devices = this.$devicesService.getDevicesForPlatform(
-			buildData.platform
-		);
-		if (buildData.device) {
-			devices = devices.filter(
-				(d) => d.deviceInfo.identifier === buildData.device
-			);
-		} else if (buildData.emulator) {
-			devices = devices.filter((d) => d.isEmulator);
-		}
-
-		const abis = _.uniq(
-			devices
-				.map((d) => (d.deviceInfo.abis || [])[0])
-				.filter((abi) => !!abi)
-		);
+		const abis = getDevicesAbis(this.$devicesService, buildData.platform, {
+			device: buildData.device,
+			emulator: buildData.emulator,
+		});
 
 		if (abis.length) {
 			buildTaskArgs.push(`-PabiFilters=${abis.join(",")}`);
