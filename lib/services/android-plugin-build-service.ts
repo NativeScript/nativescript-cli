@@ -228,7 +228,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(
 			options.platformsAndroidDirPath,
 		);
-		const shortPluginName = getShortPluginName(options.pluginName);
+		// the npm scope is dropped when shortening, so an optional suffix is what
+		// keeps two same-named plugins from overwriting each other's `.aar`
+		const shortPluginName = getShortPluginName(
+			`${options.pluginName}${options.aarSuffix || ""}`,
+		);
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
 		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(
 			options.platformsAndroidDirPath,
@@ -272,6 +276,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.platformsAndroidDirPath,
 				options.projectDir,
 				options.pluginName,
+				shortPluginName,
 			);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
@@ -414,6 +419,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		platformsAndroidDirPath: string,
 		projectDir: string,
 		pluginName: string,
+		shortPluginName: string,
 	): Promise<void> {
 		const gradleTemplatePath = path.resolve(
 			path.join(__dirname, "../../vendor/gradle-plugin"),
@@ -438,8 +444,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
 
 		// gets the package from the AndroidManifest to use as the namespace or fallback to the `org.nativescript.${shortPluginName}`
-		const shortPluginName = getShortPluginName(pluginName);
-
 		const manifestPath = path.join(
 			pluginTempDir,
 			"src",
