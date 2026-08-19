@@ -38,6 +38,7 @@ Attach the debug tools to a running app in the native emulator | `$ ns debug and
     *   `--env.sourceMap` - creates inline source maps.
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
+* `--gradleFlavor` - Builds the given product flavor, when the app declares any. `--gradleFlavor foo` runs the `assembleFooDebug`/`assembleFooRelease` gradle task instead of `assembleDebug`/`assembleRelease`.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>
