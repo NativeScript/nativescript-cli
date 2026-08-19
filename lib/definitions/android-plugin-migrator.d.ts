@@ -12,6 +12,15 @@ interface IAndroidBuildOptions {
 	tempPluginDirPath: string;
 	gradlePath?: string;
 	gradleArgs?: string;
+	abiFilters?: string[];
+
+	/**
+	 * Appended to the plugin name before it is shortened into the name of the
+	 * produced `.aar`. The npm scope is dropped when shortening, so two plugins
+	 * from different scopes can end up with the same `.aar` - a suffix tells
+	 * them apart.
+	 */
+	aarSuffix?: string;
 }
 
 interface IAndroidPluginBuildService {
@@ -49,4 +58,13 @@ interface IBuildAndroidPluginData extends Partial<IProjectDir> {
 	 * Optional custom Gradle arguments.
 	 */
 	gradleArgs?: string;
+
+	/**
+	 * The ABIs the build this plugin is prepared for is about to deploy to,
+	 * passed to the plugin build as `-PabiFilters`. Nothing in the gradle files
+	 * the CLI generates for a plugin acts on it - it is there for a plugin whose
+	 * own `include.gradle` reads the property to skip the ABIs the build does
+	 * not need.
+	 */
+	abiFilters?: string[];
 }

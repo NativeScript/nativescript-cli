@@ -61,6 +61,14 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $watchIgnoreListService: IWatchIgnoreListService,
 	) {}
 
+	/**
+	 * The plugin build data entry recording the build options gradle was last
+	 * asked for. The plugin sources do not change when an option does, so every
+	 * per-plugin option that changes what gradle produces belongs in here -
+	 * otherwise the aar built with the old one is kept.
+	 */
+	private static BUILD_OPTIONS_DATA_KEY = "__buildOptions";
+
 	private static MANIFEST_ROOT = {
 		$: {
 			"xmlns:android": "http://schemas.android.com/apk/res/android",
@@ -226,12 +234,23 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(
 			options.platformsAndroidDirPath,
 		);
-		const shortPluginName = getShortPluginName(options.pluginName);
+		// the npm scope is dropped when shortening, so an optional suffix is what
+		// keeps two same-named plugins from overwriting each other's `.aar`
+		const shortPluginName = getShortPluginName(
+			`${options.pluginName}${options.aarSuffix || ""}`,
+		);
 		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
 		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(
 			options.platformsAndroidDirPath,
 			shortPluginName,
 		);
+
+		const buildOptions = this.getArtifactAffectingOptions(options);
+		if (buildOptions) {
+			pluginSourceFileHashesInfo[
+				AndroidPluginBuildService.BUILD_OPTIONS_DATA_KEY
+			] = buildOptions;
+		}
 
 		const shouldBuildAar = await this.shouldBuildAar({
 			manifestFilePath,
@@ -260,10 +279,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.platformsAndroidDirPath,
 				options.projectDir,
 				options.pluginName,
+				shortPluginName,
 			);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
 				gradleArgs: options.gradleArgs,
+				abiFilters: options.abiFilters,
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -276,6 +297,28 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		return shouldBuildAar;
+	}
+
+	/**
+	 * The build options that change what gradle produces for this plugin, in
+	 * the form they are recorded in the plugin build data. `null` when none of
+	 * them is set, so a project that uses none of them keeps the build data it
+	 * already has.
+	 *
+	 * `abiFilters` is the only one today: the aar of a plugin built for a
+	 * subset of the ABIs is not the aar of the same sources built for another
+	 * subset. Options that only change the *name* of the artifact - `aarSuffix`
+	 * - do not belong here, they produce a different file rather than a stale
+	 * one.
+	 */
+	private getArtifactAffectingOptions(options: IPluginBuildOptions): string {
+		const affectingOptions: { [key: string]: any } = {};
+
+		if (options.abiFilters && options.abiFilters.length) {
+			affectingOptions.abiFilters = options.abiFilters;
+		}
+
+		return _.isEmpty(affectingOptions) ? null : JSON.stringify(affectingOptions);
 	}
 
 	private cleanPluginDir(pluginTempDir: string): void {
@@ -401,6 +444,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		platformsAndroidDirPath: string,
 		projectDir: string,
 		pluginName: string,
+		shortPluginName: string,
 	): Promise<void> {
 		const gradleTemplatePath = path.resolve(
 			path.join(__dirname, "../../vendor/gradle-plugin"),
@@ -425,8 +469,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
 
 		// gets the package from the AndroidManifest to use as the namespace or fallback to the `org.nativescript.${shortPluginName}`
-		const shortPluginName = getShortPluginName(pluginName);
-
 		const manifestPath = path.join(
 			pluginTempDir,
 			"src",
@@ -819,6 +861,19 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 		if (pluginBuildSettings.gradleArgs) {
 			localArgs.push(pluginBuildSettings.gradleArgs);
+		}
+
+		// nothing in the gradle files generated here acts on `abiFilters` - it is
+		// passed for a plugin whose own include.gradle reads it to narrow a long
+		// native build down. An explicit `-PabiFilters` in the gradle args wins.
+		if (
+			pluginBuildSettings.abiFilters &&
+			pluginBuildSettings.abiFilters.length &&
+			(pluginBuildSettings.gradleArgs || "").indexOf("-PabiFilters") === -1
+		) {
+			localArgs.push(
+				`-PabiFilters=${pluginBuildSettings.abiFilters.join(",")}`
+			);
 		}
 
 		if (this.$logger.getLevel() === "INFO") {

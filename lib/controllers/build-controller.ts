@@ -116,7 +116,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		);
 
 		if (buildData.copyTo) {
-			this.$buildArtifactsService.copyLatestAppPackage(
+			this.$buildArtifactsService.copyAppPackages(
 				buildData.copyTo,
 				platformData,
 				buildData

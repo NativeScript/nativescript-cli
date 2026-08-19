@@ -24,6 +24,7 @@ describe("androidPluginBuildService", () => {
 	const pluginName = "my-plugin";
 	const shortPluginName = getShortPluginName(pluginName);
 	let spawnFromEventCalled = false;
+	let builtPluginDirName: string = null;
 	let fs: IFileSystem;
 	let androidBuildPluginService: AndroidPluginBuildService;
 	let tempFolder: string;
@@ -46,6 +47,7 @@ describe("androidPluginBuildService", () => {
 	}): IPluginBuildOptions {
 		options = options || {};
 		spawnFromEventCalled = false;
+		builtPluginDirName = null;
 		tempFolder = mkdtempSync(
 			path.join(tmpdir(), "androidPluginBuildService-temp-"),
 		);
@@ -75,11 +77,16 @@ describe("androidPluginBuildService", () => {
 		const testInjector: IInjector = new stubs.InjectorStub();
 		testInjector.register("fs", FsLib.FileSystem);
 		testInjector.register("childProcess", {
-			spawnFromEvent: async (command: string): Promise<ISpawnResult> => {
-				const finalAarName = `${shortPluginName}-release.aar`;
+			spawnFromEvent: async (
+				command: string,
+				args: string[],
+			): Promise<ISpawnResult> => {
+				// the plugin dir gradle was pointed at is what names the built aar
+				const pluginDir = args[args.indexOf("-p") + 1];
+				builtPluginDirName = path.basename(pluginDir);
+				const finalAarName = `${builtPluginDirName}-release.aar`;
 				const aar = path.join(
-					tempFolder,
-					shortPluginName,
+					pluginDir,
 					"build",
 					"outputs",
 					"aar",
@@ -269,6 +276,28 @@ dependencies {
 			assert.isTrue(spawnFromEventCalled);
 		});
 
+		it("builds an aar named after the plugin", async () => {
+			const config: IPluginBuildOptions = setup({ addManifest: true });
+
+			await androidBuildPluginService.buildAar(config);
+
+			assert.deepStrictEqual(builtPluginDirName, shortPluginName);
+			assert.isTrue(
+				fs.exists(path.join(pluginFolder, `${shortPluginName}.aar`)),
+			);
+		});
+
+		it("appends aarSuffix to the name of the built aar", async () => {
+			const config: IPluginBuildOptions = setup({ addManifest: true });
+			config.aarSuffix = "-v2";
+
+			await androidBuildPluginService.buildAar(config);
+
+			const expectedName = getShortPluginName(`${pluginName}-v2`);
+			assert.deepStrictEqual(builtPluginDirName, expectedName);
+			assert.isTrue(fs.exists(path.join(pluginFolder, `${expectedName}.aar`)));
+		});
+
 		it("does not build aar when there are no supported files in the plugin", async () => {
 			const config: IPluginBuildOptions = setup();
 
@@ -319,6 +348,32 @@ dependencies {
 			await androidBuildPluginService.buildAar(config);
 
 			assert.isFalse(spawnFromEventCalled);
+		});
+
+		it("records the options that changed what gradle produced", async () => {
+			const config: IPluginBuildOptions = setup({ addManifest: true });
+			config.abiFilters = ["arm64-v8a"];
+
+			await androidBuildPluginService.buildAar(config);
+
+			const buildData = fs.readJson(
+				path.join(tempFolder, shortPluginName, PLUGIN_BUILD_DATA_FILENAME),
+			);
+			assert.deepStrictEqual(
+				buildData["__buildOptions"],
+				JSON.stringify({ abiFilters: ["arm64-v8a"] }),
+			);
+		});
+
+		it("records no build options when none of them is set", async () => {
+			const config: IPluginBuildOptions = setup({ addManifest: true });
+
+			await androidBuildPluginService.buildAar(config);
+
+			const buildData = fs.readJson(
+				path.join(tempFolder, shortPluginName, PLUGIN_BUILD_DATA_FILENAME),
+			);
+			assert.isUndefined(buildData["__buildOptions"]);
 		});
 
 		it("builds aar with the latest runtime gradle versions when no project dir is specified", async () => {

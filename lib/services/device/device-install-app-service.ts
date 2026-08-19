@@ -51,7 +51,8 @@ export class DeviceInstallAppService implements IDeviceInstallAppService {
 		});
 
 		if (!packageFile) {
-			packageFile = await this.$buildArtifactsService.getLatestAppPackagePath(
+			packageFile = await this.getPackageForDevice(
+				device,
 				platformData,
 				buildData,
 			);
@@ -89,6 +90,49 @@ export class DeviceInstallAppService implements IDeviceInstallAppService {
 
 		this.$logger.info(
 			`Successfully installed on device with identifier '${device.deviceInfo.identifier}'.`,
+		);
+	}
+
+	/**
+	 * A build narrowed down to the connected devices' ABIs produces one package
+	 * per ABI, so the one this device can run has to be picked. Falls back to
+	 * the universal package and then to the newest one, which is what a build
+	 * that was not split produces anyway.
+	 */
+	private async getPackageForDevice(
+		device: Mobile.IDevice,
+		platformData: IPlatformData,
+		buildData: IBuildData
+	): Promise<string> {
+		const outputPath =
+			buildData.outputPath || platformData.getBuildOutputPath(buildData);
+		const packages = this.$buildArtifactsService.getAllAppPackages(
+			outputPath,
+			platformData.getValidBuildOutputData(buildData)
+		);
+
+		if (packages.length > 1) {
+			const abis = device.deviceInfo.abis || [];
+			for (const abi of abis) {
+				const match = packages.find((p) =>
+					path.basename(p.packageName).includes(abi)
+				);
+				if (match) {
+					return match.packageName;
+				}
+			}
+
+			const universalPackage = packages.find((p) =>
+				path.basename(p.packageName).includes("universal")
+			);
+			if (universalPackage) {
+				return universalPackage.packageName;
+			}
+		}
+
+		return this.$buildArtifactsService.getLatestAppPackagePath(
+			platformData,
+			buildData
 		);
 	}
 
