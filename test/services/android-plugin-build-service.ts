@@ -350,6 +350,32 @@ dependencies {
 			assert.isFalse(spawnFromEventCalled);
 		});
 
+		it("records the options that changed what gradle produced", async () => {
+			const config: IPluginBuildOptions = setup({ addManifest: true });
+			config.abiFilters = ["arm64-v8a"];
+
+			await androidBuildPluginService.buildAar(config);
+
+			const buildData = fs.readJson(
+				path.join(tempFolder, shortPluginName, PLUGIN_BUILD_DATA_FILENAME),
+			);
+			assert.deepStrictEqual(
+				buildData["__buildOptions"],
+				JSON.stringify({ abiFilters: ["arm64-v8a"] }),
+			);
+		});
+
+		it("records no build options when none of them is set", async () => {
+			const config: IPluginBuildOptions = setup({ addManifest: true });
+
+			await androidBuildPluginService.buildAar(config);
+
+			const buildData = fs.readJson(
+				path.join(tempFolder, shortPluginName, PLUGIN_BUILD_DATA_FILENAME),
+			);
+			assert.isUndefined(buildData["__buildOptions"]);
+		});
+
 		it("builds aar with the latest runtime gradle versions when no project dir is specified", async () => {
 			const expectedGradleVersion = "4.4";
 			const expectedAndroidVersion = "4.5.6";

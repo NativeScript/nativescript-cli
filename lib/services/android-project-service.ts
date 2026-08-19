@@ -9,6 +9,7 @@ import { Configurations, LiveSyncPaths } from "../common/constants";
 import { hook } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
 import {
+	INsConfigAndroidPlugin,
 	IProjectData,
 	IProjectDataService,
 	IValidatePlatformOutput,
@@ -698,12 +699,15 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
 				gradleArgs: this.$options.gradleArgs,
-				abiFilters: this.getPluginsAbiFilters(),
+				abiFilters: this.getPluginsAbiFilters(pluginConfig),
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
 				aarOutputDir: pluginPlatformsFolderPath,
 				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+				// the rest of the plugin's config entry reaches the build as it is
+				// written - `abiFilters` is resolved above only because it falls
+				// back to the devices when the entry does not set it
 				...pluginConfig,
 			};
 
@@ -716,13 +720,21 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 	}
 
 	/**
-	 * The ABIs passed to the gradle build of a plugin built from source. Opt-in
-	 * (`--filter-plugins-devices-arch`): nothing in the gradle files the CLI
-	 * generates for a plugin acts on `abiFilters`, so this is only useful for a
-	 * plugin whose own `include.gradle` reads the property - a long native build
-	 * can then skip the ABIs this run is not going to deploy to.
+	 * The ABIs passed to the gradle build of a plugin built from source. Nothing
+	 * in the gradle files the CLI generates for a plugin acts on `abiFilters`,
+	 * so this is only useful for a plugin whose own `include.gradle` reads the
+	 * property - a long native build can then skip the ABIs it is not asked for.
+	 *
+	 * A list in the plugin's config entry always wins: what a plugin has native
+	 * code for does not depend on what is plugged in. Otherwise the ABIs of the
+	 * devices this run is about to deploy to are used, and only when
+	 * `--filter-plugins-devices-arch` asks for it.
 	 */
-	private getPluginsAbiFilters(): string[] {
+	private getPluginsAbiFilters(pluginConfig: INsConfigAndroidPlugin): string[] {
+		if (pluginConfig.abiFilters) {
+			return pluginConfig.abiFilters;
+		}
+
 		if (!this.$options.filterPluginsDevicesArch) {
 			return null;
 		}

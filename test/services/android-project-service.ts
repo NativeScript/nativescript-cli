@@ -20,6 +20,7 @@ import {
 	IProjectDir,
 } from "../../lib/common/declarations";
 import { IPluginBuildOptions } from "../../lib/definitions/android-plugin-migrator";
+import { INsConfigAndroidPlugin } from "../../lib/definitions/project";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -424,7 +425,8 @@ describe("androidProjectService plugins abi filtering", () => {
 
 	const preparePluginNativeCode = async (
 		options: any,
-		devices: any[]
+		devices: any[],
+		pluginsConfig?: IDictionary<INsConfigAndroidPlugin>
 	): Promise<IPluginBuildOptions> => {
 		const testInjector = createTestInjector();
 		let pluginBuildOptions: IPluginBuildOptions = null;
@@ -452,7 +454,11 @@ describe("androidProjectService plugins abi filtering", () => {
 				name: "my-plugin",
 				pluginPlatformsFolderPath: (): string => "pluginPlatformsDir",
 			},
-			<any>{ projectDir: "projectDir", platformsDir: "platformsDir" }
+			<any>{
+				projectDir: "projectDir",
+				platformsDir: "platformsDir",
+				nsConfig: { android: { plugins: pluginsConfig } },
+			}
 		);
 
 		return pluginBuildOptions;
@@ -488,6 +494,46 @@ describe("androidProjectService plugins abi filtering", () => {
 		]);
 
 		assert.isNull(options.abiFilters);
+	});
+
+	it("passes the abis from the plugin's config entry", async () => {
+		const options = await preparePluginNativeCode(
+			{ filterPluginsDevicesArch: true },
+			[createDevice("device1", ["x86_64"], true)],
+			{ "my-plugin": { abiFilters: ["arm64-v8a"] } }
+		);
+
+		assert.deepStrictEqual(options.abiFilters, ["arm64-v8a"]);
+	});
+
+	it("passes the abis from the config entry without the option", async () => {
+		const options = await preparePluginNativeCode(
+			{},
+			[createDevice("device1", ["x86_64"], true)],
+			{ "my-plugin": { abiFilters: ["arm64-v8a"] } }
+		);
+
+		assert.deepStrictEqual(options.abiFilters, ["arm64-v8a"]);
+	});
+
+	it("passes no abis when the config entry is an empty list", async () => {
+		const options = await preparePluginNativeCode(
+			{ filterPluginsDevicesArch: true },
+			[createDevice("device1", ["x86_64"], true)],
+			{ "my-plugin": { abiFilters: [] } }
+		);
+
+		assert.deepStrictEqual(options.abiFilters, []);
+	});
+
+	it("ignores the config entry of another plugin", async () => {
+		const options = await preparePluginNativeCode(
+			{ filterPluginsDevicesArch: true },
+			[createDevice("device1", ["x86_64"], true)],
+			{ "other-plugin": { abiFilters: ["arm64-v8a"] } }
+		);
+
+		assert.deepStrictEqual(options.abiFilters, ["x86_64"]);
 	});
 
 	it("passes no abis when no device reports its abis", async () => {

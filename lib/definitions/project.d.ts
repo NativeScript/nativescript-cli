@@ -195,6 +195,15 @@ interface INsConfigAndroidPlugin {
 	 * each other - a suffix tells them apart.
 	 */
 	aarSuffix?: string;
+
+	/**
+	 * The ABIs passed to this plugin's gradle build as `-PabiFilters`, which a
+	 * plugin acts on in its own `include.gradle`. Wins over the ABIs
+	 * `--filter-plugins-devices-arch` derives from the connected devices, and
+	 * applies whether or not that flag is set. An empty array passes nothing,
+	 * which opts this plugin out of the narrowing.
+	 */
+	abiFilters?: string[];
 }
 
 interface INsConfigHooks {

@@ -61,7 +61,13 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		private $watchIgnoreListService: IWatchIgnoreListService,
 	) {}
 
-	private static ABI_FILTERS_BUILD_DATA_KEY = "__abiFilters";
+	/**
+	 * The plugin build data entry recording the build options gradle was last
+	 * asked for. The plugin sources do not change when an option does, so every
+	 * per-plugin option that changes what gradle produces belongs in here -
+	 * otherwise the aar built with the old one is kept.
+	 */
+	private static BUILD_OPTIONS_DATA_KEY = "__buildOptions";
 
 	private static MANIFEST_ROOT = {
 		$: {
@@ -239,14 +245,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			shortPluginName,
 		);
 
-		// the aar of a plugin built for a subset of the ABIs is not the aar of the
-		// same sources built for another subset, so the ABIs take part in the
-		// decision to rebuild - the sources alone would not change when a device
-		// with another ABI joins the run.
-		if (options.abiFilters && options.abiFilters.length) {
+		const buildOptions = this.getArtifactAffectingOptions(options);
+		if (buildOptions) {
 			pluginSourceFileHashesInfo[
-				AndroidPluginBuildService.ABI_FILTERS_BUILD_DATA_KEY
-			] = options.abiFilters.join(",");
+				AndroidPluginBuildService.BUILD_OPTIONS_DATA_KEY
+			] = buildOptions;
 		}
 
 		const shouldBuildAar = await this.shouldBuildAar({
@@ -294,6 +297,28 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		}
 
 		return shouldBuildAar;
+	}
+
+	/**
+	 * The build options that change what gradle produces for this plugin, in
+	 * the form they are recorded in the plugin build data. `null` when none of
+	 * them is set, so a project that uses none of them keeps the build data it
+	 * already has.
+	 *
+	 * `abiFilters` is the only one today: the aar of a plugin built for a
+	 * subset of the ABIs is not the aar of the same sources built for another
+	 * subset. Options that only change the *name* of the artifact - `aarSuffix`
+	 * - do not belong here, they produce a different file rather than a stale
+	 * one.
+	 */
+	private getArtifactAffectingOptions(options: IPluginBuildOptions): string {
+		const affectingOptions: { [key: string]: any } = {};
+
+		if (options.abiFilters && options.abiFilters.length) {
+			affectingOptions.abiFilters = options.abiFilters;
+		}
+
+		return _.isEmpty(affectingOptions) ? null : JSON.stringify(affectingOptions);
 	}
 
 	private cleanPluginDir(pluginTempDir: string): void {
