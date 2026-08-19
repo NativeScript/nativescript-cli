@@ -47,6 +47,9 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+import { AndroidPrepareData } from "../data/prepare-data";
+import { IProjectChangesInfo } from "../definitions/project-changes";
+import { getDevicesAbis } from "./android/devices-abis";
 
 interface NativeDependency {
 	name: string;
@@ -148,7 +151,9 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		private $androidPluginBuildService: IAndroidPluginBuildService,
 		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
 		private $androidResourcesMigrationService: IAndroidResourcesMigrationService,
+		private $devicesService: Mobile.IDevicesService,
 		private $filesHashService: IFilesHashService,
+		private $liveSyncProcessDataService: ILiveSyncProcessDataService,
 		private $gradleCommandService: IGradleCommandService,
 		private $gradleBuildService: IGradleBuildService,
 		private $analyticsService: IAnalyticsService
@@ -691,6 +696,7 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
 				gradleArgs: this.$options.gradleArgs,
+				abiFilters: this.getPluginsAbiFilters(),
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
@@ -704,6 +710,27 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 
 			this.$androidPluginBuildService.migrateIncludeGradle(options);
 		}
+	}
+
+	/**
+	 * The ABIs passed to the gradle build of a plugin built from source. Opt-in
+	 * (`--filter-plugins-devices-arch`): nothing in the gradle files the CLI
+	 * generates for a plugin acts on `abiFilters`, so this is only useful for a
+	 * plugin whose own `include.gradle` reads the property - a long native build
+	 * can then skip the ABIs this run is not going to deploy to.
+	 */
+	private getPluginsAbiFilters(): string[] {
+		if (!this.$options.filterPluginsDevicesArch) {
+			return null;
+		}
+
+		const abis = getDevicesAbis(
+			this.$devicesService,
+			this.$devicePlatformsConstants.Android,
+			{ device: this.$options.device, emulator: this.$options.emulator }
+		);
+
+		return abis.length ? abis : null;
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -835,8 +862,61 @@ export class AndroidProjectService extends projectServiceBaseLib.PlatformProject
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
-	public async checkForChanges(): Promise<void> {
-		// Nothing android specific to check yet.
+	/**
+	 * When the native build is narrowed down to the ABIs of the connected
+	 * devices, a device that joins later has no package of its own in the build
+	 * output. Nothing else would trigger a native rebuild for it - the sources
+	 * did not change - so flag it here.
+	 */
+	public async checkForChanges(
+		changesInfo: IProjectChangesInfo,
+		prepareData: AndroidPrepareData,
+		projectData: IProjectData
+	): Promise<void> {
+		if (changesInfo.nativeChanged) {
+			return;
+		}
+
+		const platformData = this.getPlatformData(projectData);
+		const deviceDescriptors = this.$liveSyncProcessDataService.getDeviceDescriptors(
+			projectData.projectDir
+		);
+
+		for (const deviceDescriptor of deviceDescriptors) {
+			const buildData = <IAndroidBuildData>deviceDescriptor.buildData;
+			if (!buildData || !buildData.buildFilterDevicesArch) {
+				continue;
+			}
+
+			const packagesOutputPath = platformData.getBuildOutputPath(buildData);
+			if (!this.$fs.exists(packagesOutputPath)) {
+				continue;
+			}
+
+			const builtPackages = this.$fs.readDirectory(packagesOutputPath);
+			// a universal package runs on every device, nothing to rebuild
+			if (_.some(builtPackages, (f) => f.indexOf("universal") !== -1)) {
+				continue;
+			}
+
+			const device = _.find(
+				this.$devicesService.getDevicesForPlatform(buildData.platform),
+				(d) => d.deviceInfo.identifier === deviceDescriptor.identifier
+			);
+			const abi = device && (device.deviceInfo.abis || [])[0];
+			if (!abi) {
+				continue;
+			}
+
+			const abiRegex = new RegExp(`${abi}.*\\.apk$`);
+			if (!_.some(builtPackages, (entry) => abiRegex.test(entry))) {
+				this.$logger.trace(
+					`No package was built for '${abi}', marking the native project as changed.`
+				);
+				changesInfo.nativeChanged = true;
+				return;
+			}
+		}
 	}
 
 	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {

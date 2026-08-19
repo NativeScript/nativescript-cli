@@ -51,6 +51,7 @@ export class AndroidBuildData extends BuildData {
 	public keyStoreAliasPassword: string;
 	public keyStorePassword: string;
 	public androidBundle: boolean;
+	public buildFilterDevicesArch: boolean;
 	public gradlePath: string;
 	public gradleArgs: string;
 	public hostProjectPath: string;
@@ -63,6 +64,9 @@ export class AndroidBuildData extends BuildData {
 		this.keyStoreAliasPassword = data.keyStoreAliasPassword;
 		this.keyStorePassword = data.keyStorePassword;
 		this.androidBundle = data.androidBundle || data.aab;
+		// an app bundle already carries every ABI, so there is nothing to filter
+		this.buildFilterDevicesArch =
+			!this.androidBundle && data.filterDevicesArch !== false;
 		this.gradlePath = data.gradlePath;
 		this.gradleArgs = data.gradleArgs;
 		this.hostProjectPath = data.hostProjectPath;

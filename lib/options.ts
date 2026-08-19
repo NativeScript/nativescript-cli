@@ -219,6 +219,16 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
+			filterDevicesArch: {
+				type: OptionType.Boolean,
+				default: true,
+				hasSensitiveValue: false,
+			},
+			filterPluginsDevicesArch: {
+				type: OptionType.Boolean,
+				default: false,
+				hasSensitiveValue: false,
+			},
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
 			hostProjectPath: { type: OptionType.String, hasSensitiveValue: false },

@@ -53,7 +53,12 @@ export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
 		const buildData = this.$buildDataService.getBuildData(
 			this.$projectData.projectDir,
 			platform,
-			this.$options,
+			{
+				...this.$options.argv,
+				// `ns build` produces an artifact meant to be shipped, so it must
+				// not be narrowed down to the ABIs of whatever is plugged in
+				filterDevicesArch: false,
+			},
 		);
 		const outputPath = await this.$buildController.prepareAndBuild(buildData);
 

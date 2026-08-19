@@ -572,6 +572,20 @@ interface IEmbedOptions {
 }
 
 interface IAndroidOptions extends IEmbedOptions {
+	/**
+	 * When true (the default) `ns run`/`ns debug` restrict the native build to
+	 * the ABIs of the devices it is about to deploy to. Pass
+	 * `--no-filter-devices-arch` to always build every ABI.
+	 */
+	filterDevicesArch: boolean;
+
+	/**
+	 * When true, the same ABIs are passed to the gradle build of every plugin
+	 * that is built from source. Off by default - the CLI's own plugin gradle
+	 * files ignore the property, only a plugin acting on it in its
+	 * `include.gradle` gains anything from it.
+	 */
+	filterPluginsDevicesArch: boolean;
 	gradlePath: string;
 	gradleArgs: string;
 }
