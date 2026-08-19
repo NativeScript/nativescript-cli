@@ -213,7 +213,6 @@ interface INsConfig {
 	 * via destructuring without losing type safety.
 	 */
 	webpackPackageName?: string;
-	buildPath?: string;
 }
 
 /** @deprecated Kept so existing annotations compile; use the {@link ProjectData} contract. */
