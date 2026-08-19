@@ -722,7 +722,7 @@ export class MigrateController
 	private async cleanUpProject(projectData: IProjectData): Promise<void> {
 		await this.$projectCleanupService.clean([
 			constants.HOOKS_DIR_NAME,
-			constants.PLATFORMS_DIR_NAME,
+			projectData.getBuildRelativeDirectoryPath(),
 			constants.NODE_MODULES_FOLDER_NAME,
 			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		]);

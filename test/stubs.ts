@@ -735,6 +735,10 @@ export class ProjectDataStub implements IProjectData {
 	public getAppDirectoryRelativePath(): string {
 		return "app";
 	}
+
+	public getBuildRelativeDirectoryPath(): string {
+		return constants.PLATFORMS_DIR_NAME;
+	}
 }
 
 export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService {

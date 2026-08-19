@@ -191,6 +191,11 @@ interface INsConfig {
 	main?: string;
 	appPath?: string;
 	appResourcesPath?: string;
+	/**
+	 * Where the native projects are generated, relative to the project root.
+	 * Defaults to `platforms`.
+	 */
+	buildPath?: string;
 	shared?: boolean;
 	overridePods?: string;
 	webpackConfigPath?: string;

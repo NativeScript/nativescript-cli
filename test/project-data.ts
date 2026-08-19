@@ -59,6 +59,7 @@ describe("projectData", () => {
 			bundlerConfigPath?: string;
 			projectName?: string;
 			bundler?: string;
+			buildPath?: string;
 		};
 	}): IProjectData => {
 		const testInjector = createTestInjector();
@@ -95,6 +96,36 @@ describe("projectData", () => {
 
 		return projectData;
 	};
+
+	describe("buildPath", () => {
+		it("defaults to the platforms directory", () => {
+			const projectData = prepareTest();
+
+			assert.deepStrictEqual(
+				projectData.getBuildRelativeDirectoryPath(),
+				"platforms",
+			);
+			assert.deepStrictEqual(
+				projectData.platformsDir,
+				path.join(projectDir, "platforms"),
+			);
+		});
+
+		it("is read from the project config", () => {
+			const projectData = prepareTest({
+				configData: { buildPath: "build/native" },
+			});
+
+			assert.deepStrictEqual(
+				projectData.getBuildRelativeDirectoryPath(),
+				"build/native",
+			);
+			assert.deepStrictEqual(
+				projectData.platformsDir,
+				path.join(projectDir, "build/native"),
+			);
+		});
+	});
 
 	describe("projectType", () => {
 		const assertProjectType = (
