@@ -38,6 +38,12 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("filesHashService", {
 		saveHashesForProject: () => ({}),
 	});
+	testInjector.register("devicesService", {
+		getDevicesForPlatform: (): Mobile.IDevice[] => [],
+	});
+	testInjector.register("liveSyncProcessDataService", {
+		getDeviceDescriptors: (): ILiveSyncDeviceDescriptor[] => [],
+	});
 	testInjector.register("androidPluginBuildService", {});
 	testInjector.register("errors", stubs.ErrorsStub);
 	testInjector.register("logger", stubs.LoggerStub);

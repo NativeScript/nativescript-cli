@@ -185,6 +185,12 @@ function createTestInjector() {
 	);
 
 	testInjector.register("platformEnvironmentRequirements", {});
+	testInjector.register("devicesService", {
+		getDevicesForPlatform: (): Mobile.IDevice[] => [],
+	});
+	testInjector.register("liveSyncProcessDataService", {
+		getDeviceDescriptors: (): ILiveSyncDeviceDescriptor[] => [],
+	});
 	testInjector.register("filesHashService", {
 		hasChangesInShasums: (
 			oldPluginNativeHashes: IStringDictionary,

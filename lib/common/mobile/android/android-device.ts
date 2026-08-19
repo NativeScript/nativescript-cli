@@ -13,6 +13,9 @@ interface IAndroidDeviceDetails {
 	name: string;
 	release: string;
 	brand: string;
+	"cpu.abi"?: string;
+	"cpu.abilist32"?: string;
+	"cpu.abilist64"?: string;
 }
 
 interface IAdbDeviceStatusInfo {
@@ -96,6 +99,7 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 			identifier: this.identifier,
 			displayName: details.name,
 			model: details.model,
+			abis: this.getAbis(details),
 			version,
 			vendor: details.brand,
 			platform: this.$devicePlatformsConstants.Android,
@@ -177,6 +181,25 @@ export class AndroidDevice implements Mobile.IAndroidDevice {
 		this.$logger.trace(parsedDetails);
 
 		return parsedDetails;
+	}
+
+	// `ro.product.cpu.abilist64`/`abilist32` list every ABI the device supports,
+	// most preferred first. Old devices report neither and only have the single
+	// `ro.product.cpu.abi`.
+	private getAbis(details: IAndroidDeviceDetails): string[] {
+		const abis = [
+			...(details["cpu.abilist64"] || "").split(","),
+			...(details["cpu.abilist32"] || "").split(",")
+		]
+			.map((abi) => abi.trim())
+			.filter((abi) => !!abi);
+
+		if (abis.length) {
+			return abis;
+		}
+
+		const abi = (details["cpu.abi"] || "").trim();
+		return abi ? [abi] : [];
 	}
 
 	private getIsTablet(details: any): boolean {

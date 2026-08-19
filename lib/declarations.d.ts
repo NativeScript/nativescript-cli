@@ -572,6 +572,12 @@ interface IEmbedOptions {
 }
 
 interface IAndroidOptions extends IEmbedOptions {
+	/**
+	 * When true (the default) `ns run`/`ns debug` restrict the native build to
+	 * the ABIs of the devices it is about to deploy to. Pass
+	 * `--no-filter-devices-arch` to always build every ABI.
+	 */
+	filterDevicesArch: boolean;
 	gradlePath: string;
 	gradleArgs: string;
 }
