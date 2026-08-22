@@ -720,10 +720,6 @@ export class ProjectDataStub implements IProjectData {
 		return "";
 	}
 
-	public getBuildRelativeDirectoryPath(): string {
-		return "platforms";
-	}
-
 	public getAppDirectoryPath(projectDir?: string): string {
 		if (!projectDir) {
 			projectDir = this.projectDir;
@@ -734,6 +730,10 @@ export class ProjectDataStub implements IProjectData {
 
 	public getAppDirectoryRelativePath(): string {
 		return "app";
+	}
+
+	public getBuildRelativeDirectoryPath(): string {
+		return constants.PLATFORMS_DIR_NAME;
 	}
 }
 

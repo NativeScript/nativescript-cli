@@ -1108,6 +1108,19 @@ export class BundlerCompilerService
 			}
 		}
 
+		// Reaching here means the configured package could not be resolved.
+		// Falling through to plain webpack would run a bundler that does not
+		// understand the arguments the CLI passes, so the failure is reported
+		// against the package the project actually asked for.
+		const bundlerPackageName = this.getBundlerPackageName();
+		if (bundlerPackageName !== WEBPACK_PLUGIN_NAME) {
+			this.$errors.fail(
+				`Unable to resolve '${bundlerPackageName}'. Install it in the ` +
+					`project, or remove the bundler configuration to use ` +
+					`${WEBPACK_PLUGIN_NAME}.`,
+			);
+		}
+
 		const packagePath = resolvePackagePath("webpack", {
 			paths: [projectData.projectDir],
 		});

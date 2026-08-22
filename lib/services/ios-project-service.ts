@@ -94,6 +94,7 @@ const getConfigurationName = (release: boolean): string => {
 
 export class IOSProjectService
 	extends projectServiceBaseLib.PlatformProjectServiceBase
+	implements IPlatformProjectService<IOSBuildData, IOSPrepareData>
 {
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
@@ -415,10 +416,7 @@ export class IOSProjectService
 		return undefined;
 	}
 
-	public async cleanProject(
-		projectRoot: string,
-		projectData: IProjectData,
-	): Promise<void> {
+	public async cleanProject(projectRoot: string): Promise<void> {
 		return null;
 	}
 

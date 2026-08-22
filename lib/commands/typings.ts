@@ -161,8 +161,7 @@ export class TypingsCommand implements ICommand {
 		);
 
 		const dtsGeneratorPath = path.resolve(
-			this.$projectData.projectDir,
-			"platforms",
+			this.$projectData.platformsDir,
 			"android",
 			"build-tools",
 			"dts-generator.jar",

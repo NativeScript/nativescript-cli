@@ -180,6 +180,19 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			skipMacroValidation,
 		];
 
+		// Selects how xcodebuild authenticates against private Swift Package
+		// registries ("netrc" or "keychain"). It describes the machine's
+		// credential setup rather than the build, so it is read from the
+		// environment instead of a command-line option.
+		const packageAuthorizationProvider =
+			process.env.NS_PACKAGE_AUTHORIZATION_PROVIDER;
+		if (packageAuthorizationProvider) {
+			extraArgs.push(
+				"-packageAuthorizationProvider",
+				packageAuthorizationProvider,
+			);
+		}
+
 		const BUILD_SETTINGS_FILE_PATH = path.join(
 			projectData.appResourcesDirectoryPath,
 			platformData.normalizedPlatformName,
