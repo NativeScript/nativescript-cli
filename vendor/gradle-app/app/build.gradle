@@ -560,6 +560,15 @@ task compileAppClassesForSbg {
     outputs.dir(outDir)
 
     doLast {
+        // Created FIRST, and unconditionally: this directory is written into
+        // sbg-java-dependencies.txt whether or not anything lands in it, and the
+        // generator does File.listFiles() on every entry there. A missing
+        // directory returns null and it dies with a NullPointerException in
+        // FileSystemHelperImpl.readClassesFromDirectory, blaming nothing.
+        // An app with no Java of its own -- most of them -- reaches that.
+        outDir.deleteDir()
+        outDir.mkdirs()
+
         def sources = []
         sourceRoot.eachFileRecurse { f ->
             if (f.isFile() && f.name.endsWith(".java")
@@ -571,9 +580,6 @@ task compileAppClassesForSbg {
         if (sources.isEmpty()) {
             return
         }
-
-        outDir.deleteDir()
-        outDir.mkdirs()
 
         // The classpath collectAllJars just wrote, plus whatever the runtime
         // module has already produced -- com.tns.* is what the app's own
@@ -849,7 +855,15 @@ task 'collectAllJars' {
             allJarPaths.each { out.println it }
             // The app's own classes, compiled by compileAppClassesForSbg. A
             // directory rather than a jar; the generator reads both.
-            out.println layout.buildDirectory.dir("nativescript/sbg-app-classes").get().asFile.absolutePath
+            //
+            // Listed ONLY when that task runs, which is the same napi gate runSbg
+            // uses. The generator does File.listFiles() on every entry here and
+            // walks the result without a null check, so naming a directory nobody
+            // produced kills it with a NullPointerException out of
+            // FileSystemHelperImpl.readClassesFromDirectory, blaming nothing.
+            if (napiEngine != null) {
+                out.println layout.buildDirectory.dir("nativescript/sbg-app-classes").get().asFile.absolutePath
+            }
         }
         new File("$BUILD_TOOLS_PATH/$MDG_JAVA_DEPENDENCIES").withWriter { out ->
             allJarPaths.each {
