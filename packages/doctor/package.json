@@ -1,6 +1,6 @@
 {
   "name": "@nativescript/doctor",
-  "version": "2.0.17",
+  "version": "2.0.18",
   "description": "Library that helps identifying if the environment can be used for development of {N} apps.",
   "main": "dist/index.js",
   "types": "./typings/nativescript-doctor.d.ts",
