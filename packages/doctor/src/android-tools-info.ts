@@ -34,6 +34,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			"android-35",
 			"android-36",
 			"android-36.1",
+			"android-37",
 		];
 
 		const isRuntimeVersionLessThan = (targetVersion: string) => {
@@ -495,10 +496,27 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 		installedTargets: string[],
 		projectDir: string,
 	): string {
+		// SDK platforms newer than android-36 may install into directories named
+		// "android-<api>.<minor>" (e.g. "android-37.0") with no plain
+		// "android-<api>" directory, so installed targets are matched on their
+		// API level rather than the exact directory name. Extension directories
+		// like "android-33-ext4" are deliberately not treated as the base
+		// platform - they don't contain a full SDK.
 		return _.findLast(
 			this.getSupportedTargets(projectDir).sort(),
-			(supportedTarget) => _.includes(installedTargets, supportedTarget),
+			(supportedTarget) =>
+				_.includes(installedTargets, supportedTarget) ||
+				installedTargets.some(
+					(installedTarget) =>
+						AndroidToolsInfo.getInstalledTargetApiLevel(installedTarget) ===
+						this.parseAndroidSdkString(supportedTarget),
+				),
 		);
+	}
+
+	private static getInstalledTargetApiLevel(installedTarget: string): number {
+		const match = installedTarget.match(/^android-(\d+)(?:\.\d+)?$/);
+		return match ? parseInt(match[1], 10) : null;
 	}
 
 	private parseAndroidSdkString(androidSdkString: string): number {
