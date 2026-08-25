@@ -43,7 +43,7 @@
   ],
   "dependencies": {
     "@foxt/js-srp": "0.0.3-patch2",
-    "@nativescript/doctor": "2.0.17",
+    "@nativescript/doctor": "2.0.18",
     "@nativescript/hook": "3.0.5",
     "@npmcli/arborist": "9.1.8",
     "@rigor789/resolve-package-path": "1.0.7",
