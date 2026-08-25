@@ -13,6 +13,7 @@
   <a href="https://www.npmjs.com/package/nativescript"><img src="https://img.shields.io/npm/v/nativescript.svg" alt="npm version"></a>
   <a href="https://github.com/NativeScript/NativeScript/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license"></a>
   <a href="https://www.npmjs.com/package/nativescript"><img src="https://img.shields.io/npm/dm/nativescript.svg" alt="downloads"></a>
+<a href="https://inspect.software/software/NativeScript/nativescript-cli"><img src="https://raw.githubusercontent.com/inspect-software/badges/main/v1/n/NativeScript/nativescript-cli.svg" alt="inspect.software score badge for NativeScript/nativescript-cli" /></a>
 </p>
 
 Get it using: `npm install -g nativescript`
