@@ -122,7 +122,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/core",
 			minVersion: "6.5.0",
-			desiredVersion: "~9.0.0",
+			desiredVersion: "~9.1.0",
 			shouldAddIfMissing: true,
 		},
 		{
@@ -132,7 +132,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/types",
 			minVersion: "7.0.0",
-			desiredVersion: "~9.0.0",
+			desiredVersion: "~9.1.0",
 			isDev: true,
 		},
 		{
@@ -191,7 +191,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/angular",
 			minVersion: "10.0.0",
-			desiredVersion: "^20.0.0",
+			desiredVersion: "~22.0.0",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -242,7 +242,7 @@ export class MigrateController
 		{
 			packageName: "@nativescript/unit-test-runner",
 			minVersion: "1.0.0",
-			desiredVersion: "~3.0.0",
+			desiredVersion: "~4.0.1",
 			async shouldMigrateAction(
 				dependency: IMigrationDependency,
 				projectData: IProjectData,
@@ -263,7 +263,7 @@ export class MigrateController
 			packageName: "typescript",
 			isDev: true,
 			minVersion: "3.7.0",
-			desiredVersion: "~5.8.0",
+			desiredVersion: "~6.0.0",
 		},
 		{
 			packageName: "node-sass",
@@ -296,13 +296,13 @@ export class MigrateController
 		{
 			packageName: "@nativescript/ios",
 			minVersion: "6.5.3",
-			desiredVersion: "~9.0.0",
+			desiredVersion: "~9.1.0",
 			isDev: true,
 		},
 		{
 			packageName: "@nativescript/android",
 			minVersion: "7.0.0",
-			desiredVersion: "~9.0.0",
+			desiredVersion: "~9.1.0",
 			isDev: true,
 		},
 	];
@@ -1246,6 +1246,8 @@ export class MigrateController
 				...new Set([...(configContents.compilerOptions.lib || []), "ESNext"]),
 			];
 
+			this.migrateTSConfigForTypeScript6(configContents.compilerOptions);
+
 			if (isAngular) {
 				// make sure polyfills.ts is in files
 				if (configContents.files) {
@@ -1265,6 +1267,43 @@ export class MigrateController
 			this.$logger.trace("Failed to migrate tsconfig.json. Error is: ", error);
 			return false;
 		}
+	}
+
+	// TypeScript 6 errors on 'baseUrl' and 'downlevelIteration', rejects non-relative
+	// 'paths' targets once 'baseUrl' is gone, drops the implicit node_modules/@types entry
+	// whenever 'typeRoots' is set, and flips the 'strict' default from false to true.
+	private migrateTSConfigForTypeScript6(compilerOptions: any): void {
+		const baseUrl = compilerOptions.baseUrl ?? ".";
+		delete compilerOptions.baseUrl;
+		delete compilerOptions.downlevelIteration;
+
+		// rebase against the dropped baseUrl, since targets now resolve from the tsconfig
+		const toRelative = (target: string) => {
+			if (path.posix.isAbsolute(target)) {
+				return target;
+			}
+			const rebased = path.posix.join(baseUrl, target);
+			return rebased.startsWith(".") ? rebased : `./${rebased}`;
+		};
+
+		if (compilerOptions.paths) {
+			compilerOptions.paths = _.mapValues(
+				compilerOptions.paths,
+				(targets: string[]) => targets.map(toRelative),
+			);
+		}
+
+		if (compilerOptions.typeRoots) {
+			compilerOptions.typeRoots = [
+				...new Set([
+					...compilerOptions.typeRoots.map(toRelative),
+					"./node_modules/@types",
+				]),
+			];
+		}
+
+		compilerOptions.strict = compilerOptions.strict ?? false;
+		compilerOptions.skipLibCheck = compilerOptions.skipLibCheck ?? true;
 	}
 
 	private async checkOrCreatePolyfillsTS(
@@ -1311,7 +1350,7 @@ export class MigrateController
 
 	private async migrateNativeScriptAngular(): Promise<IMigrationDependency[]> {
 		const minVersion = "10.0.0";
-		const desiredVersion = "~20.2.0";
+		const desiredVersion = "~22.0.0";
 
 		const dependencies: IMigrationDependency[] = [
 			{
@@ -1371,7 +1410,7 @@ export class MigrateController
 			{
 				packageName: "zone.js",
 				minVersion: "0.11.1",
-				desiredVersion: "~0.15.0",
+				desiredVersion: "~0.16.0",
 				shouldAddIfMissing: true,
 			},
 
