@@ -25,6 +25,8 @@ export abstract class ProjectData {
 	abstract projectIdentifiers?: Mobile.IProjectIdentifier;
 	abstract dependencies: any;
 	abstract ignoredDependencies?: string[];
+
+	abstract getIgnoredDependencies(platform?: string): string[];
 	abstract devDependencies: IStringDictionary;
 	abstract appDirectoryPath: string;
 	abstract appResourcesDirectoryPath: string;
