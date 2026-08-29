@@ -30,4 +30,5 @@ interface IGradleBuildService {
 interface IGradleBuildArgsService {
 	getBuildTaskArgs(buildData: IAndroidBuildData): Promise<string[]>;
 	getCleanTaskArgs(buildData: IAndroidBuildData): string[];
+	getBuildLoggingArgs(): string[];
 }

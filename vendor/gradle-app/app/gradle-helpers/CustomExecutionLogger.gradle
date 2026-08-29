@@ -1,0 +1,52 @@
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
+def outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
+
+class CustomExecutionLogger extends BuildAdapter implements TaskExecutionListener {
+    private logger
+    private failedTask
+
+    CustomExecutionLogger(passedLogger) {
+        logger = passedLogger
+    }
+
+    void buildStarted(Gradle gradle) {
+        failedTask = null
+    }
+
+    void beforeExecute(Task task) {
+    }
+
+    void afterExecute(Task task, TaskState state) {
+        def failure = state.getFailure()
+        if(failure) {
+            failedTask = task
+        }
+    }
+
+    void buildFinished(BuildResult result) {
+        def failure = result.getFailure()
+        if(failure) {
+            if(failedTask && (failedTask.getClass().getName().contains("BuildToolTask"))) {
+                // the error from this task is already logged
+                return
+            }
+
+            println ""
+            logger.withStyle(Style.FailureHeader).println failure.getMessage()
+
+            def causeException = failure.getCause()
+            while (causeException != null) {
+                failure = causeException
+                causeException = failure.getCause()
+            }
+            if(failure != causeException) {
+                logger.withStyle(Style.Failure).println failure.getMessage()
+            }
+            println ""
+        }
+    }
+}
+
+gradle.useLogger(new CustomExecutionLogger(outLogger))

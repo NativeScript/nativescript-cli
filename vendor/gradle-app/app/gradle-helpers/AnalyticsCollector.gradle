@@ -1,0 +1,48 @@
+import groovy.json.JsonBuilder
+
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.Path
+
+class AnalyticsCollector{
+
+    private final String analyticsFilePath
+    private boolean hasUseKotlinPropertyInApp = false
+    private boolean hasKotlinRuntimeClasses = false
+
+    private AnalyticsCollector(String analyticsFilePath){
+        this.analyticsFilePath = analyticsFilePath
+    }
+
+    static AnalyticsCollector withOutputPath(String analyticsFilePath){
+        return new AnalyticsCollector(analyticsFilePath)
+    }
+
+    void markUseKotlinPropertyInApp(boolean useKotlin) {
+        hasUseKotlinPropertyInApp = useKotlin
+    }
+
+    void writeAnalyticsFile() {
+        def jsonBuilder = new JsonBuilder()
+        def kotlinUsageData = new Object()
+        kotlinUsageData.metaClass.hasUseKotlinPropertyInApp = hasUseKotlinPropertyInApp
+        kotlinUsageData.metaClass.hasKotlinRuntimeClasses = hasKotlinRuntimeClasses
+        jsonBuilder(kotlinUsage: kotlinUsageData)
+        def prettyJson = jsonBuilder.toPrettyString()
+
+
+
+        Path statisticsFilePath = Paths.get(analyticsFilePath)
+
+        if (Files.notExists(statisticsFilePath)) {
+            Files.createDirectories(statisticsFilePath.getParent())
+            Files.createFile(statisticsFilePath)
+        }
+
+        Files.write(statisticsFilePath, prettyJson.getBytes(StandardCharsets.UTF_8))
+
+    }
+}
+
+ext.AnalyticsCollector = AnalyticsCollector

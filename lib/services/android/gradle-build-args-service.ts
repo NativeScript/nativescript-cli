@@ -1,13 +1,16 @@
 import * as path from "path";
 import { Configurations } from "../../common/constants";
 import { IGradleBuildArgsService } from "../../definitions/gradle";
+import { IAndroidToolsInfo } from "../../declarations";
 import { IAndroidBuildData } from "../../definitions/build";
 import { IHooksService, IAnalyticsService } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { IProjectData } from "../../definitions/project";
+import { LoggerLevel } from "../../constants";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(
+		private $androidToolsInfo: IAndroidToolsInfo,
 		private $hooksService: IHooksService,
 		private $analyticsService: IAnalyticsService,
 		private $staticConfig: Config.IStaticConfig,
@@ -50,17 +53,34 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		// ensure we initialize project data
 		this.$projectData.initializeProjectData(buildData.projectDir);
 
+		const toolsInfo = this.$androidToolsInfo.getToolsInfo({
+			projectDir: buildData.projectDir,
+		});
+
 		args.push(
+			`-PcompileSdk=${toolsInfo.compileSdkVersion}`,
+			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
+			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
+			`-PgenerateTypings=${toolsInfo.generateTypings}`,
+			`-PprojectRoot=${this.$projectData.projectDir}`,
+			// settings.gradle runs before the project properties are available,
+			// so the same values have to be passed as system properties too
+			`-DprojectRoot=${this.$projectData.projectDir}`,
+			`-PappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
+			`-DappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
 		);
-		if (buildData.gradleArgs) {
-			args.push(buildData.gradleArgs);
-		}
+
+		args.push(...this.getUserDefinedGradleArgs(buildData.gradleArgs));
 
 		if (buildData.release) {
+			args.push("-Prelease");
+		}
+
+		// a debug build can be signed too - for example when building a system app
+		if (buildData.keyStorePath) {
 			args.push(
-				"-Prelease",
 				`-PksPath=${path.resolve(buildData.keyStorePath)}`,
 				`-Palias=${buildData.keyStoreAlias}`,
 				`-Ppassword=${buildData.keyStoreAliasPassword}`,
@@ -71,13 +91,37 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		return args;
 	}
 
-	private getBuildLoggingArgs(): string[] {
+	/**
+	 * Gradle args coming from `android.gradleArgs` in the project config, followed
+	 * by the ones passed on the command line through `--gradleArgs`. A single
+	 * value may hold several space separated args.
+	 */
+	private getUserDefinedGradleArgs(commandLineArgs: string[]): string[] {
+		const gradleArgs = (
+			this.$projectData.nsConfig?.android?.gradleArgs ?? []
+		).concat(commandLineArgs ?? []);
+
+		return gradleArgs.reduce<string[]>(
+			(args, arg) =>
+				args.concat(
+					arg
+						.split(" ")
+						.map((a) => a.trim())
+						.filter((a) => !!a)
+				),
+			[],
+		);
+	}
+
+	public getBuildLoggingArgs(): string[] {
 		const args = [];
 
 		const logLevel = this.$logger.getLevel();
-		if (logLevel === "TRACE") {
+		if (logLevel === LoggerLevel.TRACE) {
 			args.push("--stacktrace", "--debug");
-		} else if (logLevel === "INFO") {
+		} else if (logLevel === LoggerLevel.DEBUG) {
+			args.push("--stacktrace", "--info");
+		} else if (logLevel === LoggerLevel.INFO) {
 			args.push("--quiet");
 		}
 

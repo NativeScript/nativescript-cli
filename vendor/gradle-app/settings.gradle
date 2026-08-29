@@ -1,0 +1,78 @@
+rootProject.name = "__PROJECT_NAME__"
+include ':app'//, ':runtime', ':runtime-binding-generator'
+
+//project(':runtime').projectDir = new File("${System.env.ANDROID_RUNTIME_HOME}/test-app/runtime")
+//project(':runtime-binding-generator').projectDir = new File("${System.env.ANDROID_RUNTIME_HOME}/test-app/runtime-binding-generator")
+
+file("google-services.json").renameTo(file("./app/google-services.json"))
+
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+
+import java.nio.file.Paths
+
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import groovy.json.JsonSlurper
+import static org.gradle.internal.logging.text.StyledTextOutput.Style
+
+def USER_PROJECT_ROOT = "$rootDir/../../"
+def outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
+def ext  = {
+    appResourcesPath = getProperty("appResourcesPath")
+    appPath = getProperty("appPath")
+}
+
+def getAppPath = { ->
+      def relativePathToApp = "app"
+      def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+      def nsConfig
+
+      if (nsConfigFile.exists()) {
+          nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+      }
+
+      if (ext.appPath) {
+          // when appPath is passed through -PappPath=/path/to/app
+          // the path could be relative or absolute - either case will work
+          relativePathToApp = ext.appPath
+      } else if (nsConfig != null && nsConfig.appPath != null) {
+          relativePathToApp = nsConfig.appPath
+      }
+
+      return Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
+  }
+
+
+def getAppResourcesPath = { ->
+    def relativePathToAppResources
+    def absolutePathToAppResources
+    def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+    def nsConfig
+
+    if (nsConfigFile.exists()) {
+        nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+    }
+    if (ext.appResourcesPath) {
+        // when appResourcesPath is passed through -PappResourcesPath=/path/to/App_Resources
+        // the path could be relative or absolute - either case will work
+        relativePathToAppResources = ext.appResourcesPath
+        absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+    } else if (nsConfig != null && nsConfig.appResourcesPath != null) {
+        relativePathToAppResources = nsConfig.appResourcesPath
+        absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+    } else {
+        absolutePathToAppResources = "${getAppPath()}/App_Resources"
+    }
+    return absolutePathToAppResources
+}
+
+def applySettingsGradleConfiguration = { ->
+        def appResourcesPath = getAppResourcesPath()
+        def pathToSettingsGradle = "$appResourcesPath/Android/settings.gradle"
+        def settingsGradle = file(pathToSettingsGradle)
+        if (settingsGradle.exists()) {
+            outLogger.withStyle(Style.SuccessHeader).println "\t + applying user-defined configuration from ${settingsGradle}"
+            apply from: pathToSettingsGradle
+        }
+}
+
+applySettingsGradleConfiguration()
