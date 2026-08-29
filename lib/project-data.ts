@@ -298,6 +298,14 @@ export class ProjectData implements IProjectData {
 		return this.resolveToProjectDir(appRelativePath, projectDir);
 	}
 
+	public getBuildRelativeDirectoryPath(): string {
+		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]) {
+			return this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY];
+		}
+
+		return constants.PLATFORMS_DIR_NAME;
+	}
+
 	public getAppDirectoryRelativePath(): string {
 		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_APP_ENTRY]) {
 			return this.nsConfig[constants.CONFIG_NS_APP_ENTRY];
@@ -342,6 +350,7 @@ export class ProjectData implements IProjectData {
 				ios: "",
 				android: "",
 				visionos: "",
+				catalyst: "",
 			};
 		}
 
@@ -349,6 +358,8 @@ export class ProjectData implements IProjectData {
 			ios: config.id,
 			android: config.id,
 			visionos: config.id,
+			// Mac Catalyst ships under the iOS bundle identifier by default.
+			catalyst: config.id,
 		};
 
 		if (config.ios && config.ios.id) {
@@ -359,6 +370,12 @@ export class ProjectData implements IProjectData {
 		}
 		if (config.visionos && config.visionos.id) {
 			identifier.visionos = config.visionos.id;
+		}
+		if (config.ios && config.ios.id) {
+			identifier.catalyst = config.ios.id;
+		}
+		if (config.catalyst && config.catalyst.id) {
+			identifier.catalyst = config.catalyst.id;
 		}
 
 		return identifier;
