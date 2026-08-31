@@ -2,6 +2,7 @@ import * as path from "path";
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { assert } from "chai";
+import { setIsInteractive } from "../lib/common/helpers";
 import { PnpmPackageManager } from "../lib/pnpm-package-manager";
 import { IInjector } from "../lib/common/definitions/yok";
 
@@ -133,6 +134,24 @@ describe("pnpm-package-manager", () => {
 			assert.deepEqual(childProcess.spawnedArgs[0], ["i"]);
 		});
 
+		["hoist-pattern[]", "public-hoist-pattern[]"].forEach((layoutKey) => {
+			it(`omits --shamefully-hoist when an .npmrc sets array-valued ${layoutKey}`, async () => {
+				const testInjector = createTestInjector();
+				const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+				const childProcess =
+					testInjector.resolve<RecordingChildProcessStub>("childProcess");
+				const fs = testInjector.resolve<SelectiveFileSystemStub>("fs");
+				const npmrcPath = path.join(projectDir, ".npmrc");
+				fs.existingPaths = [npmrcPath];
+				fs.textFiles[npmrcPath] =
+					`registry=https://example.com\n${layoutKey}=*types*\n`;
+
+				await pnpm.install(projectDir, projectDir, {} as any);
+
+				assert.deepEqual(childProcess.spawnedArgs[0], ["i"]);
+			});
+		});
+
 		it("keeps --shamefully-hoist when an .npmrc has no layout key", async () => {
 			const testInjector = createTestInjector();
 			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
@@ -176,7 +195,12 @@ describe("pnpm-package-manager", () => {
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 
-			await pnpm.install(projectDir, projectDir, {} as any);
+			setIsInteractive(() => false);
+			try {
+				await pnpm.install(projectDir, projectDir, {} as any);
+			} finally {
+				setIsInteractive(undefined);
+			}
 
 			// pnpm never exits while its stdin is an open pipe, so anything but
 			// "ignore" here hangs the CLI's wait for the child's "close" event.

@@ -171,8 +171,9 @@ export class PnpmPackageManager extends BasePackageManager {
 	private projectManagesOwnHoisting(installDir: string): boolean {
 		// A pnpm-workspace.yaml (pnpm's config home since v10) or an .npmrc with
 		// a layout key marks the node_modules layout as the project's own choice.
+		// The optional [] suffix covers .npmrc's array syntax (hoist-pattern[]=).
 		const layoutKeyPattern =
-			/^\s*(shamefully-hoist|node-linker|hoist|hoist-pattern|public-hoist-pattern)\s*[=:]/m;
+			/^\s*(shamefully-hoist|node-linker|hoist|hoist-pattern|public-hoist-pattern)(\[\])?\s*[=:]/m;
 		let dir = path.resolve(installDir);
 		while (true) {
 			if (this.$fs.exists(path.join(dir, "pnpm-workspace.yaml"))) {
