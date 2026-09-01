@@ -46,7 +46,7 @@
   "homepage": "https://github.com/NativeScript/nativescript-cli/tree/main/packages/doctor#readme",
   "devDependencies": {
     "@types/chai": "5.2.2",
-    "@types/lodash": "4.17.21",
+    "@types/lodash": "4.17.25",
     "@types/semver": "7.7.1",
     "@types/shelljs": "0.8.17",
     "@types/temp": "0.9.4",
