@@ -642,6 +642,8 @@ export class ProjectDataService implements IProjectDataService {
 					);
 				} else if (platform === constants.PlatformTypes.visionos) {
 					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
+				} else if (platform === constants.PlatformTypes.tvos) {
+					return d.name === constants.SCOPED_TVOS_RUNTIME_NAME;
 				}
 			});
 
@@ -705,6 +707,11 @@ export class ProjectDataService implements IProjectDataService {
 		} else if (platform === constants.PlatformTypes.visionos) {
 			return {
 				name: constants.SCOPED_VISIONOS_RUNTIME_NAME,
+				version: null,
+			};
+		} else if (platform === constants.PlatformTypes.tvos) {
+			return {
+				name: constants.SCOPED_TVOS_RUNTIME_NAME,
 				version: null,
 			};
 		}

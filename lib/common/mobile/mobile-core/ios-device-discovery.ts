@@ -28,7 +28,10 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 			return;
 		}
 
-		if (this.$mobileHelper.isvisionOSPlatform(options.platform)) {
+		if (
+			this.$mobileHelper.isvisionOSPlatform(options.platform) ||
+			this.$mobileHelper.istvOSPlatform(options.platform)
+		) {
 			// look for ios devices - same logic.
 			options.platform = this.$devicePlatformsConstants.iOS;
 		}

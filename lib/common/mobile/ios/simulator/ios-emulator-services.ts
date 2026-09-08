@@ -24,14 +24,14 @@ class IosEmulatorServices implements Mobile.IiOSSimulatorService {
 
 		try {
 			if (
-				options.platform === this.$devicePlatformsConstants.visionOS &&
+				(options.platform === this.$devicePlatformsConstants.visionOS ||
+					options.platform === this.$devicePlatformsConstants.tvOS) &&
 				!options.emulatorIdOrName
 			) {
-				// find first available visionOS simulator (for now).
+				// find first available visionOS / tvOS simulator (for now).
 				const { devices } = await this.tryGetiOSSimDevices();
 				options.emulatorIdOrName = devices.find(
-					(device) =>
-						device.platform === this.$devicePlatformsConstants.visionOS
+					(device) => device.platform === options.platform
 				)?.id;
 			}
 

@@ -39,7 +39,10 @@ export class IOSBuildData extends BuildData implements IiOSBuildData {
 		this.teamId = data.teamId;
 		this.provision = data.provision;
 		this.mobileProvisionData = data.mobileProvisionData;
-		this.buildForAppStore = data.buildForAppStore;
+		this.buildForAppStore = data.buildForAppStore || data.forAppstore;
+		if (this.buildForAppStore) {
+			this.buildForDevice = true;
+		}
 		this.iCloudContainerEnvironment = data.iCloudContainerEnvironment;
 		this.hostProjectPath = data.hostProjectPath;
 	}

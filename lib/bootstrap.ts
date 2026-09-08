@@ -183,6 +183,7 @@ injector.requireCommand("run|ios", "./commands/run");
 injector.requireCommand("run|android", "./commands/run");
 injector.requireCommand("run|vision", "./commands/run");
 injector.requireCommand("run|visionos", "./commands/run");
+injector.requireCommand("run|tvos", "./commands/run");
 injector.requireCommand("typings", "./commands/typings");
 
 injector.requireCommand("preview", "./commands/preview");
@@ -198,6 +199,7 @@ injector.requireCommand("build|ios", "./commands/build");
 injector.requireCommand("build|android", "./commands/build");
 injector.requireCommand("build|vision", "./commands/build");
 injector.requireCommand("build|visionos", "./commands/build");
+injector.requireCommand("build|tvos", "./commands/build");
 injector.requireCommand("deploy", "./commands/deploy");
 
 injector.requireCommand("embed", "./commands/embedding/embed");
@@ -213,6 +215,7 @@ injector.requireCommand("test|android", "./commands/test");
 injector.requireCommand("test|ios", "./commands/test");
 injector.requireCommand("test|vision", "./commands/test");
 injector.requireCommand("test|visionos", "./commands/test");
+injector.requireCommand("test|tvos", "./commands/test");
 injector.requireCommand("test|init", "./commands/test-init");
 injector.requireCommand("dev-generate-help", "./commands/generate-help");
 

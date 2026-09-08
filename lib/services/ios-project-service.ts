@@ -69,20 +69,25 @@ export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
 export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
+export const TvDevicePlatformSdkName = "appletvos";
+export const TvSimulatorPlatformSdkName = "appletvsimulator";
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
 const getPlatformSdkName = (buildData: IBuildData): string => {
 	const forDevice =
 		!buildData || buildData.buildForDevice || buildData.buildForAppStore;
-	const isvisionOS = injector
-		.resolve("devicePlatformsConstants")
-		.isvisionOS(buildData.platform);
+	const devicePlatformsConstants = injector.resolve("devicePlatformsConstants");
+	const isvisionOS = devicePlatformsConstants.isvisionOS(buildData.platform);
+	const istvOS = devicePlatformsConstants.istvOS(buildData.platform);
 
 	if (isvisionOS) {
 		return forDevice
 			? VisionDevicePlatformSdkName
 			: VisionSimulatorPlatformSdkName;
+	}
+	if (istvOS) {
+		return forDevice ? TvDevicePlatformSdkName : TvSimulatorPlatformSdkName;
 	}
 
 	return forDevice ? DevicePlatformSdkName : SimulatorPlatformSdkName;
@@ -450,7 +455,7 @@ export class IOSProjectService
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
-		if (buildData.buildForDevice) {
+		if (buildData.buildForDevice || buildData.buildForAppStore) {
 			await this.$iOSSigningService.setupSigningForDevice(
 				projectRoot,
 				projectData,
@@ -460,22 +465,17 @@ export class IOSProjectService
 				constants.BUILD_OUTPUT_EVENT_NAME,
 				this.$childProcess,
 				handler,
-				this.$xcodebuildService.buildForDevice(
-					platformData,
-					projectData,
-					<any>buildData,
-				),
-			);
-		} else if (buildData.buildForAppStore) {
-			await attachAwaitDetach(
-				constants.BUILD_OUTPUT_EVENT_NAME,
-				this.$childProcess,
-				handler,
-				this.$xcodebuildService.buildForAppStore(
-					platformData,
-					projectData,
-					<any>buildData,
-				),
+				buildData.buildForAppStore
+					? this.$xcodebuildService.buildForAppStore(
+							platformData,
+							projectData,
+							<any>buildData,
+						)
+					: this.$xcodebuildService.buildForDevice(
+							platformData,
+							projectData,
+							<any>buildData,
+						),
 			);
 		} else {
 			await attachAwaitDetach(
@@ -1334,11 +1334,21 @@ export class IOSProjectService
 						plugin.fullPath,
 						{ suppressWarnings: true },
 					);
-					const packages = _.get(
+					let packages = _.get(
 						config,
 						`${platformData.platformNameLowerCase}.SPMPackages`,
 						[],
 					);
+					if (
+						!packages.length &&
+						this.$devicePlatformsConstants.istvOS(
+							platformData.platformNameLowerCase,
+						)
+					) {
+						// tvOS shares the iOS native project; plugins that have not added a
+						// `tvos` section keep working through their `ios` SPM packages.
+						packages = _.get(config, "ios.SPMPackages", []);
+					}
 					if (packages.length) {
 						for (const pkg of packages) {
 							// a plugin's local package path is naturally authored relative

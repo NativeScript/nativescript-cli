@@ -661,6 +661,7 @@ interface IOptions
 	copyTo: string;
 	debugTransport: boolean;
 	forDevice: boolean;
+	forAppstore: boolean;
 	iCloudContainerEnvironment: string;
 	framework: string;
 	frameworkName: string;

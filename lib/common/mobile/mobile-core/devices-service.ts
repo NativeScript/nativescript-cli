@@ -831,15 +831,14 @@ export class DevicesService
 			}
 		}
 
-		// make sure if the target platform is visionOS we don't try to run it on an already running iOS simulator...
+		// make sure if the target platform is visionOS or tvOS we don't try to run it on an already running iOS simulator...
 		if (
-			data.platform === this.$devicePlatformsConstants.visionOS &&
+			(data.platform === this.$devicePlatformsConstants.visionOS ||
+				data.platform === this.$devicePlatformsConstants.tvOS) &&
 			deviceInstances.length
 		) {
 			const runningDeviceInstance = deviceInstances.find(
-				(device) =>
-					device.deviceInfo.platform ===
-					this.$devicePlatformsConstants.visionOS,
+				(device) => device.deviceInfo.platform === data.platform,
 			);
 			if (!runningDeviceInstance) {
 				return this.startEmulatorCore(data);

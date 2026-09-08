@@ -600,6 +600,18 @@ end`.trim();
 			pluginPodFilePath
 		);
 		const podfilePlatformData = cocoapodsData.podfilePlatformData;
+		// Plugin Podfiles declare `platform :ios`; a tvOS project must tell CocoaPods it is tvOS so pod
+		// specs are resolved for that platform (visionOS is left as-is upstream).
+		if (
+			podfilePlatformData &&
+			platformData.platformNameLowerCase === "tvos" &&
+			/platform\s*:\s*ios\b/.test(podfilePlatformData.content)
+		) {
+			podfilePlatformData.content = podfilePlatformData.content.replace(
+				/platform\s*:\s*ios\b/,
+				"platform :tvos"
+			);
+		}
 		let replacedContent = cocoapodsData.replacedContent;
 
 		if (
