@@ -322,3 +322,59 @@ describe("xcodebuildArgsService", () => {
 		});
 	});
 });
+
+describe("tvOS build arguments", () => {
+	const platformData: any = {
+		projectRoot,
+		normalizedPlatformName: "tvOS",
+		getBuildOutputPath: () => buildOutputPath,
+	};
+	const projectData: any = { projectName, appResourcesDirectoryPath };
+	function service(): IXcodebuildArgsService {
+		return createTestInjector({
+			logLevel: "INFO",
+			hasProjectWorkspace: false,
+		}).resolve("xcodebuildArgsService");
+	}
+	it("uses the tvOS simulator SDK in debug builds", async () => {
+		const args = await service().getBuildForSimulatorArgs(
+			platformData,
+			projectData,
+			<any>{ platform: "tvos", release: false },
+		);
+		assert.include(args, "generic/platform=tvOS Simulator");
+		assert.include(args, "appletvsimulator");
+		assert.include(args, "Debug");
+		assert.include(args, "EXCLUDED_ARCHS=x86_64");
+	});
+	for (const buildForAppStore of [false, true]) {
+		it(`uses automatic archive signing with app-store export=${buildForAppStore}`, async () => {
+			const args = await service().getBuildForDeviceArgs(
+				platformData,
+				projectData,
+				<any>{
+					platform: "tvos",
+					release: true,
+					buildForDevice: true,
+					buildForAppStore,
+				},
+			);
+			assert.include(args, "generic/platform=tvOS");
+			assert.include(args, "appletvos");
+			assert.include(args, "archive");
+			assert.include(args, "CODE_SIGN_IDENTITY=Apple Development");
+		});
+	}
+	it("preserves an explicitly selected archive identity", async () => {
+		const args = await service().getBuildForDeviceArgs(
+			platformData,
+			projectData,
+			<any>{
+				platform: "tvos",
+				release: true,
+				codeSignIdentity: "Apple Distribution",
+			},
+		);
+		assert.include(args, "CODE_SIGN_IDENTITY=Apple Distribution");
+	});
+});

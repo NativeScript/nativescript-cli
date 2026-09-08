@@ -159,6 +159,9 @@ export class IOSDevice extends IOSDeviceBase {
 			} else if (_.startsWith(productType, "realitydevice")) {
 				// visionos
 				isArm64Architecture = true;
+			} else if (_.startsWith(productType, "appletv")) {
+				// tvos (Apple TV HD and later are arm64)
+				isArm64Architecture = true;
 			}
 
 			activeArchitecture = isArm64Architecture ? "arm64" : "armv7";
@@ -172,6 +175,10 @@ export class IOSDevice extends IOSDeviceBase {
 		if (_.startsWith(productType, "realitydevice")) {
 			// visionos
 			return this.$devicePlatformsConstants.visionOS;
+		}
+		if (_.startsWith(productType, "appletv")) {
+			// tvos
+			return this.$devicePlatformsConstants.tvOS;
 		}
 		return this.$devicePlatformsConstants.iOS;
 	}

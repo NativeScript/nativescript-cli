@@ -18,6 +18,8 @@ import {
 	SimulatorPlatformSdkName,
 	VisionDevicePlatformSdkName,
 	VisionSimulatorPlatformSdkName,
+	TvDevicePlatformSdkName,
+	TvSimulatorPlatformSdkName,
 } from "../ios-project-service";
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
@@ -48,9 +50,12 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
 			buildConfig.platform,
 		);
+		const istvOS = this.$devicePlatformsConstants.istvOS(buildConfig.platform);
 
-		if (isvisionOS) {
-			destination = "generic/platform=visionOS Simulator";
+		if (isvisionOS || istvOS) {
+			destination = isvisionOS
+				? "generic/platform=visionOS Simulator"
+				: "generic/platform=tvOS Simulator";
 			if (buildConfig._device) {
 				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
 			}
@@ -70,7 +75,9 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 					projectData,
 					isvisionOS
 						? VisionSimulatorPlatformSdkName
-						: SimulatorPlatformSdkName,
+						: istvOS
+							? TvSimulatorPlatformSdkName
+							: SimulatorPlatformSdkName,
 				),
 			)
 			.concat(this.getBuildLoggingArgs())
@@ -93,9 +100,12 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
 			buildConfig.platform,
 		);
+		const istvOS = this.$devicePlatformsConstants.istvOS(buildConfig.platform);
 
-		if (isvisionOS) {
-			destination = "generic/platform=visionOS";
+		if (isvisionOS || istvOS) {
+			destination = isvisionOS
+				? "generic/platform=visionOS"
+				: "generic/platform=tvOS";
 			if (buildConfig._device) {
 				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
 			}
@@ -116,18 +126,22 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				this.getBuildCommonArgs(
 					platformData,
 					projectData,
-					isvisionOS ? VisionDevicePlatformSdkName : DevicePlatformSdkName,
+					isvisionOS
+						? VisionDevicePlatformSdkName
+						: istvOS
+							? TvDevicePlatformSdkName
+							: DevicePlatformSdkName,
 				),
 			)
 			.concat(this.getBuildLoggingArgs());
 
 		// pbxproj-dom sets CODE_SIGN_IDENTITY[sdk=iphoneos*] which doesn't match
-		// the xros SDK used by visionOS builds — pass it explicitly as an override
-		if (isvisionOS) {
+		// the xros / appletvos SDKs used by visionOS and tvOS builds — pass it explicitly as an override
+		if (isvisionOS || istvOS) {
+			// Automatic archives use development signing; App Store export re-signs
+			// for distribution. Preserve an explicitly selected signing identity.
 			args.push(
-				`CODE_SIGN_IDENTITY=${
-					buildConfig.release ? "Apple Distribution" : "Apple Development"
-				}`,
+				`CODE_SIGN_IDENTITY=${buildConfig.codeSignIdentity || "Apple Development"}`,
 			);
 		}
 
@@ -139,8 +153,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 	): Promise<string[]> {
 		const args = [];
 
-		if (this.$devicePlatformsConstants.isvisionOS(buildConfig.platform)) {
-			// visionOS builds (device/simulator) are arm64-only; rely on destination for arch
+		if (
+			this.$devicePlatformsConstants.isvisionOS(buildConfig.platform) ||
+			this.$devicePlatformsConstants.istvOS(buildConfig.platform)
+		) {
+			// visionOS and tvOS builds (device/simulator) are arm64-only; rely on destination for arch
 			// and explicitly exclude x86_64 to avoid accidental selection
 			args.push("ONLY_ACTIVE_ARCH=YES", "EXCLUDED_ARCHS=x86_64");
 			return args;

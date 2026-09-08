@@ -284,7 +284,58 @@ class TestVisionOSCommand extends TestIosCommand {
 	}
 }
 
+class TestTvOSCommand extends TestIosCommand {
+	protected platform = "tvOS";
+
+	// The injector discovers dependencies by parsing constructor source text,
+	// so an inherited constructor would resolve to zero dependencies.
+	constructor(
+		protected $projectData: IProjectData,
+		protected $testExecutionService: ITestExecutionService,
+		protected $vitestExecutionService: IVitestExecutionService,
+		protected $analyticsService: IAnalyticsService,
+		protected $options: IOptions,
+		protected $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
+		protected $errors: IErrors,
+		protected $cleanupService: ICleanupService,
+		protected $liveSyncCommandHelper: ILiveSyncCommandHelper,
+		protected $devicesService: Mobile.IDevicesService,
+		protected $migrateController: IMigrateController,
+		protected $logger: ILogger,
+	) {
+		super(
+			$projectData,
+			$testExecutionService,
+			$vitestExecutionService,
+			$analyticsService,
+			$options,
+			$platformEnvironmentRequirements,
+			$errors,
+			$cleanupService,
+			$liveSyncCommandHelper,
+			$devicesService,
+			$migrateController,
+			$logger,
+		);
+	}
+
+	async canExecute(args: string[]): Promise<boolean> {
+		this.$projectData.initializeProjectData();
+		// The Karma runner (v4 line) never supported tvOS — only the Vitest
+		// path can drive it.
+		if (!this.$vitestExecutionService.isVitestProject(this.$projectData)) {
+			this.$errors.fail(
+				"tvOS unit testing requires the Vitest runner. Run '$ ns test init --framework vitest' to configure your project.",
+			);
+		}
+
+		return super.canExecute(args);
+	}
+}
+
 injector.registerCommand("test|android", TestAndroidCommand);
 injector.registerCommand("test|ios", TestIosCommand);
 injector.registerCommand("test|vision", TestVisionOSCommand);
 injector.registerCommand("test|visionos", TestVisionOSCommand);
+
+injector.registerCommand("test|tvos", TestTvOSCommand);

@@ -279,8 +279,10 @@ export class IOSSigningService implements IiOSSigningService {
 				"Failed to find mobile provision with UUID or Name: " + provision,
 			);
 		}
+		// visionOS and tvOS provisioning uses the "Apple Development" / "Apple Distribution" identities.
 		const isVisionOS =
-			this.$options.platformOverride?.toLowerCase() === "visionos";
+			this.$options.platformOverride?.toLowerCase() === "visionos" ||
+			this.$options.platformOverride?.toLowerCase() === "tvos";
 		const configuration = {
 			team:
 				mobileprovision.TeamIdentifier &&

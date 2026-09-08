@@ -81,6 +81,7 @@ export class ProjectData implements IProjectData {
 		this.projectIdentifiers.ios = identifier;
 		this.projectIdentifiers.android = identifier;
 		this.projectIdentifiers.visionos = identifier;
+		this.projectIdentifiers.tvos = identifier;
 	}
 
 	public projectName: string;
@@ -342,6 +343,7 @@ export class ProjectData implements IProjectData {
 				ios: "",
 				android: "",
 				visionos: "",
+				tvos: "",
 			};
 		}
 
@@ -349,6 +351,7 @@ export class ProjectData implements IProjectData {
 			ios: config.id,
 			android: config.id,
 			visionos: config.id,
+			tvos: config.id,
 		};
 
 		if (config.ios && config.ios.id) {
@@ -359,6 +362,9 @@ export class ProjectData implements IProjectData {
 		}
 		if (config.visionos && config.visionos.id) {
 			identifier.visionos = config.visionos.id;
+		}
+		if (config.tvos && config.tvos.id) {
+			identifier.tvos = config.tvos.id;
 		}
 
 		return identifier;

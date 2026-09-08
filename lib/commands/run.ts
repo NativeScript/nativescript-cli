@@ -1,3 +1,4 @@
+import { TvOSDeviceRunner } from "../services/tvos-device-runner";
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
 import { IErrors, IHostInfo } from "../common/declarations";
 import { cache } from "../common/decorators";
@@ -223,3 +224,36 @@ export class RunVisionOSCommand extends RunIosCommand {
 
 injector.registerCommand("run|vision", RunVisionOSCommand);
 injector.registerCommand("run|visionos", RunVisionOSCommand);
+
+export class RunTvOSCommand extends RunVisionOSCommand {
+	public get platform(): string {
+		return this.$devicePlatformsConstants.tvOS;
+	}
+
+	public async execute(args: string[]): Promise<void> {
+		if (await this.$injector.resolve<TvOSDeviceRunner>(TvOSDeviceRunner).tryRun()) {
+			return;
+		}
+		return super.execute(args);
+	}
+
+	constructor(
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		protected $errors: IErrors,
+		protected $injector: IInjector,
+		protected $options: IOptions,
+		protected $platformValidationService: IPlatformValidationService,
+		protected $projectDataService: IProjectDataService
+	) {
+		super(
+			$devicePlatformsConstants,
+			$errors,
+			$injector,
+			$options,
+			$platformValidationService,
+			$projectDataService
+		);
+	}
+}
+
+injector.registerCommand("run|tvos", RunTvOSCommand);

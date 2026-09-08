@@ -44,7 +44,9 @@ export class LogFilter implements Mobile.ILogFilter {
 				platform.toLowerCase() ===
 					this.$devicePlatformsConstants.iOS.toLowerCase() ||
 				platform.toLowerCase() ===
-					this.$devicePlatformsConstants.visionOS.toLowerCase()
+					this.$devicePlatformsConstants.visionOS.toLowerCase() ||
+				platform.toLowerCase() ===
+					this.$devicePlatformsConstants.tvOS.toLowerCase()
 			) {
 				return this.$injector.resolve("iOSLogFilter");
 			} else if (
