@@ -23,6 +23,7 @@ import {
 export class AndroidApplicationManager extends ApplicationManagerBase {
 	public PID_CHECK_INTERVAL = 100;
 	public PID_CHECK_TIMEOUT = 10000; // 10 secs
+	private listPackagesPerUser = false;
 
 	constructor(
 		private adb: Mobile.IDeviceAndroidDebugBridge,
@@ -42,59 +43,53 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 	}
 
 	public async getInstalledApplications(): Promise<string[]> {
-		let result = "";
-		try {
-			result = await this.adb.executeShellCommand(["pm", "list", "packages"]);
-		} catch (err) {
-			/**
-			 * on some devices (Samsung) listing packages is prevented by a permission error
-			 * notably, some system apps (bloatware) is installed under user 150
-			 * and listing these packages results in a permission error.
-			 * if this happens, we have to first list all the users, and then loop through
-			 * all the users and trying to list packages for that specific user, ignoring
-			 * any errors. These are all then concatenated together and parsed normally.
-			 * This is a slower operation, so we only do it in case listing failed in the first place.
-			 */
-			const userIDs: string[] = [];
-			const users = await this.adb.executeShellCommand(["pm", "list", "users"]);
-			/**
-			 * Users:
-			 *   UserInfo{0:Owner:c13} running
-			 */
-
-			const userIDRegex = /UserInfo{(\d+)[:}]/;
-			users.split(EOL).forEach((line: string) => {
-				const [, userID] = line.match(userIDRegex) ?? [];
-
-				if (userID) {
-					userIDs.push(userID);
-				}
-			});
-
-			for (let id of userIDs) {
-				try {
-					result +=
-						EOL +
-						(await this.adb.executeShellCommand([
-							"pm",
-							"list",
-							"packages",
-							"--user",
-							id,
-						]));
-				} catch (err) {
-					// ignore - likely permission denied.
-				}
+		if (!this.listPackagesPerUser) {
+			const packages = this.parsePackageList(
+				await this.adb.executeShellCommand(["pm", "list", "packages"]),
+			);
+			if (packages.length) {
+				return packages;
 			}
 		}
+
+		// Listing without `--user` walks every user and prints nothing when shell
+		// is denied access to one of them (e.g. Samsung's Secure Folder, user 150)
+		// without rejecting. Listing per user only loses the inaccessible ones.
+		this.listPackagesPerUser = true;
+		const packages: string[] = [];
+		for (const userId of await this.getUserIds()) {
+			packages.push(
+				...this.parsePackageList(
+					await this.adb.executeShellCommand([
+						"pm",
+						"list",
+						"packages",
+						"--user",
+						userId,
+					]),
+				),
+			);
+		}
+
+		return _.uniq(packages);
+	}
+
+	private parsePackageList(output: string): string[] {
 		const regex = /package:(.+)/;
-		return result
+		return (output || "")
 			.split(EOL)
-			.map((packageString: string) => {
-				const match = packageString.match(regex);
+			.map((line: string) => {
+				const match = line.match(regex);
 				return match ? match[1] : null;
 			})
 			.filter((parsedPackage: string) => parsedPackage !== null);
+	}
+
+	private async getUserIds(): Promise<string[]> {
+		const output: string =
+			(await this.adb.executeShellCommand(["pm", "list", "users"])) || "";
+		const regex = /UserInfo\{(\d+):/g;
+		return Array.from(output.matchAll(regex), (match) => match[1]);
 	}
 
 	@hook("install")

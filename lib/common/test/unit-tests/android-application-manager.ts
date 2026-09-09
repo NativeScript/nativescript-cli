@@ -1,6 +1,7 @@
 import { AndroidApplicationManager } from "../../mobile/android/android-application-manager";
 import { Yok } from "../../yok";
 import { assert } from "chai";
+import { EOL } from "os";
 import * as _ from "lodash";
 import {
 	AndroidBundleToolServiceStub,
@@ -79,15 +80,13 @@ class AndroidDebugBridgeStub {
 				if (passedIdentifier === invalidIdentifier) {
 					return "invalid output string";
 				} else {
-					const testString = this.validTestInput[
-						AndroidDebugBridgeStub.methodCallCount
-					];
+					const testString =
+						this.validTestInput[AndroidDebugBridgeStub.methodCallCount];
 					return testString;
 				}
 			} else {
-				this.startedWithActivityManager = this.checkIfStartedWithActivityManager(
-					args
-				);
+				this.startedWithActivityManager =
+					this.checkIfStartedWithActivityManager(args);
 				if (this.startedWithActivityManager) {
 					this.validIdentifierPassed = this.checkIfValidIdentifierPassed(args);
 				}
@@ -103,7 +102,7 @@ class AndroidDebugBridgeStub {
 
 	public async pushFile(
 		localFilePath: string,
-		deviceFilePath: string
+		deviceFilePath: string,
 	): Promise<void> {
 		await this.executeShellCommand(["push", localFilePath, deviceFilePath]);
 	}
@@ -121,9 +120,8 @@ class AndroidDebugBridgeStub {
 	private checkIfValidIdentifierPassed(args: string[]): boolean {
 		if (args && args.length) {
 			const possibleIdentifier = args[args.length - 1];
-			const validTestString = this.expectedValidTestInput[
-				AndroidDebugBridgeStub.methodCallCount
-			];
+			const validTestString =
+				this.expectedValidTestInput[AndroidDebugBridgeStub.methodCallCount];
 
 			return possibleIdentifier === validTestString;
 		}
@@ -150,7 +148,7 @@ function createTestInjector(options?: { justLaunch?: boolean }): IInjector {
 	testInjector.register("androidProcessService", AndroidProcessServiceStub);
 	testInjector.register(
 		"androidBundleToolService",
-		AndroidBundleToolServiceStub
+		AndroidBundleToolServiceStub,
 	);
 	testInjector.register("fs", FileSystemStub);
 	testInjector.register("httpClient", {});
@@ -171,7 +169,7 @@ describe("android-application-manager", () => {
 	function setup(options?: { justLaunch?: boolean }) {
 		testInjector = createTestInjector(options);
 		androidApplicationManager = testInjector.resolve(
-			"androidApplicationManager"
+			"androidApplicationManager",
 		);
 		androidDebugBridge = testInjector.resolve("adb");
 		logcatHelper = testInjector.resolve("logcatHelper");
@@ -217,7 +215,7 @@ describe("android-application-manager", () => {
 			setup();
 
 			await androidApplicationManager.startApplication(
-				_.extend({}, validStartOptions, { justLaunch: true })
+				_.extend({}, validStartOptions, { justLaunch: true }),
 			);
 
 			assert.equal(logcatHelper.StartCallCount, 0);
@@ -227,7 +225,7 @@ describe("android-application-manager", () => {
 			setup({ justLaunch: true });
 
 			await androidApplicationManager.startApplication(
-				_.extend({}, validStartOptions, { justLaunch: false })
+				_.extend({}, validStartOptions, { justLaunch: false }),
 			);
 
 			assert.equal(logcatHelper.StartCallCount, 0);
@@ -237,7 +235,7 @@ describe("android-application-manager", () => {
 			setup({ justLaunch: true });
 
 			await androidApplicationManager.startApplication(
-				_.extend({}, validStartOptions, { justLaunch: true })
+				_.extend({}, validStartOptions, { justLaunch: true }),
 			);
 
 			assert.equal(logcatHelper.StartCallCount, 0);
@@ -262,7 +260,7 @@ describe("android-application-manager", () => {
 
 			assert.equal(
 				deviceLogProvider.currentDevicePids[validDeviceIdentifier],
-				expectedPid
+				expectedPid,
 			);
 		});
 
@@ -279,8 +277,8 @@ describe("android-application-manager", () => {
 			assert.isTrue(logger.traceOutput.indexOf("Wasn't able to get pid") > -1);
 			assert.isTrue(
 				logger.output.indexOf(
-					`Unable to find running "${validIdentifier}" application on device `
-				) === -1
+					`Unable to find running "${validIdentifier}" application on device `,
+				) === -1,
 			);
 		});
 
@@ -291,20 +289,19 @@ describe("android-application-manager", () => {
 			androidApplicationManager.PID_CHECK_TIMEOUT = expectedPidTimeout;
 			androidProcessService.GetAppProcessIdResult = null;
 
-			const startApplicationPromise = androidApplicationManager.startApplication(
-				validStartOptions
-			);
+			const startApplicationPromise =
+				androidApplicationManager.startApplication(validStartOptions);
 
 			startApplicationPromise.catch(() => {
 				assert.isTrue(logcatHelper.DumpCallCount > 0);
 				assert.isTrue(
-					logger.traceOutput.indexOf("Wasn't able to get pid") > -1
+					logger.traceOutput.indexOf("Wasn't able to get pid") > -1,
 				);
 			});
 
 			return assert.isRejected(
 				startApplicationPromise,
-				`Unable to find running "${validIdentifier}" application on device `
+				`Unable to find running "${validIdentifier}" application on device `,
 			);
 		});
 	});
@@ -312,17 +309,19 @@ describe("android-application-manager", () => {
 	describe("installApplication", () => {
 		afterEach(function () {
 			androidDebugBridge.calledInstallApplication = false;
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 			bundleToolService.isBuildApksCalled = false;
 			bundleToolService.isInstallApksCalled = false;
 		});
 
 		it("should install apk using adb", async () => {
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 
 			await androidApplicationManager.installApplication("myApp.apk");
 
@@ -332,9 +331,10 @@ describe("android-application-manager", () => {
 		});
 
 		it("should install aab using bundletool", async () => {
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 
 			await androidApplicationManager.installApplication("myApp.aab");
 
@@ -345,14 +345,15 @@ describe("android-application-manager", () => {
 
 		it("should skip aab build when already built", async () => {
 			const fsStub = testInjector.resolve<FileSystemStub>("fs");
-			const bundleToolService = testInjector.resolve<
-				AndroidBundleToolServiceStub
-			>("androidBundleToolService");
+			const bundleToolService =
+				testInjector.resolve<AndroidBundleToolServiceStub>(
+					"androidBundleToolService",
+				);
 
 			await androidApplicationManager.installApplication(
 				"myApp.aab",
 				"my.app",
-				validSigning
+				validSigning,
 			);
 
 			assert.isTrue(bundleToolService.isBuildApksCalled);
@@ -365,12 +366,101 @@ describe("android-application-manager", () => {
 			await androidApplicationManager.installApplication(
 				"myApp.aab",
 				"my.app",
-				validSigning
+				validSigning,
 			);
 
 			assert.isFalse(bundleToolService.isBuildApksCalled);
 			assert.isTrue(bundleToolService.isInstallApksCalled);
 			assert.isFalse(androidDebugBridge.calledInstallApplication);
+		});
+	});
+
+	describe("getInstalledApplications", () => {
+		let shellCalls: string[];
+		const users = [
+			"Users:",
+			"\tUserInfo{0:Owner:c13} running",
+			"\tUserInfo{150:Secure Folder:1030} running",
+		].join(EOL);
+
+		function stubShellOutputs(outputs: Record<string, string>) {
+			shellCalls = [];
+			androidDebugBridge.executeShellCommand = async (args: string[]) => {
+				const command = args.join(" ");
+				shellCalls.push(command);
+				return outputs[command] || "";
+			};
+		}
+
+		it("parses the packages listed for all users", async () => {
+			setup();
+			stubShellOutputs({
+				"pm list packages": ["package:org.a", "package:org.b"].join(EOL),
+			});
+
+			const packages =
+				await androidApplicationManager.getInstalledApplications();
+
+			assert.deepEqual(packages, ["org.a", "org.b"]);
+			assert.deepEqual(shellCalls, ["pm list packages"]);
+		});
+
+		it("lists packages per user when listing for all users yields nothing", async () => {
+			setup();
+			stubShellOutputs({
+				"pm list packages": "",
+				"pm list users": users,
+				"pm list packages --user 0": ["package:org.a", "package:org.b"].join(
+					EOL,
+				),
+				"pm list packages --user 150": "",
+			});
+
+			const packages =
+				await androidApplicationManager.getInstalledApplications();
+
+			assert.deepEqual(packages, ["org.a", "org.b"]);
+			assert.deepEqual(shellCalls, [
+				"pm list packages",
+				"pm list users",
+				"pm list packages --user 0",
+				"pm list packages --user 150",
+			]);
+		});
+
+		it("deduplicates packages installed for several users", async () => {
+			setup();
+			stubShellOutputs({
+				"pm list users": users,
+				"pm list packages --user 0": ["package:org.a", "package:org.b"].join(
+					EOL,
+				),
+				"pm list packages --user 150": ["package:org.b", "package:org.c"].join(
+					EOL,
+				),
+			});
+
+			const packages =
+				await androidApplicationManager.getInstalledApplications();
+
+			assert.deepEqual(packages, ["org.a", "org.b", "org.c"]);
+		});
+
+		it("keeps listing per user once listing for all users has failed", async () => {
+			setup();
+			stubShellOutputs({
+				"pm list users": users,
+				"pm list packages --user 0": "package:org.a",
+			});
+			await androidApplicationManager.getInstalledApplications();
+			shellCalls.length = 0;
+
+			const packages =
+				await androidApplicationManager.getInstalledApplications();
+
+			assert.deepEqual(packages, ["org.a"]);
+			assert.notInclude(shellCalls, "pm list packages");
+			assert.include(shellCalls, "pm list packages --user 0");
 		});
 	});
 
@@ -398,7 +488,7 @@ describe("android-application-manager", () => {
 
 			assert.equal(
 				deviceLogProvider.currentDevicePids[validDeviceIdentifier],
-				null
+				null,
 			);
 		});
 	});
