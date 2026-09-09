@@ -383,6 +383,11 @@ describe("android-application-manager", () => {
 			"\tUserInfo{150:Secure Folder:1030} running",
 		].join(EOL);
 
+		/**
+		 * Replaces the adb shell stub with one that records every command and
+		 * answers from the given map, keyed by the space-joined command arguments.
+		 * @param {Record<string, string>} outputs Shell output per command; unknown commands return "".
+		 */
 		function stubShellOutputs(outputs: Record<string, string>) {
 			shellCalls = [];
 			androidDebugBridge.executeShellCommand = async (args: string[]) => {

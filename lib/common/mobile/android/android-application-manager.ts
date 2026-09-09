@@ -42,6 +42,12 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		super($logger, $hooksService, $deviceLogProvider);
 	}
 
+	/**
+	 * Lists the identifiers of all packages installed on the device.
+	 * Falls back to listing packages per user when the plain listing yields
+	 * nothing, which happens on devices where shell cannot access every user.
+	 * @returns {Promise<string[]>} Unique package identifiers across all users.
+	 */
 	public async getInstalledApplications(): Promise<string[]> {
 		if (!this.listPackagesPerUser) {
 			const packages = this.parsePackageList(
@@ -74,6 +80,11 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		return _.uniq(packages);
 	}
 
+	/**
+	 * Extracts package identifiers from `pm list packages` output.
+	 * @param {string} output Raw shell output, one `package:<id>` line per package.
+	 * @returns {string[]} The package identifiers, in output order.
+	 */
 	private parsePackageList(output: string): string[] {
 		const regex = /package:(.+)/;
 		return (output || "")
@@ -85,6 +96,10 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 			.filter((parsedPackage: string) => parsedPackage !== null);
 	}
 
+	/**
+	 * Lists the ids of all Android users on the device via `pm list users`.
+	 * @returns {Promise<string[]>} User ids as printed by the device, e.g. ["0", "150"].
+	 */
 	private async getUserIds(): Promise<string[]> {
 		const output: string =
 			(await this.adb.executeShellCommand(["pm", "list", "users"])) || "";
