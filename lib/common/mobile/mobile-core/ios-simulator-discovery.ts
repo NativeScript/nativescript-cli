@@ -29,7 +29,7 @@ export class IOSSimulatorDiscovery
 		if (
 			options &&
 			options.platform &&
-			!this.$mobileHelper.isiOSPlatform(options.platform)
+			!this.$mobileHelper.isApplePlatform(options.platform)
 		) {
 			return;
 		}

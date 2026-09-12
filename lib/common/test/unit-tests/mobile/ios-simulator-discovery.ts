@@ -44,9 +44,8 @@ function createTestInjector(): IInjector {
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 
 	injector.register("mobileHelper", {
-		isiOSPlatform: () => {
-			return true;
-		},
+		isApplePlatform: (platform: string) =>
+			["ios", "visionos", "tvos"].includes(platform.toLowerCase()),
 	});
 
 	injector.register("iOSSimulatorDiscovery", IOSSimulatorDiscovery);
@@ -86,7 +85,7 @@ describe("ios-simulator-discovery", () => {
 	let expectedDeviceInfo: Mobile.IDeviceInfo = null;
 
 	const detectNewSimulatorAttached = async (
-		runningSimulator: any
+		runningSimulator: any,
 	): Promise<Mobile.IiOSDevice> => {
 		return new Promise<Mobile.IiOSDevice>(async (resolve, reject) => {
 			currentlyRunningSimulators.push(_.cloneDeep(runningSimulator));
@@ -94,25 +93,25 @@ describe("ios-simulator-discovery", () => {
 				DeviceDiscoveryEventNames.DEVICE_FOUND,
 				(device: Mobile.IiOSDevice) => {
 					resolve(device);
-				}
+				},
 			);
 			await iOSSimulatorDiscovery.startLookingForDevices();
 		});
 	};
 
 	const detectSimulatorDetached = async (
-		simulatorId: string
+		simulatorId: string,
 	): Promise<Mobile.IiOSDevice> => {
 		_.remove(
 			currentlyRunningSimulators,
-			(simulator) => simulator.id === simulatorId
+			(simulator) => simulator.id === simulatorId,
 		);
 		return new Promise<Mobile.IiOSDevice>(async (resolve, reject) => {
 			iOSSimulatorDiscovery.once(
 				DeviceDiscoveryEventNames.DEVICE_LOST,
 				(device: Mobile.IiOSDevice) => {
 					resolve(device);
-				}
+				},
 			);
 			await iOSSimulatorDiscovery.startLookingForDevices();
 		});
@@ -120,11 +119,11 @@ describe("ios-simulator-discovery", () => {
 
 	const detectSimulatorChanged = async (
 		oldId: string,
-		newId: string
+		newId: string,
 	): Promise<any> => {
 		const currentlyRunningSimulator = _.find(
 			currentlyRunningSimulators,
-			(simulator) => simulator.id === oldId
+			(simulator) => simulator.id === oldId,
 		);
 		currentlyRunningSimulator.id = newId;
 		let lostDevicePromise: Promise<Mobile.IDevice>;
@@ -134,14 +133,14 @@ describe("ios-simulator-discovery", () => {
 			DeviceDiscoveryEventNames.DEVICE_LOST,
 			(device: Mobile.IDevice) => {
 				lostDevicePromise = Promise.resolve(device);
-			}
+			},
 		);
 
 		iOSSimulatorDiscovery.on(
 			DeviceDiscoveryEventNames.DEVICE_FOUND,
 			(device: Mobile.IDevice) => {
 				foundDevicePromise = Promise.resolve(device);
-			}
+			},
 		);
 
 		await iOSSimulatorDiscovery.startLookingForDevices();
@@ -183,11 +182,39 @@ describe("ios-simulator-discovery", () => {
 		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 	});
 
+	describe("when looking for a specific platform", () => {
+		const detectForPlatform = async (
+			platform: string,
+		): Promise<Mobile.IiOSDevice> => {
+			currentlyRunningSimulators.push(_.cloneDeep(defaultRunningSimulator));
+			let found: Mobile.IiOSDevice = null;
+			iOSSimulatorDiscovery.once(
+				DeviceDiscoveryEventNames.DEVICE_FOUND,
+				(device: Mobile.IiOSDevice) => {
+					found = device;
+				},
+			);
+			await iOSSimulatorDiscovery.startLookingForDevices(<any>{ platform });
+			return found;
+		};
+
+		_.each(["iOS", "visionOS", "tvOS"], (platform) => {
+			it(`finds running simulators for ${platform}`, async () => {
+				const device = await detectForPlatform(platform);
+				assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
+			});
+		});
+
+		it("does not look for simulators for Android", async () => {
+			assert.isNull(await detectForPlatform("Android"));
+		});
+	});
+
 	it("raises deviceLost when device is detached", async () => {
 		const device = await detectNewSimulatorAttached(defaultRunningSimulator);
 		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 		const lostDevice = await detectSimulatorDetached(
-			device.deviceInfo.identifier
+			device.deviceInfo.identifier,
 		);
 		assert.deepStrictEqual(lostDevice, device);
 	});
@@ -199,7 +226,7 @@ describe("ios-simulator-discovery", () => {
 
 		const devices = await detectSimulatorChanged(
 			device.deviceInfo.identifier,
-			newId
+			newId,
 		);
 		assert.deepStrictEqual(devices.deviceLost, device);
 		expectedDeviceInfo.identifier = newId;
@@ -211,7 +238,7 @@ describe("ios-simulator-discovery", () => {
 		let device = await detectNewSimulatorAttached(defaultRunningSimulator);
 		assert.deepStrictEqual(device.deviceInfo, expectedDeviceInfo);
 		const lostDevice = await detectSimulatorDetached(
-			device.deviceInfo.identifier
+			device.deviceInfo.identifier,
 		);
 		assert.deepStrictEqual(lostDevice, device);
 
@@ -226,9 +253,9 @@ describe("ios-simulator-discovery", () => {
 			DeviceDiscoveryEventNames.DEVICE_FOUND,
 			(d: Mobile.IDevice) => {
 				throw new Error(
-					"Device found should not be raised for the same device."
+					"Device found should not be raised for the same device.",
 				);
-			}
+			},
 		);
 
 		await iOSSimulatorDiscovery.startLookingForDevices();
@@ -241,9 +268,9 @@ describe("ios-simulator-discovery", () => {
 			DeviceDiscoveryEventNames.DEVICE_FOUND,
 			(device: Mobile.IDevice) => {
 				throw new Error(
-					"Device found should not be raised when OS is not OS X."
+					"Device found should not be raised when OS is not OS X.",
 				);
-			}
+			},
 		);
 		await iOSSimulatorDiscovery.startLookingForDevices();
 	});
@@ -254,16 +281,16 @@ describe("ios-simulator-discovery", () => {
 			DeviceDiscoveryEventNames.DEVICE_FOUND,
 			(device: Mobile.IDevice) => {
 				throw new Error(
-					"Device found should not be raised when OS is not OS X."
+					"Device found should not be raised when OS is not OS X.",
 				);
-			}
+			},
 		);
 		await (<any>iOSSimulatorDiscovery).checkForDevices();
 	});
 
 	it("find correctly two simulators", async () => {
 		const firstSimulator = await detectNewSimulatorAttached(
-			defaultRunningSimulator
+			defaultRunningSimulator,
 		);
 		assert.deepStrictEqual(firstSimulator.deviceInfo, expectedDeviceInfo);
 
@@ -275,11 +302,11 @@ describe("ios-simulator-discovery", () => {
 		};
 
 		const secondSimulator = await detectNewSimulatorAttached(
-			secondRunningSimulator
+			secondRunningSimulator,
 		);
 		assert.deepStrictEqual(
 			secondSimulator.deviceInfo,
-			getDeviceInfo(secondRunningSimulator)
+			getDeviceInfo(secondRunningSimulator),
 		);
 	});
 });
