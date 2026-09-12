@@ -65,7 +65,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		private $logger: ILogger,
 		private $options: IOptions,
 		public $hooksService: IHooksService,
-		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder
+		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
 	) {}
 
 	public get currentChanges(): IProjectChangesInfo {
@@ -76,42 +76,47 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async checkForChanges(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<IProjectChangesInfo> {
 		this._changesInfo = new ProjectChangesInfo();
 		const isNewPrepareInfo = await this.ensurePrepareInfo(
 			platformData,
 			projectData,
-			prepareData
+			prepareData,
 		);
 		if (!isNewPrepareInfo) {
 			let platformResourcesDir = path.join(
 				projectData.appResourcesDirectoryPath,
-				platformData.normalizedPlatformName
+				platformData.normalizedPlatformName,
 			);
 
-			if (
-				!this.$fs.exists(platformResourcesDir) &&
-				(platformData.platformNameLowerCase ===
+			// visionOS and tvOS build from the iOS native project: their App_Resources
+			// fall back to the iOS folder and plugins keep their native code in
+			// platforms/ios (see IMobileHelper.getPluginPlatformsFolderName).
+			const buildsFromIOSProject =
+				platformData.platformNameLowerCase ===
 					this.$devicePlatformsConstants.visionOS.toLowerCase() ||
-					platformData.platformNameLowerCase ===
-						this.$devicePlatformsConstants.tvOS.toLowerCase())
-			) {
+				platformData.platformNameLowerCase ===
+					this.$devicePlatformsConstants.tvOS.toLowerCase();
+			if (!this.$fs.exists(platformResourcesDir) && buildsFromIOSProject) {
 				platformResourcesDir = path.join(
 					projectData.appResourcesDirectoryPath,
-					this.$devicePlatformsConstants.iOS
+					this.$devicePlatformsConstants.iOS,
 				);
 			}
+			const pluginPlatformsFolderName = buildsFromIOSProject
+				? this.$devicePlatformsConstants.iOS.toLowerCase()
+				: platformData.platformNameLowerCase;
 
 			this._changesInfo.appResourcesChanged = this.containsNewerFiles(
 				platformResourcesDir,
-				projectData
+				projectData,
 			);
 
 			this.$nodeModulesDependenciesBuilder
 				.getProductionDependencies(
 					projectData.projectDir,
-					projectData.ignoredDependencies
+					projectData.ignoredDependencies,
 				)
 				.filter(
 					(dep) =>
@@ -120,9 +125,9 @@ export class ProjectChangesService implements IProjectChangesService {
 							path.join(
 								dep.directory,
 								PLATFORMS_DIR_NAME,
-								platformData.platformNameLowerCase
-							)
-						)
+								pluginPlatformsFolderName,
+							),
+						),
 				)
 				.forEach((dep) => {
 					this._changesInfo.nativeChanged =
@@ -131,23 +136,23 @@ export class ProjectChangesService implements IProjectChangesService {
 							path.join(
 								dep.directory,
 								PLATFORMS_DIR_NAME,
-								platformData.platformNameLowerCase
+								pluginPlatformsFolderName,
 							),
-							projectData
+							projectData,
 						) ||
 						this.isFileModified(
-							path.join(dep.directory, PACKAGE_JSON_FILE_NAME)
+							path.join(dep.directory, PACKAGE_JSON_FILE_NAME),
 						);
 				});
 
 			if (!this._changesInfo.nativeChanged) {
 				this._prepareInfo.projectFileHash = this.getProjectFileStrippedHash(
 					projectData.projectDir,
-					platformData
+					platformData,
 				);
 				this._changesInfo.nativeChanged = this.isProjectFileChanged(
 					projectData.projectDir,
-					platformData
+					platformData,
 				);
 			}
 
@@ -161,7 +166,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				this._changesInfo.nativeChanged || this._changesInfo.nsConfigChanged;
 
 			this.$logger.trace(
-				`Set nativeChanged to ${this._changesInfo.nativeChanged}.`
+				`Set nativeChanged to ${this._changesInfo.nativeChanged}.`,
 			);
 
 			if (
@@ -181,7 +186,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			}
 
 			this.$logger.trace(
-				`Set value of configChanged to ${this._changesInfo.configChanged}`
+				`Set value of configChanged to ${this._changesInfo.configChanged}`,
 			);
 		}
 
@@ -192,7 +197,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			await platformData.platformProjectService.checkForChanges(
 				this._changesInfo,
 				prepareData,
-				projectData
+				projectData,
 			);
 		}
 
@@ -201,7 +206,7 @@ export class ProjectChangesService implements IProjectChangesService {
 				`Setting all setting to true. Current options are: `,
 				prepareData,
 				" old prepare info is: ",
-				this._prepareInfo
+				this._prepareInfo,
 			);
 			this._changesInfo.appResourcesChanged = true;
 			this._changesInfo.configChanged = true;
@@ -209,7 +214,7 @@ export class ProjectChangesService implements IProjectChangesService {
 		}
 		if (this._changesInfo.appResourcesChanged) {
 			this.$logger.trace(
-				`Set configChanged to true, appResourcesChanged is: ${this._changesInfo.appResourcesChanged}`
+				`Set configChanged to true, appResourcesChanged is: ${this._changesInfo.appResourcesChanged}`,
 			);
 			this._changesInfo.configChanged = true;
 		}
@@ -232,7 +237,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	public getPrepareInfoFilePath(platformData: IPlatformData): string {
 		const prepareInfoFilePath = path.join(
 			platformData.projectRoot,
-			prepareInfoFileName
+			prepareInfoFileName,
 		);
 
 		return prepareInfoFilePath;
@@ -260,7 +265,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async savePrepareInfo(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<void> {
 		if (!this._prepareInfo) {
 			await this.ensurePrepareInfo(platformData, projectData, prepareData);
@@ -278,7 +283,7 @@ export class ProjectChangesService implements IProjectChangesService {
 	public async setNativePlatformStatus(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		addedPlatform: IAddedNativePlatform
+		addedPlatform: IAddedNativePlatform,
 	): Promise<void> {
 		this._prepareInfo = this._prepareInfo || this.getPrepareInfo(platformData);
 		if (
@@ -300,13 +305,13 @@ export class ProjectChangesService implements IProjectChangesService {
 	private async ensurePrepareInfo(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		prepareData: IPrepareData
+		prepareData: IPrepareData,
 	): Promise<boolean> {
 		this._prepareInfo = this.getPrepareInfo(platformData);
 		if (this._prepareInfo) {
 			const prepareInfoFile = path.join(
 				platformData.projectRoot,
-				prepareInfoFileName
+				prepareInfoFileName,
 			);
 			this._outputProjectMtime = this.$fs
 				.getFsStats(prepareInfoFile)
@@ -328,7 +333,7 @@ export class ProjectChangesService implements IProjectChangesService {
 			changesRequireBuild: true,
 			projectFileHash: this.getProjectFileStrippedHash(
 				projectData.projectDir,
-				platformData
+				platformData,
 			),
 			changesRequireBuildTime: null,
 		};
@@ -345,7 +350,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	private getProjectFileStrippedHash(
 		projectDir: string,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): string {
 		const projectFilePath = path.join(projectDir, PACKAGE_JSON_FILE_NAME);
 		const projectFileContents = this.$fs.readJson(projectFilePath);
@@ -354,7 +359,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 		const projectFileStrippedContents = _.pick(
 			projectFileContents,
-			relevantProperties
+			relevantProperties,
 		);
 
 		// _(this.$devicePlatformsConstants)
@@ -370,11 +375,11 @@ export class ProjectChangesService implements IProjectChangesService {
 
 	private isProjectFileChanged(
 		projectDir: string,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): boolean {
 		const projectFileStrippedContentsHash = this.getProjectFileStrippedHash(
 			projectDir,
-			platformData
+			platformData,
 		);
 		const prepareInfo = this.getPrepareInfo(platformData);
 		return projectFileStrippedContentsHash !== prepareInfo.projectFileHash;
@@ -405,7 +410,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 		if (this.isFileModified(dir)) {
 			this.$logger.trace(
-				`containsNewerFiles returns true for ${dir} as the dir itself has been modified.`
+				`containsNewerFiles returns true for ${dir} as the dir itself has been modified.`,
 			);
 			return true;
 		}
@@ -419,7 +424,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			if (changed) {
 				this.$logger.trace(
-					`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`
+					`containsNewerFiles returns true for ${dir}. The modified file is ${filePath}`,
 				);
 				return true;
 			}

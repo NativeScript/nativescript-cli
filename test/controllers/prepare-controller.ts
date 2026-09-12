@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import * as _ from "lodash";
+import * as path from "path";
 import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { InjectorStub, TempServiceStub } from "../stubs";
@@ -87,6 +88,50 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 }
 
 describe("prepareController", () => {
+	describe("getWatcherPatterns", () => {
+		const pluginDir = "/path/to/my/plugin";
+		const projectData = <any>{
+			projectDir,
+			ignoredDependencies: <string[]>[],
+			getAppDirectoryPath: () => path.join(projectDir, "app"),
+			getAppResourcesRelativeDirectoryPath: () => "App_Resources",
+		};
+
+		_.each(
+			[
+				{ platform: "ios", pluginPlatform: "ios" },
+				{ platform: "android", pluginPlatform: "android" },
+				{ platform: "visionos", pluginPlatform: "ios" },
+				{ platform: "tvos", pluginPlatform: "ios" },
+			],
+			({ platform, pluginPlatform }) => {
+				it(`watches a plugin's platforms/${pluginPlatform} folder for ${platform}`, async () => {
+					const injector = createTestInjector({ hasNativeChanges: false });
+					injector.resolve(
+						"nodeModulesDependenciesBuilder",
+					).getProductionDependencies = () => [
+						{ directory: pluginDir, nativescript: {} },
+					];
+					const prepareController: PrepareController =
+						injector.resolve("prepareController");
+
+					const patterns = await prepareController.getWatcherPatterns(
+						<any>{
+							platformNameLowerCase: platform,
+							normalizedPlatformName: platform,
+						},
+						projectData,
+					);
+
+					assert.include(
+						patterns,
+						path.join(pluginDir, "platforms", pluginPlatform),
+					);
+				});
+			},
+		);
+	});
+
 	afterEach(() => {
 		isNativePrepareCalled = false;
 		isCompileWithWatchCalled = false;
