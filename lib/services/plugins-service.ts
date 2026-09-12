@@ -640,16 +640,10 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 				);
 			pluginData.isPlugin = !!cacheData.nativescript;
 			pluginData.pluginPlatformsFolderPath = (platform: string) => {
-				if (
-					this.$mobileHelper.isvisionOSPlatform(platform) ||
-					this.$mobileHelper.istvOSPlatform(platform)
-				) {
-					platform = constants.PlatformTypes.ios;
-				}
 				return path.join(
 					pluginData.fullPath,
 					"platforms",
-					platform.toLowerCase(),
+					this.$mobileHelper.getPluginPlatformsFolderName(platform),
 				);
 			};
 			const data = cacheData.nativescript;

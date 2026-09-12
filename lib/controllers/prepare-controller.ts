@@ -414,7 +414,9 @@ export class PrepareController
 			path.join(
 				dep.directory,
 				PLATFORMS_DIR_NAME,
-				platformData.platformNameLowerCase,
+				this.$mobileHelper.getPluginPlatformsFolderName(
+					platformData.platformNameLowerCase,
+				),
 			),
 		);
 		const pluginsPackageJsonFiles = dependencies.map((dep) =>

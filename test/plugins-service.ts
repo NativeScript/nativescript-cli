@@ -919,6 +919,16 @@ describe("Plugins service", () => {
 				pluginData.pluginPlatformsFolderPath("IOS"),
 				expectediOSPath,
 			);
+			// visionOS and tvOS build from the iOS native project, so plugins keep
+			// their native code for them in platforms/ios.
+			assert.equal(
+				pluginData.pluginPlatformsFolderPath("visionOS"),
+				expectediOSPath,
+			);
+			assert.equal(
+				pluginData.pluginPlatformsFolderPath("tvOS"),
+				expectediOSPath,
+			);
 
 			assert.equal(
 				pluginData.pluginPlatformsFolderPath("Android"),

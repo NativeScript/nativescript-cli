@@ -173,6 +173,9 @@ class AndroidEmulatorServices {
 	public getRunningEmulator(emulatorId: string): Promise<Mobile.IDeviceInfo> {
 		return null;
 	}
+	public async getEmulatorImages(): Promise<Mobile.IEmulatorImagesOutput> {
+		return { devices: [], errors: [] };
+	}
 }
 
 class IOSEmulatorServices {
@@ -193,6 +196,9 @@ class IOSEmulatorServices {
 	public async getRunningEmulator(): Promise<Mobile.IDeviceInfo> {
 		return null;
 	}
+	public async getEmulatorImages(): Promise<Mobile.IEmulatorImagesOutput> {
+		return { devices: [], errors: [] };
+	}
 }
 
 function createTestInjector(): IInjector {
@@ -210,7 +216,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("prompter", {});
 
 	testInjector.register("mobileHelper", {
-		platformNames: ["ios", "android", "visionos"],
+		platformNames: ["ios", "android", "visionos", "tvos"],
 		validatePlatformName: (platform: string) => platform.toLowerCase(),
 		isiOSPlatform: (platform: string) =>
 			!!(platform && platform.toLowerCase() === "ios"),
@@ -218,11 +224,14 @@ function createTestInjector(): IInjector {
 			!!(platform && platform.toLowerCase() === "android"),
 		isvisionOSPlatform: (platform: string) =>
 			!!(platform && platform.toLowerCase() === "visionos"),
+		istvOSPlatform: (platform: string) =>
+			!!(platform && platform.toLowerCase() === "tvos"),
 		isApplePlatform: (platform: string) =>
 			!!(
 				platform &&
 				(platform.toLowerCase() === "ios" ||
-					platform.toLowerCase() === "visionos")
+					platform.toLowerCase() === "visionos" ||
+					platform.toLowerCase() === "tvos")
 			),
 	});
 
@@ -540,6 +549,26 @@ describe("devicesService", () => {
 				);
 			}),
 		);
+	});
+
+	describe("getEmulatorImages", () => {
+		it("lists iOS simulators for every Apple platform", async () => {
+			testInjector.resolve("hostInfo").isDarwin = true;
+			for (const platform of ["iOS", "visionOS", "tvOS"]) {
+				const result = await devicesService.getEmulatorImages({ platform });
+				assert.isDefined(result.ios, platform);
+				assert.isUndefined(result.android, platform);
+			}
+		});
+
+		it("lists only Android emulators for Android", async () => {
+			testInjector.resolve("hostInfo").isDarwin = true;
+			const result = await devicesService.getEmulatorImages({
+				platform: "android",
+			});
+			assert.isUndefined(result.ios);
+			assert.isDefined(result.android);
+		});
 	});
 
 	describe("startEmulatorIfNecessary behaves as expected:", () => {

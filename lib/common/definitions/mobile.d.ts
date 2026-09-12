@@ -1108,6 +1108,12 @@ declare global {
 			isvisionOSPlatform(platform: string): boolean;
 			istvOSPlatform(platform: string): boolean;
 			isApplePlatform(platform: string): boolean;
+			/**
+			 * The platforms/<name> folder a plugin's native code for the platform is read
+			 * from. visionOS and tvOS build from the iOS native project, so they consume
+			 * platforms/ios.
+			 */
+			getPluginPlatformsFolderName(platform: string): string;
 			normalizePlatformName(platform: string): string;
 			validatePlatformName(platform: string): string;
 			buildDevicePath(...args: string[]): string;

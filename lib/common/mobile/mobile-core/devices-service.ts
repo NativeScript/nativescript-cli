@@ -163,7 +163,7 @@ export class DevicesService
 			this.$hostInfo.isDarwin &&
 			(!options ||
 				!options.platform ||
-				this.$mobileHelper.isiOSPlatform(options.platform))
+				this.$mobileHelper.isApplePlatform(options.platform))
 		) {
 			result.ios = await this.$iOSEmulatorServices.getEmulatorImages();
 		}
@@ -1203,7 +1203,7 @@ export class DevicesService
 	private getEmulatorError(error: Error, platform: string): string {
 		let emulatorName = constants.DeviceTypes.Emulator;
 
-		if (this.$mobileHelper.isiOSPlatform(platform)) {
+		if (this.$mobileHelper.isApplePlatform(platform)) {
 			emulatorName = constants.DeviceTypes.Simulator;
 		}
 
