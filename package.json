@@ -1,7 +1,7 @@
 {
   "name": "nativescript",
   "main": "./dist/lib/nativescript-cli-lib.js",
-  "version": "9.1.1",
+  "version": "9.2.0-tvos.0",
   "author": "NativeScript <oss@nativescript.org>",
   "description": "Command-line interface for building NativeScript projects",
   "bin": {
