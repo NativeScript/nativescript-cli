@@ -44,6 +44,8 @@ import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
+	/** Kept per platform: one process watches several of them at a time. */
+	bundlerCompilerHandler: (data: any) => void;
 	nativeFilesWatcher: FSWatcher;
 	prepareArguments: {
 		prepareData: IPrepareData;
@@ -59,7 +61,6 @@ export class PrepareController
 	private watchersData: IDictionary<IDictionary<IPlatformWatcherData>> = {};
 	private isInitialPrepareReady = false;
 	private persistedData: IFilesChangeEventData[] = [];
-	private webpackCompilerHandler: any = null;
 	private pausedFileWatch: boolean = false;
 
 	constructor(
@@ -125,14 +126,16 @@ export class PrepareController
 			this.watchersData[projectDir][platformLowerCase] &&
 			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess
 		) {
+			const watcherData = this.watchersData[projectDir][platformLowerCase];
 			await this.$bundlerCompilerService.stopBundlerCompiler(platformLowerCase);
-			this.$bundlerCompilerService.removeListener(
-				BUNDLER_COMPILATION_COMPLETE,
-				this.webpackCompilerHandler,
-			);
-			this.watchersData[projectDir][
-				platformLowerCase
-			].hasWebpackCompilerProcess = false;
+			if (watcherData.bundlerCompilerHandler) {
+				this.$bundlerCompilerService.removeListener(
+					BUNDLER_COMPILATION_COMPLETE,
+					watcherData.bundlerCompilerHandler,
+				);
+				watcherData.bundlerCompilerHandler = null;
+			}
+			watcherData.hasWebpackCompilerProcess = false;
 		}
 	}
 
@@ -237,6 +240,7 @@ export class PrepareController
 			] = {
 				nativeFilesWatcher: null,
 				hasWebpackCompilerProcess: false,
+				bundlerCompilerHandler: null,
 				prepareArguments: {
 					platformData,
 					projectData,
@@ -303,15 +307,17 @@ export class PrepareController
 				}
 			};
 
-			this.webpackCompilerHandler = handler.bind(this);
+			const watcherData =
+				this.watchersData[projectData.projectDir][
+					platformData.platformNameLowerCase
+				];
+			watcherData.bundlerCompilerHandler = handler.bind(this);
 			this.$bundlerCompilerService.on(
 				BUNDLER_COMPILATION_COMPLETE,
-				this.webpackCompilerHandler,
+				watcherData.bundlerCompilerHandler,
 			);
 
-			this.watchersData[projectData.projectDir][
-				platformData.platformNameLowerCase
-			].hasWebpackCompilerProcess = true;
+			watcherData.hasWebpackCompilerProcess = true;
 			await this.$bundlerCompilerService.compileWithWatch(
 				platformData,
 				projectData,
