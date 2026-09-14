@@ -2,6 +2,15 @@ import { stripVTControlCharacters } from "node:util";
 import { color } from "../color";
 import { IChildProcess } from "../common/declarations";
 import { Injector } from "../common/di/injector";
+import {
+	envSwitchIsOn,
+	IKeyShortcutService,
+	KeyContextBase,
+	KeyContextExtras,
+	KeyShortcut,
+	KeyShortcutRegistration,
+	KeyShortcutRegistry,
+} from "../common/contracts/key-shortcuts";
 import { runCommand } from "../common/services/command-definition-adapter";
 import { injector } from "../common/yok";
 import { IStartService } from "../definitions/start-service";
@@ -11,45 +20,16 @@ const CTRL_C = "\u0003";
 const HELP_KEY = "?";
 const WORKFLOW_GROUP = "Development Workflow";
 
-/**
- * What every shortcut can count on. The context carries state; capabilities
- * come from the injector. Callers extend it with the dimensions their own
- * tables ask about — nothing here inspects the context beyond handing it to
- * `when` and `action`.
- */
-export interface KeyContextBase {
-	injector: Injector;
-}
-
-/** The half of a context its caller owns; the service provides the rest. */
-export type KeyContextExtras<TContext extends KeyContextBase> = Omit<
-	TContext,
-	keyof KeyContextBase
->;
-
-export interface KeyShortcut<TContext extends KeyContextBase = KeyContextBase> {
-	key: string;
-	description: string;
-	group?: string;
-	/** Availability AND help visibility — one verdict feeds both. */
-	when?(ctx: TContext): boolean;
-	action?(ctx: TContext): void | Promise<void>;
-	/**
-	 * Suppresses the keypress banner. Set by shortcuts that hand the key to a
-	 * child process, which announces and runs it itself.
-	 */
-	quiet?: boolean;
-}
-
-export interface IKeyShortcutService {
-	/** Returns false when the terminal cannot take raw mode. */
-	attach<TContext extends KeyContextBase = KeyContextBase>(options: {
-		context?: KeyContextExtras<TContext>;
-		shortcuts: KeyShortcut<TContext>[];
-	}): boolean;
-	detach(): void;
-	printHelp(): void;
-}
+// The shortcut vocabulary lives with the registry contract, so that the
+// command API can type a `shortcuts` field without reaching into this module.
+export type {
+	IKeyShortcutService,
+	KeyContextBase,
+	KeyContextExtras,
+	KeyShortcut,
+	KeyShortcutRegistration,
+};
+export { KeyShortcutRegistry };
 
 const helpShortcut: KeyShortcut = {
 	key: HELP_KEY,
@@ -102,8 +82,6 @@ export function findShortcut<TContext extends KeyContextBase>(
 	return shortcut;
 }
 
-const OFF_VALUES = ["0", "false", "off", "no"];
-
 /**
  * Raw mode outlives the process that set it, so a CI runner or a redirected
  * stdin must never get it; `NS_KEY_SHORTCUTS=false` is the manual opt-out.
@@ -111,7 +89,7 @@ const OFF_VALUES = ["0", "false", "off", "no"];
 export function keyShortcutsEnabled(): boolean {
 	const setting = process.env.NS_KEY_SHORTCUTS;
 	if (setting !== undefined) {
-		return !OFF_VALUES.includes(setting.toLowerCase());
+		return envSwitchIsOn(setting);
 	}
 
 	if (process.env.CI || process.env.JENKINS_HOME) {
@@ -157,14 +135,16 @@ const launch =
 
 const restart = async (
 	ctx: NsKeyContext,
+	platform: DevicePlatformName,
 	forceRebuildNativeApp: boolean,
 ): Promise<void> => {
 	const $liveSyncCommandHelper = ctx.injector.get<ILiveSyncCommandHelper>(
 		"liveSyncCommandHelper",
 	);
-	const devices = await $liveSyncCommandHelper.getDeviceInstances(ctx.platform);
+	const target = platform || ctx.platform;
+	const devices = await $liveSyncCommandHelper.getDeviceInstances(target);
 
-	await $liveSyncCommandHelper.executeLiveSyncOperation(devices, ctx.platform, <
+	await $liveSyncCommandHelper.executeLiveSyncOperation(devices, target, <
 		ILiveSyncCommandHelperAdditionalOptions
 	>{
 		restartLiveSync: true,
@@ -208,6 +188,71 @@ const cleanProject = async (ctx: NsKeyContext): Promise<void> => {
 	});
 };
 
+export interface RestartShortcutOptions {
+	/** Declares `R`, which always rebuilds the native app, rather than `r`. */
+	forceRebuildNativeApp?: boolean;
+	/** Restricts the restart to one platform; unset takes it from the context. */
+	platform?: DevicePlatformName;
+	/**
+	 * Replaces the restart itself, keeping the key and its help text — for a
+	 * caller whose restart has to carry state the shared one knows nothing of,
+	 * such as an attached debug session.
+	 */
+	restart?(forceRebuildNativeApp: boolean): Promise<void>;
+}
+
+/** One half of the restart pair: `r` rebuilds only if needed, `R` always. */
+export function restartShortcut(
+	options: RestartShortcutOptions = {},
+): KeyShortcut<NsKeyContext> {
+	const force = options.forceRebuildNativeApp === true;
+
+	return {
+		key: force ? "R" : "r",
+		description: force
+			? "Force rebuild native app and restart"
+			: "Rebuild native app if needed and restart",
+		group: WORKFLOW_GROUP,
+		action: (ctx) =>
+			options.restart
+				? options.restart(force)
+				: restart(ctx, options.platform, force),
+	};
+}
+
+/** Pauses and resumes the file watcher. */
+export function watcherShortcut(): KeyShortcut<NsKeyContext> {
+	return {
+		key: "w",
+		description: "Toggle file watcher",
+		group: WORKFLOW_GROUP,
+		action: toggleFileWatcher,
+	};
+}
+
+const IDE_SHORTCUTS: {
+	[K in DevicePlatformName]: { key: string; description: string };
+} = {
+	Android: { key: "A", description: "Open project in Android Studio" },
+	iOS: { key: "I", description: "Open project in Xcode" },
+	visionOS: { key: "V", description: "Open project in Xcode" },
+};
+
+/** Opens the platform's native project in the IDE that builds it. */
+export function openIdeShortcut(
+	platform: DevicePlatformName,
+): KeyShortcut<NsKeyContext> {
+	const { key, description } = IDE_SHORTCUTS[platform];
+
+	return {
+		key,
+		description,
+		group: platform,
+		when: onPlatform(platform),
+		action: () => runCommand(`open|${platform.toLowerCase()}`),
+	};
+}
+
 /**
  * The shortcuts every interactive process shares. `ns start` appends its own
  * entries on top of these; the `ns run` children it spawns use them as they
@@ -222,13 +267,7 @@ export function keyShortcuts(): KeyShortcut<NsKeyContext>[] {
 			when: duringStart("Android"),
 			action: launch((startService) => startService.runAndroid()),
 		},
-		{
-			key: "A",
-			description: "Open project in Android Studio",
-			group: "Android",
-			when: onPlatform("Android"),
-			action: () => runCommand("open|android"),
-		},
+		openIdeShortcut("Android"),
 		{
 			key: "i",
 			description: "Run iOS app",
@@ -236,13 +275,7 @@ export function keyShortcuts(): KeyShortcut<NsKeyContext>[] {
 			when: duringStart("iOS"),
 			action: launch((startService) => startService.runIOS()),
 		},
-		{
-			key: "I",
-			description: "Open project in Xcode",
-			group: "iOS",
-			when: onPlatform("iOS"),
-			action: () => runCommand("open|ios"),
-		},
+		openIdeShortcut("iOS"),
 		{
 			key: "v",
 			description: "Run visionOS app",
@@ -250,31 +283,10 @@ export function keyShortcuts(): KeyShortcut<NsKeyContext>[] {
 			when: duringStart("visionOS"),
 			action: launch((startService) => startService.runVisionOS()),
 		},
-		{
-			key: "V",
-			description: "Open project in Xcode",
-			group: "visionOS",
-			when: onPlatform("visionOS"),
-			action: () => runCommand("open|visionos"),
-		},
-		{
-			key: "r",
-			description: "Rebuild native app if needed and restart",
-			group: WORKFLOW_GROUP,
-			action: (ctx) => restart(ctx, false),
-		},
-		{
-			key: "R",
-			description: "Force rebuild native app and restart",
-			group: WORKFLOW_GROUP,
-			action: (ctx) => restart(ctx, true),
-		},
-		{
-			key: "w",
-			description: "Toggle file watcher",
-			group: WORKFLOW_GROUP,
-			action: toggleFileWatcher,
-		},
+		openIdeShortcut("visionOS"),
+		restartShortcut(),
+		restartShortcut({ forceRebuildNativeApp: true }),
+		watcherShortcut(),
 		{
 			key: "c",
 			description: "Clean project",
@@ -291,8 +303,8 @@ export function keyShortcuts(): KeyShortcut<NsKeyContext>[] {
 }
 
 export class KeyShortcutService implements IKeyShortcutService {
-	/** The table as the caller declared it; `when` is applied per read. */
-	private shortcuts: KeyShortcut<any>[] = [];
+	/** The batch `attach` registered, disposed when it is replaced or detached. */
+	private attachedShortcuts: KeyShortcutRegistration;
 	private context: KeyContextBase;
 	private running: boolean = false;
 	private attached: boolean = false;
@@ -300,6 +312,7 @@ export class KeyShortcutService implements IKeyShortcutService {
 	constructor(
 		private $injector: Injector,
 		private $logger: ILogger,
+		private $keyShortcutRegistry: KeyShortcutRegistry,
 	) {}
 
 	public attach<TContext extends KeyContextBase = KeyContextBase>(options: {
@@ -309,7 +322,9 @@ export class KeyShortcutService implements IKeyShortcutService {
 		this.detach();
 
 		this.context = { ...options.context, injector: this.$injector };
-		this.shortcuts = options.shortcuts;
+		this.attachedShortcuts = this.$keyShortcutRegistry.add(
+			...options.shortcuts,
+		);
 
 		const stdin = process.stdin;
 		if (!stdin.isTTY || typeof stdin.setRawMode !== "function") {
@@ -321,6 +336,7 @@ export class KeyShortcutService implements IKeyShortcutService {
 		}
 
 		if (!keyShortcutsEnabled()) {
+			this.releaseShortcuts();
 			return false;
 		}
 
@@ -335,6 +351,8 @@ export class KeyShortcutService implements IKeyShortcutService {
 	}
 
 	public detach(): void {
+		this.releaseShortcuts();
+
 		if (!this.attached) {
 			return;
 		}
@@ -376,12 +394,31 @@ export class KeyShortcutService implements IKeyShortcutService {
 		);
 	}
 
+	/** One compact line where the full table would drown the output. */
+	public printHint(): void {
+		if (!process.stdin.isTTY) {
+			return;
+		}
+
+		console.info(color.dim(` › press ${HELP_KEY} to list shortcuts`));
+	}
+
 	/**
-	 * Help and dispatch each read the table through this one function, so a
-	 * `when` that changes while the process runs moves both together.
+	 * Help and dispatch each read the registry through this one function, so a
+	 * `when` that changes while the process runs — or an entry registered after
+	 * the attach — moves both together.
 	 */
 	private resolve(): KeyShortcut[] {
-		return resolveShortcuts(this.shortcuts, this.context);
+		return resolveShortcuts(this.$keyShortcutRegistry.entries(), this.context);
+	}
+
+	private releaseShortcuts(): void {
+		if (!this.attachedShortcuts) {
+			return;
+		}
+
+		this.attachedShortcuts.dispose();
+		this.attachedShortcuts = undefined;
 	}
 
 	private onData = (data: Buffer): void => {

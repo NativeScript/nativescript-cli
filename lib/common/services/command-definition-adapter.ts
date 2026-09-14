@@ -11,6 +11,11 @@ import {
 	DeferredCommandResult,
 	describeRejection,
 } from "../contracts/command-registry";
+import {
+	commandShortcutsEnabled,
+	IKeyShortcutService,
+	KeyShortcut,
+} from "../contracts/key-shortcuts";
 import { Provider } from "../di/providers";
 import {
 	ArgumentSpec,
@@ -365,6 +370,46 @@ export function createCommandFromDefinition<
 		return currentInvocation;
 	};
 
+	/**
+	 * Attaching takes the terminal into raw mode and leaves stdin resumed, so it
+	 * is confined to a top-level run: an in-process dispatch borrows the
+	 * terminal of a host that has its own table attached, and replacing it would
+	 * take the host's keys with it.
+	 */
+	const attachShortcuts = (
+		context: CommandContext<TSchema>,
+		setupResult: Awaited<TSetup>,
+	): void => {
+		if (!commandShortcutsEnabled()) {
+			return;
+		}
+
+		const commandsService = targetInjector.get<ICommandsService>(
+			"commandsService",
+			{ optional: true },
+		);
+		if (commandsService && commandsService.isExecutingInProcess) {
+			return;
+		}
+
+		const shortcuts: KeyShortcut[] = runInInjectionContext(targetInjector, () =>
+			definition.shortcuts.call(definition, context, setupResult),
+		);
+		if (!shortcuts || !shortcuts.length) {
+			return;
+		}
+
+		const keyShortcutService = targetInjector.get<IKeyShortcutService>(
+			"keyShortcutService",
+			{ optional: true },
+		);
+		if (!keyShortcutService || !keyShortcutService.attach({ shortcuts })) {
+			return;
+		}
+
+		keyShortcutService.printHint();
+	};
+
 	return {
 		allowedParameters: [],
 		dashedOptions,
@@ -428,6 +473,10 @@ export function createCommandFromDefinition<
 			invocation.runResult = await runInInjectionContext(targetInjector, () =>
 				definition.run.call(definition, context, setupResult),
 			);
+
+			if (definition.shortcuts) {
+				attachShortcuts(context, setupResult);
+			}
 		},
 	};
 }

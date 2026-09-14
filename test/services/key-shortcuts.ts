@@ -3,6 +3,7 @@ import { EventEmitter } from "events";
 import { runInInjectionContext } from "../../lib/common/di/inject";
 import { Injector } from "../../lib/common/di/injector";
 import { runCommand } from "../../lib/common/services/command-definition-adapter";
+import { KeyShortcutRegistryService } from "../../lib/services/key-shortcut-registry";
 import {
 	findShortcut,
 	KeyContextBase,
@@ -299,6 +300,7 @@ describe("key shortcuts", () => {
 		let restoreConsole: () => void;
 		let savedSetting: string;
 		let registrations: Map<any, any>;
+		let registry: KeyShortcutRegistryService;
 
 		beforeEach(() => {
 			savedSetting = process.env.NS_KEY_SHORTCUTS;
@@ -311,11 +313,14 @@ describe("key shortcuts", () => {
 			info = [];
 			echoed = [];
 			registrations = new Map<any, any>();
-			service = new KeyShortcutService(fakeInjector(registrations), <ILogger>(<
-				any
-			>{
-				error: (message: string) => errors.push(message),
-			}));
+			registry = new KeyShortcutRegistryService();
+			service = new KeyShortcutService(
+				fakeInjector(registrations),
+				<ILogger>(<any>{
+					error: (message: string) => errors.push(message),
+				}),
+				registry,
+			);
 			registrations.set("keyShortcutService", service);
 
 			const originalInfo = console.info;
@@ -639,6 +644,84 @@ describe("key shortcuts", () => {
 
 			assert.deepEqual(ran, ["x"]);
 			assert.deepEqual(echoed, ["x"]);
+		});
+
+		it("takes the table it attached out of the registry when it detaches", () => {
+			service.attach({
+				shortcuts: [{ key: "x", description: "Attached", action: noop }],
+			});
+			assert.deepEqual(keysOf(registry.entries()), ["x"]);
+
+			service.detach();
+
+			assert.deepEqual(registry.entries(), []);
+		});
+
+		it("replaces its own table when it attaches again", () => {
+			service.attach({
+				shortcuts: [{ key: "x", description: "First", action: noop }],
+			});
+			service.attach({
+				shortcuts: [{ key: "y", description: "Second", action: noop }],
+			});
+
+			assert.deepEqual(keysOf(registry.entries()), ["y"]);
+		});
+
+		it("registers nothing when it declines to attach", () => {
+			process.env.NS_KEY_SHORTCUTS = "false";
+
+			assert.isFalse(
+				service.attach({
+					shortcuts: [{ key: "x", description: "Declined", action: noop }],
+				}),
+			);
+
+			assert.deepEqual(registry.entries(), []);
+		});
+
+		it("dispatches and lists an entry registered after the attach", async () => {
+			const ran: string[] = [];
+			service.attach({ shortcuts: [] });
+
+			registry.add({
+				key: "x",
+				description: "Registered late",
+				action: () => void ran.push("x"),
+			});
+
+			service.printHelp();
+			await press("x");
+
+			assert.deepEqual(ran, ["x"]);
+			assert.include(info.join("\n"), "Registered late");
+		});
+
+		it("leaves registrations it does not own alone across an attach cycle", () => {
+			const kept = registry.add({
+				key: "x",
+				description: "Owned elsewhere",
+				action: noop,
+			});
+
+			service.attach({
+				shortcuts: [{ key: "y", description: "Attached", action: noop }],
+			});
+			service.detach();
+
+			assert.deepEqual(keysOf(registry.entries()), ["x"]);
+
+			kept.dispose();
+			assert.deepEqual(registry.entries(), []);
+		});
+
+		it("hints at the help key, and stays quiet without a terminal", () => {
+			service.printHint();
+			stdin.isTTY = false;
+			service.printHint();
+
+			assert.lengthOf(info, 1);
+			assert.include(info[0], "press ? to list shortcuts");
 		});
 	});
 

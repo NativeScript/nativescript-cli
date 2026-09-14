@@ -28,6 +28,13 @@ export type {
 	AbstractType,
 } from "../common/di/providers";
 
+export { KeyShortcutRegistry } from "../common/contracts/key-shortcuts";
+export type {
+	KeyContextBase,
+	KeyShortcut,
+	KeyShortcutRegistration,
+} from "../common/contracts/key-shortcuts";
+
 export { ChildProcess } from "./child-process";
 export { DevicesService } from "./devices-service";
 export { DoctorService } from "./doctor-service";

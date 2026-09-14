@@ -1,5 +1,11 @@
 interface ICommandsService {
 	currentCommandData: ICommandData;
+	/**
+	 * Whether the command running right now was dispatched by
+	 * executeCommandInProcess rather than by the command line — what tells a
+	 * command that it is borrowing a host process instead of owning one.
+	 */
+	readonly isExecutingInProcess: boolean;
 	allCommands(opts: { includeDevCommands: boolean }): string[];
 	tryExecuteCommand(
 		commandName: string,

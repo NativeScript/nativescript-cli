@@ -30,6 +30,7 @@ import {
 	registerCommand,
 	registerLazyCommand,
 } from "../lib/common/services/command-definition-adapter";
+import type { KeyShortcut } from "../lib/common/contracts/key-shortcuts";
 
 const createTestInjector = (options: any = {}): IInjector => {
 	const testInjector = new Yok();
@@ -529,6 +530,167 @@ describe("defineCommand", () => {
 				retries: 3,
 				files: ["a.ts"],
 			});
+		});
+	});
+
+	describe("shortcuts", () => {
+		let savedSetting: string;
+
+		beforeEach(() => {
+			savedSetting = process.env.NS_COMMAND_SHORTCUTS;
+			process.env.NS_COMMAND_SHORTCUTS = "true";
+		});
+
+		afterEach(() => {
+			if (savedSetting === undefined) {
+				delete process.env.NS_COMMAND_SHORTCUTS;
+			} else {
+				process.env.NS_COMMAND_SHORTCUTS = savedSetting;
+			}
+		});
+
+		const restartEntry: KeyShortcut = {
+			key: "r",
+			description: "Restart",
+			action: (): void => undefined,
+		};
+
+		const keyShortcutServiceStub = () => ({
+			attached: <string[][]>[],
+			hints: 0,
+			attach(options: { shortcuts: KeyShortcut[] }): boolean {
+				this.attached.push(options.shortcuts.map((shortcut) => shortcut.key));
+				return true;
+			},
+			detach: (): void => undefined,
+			printHelp: (): void => undefined,
+			printHint(): void {
+				this.hints++;
+			},
+		});
+
+		it("attaches the declared table once run resolves", async () => {
+			const testInjector = createTestInjector();
+			const keyShortcutService = keyShortcutServiceStub();
+			testInjector.register("keyShortcutService", keyShortcutService);
+
+			let declaredWith: any[];
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-shortcuts",
+					setup: () => ({ platform: "iOS" }),
+					run: (): void => undefined,
+					shortcuts: (context, setupResult) => {
+						declaredWith = [context.args, setupResult];
+						return [restartEntry];
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute(["alpha"]);
+
+			assert.deepEqual(keyShortcutService.attached, [["r"]]);
+			assert.equal(keyShortcutService.hints, 1);
+			assert.deepEqual(declaredWith, [["alpha"], { platform: "iOS" }]);
+		});
+
+		it("attaches nothing while NS_COMMAND_SHORTCUTS is off", async () => {
+			delete process.env.NS_COMMAND_SHORTCUTS;
+			const testInjector = createTestInjector();
+			const keyShortcutService = keyShortcutServiceStub();
+			testInjector.register("keyShortcutService", keyShortcutService);
+
+			let declared = false;
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-shortcuts-off",
+					run: (): void => undefined,
+					shortcuts: () => {
+						declared = true;
+						return [restartEntry];
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.isFalse(declared);
+			assert.deepEqual(keyShortcutService.attached, []);
+			assert.equal(keyShortcutService.hints, 0);
+		});
+
+		it("attaches nothing when the table comes back empty", async () => {
+			const testInjector = createTestInjector();
+			const keyShortcutService = keyShortcutServiceStub();
+			testInjector.register("keyShortcutService", keyShortcutService);
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-shortcuts-empty",
+					run: (): void => undefined,
+					shortcuts: () => [],
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.deepEqual(keyShortcutService.attached, []);
+		});
+
+		it("attaches nothing when the run is an in-process dispatch", async () => {
+			const testInjector = new Yok();
+			testInjector.register("errors", {
+				beginCommand: async (action: () => Promise<boolean>) => action(),
+				failWithHelp: (message: string) => {
+					throw new Error(message);
+				},
+				fail: (message: string) => {
+					throw new Error(message);
+				},
+				reportCommandError: async (ex: Error) => {
+					throw ex;
+				},
+			});
+			testInjector.register("hooksService", HooksServiceStub);
+			testInjector.register("logger", LoggerStub);
+			testInjector.register("staticConfig", {
+				disableAnalytics: true,
+				disableCommandHooks: true,
+			});
+			testInjector.register("extensibilityService", {});
+			testInjector.register("optionsTracker", {});
+			testInjector.register("options", {
+				validateOptions: (): void => undefined,
+			});
+			testInjector.register("commandsService", CommandsService);
+			const keyShortcutService = keyShortcutServiceStub();
+			testInjector.register("keyShortcutService", keyShortcutService);
+
+			let ran = false;
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-shortcuts-in-process",
+						run: () => {
+							ran = true;
+						},
+						shortcuts: () => [restartEntry],
+					}),
+				),
+			);
+
+			const commandsService: ICommandsService =
+				testInjector.resolve("commandsService");
+			await commandsService.executeCommandInProcess(
+				"dctest-shortcuts-in-process",
+			);
+
+			assert.isTrue(ran);
+			assert.deepEqual(keyShortcutService.attached, []);
+			assert.isFalse(commandsService.isExecutingInProcess);
 		});
 	});
 

@@ -721,6 +721,7 @@ injector.require("tempService", "./services/temp-service");
 
 injector.require("sharedEventBus", "./shared-event-bus");
 
+injector.require("keyShortcutRegistry", "./services/key-shortcut-registry");
 injector.require("keyShortcutService", "./services/key-shortcuts");
 
 registerBuiltInCommand<

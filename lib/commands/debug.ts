@@ -1,4 +1,5 @@
 import { IErrors, ISysInfo } from "../common/declarations";
+import { commandShortcutsEnabled } from "../common/contracts/key-shortcuts";
 import {
 	booleanOption,
 	CommandContext,
@@ -18,6 +19,12 @@ import {
 } from "../definitions/debug";
 import { IMigrateController } from "../definitions/migrate";
 import { SystemWarningsSeverity } from "../definitions/system-warnings";
+import {
+	IKeyShortcutService,
+	KeyShortcutRegistry,
+	restartShortcut,
+	watcherShortcut,
+} from "../services/key-shortcuts";
 import {
 	canExecuteCommandBase,
 	injectPlatformCommandServices,
@@ -152,17 +159,53 @@ export async function runDebugCommand(
 		return;
 	}
 
+	const liveSyncOptions = (
+		additional: Partial<ILiveSyncCommandHelperAdditionalOptions>,
+	): ILiveSyncCommandHelperAdditionalOptions => ({
+		deviceDebugMap: {
+			[selectedDeviceForDebug.deviceInfo.identifier]: true,
+		},
+		buildPlatform: undefined,
+		skipNativePrepare: false,
+		...additional,
+	});
+
 	await services.$liveSyncCommandHelper.executeLiveSyncOperation(
 		[selectedDeviceForDebug],
 		services.platform,
-		{
-			deviceDebugMap: {
-				[selectedDeviceForDebug.deviceInfo.identifier]: true,
-			},
-			buildPlatform: undefined,
-			skipNativePrepare: false,
-		},
+		liveSyncOptions({}),
 	);
+
+	if (!commandShortcutsEnabled()) {
+		return;
+	}
+
+	// The device map is what keeps the debugger attached across a restart, so
+	// the shared restart — which knows nothing of it — cannot stand in here.
+	const restartDebugSession = (forceRebuildNativeApp: boolean): Promise<void> =>
+		services.$liveSyncCommandHelper.executeLiveSyncOperation(
+			[selectedDeviceForDebug],
+			services.platform,
+			liveSyncOptions(<Partial<ILiveSyncCommandHelperAdditionalOptions>>{
+				restartLiveSync: true,
+				...(forceRebuildNativeApp ? { forceRebuildNativeApp: true } : {}),
+			}),
+		);
+
+	context.injector.get(KeyShortcutRegistry).add(
+		restartShortcut({ restart: restartDebugSession }),
+		restartShortcut({
+			forceRebuildNativeApp: true,
+			restart: restartDebugSession,
+		}),
+		watcherShortcut(),
+	);
+
+	const keyShortcutService =
+		context.injector.get<IKeyShortcutService>("keyShortcutService");
+	if (keyShortcutService.attach({ shortcuts: [] })) {
+		keyShortcutService.printHint();
+	}
 }
 
 interface IDebugApplePlatformCommandServices extends IDebugCommandServices {

@@ -33,6 +33,11 @@ export class CommandsService implements ICommandsService {
 	}
 
 	private commands: ICommandData[] = [];
+	private inProcessDepth: number = 0;
+
+	public get isExecutingInProcess(): boolean {
+		return this.inProcessDepth > 0;
+	}
 
 	constructor(
 		private $errors: IErrors,
@@ -238,6 +243,7 @@ export class CommandsService implements ICommandsService {
 		commandName: string,
 		commandArguments: string[] = [],
 	): Promise<void> {
+		this.inProcessDepth++;
 		try {
 			const command = this.$injector.resolveCommand(commandName);
 			if (!command) {
@@ -272,6 +278,8 @@ export class CommandsService implements ICommandsService {
 			);
 
 			throw ex;
+		} finally {
+			this.inProcessDepth--;
 		}
 	}
 

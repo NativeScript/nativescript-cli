@@ -6,6 +6,7 @@
  * lib/common/services/command-definition-adapter.
  */
 
+import type { KeyShortcut } from "./contracts/key-shortcuts";
 import type { Injector } from "./di/injector";
 
 /**
@@ -159,6 +160,17 @@ export interface CommandDefinition<
 		context: CommandContext<TSchema>,
 		setupResult: Awaited<TSetup>,
 	): TResult | Promise<TResult>;
+	/**
+	 * The keys the command answers to once `run` has resolved. Attaching keeps
+	 * stdin resumed, which keeps the process alive: declaring shortcuts says the
+	 * command is resident. Entries close over this command's own context and
+	 * setup result; they are attached only for a top-level run, and only while
+	 * `NS_COMMAND_SHORTCUTS` is on.
+	 */
+	shortcuts?(
+		context: CommandContext<TSchema>,
+		setupResult: Awaited<TSetup>,
+	): KeyShortcut[];
 	/** Runs after `run` succeeds, with whatever `run` returned. */
 	postRun?(
 		context: CommandContext<TSchema>,
@@ -211,6 +223,7 @@ const DEFINITION_FIELDS = [
 	"enableHooks",
 	"setup",
 	"run",
+	"shortcuts",
 	"postRun",
 ];
 
@@ -242,7 +255,7 @@ const OPTION_TYPES: CommandOptionType[] = [
 const ACCEPTED_FORM =
 	'defineCommand({ name: "widget|add", run(ctx) { ... } }) — with the ' +
 	"optional fields description, options, arguments, allowUnknownOptions, " +
-	"setup, canExecute, postRun, disableAnalytics and enableHooks.";
+	"setup, canExecute, shortcuts, postRun, disableAnalytics and enableHooks.";
 
 const describeDefinition = (definition: any): string => {
 	const name = definition && definition.name;
@@ -475,7 +488,7 @@ const validateDefinition = (definition: any): void => {
 		}
 	}
 
-	for (const handler of ["canExecute", "setup", "postRun"]) {
+	for (const handler of ["canExecute", "setup", "shortcuts", "postRun"]) {
 		if (
 			definition[handler] !== undefined &&
 			typeof definition[handler] !== "function"

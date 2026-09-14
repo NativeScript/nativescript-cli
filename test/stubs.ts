@@ -1308,6 +1308,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 export class CommandsService implements ICommandsService {
 	public currentCommandData = { commandName: "test", commandArguments: [""] };
+	public isExecutingInProcess = false;
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
 		return [];

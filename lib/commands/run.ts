@@ -20,7 +20,10 @@ import { IProjectData, IProjectDataService } from "../definitions/project";
 import {
 	DevicePlatformName,
 	IKeyShortcutService,
+	KeyShortcut,
 	keyShortcuts,
+	restartShortcut,
+	watcherShortcut,
 } from "../services/key-shortcuts";
 
 const runCommandOptions = {
@@ -137,6 +140,30 @@ export async function runRunCommand(
 	}
 }
 
+/**
+ * Restarting and pausing the watcher are the shortcuts a standalone run owns
+ * outright; the launch and clean keys belong to the parent that respawns
+ * things, which is why the `ns start` table is not reused here.
+ */
+export function runCommandShortcuts(
+	context: RunCommandContext,
+	services: IRunCommandServices,
+): KeyShortcut[] {
+	if (process.env.NS_IS_INTERACTIVE) {
+		// A `ns start` child is driven over IPC through the table `run` attaches
+		// for itself; a second attach would replace it.
+		return [];
+	}
+
+	const platform = <DevicePlatformName>services.platform;
+
+	return [
+		restartShortcut({ platform }),
+		restartShortcut({ platform, forceRebuildNativeApp: true }),
+		watcherShortcut(),
+	];
+}
+
 export const runCommandDefinition = defineCommand({
 	name: "run|*all",
 	description: "Runs your project on all connected devices and emulators.",
@@ -146,6 +173,7 @@ export const runCommandDefinition = defineCommand({
 	setup: setupRunCommand,
 	canExecute: canExecuteRunCommand,
 	run: runRunCommand,
+	shortcuts: runCommandShortcuts,
 });
 
 async function canExecuteApplePlatformRunCommand(
@@ -188,6 +216,7 @@ const defineApplePlatformRunCommand = <const TName extends CommandName>(
 		setup: setupPlatformRunCommand(platform),
 		canExecute: canExecuteApplePlatformRunCommand,
 		run: runRunCommand,
+		shortcuts: runCommandShortcuts,
 	});
 
 export const iosRunCommand = defineApplePlatformRunCommand("run|ios", "iOS");
@@ -242,4 +271,5 @@ export const androidRunCommand = defineCommand({
 		);
 	},
 	run: runRunCommand,
+	shortcuts: runCommandShortcuts,
 });
