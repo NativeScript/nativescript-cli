@@ -6,6 +6,7 @@ import { Injector } from "../di/injector";
 import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { ICommand } from "../definitions/commands";
 import { COMMAND_CONTEXT } from "../contracts/command-context";
+import { CommandsService } from "../contracts/commands-service";
 import {
 	COMMAND_OWNER,
 	CommandRegistry,
@@ -195,6 +196,7 @@ export function createCommandFromDefinition<
 >(
 	definition: CommandDefinition<TSchema, TResult, TSetup>,
 	targetInjector: Injector = <Injector>(<any>getRootInjector()),
+	providers: Provider[] = [],
 ): ICommand {
 	const schema = definition.options || <TSchema>{};
 	const optionNames = Object.keys(schema);
@@ -267,7 +269,10 @@ export function createCommandFromDefinition<
 			args,
 			params: mapArguments(args),
 			options,
-			injector: targetInjector,
+			// The invocation's child injector provides this very object under
+			// COMMAND_CONTEXT, so it can only be created - and assigned here -
+			// once the context exists.
+			injector: <Injector>undefined,
 			fail,
 		};
 	};
@@ -373,12 +378,19 @@ export function createCommandFromDefinition<
 	// opens one only when the current invocation has already run.
 	let currentInvocation: Invocation = null;
 
-	const beginInvocation = (context: CommandContext<TSchema>): Invocation => {
+	const beginInvocation = (args: string[]): Invocation => {
+		const context = buildContext(args);
+		// Per-command providers live here rather than in a registration-time
+		// scope so that a factory or class among them can inject the
+		// invocation; the price is one instance per invocation.
+		const injector = targetInjector.createChild([
+			{ provide: COMMAND_CONTEXT, useValue: context },
+			...providers,
+		]);
+		context.injector = injector;
 		const invocation: Invocation = {
 			context,
-			injector: targetInjector.createChild([
-				{ provide: COMMAND_CONTEXT, useValue: context },
-			]),
+			injector,
 			setup: undefined,
 			hasRun: false,
 		};
@@ -403,10 +415,9 @@ export function createCommandFromDefinition<
 			return;
 		}
 
-		const commandsService = targetInjector.get<ICommandsService>(
-			"commandsService",
-			{ optional: true },
-		);
+		const commandsService = targetInjector.get(CommandsService, {
+			optional: true,
+		});
 		if (commandsService && commandsService.isExecutingInProcess) {
 			return;
 		}
@@ -446,8 +457,7 @@ export function createCommandFromDefinition<
 			? {}
 			: {
 					postCommandAction: async (args: string[]): Promise<void> => {
-						const invocation =
-							currentInvocation || beginInvocation(buildContext(args));
+						const invocation = currentInvocation || beginInvocation(args);
 						const context = invocation.context;
 						const setupResult = await invocation.setup;
 						await runInInjectionContext(invocation.injector, () =>
@@ -461,13 +471,13 @@ export function createCommandFromDefinition<
 					},
 				}),
 		canExecute: async (args: string[]): Promise<boolean> => {
-			const context = buildContext(args);
 			// Setup first: it stands in for the constructor work legacy commands
 			// did at resolution time, which ran before anything looked at the
 			// arguments - so an argument validator can rely on it, and a command
 			// run in the wrong place still reports that before complaining about
 			// arity.
-			const invocation = beginInvocation(context);
+			const invocation = beginInvocation(args);
+			const context = invocation.context;
 			const setupResult = await invocation.setup;
 
 			await enforceArguments(context);
@@ -487,7 +497,7 @@ export function createCommandFromDefinition<
 			const invocation =
 				currentInvocation && !currentInvocation.hasRun
 					? currentInvocation
-					: beginInvocation(buildContext(args));
+					: beginInvocation(args);
 			const context = invocation.context;
 			invocation.hasRun = true;
 
@@ -517,6 +527,7 @@ export function registerDefinitionAs<
 	name: string,
 	definition: DefinedCommand<TSchema, TResult, TSetup>,
 	targetInjector: Injector = <Injector>(<any>getRootInjector()),
+	providers: Provider[] = [],
 ): void {
 	// The registry facet rather than the injector itself, so a child injector
 	// that provides its own CommandRegistry receives the registration.
@@ -524,7 +535,7 @@ export function registerDefinitionAs<
 	// A prototype-less zero-parameter function registers as a useFactory
 	// provider, so the command is built on first resolution and cached.
 	registry.registerCommand(name, () =>
-		createCommandFromDefinition(definition, targetInjector),
+		createCommandFromDefinition(definition, targetInjector, providers),
 	);
 }
 
@@ -543,50 +554,15 @@ const contextInjector = (): Injector =>
 	getCurrentInjector() || <Injector>(<any>getRootInjector());
 
 /**
- * Runs a registered command in the current process. The command gets what a
- * typed command line gives it — its declared options primed with their
- * defaults, the arguments policy, `canExecute`, hooks and `postRun` — and a
- * failure throws instead of exiting, so a process that has to keep running
- * (`ns start`, dispatching a key shortcut) can catch it.
- */
-export async function runCommand(
-	name: string,
-	args: string[] = [],
-): Promise<void> {
-	const commandsService =
-		contextInjector().get<ICommandsService>("commandsService");
-
-	await commandsService.executeCommandInProcess(name, args);
-}
-
-/**
- * Asks a registered command whether it could run on `args`, without running it.
- * The named command is resolved and its options primed exactly as `runCommand`
- * does, and its own `canExecute` returns the verdict.
- *
- * This is how one command reuses another's precondition — `embed` asking
- * whether `prepare` would run. The child resolves its own services, so nothing
- * crosses between the two but the name and the arguments; pass only the
- * arguments the child's own `arguments` policy accepts.
- */
-export async function canExecuteCommand(
-	name: string,
-	args: string[] = [],
-): Promise<boolean> {
-	const commandsService =
-		contextInjector().get<ICommandsService>("commandsService");
-
-	return commandsService.canExecuteCommandInProcess(name, args);
-}
-
-/**
  * Registers a command with the CLI. Takes a Command() class, the result of
  * defineCommand(), or a bare definition, which it defines on the caller's
  * behalf.
  *
  * Registration targets the injector of the current injection context, and
- * `providers` scope the command to a child of it. To register against some
- * other injector, run the call in its context:
+ * `providers` are added to each invocation's own child of it, next to
+ * COMMAND_CONTEXT, so they can inject the invocation and are built once per
+ * invocation. To register against some other injector, run the call in its
+ * context:
  * `runInInjectionContext(injector, () => registerCommand(definition))`.
  *
  * Every registration has an owner and claims its names, the way
@@ -600,7 +576,7 @@ export function registerCommand<
 	TSetup = any,
 >(
 	definition:
-		| CommandClass<CommandName, TSchema, TResult>
+		| CommandClass<CommandName, TSchema>
 		| DefinedCommand<TSchema, TResult, TSetup>
 		| CommandDefinition<TSchema, TResult, TSetup>,
 	providers: Provider[] = [],
@@ -609,14 +585,13 @@ export function registerCommand<
 		toCommandDefinition(definition) ||
 		defineCommand(<CommandDefinition<TSchema, TResult, TSetup>>definition);
 	const target = contextInjector();
-	const scope = providers.length ? target.createChild(providers) : target;
 	const owner = target.get(COMMAND_OWNER, { optional: true }) || CLI_OWNER;
 	const registry = target.get(CommandRegistry);
 
 	for (const name of namesOf(defined)) {
 		const result = registry.registerDeferredCommand(name, {
 			owner,
-			load: () => registerDefinitionAs(name, defined, scope),
+			load: () => registerDefinitionAs(name, defined, target, providers),
 		});
 
 		if (!result.registered) {
@@ -650,8 +625,9 @@ type MissingTypeArgument =
  *       () => require("./commands/run").iosRunCommand,
  *     );
  *
- * `providers` scope the command to a child injector, built when the command is
- * constructed rather than when its name is claimed.
+ * `providers` are added to each invocation's own child injector, as for
+ * `registerCommand`, so nothing about them is resolved when the name is
+ * claimed.
  *
  * Registration targets the injector of the current injection context, if there
  * is one, and takes its owner from that injector's COMMAND_OWNER — which is
@@ -723,11 +699,7 @@ export function registerLazyCommand<
 				);
 			}
 
-			registerDefinitionAs(
-				commandName,
-				definition,
-				providers.length ? target.createChild(providers) : target,
-			);
+			registerDefinitionAs(commandName, definition, target, providers);
 		},
 	});
 }

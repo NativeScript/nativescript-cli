@@ -1328,18 +1328,32 @@ export class CommandsService implements ICommandsService {
 		return Promise.resolve(true);
 	}
 
-	public executeCommandInProcess(
+	public runCommand(
 		commandName: string,
 		commandArguments?: string[],
 	): Promise<void> {
 		return Promise.resolve();
 	}
 
-	public canExecuteCommandInProcess(
+	public canExecuteCommand(
 		commandName: string,
 		commandArguments?: string[],
 	): Promise<boolean> {
 		return Promise.resolve(true);
+	}
+
+	public executeCommandInProcess(
+		commandName: string,
+		commandArguments?: string[],
+	): Promise<void> {
+		return this.runCommand(commandName, commandArguments);
+	}
+
+	public canExecuteCommandInProcess(
+		commandName: string,
+		commandArguments?: string[],
+	): Promise<boolean> {
+		return this.canExecuteCommand(commandName, commandArguments);
 	}
 
 	public completeCommand(): Promise<boolean> {

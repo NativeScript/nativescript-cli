@@ -14,6 +14,7 @@ import {
 	CommandRegistry,
 	DeferredCommandResult,
 } from "../lib/common/contracts/command-registry";
+import { CommandsService as CommandsServiceContract } from "../lib/common/contracts/commands-service";
 import { CommandsService } from "../lib/common/services/commands-service";
 import { Options } from "../lib/options";
 import { Errors } from "../lib/common/errors";
@@ -29,7 +30,6 @@ import {
 	stringOption,
 } from "../lib/common/define-command";
 import {
-	canExecuteCommand,
 	createCommandFromDefinition,
 	registerBuiltInCommand,
 	registerCommand,
@@ -404,7 +404,7 @@ describe("defineCommand", () => {
 			);
 
 			await testInjector.resolveCommand("dctestambient").execute([]);
-			assert.strictEqual(seenInjector, scope);
+			assert.strictEqual(seenInjector.parent, scope);
 
 			assert.deepStrictEqual(
 				runInInjectionContext(testInjector, () =>
@@ -1393,16 +1393,91 @@ describe("defineCommand", () => {
 			});
 
 			const verdicts = [
-				await runInInjectionContext(testInjector, () =>
-					canExecuteCommand("dctest-can-yes", ["ok"]),
-				),
-				await runInInjectionContext(testInjector, () =>
-					canExecuteCommand("dctest-can-yes", ["nope"]),
-				),
+				await testInjector
+					.resolve("commandsService")
+					.canExecuteCommand("dctest-can-yes", ["ok"]),
+				await testInjector
+					.resolve("commandsService")
+					.canExecuteCommand("dctest-can-yes", ["nope"]),
 			];
 
 			assert.deepEqual(verdicts, [true, false]);
 			assert.isFalse(ran);
+		});
+
+		it("is the CommandsService contract's method, resolved by the registered name", async () => {
+			const testInjector = createInProcessInjector();
+			let ran = false;
+
+			runInInjectionContext(testInjector, () => {
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-contract",
+						arguments: "any",
+						canExecute: (context) => context.args[0] === "ok",
+						run: () => {
+							ran = true;
+						},
+					}),
+				);
+			});
+
+			const service = testInjector.get(CommandsServiceContract);
+			assert.instanceOf(service, <any>CommandsServiceContract);
+			assert.isTrue(
+				await service.canExecuteCommand("dctest-can-contract", ["ok"]),
+			);
+			assert.isFalse(ran);
+
+			await service.runCommand("dctest-can-contract", ["ok"]);
+			assert.isTrue(ran);
+		});
+
+		it("runs a definition or class as given, registered or not", async () => {
+			const testInjector = createInProcessInjector();
+			const runs: string[] = [];
+			const definition = defineCommand({
+				name: ["dctest-ref-primary", "dctest-ref-alias"],
+				arguments: "any",
+				canExecute: (context) => context.args[0] === "ok",
+				run: () => {
+					runs.push("definition");
+				},
+			});
+			class RefCommand extends Command({
+				name: "dctest-ref-class",
+				arguments: "any",
+			}) {
+				run(): void {
+					runs.push("class");
+				}
+			}
+			// Registered under the same name as the definition, to show the
+			// definition wins over the lookup.
+			runInInjectionContext(testInjector, () => {
+				registerCommand(
+					defineCommand({
+						name: "dctest-ref-primary",
+						arguments: "any",
+						run: () => {
+							runs.push("registered");
+						},
+					}),
+				);
+			});
+			const service = testInjector.get(CommandsServiceContract);
+
+			assert.isTrue(await service.canExecuteCommand(definition, ["ok"]));
+			assert.isFalse(await service.canExecuteCommand(definition, ["no"]));
+			await service.runCommand(definition, ["ok"]);
+			await service.runCommand(RefCommand);
+			await service.runCommand("dctest-ref-primary");
+			assert.deepEqual(runs, ["definition", "class", "registered"]);
+
+			await assert.isRejected(
+				service.runCommand(<any>{ name: "not-a-definition" }),
+				/Expected a command name/,
+			);
 		});
 
 		it("enforces the child's arguments policy before its canExecute", async () => {
@@ -1423,9 +1498,9 @@ describe("defineCommand", () => {
 			);
 
 			await assert.isRejected(
-				runInInjectionContext(testInjector, () =>
-					canExecuteCommand("dctest-can-none", ["stray"]),
-				),
+				testInjector
+					.resolve("commandsService")
+					.canExecuteCommand("dctest-can-none", ["stray"]),
 				/doesn't accept parameters/,
 			);
 			assert.isFalse(consulted);
@@ -1449,9 +1524,9 @@ describe("defineCommand", () => {
 			);
 
 			assert.isTrue(
-				await runInInjectionContext(testInjector, () =>
-					canExecuteCommand("dctest-can-setup"),
-				),
+				await testInjector
+					.resolve("commandsService")
+					.canExecuteCommand("dctest-can-setup"),
 			);
 		});
 
@@ -1459,9 +1534,9 @@ describe("defineCommand", () => {
 			const testInjector = createInProcessInjector();
 
 			await assert.isRejected(
-				runInInjectionContext(testInjector, () =>
-					canExecuteCommand("dctest-can-missing"),
-				),
+				testInjector
+					.resolve("commandsService")
+					.canExecuteCommand("dctest-can-missing"),
 				/Unknown command 'dctest-can-missing'/,
 			);
 		});
@@ -2208,7 +2283,7 @@ describe("defineCommand", () => {
 			);
 		});
 
-		it("scopes the command to a child injector built on first resolution", async () => {
+		it("adds the providers to each invocation's injector, not at resolution", async () => {
 			const testInjector = createTestInjector();
 			const GREETING = new InjectionToken<string>("dctestLazyGreeting");
 			let seen: string;
@@ -2238,11 +2313,12 @@ describe("defineCommand", () => {
 			assert.strictEqual(children, 0);
 
 			const command = testInjector.resolveCommand("dctestlazyscoped");
-			assert.strictEqual(children, 1);
+			assert.strictEqual(children, 0);
 
 			await command.execute([]);
+			assert.strictEqual(children, 1);
 			assert.strictEqual(seen, "hello");
-			// The provider lives in the command's own scope, not the injector the
+			// The provider lives in the invocation's own injector, not the one the
 			// registration was made against.
 			assert.isNotOk((<any>testInjector).get(GREETING, { optional: true }));
 		});
@@ -2286,7 +2362,7 @@ describe("defineCommand", () => {
 			assert.deepStrictEqual(result, { registered: true });
 
 			await testInjector.resolveCommand("dctestlazyambient").execute([]);
-			assert.strictEqual(seenInjector, scope);
+			assert.strictEqual(seenInjector.parent, scope);
 
 			assert.deepStrictEqual(
 				runInInjectionContext(testInjector, () =>
@@ -2354,15 +2430,20 @@ describe("defineCommand", () => {
 	});
 
 	describe("ctx.injector", () => {
-		it("is the injector the command was registered against", async () => {
+		it("is the invocation's injector, a child of the registration injector", async () => {
 			const testInjector = createTestInjector();
+			testInjector.register("dcTestRegistered", { value: "parent" });
 			let seen: any;
+			let seenContext: any;
+			let injectedContext: any;
 
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-injector",
 					run: (ctx) => {
+						injectedContext = inject(COMMAND_CONTEXT);
 						seen = ctx.injector;
+						seenContext = ctx.injector.get(COMMAND_CONTEXT);
 					},
 				}),
 				testInjector,
@@ -2370,7 +2451,29 @@ describe("defineCommand", () => {
 
 			await command.execute([]);
 
-			assert.strictEqual(seen, testInjector);
+			assert.notStrictEqual(seen, testInjector);
+			assert.strictEqual(seenContext, injectedContext);
+			assert.strictEqual(seen.get("dcTestRegistered").value, "parent");
+		});
+
+		it("is a different injector for each invocation", async () => {
+			const testInjector = createTestInjector();
+			const seen: any[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-injector-per-invocation",
+					run: (ctx) => {
+						seen.push(ctx.injector);
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+			await command.execute([]);
+
+			assert.notStrictEqual(seen[0], seen[1]);
 		});
 
 		it("resolves after the first await, where inject() no longer can", async () => {
@@ -2841,6 +2944,50 @@ describe("defineCommand", () => {
 			}
 
 			assert.deepEqual(ran, ["android:true:android", "ios:true:ios"]);
+		});
+
+		it("builds a factory provider per invocation, with the invocation in reach", async () => {
+			const LABEL = new InjectionToken<{ label: string }>("dcTestLabel");
+			const testInjector = createTestInjector();
+			const built: string[] = [];
+			const seen: any[] = [];
+
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-provider-sees-invocation",
+						arguments: "any",
+						run: (ctx) => {
+							const first = ctx.injector.get(LABEL);
+							seen.push(first, ctx.injector.get(LABEL));
+						},
+					}),
+					[
+						{
+							provide: LABEL,
+							useFactory: () => {
+								const label = inject(COMMAND_CONTEXT).args.join("+");
+								built.push(label);
+								return { label };
+							},
+						},
+					],
+				),
+			);
+
+			const command = testInjector.resolveCommand(
+				"dctest-provider-sees-invocation",
+			);
+			await command.execute(["a", "b"]);
+			await command.execute(["c"]);
+
+			assert.deepEqual(built, ["a+b", "c"]);
+			assert.strictEqual(seen[0], seen[1]);
+			assert.notStrictEqual(seen[0], seen[2]);
+			assert.deepEqual(
+				seen.map((entry) => entry.label),
+				["a+b", "a+b", "c", "c"],
+			);
 		});
 	});
 });

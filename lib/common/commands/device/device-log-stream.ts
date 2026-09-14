@@ -1,4 +1,5 @@
 import { ICleanupService } from "../../../definitions/cleanup-service";
+import { CommandsService } from "../../contracts/commands-service";
 import { IErrors } from "../../declarations";
 import {
 	CommandOptionsSchema,
@@ -29,7 +30,7 @@ export const openDeviceLogStreamCommandDefinition = defineCommand({
 		inject<ICleanupService>("cleanupService").setShouldDispose(false);
 	},
 	async run(context): Promise<void> {
-		const $commandsService = inject<ICommandsService>("commandsService");
+		const $commandsService = inject(CommandsService);
 		const $deviceLogProvider =
 			inject<Mobile.IDeviceLogProvider>("deviceLogProvider");
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
@@ -44,7 +45,7 @@ export const openDeviceLogStreamCommandDefinition = defineCommand({
 		});
 
 		if ($devicesService.deviceCount > 1) {
-			await $commandsService.tryExecuteCommand("device", []);
+			await $commandsService.runCommand("device");
 			$errors.failWithHelp(NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
 		}
 

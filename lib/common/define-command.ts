@@ -806,6 +806,12 @@ export function toCommandDefinition(
 }
 
 /**
+ * What a dispatcher accepts: a registered command's name, or a definition or
+ * class to run as given.
+ */
+export type CommandReference = string | RegisterableCommand;
+
+/**
  * The class authoring form: sugar over defineCommand, not a second execution
  * path. The returned base carries a `definition` that reads the class it is
  * accessed through, so the subclass — not this base — is what `setup`

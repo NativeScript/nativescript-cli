@@ -13,7 +13,7 @@ import {
 	KeyShortcutRegistration,
 	KeyShortcutRegistry,
 } from "../common/contracts/key-shortcuts";
-import { runCommand } from "../common/services/command-definition-adapter";
+import { CommandsService } from "../common/contracts/commands-service";
 import { injector } from "../common/yok";
 import { IProjectDataService } from "../definitions/project";
 import { IStartService } from "../definitions/start-service";
@@ -318,7 +318,10 @@ export function openIdeShortcut(
 		description,
 		group: platform,
 		when: onPlatform(platform),
-		action: () => runCommand(`open|${platform.toLowerCase()}`),
+		action: (ctx) =>
+			ctx.injector
+				.get(CommandsService)
+				.runCommand(`open|${platform.toLowerCase()}`),
 	};
 }
 
@@ -367,7 +370,7 @@ export function keyShortcuts(): KeyShortcut<NsKeyContext>[] {
 			key: "n",
 			description: "Install dependencies",
 			group: WORKFLOW_GROUP,
-			action: () => runCommand("install"),
+			action: (ctx) => ctx.injector.get(CommandsService).runCommand("install"),
 		},
 	];
 }

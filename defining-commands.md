@@ -346,7 +346,8 @@ The run context
   `const { args, arguments } = ctx` would not even parse.
 - `ctx.options` — the current value of each declared option, read at the moment
   the command executes.
-- `ctx.injector` — the injector this command was registered against; see
+- `ctx.injector` — this invocation's injector, a child of the one the command
+  was registered against; see
   [Injection, and the first `await`](#injection-and-the-first-await).
 - `ctx.fail(message)` — fails the command with `message` and a usage help
   suggestion.
@@ -416,10 +417,13 @@ async run(ctx) {
 `ctx.injector` is deliberately the injector itself rather than a bound
 `ctx.inject(...)`: it is a visibly different mechanism because it obeys
 different rules, and mistaking one for the other is exactly the bug this shape
-prevents. It is the injector the command was **registered against**, so it also
-resolves providers a child scope supplied — see
-[Registering a definition](#registering-a-definition). The same guidance, and
-the reasoning behind it, is in `dependency-injection.md`.
+prevents. It is the **invocation's own injector**: a child of the one the
+command was registered against, holding the context under `COMMAND_CONTEXT`
+and any per-command providers — see
+[Registering a definition](#registering-a-definition). `inject()` before the
+first `await` and `ctx.injector.get()` after it are therefore the same lookup
+against the same injector. The same guidance, and the reasoning behind it, is
+in `dependency-injection.md`.
 
 Where a handler gets its services
 ---------------------------------
@@ -466,8 +470,8 @@ Sharing is either of two things, and neither of them is a bag:
   }
   ```
 
-- **A whole command's precondition** — `canExecuteCommand(name, args)`, which
-  asks that command itself; see [Asking another
+- **A whole command's precondition** — `CommandsService.canExecuteCommand`,
+  which asks that command itself; see [Asking another
   command](#asking-another-command).
 
 ### `setup`, when a command has one
@@ -600,8 +604,10 @@ schema does not declare is a compile error. `this.context` also carries
 **Per-command providers see the invocation.** The context is provided to the
 invocation's own child injector under the `COMMAND_CONTEXT` token, which is how
 the base class reads it. A provider registered for one command — through the
-`providers` argument of `registerCommand` or `registerLazyCommand` — can inject
-it too, and resolves nothing outside a running invocation.
+`providers` argument of `registerCommand` or `registerLazyCommand` — lives in
+that same child, so a factory or class among them can inject the context too.
+The cost is that such a provider is built once per invocation, never shared
+across invocations, and resolves nothing outside a running one.
 
 **One field per dependency.** Each service the class uses is its own field,
 read as `this.$x`:
@@ -681,8 +687,8 @@ the registry. It claims every name the definition declares, through the
 `DeferredCommandResult` — see _The owner is ambient_ below. The command instance
 is built by a factory on first resolution and cached.
 
-Pass providers as the second argument to scope the command to a child injector
-of the one it registers against — how a definition is parameterized per
+Pass providers as the second argument to add them to each invocation's child
+injector, the one `ctx.injector` names — how a definition is parameterized per
 registration:
 
 ```ts
@@ -827,14 +833,24 @@ per-platform command subclasses a shared base to override one field.
 Running a command in process
 ----------------------------
 
-`runCommand` dispatches a registered command from inside the process that is
-already running:
+The `CommandsService` contract dispatches a registered command from inside the
+process that is already running. It is a service like any other, so it follows
+the rule every service does: `inject()` before the first `await`, the
+injector after it, and a key shortcut's action reaches it through the
+injector its context carries:
 
 ```ts
-import { runCommand } from "../common/services/command-definition-adapter";
+import { CommandsService } from "nativescript/contracts";
 
-await runCommand("open|ios");
-await runCommand("install", ["lodash"]);
+// in a class command
+private $commandsService = inject(CommandsService);
+await this.$commandsService.runCommand("autocomplete");
+
+// in an inline handler, after the first await
+await ctx.injector.get(CommandsService).runCommand("install", ["lodash"]);
+
+// in a shortcut action
+action: (ctx) => ctx.injector.get(CommandsService).runCommand("open|ios"),
 ```
 
 The command gets what a typed command line gives it, in the same order: its
@@ -852,29 +868,56 @@ running afterwards:
   the caller decides what happens next.
 - **Analytics do not fire.** An in-process dispatch is not a new invocation of
   the CLI, and the consent check can prompt on a terminal the caller has put
-  into raw mode. Hooks do fire: a project's `before-open-ios` hook is part of
-  what `open|ios` means, however the command was reached.
+  into raw mode. Hooks do fire, under the same names the command line fires:
+  `open|ios` fires `before-open-ios` and then `before-open` (and `after-open`,
+  `after-open-ios` on the way out), however the command was reached.
 
 The options service is put back the way it was found. Merging a command's
 declarations into it rewrites the values the host process is still running on
 — `open|ios` declares `watch: false`, which would otherwise leave an `ns start`
 out of watch mode for the rest of its life.
 
-Which injector it dispatches through follows the rule `registerCommand` does:
-the injector of the current injection context, and the CLI's own outside one.
-`runCommand` is a thin call onto `CommandsService.executeCommandInProcess`,
-where the pipeline itself lives.
+In-process dispatches nest; they never overlap. The options are put back in
+the order the dispatches were entered, which only restores the right values
+when each one finishes before the dispatch it was started from. A dispatch
+started while another is in flight, and not from inside it — two
+`runCommand` calls under one `Promise.all`, say — is rejected with
+`Cannot dispatch '…' in process while '…' is still running: in-process
+dispatches must nest, not overlap; await the running one first.` Await one
+before starting the next.
+
+There is deliberately no free `runCommand()` function: one that silently fell
+back to the CLI's root injector outside an injection context would dispatch
+through the wrong scope from exactly the places — after an `await`, inside a
+stdin handler — where the mistake is hardest to notice. The injector you hold
+is the one to dispatch through.
 
 ### Asking another command
 
-`canExecuteCommand(name, args)` asks a registered command whether it *could*
-run, without running it:
+Both methods take a registered name, or — the typed way — a definition or
+`Command()` class. A name is looked up in the registry, and a parent name is
+routed to its subcommand the way the command line routes it —
+`runCommand("device")` runs `device|*list`, `runCommand("device", ["log"])`
+runs `device|log`; a definition runs as
+given, whether or not it is registered, so `runCommand(prepareCommandDefinition)`
+runs exactly what you hold and cannot go stale the way a string can. Its first
+name still identifies it for hooks and reporting.
+
+`CommandsService.canExecuteCommand(command, args)` asks a registered command
+whether it *could* run, without running it:
 
 ```ts
-import { canExecuteCommand } from "../common/services/command-definition-adapter";
+import { CommandsService } from "nativescript/contracts";
+
+private $commandsService = inject(CommandsService);
 
 async canExecute(): Promise<boolean> {
-	if (!(await canExecuteCommand("prepare", [this.args[0]]))) {
+	if (
+		!(await this.$commandsService.canExecuteCommand(
+			prepareCommandDefinition,
+			[this.args[0]],
+		))
+	) {
 		return false;
 	}
 
@@ -886,18 +929,18 @@ This is how one command builds on another's precondition. `embed` prepares the
 project, so "could `embed` run" starts with "could `prepare` run" — and the way
 to ask that is to ask `prepare`, not to import its `canExecute` and hand it
 services. The named command is resolved and its options primed exactly as
-`runCommand` does, then its own `canExecute` returns the verdict. It builds its
-own setup from its own services; nothing crosses between the two commands but
-the name and the arguments.
+`runCommand` does, then its own `canExecute` returns its verdict or throws. It
+builds its own setup from its own services; nothing crosses between the two
+commands but the name and the arguments.
 
 Pass only the arguments the child's own `arguments` policy accepts. The child
 enforces that policy before its `canExecute`, so forwarding a caller's whole
 argument list to a child that declares fewer is a rejection, not a wider check.
 
-`canExecuteCommand` is a thin call onto
-`CommandsService.canExecuteCommandInProcess`, and follows `runCommand` in
-everything else: the same injector rule, the same option priming and
-restoration.
+`canExecuteCommand` follows `runCommand` in everything else: the same option
+priming and restoration, the same routing of a parent name to its subcommand.
+The deprecated `canExecuteCommandInProcess` and `executeCommandInProcess`
+call the two methods with a name.
 
 ### Key shortcuts
 
@@ -910,7 +953,7 @@ an `action` that runs it:
 	key: "I",
 	description: "Open project in Xcode",
 	when: onPlatform("iOS"),
-	action: () => runCommand("open|ios"),
+	action: (ctx) => ctx.injector.get(CommandsService).runCommand("open|ios"),
 }
 ```
 

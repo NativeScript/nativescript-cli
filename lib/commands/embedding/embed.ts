@@ -5,9 +5,13 @@ import { IProjectConfigService, IProjectData } from "../../definitions/project";
 import { Command } from "../../common/define-command";
 import { IFileSystem } from "../../common/declarations";
 import { inject } from "../../common/di";
-import { canExecuteCommand } from "../../common/services/command-definition-adapter";
+import { CommandsService } from "../../common/contracts/commands-service";
 import { platformArgument } from "../command-base";
-import { prepareCommandOptions, runPrepareCommand } from "../prepare";
+import {
+	prepareCommandDefinition,
+	prepareCommandOptions,
+	runPrepareCommand,
+} from "../prepare";
 
 function resolveHostProjectPath(
 	projectDir: string,
@@ -31,6 +35,7 @@ export class EmbedCommand extends Command({
 		{ name: "hostProjectModuleName" },
 	],
 }) {
+	private $commandsService = inject(CommandsService);
 	private $fs = inject<IFileSystem>("fs");
 	private $logger = inject<ILogger>("logger");
 	private $options = inject<IOptions>("options");
@@ -52,7 +57,12 @@ export class EmbedCommand extends Command({
 	public async canExecute(): Promise<boolean> {
 		// `prepare` takes the platform alone; the host project arguments are this
 		// command's own and it would reject them.
-		if (!(await canExecuteCommand("prepare", this.args.slice(0, 1)))) {
+		if (
+			!(await this.$commandsService.canExecuteCommand(
+				prepareCommandDefinition,
+				this.args.slice(0, 1),
+			))
+		) {
 			return false;
 		}
 

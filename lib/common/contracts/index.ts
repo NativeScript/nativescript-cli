@@ -15,5 +15,6 @@ export type {
 	DeferredCommandResult,
 } from "./command-registry";
 export { COMMAND_CONTEXT } from "./command-context";
+export { CommandsService } from "./commands-service";
 export { ModuleRegistry } from "./module-registry";
 export { PublicApiBuilder } from "./public-api-builder";

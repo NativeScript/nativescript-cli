@@ -1,9 +1,8 @@
 import { assert } from "chai";
 import { EventEmitter } from "events";
 import { RunOnDeviceEvents } from "../../lib/constants";
-import { runInInjectionContext } from "../../lib/common/di/inject";
+import { getContractName } from "../../lib/common/di/contract";
 import { Injector } from "../../lib/common/di/injector";
-import { runCommand } from "../../lib/common/services/command-definition-adapter";
 import { KeyShortcutRegistryService } from "../../lib/services/key-shortcut-registry";
 import {
 	findShortcut,
@@ -41,8 +40,10 @@ class FakeStdin extends EventEmitter {
 
 const fakeInjector = (
 	registrations: Map<any, any> = new Map<any, any>(),
-): Injector =>
-	<Injector>(<any>{ get: (token: any) => registrations.get(token) });
+): Injector => <Injector>(<any>{
+		get: (token: any) =>
+			registrations.get(token) ?? registrations.get(getContractName(token)),
+	});
 
 const baseContext = (): KeyContextBase => ({ injector: fakeInjector() });
 
@@ -210,26 +211,24 @@ describe("key shortcuts", () => {
 			]);
 		});
 
-		it("routes the IDE shortcuts through the open commands", async () => {
+		it("routes the IDE shortcuts through the context's commands service", async () => {
 			const invoked: string[] = [];
 			const dispatcher = fakeInjector(
 				new Map<any, any>([
 					[
 						"commandsService",
 						{
-							executeCommandInProcess: async (name: string): Promise<void> =>
+							runCommand: async (name: string): Promise<void> =>
 								void invoked.push(name),
 						},
 					],
 				]),
 			);
-			const ctx = context();
+			const ctx = context({ injector: dispatcher });
 			const resolved = resolveShortcuts(keyShortcuts(), ctx);
 
 			for (const key of ["A", "I", "V", "n"]) {
-				await runInInjectionContext(dispatcher, () =>
-					findShortcut(resolved, key).action(ctx),
-				);
+				await findShortcut(resolved, key).action(ctx);
 			}
 
 			assert.deepEqual(invoked, [
@@ -947,59 +946,6 @@ describe("key shortcuts", () => {
 				runController.listenerCount(RunOnDeviceEvents.runOnDeviceExecuted),
 				0,
 			);
-		});
-	});
-
-	describe("runCommand", () => {
-		it("dispatches through the commands service of the current context", async () => {
-			const dispatched: { name: string; args: string[] }[] = [];
-			const dispatcher = fakeInjector(
-				new Map<any, any>([
-					[
-						"commandsService",
-						{
-							executeCommandInProcess: async (
-								name: string,
-								args: string[],
-							): Promise<void> => void dispatched.push({ name, args }),
-						},
-					],
-				]),
-			);
-
-			await runInInjectionContext(dispatcher, () =>
-				runCommand("open|ios", ["--verbose"]),
-			);
-			await runInInjectionContext(dispatcher, () => runCommand("install"));
-
-			assert.deepEqual(dispatched, [
-				{ name: "open|ios", args: ["--verbose"] },
-				{ name: "install", args: [] },
-			]);
-		});
-
-		it("lets a failure reach the caller", async () => {
-			const dispatcher = fakeInjector(
-				new Map<any, any>([
-					[
-						"commandsService",
-						{
-							executeCommandInProcess: async (): Promise<void> => {
-								throw new Error("Unable to execute command 'open ios'.");
-							},
-						},
-					],
-				]),
-			);
-
-			let raised: Error = null;
-			try {
-				await runInInjectionContext(dispatcher, () => runCommand("open|ios"));
-			} catch (err) {
-				raised = err;
-			}
-
-			assert.equal(raised.message, "Unable to execute command 'open ios'.");
 		});
 	});
 });

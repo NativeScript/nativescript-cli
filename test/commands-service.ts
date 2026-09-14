@@ -336,7 +336,12 @@ describe("commands-service", () => {
 
 			await service.executeCommandInProcess("open|ios");
 
-			assert.deepEqual(record.hooks, ["before:open|ios", "after:open|ios"]);
+			assert.deepEqual(record.hooks, [
+				"before:open-ios",
+				"before:open|ios",
+				"after:open|ios",
+				"after:open-ios",
+			]);
 			assert.deepEqual(record.analytics, []);
 		});
 	});
