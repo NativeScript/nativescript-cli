@@ -527,10 +527,10 @@ injector.require("androidToolsInfo", "./android-tools-info");
 injector.require("devicePathProvider", "./device-path-provider");
 
 registerBuiltInCommand<
-	typeof import("./commands/platform-clean").platformCleanCommandDefinition
+	typeof import("./commands/platform-clean").PlatformCleanCommand
 >(
 	"platform|clean",
-	() => require("./commands/platform-clean").platformCleanCommandDefinition,
+	() => require("./commands/platform-clean").PlatformCleanCommand,
 );
 
 injector.require(
@@ -583,9 +583,10 @@ registerBuiltInCommand<
 registerBuiltInCommand<
 	typeof import("./commands/migrate").migrateCommandDefinition
 >("migrate", () => require("./commands/migrate").migrateCommandDefinition);
-registerBuiltInCommand<
-	typeof import("./commands/update").updateCommandDefinition
->("update", () => require("./commands/update").updateCommandDefinition);
+registerBuiltInCommand<typeof import("./commands/update").UpdateCommand>(
+	"update",
+	() => require("./commands/update").UpdateCommand,
+);
 
 injector.require("iOSLogFilter", "./services/ios-log-filter");
 injector.require("logSourceMapService", "./services/log-source-map-service");

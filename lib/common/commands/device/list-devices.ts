@@ -3,6 +3,7 @@ import { DeviceConnectionType } from "../../../constants";
 import { IErrors } from "../../declarations";
 import {
 	booleanOption,
+	Command,
 	CommandContext,
 	CommandName,
 	CommandOptionsSchema,
@@ -160,17 +161,21 @@ export async function runListDevicesCommand(
 	}
 }
 
-export const listDevicesCommandDefinition = defineCommand({
+export class ListDevicesCommand extends Command({
 	name: ["device|*list", "devices|*list"],
 	description: "Lists the connected devices and emulators.",
 	options: listDevicesCommandOptions,
 	arguments: [{ name: "platform" }],
-	setup: setupListDevicesCommand,
-	run(context, services): Promise<void> {
-		return runListDevicesCommand(context, services, context.args[0]);
-	},
-});
+}) {
+	private services = setupListDevicesCommand();
 
+	public run(): Promise<void> {
+		return runListDevicesCommand(this.context, this.services, this.args[0]);
+	}
+}
+
+// One definition per platform, generated: the object form is what a family of
+// commands needs, where the class form fits a single named command.
 const defineListPlatformDevicesCommand = <const TName extends CommandName>(
 	name: TName,
 	listedPlatform: "iOS" | "Android",

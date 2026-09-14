@@ -91,16 +91,16 @@ registerBuiltInCommand<
 );
 
 registerBuiltInCommand<
-	typeof import("./commands/device/list-devices").listDevicesCommandDefinition
+	typeof import("./commands/device/list-devices").ListDevicesCommand
 >(
 	"device|*list",
-	() => require("./commands/device/list-devices").listDevicesCommandDefinition,
+	() => require("./commands/device/list-devices").ListDevicesCommand,
 );
 registerBuiltInCommand<
-	typeof import("./commands/device/list-devices").listDevicesCommandDefinition
+	typeof import("./commands/device/list-devices").ListDevicesCommand
 >(
 	"devices|*list",
-	() => require("./commands/device/list-devices").listDevicesCommandDefinition,
+	() => require("./commands/device/list-devices").ListDevicesCommand,
 );
 registerBuiltInCommand<
 	typeof import("./commands/device/list-devices").androidListDevicesCommand
