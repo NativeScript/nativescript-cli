@@ -419,73 +419,69 @@ resolves providers a child scope supplied — see
 [Registering a definition](#registering-a-definition). The same guidance, and
 the reasoning behind it, is in `dependency-injection.md`.
 
-`setup` — hoisting work out of `run`
-------------------------------------
+Where a handler gets its services
+---------------------------------
+
+A handler resolves what it needs itself, at the top of its own body:
+
+```ts
+export default defineCommand({
+	name: "widget|add",
+	arguments: "any",
+	async run(ctx) {
+		const widgets = inject(WidgetService);
+		const projectData = inject(ProjectData);
+
+		projectData.initializeProjectData();
+		await widgets.add(ctx.args);
+	},
+});
+```
+
+The injection context is synchronous, so the `inject()` calls belong **above
+the first `await`** — see [Injection, and the first
+`await`](#injection-and-the-first-await). Resolve everything the handler needs
+there and the rule never bites; for anything that genuinely has to wait —
+resolved after an `await`, or inside a helper called later — use
+`ctx.injector.get(token)`, which works at any point.
+
+**Services are never bundled.** There is no `setupXCommand()` returning an
+object of injected services for another command to spread, and no
+`IXCommandServices` type travelling between commands. A dependency is named
+where it is used, so reading a handler tells you exactly what it touches.
+Sharing is either of two things, and neither of them is a bag:
+
+- **Shared logic** — a plain function taking the typed `ctx` and plain values,
+  resolving its own services through `ctx.injector.get(...)`:
+
+  ```ts
+  export async function canBuildFor(
+  	ctx: CommandContext<any>,
+  	platform: string,
+  ): Promise<boolean> {
+  	const validation = ctx.injector.get(PlatformValidationService);
+  	return validation.canBuild(platform);
+  }
+  ```
+
+- **A whole command's precondition** — `canExecuteCommand(name, args)`, which
+  asks that command itself; see [Asking another
+  command](#asking-another-command).
+
+### `setup`, when a command has one
 
 `setup(ctx)` runs once per invocation, before `canExecute`, and its return
-value is handed to `canExecute`, `run` and `postRun` as their second argument:
+value is handed to `canExecute`, `run` and `postRun` as their second argument.
+"Once per invocation" means once across the three together — whichever the CLI
+reaches first triggers it, and the rest reuse the value.
 
-```ts
-export default defineCommand({
-	name: "widget|add",
-	arguments: "any",
-	setup() {
-		const projectData = inject(ProjectData);
-		projectData.initializeProjectData();
-		return { projectData, widgets: inject(WidgetService) };
-	},
-	canExecute(ctx, { projectData }) {
-		return !!projectData.projectDir;
-	},
-	async run(ctx, { widgets }) {
-		await widgets.add(ctx.args);
-	},
-});
-```
-
-It exists for two reasons. It is the place to inject services before the first
-`await` when several handlers need them, and it is where the work a command
-class used to do in its constructor goes — most often
-`$projectData.initializeProjectData()`.
-
-`setup` is sugar. A command may ignore it entirely and call `inject()` at the
-top of `run`; nothing else changes. "Once per invocation" means once across
-`canExecute`, `run` and `postRun` together — whichever of them the CLI reaches
-first triggers it, and the rest reuse the value.
-
-When several commands share a setup, or a helper outside the definition takes
-the services as a parameter, lift it into a named function and derive the type
-from it instead of writing the shape out by hand:
-
-```ts
-export function setupWidgetAddCommand() {
-	const projectData = inject(ProjectData);
-	projectData.initializeProjectData();
-	return { projectData, widgets: inject(WidgetService) };
-}
-export type IWidgetAddCommandServices = ReturnType<
-	typeof setupWidgetAddCommand
->;
-
-export function canAddWidget(services: IWidgetAddCommandServices): boolean {
-	return !!services.projectData.projectDir;
-}
-
-export default defineCommand({
-	name: "widget|add",
-	arguments: "any",
-	setup: setupWidgetAddCommand,
-	canExecute: (ctx, services) => canAddWidget(services),
-	async run(ctx, { widgets }) {
-		await widgets.add(ctx.args);
-	},
-});
-```
-
-Leave the setup function's return type off: the alias reads what the body
-infers, so annotating the function with the alias makes the pair circular. Read
-a setup curried over a parameter — `setupX(platform)` returning the setup
-itself — through its inner function, `ReturnType<ReturnType<typeof setupX>>`.
+It is optional sugar for **one** command's own handlers, for the case where
+`canExecute` and `run` would otherwise repeat the same per-invocation
+derivation. It is never a place to assemble services for anything but the
+command it belongs to, and a command with a single handler does not need it at
+all. When a command has enough structure to want one, the
+[class form](#class-form) usually says the same thing better: the instance *is*
+the setup, and each dependency is a field.
 
 `run`'s return value, and `postRun`
 -----------------------------------
@@ -569,12 +565,19 @@ class does not declare is left out of the definition entirely, so a class
 without `postRun` gets no `postCommandAction`, exactly as an object without one
 does.
 
-**Which form to use.** The class form is for a single named command. When a
-function generates variants of one command — the `run|ios` / `run|vision`
-family, one definition per platform — the object form is what fits, because
-the thing being parameterized is a value and definitions are values.
-Registering the same class twice under two names is not the equivalent: the
-class is one definition.
+**Which form to use.** The class form is for a single named command with
+internal structure: state shared between `canExecute` and `run`, values derived
+once per invocation, several private steps, or enough collaborators that
+`this.$service` reads better than a local in every handler. Everything simpler
+— a handful of services and a short handler — is an object definition with its
+handlers written inline, where `ctx` is typed by inference and there is nothing
+to name.
+
+When a function generates variants of one command — the `run|ios` /
+`run|vision` family, one definition per platform — the object form is what
+fits, because the thing being parameterized is a value and definitions are
+values. Registering the same class twice under two names is not the
+equivalent: the class is one definition.
 
 **The class is the setup.** One instance is constructed per invocation, as that
 invocation's `setup`, before `canExecute` runs. So field initializers and the
@@ -597,26 +600,37 @@ the base class reads it. A provider registered for one command — through the
 `providers` argument of `registerCommand` or `registerLazyCommand` — can inject
 it too, and resolves nothing outside a running invocation.
 
-**Share through functions, not base classes.** Two commands that need the same
-services share an `inject()`-based helper, not a common ancestor:
+**One field per dependency.** Each service the class uses is its own field,
+read as `this.$x`:
 
 ```ts
-export function injectPlatformCommandServices() {
-	const projectData = inject(ProjectData);
-	projectData.initializeProjectData();
-	return { projectData, platformHelper: inject(PlatformCommandHelper) };
-}
-
 export class PlatformAddCommand extends Command({ name: "platform|add" }) {
-	private services = injectPlatformCommandServices();
+	private $projectData = inject<IProjectData>("projectData");
+	private $platformHelper = inject<IPlatformCommandHelper>(
+		"platformCommandHelper",
+	);
+
+	constructor() {
+		super();
+		this.$projectData.initializeProjectData();
+	}
 	// ...
 }
 ```
 
-A helper composes — a command can call two of them — and it stays readable
-without the reader walking a chain of files. A base class between `Command()`
-and the command does not: it is the pattern the legacy `ICommand` hierarchy
-used, and untangling it is most of why this API exists.
+Never a `private services = injectSomething()` holding a bag — the fields are
+the point, and a bag puts the dependency list back behind one more hop. Two
+commands needing the same four services restate those four lines; that
+duplication is cheaper than a shared shape neither of them owns.
+
+**Share logic, not base classes and not services.** What two commands genuinely
+have in common is a check or a step, so share a function that takes
+`this.context` and plain values and resolves its own services — see [Where a
+handler gets its services](#where-a-handler-gets-its-services). To reuse
+another command's precondition whole, ask that command: [Asking another
+command](#asking-another-command). A base class between `Command()` and the
+command is the pattern the legacy `ICommand` hierarchy used, and untangling it
+is most of why this API exists.
 
 Registration takes the class itself; see
 [Registering a definition](#registering-a-definition):
@@ -847,6 +861,40 @@ Which injector it dispatches through follows the rule `registerCommand` does:
 the injector of the current injection context, and the CLI's own outside one.
 `runCommand` is a thin call onto `CommandsService.executeCommandInProcess`,
 where the pipeline itself lives.
+
+### Asking another command
+
+`canExecuteCommand(name, args)` asks a registered command whether it *could*
+run, without running it:
+
+```ts
+import { canExecuteCommand } from "../common/services/command-definition-adapter";
+
+async canExecute(): Promise<boolean> {
+	if (!(await canExecuteCommand("prepare", [this.args[0]]))) {
+		return false;
+	}
+
+	return !!this.hostProjectPath;
+}
+```
+
+This is how one command builds on another's precondition. `embed` prepares the
+project, so "could `embed` run" starts with "could `prepare` run" — and the way
+to ask that is to ask `prepare`, not to import its `canExecute` and hand it
+services. The named command is resolved and its options primed exactly as
+`runCommand` does, then its own `canExecute` returns the verdict. It builds its
+own setup from its own services; nothing crosses between the two commands but
+the name and the arguments.
+
+Pass only the arguments the child's own `arguments` policy accepts. The child
+enforces that policy before its `canExecute`, so forwarding a caller's whole
+argument list to a child that declares fewer is a rejection, not a wider check.
+
+`canExecuteCommand` is a thin call onto
+`CommandsService.canExecuteCommandInProcess`, and follows `runCommand` in
+everything else: the same injector rule, the same option priming and
+restoration.
 
 ### Key shortcuts
 
