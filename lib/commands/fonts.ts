@@ -7,49 +7,43 @@ import * as fontFinder from "font-finder";
 import { createTable } from "../common/helpers";
 import * as path from "path";
 
-export function setupFontsCommand() {
-	const services = {
-		$projectData: inject<IProjectData>("projectData"),
-		$fs: inject<IFileSystem>("fs"),
-		$logger: inject<ILogger>("logger"),
-		$projectConfigService: inject<IProjectConfigService>(
-			"projectConfigService",
-		),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IFontsCommandServices = ReturnType<typeof setupFontsCommand>;
-
 export const fontsCommandDefinition = defineCommand({
 	name: "fonts",
 	description: "Lists the custom fonts the project bundles.",
 	arguments: "none",
-	setup: setupFontsCommand,
-	async run(context, services): Promise<void> {
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	async run(): Promise<void> {
+		const $projectData = inject<IProjectData>("projectData");
+		const $fs = inject<IFileSystem>("fs");
+		const $logger = inject<ILogger>("logger");
+		const $projectConfigService = inject<IProjectConfigService>(
+			"projectConfigService",
+		);
 		const supportedExtensions = [".ttf", ".otf"];
 
 		const defaultFontsFolderPaths = [
 			path.join(
-				services.$projectConfigService.getValue("appPath") ?? "",
+				$projectConfigService.getValue("appPath") ?? "",
 				constants.FONTS_DIR,
 			),
 			path.join(constants.APP_FOLDER_NAME, constants.FONTS_DIR),
 			path.join(constants.SRC_DIR, constants.FONTS_DIR),
-		].map((entry) => path.resolve(services.$projectData.projectDir, entry));
+		].map((entry) => path.resolve($projectData.projectDir, entry));
 
 		const fontsFolderPath = defaultFontsFolderPaths.find((entry) =>
-			services.$fs.exists(entry),
+			$fs.exists(entry),
 		);
 
 		if (!fontsFolderPath) {
-			services.$logger.warn("No fonts folder found.");
+			$logger.warn("No fonts folder found.");
 			return;
 		}
 
-		const files = services.$fs
+		const files = $fs
 			.readDirectory(fontsFolderPath)
 			.map((entry) => path.parse(entry))
 			.filter((entry) => {
@@ -57,7 +51,7 @@ export const fontsCommandDefinition = defineCommand({
 			});
 
 		if (!files.length) {
-			services.$logger.warn("No custom fonts found.");
+			$logger.warn("No custom fonts found.");
 			return;
 		}
 
@@ -71,6 +65,6 @@ export const fontsCommandDefinition = defineCommand({
 			]);
 		}
 
-		services.$logger.info(table.toString());
+		$logger.info(table.toString());
 	},
 });

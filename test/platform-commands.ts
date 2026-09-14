@@ -1,8 +1,8 @@
 import * as yok from "../lib/common/yok";
 import * as stubs from "./stubs";
-import { addPlatformCommandDefinition } from "../lib/commands/add-platform";
+import { AddPlatformCommand } from "../lib/commands/add-platform";
 import { removePlatformCommandDefinition } from "../lib/commands/remove-platform";
-import { updatePlatformCommandDefinition } from "../lib/commands/update-platform";
+import { UpdatePlatformCommand } from "../lib/commands/update-platform";
 import { PlatformCleanCommand } from "../lib/commands/platform-clean";
 import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import * as StaticConfigLib from "../lib/config";
@@ -162,13 +162,13 @@ function createTestInjector() {
 	testInjector.register("sysInfo", {});
 	testInjector.register("commands-service", CommandsServiceLib.CommandsService);
 	runInInjectionContext(testInjector, () =>
-		registerCommand(addPlatformCommandDefinition),
+		registerCommand(AddPlatformCommand),
 	);
 	runInInjectionContext(testInjector, () =>
 		registerCommand(removePlatformCommandDefinition),
 	);
 	runInInjectionContext(testInjector, () =>
-		registerCommand(updatePlatformCommandDefinition),
+		registerCommand(UpdatePlatformCommand),
 	);
 	runInInjectionContext(testInjector, () =>
 		registerCommand(PlatformCleanCommand),

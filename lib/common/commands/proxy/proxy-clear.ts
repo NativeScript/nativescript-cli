@@ -1,9 +1,7 @@
+import { IProxyService } from "../../declarations";
 import { defineCommand } from "../../define-command";
-import {
-	injectProxyCommandServices,
-	IProxyCommandServices,
-	tryTrackProxyCommandUsage,
-} from "./proxy-base";
+import { inject } from "../../di";
+import { tryTrackProxyCommandUsage } from "./proxy-base";
 
 const proxyClearCommandName = "proxy|clear";
 
@@ -12,10 +10,12 @@ export const proxyClearCommandDefinition = defineCommand({
 	description: "Clears the currently configured proxy settings.",
 	arguments: "none",
 	disableAnalytics: true,
-	setup: injectProxyCommandServices,
-	async run(context, services: IProxyCommandServices): Promise<void> {
-		await services.$proxyService.clearCache();
-		services.$logger.info("Successfully cleared proxy.");
-		await tryTrackProxyCommandUsage(services, proxyClearCommandName);
+	async run(): Promise<void> {
+		const $logger = inject<ILogger>("logger");
+		const $proxyService = inject<IProxyService>("proxyService");
+
+		await $proxyService.clearCache();
+		$logger.info("Successfully cleared proxy.");
+		await tryTrackProxyCommandUsage($logger, proxyClearCommandName);
 	},
 });

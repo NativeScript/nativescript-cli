@@ -3,52 +3,41 @@ import { IAutoCompletionService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
 
-export function injectAutoCompleteCommandServices() {
-	return {
-		$autoCompletionService: inject<IAutoCompletionService>(
-			"autoCompletionService",
-		),
-		$logger: inject<ILogger>("logger"),
-	};
-}
-
-export type IAutoCompleteCommandServices = ReturnType<
-	typeof injectAutoCompleteCommandServices
->;
-
 export const autoCompleteCommandDefinition = defineCommand({
 	name: "autocomplete|*default",
 	description: "Prompts to enable command-line completion for the CLI.",
 	arguments: "none",
 	disableAnalytics: true,
-	setup: () => ({
-		...injectAutoCompleteCommandServices(),
-		$prompter: inject<IPrompter>("prompter"),
-	}),
-	async run(context, services): Promise<void> {
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
+		const $prompter = inject<IPrompter>("prompter");
+
 		if (helpers.isInteractive()) {
-			if (services.$autoCompletionService.isAutoCompletionEnabled()) {
-				if (services.$autoCompletionService.isObsoleteAutoCompletionEnabled()) {
+			if ($autoCompletionService.isAutoCompletionEnabled()) {
+				if ($autoCompletionService.isObsoleteAutoCompletionEnabled()) {
 					// obsolete autocompletion is enabled, update it to the new one:
-					await services.$autoCompletionService.enableAutoCompletion();
+					await $autoCompletionService.enableAutoCompletion();
 				} else {
-					services.$logger.info("Autocompletion is already enabled");
+					$logger.info("Autocompletion is already enabled");
 				}
 			} else {
-				services.$logger.info(
+				$logger.info(
 					"If you are using bash or zsh, you can enable command-line completion.",
 				);
 				const message = "Do you want to enable it now?";
 
-				const autoCompetionStatus = await services.$prompter.confirm(
+				const autoCompetionStatus = await $prompter.confirm(
 					message,
 					() => true,
 				);
 				if (autoCompetionStatus) {
-					await services.$autoCompletionService.enableAutoCompletion();
+					await $autoCompletionService.enableAutoCompletion();
 				} else {
 					// make sure we've removed all autocompletion code from all shell profiles
-					services.$autoCompletionService.disableAutoCompletion();
+					$autoCompletionService.disableAutoCompletion();
 				}
 			}
 		}
@@ -60,12 +49,16 @@ export const disableAutoCompleteCommandDefinition = defineCommand({
 	description: "Disables command-line completion for the CLI.",
 	arguments: "none",
 	disableAnalytics: true,
-	setup: injectAutoCompleteCommandServices,
-	async run(context, services): Promise<void> {
-		if (services.$autoCompletionService.isAutoCompletionEnabled()) {
-			services.$autoCompletionService.disableAutoCompletion();
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
+
+		if ($autoCompletionService.isAutoCompletionEnabled()) {
+			$autoCompletionService.disableAutoCompletion();
 		} else {
-			services.$logger.info("Autocompletion is already disabled.");
+			$logger.info("Autocompletion is already disabled.");
 		}
 	},
 });
@@ -75,12 +68,16 @@ export const enableAutoCompleteCommandDefinition = defineCommand({
 	description: "Enables command-line completion for the CLI.",
 	arguments: "none",
 	disableAnalytics: true,
-	setup: injectAutoCompleteCommandServices,
-	async run(context, services): Promise<void> {
-		if (services.$autoCompletionService.isAutoCompletionEnabled()) {
-			services.$logger.info("Autocompletion is already enabled.");
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
+
+		if ($autoCompletionService.isAutoCompletionEnabled()) {
+			$logger.info("Autocompletion is already enabled.");
 		} else {
-			await services.$autoCompletionService.enableAutoCompletion();
+			await $autoCompletionService.enableAutoCompletion();
 		}
 	},
 });
@@ -90,12 +87,16 @@ export const autoCompleteStatusCommandDefinition = defineCommand({
 	description: "Prints whether command-line completion is enabled.",
 	arguments: "none",
 	disableAnalytics: true,
-	setup: injectAutoCompleteCommandServices,
-	async run(context, services): Promise<void> {
-		if (services.$autoCompletionService.isAutoCompletionEnabled()) {
-			services.$logger.info("Autocompletion is enabled.");
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
+
+		if ($autoCompletionService.isAutoCompletionEnabled()) {
+			$logger.info("Autocompletion is enabled.");
 		} else {
-			services.$logger.info("Autocompletion is disabled.");
+			$logger.info("Autocompletion is disabled.");
 		}
 	},
 });

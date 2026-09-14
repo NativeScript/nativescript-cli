@@ -2,14 +2,11 @@ import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 } from "../constants";
-import {
-	canExecuteCommandBase,
-	injectPlatformCommandServices,
-	platformArgument,
-} from "./command-base";
+import { canExecuteCommandBase, platformArgument } from "./command-base";
 import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 import { hasValidAndroidSigning } from "../common/helpers";
 import { IMigrateController } from "../definitions/migrate";
+import { IProjectData } from "../definitions/project";
 import { IErrors } from "../common/declarations";
 import {
 	booleanOption,
@@ -36,24 +33,18 @@ export const deployCommandDefinition = defineCommand({
 	description: "Builds and deploys the project to a connected device.",
 	options: deployCommandOptions,
 	arguments: [platformArgument],
-	setup() {
-		const services = {
-			...injectPlatformCommandServices(),
-			$errors: inject<IErrors>("errors"),
-			$mobileHelper: inject<Mobile.IMobileHelper>("mobileHelper"),
-			$deployCommandHelper: inject<DeployCommandHelper>("deployCommandHelper"),
-			$migrateController: inject<IMigrateController>("migrateController"),
-		};
-		services.$projectData.initializeProjectData();
+	async canExecute(context): Promise<boolean> {
+		const $errors = inject<IErrors>("errors");
+		const $migrateController = inject<IMigrateController>("migrateController");
+		const $mobileHelper = inject<Mobile.IMobileHelper>("mobileHelper");
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-		return services;
-	},
-	async canExecute(context, services): Promise<boolean> {
 		const platform = context.args[0];
 
 		if (!context.options.force) {
-			await services.$migrateController.validate({
-				projectDir: services.$projectData.projectDir,
+			await $migrateController.validate({
+				projectDir: $projectData.projectDir,
 				platforms: [platform],
 			});
 		}
@@ -63,22 +54,28 @@ export const deployCommandDefinition = defineCommand({
 		}
 
 		if (
-			services.$mobileHelper.isAndroidPlatform(platform) &&
+			$mobileHelper.isAndroidPlatform(platform) &&
 			(context.options.release || context.options.aab) &&
 			!hasValidAndroidSigning(context.options)
 		) {
 			if (context.options.release) {
-				services.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			} else {
-				services.$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+				$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 			}
 		}
 
-		return canExecuteCommandBase(services, platform, {
+		return canExecuteCommandBase(context, platform, {
 			validateOptions: true,
 		});
 	},
-	async run(context, services): Promise<void> {
-		await services.$deployCommandHelper.deploy(context.args[0]);
+	async run(context): Promise<void> {
+		const $deployCommandHelper = inject<DeployCommandHelper>(
+			"deployCommandHelper",
+		);
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
+
+		await $deployCommandHelper.deploy(context.args[0]);
 	},
 });

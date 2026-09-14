@@ -4,6 +4,7 @@ import * as path from "path";
 import { IChildProcess, IXcodeSelectService } from "../common/declarations";
 import {
 	booleanOption,
+	CommandContext,
 	CommandOptionsSchema,
 	defineCommand,
 } from "../common/define-command";
@@ -14,39 +15,7 @@ import { IOptions } from "../declarations";
 import { IProjectData } from "../definitions/project";
 import type { IOSProjectService } from "../services/ios-project-service";
 
-export function injectOpenXcodeProjectServices() {
-	return {
-		$iOSProjectService: inject<IOSProjectService>("iOSProjectService"),
-		$logger: inject<ILogger>("logger"),
-		$childProcess: inject<IChildProcess>("childProcess"),
-		$projectData: inject<IProjectData>("projectData"),
-		$xcodeSelectService: inject<IXcodeSelectService>("xcodeSelectService"),
-		$xcodebuildArgsService: inject<IXcodebuildArgsService>(
-			"xcodebuildArgsService",
-		),
-	};
-}
-
-export type IOpenXcodeProjectServices = ReturnType<
-	typeof injectOpenXcodeProjectServices
->;
-
-export function injectOpenAndroidStudioServices() {
-	return {
-		$logger: inject<ILogger>("logger"),
-		$liveSyncCommandHelper: inject<ILiveSyncCommandHelper>(
-			"liveSyncCommandHelper",
-		),
-		$childProcess: inject<IChildProcess>("childProcess"),
-		$projectData: inject<IProjectData>("projectData"),
-	};
-}
-
-export type IOpenAndroidStudioServices = ReturnType<
-	typeof injectOpenAndroidStudioServices
->;
-
-export function getAndroidStudioPath(): string | null {
+function getAndroidStudioPath(): string | null {
 	const os = currentPlatform();
 
 	if (os === "darwin") {
@@ -79,14 +48,21 @@ export function getAndroidStudioPath(): string | null {
  * while `ns run` owns stdin and has to hand it back after `prepare` consumed
  * it, a one-shot CLI command exits instead.
  */
-export async function openAndroidStudioProject(
-	services: IOpenAndroidStudioServices,
+async function openAndroidStudioProject(
+	context: CommandContext,
 	platform: string,
 	isInteractive: boolean,
 ): Promise<void> {
-	services.$liveSyncCommandHelper.validatePlatform(platform);
-	services.$projectData.initializeProjectData();
-	const androidDir = `${services.$projectData.platformsDir}/android`;
+	const $childProcess = context.injector.get<IChildProcess>("childProcess");
+	const $liveSyncCommandHelper = context.injector.get<ILiveSyncCommandHelper>(
+		"liveSyncCommandHelper",
+	);
+	const $logger = context.injector.get<ILogger>("logger");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+
+	$liveSyncCommandHelper.validatePlatform(platform);
+	$projectData.initializeProjectData();
+	const androidDir = `${$projectData.platformsDir}/android`;
 
 	if (!fs.existsSync(androidDir)) {
 		const prepareCommand = injector.resolveCommand("prepare") as ICommand;
@@ -104,7 +80,7 @@ export async function openAndroidStudioProject(
 		studioPath = getAndroidStudioPath();
 
 		if (!studioPath) {
-			services.$logger.error(
+			$logger.error(
 				"Android Studio is not installed, or is not in a standard location. Use NATIVESCRIPT_ANDROID_STUDIO_PATH.",
 			);
 			return;
@@ -113,34 +89,42 @@ export async function openAndroidStudioProject(
 
 	const os = currentPlatform();
 	if (os === "darwin") {
-		services.$childProcess.exec(`open -a "${studioPath}" ${androidDir}`);
+		$childProcess.exec(`open -a "${studioPath}" ${androidDir}`);
 	} else if (os === "win32") {
-		const child = services.$childProcess.spawn(studioPath, [androidDir], {
+		const child = $childProcess.spawn(studioPath, [androidDir], {
 			detached: true,
 			stdio: "ignore",
 		});
 		child.unref();
 	} else if (os === "linux") {
-		services.$childProcess.exec(`${studioPath} ${androidDir}`);
+		$childProcess.exec(`${studioPath} ${androidDir}`);
 	}
 }
 
-export async function openXcodeProject(
-	services: IOpenXcodeProjectServices,
+async function openXcodeProject(
+	context: CommandContext,
 	platformDirName: string,
 	isInteractive: boolean,
 ): Promise<void> {
+	const $childProcess = context.injector.get<IChildProcess>("childProcess");
+	const $iOSProjectService =
+		context.injector.get<IOSProjectService>("iOSProjectService");
+	const $logger = context.injector.get<ILogger>("logger");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $xcodeSelectService =
+		context.injector.get<IXcodeSelectService>("xcodeSelectService");
+	const $xcodebuildArgsService = context.injector.get<IXcodebuildArgsService>(
+		"xcodebuildArgsService",
+	);
+
 	const os = currentPlatform();
 	if (os !== "darwin") {
-		services.$logger.error("Opening a project in XCode requires macOS.");
+		$logger.error("Opening a project in XCode requires macOS.");
 		return;
 	}
 
-	services.$projectData.initializeProjectData();
-	const platformDir = path.resolve(
-		services.$projectData.platformsDir,
-		platformDirName,
-	);
+	$projectData.initializeProjectData();
+	const platformDir = path.resolve($projectData.platformsDir, platformDirName);
 
 	if (!fs.existsSync(platformDir)) {
 		const prepareCommand = injector.resolveCommand("prepare") as ICommand;
@@ -150,33 +134,31 @@ export async function openXcodeProject(
 			process.stdin.resume();
 		}
 	}
-	const platformData = services.$iOSProjectService.getPlatformData(
-		services.$projectData,
-	);
-	const xcprojectFile = services.$xcodebuildArgsService.getXcodeProjectArgs(
+	const platformData = $iOSProjectService.getPlatformData($projectData);
+	const xcprojectFile = $xcodebuildArgsService.getXcodeProjectArgs(
 		platformData,
-		services.$projectData,
+		$projectData,
 	)[1];
 
 	if (fs.existsSync(xcprojectFile)) {
-		services.$xcodeSelectService
+		$xcodeSelectService
 			.getDeveloperDirectoryPath()
-			.then(() => services.$childProcess.exec(`open ${xcprojectFile}`, {}))
+			.then(() => $childProcess.exec(`open ${xcprojectFile}`, {}))
 			.catch((e) => {
-				services.$logger.error(e.message);
+				$logger.error(e.message);
 			});
 	} else {
-		services.$logger.error(`Unable to open project file: ${xcprojectFile}`);
+		$logger.error(`Unable to open project file: ${xcprojectFile}`);
 	}
 }
 
-export async function openVisionOSProject(
-	services: IOpenXcodeProjectServices,
+async function openVisionOSProject(
+	context: CommandContext,
 	$options: IOptions,
 	isInteractive: boolean,
 ): Promise<void> {
 	$options.platformOverride = "visionOS";
-	await openXcodeProject(services, "visionos", isInteractive);
+	await openXcodeProject(context, "visionos", isInteractive);
 	$options.platformOverride = null;
 }
 
@@ -208,16 +190,9 @@ export const iosOpenCommand = defineCommand({
 	description: "Opens the project in Xcode.",
 	options: openCommandOptions,
 	arguments: "none",
-	setup() {
-		return {
-			...injectOpenXcodeProjectServices(),
-			$options: inject<IOptions>("options"),
-		};
-	},
-	async run(context, services): Promise<void> {
-		await withoutWatch(services.$options, () =>
-			openXcodeProject(services, "ios", false),
-		);
+	async run(context): Promise<void> {
+		const $options = inject<IOptions>("options");
+		await withoutWatch($options, () => openXcodeProject(context, "ios", false));
 	},
 });
 
@@ -226,15 +201,10 @@ export const visionOpenCommand = defineCommand({
 	description: "Opens the visionOS project in Xcode.",
 	options: openCommandOptions,
 	arguments: "none",
-	setup() {
-		return {
-			...injectOpenXcodeProjectServices(),
-			$options: inject<IOptions>("options"),
-		};
-	},
-	async run(context, services): Promise<void> {
-		await withoutWatch(services.$options, () =>
-			openVisionOSProject(services, services.$options, false),
+	async run(context): Promise<void> {
+		const $options = inject<IOptions>("options");
+		await withoutWatch($options, () =>
+			openVisionOSProject(context, $options, false),
 		);
 	},
 });
@@ -244,15 +214,10 @@ export const androidOpenCommand = defineCommand({
 	description: "Opens the project in Android Studio.",
 	options: openCommandOptions,
 	arguments: "none",
-	setup() {
-		return {
-			...injectOpenAndroidStudioServices(),
-			$options: inject<IOptions>("options"),
-		};
-	},
-	async run(context, services): Promise<void> {
-		await withoutWatch(services.$options, () =>
-			openAndroidStudioProject(services, "Android", false),
+	async run(context): Promise<void> {
+		const $options = inject<IOptions>("options");
+		await withoutWatch($options, () =>
+			openAndroidStudioProject(context, "Android", false),
 		);
 	},
 });

@@ -314,11 +314,8 @@ registerBuiltInCommand<
 	() => require("./commands/proxy/proxy-get").proxyGetCommandDefinition,
 );
 registerBuiltInCommand<
-	typeof import("./commands/proxy/proxy-set").proxySetCommandDefinition
->(
-	"proxy|set",
-	() => require("./commands/proxy/proxy-set").proxySetCommandDefinition,
-);
+	typeof import("./commands/proxy/proxy-set").ProxySetCommand
+>("proxy|set", () => require("./commands/proxy/proxy-set").ProxySetCommand);
 registerBuiltInCommand<
 	typeof import("./commands/proxy/proxy-clear").proxyClearCommandDefinition
 >(

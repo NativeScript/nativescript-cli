@@ -1,6 +1,5 @@
 import {
 	canExecuteCommandBase,
-	injectPlatformCommandServices,
 	platformArgument,
 	validatePlatformArgument,
 	validatePlatformOptions,
@@ -15,6 +14,8 @@ import {
 	defineCommand,
 } from "../common/define-command";
 import { inject } from "../common/di";
+import { IOptions } from "../declarations";
+import { IProjectData } from "../definitions/project";
 
 export const prepareCommandOptions = {
 	watch: booleanOption({ default: false }),
@@ -23,28 +24,15 @@ export const prepareCommandOptions = {
 	force: booleanOption(),
 } satisfies CommandOptionsSchema;
 
-export type PrepareCommandContext = CommandContext<
-	typeof prepareCommandOptions
->;
+type PrepareCommandContext = CommandContext<typeof prepareCommandOptions>;
 
-export function setupPrepareCommand() {
-	const services = {
-		...injectPlatformCommandServices(),
-		$prepareController: inject<PrepareController>("prepareController"),
-		$prepareDataService: inject<PrepareDataService>("prepareDataService"),
-		$migrateController: inject<IMigrateController>("migrateController"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IPrepareCommandServices = ReturnType<typeof setupPrepareCommand>;
-
-export async function canExecutePrepareCommand(
+async function canExecutePrepareCommand(
 	context: PrepareCommandContext,
-	services: IPrepareCommandServices,
 ): Promise<boolean> {
+	const $migrateController =
+		context.injector.get<IMigrateController>("migrateController");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+
 	const platform = context.args[0];
 	if (!platform) {
 		// The declared argument validates only a platform that was passed; an
@@ -52,11 +40,11 @@ export async function canExecutePrepareCommand(
 		validatePlatformArgument(context.injector, platform);
 	}
 
-	const result = await validatePlatformOptions(services, platform);
+	const result = await validatePlatformOptions(context, platform);
 
 	if (!context.options.force) {
-		await services.$migrateController.validate({
-			projectDir: services.$projectData.projectDir,
+		await $migrateController.validate({
+			projectDir: $projectData.projectDir,
 			platforms: [platform],
 		});
 	}
@@ -65,19 +53,25 @@ export async function canExecutePrepareCommand(
 		return false;
 	}
 
-	return canExecuteCommandBase(services, platform);
+	return canExecuteCommandBase(context, platform);
 }
 
 export async function runPrepareCommand(
 	context: PrepareCommandContext,
-	services: IPrepareCommandServices,
 ): Promise<void> {
-	const prepareData = services.$prepareDataService.getPrepareData(
-		services.$projectData.projectDir,
+	const $options = context.injector.get<IOptions>("options");
+	const $prepareController =
+		context.injector.get<PrepareController>("prepareController");
+	const $prepareDataService =
+		context.injector.get<PrepareDataService>("prepareDataService");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+
+	const prepareData = $prepareDataService.getPrepareData(
+		$projectData.projectDir,
 		context.args[0],
-		services.$options,
+		$options,
 	);
-	await services.$prepareController.prepare(prepareData);
+	await $prepareController.prepare(prepareData);
 }
 
 export const prepareCommandDefinition = defineCommand({
@@ -85,7 +79,9 @@ export const prepareCommandDefinition = defineCommand({
 	description: "Copies common and platform-specific content to the platform.",
 	options: prepareCommandOptions,
 	arguments: [platformArgument],
-	setup: setupPrepareCommand,
+	setup() {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
 	canExecute: canExecutePrepareCommand,
 	run: runPrepareCommand,
 });

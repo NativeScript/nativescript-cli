@@ -176,11 +176,8 @@ injector.require(
 );
 injector.require("platformCommandParameter", "./platform-command-param");
 registerBuiltInCommand<
-	typeof import("./commands/create-project").createProjectCommandDefinition
->(
-	"create",
-	() => require("./commands/create-project").createProjectCommandDefinition,
-);
+	typeof import("./commands/create-project").CreateProjectCommand
+>("create", () => require("./commands/create-project").CreateProjectCommand);
 registerBuiltInCommand<
 	typeof import("./commands/clean").cleanCommandDefinition
 >("clean", () => require("./commands/clean").cleanCommandDefinition);
@@ -206,11 +203,8 @@ registerBuiltInCommand<
 	() => require("./commands/list-platforms").listPlatformsCommandDefinition,
 );
 registerBuiltInCommand<
-	typeof import("./commands/add-platform").addPlatformCommandDefinition
->(
-	"platform|add",
-	() => require("./commands/add-platform").addPlatformCommandDefinition,
-);
+	typeof import("./commands/add-platform").AddPlatformCommand
+>("platform|add", () => require("./commands/add-platform").AddPlatformCommand);
 registerBuiltInCommand<
 	typeof import("./commands/remove-platform").removePlatformCommandDefinition
 >(
@@ -218,10 +212,10 @@ registerBuiltInCommand<
 	() => require("./commands/remove-platform").removePlatformCommandDefinition,
 );
 registerBuiltInCommand<
-	typeof import("./commands/update-platform").updatePlatformCommandDefinition
+	typeof import("./commands/update-platform").UpdatePlatformCommand
 >(
 	"platform|update",
-	() => require("./commands/update-platform").updatePlatformCommandDefinition,
+	() => require("./commands/update-platform").UpdatePlatformCommand,
 );
 registerBuiltInCommand<typeof import("./commands/run").runCommandDefinition>(
 	"run|*all",
@@ -259,13 +253,15 @@ registerBuiltInCommand<typeof import("./commands/open").visionOpenCommand>(
 	"open|vision",
 	() => require("./commands/open").visionOpenCommand,
 );
-registerBuiltInCommand<
-	typeof import("./commands/typings").typingsCommandDefinition
->("typings", () => require("./commands/typings").typingsCommandDefinition);
+registerBuiltInCommand<typeof import("./commands/typings").TypingsCommand>(
+	"typings",
+	() => require("./commands/typings").TypingsCommand,
+);
 
-registerBuiltInCommand<
-	typeof import("./commands/preview").previewCommandDefinition
->("preview", () => require("./commands/preview").previewCommandDefinition);
+registerBuiltInCommand<typeof import("./commands/preview").PreviewCommand>(
+	"preview",
+	() => require("./commands/preview").PreviewCommand,
+);
 
 registerBuiltInCommand<typeof import("./commands/debug").iosDebugCommand>(
 	"debug|ios",
@@ -312,8 +308,8 @@ registerBuiltInCommand<
 >("deploy", () => require("./commands/deploy").deployCommandDefinition);
 
 registerBuiltInCommand<
-	typeof import("./commands/embedding/embed").embedCommandDefinition
->("embed", () => require("./commands/embedding/embed").embedCommandDefinition);
+	typeof import("./commands/embedding/embed").EmbedCommand
+>("embed", () => require("./commands/embedding/embed").EmbedCommand);
 
 injector.require("testExecutionService", "./services/test-execution-service");
 injector.require(
@@ -342,9 +338,10 @@ registerBuiltInCommand<
 	"test|visionos",
 	() => require("./commands/test").testVisionOSCommandDefinition,
 );
-registerBuiltInCommand<
-	typeof import("./commands/test-init").testInitCommandDefinition
->("test|init", () => require("./commands/test-init").testInitCommandDefinition);
+registerBuiltInCommand<typeof import("./commands/test-init").TestInitCommand>(
+	"test|init",
+	() => require("./commands/test-init").TestInitCommand,
+);
 registerBuiltInCommand<
 	typeof import("./commands/generate-help").generateHelpCommandDefinition
 >(
@@ -353,23 +350,20 @@ registerBuiltInCommand<
 );
 
 registerBuiltInCommand<
-	typeof import("./commands/appstore-list").listiOSAppsCommandDefinition
+	typeof import("./commands/appstore-list").ListiOSAppsCommand
 >(
 	"appstore|*list",
-	() => require("./commands/appstore-list").listiOSAppsCommandDefinition,
+	() => require("./commands/appstore-list").ListiOSAppsCommand,
 );
 registerBuiltInCommand<
-	typeof import("./commands/appstore-upload").publishIOSCommandDefinition
+	typeof import("./commands/appstore-upload").PublishIOSCommand
 >(
 	"appstore|upload",
-	() => require("./commands/appstore-upload").publishIOSCommandDefinition,
+	() => require("./commands/appstore-upload").PublishIOSCommand,
 );
 registerBuiltInCommand<
-	typeof import("./commands/appstore-upload").publishIOSCommandDefinition
->(
-	"publish|ios",
-	() => require("./commands/appstore-upload").publishIOSCommandDefinition,
-);
+	typeof import("./commands/appstore-upload").PublishIOSCommand
+>("publish|ios", () => require("./commands/appstore-upload").PublishIOSCommand);
 registerBuiltInCommand<
 	typeof import("./commands/apple-login").appleLoginCommandDefinition
 >(
@@ -459,17 +453,16 @@ registerBuiltInCommand<
 		require("./commands/plugin/update-plugin").updatePluginCommandDefinition,
 );
 registerBuiltInCommand<
-	typeof import("./commands/plugin/build-plugin").buildPluginCommandDefinition
+	typeof import("./commands/plugin/build-plugin").BuildPluginCommand
 >(
 	"plugin|build",
-	() => require("./commands/plugin/build-plugin").buildPluginCommandDefinition,
+	() => require("./commands/plugin/build-plugin").BuildPluginCommand,
 );
 registerBuiltInCommand<
-	typeof import("./commands/plugin/create-plugin").createPluginCommandDefinition
+	typeof import("./commands/plugin/create-plugin").CreatePluginCommand
 >(
 	"plugin|create",
-	() =>
-		require("./commands/plugin/create-plugin").createPluginCommandDefinition,
+	() => require("./commands/plugin/create-plugin").CreatePluginCommand,
 );
 
 registerBuiltInCommand<
@@ -575,10 +568,10 @@ injector.require(
 injector.require("messages", "./common/messages/messages");
 
 registerBuiltInCommand<
-	typeof import("./commands/post-install").postInstallCliCommandDefinition
+	typeof import("./commands/post-install").PostInstallCliCommand
 >(
 	"post-install-cli",
-	() => require("./commands/post-install").postInstallCliCommandDefinition,
+	() => require("./commands/post-install").PostInstallCliCommand,
 );
 registerBuiltInCommand<
 	typeof import("./commands/migrate").migrateCommandDefinition

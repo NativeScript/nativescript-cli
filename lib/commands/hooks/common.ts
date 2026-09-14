@@ -1,7 +1,6 @@
-import { IProjectData } from "../../definitions/project";
-import { IPluginData, IPluginsService } from "../../definitions/plugins";
+import { IPluginData } from "../../definitions/plugins";
 import { IErrors, IFileSystem } from "../../common/declarations";
-import { inject } from "../../common/di";
+import { CommandContext } from "../../common/define-command";
 import path = require("path");
 import * as crypto from "crypto";
 
@@ -16,24 +15,6 @@ export interface OutputPlugin {
 	hooks: OutputHook[];
 }
 
-/** Callable from `setup` and from `canExecute` before their first `await`. */
-export function injectHooksCommandServices() {
-	const services = {
-		$pluginsService: inject<IPluginsService>("pluginsService"),
-		$projectData: inject<IProjectData>("projectData"),
-		$errors: inject<IErrors>("errors"),
-		$fs: inject<IFileSystem>("fs"),
-		$logger: inject<ILogger>("logger"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IHooksCommandServices = ReturnType<
-	typeof injectHooksCommandServices
->;
-
 export function getPluginsWithHooks(plugins: IPluginData[]): IPluginData[] {
 	const pluginsWithHooks: IPluginData[] = [];
 	for (const plugin of plugins) {
@@ -46,18 +27,22 @@ export function getPluginsWithHooks(plugins: IPluginData[]): IPluginData[] {
 }
 
 export async function verifyHooksLock(
-	services: IHooksCommandServices,
+	context: CommandContext,
 	plugins: IPluginData[],
 	hooksLockPath: string,
 ): Promise<void> {
+	const $errors = context.injector.get<IErrors>("errors");
+	const $fs = context.injector.get<IFileSystem>("fs");
+	const $logger = context.injector.get<ILogger>("logger");
+
 	let lockFileContent: string;
 	let hooksLock: OutputPlugin[];
 
 	try {
-		lockFileContent = services.$fs.readText(hooksLockPath, "utf8");
+		lockFileContent = $fs.readText(hooksLockPath, "utf8");
 		hooksLock = JSON.parse(lockFileContent);
 	} catch (err) {
-		services.$errors.fail(
+		$errors.fail(
 			`❌ Failed to read or parse ${LOCK_FILE_NAME} at ${hooksLockPath}`,
 		);
 	}
@@ -78,7 +63,7 @@ export async function verifyHooksLock(
 		const pluginLockHooks = lockMap.get(plugin.name);
 
 		if (!pluginLockHooks) {
-			services.$logger.error(
+			$logger.error(
 				`❌ Plugin '${plugin.name}' not found in ${LOCK_FILE_NAME}`,
 			);
 			isValid = false;
@@ -89,7 +74,7 @@ export async function verifyHooksLock(
 			const expectedHash = pluginLockHooks.get(hook.type);
 
 			if (!expectedHash) {
-				services.$logger.error(
+				$logger.error(
 					`❌ Missing hook '${hook.type}' for plugin '${plugin.name}' in ${LOCK_FILE_NAME}`,
 				);
 				isValid = false;
@@ -99,11 +84,9 @@ export async function verifyHooksLock(
 			let fileContent: string | Buffer<ArrayBufferLike>;
 
 			try {
-				fileContent = services.$fs.readFile(
-					path.join(plugin.fullPath, hook.script),
-				);
+				fileContent = $fs.readFile(path.join(plugin.fullPath, hook.script));
 			} catch (err) {
-				services.$logger.error(
+				$logger.error(
 					`❌ Cannot read script file '${hook.script}' for hook '${hook.type}' in plugin '${plugin.name}'`,
 				);
 				isValid = false;
@@ -116,21 +99,19 @@ export async function verifyHooksLock(
 				.digest("hex");
 
 			if (actualHash !== expectedHash) {
-				services.$logger.error(
+				$logger.error(
 					`❌ Hash mismatch for '${hook.script}' (${hook.type} in ${plugin.name}):`,
 				);
-				services.$logger.error(`   Expected: ${expectedHash}`);
-				services.$logger.error(`   Actual:   ${actualHash}`);
+				$logger.error(`   Expected: ${expectedHash}`);
+				$logger.error(`   Actual:   ${actualHash}`);
 				isValid = false;
 			}
 		}
 	}
 
 	if (isValid) {
-		services.$logger.info(
-			"✅ All hooks verified successfully. No issues found.",
-		);
+		$logger.info("✅ All hooks verified successfully. No issues found.");
 	} else {
-		services.$errors.fail("❌ One or more hooks failed verification.");
+		$errors.fail("❌ One or more hooks failed verification.");
 	}
 }

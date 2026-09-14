@@ -17,26 +17,12 @@ const listDevicesCommandOptions = {
 	json: booleanOption(),
 } satisfies CommandOptionsSchema;
 
-export type ListDevicesCommandContext = CommandContext<
+type ListDevicesCommandContext = CommandContext<
 	typeof listDevicesCommandOptions
 >;
 
-export function setupListDevicesCommand() {
-	return {
-		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
-		$emulatorHelper: inject<Mobile.IEmulatorHelper>("emulatorHelper"),
-		$errors: inject<IErrors>("errors"),
-		$logger: inject<ILogger>("logger"),
-		$mobileHelper: inject<Mobile.IMobileHelper>("mobileHelper"),
-	};
-}
-
-export type IListDevicesCommandServices = ReturnType<
-	typeof setupListDevicesCommand
->;
-
 function printEmulators(
-	services: IListDevicesCommandServices,
+	$logger: ILogger,
 	emulators: Mobile.IDeviceInfo[],
 ): void {
 	const table: any = createTable(
@@ -61,14 +47,22 @@ function printEmulators(
 		]);
 	}
 
-	services.$logger.info(table.toString());
+	$logger.info(table.toString());
 }
 
-export async function runListDevicesCommand(
+async function listDevices(
 	context: ListDevicesCommandContext,
-	services: IListDevicesCommandServices,
 	platformFilter: string,
 ): Promise<void> {
+	const $devicesService =
+		context.injector.get<Mobile.IDevicesService>("devicesService");
+	const $emulatorHelper =
+		context.injector.get<Mobile.IEmulatorHelper>("emulatorHelper");
+	const $errors = context.injector.get<IErrors>("errors");
+	const $logger = context.injector.get<ILogger>("logger");
+	const $mobileHelper =
+		context.injector.get<Mobile.IMobileHelper>("mobileHelper");
+
 	const devices: {
 		available?: any[];
 		devices: any[];
@@ -77,32 +71,31 @@ export async function runListDevicesCommand(
 	};
 
 	if (context.options.availableDevices) {
-		const platform =
-			services.$mobileHelper.normalizePlatformName(platformFilter);
+		const platform = $mobileHelper.normalizePlatformName(platformFilter);
 		if (!platform && platformFilter) {
-			services.$errors.fail(
+			$errors.fail(
 				`${platformFilter} is not a valid device platform. The valid platforms are ${formatListOfNames(
-					services.$mobileHelper.platformNames,
+					$mobileHelper.platformNames,
 				)}`,
 			);
 		}
 
-		const availableEmulatorsOutput =
-			await services.$devicesService.getEmulatorImages({ platform });
-		const emulators =
-			services.$emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(
-				availableEmulatorsOutput,
-			);
+		const availableEmulatorsOutput = await $devicesService.getEmulatorImages({
+			platform,
+		});
+		const emulators = $emulatorHelper.getEmulatorsFromAvailableEmulatorsOutput(
+			availableEmulatorsOutput,
+		);
 		devices.available = emulators;
 
 		if (!context.options.json) {
-			services.$logger.info(color.bold("\n Available emulators"));
-			printEmulators(services, emulators);
+			$logger.info(color.bold("\n Available emulators"));
+			printEmulators($logger, emulators);
 		}
 	}
 
 	let index = 1;
-	await services.$devicesService.initialize({
+	await $devicesService.initialize({
 		platform: platformFilter,
 		deviceId: null,
 		skipInferPlatform: true,
@@ -112,7 +105,7 @@ export async function runListDevicesCommand(
 	});
 
 	if (!context.options.json) {
-		services.$logger.info(color.bold("\n Connected devices & emulators"));
+		$logger.info(color.bold("\n Connected devices & emulators"));
 	}
 
 	const table: any = createTable(
@@ -148,16 +141,16 @@ export async function runListDevicesCommand(
 		};
 	}
 
-	await services.$devicesService.execute(action, undefined, {
+	await $devicesService.execute(action, undefined, {
 		allowNoDevices: true,
 	});
 
 	if (context.options.json) {
-		return services.$logger.info(JSON.stringify(devices, null, 2));
+		return $logger.info(JSON.stringify(devices, null, 2));
 	}
 
 	if (table.length) {
-		services.$logger.info(table.toString());
+		$logger.info(table.toString());
 	}
 }
 
@@ -167,10 +160,8 @@ export class ListDevicesCommand extends Command({
 	options: listDevicesCommandOptions,
 	arguments: [{ name: "platform" }],
 }) {
-	private services = setupListDevicesCommand();
-
 	public run(): Promise<void> {
-		return runListDevicesCommand(this.context, this.services, this.args[0]);
+		return listDevices(this.context, this.args[0]);
 	}
 }
 
@@ -185,17 +176,12 @@ const defineListPlatformDevicesCommand = <const TName extends CommandName>(
 		description: "Lists the connected devices and emulators for one platform.",
 		options: listDevicesCommandOptions,
 		arguments: "none",
-		setup() {
-			const $devicePlatformsConstants =
-				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
+		run(context): Promise<void> {
+			const platform = inject<Mobile.IDevicePlatformsConstants>(
+				"devicePlatformsConstants",
+			)[listedPlatform];
 
-			return {
-				...setupListDevicesCommand(),
-				platform: $devicePlatformsConstants[listedPlatform],
-			};
-		},
-		run(context, services): Promise<void> {
-			return runListDevicesCommand(context, services, services.platform);
+			return listDevices(context, platform);
 		},
 	});
 

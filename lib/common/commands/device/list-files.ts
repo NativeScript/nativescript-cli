@@ -1,7 +1,6 @@
 import { IProjectData } from "../../../definitions/project";
 import { IErrors } from "../../declarations";
 import {
-	CommandContext,
 	CommandOptionsSchema,
 	defineCommand,
 	stringOption,
@@ -12,62 +11,44 @@ const listFilesCommandOptions = {
 	device: stringOption(),
 } satisfies CommandOptionsSchema;
 
-export type ListFilesCommandContext = CommandContext<
-	typeof listFilesCommandOptions
->;
-
-export function setupListFilesCommand() {
-	return {
-		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
-		$errors: inject<IErrors>("errors"),
-		$projectData: inject<IProjectData>("projectData"),
-	};
-}
-
-export type IListFilesCommandServices = ReturnType<
-	typeof setupListFilesCommand
->;
-
-export async function runListFilesCommand(
-	context: ListFilesCommandContext,
-	services: IListFilesCommandServices,
-): Promise<void> {
-	await services.$devicesService.initialize({
-		deviceId: context.options.device,
-		skipInferPlatform: true,
-	});
-	const pathToList = context.args[0];
-	let appIdentifier = context.args[1];
-
-	if (!appIdentifier) {
-		try {
-			services.$projectData.initializeProjectData();
-		} catch (err) {
-			// ignore the error
-		}
-		if (!services.$projectData.projectIdentifiers) {
-			services.$errors.fail(
-				"Please enter application identifier or execute this command in project.",
-			);
-		}
-	}
-
-	const action = async (device: Mobile.IDevice) => {
-		appIdentifier =
-			appIdentifier ||
-			services.$projectData.projectIdentifiers[
-				device.deviceInfo.platform.toLowerCase()
-			];
-		await device.fileSystem.listFiles(pathToList, appIdentifier);
-	};
-	await services.$devicesService.execute(action);
-}
-
 export const listFilesCommandDefinition = defineCommand({
 	name: ["device|list-files", "devices|list-files"],
 	description: "Lists the files in a directory on a connected device.",
 	options: listFilesCommandOptions,
 	arguments: [{ name: "path" }, { name: "appId" }],
-	setup: setupListFilesCommand,
-	run: runListFilesCommand,
+	async run(context): Promise<void> {
+		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
+		const $errors = inject<IErrors>("errors");
+		const $projectData = inject<IProjectData>("projectData");
+
+		await $devicesService.initialize({
+			deviceId: context.options.device,
+			skipInferPlatform: true,
+		});
+		const pathToList = context.args[0];
+		let appIdentifier = context.args[1];
+
+		if (!appIdentifier) {
+			try {
+				$projectData.initializeProjectData();
+			} catch (err) {
+				// ignore the error
+			}
+			if (!$projectData.projectIdentifiers) {
+				$errors.fail(
+					"Please enter application identifier or execute this command in project.",
+				);
+			}
+		}
+
+		const action = async (device: Mobile.IDevice) => {
+			appIdentifier =
+				appIdentifier ||
+				$projectData.projectIdentifiers[
+					device.deviceInfo.platform.toLowerCase()
+				];
+			await device.fileSystem.listFiles(pathToList, appIdentifier);
+		};
+		await $devicesService.execute(action);
+	},
 });

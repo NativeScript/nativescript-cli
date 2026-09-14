@@ -3,48 +3,42 @@ import { IMigrateController, IMigrationData } from "../definitions/migrate";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 
-export function setupMigrateCommand() {
-	const services = {
-		$devicePlatformsConstants: inject<Mobile.IDevicePlatformsConstants>(
-			"devicePlatformsConstants",
-		),
-		$migrateController: inject<IMigrateController>("migrateController"),
-		$staticConfig: inject<Config.IStaticConfig>("staticConfig"),
-		$projectData: inject<IProjectData>("projectData"),
-		$logger: inject<ILogger>("logger"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IMigrateCommandServices = ReturnType<typeof setupMigrateCommand>;
-
 export const migrateCommandDefinition = defineCommand({
 	name: "migrate",
 	description:
 		"Migrates the project's dependencies to the ones the current CLI supports.",
 	arguments: "none",
-	setup: setupMigrateCommand,
-	async run(context, services): Promise<void> {
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	async run(): Promise<void> {
+		const $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
+			"devicePlatformsConstants",
+		);
+		const $migrateController = inject<IMigrateController>("migrateController");
+		const $staticConfig = inject<Config.IStaticConfig>("staticConfig");
+		const $projectData = inject<IProjectData>("projectData");
+		const $logger = inject<ILogger>("logger");
 		const migrationData: IMigrationData = {
-			projectDir: services.$projectData.projectDir,
+			projectDir: $projectData.projectDir,
 			platforms: [
-				services.$devicePlatformsConstants.Android,
-				services.$devicePlatformsConstants.iOS,
+				$devicePlatformsConstants.Android,
+				$devicePlatformsConstants.iOS,
 			],
 		};
 		const shouldMigrateResult =
-			await services.$migrateController.shouldMigrate(migrationData);
+			await $migrateController.shouldMigrate(migrationData);
 
 		if (!shouldMigrateResult) {
-			const cliVersion = services.$staticConfig.version;
-			services.$logger.printMarkdown(
+			const cliVersion = $staticConfig.version;
+			$logger.printMarkdown(
 				`__Project is compatible with NativeScript \`v${cliVersion}\`__`,
 			);
 			return;
 		}
 
-		await services.$migrateController.migrate(migrationData);
+		await $migrateController.migrate(migrationData);
 	},
 });

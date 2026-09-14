@@ -29,6 +29,7 @@ import {
 	stringOption,
 } from "../lib/common/define-command";
 import {
+	canExecuteCommand,
 	createCommandFromDefinition,
 	registerBuiltInCommand,
 	registerCommand,
@@ -1344,6 +1345,128 @@ describe("defineCommand", () => {
 		});
 	});
 
+	describe("canExecuteCommand", () => {
+		const createInProcessInjector = (): IInjector => {
+			const testInjector = new Yok();
+			testInjector.register("errors", {
+				beginCommand: async (action: () => Promise<boolean>) => action(),
+				failWithHelp: (message: string) => {
+					throw new Error(message);
+				},
+				fail: (message: string) => {
+					throw new Error(message);
+				},
+				reportCommandError: async (ex: Error) => {
+					throw ex;
+				},
+			});
+			testInjector.register("hooksService", HooksServiceStub);
+			testInjector.register("logger", LoggerStub);
+			testInjector.register("staticConfig", {
+				disableAnalytics: true,
+				disableCommandHooks: true,
+			});
+			testInjector.register("extensibilityService", {});
+			testInjector.register("optionsTracker", {});
+			testInjector.register("options", {
+				validateOptions: (): void => undefined,
+			});
+			testInjector.register("commandsService", CommandsService);
+			return testInjector;
+		};
+
+		it("returns the named command's own verdict without running it", async () => {
+			const testInjector = createInProcessInjector();
+			let ran = false;
+
+			runInInjectionContext(testInjector, () => {
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-yes",
+						arguments: "any",
+						canExecute: (context) => context.args[0] === "ok",
+						run: () => {
+							ran = true;
+						},
+					}),
+				);
+			});
+
+			const verdicts = [
+				await runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-yes", ["ok"]),
+				),
+				await runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-yes", ["nope"]),
+				),
+			];
+
+			assert.deepEqual(verdicts, [true, false]);
+			assert.isFalse(ran);
+		});
+
+		it("enforces the child's arguments policy before its canExecute", async () => {
+			const testInjector = createInProcessInjector();
+			let consulted = false;
+
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-none",
+						canExecute: () => {
+							consulted = true;
+							return true;
+						},
+						run: (): void => undefined,
+					}),
+				),
+			);
+
+			await assert.isRejected(
+				runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-none", ["stray"]),
+				),
+				/doesn't accept parameters/,
+			);
+			assert.isFalse(consulted);
+		});
+
+		it("builds the child's setup from the child's own services", async () => {
+			const testInjector = createInProcessInjector();
+			testInjector.register("gadgetService", { ready: true });
+
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-setup",
+						setup: () => ({
+							$gadgetService: inject<any>("gadgetService"),
+						}),
+						canExecute: (context, services) => services.$gadgetService.ready,
+						run: (): void => undefined,
+					}),
+				),
+			);
+
+			assert.isTrue(
+				await runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-setup"),
+				),
+			);
+		});
+
+		it("fails by name for a command that is not registered", async () => {
+			const testInjector = createInProcessInjector();
+
+			await assert.isRejected(
+				runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-missing"),
+				),
+				/Unknown command 'dctest-can-missing'/,
+			);
+		});
+	});
+
 	describe("positional argument specs", () => {
 		const platformCommand = (extra: any = {}) =>
 			createCommandFromDefinition(
@@ -2382,7 +2505,7 @@ describe("defineCommand", () => {
 			const testInjector = createTestInjector();
 			const order: string[] = [];
 
-			class Widget extends Command<"dctest-class-postrun", {}, number>({
+			class Widget extends Command({
 				name: "dctest-class-postrun",
 			}) {
 				public run(): number {
@@ -2499,6 +2622,66 @@ describe("defineCommand", () => {
 			);
 		});
 
+		describe("define-time validation", () => {
+			it("rejects an unusable name at the Command() call", () => {
+				assert.throws(
+					() => Command({ name: "" }),
+					/Invalid command definition for an unnamed command.*'name' must be/s,
+				);
+			});
+
+			it("rejects an unknown meta field at the Command() call, naming it", () => {
+				assert.throws(
+					() => Command(<any>{ name: "dctest-class-typo", typo: 1 }),
+					/Invalid command definition for 'dctest-class-typo'.*unknown field\(s\) 'typo'; Command\(\) accepts/s,
+				);
+			});
+
+			it("rejects a bad option spec at the Command() call", () => {
+				assert.throws(
+					() =>
+						Command({
+							name: "dctest-class-badoption",
+							options: { flag: <any>{ type: "flag" } },
+						}),
+					/Invalid command definition for 'dctest-class-badoption'.*option 'flag' has type 'flag'/s,
+				);
+			});
+
+			it("rejects a handler passed in the meta", () => {
+				assert.throws(
+					() =>
+						Command(<any>{
+							name: "dctest-class-metahandler",
+							canExecute(): boolean {
+								return true;
+							},
+						}),
+					/Invalid command definition for 'dctest-class-metahandler'.*handler\(s\) 'canExecute'; in the class form handlers are methods of the class/s,
+				);
+			});
+
+			it("leaves the missing run to the first definition read", () => {
+				const base: any = Command({ name: "dctest-class-lazyrun" });
+				const [Anonymous] = [class extends base {}];
+				class Named extends base {}
+
+				for (const ctor of [base, Anonymous, Named]) {
+					let message = "";
+					try {
+						ctor.definition;
+					} catch (err) {
+						message = err.message;
+					}
+
+					assert.match(message, /implements no 'run' method/);
+					assert.notInclude(message, "'Base'");
+				}
+
+				assert.throws(() => (<any>Named).definition, /the class 'Named'/);
+			});
+		});
+
 		it("reports a class Command() did not produce, through the deferred loader", () => {
 			const testInjector = createTestInjector();
 
@@ -2548,6 +2731,40 @@ describe("defineCommand", () => {
 
 			assert.strictEqual(injectedInSetup, setupContext);
 			assert.strictEqual(injectedInRun, runContext);
+		});
+
+		it("hands one context object to every stage of an invocation", async () => {
+			const testInjector = createTestInjector();
+			const seen: any[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context-shared",
+					setup: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+					},
+					canExecute: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+						return true;
+					},
+					run: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+					},
+					postRun: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+					},
+				}),
+				testInjector,
+			);
+
+			await command.canExecute([]);
+			await command.execute([]);
+			await command.postCommandAction([]);
+
+			assert.lengthOf(seen, 8);
+			for (const context of seen) {
+				assert.strictEqual(context, seen[0]);
+			}
 		});
 
 		it("is scoped to the invocation, so the root injector never sees it", async () => {

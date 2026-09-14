@@ -2,9 +2,9 @@ import * as path from "path";
 import { color } from "../color";
 import {
 	booleanOption,
-	CommandContext,
+	Command,
 	CommandOptionsSchema,
-	defineCommand,
+	CommandOptionValues,
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
@@ -27,7 +27,7 @@ const TABS_TEMPLATE_KEY = "Tabs";
 const TABS_TEMPLATE_DESCRIPTION =
 	"An app with pre-built pages that uses tabs for navigation";
 
-export const createProjectCommandOptions = {
+const createProjectCommandOptions = {
 	js: booleanOption(),
 	ng: booleanOption(),
 	react: booleanOption(),
@@ -48,22 +48,6 @@ export const createProjectCommandOptions = {
 	force: booleanOption(),
 	ignoreScripts: booleanOption(),
 } satisfies CommandOptionsSchema;
-
-export type CreateProjectCommandContext = CommandContext<
-	typeof createProjectCommandOptions
->;
-
-export function setupCreateProjectCommand() {
-	return {
-		$projectService: inject<IProjectService>("projectService"),
-		$logger: inject<ILogger>("logger"),
-		$prompter: inject<IPrompter>("prompter"),
-	};
-}
-
-export type ICreateProjectCommandServices = ReturnType<
-	typeof setupCreateProjectCommand
->;
 
 interface ITemplateChoice {
 	key?: string;
@@ -233,7 +217,7 @@ const flavorTemplates: { [flavorName: string]: () => ITemplateChoice[] } = {
 
 /** The template a flavor flag selects, without asking anything. */
 function selectTemplateFromOptions(
-	options: CreateProjectCommandContext["options"],
+	options: CommandOptionValues<typeof createProjectCommandOptions>,
 ): string {
 	if (options["vision-ng"] || (options.vision && options.ng)) {
 		return constants.RESERVED_TEMPLATE_NAMES["vision-ng"];
@@ -298,10 +282,10 @@ function selectTemplateFromOptions(
 }
 
 function interactiveFlavorSelection(
-	services: ICreateProjectCommandServices,
+	$prompter: IPrompter,
 	adverb: string,
 ): Promise<string> {
-	return services.$prompter.promptForDetailedChoice(
+	return $prompter.promptForDetailedChoice(
 		`${adverb}, which style of NativeScript project would you like to use:`,
 		[
 			{
@@ -338,7 +322,8 @@ function interactiveFlavorSelection(
 }
 
 async function interactiveTemplateSelection(
-	services: ICreateProjectCommandServices,
+	$logger: ILogger,
+	$prompter: IPrompter,
 	flavorSelection: string,
 	adverb: string,
 ): Promise<string> {
@@ -348,15 +333,14 @@ async function interactiveTemplateSelection(
 		: [];
 
 	if (selectedFlavorTemplates.length > 1) {
-		services.$logger.info();
+		$logger.info();
 		const templateChoices = selectedFlavorTemplates.map((template) => {
 			return { key: template.key, description: template.description };
 		});
-		const selectedTemplateKey =
-			await services.$prompter.promptForDetailedChoice(
-				`${adverb}, which template would you like to start from:`,
-				templateChoices,
-			);
+		const selectedTemplateKey = await $prompter.promptForDetailedChoice(
+			`${adverb}, which template would you like to start from:`,
+			templateChoices,
+		);
 
 		return selectedFlavorTemplates.find((t) => t.key === selectedTemplateKey)
 			.value;
@@ -366,164 +350,165 @@ async function interactiveTemplateSelection(
 }
 
 async function interactiveFlavorAndTemplateSelection(
-	services: ICreateProjectCommandServices,
+	$logger: ILogger,
+	$prompter: IPrompter,
 	flavorAdverb: string,
 	templateAdverb: string,
 ): Promise<string> {
 	const selectedFlavor = await interactiveFlavorSelection(
-		services,
+		$prompter,
 		flavorAdverb,
 	);
 
-	return interactiveTemplateSelection(services, selectedFlavor, templateAdverb);
-}
-
-export async function runCreateProjectCommand(
-	context: CreateProjectCommandContext,
-	services: ICreateProjectCommandServices,
-): Promise<ICreateProjectData> {
-	const options = context.options;
-	const interactiveAdverbs = ["First", "Next", "Finally"];
-	const getNextInteractiveAdverb = () => {
-		return interactiveAdverbs.shift() || "Next";
-	};
-
-	let isInteractionIntroShown = false;
-	const printInteractiveCreationIntroIfNeeded = () => {
-		if (isInteractionIntroShown) {
-			return;
-		}
-
-		isInteractionIntroShown = true;
-		services.$logger.info();
-		services.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
-		services.$logger.printMarkdown(`
-Answer the following questions to help us build the right app for you. (Note: you
-can skip this prompt next time using the --template option, or using --ng, --react, --solid, --svelte, --vue, --ts, or --js flags.)
-`);
-	};
-
-	if (
-		(options.tsc ||
-			options.ng ||
-			options.vue ||
-			options.react ||
-			options.solid ||
-			options.svelte ||
-			options.js) &&
-		options.template
-	) {
-		context.fail(
-			"You cannot use a flavor option like --ng, --vue, --react, --solid, --svelte, --tsc and --js together with --template.",
-		);
-	}
-
-	let projectName = context.args[0];
-	let selectedTemplate = selectTemplateFromOptions(options);
-
-	if (!projectName && isInteractive()) {
-		printInteractiveCreationIntroIfNeeded();
-		projectName = await services.$prompter.getString(
-			`${getNextInteractiveAdverb()}, what will be the name of your app?`,
-			{ allowEmpty: false },
-		);
-		services.$logger.info();
-	}
-
-	projectName = await services.$projectService.validateProjectName({
-		projectName: projectName,
-		force: options.force,
-		pathToProject: options.path,
-	});
-
-	if (!selectedTemplate && isInteractive()) {
-		printInteractiveCreationIntroIfNeeded();
-		selectedTemplate = await interactiveFlavorAndTemplateSelection(
-			services,
-			getNextInteractiveAdverb(),
-			getNextInteractiveAdverb(),
-		);
-	}
-
-	return services.$projectService.createProject({
-		projectName: projectName,
-		template: selectedTemplate,
-		appId: options.appid,
-		pathToProject: options.path,
-		// its already validated above
-		force: true,
-		ignoreScripts: options.ignoreScripts,
-	});
-}
-
-export function reportCreatedProject(
-	context: CreateProjectCommandContext,
-	createdProjectData: ICreateProjectData,
-	services: ICreateProjectCommandServices,
-): void {
-	const { projectDir, projectName } = createdProjectData;
-	const relativePath = path.relative(process.cwd(), projectDir);
-
-	const greyDollarSign = color.grey("$");
-	services.$logger.clearScreen();
-	let runDebugNotes: Array<string> = [];
-	if (
-		context.options.vision ||
-		context.options["vision-ng"] ||
-		context.options["vision-react"] ||
-		context.options["vision-solid"] ||
-		context.options["vision-svelte"] ||
-		context.options["vision-vue"]
-	) {
-		runDebugNotes = [
-			`Run the project on Vision Pro with:`,
-			"",
-			`  ${greyDollarSign} ${color.green("ns run visionos --no-hmr")}`,
-		];
-	} else {
-		runDebugNotes = [
-			`Run the project on multiple devices:`,
-			"",
-			`  ${greyDollarSign} ${color.green("ns run ios")}`,
-			`  ${greyDollarSign} ${color.green("ns run android")}`,
-			"",
-			"Debug the project with Chrome DevTools:",
-			"",
-			`  ${greyDollarSign} ${color.green("ns debug ios")}`,
-			`  ${greyDollarSign} ${color.green("ns debug android")}`,
-		];
-	}
-	services.$logger.info(
-		[
-			[
-				color.green(`Project`),
-				color.cyan(projectName),
-				color.green(`was successfully created.`),
-			].join(" "),
-			"",
-			`Now you can navigate to your project with ${color.cyan(
-				`cd ${relativePath}`,
-			)} and then:`,
-			"",
-			...runDebugNotes,
-			``,
-			`For more options consult the docs or run ${color.green("ns --help")}`,
-			"",
-		].join("\n"),
+	return interactiveTemplateSelection(
+		$logger,
+		$prompter,
+		selectedFlavor,
+		templateAdverb,
 	);
-	// todo: add back ns preview
-	// this.$logger.printMarkdown(
-	// 	`After that you can preview it on device by executing \`$ ns preview\``
-	// );
 }
 
-export const createProjectCommandDefinition = defineCommand({
+export class CreateProjectCommand extends Command({
 	name: "create",
 	description: "Creates a new NativeScript project.",
 	options: createProjectCommandOptions,
 	arguments: [{ name: "projectName" }],
 	enableHooks: false,
-	setup: setupCreateProjectCommand,
-	run: runCreateProjectCommand,
-	postRun: reportCreatedProject,
-});
+}) {
+	private $projectService = inject<IProjectService>("projectService");
+	private $logger = inject<ILogger>("logger");
+	private $prompter = inject<IPrompter>("prompter");
+
+	public async run(): Promise<ICreateProjectData> {
+		const options = this.options;
+		const interactiveAdverbs = ["First", "Next", "Finally"];
+		const getNextInteractiveAdverb = () => {
+			return interactiveAdverbs.shift() || "Next";
+		};
+
+		let isInteractionIntroShown = false;
+		const printInteractiveCreationIntroIfNeeded = () => {
+			if (isInteractionIntroShown) {
+				return;
+			}
+
+			isInteractionIntroShown = true;
+			this.$logger.info();
+			this.$logger.printMarkdown(`# Let’s create a NativeScript app!`);
+			this.$logger.printMarkdown(`
+Answer the following questions to help us build the right app for you. (Note: you
+can skip this prompt next time using the --template option, or using --ng, --react, --solid, --svelte, --vue, --ts, or --js flags.)
+`);
+		};
+
+		if (
+			(options.tsc ||
+				options.ng ||
+				options.vue ||
+				options.react ||
+				options.solid ||
+				options.svelte ||
+				options.js) &&
+			options.template
+		) {
+			this.context.fail(
+				"You cannot use a flavor option like --ng, --vue, --react, --solid, --svelte, --tsc and --js together with --template.",
+			);
+		}
+
+		let projectName = this.args[0];
+		let selectedTemplate = selectTemplateFromOptions(options);
+
+		if (!projectName && isInteractive()) {
+			printInteractiveCreationIntroIfNeeded();
+			projectName = await this.$prompter.getString(
+				`${getNextInteractiveAdverb()}, what will be the name of your app?`,
+				{ allowEmpty: false },
+			);
+			this.$logger.info();
+		}
+
+		projectName = await this.$projectService.validateProjectName({
+			projectName: projectName,
+			force: options.force,
+			pathToProject: options.path,
+		});
+
+		if (!selectedTemplate && isInteractive()) {
+			printInteractiveCreationIntroIfNeeded();
+			selectedTemplate = await interactiveFlavorAndTemplateSelection(
+				this.$logger,
+				this.$prompter,
+				getNextInteractiveAdverb(),
+				getNextInteractiveAdverb(),
+			);
+		}
+
+		return this.$projectService.createProject({
+			projectName: projectName,
+			template: selectedTemplate,
+			appId: options.appid,
+			pathToProject: options.path,
+			// its already validated above
+			force: true,
+			ignoreScripts: options.ignoreScripts,
+		});
+	}
+
+	public postRun(createdProjectData: ICreateProjectData): void {
+		const { projectDir, projectName } = createdProjectData;
+		const relativePath = path.relative(process.cwd(), projectDir);
+
+		const greyDollarSign = color.grey("$");
+		this.$logger.clearScreen();
+		let runDebugNotes: Array<string> = [];
+		if (
+			this.options.vision ||
+			this.options["vision-ng"] ||
+			this.options["vision-react"] ||
+			this.options["vision-solid"] ||
+			this.options["vision-svelte"] ||
+			this.options["vision-vue"]
+		) {
+			runDebugNotes = [
+				`Run the project on Vision Pro with:`,
+				"",
+				`  ${greyDollarSign} ${color.green("ns run visionos --no-hmr")}`,
+			];
+		} else {
+			runDebugNotes = [
+				`Run the project on multiple devices:`,
+				"",
+				`  ${greyDollarSign} ${color.green("ns run ios")}`,
+				`  ${greyDollarSign} ${color.green("ns run android")}`,
+				"",
+				"Debug the project with Chrome DevTools:",
+				"",
+				`  ${greyDollarSign} ${color.green("ns debug ios")}`,
+				`  ${greyDollarSign} ${color.green("ns debug android")}`,
+			];
+		}
+		this.$logger.info(
+			[
+				[
+					color.green(`Project`),
+					color.cyan(projectName),
+					color.green(`was successfully created.`),
+				].join(" "),
+				"",
+				`Now you can navigate to your project with ${color.cyan(
+					`cd ${relativePath}`,
+				)} and then:`,
+				"",
+				...runDebugNotes,
+				``,
+				`For more options consult the docs or run ${color.green("ns --help")}`,
+				"",
+			].join("\n"),
+		);
+		// todo: add back ns preview
+		// this.$logger.printMarkdown(
+		// 	`After that you can preview it on device by executing \`$ ns preview\``
+		// );
+	}
+}

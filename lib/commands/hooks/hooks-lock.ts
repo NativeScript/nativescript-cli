@@ -1,11 +1,12 @@
-import { IPluginData } from "../../definitions/plugins";
-import { defineCommand } from "../../common/define-command";
+import { IProjectData } from "../../definitions/project";
+import { IPluginData, IPluginsService } from "../../definitions/plugins";
+import { IErrors, IFileSystem } from "../../common/declarations";
+import { CommandContext, defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 import path = require("path");
 import * as crypto from "crypto";
 import {
 	getPluginsWithHooks,
-	IHooksCommandServices,
-	injectHooksCommandServices,
 	LOCK_FILE_NAME,
 	OutputHook,
 	OutputPlugin,
@@ -13,10 +14,13 @@ import {
 } from "./common";
 
 async function writeHooksLockFile(
-	services: IHooksCommandServices,
+	context: CommandContext,
 	plugins: IPluginData[],
 	outputDir: string,
 ): Promise<void> {
+	const $errors = context.injector.get<IErrors>("errors");
+	const $fs = context.injector.get<IFileSystem>("fs");
+	const $logger = context.injector.get<ILogger>("logger");
 	const output: OutputPlugin[] = [];
 
 	for (const plugin of plugins) {
@@ -24,7 +28,7 @@ async function writeHooksLockFile(
 
 		for (const hook of plugin.nativescript?.hooks || []) {
 			try {
-				const fileContent = services.$fs.readFile(
+				const fileContent = $fs.readFile(
 					path.join(plugin.fullPath, hook.script),
 				);
 				const hash = crypto
@@ -37,7 +41,7 @@ async function writeHooksLockFile(
 					hash,
 				});
 			} catch (err) {
-				services.$logger.warn(
+				$logger.warn(
 					`Warning: Failed to read script '${hook.script}' for plugin '${plugin.name}'. Skipping this hook.`,
 				);
 				continue;
@@ -50,10 +54,10 @@ async function writeHooksLockFile(
 	const filePath = path.resolve(outputDir, LOCK_FILE_NAME);
 
 	try {
-		services.$fs.writeFile(filePath, JSON.stringify(output, null, 2), "utf8");
-		services.$logger.info(`✅ ${LOCK_FILE_NAME} written to: ${filePath}`);
+		$fs.writeFile(filePath, JSON.stringify(output, null, 2), "utf8");
+		$logger.info(`✅ ${LOCK_FILE_NAME} written to: ${filePath}`);
 	} catch (err) {
-		services.$errors.fail(`❌ Failed to write ${LOCK_FILE_NAME}: ${err}`);
+		$errors.fail(`❌ Failed to write ${LOCK_FILE_NAME}: ${err}`);
 	}
 }
 
@@ -62,20 +66,26 @@ export const hooksLockCommandDefinition = defineCommand({
 	description:
 		"Records a hash of every plugin hook in the project's lock file.",
 	arguments: "any",
-	setup: injectHooksCommandServices,
-	async run(context, services): Promise<void> {
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	async run(context): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		const $logger = inject<ILogger>("logger");
+
 		const plugins: IPluginData[] =
-			await services.$pluginsService.getAllInstalledPlugins(
-				services.$projectData,
-			);
+			await $pluginsService.getAllInstalledPlugins($projectData);
 		if (plugins && plugins.length > 0) {
 			await writeHooksLockFile(
-				services,
+				context,
 				getPluginsWithHooks(plugins),
-				services.$projectData.projectDir,
+				$projectData.projectDir,
 			);
 		} else {
-			services.$logger.info("No plugins with hooks found.");
+			$logger.info("No plugins with hooks found.");
 		}
 	},
 });
@@ -85,20 +95,26 @@ export const hooksVerifyCommandDefinition = defineCommand({
 	description:
 		"Checks every plugin hook against the hashes in the project's lock file.",
 	arguments: "any",
-	setup: injectHooksCommandServices,
-	async run(context, services): Promise<void> {
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	async run(context): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		const $logger = inject<ILogger>("logger");
+
 		const plugins: IPluginData[] =
-			await services.$pluginsService.getAllInstalledPlugins(
-				services.$projectData,
-			);
+			await $pluginsService.getAllInstalledPlugins($projectData);
 		if (plugins && plugins.length > 0) {
 			await verifyHooksLock(
-				services,
+				context,
 				getPluginsWithHooks(plugins),
-				path.join(services.$projectData.projectDir, LOCK_FILE_NAME),
+				path.join($projectData.projectDir, LOCK_FILE_NAME),
 			);
 		} else {
-			services.$logger.info("No plugins with hooks found.");
+			$logger.info("No plugins with hooks found.");
 		}
 	},
 });

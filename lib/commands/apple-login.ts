@@ -1,59 +1,43 @@
 import { IErrors } from "../common/declarations";
-import { CommandContext, defineCommand } from "../common/define-command";
+import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { IApplePortalSessionService } from "../services/apple-portal/definitions";
-
-export type AppleLoginCommandContext = CommandContext;
-
-export function setupAppleLoginCommand() {
-	return {
-		$applePortalSessionService: inject<IApplePortalSessionService>(
-			"applePortalSessionService",
-		),
-		$errors: inject<IErrors>("errors"),
-		$logger: inject<ILogger>("logger"),
-		$prompter: inject<IPrompter>("prompter"),
-	};
-}
-
-export type IAppleLoginCommandServices = ReturnType<
-	typeof setupAppleLoginCommand
->;
-
-export async function runAppleLoginCommand(
-	context: AppleLoginCommandContext,
-	services: IAppleLoginCommandServices,
-): Promise<void> {
-	let username = context.args[0];
-	if (!username) {
-		username = await services.$prompter.getString("Apple ID", {
-			allowEmpty: false,
-		});
-	}
-
-	let password = context.args[1];
-	if (!password) {
-		password = await services.$prompter.getPassword("Apple ID password");
-	}
-
-	const user = await services.$applePortalSessionService.createUserSession({
-		username,
-		password,
-	});
-	if (!user.areCredentialsValid) {
-		services.$errors.fail(
-			`Invalid username and password combination. Used '${username}' as the username.`,
-		);
-	}
-
-	const output = Buffer.from(user.userSessionCookie).toString("base64");
-	services.$logger.info(output);
-}
 
 export const appleLoginCommandDefinition = defineCommand({
 	name: "apple-login",
 	description: "Logs in to an Apple account and prints the session cookie.",
 	arguments: [{ name: "appleId" }, { name: "password" }],
-	setup: setupAppleLoginCommand,
-	run: runAppleLoginCommand,
+	async run(context) {
+		const $applePortalSessionService = inject<IApplePortalSessionService>(
+			"applePortalSessionService",
+		);
+		const $errors = inject<IErrors>("errors");
+		const $logger = inject<ILogger>("logger");
+		const $prompter = inject<IPrompter>("prompter");
+
+		let username = context.args[0];
+		if (!username) {
+			username = await $prompter.getString("Apple ID", {
+				allowEmpty: false,
+			});
+		}
+
+		let password = context.args[1];
+		if (!password) {
+			password = await $prompter.getPassword("Apple ID password");
+		}
+
+		const user = await $applePortalSessionService.createUserSession({
+			username,
+			password,
+		});
+		if (!user.areCredentialsValid) {
+			$errors.fail(
+				`Invalid username and password combination. Used '${username}' as the username.`,
+			);
+		}
+
+		const output = Buffer.from(user.userSessionCookie).toString("base64");
+		$logger.info(output);
+	},
 });

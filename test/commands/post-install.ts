@@ -1,6 +1,6 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
-import { postInstallCliCommandDefinition } from "../../lib/commands/post-install";
+import { PostInstallCliCommand } from "../../lib/commands/post-install";
 import { registerCommand } from "../../lib/common/services/command-definition-adapter";
 import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 import { IInjector } from "../../lib/common/definitions/yok";
@@ -47,7 +47,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("settingsService", SettingsService);
 
 	runInInjectionContext(testInjector, () =>
-		registerCommand(postInstallCliCommandDefinition),
+		registerCommand(PostInstallCliCommand),
 	);
 
 	testInjector.register("hostInfo", {});

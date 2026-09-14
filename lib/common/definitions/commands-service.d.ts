@@ -23,6 +23,14 @@ interface ICommandsService {
 		commandName: string,
 		commandArguments?: string[],
 	): Promise<void>;
+	/**
+	 * Asks a command whether it could run, without running it. The command
+	 * builds its own setup from its own services.
+	 */
+	canExecuteCommandInProcess(
+		commandName: string,
+		commandArguments?: string[],
+	): Promise<boolean>;
 }
 
 /**

@@ -2,15 +2,16 @@ import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	AndroidAppBundleMessages,
 } from "../constants";
-import {
-	canExecuteCommandBase,
-	injectPlatformCommandServices,
-	validatePlatformOptions,
-} from "./command-base";
+import { canExecuteCommandBase, validatePlatformOptions } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
-import { IAndroidBundleValidatorHelper } from "../declarations";
+import {
+	IAndroidBundleValidatorHelper,
+	IOptions,
+	IPlatformValidationService,
+} from "../declarations";
 import { IBuildController, IBuildDataService } from "../definitions/build";
 import { IMigrateController } from "../definitions/migrate";
+import { IProjectData } from "../definitions/project";
 import { IErrors } from "../common/declarations";
 import {
 	booleanOption,
@@ -48,87 +49,82 @@ const defineBuildCommand = <const TName extends CommandName>(
 		description: "Builds the project for the selected target platform.",
 		options: buildCommandOptions,
 		arguments: "none",
-		setup() {
-			const devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
-				"devicePlatformsConstants",
+		async canExecute(context): Promise<boolean> {
+			const $devicePlatformsConstants =
+				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
+			const $errors = inject<IErrors>("errors");
+			const $migrateController =
+				inject<IMigrateController>("migrateController");
+			const $platformValidationService = inject<IPlatformValidationService>(
+				"platformValidationService",
 			);
-			const platform = devicePlatformsConstants[buildPlatform];
-			const isAndroid = devicePlatformsConstants.isAndroid(platform);
-			const services = {
-				...injectPlatformCommandServices(),
-				platform,
-				isAndroid,
-				$errors: inject<IErrors>("errors"),
-				$logger: inject<ILogger>("logger"),
-				$buildController: inject<IBuildController>("buildController"),
-				$buildDataService: inject<IBuildDataService>("buildDataService"),
-				$migrateController: inject<IMigrateController>("migrateController"),
-				// Only the android build checks the runtime version.
-				$androidBundleValidatorHelper: isAndroid
-					? inject<IAndroidBundleValidatorHelper>(
-							"androidBundleValidatorHelper",
-						)
-					: null,
-			};
-			services.$projectData.initializeProjectData();
-
-			return services;
-		},
-		async canExecute(context, services): Promise<boolean> {
-			const { platform } = services;
+			const $projectData = inject<IProjectData>("projectData");
+			const platform = $devicePlatformsConstants[buildPlatform];
+			const isAndroid = $devicePlatformsConstants.isAndroid(platform);
+			// Only the android build checks the runtime version.
+			const $androidBundleValidatorHelper = isAndroid
+				? inject<IAndroidBundleValidatorHelper>("androidBundleValidatorHelper")
+				: null;
+			$projectData.initializeProjectData();
 
 			if (!context.options.force) {
-				await services.$migrateController.validate({
-					projectDir: services.$projectData.projectDir,
+				await $migrateController.validate({
+					projectDir: $projectData.projectDir,
 					platforms: [platform],
 				});
 			}
 
-			if (services.isAndroid) {
-				services.$androidBundleValidatorHelper.validateRuntimeVersion(
-					services.$projectData,
-				);
+			if (isAndroid) {
+				$androidBundleValidatorHelper.validateRuntimeVersion($projectData);
 			} else if (
-				!services.$platformValidationService.isPlatformSupportedForOS(
+				!$platformValidationService.isPlatformSupportedForOS(
 					platform,
-					services.$projectData,
+					$projectData,
 				)
 			) {
-				services.$errors.fail(
+				$errors.fail(
 					`Applications for platform ${platform} can not be built on this OS`,
 				);
 			}
 
-			if (!(await canExecuteCommandBase(services, platform))) {
+			if (!(await canExecuteCommandBase(context, platform))) {
 				return false;
 			}
 
 			if (
-				services.isAndroid &&
+				isAndroid &&
 				context.options.release &&
 				!hasValidAndroidSigning(context.options)
 			) {
-				services.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			}
 
-			return validatePlatformOptions(services, platform);
+			return validatePlatformOptions(context, platform);
 		},
-		async run(context, services): Promise<string> {
-			const buildData = services.$buildDataService.getBuildData(
-				services.$projectData.projectDir,
-				services.platform.toLowerCase(),
-				services.$options,
-			);
-			const outputPath =
-				await services.$buildController.prepareAndBuild(buildData);
+		async run(context): Promise<string> {
+			const $buildController = inject<IBuildController>("buildController");
+			const $buildDataService = inject<IBuildDataService>("buildDataService");
+			const $devicePlatformsConstants =
+				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
+			const $logger = inject<ILogger>("logger");
+			const $options = inject<IOptions>("options");
+			const $projectData = inject<IProjectData>("projectData");
+			const platform = $devicePlatformsConstants[buildPlatform];
+			const isAndroid = $devicePlatformsConstants.isAndroid(platform);
+			$projectData.initializeProjectData();
 
-			if (services.isAndroid && context.options.aab) {
-				services.$logger.info(
-					AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE,
-				);
+			const buildData = $buildDataService.getBuildData(
+				$projectData.projectDir,
+				platform.toLowerCase(),
+				$options,
+			);
+			const outputPath = await $buildController.prepareAndBuild(buildData);
+
+			if (isAndroid && context.options.aab) {
+				$logger.info(AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE);
 
 				if (context.options.release) {
-					services.$logger.info(
+					$logger.info(
 						AndroidAppBundleMessages.ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE,
 					);
 				}

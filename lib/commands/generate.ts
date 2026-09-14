@@ -7,18 +7,17 @@ export const generateCommandDefinition = defineCommand({
 	name: "generate",
 	description: "Executes a schematic in the project.",
 	arguments: "any",
-	setup: () => ({
-		$logger: inject<ILogger>("logger"),
-		$errors: inject<IErrors>("errors"),
-	}),
-	async run(context, services): Promise<void> {
+	async run(): Promise<void> {
+		const $logger = inject<ILogger>("logger");
+		const $errors = inject<IErrors>("errors");
+
 		try {
-			services.$logger.info(
+			$logger.info(
 				"If you have ideas for this command, please discuss at https://nativescript.org/discord",
 			);
 			// await run(this.executionOptions);
 		} catch (error) {
-			services.$errors.fail(error.message);
+			$errors.fail(error.message);
 		}
 	},
 });

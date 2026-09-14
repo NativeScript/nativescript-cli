@@ -36,103 +36,78 @@ const runCommandOptions = {
 	keyStoreAliasPassword: stringOption(),
 } satisfies CommandOptionsSchema;
 
-export type RunCommandContext = CommandContext<typeof runCommandOptions>;
+type RunCommandContext = CommandContext<typeof runCommandOptions>;
 
-export interface IRunCommandServices {
-	/**
-	 * Undefined for `run|*all`, which targets every platform. `canExecute`
-	 * narrows it to Android off macOS, and `run` reads whatever it settled on.
-	 */
-	platform: string;
-	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
-	$errors: IErrors;
-	$hostInfo: IHostInfo;
-	$keyShortcutService: IKeyShortcutService;
-	$liveSyncCommandHelper: ILiveSyncCommandHelper;
-	$migrateController: IMigrateController;
-	$options: IOptions;
-	$platformValidationService: IPlatformValidationService;
-	$projectData: IProjectData;
-	$projectDataService: IProjectDataService;
-}
-
-export function setupRunCommand(): IRunCommandServices {
-	return {
-		platform: undefined,
-		$devicePlatformsConstants: inject<Mobile.IDevicePlatformsConstants>(
-			"devicePlatformsConstants",
-		),
-		$errors: inject<IErrors>("errors"),
-		$hostInfo: inject<IHostInfo>("hostInfo"),
-		$keyShortcutService: inject<IKeyShortcutService>("keyShortcutService"),
-		$liveSyncCommandHelper: inject<ILiveSyncCommandHelper>(
-			"liveSyncCommandHelper",
-		),
-		$migrateController: inject<IMigrateController>("migrateController"),
-		$options: inject<IOptions>("options"),
-		$platformValidationService: inject<IPlatformValidationService>(
-			"platformValidationService",
-		),
-		$projectData: inject<IProjectData>("projectData"),
-		$projectDataService: inject<IProjectDataService>("projectDataService"),
-	};
-}
-
+/**
+ * Which `$devicePlatformsConstants` entry a command runs for. The constants
+ * stay the source of truth for the platform spelling.
+ */
 type RunPlatform = "iOS" | "Android" | "visionOS";
 
-const setupPlatformRunCommand =
-	(platform: RunPlatform) => (): IRunCommandServices => {
-		const services = setupRunCommand();
-		services.platform = services.$devicePlatformsConstants[platform];
-
-		return services;
-	};
-
-export async function canExecuteRunCommand(
+const runPlatformName = (
 	context: RunCommandContext,
-	services: IRunCommandServices,
+	platform: RunPlatform,
+): string =>
+	context.injector.get<Mobile.IDevicePlatformsConstants>(
+		"devicePlatformsConstants",
+	)[platform];
+
+async function canExecuteRunCommand(
+	context: RunCommandContext,
+	platform: string,
 ): Promise<boolean> {
+	const $devicePlatformsConstants =
+		context.injector.get<Mobile.IDevicePlatformsConstants>(
+			"devicePlatformsConstants",
+		);
+	const $errors = context.injector.get<IErrors>("errors");
+	const $liveSyncCommandHelper = context.injector.get<ILiveSyncCommandHelper>(
+		"liveSyncCommandHelper",
+	);
+	const $migrateController =
+		context.injector.get<IMigrateController>("migrateController");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+
 	if (context.args.length) {
-		services.$errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
+		$errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 	}
 
-	if (!services.platform && !services.$hostInfo.isDarwin) {
-		services.platform = services.$devicePlatformsConstants.Android;
-	}
-
-	services.$projectData.initializeProjectData();
-	const platforms = services.platform
-		? [services.platform]
-		: [
-				services.$devicePlatformsConstants.Android,
-				services.$devicePlatformsConstants.iOS,
-			];
+	$projectData.initializeProjectData();
+	const platforms = platform
+		? [platform]
+		: [$devicePlatformsConstants.Android, $devicePlatformsConstants.iOS];
 
 	if (!context.options.force) {
-		await services.$migrateController.validate({
-			projectDir: services.$projectData.projectDir,
+		await $migrateController.validate({
+			projectDir: $projectData.projectDir,
 			platforms,
 		});
 	}
 
-	await services.$liveSyncCommandHelper.validatePlatform(services.platform);
+	await $liveSyncCommandHelper.validatePlatform(platform);
 
 	return true;
 }
 
-export async function runRunCommand(
+async function runRunCommand(
 	context: RunCommandContext,
-	services: IRunCommandServices,
+	platform: string,
 ): Promise<void> {
-	await services.$liveSyncCommandHelper.executeCommandLiveSync(
-		services.platform,
+	const $keyShortcutService =
+		context.injector.get<IKeyShortcutService>("keyShortcutService");
+	const $liveSyncCommandHelper = context.injector.get<ILiveSyncCommandHelper>(
+		"liveSyncCommandHelper",
+	);
+
+	await $liveSyncCommandHelper.executeCommandLiveSync(
+		platform,
 		<ILiveSyncCommandHelperAdditionalOptions>{},
 	);
 
 	if (process.env.NS_IS_INTERACTIVE) {
-		services.$keyShortcutService.attach({
+		$keyShortcutService.attach({
 			context: {
-				platform: <DevicePlatformName>services.platform,
+				platform: <DevicePlatformName>platform,
 				processType: "run",
 			},
 			shortcuts: keyShortcuts(),
@@ -145,9 +120,9 @@ export async function runRunCommand(
  * outright; the launch and clean keys belong to the parent that respawns
  * things, which is why the `ns start` table is not reused here.
  */
-export function runCommandShortcuts(
+function runCommandShortcuts(
 	context: RunCommandContext,
-	services: IRunCommandServices,
+	platform: string,
 ): KeyShortcut[] {
 	if (process.env.NS_IS_INTERACTIVE) {
 		// A `ns start` child is driven over IPC through the table `run` attaches
@@ -155,12 +130,13 @@ export function runCommandShortcuts(
 		return [];
 	}
 
-	const platform = <DevicePlatformName>services.platform;
-
 	return [
-		restartShortcut({ platform }),
-		restartShortcut({ platform, full: true }),
-		restartShortcut({ platform, forceRebuildNativeApp: true }),
+		restartShortcut({ platform: <DevicePlatformName>platform }),
+		restartShortcut({ platform: <DevicePlatformName>platform, full: true }),
+		restartShortcut({
+			platform: <DevicePlatformName>platform,
+			forceRebuildNativeApp: true,
+		}),
 		watcherShortcut(),
 	];
 }
@@ -171,7 +147,16 @@ export const runCommandDefinition = defineCommand({
 	options: runCommandOptions,
 	// The base rejects arguments itself, with the sub-command message.
 	arguments: "any",
-	setup: setupRunCommand,
+	/**
+	 * Undefined for `run|*all`, which targets every platform, except off macOS
+	 * where only Android can be built. It is settled here, once per invocation,
+	 * because `canExecute` and `run` have to agree on the platform.
+	 */
+	setup(context: RunCommandContext): string {
+		const $hostInfo = inject<IHostInfo>("hostInfo");
+
+		return $hostInfo.isDarwin ? undefined : runPlatformName(context, "Android");
+	},
 	canExecute: canExecuteRunCommand,
 	run: runRunCommand,
 	shortcuts: runCommandShortcuts,
@@ -179,28 +164,34 @@ export const runCommandDefinition = defineCommand({
 
 async function canExecuteApplePlatformRunCommand(
 	context: RunCommandContext,
-	services: IRunCommandServices,
+	platform: string,
 ): Promise<boolean> {
-	const projectData = services.$projectDataService.getProjectData();
+	const $errors = context.injector.get<IErrors>("errors");
+	const $options = context.injector.get<IOptions>("options");
+	const $platformValidationService =
+		context.injector.get<IPlatformValidationService>(
+			"platformValidationService",
+		);
+	const $projectDataService =
+		context.injector.get<IProjectDataService>("projectDataService");
+
+	const projectData = $projectDataService.getProjectData();
 
 	if (
-		!services.$platformValidationService.isPlatformSupportedForOS(
-			services.platform,
-			projectData,
-		)
+		!$platformValidationService.isPlatformSupportedForOS(platform, projectData)
 	) {
-		services.$errors.fail(
-			`Applications for platform ${services.platform} can not be built on this OS`,
+		$errors.fail(
+			`Applications for platform ${platform} can not be built on this OS`,
 		);
 	}
 
 	const result =
-		(await canExecuteRunCommand(context, services)) &&
-		(await services.$platformValidationService.validateOptions(
-			services.$options.provision,
-			services.$options.teamId,
+		(await canExecuteRunCommand(context, platform)) &&
+		(await $platformValidationService.validateOptions(
+			$options.provision,
+			$options.teamId,
 			projectData,
-			services.platform.toLowerCase(),
+			platform.toLowerCase(),
 		));
 	return result;
 }
@@ -214,10 +205,15 @@ const defineApplePlatformRunCommand = <const TName extends CommandName>(
 		description: "Runs your project on a connected Apple device or simulator.",
 		options: runCommandOptions,
 		arguments: "any",
-		setup: setupPlatformRunCommand(platform),
-		canExecute: canExecuteApplePlatformRunCommand,
-		run: runRunCommand,
-		shortcuts: runCommandShortcuts,
+		canExecute: (context: RunCommandContext) =>
+			canExecuteApplePlatformRunCommand(
+				context,
+				runPlatformName(context, platform),
+			),
+		run: (context: RunCommandContext) =>
+			runRunCommand(context, runPlatformName(context, platform)),
+		shortcuts: (context: RunCommandContext) =>
+			runCommandShortcuts(context, runPlatformName(context, platform)),
 	});
 
 export const iosRunCommand = defineApplePlatformRunCommand("run|ios", "iOS");
@@ -232,24 +228,28 @@ export const androidRunCommand = defineCommand({
 	description: "Runs your project on a connected Android device or emulator.",
 	options: runCommandOptions,
 	arguments: "any",
-	setup: setupPlatformRunCommand("Android"),
-	async canExecute(
-		context: RunCommandContext,
-		services: IRunCommandServices,
-	): Promise<boolean> {
+	async canExecute(context: RunCommandContext): Promise<boolean> {
+		const $errors = inject<IErrors>("errors");
+		const $options = inject<IOptions>("options");
+		const $platformValidationService = inject<IPlatformValidationService>(
+			"platformValidationService",
+		);
+		const $projectData = inject<IProjectData>("projectData");
+		const platform = runPlatformName(context, "Android");
+
 		// The base verdict is dropped rather than combined with the checks below;
 		// the base only ever returns true or throws, so the Android command has
 		// always relied on it for its side effects alone.
-		await canExecuteRunCommand(context, services);
+		await canExecuteRunCommand(context, platform);
 
 		if (
-			!services.$platformValidationService.isPlatformSupportedForOS(
-				services.$devicePlatformsConstants.Android,
-				services.$projectData,
+			!$platformValidationService.isPlatformSupportedForOS(
+				platform,
+				$projectData,
 			)
 		) {
-			services.$errors.fail(
-				`Applications for platform ${services.$devicePlatformsConstants.Android} can not be built on this OS`,
+			$errors.fail(
+				`Applications for platform ${platform} can not be built on this OS`,
 			);
 		}
 
@@ -258,19 +258,21 @@ export const androidRunCommand = defineCommand({
 			!hasValidAndroidSigning(context.options)
 		) {
 			if (context.options.release) {
-				services.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			} else {
-				services.$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+				$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 			}
 		}
 
-		return services.$platformValidationService.validateOptions(
-			services.$options.provision,
-			services.$options.teamId,
-			services.$projectData,
-			services.$devicePlatformsConstants.Android.toLowerCase(),
+		return $platformValidationService.validateOptions(
+			$options.provision,
+			$options.teamId,
+			$projectData,
+			platform.toLowerCase(),
 		);
 	},
-	run: runRunCommand,
-	shortcuts: runCommandShortcuts,
+	run: (context: RunCommandContext) =>
+		runRunCommand(context, runPlatformName(context, "Android")),
+	shortcuts: (context: RunCommandContext) =>
+		runCommandShortcuts(context, runPlatformName(context, "Android")),
 });

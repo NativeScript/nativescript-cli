@@ -117,8 +117,8 @@ export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
 	/** Current value of every option declared in the schema, and nothing else. */
 	options: CommandOptionValues<TSchema>;
 	/**
-	 * The injector the command was registered against. `inject()` stops working
-	 * after the first `await`; this is the supported late lookup.
+	 * This invocation's injector, the one `inject()` resolves against before the
+	 * first `await`; after it, `inject()` stops working and this is the lookup.
 	 */
 	injector: Injector;
 	/** Fails the command with `message` and the usage help suggestion. */
@@ -539,6 +539,49 @@ const validateDefinition = (definition: any): void => {
 	}
 };
 
+const HANDLER_FIELDS = ["setup", "canExecute", "run", "postRun", "shortcuts"];
+
+const META_FIELDS = DEFINITION_FIELDS.filter(
+	(field) => HANDLER_FIELDS.indexOf(field) === -1,
+);
+
+/**
+ * Everything defineCommand checks except the handlers, which the class form
+ * only has once the subclass is declared, after Command() has returned.
+ */
+const validateMeta = (meta: any): void => {
+	if (!isPlainObject(meta)) {
+		invalid(meta, "Command() expects an object");
+	}
+
+	const fields = Object.keys(meta);
+	const handlers = fields.filter(
+		(field) => HANDLER_FIELDS.indexOf(field) !== -1,
+	);
+	if (handlers.length) {
+		invalid(
+			meta,
+			`Command() was given the handler(s) ${handlers
+				.map((field) => `'${field}'`)
+				.join(", ")}; in the class form handlers are methods of the class`,
+		);
+	}
+
+	const unknownFields = fields.filter(
+		(field) => META_FIELDS.indexOf(field) === -1,
+	);
+	if (unknownFields.length) {
+		invalid(
+			meta,
+			`unknown field(s) ${unknownFields
+				.map((field) => `'${field}'`)
+				.join(", ")}; Command() accepts ${META_FIELDS.join(", ")}`,
+		);
+	}
+
+	validateDefinition({ ...meta, run: (): void => undefined });
+};
+
 /**
  * A definition that carries the name it declares in its own type. `Omit` rather
  * than an intersection: intersecting the declared name with the wider `name` of
@@ -629,10 +672,7 @@ export type CommandMeta<
  * every `Command()` class — a subclass's declaration emit refers to it — not
  * because anything should extend it directly.
  */
-export abstract class CommandBase<
-	TSchema extends CommandOptionsSchema = {},
-	TResult = void,
-> {
+export abstract class CommandBase<TSchema extends CommandOptionsSchema = {}> {
 	/**
 	 * The instance is built once per invocation, as that invocation's `setup`,
 	 * so the context captured here is the one its own run was handed.
@@ -647,9 +687,10 @@ export abstract class CommandBase<
 		return this.context.args;
 	}
 
-	abstract run(): Promise<TResult> | TResult;
+	abstract run(): unknown;
 	canExecute?(): Promise<boolean> | boolean;
-	postRun?(result: Awaited<TResult>): Promise<void> | void;
+	/** Typed off the subclass's own `run` through the polymorphic `this`. */
+	postRun?(result: Awaited<ReturnType<this["run"]>>): Promise<void> | void;
 	shortcuts?(): KeyShortcut[];
 }
 
@@ -661,24 +702,16 @@ export abstract class CommandBase<
 export type CommandClass<
 	TName extends CommandName = CommandName,
 	TSchema extends CommandOptionsSchema = {},
-	TResult = void,
-> = (abstract new () => CommandBase<TSchema, TResult>) & {
-	readonly definition: NamedCommand<
-		TSchema,
-		TResult,
-		CommandBase<TSchema, TResult>,
-		TName
-	>;
+> = (abstract new () => CommandBase<TSchema>) & {
+	readonly definition: NamedCommand<TSchema, any, CommandBase<TSchema>, TName>;
 	readonly [COMMAND_CLASS_MARKER]: true;
 };
 
 /** Either accepted form of a command, as a registration site takes it. */
 export type RegisterableCommand =
-	DefinedCommand<any, any, any> | CommandClass<any, any, any>;
+	DefinedCommand<any, any, any> | CommandClass<any, any>;
 
-export function isCommandClass(
-	value: any,
-): value is CommandClass<any, any, any> {
+export function isCommandClass(value: any): value is CommandClass<any, any> {
 	return (
 		typeof value === "function" && (<any>value)[COMMAND_CLASS_MARKER] === true
 	);
@@ -691,9 +724,19 @@ const buildClassDefinition = (ctor: any): DefinedCommand<any, any, any> => {
 		typeof prototype[method] === "function";
 
 	if (!implementsMethod("run")) {
+		// The base Command() returns is never the author's class, and its
+		// local name would only mislead.
+		const isFactoryBase = Object.prototype.hasOwnProperty.call(
+			ctor,
+			COMMAND_CLASS_META,
+		);
 		invalid(
 			meta,
-			`the class '${ctor.name || "<anonymous>"}' implements no 'run' method`,
+			isFactoryBase
+				? "the class returned by Command() implements no 'run' method; extend it with a class that does"
+				: ctor.name
+					? `the class '${ctor.name}' implements no 'run' method`
+					: "an anonymous class implements no 'run' method",
 		);
 	}
 
@@ -779,9 +822,10 @@ export function toCommandDefinition(
 export function Command<
 	const TName extends CommandName,
 	TSchema extends CommandOptionsSchema = {},
-	TResult = void,
->(meta: CommandMeta<TName, TSchema>): CommandClass<TName, TSchema, TResult> {
-	abstract class Base extends CommandBase<TSchema, TResult> {
+>(meta: CommandMeta<TName, TSchema>): CommandClass<TName, TSchema> {
+	validateMeta(meta);
+
+	abstract class Base extends CommandBase<TSchema> {
 		// A getter, because `this` in a static accessor is the constructor the
 		// property was read through: that is the only hook that resolves the
 		// subclass without the subclass having to name itself.

@@ -1,9 +1,7 @@
+import { IProxyService } from "../../declarations";
 import { defineCommand } from "../../define-command";
-import {
-	injectProxyCommandServices,
-	IProxyCommandServices,
-	tryTrackProxyCommandUsage,
-} from "./proxy-base";
+import { inject } from "../../di";
+import { tryTrackProxyCommandUsage } from "./proxy-base";
 
 const proxyGetCommandName = "proxy|*get";
 
@@ -12,9 +10,11 @@ export const proxyGetCommandDefinition = defineCommand({
 	description: "Prints the current proxy settings.",
 	arguments: "none",
 	disableAnalytics: true,
-	setup: injectProxyCommandServices,
-	async run(context, services: IProxyCommandServices): Promise<void> {
-		services.$logger.info(await services.$proxyService.getInfo());
-		await tryTrackProxyCommandUsage(services, proxyGetCommandName);
+	async run(): Promise<void> {
+		const $logger = inject<ILogger>("logger");
+		const $proxyService = inject<IProxyService>("proxyService");
+
+		$logger.info(await $proxyService.getInfo());
+		await tryTrackProxyCommandUsage($logger, proxyGetCommandName);
 	},
 });

@@ -18,71 +18,53 @@ import { IPlatformsDataService } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 
-export const installCommandOptions = {
+const installCommandOptions = {
 	frameworkPath: stringOption(),
 	disableNpmInstall: booleanOption(),
 	ignoreScripts: booleanOption(),
 	path: stringOption(),
 } satisfies CommandOptionsSchema;
 
-export type InstallCommandContext = CommandContext<
-	typeof installCommandOptions
->;
-
-export function setupInstallCommand() {
-	const services = {
-		$options: inject<IOptions>("options"),
-		$mobileHelper: inject<Mobile.IMobileHelper>("mobileHelper"),
-		$platformsDataService: inject<IPlatformsDataService>(
-			"platformsDataService",
-		),
-		$platformCommandHelper: inject<IPlatformCommandHelper>(
-			"platformCommandHelper",
-		),
-		$projectData: inject<IProjectData>("projectData"),
-		$projectDataService: inject<IProjectDataService>("projectDataService"),
-		$pluginsService: inject<IPluginsService>("pluginsService"),
-		$logger: inject<ILogger>("logger"),
-		$fs: inject<IFileSystem>("fs"),
-		$packageManager: inject<INodePackageManager>("packageManager"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IInstallCommandServices = ReturnType<typeof setupInstallCommand>;
-
 async function installProjectDependencies(
-	context: InstallCommandContext,
-	services: IInstallCommandServices,
+	context: CommandContext<typeof installCommandOptions>,
 ): Promise<void> {
+	const $options = context.injector.get<IOptions>("options");
+	const $mobileHelper =
+		context.injector.get<Mobile.IMobileHelper>("mobileHelper");
+	const $platformsDataService = context.injector.get<IPlatformsDataService>(
+		"platformsDataService",
+	);
+	const $platformCommandHelper = context.injector.get<IPlatformCommandHelper>(
+		"platformCommandHelper",
+	);
+	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectDataService =
+		context.injector.get<IProjectDataService>("projectDataService");
+	const $pluginsService =
+		context.injector.get<IPluginsService>("pluginsService");
+	const $logger = context.injector.get<ILogger>("logger");
+
 	let error: string = "";
 
-	await services.$pluginsService.ensureAllDependenciesAreInstalled(
-		services.$projectData,
-	);
+	await $pluginsService.ensureAllDependenciesAreInstalled($projectData);
 
-	for (const platform of services.$mobileHelper.platformNames) {
-		const platformData = services.$platformsDataService.getPlatformData(
+	for (const platform of $mobileHelper.platformNames) {
+		const platformData = $platformsDataService.getPlatformData(
 			platform,
-			services.$projectData,
+			$projectData,
 		);
-		const frameworkPackageData = services.$projectDataService.getRuntimePackage(
-			services.$projectData.projectDir,
+		const frameworkPackageData = $projectDataService.getRuntimePackage(
+			$projectData.projectDir,
 			<PlatformTypes>platformData.platformNameLowerCase,
 		);
 		if (frameworkPackageData && frameworkPackageData.version) {
 			try {
 				const platformProjectService = platformData.platformProjectService;
-				await platformProjectService.validate(
-					services.$projectData,
-					services.$options,
-				);
+				await platformProjectService.validate($projectData, $options);
 
-				await services.$platformCommandHelper.addPlatforms(
+				await $platformCommandHelper.addPlatforms(
 					[`${platform}@${frameworkPackageData.version}`],
-					services.$projectData,
+					$projectData,
 					context.options.frameworkPath,
 				);
 			} catch (err) {
@@ -92,38 +74,33 @@ async function installProjectDependencies(
 	}
 
 	if (error) {
-		services.$logger.error(error);
+		$logger.error(error);
 	}
 }
 
 async function installModule(
-	context: InstallCommandContext,
-	services: IInstallCommandServices,
+	context: CommandContext<typeof installCommandOptions>,
 	moduleName: string,
 ): Promise<void> {
-	const projectDir = services.$projectData.projectDir;
+	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $fs = context.injector.get<IFileSystem>("fs");
+	const $packageManager =
+		context.injector.get<INodePackageManager>("packageManager");
+
+	const projectDir = $projectData.projectDir;
 
 	const devPrefix = "nativescript-dev-";
-	if (!services.$fs.exists(moduleName) && moduleName.indexOf(devPrefix) !== 0) {
+	if (!$fs.exists(moduleName) && moduleName.indexOf(devPrefix) !== 0) {
 		moduleName = devPrefix + moduleName;
 	}
 
-	await services.$packageManager.install(moduleName, projectDir, {
+	await $packageManager.install(moduleName, projectDir, {
 		"save-dev": true,
 		disableNpmInstall: context.options.disableNpmInstall,
 		frameworkPath: context.options.frameworkPath,
 		ignoreScripts: context.options.ignoreScripts,
 		path: context.options.path,
 	});
-}
-
-export function runInstallCommand(
-	context: InstallCommandContext,
-	services: IInstallCommandServices,
-): Promise<void> {
-	return context.args[0]
-		? installModule(context, services, context.args[0])
-		: installProjectDependencies(context, services);
 }
 
 export const installCommandDefinition = defineCommand({
@@ -133,6 +110,14 @@ export const installCommandDefinition = defineCommand({
 	options: installCommandOptions,
 	arguments: [{ name: "moduleName" }],
 	enableHooks: false,
-	setup: setupInstallCommand,
-	run: runInstallCommand,
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	run(context): Promise<void> {
+		return context.args[0]
+			? installModule(context, context.args[0])
+			: installProjectDependencies(context);
+	},
 });

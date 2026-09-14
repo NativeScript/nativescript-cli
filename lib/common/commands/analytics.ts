@@ -18,30 +18,13 @@ interface IAnalyticsSetting {
 	humanReadableSettingName: string;
 }
 
-export const analyticsCommandOptions = {
+const analyticsCommandOptions = {
 	json: booleanOption(),
 } satisfies CommandOptionsSchema;
 
-export type AnalyticsCommandContext = CommandContext<
-	typeof analyticsCommandOptions
->;
+type AnalyticsCommandContext = CommandContext<typeof analyticsCommandOptions>;
 
-export function setupAnalyticsCommand(setting: IAnalyticsSetting) {
-	const $staticConfig = inject<Config.IStaticConfig>("staticConfig");
-
-	return {
-		settingName: $staticConfig[setting.staticConfigKey],
-		humanReadableSettingName: setting.humanReadableSettingName,
-		$analyticsService: inject<IAnalyticsService>("analyticsService"),
-		$logger: inject<ILogger>("logger"),
-	};
-}
-
-export type IAnalyticsCommandServices = ReturnType<
-	typeof setupAnalyticsCommand
->;
-
-export function validateAnalyticsState(value: string): boolean | string {
+function validateAnalyticsState(value: string): boolean | string {
 	switch ((value || "").toLowerCase()) {
 		case "enable":
 		case "disable":
@@ -53,33 +36,35 @@ export function validateAnalyticsState(value: string): boolean | string {
 	}
 }
 
-export async function runAnalyticsCommand(
+async function runAnalyticsCommand(
 	context: AnalyticsCommandContext,
-	services: IAnalyticsCommandServices,
+	setting: IAnalyticsSetting,
 ): Promise<void> {
+	const $analyticsService = inject<IAnalyticsService>("analyticsService");
+	const $logger = inject<ILogger>("logger");
+	const $staticConfig = inject<Config.IStaticConfig>("staticConfig");
+	const settingName = $staticConfig[setting.staticConfigKey];
+	const { humanReadableSettingName } = setting;
+
 	const arg = context.args[0] || "";
 	switch (arg.toLowerCase()) {
 		case "enable":
-			await services.$analyticsService.setStatus(services.settingName, true);
+			await $analyticsService.setStatus(settingName, true);
 			// TODO(Analytics): await this.$analyticsService.track(this.settingName, "enabled");
-			services.$logger.info(
-				`${services.humanReadableSettingName} is now enabled.`,
-			);
+			$logger.info(`${humanReadableSettingName} is now enabled.`);
 			break;
 		case "disable":
 			// TODO(Analytics): await this.$analyticsService.track(this.settingName, "disabled");
-			await services.$analyticsService.setStatus(services.settingName, false);
-			services.$logger.info(
-				`${services.humanReadableSettingName} is now disabled.`,
-			);
+			await $analyticsService.setStatus(settingName, false);
+			$logger.info(`${humanReadableSettingName} is now disabled.`);
 			break;
 		case "status":
 		case "":
-			services.$logger.info(
-				await services.$analyticsService.getStatusMessage(
-					services.settingName,
+			$logger.info(
+				await $analyticsService.getStatusMessage(
+					settingName,
 					context.options.json,
-					services.humanReadableSettingName,
+					humanReadableSettingName,
 				),
 			);
 			break;
@@ -96,8 +81,7 @@ const defineAnalyticsCommand = <const TName extends CommandName>(
 		options: analyticsCommandOptions,
 		arguments: [{ name: "state", validate: validateAnalyticsState }],
 		disableAnalytics: true,
-		setup: () => setupAnalyticsCommand(setting),
-		run: runAnalyticsCommand,
+		run: (context) => runAnalyticsCommand(context, setting),
 	});
 
 export const usageReportingCommand = defineAnalyticsCommand("usage-reporting", {

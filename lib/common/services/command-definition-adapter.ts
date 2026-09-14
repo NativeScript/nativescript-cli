@@ -254,8 +254,9 @@ export function createCommandFromDefinition<
 		return values;
 	};
 
-	// Read per call rather than snapshotted here: the options service only holds
-	// this command's parsed values once validateOptions has run for it.
+	// Read when an invocation opens rather than at definition time: the options
+	// service only holds this command's parsed values once validateOptions has
+	// run for it.
 	const buildContext = (args: string[]): CommandContext<TSchema> => {
 		const options: any = {};
 		for (const optionName of optionNames) {
@@ -339,7 +340,7 @@ export function createCommandFromDefinition<
 	// The state of one invocation. The command object itself is cached for the
 	// process, so nothing invocation-scoped may live outside one of these.
 	interface Invocation {
-		/** The context of the stage that is running; COMMAND_CONTEXT reads it. */
+		/** Built once when the invocation opens; every stage and COMMAND_CONTEXT share it. */
 		context: CommandContext<TSchema>;
 		injector: Injector;
 		setup: Promise<Awaited<TSetup>>;
@@ -375,15 +376,8 @@ export function createCommandFromDefinition<
 	const beginInvocation = (context: CommandContext<TSchema>): Invocation => {
 		const invocation: Invocation = {
 			context,
-			// Each entry point builds its own context object, so the token reads
-			// the live one rather than a snapshot: a handler that injects it gets
-			// the very context it was handed.
 			injector: targetInjector.createChild([
-				{
-					provide: COMMAND_CONTEXT,
-					useFactory: () => invocation.context,
-					shared: false,
-				},
+				{ provide: COMMAND_CONTEXT, useValue: context },
 			]),
 			setup: undefined,
 			hasRun: false,
@@ -452,9 +446,9 @@ export function createCommandFromDefinition<
 			? {}
 			: {
 					postCommandAction: async (args: string[]): Promise<void> => {
-						const context = buildContext(args);
-						const invocation = currentInvocation || beginInvocation(context);
-						invocation.context = context;
+						const invocation =
+							currentInvocation || beginInvocation(buildContext(args));
+						const context = invocation.context;
 						const setupResult = await invocation.setup;
 						await runInInjectionContext(invocation.injector, () =>
 							definition.postRun.call(
@@ -490,12 +484,11 @@ export function createCommandFromDefinition<
 			);
 		},
 		execute: async (args: string[]): Promise<void> => {
-			const context = buildContext(args);
 			const invocation =
 				currentInvocation && !currentInvocation.hasRun
 					? currentInvocation
-					: beginInvocation(context);
-			invocation.context = context;
+					: beginInvocation(buildContext(args));
+			const context = invocation.context;
 			invocation.hasRun = true;
 
 			const setupResult = await invocation.setup;
@@ -564,6 +557,26 @@ export async function runCommand(
 		contextInjector().get<ICommandsService>("commandsService");
 
 	await commandsService.executeCommandInProcess(name, args);
+}
+
+/**
+ * Asks a registered command whether it could run on `args`, without running it.
+ * The named command is resolved and its options primed exactly as `runCommand`
+ * does, and its own `canExecute` returns the verdict.
+ *
+ * This is how one command reuses another's precondition — `embed` asking
+ * whether `prepare` would run. The child resolves its own services, so nothing
+ * crosses between the two but the name and the arguments; pass only the
+ * arguments the child's own `arguments` policy accepts.
+ */
+export async function canExecuteCommand(
+	name: string,
+	args: string[] = [],
+): Promise<boolean> {
+	const commandsService =
+		contextInjector().get<ICommandsService>("commandsService");
+
+	return commandsService.canExecuteCommandInProcess(name, args);
 }
 
 /**

@@ -894,35 +894,29 @@ declare class AppleWidgetUtils extends NSObject {
 	}
 }
 
-interface IWidgetCommandServices {
-	generator: IOSWidgetGenerator;
-}
-
 // No flat "widget": the subcommand registration below synthesizes the parent
 // dispatcher.
 export const widgetIOSCommandDefinition = defineCommand({
 	name: "widget|ios",
 	description: "Generates an iOS widget extension for the project.",
 	arguments: "any",
-	setup(): IWidgetCommandServices {
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	run(ctx): void {
 		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
 
-		return {
-			generator: new IOSWidgetGenerator(
-				$projectData,
-				inject<IProjectConfigService>("projectConfigService"),
-				inject<ILogger>("logger"),
-				inject<IErrors>("errors"),
-			),
-		};
-	},
-	canExecute(): boolean {
-		return true;
-	},
-	run(context, services: IWidgetCommandServices): void {
+		const generator = new IOSWidgetGenerator(
+			$projectData,
+			inject<IProjectConfigService>("projectConfigService"),
+			inject<ILogger>("logger"),
+			inject<IErrors>("errors"),
+		);
+
 		// Not awaited: the command has always reported completion before the
 		// prompts it opens are answered.
-		services.generator.startPrompt(context.args);
+		generator.startPrompt(ctx.args);
 	},
 });

@@ -1,4 +1,4 @@
-import { publishIOSCommandDefinition } from "../lib/commands/appstore-upload";
+import { PublishIOSCommand } from "../lib/commands/appstore-upload";
 import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import { Injector } from "../lib/common/di";
 import {
@@ -104,7 +104,7 @@ class AppStore {
 		}
 
 		runInInjectionContext(<Injector>(<any>this.injector), () =>
-			registerCommand({ ...publishIOSCommandDefinition, name: "appstore" }),
+			registerCommand({ ...PublishIOSCommand.definition, name: "appstore" }),
 		);
 
 		this.injector.register("projectDataService", ProjectDataServiceStub);

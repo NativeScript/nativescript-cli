@@ -1,69 +1,60 @@
 import { IProjectData } from "../../definitions/project";
 import { IAndroidResourcesMigrationService } from "../../declarations";
 import { IErrors } from "../../common/declarations";
-import { CommandContext, defineCommand } from "../../common/define-command";
+import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-
-export function setupResourcesUpdateCommand() {
-	const services = {
-		$projectData: inject<IProjectData>("projectData"),
-		$errors: inject<IErrors>("errors"),
-		$androidResourcesMigrationService:
-			inject<IAndroidResourcesMigrationService>(
-				"androidResourcesMigrationService",
-			),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IResourcesUpdateCommandServices = ReturnType<
-	typeof setupResourcesUpdateCommand
->;
-
-export async function canExecuteResourcesUpdateCommand(
-	context: CommandContext,
-	services: IResourcesUpdateCommandServices,
-): Promise<boolean> {
-	let args = context.args;
-	if (!args || args.length === 0) {
-		// Command defaults to migrating the Android App_Resources, unless explicitly specified.
-		// The default reaches this check only; the migration itself ignores the arguments.
-		args = ["android"];
-	}
-
-	for (const platform of args) {
-		if (!services.$androidResourcesMigrationService.canMigrate(platform)) {
-			services.$errors.fail(
-				`The ${platform} does not need to have its resources updated.`,
-			);
-		}
-
-		if (
-			services.$androidResourcesMigrationService.hasMigrated(
-				services.$projectData.getAppResourcesDirectoryPath(),
-			)
-		) {
-			services.$errors.fail(
-				"The App_Resources have already been updated for the Android platform.",
-			);
-		}
-	}
-
-	return true;
-}
 
 export const resourcesUpdateCommandDefinition = defineCommand({
 	name: "resources|update",
 	description:
 		"Updates the App_Resources directory to the structure the current Android runtime expects.",
 	arguments: "any",
-	setup: setupResourcesUpdateCommand,
-	canExecute: canExecuteResourcesUpdateCommand,
-	async run(context, services): Promise<void> {
-		await services.$androidResourcesMigrationService.migrate(
-			services.$projectData.getAppResourcesDirectoryPath(),
+	async canExecute(context): Promise<boolean> {
+		const $androidResourcesMigrationService =
+			inject<IAndroidResourcesMigrationService>(
+				"androidResourcesMigrationService",
+			);
+		const $errors = inject<IErrors>("errors");
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
+
+		let args = context.args;
+		if (!args || args.length === 0) {
+			// Command defaults to migrating the Android App_Resources, unless explicitly specified.
+			// The default reaches this check only; the migration itself ignores the arguments.
+			args = ["android"];
+		}
+
+		for (const platform of args) {
+			if (!$androidResourcesMigrationService.canMigrate(platform)) {
+				$errors.fail(
+					`The ${platform} does not need to have its resources updated.`,
+				);
+			}
+
+			if (
+				$androidResourcesMigrationService.hasMigrated(
+					$projectData.getAppResourcesDirectoryPath(),
+				)
+			) {
+				$errors.fail(
+					"The App_Resources have already been updated for the Android platform.",
+				);
+			}
+		}
+
+		return true;
+	},
+	async run(): Promise<void> {
+		const $androidResourcesMigrationService =
+			inject<IAndroidResourcesMigrationService>(
+				"androidResourcesMigrationService",
+			);
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
+
+		await $androidResourcesMigrationService.migrate(
+			$projectData.getAppResourcesDirectoryPath(),
 		);
 	},
 });

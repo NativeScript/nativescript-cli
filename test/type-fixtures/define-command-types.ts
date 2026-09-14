@@ -275,15 +275,53 @@ class TypefixturePlatformClean extends Command({
 	}
 }
 
-class TypefixtureResult extends Command<"typefixture|class-result", {}, number>(
-	{ name: "typefixture|class-result" },
-) {
-	run(): number {
+// The result type is inferred from run; postRun receives it without the
+// class restating it.
+class TypefixtureResult extends Command({ name: "typefixture|class-result" }) {
+	run() {
 		return 1;
 	}
 
 	postRun(result: number): void {
 		expectExactType<IsExact<typeof result, number>>();
+	}
+}
+
+class TypefixtureResultMismatch extends Command({
+	name: "typefixture|class-result-mismatch",
+}) {
+	run() {
+		return 1;
+	}
+
+	// @ts-expect-error - run returns a number, so postRun cannot take a string
+	postRun(result: string): void {
+		return undefined;
+	}
+}
+
+class TypefixtureAsyncResult extends Command({
+	name: "typefixture|class-async-result",
+}) {
+	async run() {
+		return { created: true, path: "/tmp/app" };
+	}
+
+	postRun(result: { created: boolean; path: string }): void {
+		return undefined;
+	}
+}
+
+class TypefixtureAsyncResultMismatch extends Command({
+	name: "typefixture|class-async-result-mismatch",
+}) {
+	async run() {
+		return { created: true };
+	}
+
+	// @ts-expect-error - postRun receives the awaited object, not a string flag
+	postRun(result: { created: string }): void {
+		return undefined;
 	}
 }
 

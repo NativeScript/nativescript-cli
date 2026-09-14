@@ -7,10 +7,7 @@ export const setupCommandDefinition = defineCommand({
 	description:
 		"Run the setup script to try to automatically configure your environment.",
 	arguments: "none",
-	setup: () => ({
-		$doctorService: inject<IDoctorService>("doctorService"),
-	}),
-	run(context, services): Promise<any> {
-		return services.$doctorService.runSetupScript();
+	run(): Promise<any> {
+		return inject<IDoctorService>("doctorService").runSetupScript();
 	},
 });

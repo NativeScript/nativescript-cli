@@ -1,7 +1,7 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import {
-	createPluginCommandDefinition,
+	CreatePluginCommand,
 	INCLUDE_ANGULAR_DEMO_MESSAGE,
 	INCLUDE_TYPESCRIPT_DEMO_MESSAGE,
 	NAME_MESSAGE,
@@ -74,7 +74,7 @@ function createTestInjector() {
 	});
 
 	runInInjectionContext(testInjector, () =>
-		registerCommand(createPluginCommandDefinition),
+		registerCommand(CreatePluginCommand),
 	);
 
 	return testInjector;
