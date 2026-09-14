@@ -5,6 +5,7 @@ import { getCurrentInjector, runInInjectionContext } from "../di/inject";
 import { Injector } from "../di/injector";
 import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { ICommand } from "../definitions/commands";
+import { COMMAND_CONTEXT } from "../contracts/command-context";
 import {
 	COMMAND_OWNER,
 	CommandRegistry,
@@ -335,6 +336,9 @@ export function createCommandFromDefinition<
 	// The state of one invocation. The command object itself is cached for the
 	// process, so nothing invocation-scoped may live outside one of these.
 	interface Invocation {
+		/** The context of the stage that is running; COMMAND_CONTEXT reads it. */
+		context: CommandContext<TSchema>;
+		injector: Injector;
 		setup: Promise<Awaited<TSetup>>;
 		hasRun: boolean;
 		runResult?: Awaited<TResult>;
@@ -342,6 +346,7 @@ export function createCommandFromDefinition<
 
 	const startSetup = (
 		context: CommandContext<TSchema>,
+		injector: Injector,
 	): Promise<Awaited<TSetup>> =>
 		// The executor runs synchronously, so setup keeps its injection context
 		// up to its first await, while a synchronous failure - ctx.fail() is one -
@@ -350,7 +355,7 @@ export function createCommandFromDefinition<
 			resolve(
 				definition.setup
 					? <any>(
-							runInInjectionContext(targetInjector, () =>
+							runInInjectionContext(injector, () =>
 								definition.setup.call(definition, context),
 							)
 						)
@@ -365,9 +370,25 @@ export function createCommandFromDefinition<
 	let currentInvocation: Invocation = null;
 
 	const beginInvocation = (context: CommandContext<TSchema>): Invocation => {
-		currentInvocation = { setup: startSetup(context), hasRun: false };
+		const invocation: Invocation = {
+			context,
+			// Each entry point builds its own context object, so the token reads
+			// the live one rather than a snapshot: a handler that injects it gets
+			// the very context it was handed.
+			injector: targetInjector.createChild([
+				{
+					provide: COMMAND_CONTEXT,
+					useFactory: () => invocation.context,
+					shared: false,
+				},
+			]),
+			setup: undefined,
+			hasRun: false,
+		};
+		invocation.setup = startSetup(context, invocation.injector);
+		currentInvocation = invocation;
 
-		return currentInvocation;
+		return invocation;
 	};
 
 	/**
@@ -377,6 +398,7 @@ export function createCommandFromDefinition<
 	 * take the host's keys with it.
 	 */
 	const attachShortcuts = (
+		invocation: Invocation,
 		context: CommandContext<TSchema>,
 		setupResult: Awaited<TSetup>,
 	): void => {
@@ -392,8 +414,9 @@ export function createCommandFromDefinition<
 			return;
 		}
 
-		const shortcuts: KeyShortcut[] = runInInjectionContext(targetInjector, () =>
-			definition.shortcuts.call(definition, context, setupResult),
+		const shortcuts: KeyShortcut[] = runInInjectionContext(
+			invocation.injector,
+			() => definition.shortcuts.call(definition, context, setupResult),
 		);
 		if (!shortcuts || !shortcuts.length) {
 			return;
@@ -428,8 +451,9 @@ export function createCommandFromDefinition<
 					postCommandAction: async (args: string[]): Promise<void> => {
 						const context = buildContext(args);
 						const invocation = currentInvocation || beginInvocation(context);
+						invocation.context = context;
 						const setupResult = await invocation.setup;
-						await runInInjectionContext(targetInjector, () =>
+						await runInInjectionContext(invocation.injector, () =>
 							definition.postRun.call(
 								definition,
 								context,
@@ -446,7 +470,8 @@ export function createCommandFromDefinition<
 			// arguments - so an argument validator can rely on it, and a command
 			// run in the wrong place still reports that before complaining about
 			// arity.
-			const setupResult = await beginInvocation(context).setup;
+			const invocation = beginInvocation(context);
+			const setupResult = await invocation.setup;
 
 			await enforceArguments(context);
 
@@ -457,7 +482,7 @@ export function createCommandFromDefinition<
 
 			// Same first-await rule as execute: runInInjectionContext is
 			// synchronous, so inject() is available up to the first await.
-			return await runInInjectionContext(targetInjector, () =>
+			return await runInInjectionContext(invocation.injector, () =>
 				refine.call(definition, context, setupResult),
 			);
 		},
@@ -467,15 +492,17 @@ export function createCommandFromDefinition<
 				currentInvocation && !currentInvocation.hasRun
 					? currentInvocation
 					: beginInvocation(context);
+			invocation.context = context;
 			invocation.hasRun = true;
 
 			const setupResult = await invocation.setup;
-			invocation.runResult = await runInInjectionContext(targetInjector, () =>
-				definition.run.call(definition, context, setupResult),
+			invocation.runResult = await runInInjectionContext(
+				invocation.injector,
+				() => definition.run.call(definition, context, setupResult),
 			);
 
 			if (definition.shortcuts) {
-				attachShortcuts(context, setupResult);
+				attachShortcuts(invocation, context, setupResult);
 			}
 		},
 	};

@@ -8,6 +8,7 @@ import {
 	InjectionToken,
 	runInInjectionContext,
 } from "../lib/common/di";
+import { COMMAND_CONTEXT } from "../lib/common/contracts/command-context";
 import {
 	COMMAND_OWNER,
 	CommandRegistry,
@@ -2272,6 +2273,76 @@ describe("defineCommand", () => {
 
 			assert.isTrue(injectFailed);
 			assert.strictEqual(late, 42);
+		});
+	});
+
+	describe("COMMAND_CONTEXT", () => {
+		it("resolves to the context the handlers of the same stage receive", async () => {
+			const testInjector = createTestInjector();
+			let injectedInSetup: any;
+			let injectedInRun: any;
+			let setupContext: any;
+			let runContext: any;
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context",
+					setup: (ctx) => {
+						setupContext = ctx;
+						injectedInSetup = inject(COMMAND_CONTEXT);
+					},
+					run: (ctx) => {
+						runContext = ctx;
+						injectedInRun = inject(COMMAND_CONTEXT);
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.strictEqual(injectedInSetup, setupContext);
+			assert.strictEqual(injectedInRun, runContext);
+		});
+
+		it("is scoped to the invocation, so the root injector never sees it", async () => {
+			const testInjector = createTestInjector();
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context-scope",
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.isNull(testInjector.get(COMMAND_CONTEXT, { optional: true }));
+			assert.throws(
+				() => testInjector.get(COMMAND_CONTEXT),
+				/unable to resolve/,
+			);
+		});
+
+		it("gives each invocation a context of its own", async () => {
+			const testInjector = createTestInjector();
+			const seen: any[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context-per-invocation",
+					setup: () => seen.push(inject(COMMAND_CONTEXT)),
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+			await command.execute([]);
+
+			assert.lengthOf(seen, 2);
+			assert.notStrictEqual(seen[0], seen[1]);
 		});
 	});
 
