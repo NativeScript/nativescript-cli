@@ -1189,13 +1189,13 @@ describe("defineCommand", () => {
 						...(extra.variadic ? [{ name: "rest", variadic: true }] : []),
 					],
 					run: (ctx) => {
-						extra.seen = ctx.arguments;
+						extra.seen = ctx.params;
 					},
 				}),
 				createTestInjector(),
 			);
 
-		it("maps arguments onto ctx.arguments strictly by position", async () => {
+		it("maps arguments onto ctx.params strictly by position", async () => {
 			const extra: any = {};
 			const command = platformCommand(extra);
 
@@ -1205,7 +1205,7 @@ describe("defineCommand", () => {
 			assert.deepEqual(extra.seen, { platform: "android", target: "device" });
 		});
 
-		it("leaves an unfilled optional argument off ctx.arguments", async () => {
+		it("leaves an unfilled optional argument off ctx.params", async () => {
 			const extra: any = {};
 			const command = platformCommand(extra);
 
@@ -1233,14 +1233,14 @@ describe("defineCommand", () => {
 			});
 		});
 
-		it("exposes an empty ctx.arguments when no specs are declared", async () => {
+		it("exposes an empty ctx.params when no specs are declared", async () => {
 			let seen: any;
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-noargspecs",
 					arguments: "any",
 					run: (ctx) => {
-						seen = ctx.arguments;
+						seen = ctx.params;
 					},
 				}),
 				createTestInjector(),
@@ -1404,7 +1404,7 @@ describe("defineCommand", () => {
 			await command.canExecute(["android"]);
 
 			assert.deepEqual(capturedContext.options, { force: true });
-			assert.deepEqual(capturedContext.arguments, { platform: "android" });
+			assert.deepEqual(capturedContext.params, { platform: "android" });
 		});
 
 		it("enforces the specs before consulting the definition canExecute", async () => {
@@ -1586,6 +1586,50 @@ describe("defineCommand", () => {
 			const viaExecute = build();
 			await viaExecute.execute([]);
 			assert.strictEqual(runs, 1);
+		});
+
+		it("runs again for the next invocation of the same command object", async () => {
+			let runs = 0;
+			const seen: number[] = [];
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-setup-per-invocation",
+					setup: async () => ++runs,
+					run: (ctx, attempt: number) => {
+						seen.push(attempt);
+					},
+				}),
+				createTestInjector(),
+			);
+
+			await command.canExecute([]);
+			await command.execute([]);
+			await command.canExecute([]);
+			await command.execute([]);
+
+			assert.strictEqual(runs, 2);
+			assert.deepEqual(seen, [1, 2]);
+		});
+
+		it("starts a new invocation for an execute with no canExecute of its own", async () => {
+			let runs = 0;
+			const seen: number[] = [];
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-setup-repeat-execute",
+					setup: async () => ++runs,
+					run: (ctx, attempt: number) => {
+						seen.push(attempt);
+					},
+				}),
+				createTestInjector(),
+			);
+
+			await command.execute([]);
+			await command.execute([]);
+
+			assert.strictEqual(runs, 2);
+			assert.deepEqual(seen, [1, 2]);
 		});
 
 		it("hands undefined through when no setup is declared", async () => {

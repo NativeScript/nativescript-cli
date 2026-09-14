@@ -98,6 +98,11 @@ class ErrorsNoFailStub implements IErrors {
 		return result;
 	}
 
+	async reportCommandError(
+		error: any,
+		printHelpCommand: () => Promise<void>,
+	): Promise<void> {}
+
 	executeAction(action: Function): any {
 		return action();
 	}

@@ -426,7 +426,7 @@ export class ExtensibilityService implements IExtensibilityService {
 					),
 			});
 
-			if (!result.registered) {
+			if (result.registered === false) {
 				this.$logger.warn(
 					`Extension ${extensionName} is unable to register command '${commandName}': ${describeRejection(
 						result.rejection,

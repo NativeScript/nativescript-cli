@@ -175,7 +175,9 @@ const warnOnCliOptionCollisions = (
  *
  * CommandsService calls canExecute, execute and postCommandAction as three
  * separate entry points into one invocation, which is why the setup result and
- * the run result are held here rather than passed between them.
+ * the run result are held on an invocation record here rather than passed
+ * between them. The command object is resolved once and cached for the process
+ * lifetime, so that record is replaced per invocation.
  */
 export function createCommandFromDefinition<
 	TSchema extends CommandOptionsSchema,
@@ -253,7 +255,7 @@ export function createCommandFromDefinition<
 
 		return {
 			args,
-			arguments: mapArguments(args),
+			params: mapArguments(args),
 			options,
 			injector: targetInjector,
 			fail,
@@ -325,27 +327,43 @@ export function createCommandFromDefinition<
 		}
 	};
 
-	// One invocation spans canExecute, execute and postCommandAction, which the
-	// CommandsService calls separately; setup must run for the first of them
-	// that happens and be reused by the rest.
-	let setupPromise: Promise<Awaited<TSetup>> = null;
-	const ensureSetup = (
+	// The state of one invocation. The command object itself is cached for the
+	// process, so nothing invocation-scoped may live outside one of these.
+	interface Invocation {
+		setup: Promise<Awaited<TSetup>>;
+		hasRun: boolean;
+		runResult?: Awaited<TResult>;
+	}
+
+	const startSetup = (
 		context: CommandContext<TSchema>,
-	): Promise<Awaited<TSetup>> => {
-		if (!setupPromise) {
-			setupPromise = definition.setup
-				? Promise.resolve(
-						runInInjectionContext(targetInjector, () =>
-							definition.setup.call(definition, context),
-						),
-					)
-				: Promise.resolve(<Awaited<TSetup>>undefined);
-		}
+	): Promise<Awaited<TSetup>> =>
+		// The executor runs synchronously, so setup keeps its injection context
+		// up to its first await, while a synchronous failure - ctx.fail() is one -
+		// rejects the promise instead of escaping into the caller.
+		new Promise<Awaited<TSetup>>((resolve) =>
+			resolve(
+				definition.setup
+					? <any>(
+							runInInjectionContext(targetInjector, () =>
+								definition.setup.call(definition, context),
+							)
+						)
+					: undefined,
+			),
+		);
 
-		return setupPromise;
+	// CommandsService calls canExecute, execute and postCommandAction as three
+	// separate entry points with nothing tying them together, so the boundary
+	// between invocations is inferred: canExecute always opens one, and execute
+	// opens one only when the current invocation has already run.
+	let currentInvocation: Invocation = null;
+
+	const beginInvocation = (context: CommandContext<TSchema>): Invocation => {
+		currentInvocation = { setup: startSetup(context), hasRun: false };
+
+		return currentInvocation;
 	};
-
-	let runResult: Awaited<TResult>;
 
 	return {
 		allowedParameters: [],
@@ -364,12 +382,13 @@ export function createCommandFromDefinition<
 			: {
 					postCommandAction: async (args: string[]): Promise<void> => {
 						const context = buildContext(args);
-						const setupResult = await ensureSetup(context);
+						const invocation = currentInvocation || beginInvocation(context);
+						const setupResult = await invocation.setup;
 						await runInInjectionContext(targetInjector, () =>
 							definition.postRun.call(
 								definition,
 								context,
-								runResult,
+								invocation.runResult,
 								setupResult,
 							),
 						);
@@ -382,7 +401,7 @@ export function createCommandFromDefinition<
 			// arguments - so an argument validator can rely on it, and a command
 			// run in the wrong place still reports that before complaining about
 			// arity.
-			const setupResult = await ensureSetup(context);
+			const setupResult = await beginInvocation(context).setup;
 
 			await enforceArguments(context);
 
@@ -399,8 +418,14 @@ export function createCommandFromDefinition<
 		},
 		execute: async (args: string[]): Promise<void> => {
 			const context = buildContext(args);
-			const setupResult = await ensureSetup(context);
-			runResult = await runInInjectionContext(targetInjector, () =>
+			const invocation =
+				currentInvocation && !currentInvocation.hasRun
+					? currentInvocation
+					: beginInvocation(context);
+			invocation.hasRun = true;
+
+			const setupResult = await invocation.setup;
+			invocation.runResult = await runInInjectionContext(targetInjector, () =>
 				definition.run.call(definition, context, setupResult),
 			);
 		},
@@ -438,12 +463,29 @@ const namesOf = (definition: DefinedCommand<any, any, any>): string[] =>
 	Array.isArray(definition.name) ? definition.name : [definition.name];
 
 /**
- * Where a registration lands: the injector serving the code that is running,
- * so an extension module loaded under a scope of its own registers into that
- * scope without naming it. Outside any context it is the CLI's own injector.
+ * The injector serving the code that is running, so an extension module loaded
+ * under a scope of its own registers into — and dispatches through — that scope
+ * without naming it. Outside any context it is the CLI's own injector.
  */
-const registrationTarget = (): Injector =>
+const contextInjector = (): Injector =>
 	getCurrentInjector() || <Injector>(<any>getRootInjector());
+
+/**
+ * Runs a registered command in the current process. The command gets what a
+ * typed command line gives it — its declared options primed with their
+ * defaults, the arguments policy, `canExecute`, hooks and `postRun` — and a
+ * failure throws instead of exiting, so a process that has to keep running
+ * (`ns start`, dispatching a key shortcut) can catch it.
+ */
+export async function runCommand(
+	name: string,
+	args: string[] = [],
+): Promise<void> {
+	const commandsService =
+		contextInjector().get<ICommandsService>("commandsService");
+
+	await commandsService.executeCommandInProcess(name, args);
+}
 
 /**
  * Registers a command with the CLI. Takes either the result of defineCommand()
@@ -472,7 +514,7 @@ export function registerCommand<
 	const defined = isCommandDefinition(definition)
 		? definition
 		: defineCommand(<CommandDefinition<TSchema, TResult, TSetup>>definition);
-	const target = registrationTarget();
+	const target = contextInjector();
 	const scope = providers.length ? target.createChild(providers) : target;
 	const owner = target.get(COMMAND_OWNER, { optional: true }) || CLI_OWNER;
 	const registry = target.get(CommandRegistry);
@@ -541,7 +583,7 @@ export function registerBuiltInCommand<
 	// The conditional name type cannot be narrowed while forwarding it.
 	const result = registerLazyCommand<TDefinition>(<any>name, load, providers);
 
-	if (!result.registered) {
+	if (result.registered === false) {
 		throw new Error(
 			`Unable to register command '${name}': ${describeRejection(
 				result.rejection,
@@ -560,7 +602,7 @@ export function registerLazyCommand<
 	providers: Provider[] = [],
 ): DeferredCommandResult {
 	const commandName = <string>(<any>name);
-	const target = registrationTarget();
+	const target = contextInjector();
 	const registry = target.get(CommandRegistry);
 
 	return registry.registerDeferredCommand(commandName, {

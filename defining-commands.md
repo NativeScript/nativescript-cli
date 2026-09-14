@@ -253,16 +253,16 @@ defineCommand({
 		{ name: "files", variadic: true },
 	],
 	async run(ctx) {
-		ctx.arguments.platform; // "android"
-		ctx.arguments.template; // "blank", or absent
-		ctx.arguments.files; // string[], possibly empty
+		ctx.params.platform; // "android"
+		ctx.params.template; // "blank", or absent
+		ctx.params.files; // string[], possibly empty
 	},
 });
 ```
 
 A spec accepts:
 
-- `name` — the key the value appears under on `ctx.arguments`, and the name
+- `name` — the key the value appears under on `ctx.params`, and the name
   messages use.
 - `required` — defaults to false. A required argument may not follow an
   optional one; positional matching would never be able to satisfy it.
@@ -288,11 +288,11 @@ and lets a mandatory parameter claim whichever argument happens to satisfy it �
 so `ns command b a` could satisfy `[a, b]`. Nothing in the CLI depends on that
 behaviour, and positional is what the declaration reads like.
 
-The practical consequence: `ctx.arguments.template` is `args[1]` whether or not
+The practical consequence: `ctx.params.template` is `args[1]` whether or not
 `args[1]` looks like a template. An argument that could be several things is a
 job for `validate` or for `canExecute`, not for the matcher.
 
-`ctx.arguments` is always present, even with `arguments: "none"` or `"any"` —
+`ctx.params` is always present, even with `arguments: "none"` or `"any"` —
 it is simply `{}` when no specs are declared. An optional non-variadic argument
 the command line did not reach is absent from it; a variadic one is always
 there, as an array.
@@ -334,8 +334,10 @@ The run context
 
 - `ctx.args` — `string[]`, the positional arguments left after the command name
   (including any subcommand segments) has been consumed.
-- `ctx.arguments` — the same arguments keyed by the names the `arguments` specs
-  declare, `{}` when there are none.
+- `ctx.params` — the same arguments keyed by the names the `arguments` specs
+  declare, `{}` when there are none. It is spelled `params` because
+  `arguments` is a reserved binding name in strict mode, so a destructuring
+  `const { args, arguments } = ctx` would not even parse.
 - `ctx.options` — the current value of each declared option, read at the moment
   the command executes.
 - `ctx.injector` — the injector this command was registered against; see
@@ -458,7 +460,7 @@ export default defineCommand({
 	name: "create",
 	arguments: [{ name: "appName", required: true }],
 	async run(ctx) {
-		const projectDir = await createProject(ctx.arguments.appName as string);
+		const projectDir = await createProject(ctx.params.appName as string);
 		return { projectDir };
 	},
 	postRun(ctx, { projectDir }) {
@@ -647,6 +649,71 @@ after the first `await` — and needs to know nothing else. The spread keeps the
 
 This replaces the class-inheritance pattern the legacy commands use, where a
 per-platform command subclasses a shared base to override one field.
+
+Running a command in process
+----------------------------
+
+`runCommand` dispatches a registered command from inside the process that is
+already running:
+
+```ts
+import { runCommand } from "../common/services/command-definition-adapter";
+
+await runCommand("open|ios");
+await runCommand("install", ["lodash"]);
+```
+
+The command gets what a typed command line gives it, in the same order: its
+declared options are primed into the parser — so `ctx.options` holds this
+command's values and its declared defaults rather than the outer command
+line's — then the `arguments` policy, then `canExecute`, then `run`,
+`postRun`, and the command's hooks.
+
+Two things differ, both because the caller is a process that has to keep
+running afterwards:
+
+- **A failure throws instead of exiting.** A failed command line ends in
+  `process.exit`. `runCommand` reports the failure the same way — the same
+  message formatting, the same `ns … --help` suggestion — and then throws, so
+  the caller decides what happens next.
+- **Analytics do not fire.** An in-process dispatch is not a new invocation of
+  the CLI, and the consent check can prompt on a terminal the caller has put
+  into raw mode. Hooks do fire: a project's `before-open-ios` hook is part of
+  what `open|ios` means, however the command was reached.
+
+The options service is put back the way it was found. Merging a command's
+declarations into it rewrites the values the host process is still running on
+— `open|ios` declares `watch: false`, which would otherwise leave an `ns start`
+out of watch mode for the rest of its life.
+
+Which injector it dispatches through follows the rule `registerCommand` does:
+the injector of the current injection context, and the CLI's own outside one.
+`runCommand` is a thin call onto `CommandsService.executeCommandInProcess`,
+where the pipeline itself lives.
+
+### Key shortcuts
+
+The interactive keys `ns start` and `ns run` offer are the CLI's own caller. A
+shortcut is a table entry with a `when` deciding whether the key is live, and
+an `action` that runs it:
+
+```ts
+{
+	key: "I",
+	description: "Open project in Xcode",
+	when: onPlatform("iOS"),
+	action: () => runCommand("open|ios"),
+}
+```
+
+The context an action receives carries state and nothing else — the platform
+being watched, whether this is `ns start` or an `ns run` child it spawned, and
+the injector. Capabilities are resolved from that injector rather than handed
+over as context methods:
+
+```ts
+action: (ctx) => ctx.injector.get<IStartService>("startService").runIOS(),
+```
 
 Relationship to `ICommand`
 --------------------------

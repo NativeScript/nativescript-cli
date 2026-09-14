@@ -67,15 +67,16 @@ export function describeRejection(rejection: DeferredCommandRejection): string {
 }
 
 /**
- * Outcome of a deferred registration. Callers branch on `rejection.reason`
- * rather than on message text; describeRejection renders it when the report
- * is for a human.
+ * Outcome of a deferred registration. Checking `registered` narrows the result,
+ * so a rejected one carries its rejection without an assertion — inside the CLI
+ * that check has to read `registered === false`, because the build leaves
+ * strictNullChecks off and truthiness alone does not narrow a literal
+ * discriminant there. Callers branch on `rejection.reason` rather than on
+ * message text; describeRejection renders it when the report is for a human.
  */
-export interface DeferredCommandResult {
-	registered: boolean;
-	/** Set exactly when `registered` is false. */
-	rejection?: DeferredCommandRejection;
-}
+export type DeferredCommandResult =
+	| { registered: true }
+	| { registered: false; rejection: DeferredCommandRejection };
 
 /**
  * The command-registry face of the injector facade. Transitional contract: it

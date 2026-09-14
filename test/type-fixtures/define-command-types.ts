@@ -86,7 +86,7 @@ defineCommand({
 	run: () => undefined,
 });
 
-// `arguments` accepts positional specs, and `ctx.arguments` keys the values by
+// `arguments` accepts positional specs, and `ctx.params` keys the values by
 // the declared names. The keys are not inferred from the spec array — the
 // value type is what the declaration pins.
 defineCommand({
@@ -96,9 +96,9 @@ defineCommand({
 		{ name: "extra", variadic: true },
 	],
 	run(ctx) {
-		expectExactType<IsExact<typeof ctx.arguments, CommandArgumentValues>>();
+		expectExactType<IsExact<typeof ctx.params, CommandArgumentValues>>();
 		expectExactType<
-			IsExact<(typeof ctx.arguments)["platform"], string | string[]>
+			IsExact<(typeof ctx.params)["platform"], string | string[]>
 		>();
 	},
 });

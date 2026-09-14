@@ -82,7 +82,7 @@ export interface CommandArgumentValues {
  * spec takes the first argument, and so on.
  */
 export interface ArgumentSpec<TSchema extends CommandOptionsSchema = {}> {
-	/** Key under which the value appears on `ctx.arguments`. */
+	/** Key under which the value appears on `ctx.params`. */
 	name: string;
 	/** Defaults to false. A required spec may not follow an optional one. */
 	required?: boolean;
@@ -110,7 +110,7 @@ export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
 	/** Positional arguments, after the command name has been consumed. */
 	args: string[];
 	/** The same arguments keyed by the names the `arguments` specs declare. */
-	arguments: CommandArgumentValues;
+	params: CommandArgumentValues;
 	/** Current value of every option declared in the schema, and nothing else. */
 	options: CommandOptionValues<TSchema>;
 	/**
@@ -386,7 +386,7 @@ const validateArgumentSpecs = (definition: any, specs: any[]): void => {
 		if (seen.indexOf(spec.name) !== -1) {
 			invalid(
 				definition,
-				`'arguments' declares '${spec.name}' twice; argument names key ctx.arguments and must be unique`,
+				`'arguments' declares '${spec.name}' twice; argument names key ctx.params and must be unique`,
 			);
 		}
 		seen.push(spec.name);
