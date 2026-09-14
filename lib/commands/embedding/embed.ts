@@ -7,7 +7,11 @@ import { IFileSystem } from "../../common/declarations";
 import { inject } from "../../common/di";
 import { canExecuteCommand } from "../../common/services/command-definition-adapter";
 import { platformArgument } from "../command-base";
-import { prepareCommandOptions, runPrepareCommand } from "../prepare";
+import {
+	prepareCommandDefinition,
+	prepareCommandOptions,
+	runPrepareCommand,
+} from "../prepare";
 
 function resolveHostProjectPath(
 	projectDir: string,
@@ -52,7 +56,12 @@ export class EmbedCommand extends Command({
 	public async canExecute(): Promise<boolean> {
 		// `prepare` takes the platform alone; the host project arguments are this
 		// command's own and it would reject them.
-		if (!(await canExecuteCommand("prepare", this.args.slice(0, 1)))) {
+		if (
+			!(await canExecuteCommand(
+				prepareCommandDefinition,
+				this.args.slice(0, 1),
+			))
+		) {
 			return false;
 		}
 

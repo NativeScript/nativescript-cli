@@ -6,6 +6,7 @@ import { Injector } from "../di/injector";
 import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { ICommand } from "../definitions/commands";
 import { COMMAND_CONTEXT } from "../contracts/command-context";
+import { CommandsService } from "../contracts/commands-service";
 import {
 	COMMAND_OWNER,
 	CommandRegistry,
@@ -29,6 +30,7 @@ import {
 	CommandOptionSpec,
 	CommandOptionType,
 	CommandOptionsSchema,
+	CommandReference,
 	DefinedCommand,
 	RegisterableCommand,
 	defineCommand,
@@ -403,10 +405,9 @@ export function createCommandFromDefinition<
 			return;
 		}
 
-		const commandsService = targetInjector.get<ICommandsService>(
-			"commandsService",
-			{ optional: true },
-		);
+		const commandsService = targetInjector.get(CommandsService, {
+			optional: true,
+		});
 		if (commandsService && commandsService.isExecutingInProcess) {
 			return;
 		}
@@ -543,40 +544,28 @@ const contextInjector = (): Injector =>
 	getCurrentInjector() || <Injector>(<any>getRootInjector());
 
 /**
- * Runs a registered command in the current process. The command gets what a
- * typed command line gives it — its declared options primed with their
- * defaults, the arguments policy, `canExecute`, hooks and `postRun` — and a
- * failure throws instead of exiting, so a process that has to keep running
- * (`ns start`, dispatching a key shortcut) can catch it.
+ * Convenience over `CommandsService.runCommand` for code that has no injected
+ * service at hand, such as a key shortcut action or an inline handler; the
+ * contract is the API, this only resolves it from the current context.
  */
 export async function runCommand(
-	name: string,
+	command: CommandReference,
 	args: string[] = [],
 ): Promise<void> {
-	const commandsService =
-		contextInjector().get<ICommandsService>("commandsService");
-
-	await commandsService.executeCommandInProcess(name, args);
+	await contextInjector().get(CommandsService).runCommand(command, args);
 }
 
 /**
- * Asks a registered command whether it could run on `args`, without running it.
- * The named command is resolved and its options primed exactly as `runCommand`
- * does, and its own `canExecute` returns the verdict.
- *
- * This is how one command reuses another's precondition — `embed` asking
- * whether `prepare` would run. The child resolves its own services, so nothing
- * crosses between the two but the name and the arguments; pass only the
- * arguments the child's own `arguments` policy accepts.
+ * Convenience over `CommandsService.canExecuteCommand`, resolved from the
+ * current context the way `runCommand` is.
  */
 export async function canExecuteCommand(
-	name: string,
+	command: CommandReference,
 	args: string[] = [],
 ): Promise<boolean> {
-	const commandsService =
-		contextInjector().get<ICommandsService>("commandsService");
-
-	return commandsService.canExecuteCommandInProcess(name, args);
+	return contextInjector()
+		.get(CommandsService)
+		.canExecuteCommand(command, args);
 }
 
 /**

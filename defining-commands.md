@@ -824,12 +824,20 @@ per-platform command subclasses a shared base to override one field.
 Running a command in process
 ----------------------------
 
-`runCommand` dispatches a registered command from inside the process that is
-already running:
+The `CommandsService` contract dispatches a registered command from inside the
+process that is already running. A class command injects it like any other
+service; an inline handler or a key shortcut may use the `runCommand`
+convenience, which only resolves the contract from the current context:
 
 ```ts
+import { CommandsService } from "../common/contracts/commands-service";
 import { runCommand } from "../common/services/command-definition-adapter";
 
+// in a class command
+private $commandsService = inject(CommandsService);
+await this.$commandsService.runCommand("autocomplete");
+
+// in an inline handler or a shortcut action
 await runCommand("open|ios");
 await runCommand("install", ["lodash"]);
 ```
@@ -857,14 +865,20 @@ declarations into it rewrites the values the host process is still running on
 — `open|ios` declares `watch: false`, which would otherwise leave an `ns start`
 out of watch mode for the rest of its life.
 
-Which injector it dispatches through follows the rule `registerCommand` does:
-the injector of the current injection context, and the CLI's own outside one.
-`runCommand` is a thin call onto `CommandsService.executeCommandInProcess`,
-where the pipeline itself lives.
+Which injector `runCommand` dispatches through follows the rule
+`registerCommand` does: the injector of the current injection context, and the
+CLI's own outside one. The pipeline itself lives on the contract, so a plugin
+that holds an injector can call `CommandsService.runCommand` directly.
 
 ### Asking another command
 
-`canExecuteCommand(name, args)` asks a registered command whether it *could*
+Both methods take the command's registered name, or — the typed way — the
+definition or `Command()` class it was registered from, whose first name is
+used: `runCommand(prepareCommandDefinition)` cannot go stale the way a string
+can.
+
+`CommandsService.canExecuteCommand(command, args)` — or the
+`canExecuteCommand` convenience — asks a registered command whether it *could*
 run, without running it:
 
 ```ts

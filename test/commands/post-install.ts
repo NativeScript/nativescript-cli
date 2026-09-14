@@ -17,7 +17,7 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("staticConfig", {});
 
 	testInjector.register("commandsService", {
-		tryExecuteCommand: async (
+		runCommand: async (
 			commandName: string,
 			commandArguments: string[],
 		): Promise<void> => undefined,
@@ -85,7 +85,7 @@ describe("post-install command", () => {
 		const commandsService =
 			testInjector.resolve<ICommandsService>("commandsService");
 		let isTryExecuteCommandCalled = false;
-		commandsService.tryExecuteCommand = async (): Promise<void> => {
+		commandsService.runCommand = async (): Promise<void> => {
 			isTryExecuteCommandCalled = true;
 		};
 
@@ -110,7 +110,7 @@ describe("post-install command", () => {
 		assert.equal(
 			isTryExecuteCommandCalled,
 			opts.shouldCallMethod,
-			`post-install-cli command must ${hasNotInMsg} call commandsService.tryExecuteCommand`,
+			`post-install-cli command must ${hasNotInMsg} call commandsService.runCommand`,
 		);
 	};
 

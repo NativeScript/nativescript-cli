@@ -91,6 +91,9 @@ export type {
 // Promoted from the internal contracts index: the class form reads it in a
 // field initializer, and a per-command provider is written against it.
 export { COMMAND_CONTEXT } from "../common/contracts/command-context";
+// The in-process dispatcher a command or plugin runs or consults other
+// commands through.
+export { CommandsService } from "../common/contracts/commands-service";
 export { defineHook, isHookDefinition } from "../common/define-hook";
 export type {
 	HookContext,

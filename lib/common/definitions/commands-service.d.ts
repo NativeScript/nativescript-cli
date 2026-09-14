@@ -19,14 +19,24 @@ interface ICommandsService {
 	 * Runs a command inside the running process, throwing on failure rather
 	 * than exiting, so a long-lived host survives it.
 	 */
-	executeCommandInProcess(
-		commandName: string,
+	runCommand(
+		command: import("../define-command").CommandReference,
 		commandArguments?: string[],
 	): Promise<void>;
 	/**
 	 * Asks a command whether it could run, without running it. The command
 	 * builds its own setup from its own services.
 	 */
+	canExecuteCommand(
+		command: import("../define-command").CommandReference,
+		commandArguments?: string[],
+	): Promise<boolean>;
+	/** @deprecated Use `runCommand`. */
+	executeCommandInProcess(
+		commandName: string,
+		commandArguments?: string[],
+	): Promise<void>;
+	/** @deprecated Use `canExecuteCommand`. */
 	canExecuteCommandInProcess(
 		commandName: string,
 		commandArguments?: string[],

@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import { EventEmitter } from "events";
 import { RunOnDeviceEvents } from "../../lib/constants";
+import { getContractName } from "../../lib/common/di/contract";
 import { runInInjectionContext } from "../../lib/common/di/inject";
 import { Injector } from "../../lib/common/di/injector";
 import { runCommand } from "../../lib/common/services/command-definition-adapter";
@@ -41,8 +42,10 @@ class FakeStdin extends EventEmitter {
 
 const fakeInjector = (
 	registrations: Map<any, any> = new Map<any, any>(),
-): Injector =>
-	<Injector>(<any>{ get: (token: any) => registrations.get(token) });
+): Injector => <Injector>(<any>{
+		get: (token: any) =>
+			registrations.get(token) ?? registrations.get(getContractName(token)),
+	});
 
 const baseContext = (): KeyContextBase => ({ injector: fakeInjector() });
 
@@ -217,7 +220,7 @@ describe("key shortcuts", () => {
 					[
 						"commandsService",
 						{
-							executeCommandInProcess: async (name: string): Promise<void> =>
+							runCommand: async (name: string): Promise<void> =>
 								void invoked.push(name),
 						},
 					],
@@ -958,10 +961,8 @@ describe("key shortcuts", () => {
 					[
 						"commandsService",
 						{
-							executeCommandInProcess: async (
-								name: string,
-								args: string[],
-							): Promise<void> => void dispatched.push({ name, args }),
+							runCommand: async (name: string, args: string[]): Promise<void> =>
+								void dispatched.push({ name, args }),
 						},
 					],
 				]),
@@ -984,7 +985,7 @@ describe("key shortcuts", () => {
 					[
 						"commandsService",
 						{
-							executeCommandInProcess: async (): Promise<void> => {
+							runCommand: async (): Promise<void> => {
 								throw new Error("Unable to execute command 'open ios'.");
 							},
 						},

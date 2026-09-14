@@ -10,6 +10,8 @@ import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 import { IGoogleAnalyticsPageviewData } from "../definitions/google-analytics";
+import { CommandsService as CommandsServiceContract } from "../contracts/commands-service";
+import { CommandReference, commandNameOf } from "../define-command";
 import {
 	ICommandParameter,
 	ICommand,
@@ -27,7 +29,10 @@ class CommandArgumentsValidationHelper {
 	public remainingArguments: string[];
 }
 
-export class CommandsService implements ICommandsService {
+export class CommandsService
+	extends CommandsServiceContract
+	implements ICommandsService
+{
 	public get currentCommandData(): ICommandData {
 		return _.last(this.commands);
 	}
@@ -48,7 +53,9 @@ export class CommandsService implements ICommandsService {
 		private $staticConfig: Config.IStaticConfig,
 		private $extensibilityService: IExtensibilityService,
 		private $optionsTracker: IOptionsTracker,
-	) {}
+	) {
+		super();
+	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
 		const commands = this.$injector.getRegisteredCommandsNames(
@@ -191,7 +198,7 @@ export class CommandsService implements ICommandsService {
 			);
 		}
 
-		return this.canExecuteCommand(commandName, commandArguments);
+		return this.canExecuteResolvedCommand(commandName, commandArguments);
 	}
 
 	public async tryExecuteCommand(
@@ -239,10 +246,11 @@ export class CommandsService implements ICommandsService {
 	 * Analytics stay out of it: this is not a new CLI invocation, and
 	 * `checkConsent` may prompt on a terminal the caller has put in raw mode.
 	 */
-	public async executeCommandInProcess(
-		commandName: string,
+	public async runCommand(
+		command: CommandReference,
 		commandArguments: string[] = [],
 	): Promise<void> {
+		const commandName = commandNameOf(command);
 		this.inProcessDepth++;
 		try {
 			const command = this.$injector.resolveCommand(commandName);
@@ -255,7 +263,9 @@ export class CommandsService implements ICommandsService {
 			this.commands.push({ commandName, commandArguments });
 			const restoreOptions = this.primeOptions(command);
 			try {
-				if (!(await this.canExecuteCommand(commandName, commandArguments))) {
+				if (
+					!(await this.canExecuteResolvedCommand(commandName, commandArguments))
+				) {
 					let commandWithArgs = commandName;
 					if (commandArguments && commandArguments.length) {
 						commandWithArgs += ` ${commandArguments.join(" ")}`;
@@ -284,16 +294,17 @@ export class CommandsService implements ICommandsService {
 	}
 
 	/**
-	 * The `canExecute` half of {@link executeCommandInProcess}: the named command
-	 * is resolved and its options are primed the same way, and its own
-	 * `canExecute` returns the verdict. The child builds its own setup from its
-	 * own services — nothing is threaded in from the caller — which is what lets
-	 * one command reuse another's precondition without importing its handlers.
+	 * The `canExecute` half of {@link runCommand}: the named command is resolved
+	 * and its options are primed the same way, and its own `canExecute` returns
+	 * the verdict. The child builds its own setup from its own services —
+	 * nothing is threaded in from the caller — which is what lets one command
+	 * reuse another's precondition without importing its handlers.
 	 */
-	public async canExecuteCommandInProcess(
-		commandName: string,
+	public async canExecuteCommand(
+		command: CommandReference,
 		commandArguments: string[] = [],
 	): Promise<boolean> {
+		const commandName = commandNameOf(command);
 		this.inProcessDepth++;
 		try {
 			const command = this.$injector.resolveCommand(commandName);
@@ -306,7 +317,10 @@ export class CommandsService implements ICommandsService {
 			this.commands.push({ commandName, commandArguments });
 			const restoreOptions = this.primeOptions(command);
 			try {
-				return await this.canExecuteCommand(commandName, commandArguments);
+				return await this.canExecuteResolvedCommand(
+					commandName,
+					commandArguments,
+				);
 			} finally {
 				restoreOptions();
 				this.commands.pop();
@@ -314,6 +328,22 @@ export class CommandsService implements ICommandsService {
 		} finally {
 			this.inProcessDepth--;
 		}
+	}
+
+	/** @deprecated Use {@link runCommand}. */
+	public executeCommandInProcess(
+		commandName: string,
+		commandArguments: string[] = [],
+	): Promise<void> {
+		return this.runCommand(commandName, commandArguments);
+	}
+
+	/** @deprecated Use {@link canExecuteCommand}. */
+	public canExecuteCommandInProcess(
+		commandName: string,
+		commandArguments: string[] = [],
+	): Promise<boolean> {
+		return this.canExecuteCommand(commandName, commandArguments);
 	}
 
 	/**
@@ -341,7 +371,7 @@ export class CommandsService implements ICommandsService {
 		};
 	}
 
-	private async canExecuteCommand(
+	private async canExecuteResolvedCommand(
 		commandName: string,
 		commandArguments: string[],
 		isDynamicCommand?: boolean,

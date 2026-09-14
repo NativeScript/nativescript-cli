@@ -14,6 +14,7 @@ import {
 	CommandRegistry,
 	DeferredCommandResult,
 } from "../lib/common/contracts/command-registry";
+import { CommandsService as CommandsServiceContract } from "../lib/common/contracts/commands-service";
 import { CommandsService } from "../lib/common/services/commands-service";
 import { Options } from "../lib/options";
 import { Errors } from "../lib/common/errors";
@@ -1403,6 +1404,72 @@ describe("defineCommand", () => {
 
 			assert.deepEqual(verdicts, [true, false]);
 			assert.isFalse(ran);
+		});
+
+		it("is the CommandsService contract's method, resolved by the registered name", async () => {
+			const testInjector = createInProcessInjector();
+			let ran = false;
+
+			runInInjectionContext(testInjector, () => {
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-contract",
+						arguments: "any",
+						canExecute: (context) => context.args[0] === "ok",
+						run: () => {
+							ran = true;
+						},
+					}),
+				);
+			});
+
+			const service = testInjector.get(CommandsServiceContract);
+			assert.instanceOf(service, <any>CommandsServiceContract);
+			assert.isTrue(
+				await service.canExecuteCommand("dctest-can-contract", ["ok"]),
+			);
+			assert.isFalse(ran);
+
+			await service.runCommand("dctest-can-contract", ["ok"]);
+			assert.isTrue(ran);
+		});
+
+		it("takes the definition or class in place of the name", async () => {
+			const testInjector = createInProcessInjector();
+			const runs: string[] = [];
+			const definition = defineCommand({
+				name: ["dctest-ref-primary", "dctest-ref-alias"],
+				arguments: "any",
+				canExecute: (context) => context.args[0] === "ok",
+				run: () => {
+					runs.push("definition");
+				},
+			});
+			class RefCommand extends Command({
+				name: "dctest-ref-class",
+				arguments: "any",
+			}) {
+				run(): void {
+					runs.push("class");
+				}
+			}
+
+			runInInjectionContext(testInjector, () => {
+				registerCommand(definition);
+				registerCommand(RefCommand);
+			});
+			const service = testInjector.get(CommandsServiceContract);
+
+			assert.isTrue(await service.canExecuteCommand(definition, ["ok"]));
+			assert.isFalse(await service.canExecuteCommand(definition, ["no"]));
+			await service.runCommand(definition, ["ok"]);
+			await service.runCommand(RefCommand);
+			assert.deepEqual(runs, ["definition", "class"]);
+
+			await assert.isRejected(
+				service.runCommand(<any>{ name: "not-a-definition" }),
+				/neither a command name/,
+			);
 		});
 
 		it("enforces the child's arguments policy before its canExecute", async () => {

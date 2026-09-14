@@ -6,6 +6,7 @@ import {
 	IHostInfo,
 	ISettingsService,
 } from "../common/declarations";
+import { CommandsService } from "../common/contracts/commands-service";
 import { Command } from "../common/define-command";
 import { inject } from "../common/di";
 import { doesCurrentNpmCommandMatch } from "../common/helpers";
@@ -16,7 +17,7 @@ export class PostInstallCliCommand extends Command({
 	disableAnalytics: true,
 }) {
 	private $fs = inject<IFileSystem>("fs");
-	private $commandsService = inject<ICommandsService>("commandsService");
+	private $commandsService = inject(CommandsService);
 	private $helpService = inject<IHelpService>("helpService");
 	private $settingsService = inject<ISettingsService>("settingsService");
 	private $analyticsService = inject<IAnalyticsService>("analyticsService");
@@ -47,7 +48,7 @@ export class PostInstallCliCommand extends Command({
 
 			// Explicitly ask for confirmation of usage-reporting:
 			await this.$analyticsService.checkConsent();
-			await this.$commandsService.tryExecuteCommand("autocomplete", []);
+			await this.$commandsService.runCommand("autocomplete");
 		}
 	}
 
