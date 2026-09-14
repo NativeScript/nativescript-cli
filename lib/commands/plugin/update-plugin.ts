@@ -2,74 +2,55 @@ import * as _ from "lodash";
 import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
 import { IErrors } from "../../common/declarations";
-import { CommandContext, defineCommand } from "../../common/define-command";
+import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-
-export function setupUpdatePluginCommand() {
-	const services = {
-		$pluginsService: inject<IPluginsService>("pluginsService"),
-		$projectData: inject<IProjectData>("projectData"),
-		$errors: inject<IErrors>("errors"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IUpdatePluginCommandServices = ReturnType<
-	typeof setupUpdatePluginCommand
->;
-
-export async function canExecuteUpdatePluginCommand(
-	context: CommandContext,
-	services: IUpdatePluginCommandServices,
-): Promise<boolean> {
-	const args = context.args;
-	if (!args || args.length === 0) {
-		return true;
-	}
-
-	const installedPlugins =
-		await services.$pluginsService.getAllInstalledPlugins(
-			services.$projectData,
-		);
-	const installedPluginNames: string[] = installedPlugins.map((pl) => pl.name);
-
-	const pluginName = args[0].toLowerCase();
-	if (
-		!_.some(installedPluginNames, (name) => name.toLowerCase() === pluginName)
-	) {
-		services.$errors.fail(`Plugin "${pluginName}" is not installed.`);
-	}
-
-	return true;
-}
-
-export async function runUpdatePluginCommand(
-	context: CommandContext,
-	services: IUpdatePluginCommandServices,
-): Promise<void> {
-	let pluginNames = context.args;
-
-	if (!pluginNames || context.args.length === 0) {
-		const installedPlugins =
-			await services.$pluginsService.getAllInstalledPlugins(
-				services.$projectData,
-			);
-		pluginNames = installedPlugins.map((p) => p.name);
-	}
-
-	for (const pluginName of pluginNames) {
-		await services.$pluginsService.remove(pluginName, services.$projectData);
-		await services.$pluginsService.add(pluginName, services.$projectData);
-	}
-}
 
 export const updatePluginCommandDefinition = defineCommand({
 	name: "plugin|update",
 	description: "Uninstalls and installs the specified plugin(s).",
 	arguments: "any",
-	setup: setupUpdatePluginCommand,
-	canExecute: canExecuteUpdatePluginCommand,
-	run: runUpdatePluginCommand,
+	async canExecute(context): Promise<boolean> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		const $errors = inject<IErrors>("errors");
+		$projectData.initializeProjectData();
+
+		const args = context.args;
+		if (!args || args.length === 0) {
+			return true;
+		}
+
+		const installedPlugins =
+			await $pluginsService.getAllInstalledPlugins($projectData);
+		const installedPluginNames: string[] = installedPlugins.map(
+			(pl) => pl.name,
+		);
+
+		const pluginName = args[0].toLowerCase();
+		if (
+			!_.some(installedPluginNames, (name) => name.toLowerCase() === pluginName)
+		) {
+			$errors.fail(`Plugin "${pluginName}" is not installed.`);
+		}
+
+		return true;
+	},
+	async run(context): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
+
+		let pluginNames = context.args;
+
+		if (!pluginNames || context.args.length === 0) {
+			const installedPlugins =
+				await $pluginsService.getAllInstalledPlugins($projectData);
+			pluginNames = installedPlugins.map((p) => p.name);
+		}
+
+		for (const pluginName of pluginNames) {
+			await $pluginsService.remove(pluginName, $projectData);
+			await $pluginsService.add(pluginName, $projectData);
+		}
+	},
 });

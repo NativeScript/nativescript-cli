@@ -17,24 +17,6 @@ import { IExtensibilityService } from "../definitions/extensibility";
 // disabled for now (6/24/2020)
 // const FEEDBACK_FORM_URL = "https://www.nativescript.org/uninstall-feedback";
 
-export function setupPreUninstallCommand() {
-	return {
-		$analyticsService: inject<IAnalyticsService>("analyticsService"),
-		$extensibilityService: inject<IExtensibilityService>(
-			"extensibilityService",
-		),
-		$fs: inject<IFileSystem>("fs"),
-		$packageInstallationManager: inject<IPackageInstallationManager>(
-			"packageInstallationManager",
-		),
-		$settingsService: inject<ISettingsService>("settingsService"),
-	};
-}
-
-export type IPreUninstallCommandServices = ReturnType<
-	typeof setupPreUninstallCommand
->;
-
 async function handleFeedbackForm(): Promise<void> {
 	// disabled for now (6/24/2020)
 	// if (isInteractive()) {
@@ -44,10 +26,11 @@ async function handleFeedbackForm(): Promise<void> {
 }
 
 async function handleIntentionalUninstall(
-	services: IPreUninstallCommandServices,
+	$extensibilityService: IExtensibilityService,
+	$packageInstallationManager: IPackageInstallationManager,
 ): Promise<void> {
-	services.$extensibilityService.removeAllExtensions();
-	services.$packageInstallationManager.clearInspectorCache();
+	$extensibilityService.removeAllExtensions();
+	$packageInstallationManager.clearInspectorCache();
 	await handleFeedbackForm();
 }
 
@@ -55,8 +38,17 @@ export const preUninstallCommandDefinition = defineCommand({
 	name: "dev-preuninstall",
 	description: "Runs the CLI's own uninstall bookkeeping.",
 	arguments: "none",
-	setup: setupPreUninstallCommand,
-	async run(context, services): Promise<void> {
+	async run(): Promise<void> {
+		const $analyticsService = inject<IAnalyticsService>("analyticsService");
+		const $extensibilityService = inject<IExtensibilityService>(
+			"extensibilityService",
+		);
+		const $fs = inject<IFileSystem>("fs");
+		const $packageInstallationManager = inject<IPackageInstallationManager>(
+			"packageInstallationManager",
+		);
+		const $settingsService = inject<ISettingsService>("settingsService");
+
 		const isIntentionalUninstall = doesCurrentNpmCommandMatch([
 			/^uninstall$/,
 			/^remove$/,
@@ -66,22 +58,21 @@ export const preUninstallCommandDefinition = defineCommand({
 			/^unlink$/,
 		]);
 
-		await services.$analyticsService.trackEventActionInGoogleAnalytics({
+		await $analyticsService.trackEventActionInGoogleAnalytics({
 			action: TrackActionNames.UninstallCLI,
 			additionalData: `isIntentionalUninstall${AnalyticsEventLabelDelimiter}${isIntentionalUninstall}${AnalyticsEventLabelDelimiter}isInteractive${AnalyticsEventLabelDelimiter}${!!isInteractive()}`,
 		});
 
 		if (isIntentionalUninstall) {
-			await handleIntentionalUninstall(services);
+			await handleIntentionalUninstall(
+				$extensibilityService,
+				$packageInstallationManager,
+			);
 		}
 
-		services.$fs.deleteFile(
-			path.join(
-				services.$settingsService.getProfileDir(),
-				"KillSwitches",
-				"cli",
-			),
+		$fs.deleteFile(
+			path.join($settingsService.getProfileDir(), "KillSwitches", "cli"),
 		);
-		await services.$analyticsService.finishTracking();
+		await $analyticsService.finishTracking();
 	},
 });

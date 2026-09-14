@@ -2,7 +2,11 @@ import * as fs from "fs";
 import { EOL } from "os";
 import * as path from "path";
 import { IErrors } from "../common/declarations";
-import { CommandName, defineCommand } from "../common/define-command";
+import {
+	CommandContext,
+	CommandName,
+	defineCommand,
+} from "../common/define-command";
 import { inject } from "../common/di";
 import { capitalizeFirstLetter } from "../common/utils";
 import { IProjectData } from "../definitions/project";
@@ -14,38 +18,19 @@ import { IProjectData } from "../definitions/project";
  */
 type NativeAddLanguage = "java" | "kotlin" | "swift" | "objective-c";
 
-interface INativeAddLanguageCommandServices extends INativeAddCommandServices {
-	language: NativeAddLanguage;
-}
-
-export function setupNativeAddCommand() {
-	const services = {
-		$projectData: inject<IProjectData>("projectData"),
-		$logger: inject<ILogger>("logger"),
-		$errors: inject<IErrors>("errors"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type INativeAddCommandServices = ReturnType<
-	typeof setupNativeAddCommand
->;
-
-function failWithUsage(services: INativeAddCommandServices): void {
-	services.$errors.failWithHelp(
+function failWithUsage($errors: IErrors): void {
+	$errors.failWithHelp(
 		"Usage: ns native add [swift|objective-c|java|kotlin] [class name]",
 	);
 }
 
-function getIosSourcePathBase(services: INativeAddCommandServices): string {
-	const resources = services.$projectData.getAppResourcesDirectoryPath();
+function getIosSourcePathBase($projectData: IProjectData): string {
+	const resources = $projectData.getAppResourcesDirectoryPath();
 	return path.join(resources, "iOS", "src");
 }
 
-function getAndroidSourcePathBase(services: INativeAddCommandServices): string {
-	const resources = services.$projectData.getAppResourcesDirectoryPath();
+function getAndroidSourcePathBase($projectData: IProjectData): string {
+	const resources = $projectData.getAppResourcesDirectoryPath();
 	return path.join(resources, "Android", "src", "main", "java");
 }
 
@@ -102,10 +87,11 @@ class ${classSimpleName} {
 	);
 }
 
-function checkAndUpdateGradleProperties(
-	services: INativeAddCommandServices,
-): boolean {
-	const resources = services.$projectData.getAppResourcesDirectoryPath();
+function checkAndUpdateGradleProperties(ctx: CommandContext): boolean {
+	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const $logger = ctx.injector.get<ILogger>("logger");
+	const $errors = ctx.injector.get<IErrors>("errors");
+	const resources = $projectData.getAppResourcesDirectoryPath();
 
 	const filePath = path.join(resources, "Android", "gradle.properties");
 
@@ -118,7 +104,7 @@ function checkAndUpdateGradleProperties(
 			const useKotlin = match[1];
 
 			if (useKotlin === "false") {
-				services.$errors.failWithHelp(
+				$errors.failWithHelp(
 					"The useKotlin property is set to false. Stopping processing. Kotlin must be enabled in gradle.properties to use.",
 				);
 				return false;
@@ -129,41 +115,38 @@ function checkAndUpdateGradleProperties(
 			}
 		} else {
 			fs.appendFileSync(filePath, `${EOL}useKotlin=true${EOL}`);
-			services.$logger.info(
-				'Added "useKotlin=true" property to gradle.properties.',
-			);
+			$logger.info('Added "useKotlin=true" property to gradle.properties.');
 		}
 	} else {
 		fs.writeFileSync(filePath, `useKotlin=true${EOL}`);
-		services.$logger.info(
-			'Created gradle.properties with "useKotlin=true" property.',
-		);
+		$logger.info('Created gradle.properties with "useKotlin=true" property.');
 	}
 	return true;
 }
 
-export function generateJavaKotlin(
-	services: INativeAddCommandServices,
+function generateJavaKotlin(
+	ctx: CommandContext,
 	className: string,
 	extension: string,
 ): void {
+	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const $logger = ctx.injector.get<ILogger>("logger");
+	const $errors = ctx.injector.get<IErrors>("errors");
 	const fileExt = extension == "java" ? extension : "kt";
 	const packageName = getPackageName(className);
 	const classSimpleName = getClassSimpleName(className);
 	const packagePath = path.join(
-		getAndroidSourcePathBase(services),
+		getAndroidSourcePathBase($projectData),
 		...packageName.split("."),
 	);
 	const filePath = path.join(packagePath, `${classSimpleName}.${fileExt}`);
 
 	if (fs.existsSync(filePath)) {
-		services.$errors.failWithHelp(
-			`${extension} file '${filePath}' already exists.`,
-		);
+		$errors.failWithHelp(`${extension} file '${filePath}' already exists.`);
 		return;
 	}
 
-	if (extension == "kotlin" && !checkAndUpdateGradleProperties(services)) {
+	if (extension == "kotlin" && !checkAndUpdateGradleProperties(ctx)) {
 		return;
 	}
 
@@ -174,7 +157,7 @@ export function generateJavaKotlin(
 
 	fs.mkdirSync(packagePath, { recursive: true });
 	fs.writeFileSync(filePath, fileContent);
-	services.$logger.info(
+	$logger.info(
 		`${capitalizeFirstLetter(
 			extension,
 		)} file '${filePath}' generated successfully.`,
@@ -182,7 +165,7 @@ export function generateJavaKotlin(
 }
 
 function generateOrUpdateModuleMap(
-	services: INativeAddCommandServices,
+	$logger: ILogger,
 	headerFileName: string,
 	moduleMapPath: string,
 ): void {
@@ -201,7 +184,7 @@ function generateOrUpdateModuleMap(
 		// Module declaration already exists in the module map
 		if (moduleMapContent.includes(headerDeclaration)) {
 			// Header is already present in the module map
-			services.$logger.warn(
+			$logger.warn(
 				`Header '${headerFileName}' is already added to the module map.`,
 			);
 			return;
@@ -221,28 +204,27 @@ function generateOrUpdateModuleMap(
 		fs.writeFileSync(moduleMapPath, moduleMapContent);
 	}
 
-	services.$logger.info(
+	$logger.info(
 		`Module map '${moduleMapPath}' has been updated with the header '${headerFileName}'.`,
 	);
 }
 
 function generateObjectiveCFiles(
-	services: INativeAddCommandServices,
+	ctx: CommandContext,
 	className: string,
 	classFilePath: string,
 	interfaceFilePath: string,
 ): boolean {
+	const $logger = ctx.injector.get<ILogger>("logger");
+	const $errors = ctx.injector.get<IErrors>("errors");
+
 	if (fs.existsSync(classFilePath)) {
-		services.$errors.failWithHelp(
-			`Error: File '${classFilePath}' already exists.`,
-		);
+		$errors.failWithHelp(`Error: File '${classFilePath}' already exists.`);
 		return false;
 	}
 
 	if (fs.existsSync(interfaceFilePath)) {
-		services.$errors.failWithHelp(
-			`Error: File '${interfaceFilePath}' already exists.`,
-		);
+		$errors.failWithHelp(`Error: File '${interfaceFilePath}' already exists.`);
 		return false;
 	}
 
@@ -267,32 +249,29 @@ function generateObjectiveCFiles(
 `;
 
 	fs.writeFileSync(classFilePath, classContent);
-	services.$logger.trace(
+	$logger.trace(
 		`Objective-C class file '${classFilePath}' generated successfully.`,
 	);
 
 	fs.writeFileSync(interfaceFilePath, interfaceContent);
-	services.$logger.trace(
+	$logger.trace(
 		`Objective-C interface file '${interfaceFilePath}' generated successfully.`,
 	);
 	return true;
 }
 
-export function generateObjectiveC(
-	services: INativeAddCommandServices,
-	className: string,
-): void {
-	const iosSourceBase = getIosSourcePathBase(services);
+function generateObjectiveC(ctx: CommandContext, className: string): void {
+	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const $logger = ctx.injector.get<ILogger>("logger");
+	const iosSourceBase = getIosSourcePathBase($projectData);
 
 	const classFilePath = path.join(iosSourceBase, `${className}.m`);
 	const headerFilePath = path.join(iosSourceBase, `${className}.h`);
 
-	if (
-		generateObjectiveCFiles(services, className, classFilePath, headerFilePath)
-	) {
+	if (generateObjectiveCFiles(ctx, className, classFilePath, headerFilePath)) {
 		// Modify/Generate moduleMap
 		generateOrUpdateModuleMap(
-			services,
+			$logger,
 			`${className}.h`,
 			path.join(iosSourceBase, "module.modulemap"),
 		);
@@ -300,19 +279,21 @@ export function generateObjectiveC(
 }
 
 function generateSwiftFile(
-	services: INativeAddCommandServices,
+	ctx: CommandContext,
 	className: string,
 	filePath: string,
 ): void {
+	const $logger = ctx.injector.get<ILogger>("logger");
+	const $errors = ctx.injector.get<IErrors>("errors");
 	const directory = path.dirname(filePath);
 
 	if (!fs.existsSync(directory)) {
 		fs.mkdirSync(directory, { recursive: true });
-		services.$logger.trace(`Created directory: '${directory}'.`);
+		$logger.trace(`Created directory: '${directory}'.`);
 	}
 
 	if (fs.existsSync(filePath)) {
-		services.$errors.failWithHelp(`Error: File '${filePath}' already exists.`);
+		$errors.failWithHelp(`Error: File '${filePath}' already exists.`);
 		return;
 	}
 
@@ -326,26 +307,22 @@ import os;
 }`;
 
 	fs.writeFileSync(filePath, content);
-	services.$logger.info(`Swift file '${filePath}' generated successfully.`);
+	$logger.info(`Swift file '${filePath}' generated successfully.`);
 }
 
-export function generateSwift(
-	services: INativeAddCommandServices,
-	className: string,
-): void {
-	const iosSourceBase = getIosSourcePathBase(services);
+function generateSwift(ctx: CommandContext, className: string): void {
+	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const iosSourceBase = getIosSourcePathBase($projectData);
 	const swiftFilePath = path.join(iosSourceBase, `${className}.swift`);
-	generateSwiftFile(services, className, swiftFilePath);
+	generateSwiftFile(ctx, className, swiftFilePath);
 }
 
 const generators: Record<
 	NativeAddLanguage,
-	(services: INativeAddCommandServices, className: string) => void
+	(ctx: CommandContext, className: string) => void
 > = {
-	java: (services, className) =>
-		generateJavaKotlin(services, className, "java"),
-	kotlin: (services, className) =>
-		generateJavaKotlin(services, className, "kotlin"),
+	java: (ctx, className) => generateJavaKotlin(ctx, className, "java"),
+	kotlin: (ctx, className) => generateJavaKotlin(ctx, className, "kotlin"),
 	swift: generateSwift,
 	"objective-c": generateObjectiveC,
 };
@@ -355,13 +332,15 @@ export const nativeAddCommandDefinition = defineCommand({
 	description:
 		"Commands to add native files to the application placing them in the correct directory.",
 	arguments: "any",
-	setup: setupNativeAddCommand,
-	canExecute(context, services: INativeAddCommandServices): boolean {
-		failWithUsage(services);
+	setup() {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	canExecute(): boolean {
+		failWithUsage(inject<IErrors>("errors"));
 		return false;
 	},
-	run(context, services: INativeAddCommandServices): void {
-		failWithUsage(services);
+	run(): void {
+		failWithUsage(inject<IErrors>("errors"));
 	},
 });
 
@@ -375,21 +354,20 @@ const defineNativeAddLanguageCommand = <const TName extends CommandName>(
 		// The one usage message answers both too few and too many arguments; a
 		// declared argument spec would report them with two different ones.
 		arguments: "any",
-		setup(): INativeAddLanguageCommandServices {
-			return {
-				...setupNativeAddCommand(),
-				language,
-			};
+		setup() {
+			inject<IProjectData>("projectData").initializeProjectData();
 		},
-		canExecute(context, services: INativeAddLanguageCommandServices): boolean {
+		canExecute(context): boolean {
+			const $errors = inject<IErrors>("errors");
+
 			if (context.args.length !== 1) {
-				failWithUsage(services);
+				failWithUsage($errors);
 			}
 
 			return true;
 		},
-		run(context, services: INativeAddLanguageCommandServices): void {
-			generators[services.language](services, context.args[0]);
+		run(context): void {
+			generators[language](context, context.args[0]);
 		},
 	});
 

@@ -5,12 +5,12 @@ import {
 	defineCommand,
 	stringOption,
 } from "../common/define-command";
-import { inject } from "../common/di";
 import {
 	IAssetsGenerationService,
 	IResourceGenerationData,
 } from "../declarations";
 import { IProjectData } from "../definitions/project";
+import { inject } from "../common/di";
 
 /** Which set of assets a command generates from the source image. */
 type GeneratedAssets = "icons" | "splashes";
@@ -26,39 +26,21 @@ const generators: Record<
 	splashes: (service, data) => service.generateSplashScreens(data),
 };
 
-export const generateAssetsCommandOptions = {
+const generateAssetsCommandOptions = {
 	background: stringOption(),
 } satisfies CommandOptionsSchema;
 
-export type GenerateAssetsCommandContext = CommandContext<
-	typeof generateAssetsCommandOptions
->;
-
-export function setupGenerateAssetsCommand(assets: GeneratedAssets) {
-	const services = {
-		assets,
-		$assetsGenerationService: inject<IAssetsGenerationService>(
-			"assetsGenerationService",
-		),
-		$projectData: inject<IProjectData>("projectData"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IGenerateAssetsCommandServices = ReturnType<
-	typeof setupGenerateAssetsCommand
->;
-
-export function runGenerateAssetsCommand(
-	context: GenerateAssetsCommandContext,
-	services: IGenerateAssetsCommandServices,
+function runGenerateAssetsCommand(
+	context: CommandContext<typeof generateAssetsCommandOptions>,
+	assets: GeneratedAssets,
 ): Promise<void> {
-	return generators[services.assets](services.$assetsGenerationService, {
+	const $assetsGenerationService =
+		context.injector.get<IAssetsGenerationService>("assetsGenerationService");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+	return generators[assets]($assetsGenerationService, {
 		imagePath: context.args[0],
 		background: context.options.background,
-		projectDir: services.$projectData.projectDir,
+		projectDir: $projectData.projectDir,
 	});
 }
 
@@ -79,8 +61,12 @@ const defineGenerateAssetsCommand = <const TName extends CommandName>(
 					"You have to provide path to image to generate other images based on it.",
 			},
 		],
-		setup: () => setupGenerateAssetsCommand(assets),
-		run: runGenerateAssetsCommand,
+		// In setup, not run: it lands ahead of the arguments policy, so being
+		// outside a project is what a missing image path reports first.
+		setup(): void {
+			inject<IProjectData>("projectData").initializeProjectData();
+		},
+		run: (context) => runGenerateAssetsCommand(context, assets),
 	});
 
 export const generateIconsCommand = defineGenerateAssetsCommand(

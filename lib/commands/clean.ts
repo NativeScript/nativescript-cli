@@ -86,32 +86,8 @@ const cleanCommandOptions = {
 	json: booleanOption(),
 } satisfies CommandOptionsSchema;
 
-export type CleanCommandContext = CommandContext<typeof cleanCommandOptions>;
-
-export function setupCleanCommand() {
-	return {
-		$childProcess: inject<IChildProcess>("childProcess"),
-		$logger: inject<ILogger>("logger"),
-		$projectCleanupService: inject<IProjectCleanupService>(
-			"projectCleanupService",
-		),
-		$projectConfigService: inject<IProjectConfigService>(
-			"projectConfigService",
-		),
-		$projectData: inject<IProjectData>("projectData"),
-		$projectService: inject<IProjectService>("projectService"),
-		$prompter: inject<IPrompter>("prompter"),
-		$staticConfig: inject<IStaticConfig>("staticConfig"),
-		$terminalSpinnerService: inject<ITerminalSpinnerService>(
-			"terminalSpinnerService",
-		),
-	};
-}
-
-export type ICleanCommandServices = ReturnType<typeof setupCleanCommand>;
-
 async function getNSProjectPathsInDirectory(
-	services: ICleanCommandServices,
+	$logger: ILogger,
 	dir = process.cwd(),
 ): Promise<string[]> {
 	let nsDirs: string[] = [];
@@ -124,11 +100,7 @@ async function getNSProjectPathsInDirectory(
 
 		const dirents = await readdir(dir, { withFileTypes: true }).catch(
 			(err): any[] => {
-				services.$logger.trace(
-					'Failed to read directory "%s". Error is:',
-					dir,
-					err,
-				);
+				$logger.trace('Failed to read directory "%s". Error is:', dir, err);
 				return [];
 			},
 		);
@@ -162,17 +134,21 @@ async function getNSProjectPathsInDirectory(
 }
 
 async function cleanMultipleProjects(
-	context: CleanCommandContext,
-	services: ICleanCommandServices,
+	context: CommandContext<typeof cleanCommandOptions>,
 	spinner: ITerminalSpinner,
 ) {
+	const $childProcess = context.injector.get<IChildProcess>("childProcess");
+	const $logger = context.injector.get<ILogger>("logger");
+	const $prompter = context.injector.get<IPrompter>("prompter");
+	const $staticConfig = context.injector.get<IStaticConfig>("staticConfig");
+
 	if (!isInteractive() || context.options.json) {
 		// interactive terminal is required, and we can't output json in an interactive command.
-		services.$logger.warn("No project found in the current directory.");
+		$logger.warn("No project found in the current directory.");
 		return;
 	}
 
-	const shouldScan = await services.$prompter.confirm(
+	const shouldScan = await $prompter.confirm(
 		"No project found in the current directory. Would you like to scan for all projects in sub-directories instead?",
 	);
 
@@ -181,7 +157,7 @@ async function cleanMultipleProjects(
 	}
 
 	spinner.start("Scanning for projects... Please wait.");
-	const paths = await getNSProjectPathsInDirectory(services);
+	const paths = await getNSProjectPathsInDirectory($logger);
 	spinner.succeed(`Found ${paths.length} projects.`);
 
 	let computed = 0;
@@ -200,9 +176,9 @@ async function cleanMultipleProjects(
 	await promiseMap(
 		paths,
 		(p) => {
-			return services.$childProcess
+			return $childProcess
 				.exec(
-					`node ${services.$staticConfig.cliBinPath} clean --dry-run --json --disable-analytics`,
+					`node ${$staticConfig.cliBinPath} clean --dry-run --json --disable-analytics`,
 					{
 						cwd: p,
 					},
@@ -212,11 +188,7 @@ async function cleanMultipleProjects(
 					return Object.values(paths).reduce((a, b) => a + b, 0);
 				})
 				.catch((err) => {
-					services.$logger.trace(
-						"Failed to get project size for %s, Error is:",
-						p,
-						err,
-					);
+					$logger.trace("Failed to get project size for %s, Error is:", p, err);
 					return -1;
 				})
 				.then((size) => {
@@ -235,13 +207,13 @@ async function cleanMultipleProjects(
 	spinner.clear();
 	spinner.stop();
 
-	services.$logger.clearScreen();
+	$logger.clearScreen();
 
 	const totalSize = Array.from(projects.values())
 		.filter((s) => s > 0)
 		.reduce((a, b) => a + b, 0);
 
-	const pathsToClean = await services.$prompter.promptForChoice(
+	const pathsToClean = await $prompter.promptForChoice(
 		`Found ${
 			projects.size
 		} cleanable project(s) with a total size of: ${color.green(
@@ -266,7 +238,7 @@ async function cleanMultipleProjects(
 			optionsPerPage: process.stdout.rows - 6, // 6 lines are taken up by the instructions
 		} as Partial<PromptObject>,
 	);
-	services.$logger.clearScreen();
+	$logger.clearScreen();
 
 	spinner.warn(
 		`This will run "${color.yellow(
@@ -278,7 +250,7 @@ async function cleanMultipleProjects(
 	);
 	spinner.warn(`This action cannot be undone!`);
 
-	let confirmed = await services.$prompter.confirm(
+	let confirmed = await $prompter.confirm(
 		"Are you sure you want to clean the selected projects?",
 	);
 	if (!confirmed) {
@@ -295,9 +267,9 @@ async function cleanMultipleProjects(
 			`Cleaning ${color.cyan(currentPath)}... ${i + 1}/${pathsToClean.length}`,
 		);
 
-		const ok = await services.$childProcess
+		const ok = await $childProcess
 			.exec(
-				`node ${services.$staticConfig.cliBinPath} clean ${
+				`node ${$staticConfig.cliBinPath} clean ${
 					context.options.dryRun ? "--dry-run" : ""
 				} --json --disable-analytics`,
 				{
@@ -309,11 +281,7 @@ async function cleanMultipleProjects(
 				return cleanupRes.ok;
 			})
 			.catch((err) => {
-				services.$logger.trace(
-					'Failed to clean project "%s"',
-					currentPath,
-					err,
-				);
+				$logger.trace('Failed to clean project "%s"', currentPath, err);
 				return false;
 			});
 
@@ -343,82 +311,88 @@ async function cleanMultipleProjects(
 	}
 }
 
-export async function runCleanCommand(
-	context: CleanCommandContext,
-	services: ICleanCommandServices,
-): Promise<void> {
-	const isDryRun = context.options.dryRun ?? false;
-	const isJSON = context.options.json ?? false;
-
-	const spinner = services.$terminalSpinnerService.createSpinner({
-		isSilent: isJSON,
-	});
-
-	if (!services.$projectService.isValidNativeScriptProject()) {
-		return cleanMultipleProjects(context, services, spinner);
-	}
-
-	spinner.start("Cleaning project...\n");
-
-	let pathsToClean = [
-		constants.HOOKS_DIR_NAME,
-		services.$projectData.getBuildRelativeDirectoryPath(),
-		constants.NODE_MODULES_FOLDER_NAME,
-	];
-
-	try {
-		const overridePathsToClean =
-			services.$projectConfigService.getValue("cli.pathsToClean");
-		const additionalPaths = services.$projectConfigService.getValue(
-			"cli.additionalPathsToClean",
-		);
-
-		// allow overriding default paths to clean
-		if (Array.isArray(overridePathsToClean)) {
-			pathsToClean = overridePathsToClean;
-		}
-
-		if (Array.isArray(additionalPaths)) {
-			pathsToClean.push(...additionalPaths);
-		}
-	} catch (err) {
-		// ignore
-	}
-
-	const res = await services.$projectCleanupService.clean(pathsToClean, {
-		dryRun: isDryRun,
-		silent: isJSON,
-		stats: isJSON,
-	});
-
-	if (res.stats && isJSON) {
-		console.log(
-			JSON.stringify(
-				{
-					ok: res.ok,
-					dryRun: isDryRun,
-					stats: Object.fromEntries(res.stats.entries()),
-				},
-				null,
-				2,
-			),
-		);
-
-		return;
-	}
-
-	if (res.ok) {
-		spinner.succeed("Project successfully cleaned.");
-	} else {
-		spinner.fail(color.red("Project unsuccessfully cleaned."));
-	}
-}
-
 export const cleanCommandDefinition = defineCommand({
 	name: "clean",
 	description: "Cleans the project's build artefacts and dependencies.",
 	options: cleanCommandOptions,
 	arguments: "none",
-	setup: setupCleanCommand,
-	run: runCleanCommand,
+	async run(context): Promise<void> {
+		const $projectCleanupService = inject<IProjectCleanupService>(
+			"projectCleanupService",
+		);
+		const $projectConfigService = inject<IProjectConfigService>(
+			"projectConfigService",
+		);
+		const $projectData = inject<IProjectData>("projectData");
+		const $projectService = inject<IProjectService>("projectService");
+		const $terminalSpinnerService = inject<ITerminalSpinnerService>(
+			"terminalSpinnerService",
+		);
+
+		const isDryRun = context.options.dryRun ?? false;
+		const isJSON = context.options.json ?? false;
+
+		const spinner = $terminalSpinnerService.createSpinner({
+			isSilent: isJSON,
+		});
+
+		if (!$projectService.isValidNativeScriptProject()) {
+			return cleanMultipleProjects(context, spinner);
+		}
+
+		spinner.start("Cleaning project...\n");
+
+		let pathsToClean = [
+			constants.HOOKS_DIR_NAME,
+			$projectData.getBuildRelativeDirectoryPath(),
+			constants.NODE_MODULES_FOLDER_NAME,
+		];
+
+		try {
+			const overridePathsToClean =
+				$projectConfigService.getValue("cli.pathsToClean");
+			const additionalPaths = $projectConfigService.getValue(
+				"cli.additionalPathsToClean",
+			);
+
+			// allow overriding default paths to clean
+			if (Array.isArray(overridePathsToClean)) {
+				pathsToClean = overridePathsToClean;
+			}
+
+			if (Array.isArray(additionalPaths)) {
+				pathsToClean.push(...additionalPaths);
+			}
+		} catch (err) {
+			// ignore
+		}
+
+		const res = await $projectCleanupService.clean(pathsToClean, {
+			dryRun: isDryRun,
+			silent: isJSON,
+			stats: isJSON,
+		});
+
+		if (res.stats && isJSON) {
+			console.log(
+				JSON.stringify(
+					{
+						ok: res.ok,
+						dryRun: isDryRun,
+						stats: Object.fromEntries(res.stats.entries()),
+					},
+					null,
+					2,
+				),
+			);
+
+			return;
+		}
+
+		if (res.ok) {
+			spinner.succeed("Project successfully cleaned.");
+		} else {
+			spinner.fail(color.red("Project unsuccessfully cleaned."));
+		}
+	},
 });

@@ -4,36 +4,26 @@ import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
 import * as helpers from "../../common/helpers";
 
-export function setupListExtensionsCommand() {
-	return {
-		$extensibilityService: inject<IExtensibilityService>(
-			"extensibilityService",
-		),
-		$logger: inject<ILogger>("logger"),
-	};
-}
-
-export type IListExtensionsCommandServices = ReturnType<
-	typeof setupListExtensionsCommand
->;
-
 export const listExtensionsCommandDefinition = defineCommand({
 	name: "extension|*list",
 	description: "Lists all installed extensions.",
-	setup: setupListExtensionsCommand,
-	run(context, services: IListExtensionsCommandServices): void {
-		const installedExtensions =
-			services.$extensibilityService.getInstalledExtensions();
+	run(): void {
+		const $extensibilityService = inject<IExtensibilityService>(
+			"extensibilityService",
+		);
+		const $logger = inject<ILogger>("logger");
+
+		const installedExtensions = $extensibilityService.getInstalledExtensions();
 		if (_.keys(installedExtensions).length) {
-			services.$logger.info("Installed extensions:");
+			$logger.info("Installed extensions:");
 			const data = _.map(installedExtensions, (version, name) => {
 				return [name, version];
 			});
 
 			const table = helpers.createTable(["Name", "Version"], data);
-			services.$logger.info(table.toString());
+			$logger.info(table.toString());
 		} else {
-			services.$logger.info("No extensions installed.");
+			$logger.info("No extensions installed.");
 		}
 	},
 });

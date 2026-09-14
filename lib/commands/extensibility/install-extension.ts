@@ -2,19 +2,6 @@ import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
 
-export function setupInstallExtensionCommand() {
-	return {
-		$extensibilityService: inject<IExtensibilityService>(
-			"extensibilityService",
-		),
-		$logger: inject<ILogger>("logger"),
-	};
-}
-
-export type IInstallExtensionCommandServices = ReturnType<
-	typeof setupInstallExtensionCommand
->;
-
 export const installExtensionCommandDefinition = defineCommand({
 	name: "extension|install",
 	description: "Installs the specified extension.",
@@ -26,22 +13,21 @@ export const installExtensionCommandDefinition = defineCommand({
 				"You have to provide a valid name for extension that you want to install.",
 		},
 	],
-	setup: setupInstallExtensionCommand,
-	async run(
-		context,
-		services: IInstallExtensionCommandServices,
-	): Promise<void> {
-		const extensionData = await services.$extensibilityService.installExtension(
+	async run(context): Promise<void> {
+		const $extensibilityService = inject<IExtensibilityService>(
+			"extensibilityService",
+		);
+		const $logger = inject<ILogger>("logger");
+
+		const extensionData = await $extensibilityService.installExtension(
 			context.args[0],
 		);
-		services.$logger.info(
+		$logger.info(
 			`Successfully installed extension ${extensionData.extensionName}.`,
 		);
 
-		await services.$extensibilityService.loadExtension(
-			extensionData.extensionName,
-		);
-		services.$logger.info(
+		await $extensibilityService.loadExtension(extensionData.extensionName);
+		$logger.info(
 			`Successfully loaded extension ${extensionData.extensionName}.`,
 		);
 	},

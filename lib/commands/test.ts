@@ -49,79 +49,66 @@ const testCommandOptions = {
 	keyStoreAliasPassword: stringOption(),
 } satisfies CommandOptionsSchema;
 
-export type TestCommandContext = CommandContext<typeof testCommandOptions>;
+type TestCommandContext = CommandContext<typeof testCommandOptions>;
 
-export function setupTestCommand(testPlatform: TestPlatform) {
-	return {
-		platform: testPlatform,
-		$analyticsService: inject<IAnalyticsService>("analyticsService"),
-		$cleanupService: inject<ICleanupService>("cleanupService"),
-		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
-		$errors: inject<IErrors>("errors"),
-		$liveSyncCommandHelper: inject<ILiveSyncCommandHelper>(
-			"liveSyncCommandHelper",
-		),
-		$logger: inject<ILogger>("logger"),
-		$migrateController: inject<IMigrateController>("migrateController"),
-		$options: inject<IOptions>("options"),
-		$platformEnvironmentRequirements: inject<IPlatformEnvironmentRequirements>(
-			"platformEnvironmentRequirements",
-		),
-		$projectData: inject<IProjectData>("projectData"),
-		$testExecutionService: inject<ITestExecutionService>(
-			"testExecutionService",
-		),
-		$vitestExecutionService: inject<IVitestExecutionService>(
-			"vitestExecutionService",
-		),
-	};
-}
-
-export type ITestCommandServices = ReturnType<typeof setupTestCommand>;
-
-export async function canExecuteTestCommand(
+async function canExecuteTestCommand(
 	context: TestCommandContext,
-	services: ITestCommandServices,
+	platform: TestPlatform,
 ): Promise<boolean> {
+	const $analyticsService =
+		context.injector.get<IAnalyticsService>("analyticsService");
+	const $cleanupService =
+		context.injector.get<ICleanupService>("cleanupService");
+	const $errors = context.injector.get<IErrors>("errors");
+	const $migrateController =
+		context.injector.get<IMigrateController>("migrateController");
+	const $options = context.injector.get<IOptions>("options");
+	const $platformEnvironmentRequirements =
+		context.injector.get<IPlatformEnvironmentRequirements>(
+			"platformEnvironmentRequirements",
+		);
+	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $testExecutionService = context.injector.get<ITestExecutionService>(
+		"testExecutionService",
+	);
+	const $vitestExecutionService = context.injector.get<IVitestExecutionService>(
+		"vitestExecutionService",
+	);
+
 	if (!context.options.force) {
 		if (context.options.hmr) {
 			// With HMR we are not restarting after LiveSync which is causing a 30 seconds app start on Android
 			// because the Runtime does not watch for the `/data/local/tmp<appId>-livesync-in-progress` file deletion.
 			// The App is closing itself after each test execution and the bug will be reproducible on each LiveSync.
-			services.$errors.fail(
-				"The `--hmr` option is not supported for this command.",
-			);
+			$errors.fail("The `--hmr` option is not supported for this command.");
 		}
 
-		await services.$migrateController.validate({
-			projectDir: services.$projectData.projectDir,
-			platforms: [services.platform],
+		await $migrateController.validate({
+			projectDir: $projectData.projectDir,
+			platforms: [platform],
 		});
 	}
 
-	services.$projectData.initializeProjectData();
-	services.$analyticsService.setShouldDispose(
+	$projectData.initializeProjectData();
+	$analyticsService.setShouldDispose(
 		context.options.justlaunch || !context.options.watch,
 	);
-	services.$cleanupService.setShouldDispose(
+	$cleanupService.setShouldDispose(
 		context.options.justlaunch || !context.options.watch,
 	);
 
 	const output =
-		await services.$platformEnvironmentRequirements.checkEnvironmentRequirements(
-			{
-				platform: services.platform,
-				projectDir: services.$projectData.projectDir,
-				options: services.$options,
-			},
-		);
+		await $platformEnvironmentRequirements.checkEnvironmentRequirements({
+			platform,
+			projectDir: $projectData.projectDir,
+			options: $options,
+		});
 
-	if (services.$vitestExecutionService.isVitestProject(services.$projectData)) {
-		const canStartTestRun = services.$vitestExecutionService.canStartTestRun(
-			services.$projectData,
-		);
+	if ($vitestExecutionService.isVitestProject($projectData)) {
+		const canStartTestRun =
+			$vitestExecutionService.canStartTestRun($projectData);
 		if (!canStartTestRun) {
-			services.$errors.fail({
+			$errors.fail({
 				formatStr:
 					"Error: In order to run unit tests, your project must already be configured by running $ ns test init.",
 				errorCode: ErrorCodes.TESTS_INIT_REQUIRED,
@@ -131,11 +118,9 @@ export async function canExecuteTestCommand(
 	}
 
 	const canStartKarmaServer =
-		await services.$testExecutionService.canStartKarmaServer(
-			services.$projectData,
-		);
+		await $testExecutionService.canStartKarmaServer($projectData);
 	if (!canStartKarmaServer) {
-		services.$errors.fail({
+		$errors.fail({
 			formatStr:
 				"Error: In order to run unit tests, your project must already be configured by running $ ns test init.",
 			errorCode: ErrorCodes.TESTS_INIT_REQUIRED,
@@ -145,57 +130,66 @@ export async function canExecuteTestCommand(
 	return output.canExecute && canStartKarmaServer;
 }
 
-export async function runTestCommand(
+async function runTestCommand(
 	context: TestCommandContext,
-	services: ITestCommandServices,
+	platform: TestPlatform,
 ): Promise<void> {
-	if (services.$vitestExecutionService.isVitestProject(services.$projectData)) {
-		await services.$vitestExecutionService.startTestRun(
-			services.platform,
-			services.$projectData,
-		);
+	const $devicesService =
+		context.injector.get<Mobile.IDevicesService>("devicesService");
+	const $liveSyncCommandHelper = context.injector.get<ILiveSyncCommandHelper>(
+		"liveSyncCommandHelper",
+	);
+	const $logger = context.injector.get<ILogger>("logger");
+	const $options = context.injector.get<IOptions>("options");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $testExecutionService = context.injector.get<ITestExecutionService>(
+		"testExecutionService",
+	);
+	const $vitestExecutionService = context.injector.get<IVitestExecutionService>(
+		"vitestExecutionService",
+	);
+
+	if ($vitestExecutionService.isVitestProject($projectData)) {
+		await $vitestExecutionService.startTestRun(platform, $projectData);
 		process.exit(0);
 	}
 
-	services.$logger.warn(
+	$logger.warn(
 		"Karma-based unit testing is deprecated and will be removed in a future release. " +
 			"Re-initialize your tests with '$ ns test init --framework vitest' to migrate.",
 	);
 
 	let devices = [];
 	if (context.options.debugBrk) {
-		await services.$devicesService.initialize({
-			platform: services.platform,
+		await $devicesService.initialize({
+			platform,
 			deviceId: context.options.device,
 			emulator: context.options.emulator,
-			skipInferPlatform: !services.platform,
+			skipInferPlatform: !platform,
 			sdk: context.options.sdk,
 		});
 
-		const selectedDeviceForDebug =
-			await services.$devicesService.pickSingleDevice({
-				onlyEmulators: context.options.emulator,
-				onlyDevices: context.options.forDevice,
-				deviceId: context.options.device,
-			});
+		const selectedDeviceForDebug = await $devicesService.pickSingleDevice({
+			onlyEmulators: context.options.emulator,
+			onlyDevices: context.options.forDevice,
+			deviceId: context.options.device,
+		});
 		devices = [selectedDeviceForDebug];
 		// const debugData = this.getDebugData(platform, projectData, deployOptions, { device: selectedDeviceForDebug.deviceInfo.identifier });
 		// await this.$debugService.debug(debugData, this.$options);
 	} else {
-		devices = await services.$liveSyncCommandHelper.getDeviceInstances(
-			services.platform,
-		);
+		devices = await $liveSyncCommandHelper.getDeviceInstances(platform);
 	}
 
 	// The bundler reads unitTesting off the shared options service, so the flag
 	// is set there rather than on the command's own snapshot.
-	if (!services.$options.env) {
-		services.$options.env = {};
+	if (!$options.env) {
+		$options.env = {};
 	}
-	services.$options.env.unitTesting = true;
+	$options.env.unitTesting = true;
 
-	const liveSyncInfo = services.$liveSyncCommandHelper.getLiveSyncData(
-		services.$projectData.projectDir,
+	const liveSyncInfo = $liveSyncCommandHelper.getLiveSyncData(
+		$projectData.projectDir,
 	);
 
 	const deviceDebugMap: IDictionary<boolean> = {};
@@ -205,14 +199,12 @@ export async function runTestCommand(
 	);
 
 	const deviceDescriptors =
-		await services.$liveSyncCommandHelper.createDeviceDescriptors(
-			devices,
-			services.platform,
-			<any>{ deviceDebugMap },
-		);
+		await $liveSyncCommandHelper.createDeviceDescriptors(devices, platform, <
+			any
+		>{ deviceDebugMap });
 
-	await services.$testExecutionService.startKarmaServer(
-		services.platform,
+	await $testExecutionService.startKarmaServer(
+		platform,
 		liveSyncInfo,
 		deviceDescriptors,
 	);
@@ -226,9 +218,9 @@ export const testCommandDefinition = defineCommand({
 	options: testCommandOptions,
 	// Arguments have never been rejected here, only ignored.
 	arguments: "any",
-	setup: () => setupTestCommand("iOS"),
-	canExecute: canExecuteTestCommand,
-	run: runTestCommand,
+	canExecute: (context: TestCommandContext) =>
+		canExecuteTestCommand(context, "iOS"),
+	run: (context: TestCommandContext) => runTestCommand(context, "iOS"),
 });
 
 export const testAndroidCommandDefinition = defineCommand({
@@ -237,30 +229,26 @@ export const testAndroidCommandDefinition = defineCommand({
 		"Runs the tests in your project on connected Android devices or Android emulators.",
 	options: testCommandOptions,
 	arguments: "any",
-	setup: () => setupTestCommand("android"),
-	async canExecute(
-		context: TestCommandContext,
-		services: ITestCommandServices,
-	): Promise<boolean> {
-		const canExecuteBase = await canExecuteTestCommand(context, services);
+	async canExecute(context: TestCommandContext): Promise<boolean> {
+		const $errors = inject<IErrors>("errors");
+
+		const canExecuteBase = await canExecuteTestCommand(context, "android");
 		if (canExecuteBase) {
 			if (
 				(context.options.release || context.options.aab) &&
 				!hasValidAndroidSigning(context.options)
 			) {
 				if (context.options.release) {
-					services.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+					$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 				} else {
-					services.$errors.failWithHelp(
-						ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
-					);
+					$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 				}
 			}
 		}
 
 		return canExecuteBase;
 	},
-	run: runTestCommand,
+	run: (context: TestCommandContext) => runTestCommand(context, "android"),
 });
 
 export const testVisionOSCommandDefinition = defineCommand({
@@ -269,23 +257,23 @@ export const testVisionOSCommandDefinition = defineCommand({
 		"Runs the tests in your project in the visionOS Simulator or on connected Apple Vision Pro devices.",
 	options: testCommandOptions,
 	arguments: "any",
-	setup: () => setupTestCommand("visionOS"),
-	async canExecute(
-		context: TestCommandContext,
-		services: ITestCommandServices,
-	): Promise<boolean> {
-		services.$projectData.initializeProjectData();
+	async canExecute(context: TestCommandContext): Promise<boolean> {
+		const $errors = inject<IErrors>("errors");
+		const $projectData = inject<IProjectData>("projectData");
+		const $vitestExecutionService = inject<IVitestExecutionService>(
+			"vitestExecutionService",
+		);
+
+		$projectData.initializeProjectData();
 		// The Karma runner (v4 line) never supported visionOS — only the Vitest
 		// path can drive it.
-		if (
-			!services.$vitestExecutionService.isVitestProject(services.$projectData)
-		) {
-			services.$errors.fail(
+		if (!$vitestExecutionService.isVitestProject($projectData)) {
+			$errors.fail(
 				"visionOS unit testing requires the Vitest runner. Run '$ ns test init --framework vitest' to configure your project.",
 			);
 		}
 
-		return canExecuteTestCommand(context, services);
+		return canExecuteTestCommand(context, "visionOS");
 	},
-	run: runTestCommand,
+	run: (context: TestCommandContext) => runTestCommand(context, "visionOS"),
 });

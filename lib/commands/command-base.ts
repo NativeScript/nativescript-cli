@@ -2,41 +2,20 @@ import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
 import { IOptions, IPlatformValidationService } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import {
-	ICommandParameter,
 	ICanExecuteCommandOptions,
 	INotConfiguredEnvOptions,
 } from "../common/definitions/commands";
-import { ArgumentSpec } from "../common/define-command";
-import { inject, Injector } from "../common/di";
+import { ArgumentSpec, CommandContext } from "../common/define-command";
+import { Injector } from "../common/di";
 
-/** Callable from `setup` and from `canExecute` before their first `await`. */
-export function injectPlatformCommandServices() {
-	return {
-		$options: inject<IOptions>("options"),
-		$platformsDataService: inject<IPlatformsDataService>(
-			"platformsDataService",
-		),
-		$platformValidationService: inject<IPlatformValidationService>(
-			"platformValidationService",
-		),
-		$projectData: inject<IProjectData>("projectData"),
-	};
-}
-
-/**
- * What the platform-validation helpers below need. A command definition's
- * `setup` returns this shape (see `injectPlatformCommandServices`), so its
- * result can be handed straight to them.
- */
-export type IPlatformCommandServices = ReturnType<
-	typeof injectPlatformCommandServices
->;
+/** The part of a command context these helpers read. */
+type PlatformCommandContext = Pick<CommandContext<any>, "injector">;
 
 /**
  * The declarative form of `$platformCommandParameter`. Initializing the
  * project data is what makes the platform check possible, so it stays part of
- * validating the argument instead of moving to `setup`, which the adapter runs
- * only after argument enforcement.
+ * validating the argument instead of moving to the command's own handlers,
+ * which the adapter runs only after argument enforcement.
  */
 export function validatePlatformArgument(
 	targetInjector: Injector,
@@ -59,33 +38,38 @@ export const platformArgument: ArgumentSpec<any> = {
 };
 
 export function validatePlatformOptions(
-	services: IPlatformCommandServices,
+	context: PlatformCommandContext,
 	platform: string,
 ): Promise<boolean> {
-	return services.$platformValidationService.validateOptions(
-		services.$options.provision,
-		services.$options.teamId,
-		services.$projectData,
-		platform,
-	);
+	const $options = context.injector.get<IOptions>("options");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+
+	return context.injector
+		.get<IPlatformValidationService>("platformValidationService")
+		.validateOptions(
+			$options.provision,
+			$options.teamId,
+			$projectData,
+			platform,
+		);
 }
 
 async function validatePlatformBase(
-	services: IPlatformCommandServices,
+	context: PlatformCommandContext,
 	platform: string,
 	notConfiguredEnvOptions: INotConfiguredEnvOptions,
 ): Promise<IValidatePlatformOutput> {
-	const platformData = services.$platformsDataService.getPlatformData(
-		platform,
-		services.$projectData,
-	);
-	const platformProjectService = platformData.platformProjectService;
-	const result = await platformProjectService.validate(
-		services.$projectData,
-		services.$options,
+	const $options = context.injector.get<IOptions>("options");
+	const $projectData = context.injector.get<IProjectData>("projectData");
+	const platformData = context.injector
+		.get<IPlatformsDataService>("platformsDataService")
+		.getPlatformData(platform, $projectData);
+
+	return platformData.platformProjectService.validate(
+		$projectData,
+		$options,
 		notConfiguredEnvOptions,
 	);
-	return result;
 }
 
 function hasUsableEnvironment(
@@ -99,12 +83,12 @@ function hasUsableEnvironment(
 }
 
 export async function canExecuteCommandBase(
-	services: IPlatformCommandServices,
+	context: PlatformCommandContext,
 	platform: string,
 	options: ICanExecuteCommandOptions = {},
 ): Promise<boolean> {
 	const validatePlatformOutput = await validatePlatformBase(
-		services,
+		context,
 		platform,
 		options.notConfiguredEnvOptions,
 	);
@@ -112,40 +96,8 @@ export async function canExecuteCommandBase(
 	let result = canExecute;
 
 	if (canExecute && options.validateOptions) {
-		result = await validatePlatformOptions(services, platform);
+		result = await validatePlatformOptions(context, platform);
 	}
 
 	return result;
-}
-
-/**
- * @deprecated Nothing extends this any more; the exported functions beside it carry
- * the same behaviour for definitions.
- */
-export abstract class ValidatePlatformCommandBase {
-	constructor(
-		protected $options: IOptions,
-		protected $platformsDataService: IPlatformsDataService,
-		protected $platformValidationService: IPlatformValidationService,
-		protected $projectData: IProjectData,
-	) {}
-
-	abstract allowedParameters: ICommandParameter[];
-	abstract execute(args: string[]): Promise<void>;
-
-	public canExecuteCommandBase(
-		platform: string,
-		options?: ICanExecuteCommandOptions,
-	): Promise<boolean> {
-		return canExecuteCommandBase(
-			{
-				$options: this.$options,
-				$platformsDataService: this.$platformsDataService,
-				$platformValidationService: this.$platformValidationService,
-				$projectData: this.$projectData,
-			},
-			platform,
-			options,
-		);
-	}
 }

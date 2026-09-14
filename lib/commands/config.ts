@@ -5,20 +5,6 @@ import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { color } from "../color";
 
-export function injectConfigCommandServices() {
-	return {
-		$projectConfigService: inject<IProjectConfigService>(
-			"projectConfigService",
-		),
-		$logger: inject<ILogger>("logger"),
-		$errors: inject<IErrors>("errors"),
-	};
-}
-
-export type IConfigCommandServices = ReturnType<
-	typeof injectConfigCommandServices
->;
-
 function getValueString(value: SupportedConfigValues, depth = 0): string {
 	const indent = () => "  ".repeat(depth);
 	if (typeof value === "object") {
@@ -50,12 +36,11 @@ function getConvertedValue(v: any): any {
 	}
 }
 
-export function requireConfigKey(
-	context: CommandContext,
-	services: IConfigCommandServices,
-): void {
+function requireConfigKey(context: CommandContext): void {
 	if (!context.args[0]) {
-		services.$errors.failWithHelp("You must specify a key. Eg: ios.id");
+		context.injector
+			.get<IErrors>("errors")
+			.failWithHelp("You must specify a key. Eg: ios.id");
 	}
 }
 
@@ -63,13 +48,17 @@ export const configListCommandDefinition = defineCommand({
 	name: "config|*list",
 	description: "Prints the project configuration.",
 	arguments: "none",
-	setup: injectConfigCommandServices,
-	async run(context, services): Promise<void> {
+	async run(): Promise<void> {
+		const $projectConfigService = inject<IProjectConfigService>(
+			"projectConfigService",
+		);
+		const $logger = inject<ILogger>("logger");
+
 		try {
-			const config = services.$projectConfigService.readConfig();
-			services.$logger.info(getValueString(config as SupportedConfigValues));
+			const config = $projectConfigService.readConfig();
+			$logger.info(getValueString(config as SupportedConfigValues));
 		} catch (error) {
-			services.$logger.info("Failed to read config. Error is: ", error);
+			$logger.info("Failed to read config. Error is: ", error);
 		}
 	},
 });
@@ -78,17 +67,21 @@ export const configGetCommandDefinition = defineCommand({
 	name: "config|get",
 	description: "Prints the value the project configuration holds for a key.",
 	arguments: "any",
-	setup: injectConfigCommandServices,
-	async canExecute(context, services): Promise<boolean> {
-		requireConfigKey(context, services);
+	async canExecute(context): Promise<boolean> {
+		requireConfigKey(context);
 
 		return true;
 	},
-	async run(context, services): Promise<void> {
+	async run(context): Promise<void> {
+		const $projectConfigService = inject<IProjectConfigService>(
+			"projectConfigService",
+		);
+		const $logger = inject<ILogger>("logger");
+
 		try {
 			const [key] = context.args;
-			const current = services.$projectConfigService.getValue(key);
-			services.$logger.info(current);
+			const current = $projectConfigService.getValue(key);
+			$logger.info(current);
 		} catch (err) {
 			// ignore
 		}
@@ -99,21 +92,28 @@ export const configSetCommandDefinition = defineCommand({
 	name: "config|set",
 	description: "Sets a value in the project configuration.",
 	arguments: "any",
-	setup: injectConfigCommandServices,
-	async canExecute(context, services): Promise<boolean> {
-		requireConfigKey(context, services);
+	async canExecute(context): Promise<boolean> {
+		const $errors = inject<IErrors>("errors");
+
+		requireConfigKey(context);
 
 		if (!context.args[1]) {
-			services.$errors.failWithHelp("You must specify a value.");
+			$errors.failWithHelp("You must specify a value.");
 		}
 
 		return true;
 	},
-	async run(context, services): Promise<void> {
+	async run(context): Promise<void> {
+		const $projectConfigService = inject<IProjectConfigService>(
+			"projectConfigService",
+		);
+		const $logger = inject<ILogger>("logger");
+		const $errors = inject<IErrors>("errors");
+
 		const [key, value] = context.args;
-		const current = services.$projectConfigService.getValue(key);
+		const current = $projectConfigService.getValue(key);
 		if (current && typeof current === "object") {
-			services.$errors.fail(
+			$errors.fail(
 				`Unable to change object values. Please update individual values instead.\nEg: ns config set android.codeCache true`,
 			);
 		}
@@ -124,17 +124,17 @@ export const configSetCommandDefinition = defineCommand({
 		const currentDisplay = current ? color.yellow(current) : "";
 		const updatedDisplay = color.cyan(convertedValue);
 
-		services.$logger.info(
+		$logger.info(
 			`${existingKey ? "Updating" : "Setting"} ${keyDisplay}${
 				existingKey ? ` from ${currentDisplay} ` : " "
 			}to ${updatedDisplay}`,
 		);
 
 		try {
-			await services.$projectConfigService.setValue(key, convertedValue);
-			services.$logger.info("Done");
+			await $projectConfigService.setValue(key, convertedValue);
+			$logger.info("Done");
 		} catch (error) {
-			services.$logger.info("Could not update conifg. Error is: ", error);
+			$logger.info("Could not update conifg. Error is: ", error);
 		}
 	},
 });

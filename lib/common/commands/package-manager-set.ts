@@ -3,46 +3,36 @@ import { IErrors, IUserSettingsService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
 
-export function setupPackageManagerSetCommand() {
-	return {
-		$userSettingsService: inject<IUserSettingsService>("userSettingsService"),
-		$errors: inject<IErrors>("errors"),
-		$logger: inject<ILogger>("logger"),
-	};
-}
-
-export type IPackageManagerSetCommandServices = ReturnType<
-	typeof setupPackageManagerSetCommand
->;
-
 export const packageManagerSetCommandDefinition = defineCommand({
 	name: "package-manager|set",
 	description: "Sets the package manager the CLI installs dependencies with.",
 	arguments: [{ name: "packageManager" }],
-	setup: setupPackageManagerSetCommand,
-	async run(
-		context,
-		services: IPackageManagerSetCommandServices,
-	): Promise<void> {
+	async run(context): Promise<void> {
+		const $userSettingsService = inject<IUserSettingsService>(
+			"userSettingsService",
+		);
+		const $errors = inject<IErrors>("errors");
+		const $logger = inject<ILogger>("logger");
+
 		const packageManagerName = context.args[0];
 		const supportedPackageManagers = Object.keys(PackageManagers);
 		if (supportedPackageManagers.indexOf(packageManagerName) === -1) {
-			services.$errors.fail(
+			$errors.fail(
 				`${packageManagerName} is not a valid package manager. Supported values are: ${supportedPackageManagers.join(
 					", ",
 				)}.`,
 			);
 		}
 
-		await services.$userSettingsService.saveSetting(
+		await $userSettingsService.saveSetting(
 			"packageManager",
 			packageManagerName,
 		);
 
-		services.$logger.printMarkdown(
+		$logger.printMarkdown(
 			`Please ensure you have the directory containing \`${packageManagerName}\` executable available in your PATH.`,
 		);
-		services.$logger.printMarkdown(
+		$logger.printMarkdown(
 			`You've successfully set \`${packageManagerName}\` as your package manager.`,
 		);
 	},

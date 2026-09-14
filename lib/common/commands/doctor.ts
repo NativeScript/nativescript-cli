@@ -3,16 +3,6 @@ import { CommandName, defineCommand } from "../define-command";
 import { inject } from "../di";
 import { PlatformTypes } from "../../constants";
 
-export function setupDoctorCommand(platform?: PlatformTypes) {
-	return {
-		platform,
-		$doctorService: inject<IDoctorService>("doctorService"),
-		$projectHelper: inject<IProjectHelper>("projectHelper"),
-	};
-}
-
-export type IDoctorCommandServices = ReturnType<typeof setupDoctorCommand>;
-
 const defineDoctorCommand = <const TName extends CommandName>(
 	name: TName,
 	platform?: PlatformTypes,
@@ -22,13 +12,15 @@ const defineDoctorCommand = <const TName extends CommandName>(
 		description:
 			"Checks the local environment for configuration issues, and prints what it finds.",
 		arguments: "none",
-		setup: () => setupDoctorCommand(platform),
-		run(context, services): Promise<void> {
-			return services.$doctorService.printWarnings({
+		run(): Promise<void> {
+			const $doctorService = inject<IDoctorService>("doctorService");
+			const $projectHelper = inject<IProjectHelper>("projectHelper");
+
+			return $doctorService.printWarnings({
 				trackResult: false,
-				projectDir: services.$projectHelper.projectDir,
+				projectDir: $projectHelper.projectDir,
 				forceCheck: true,
-				...(services.platform ? { platform: services.platform } : {}),
+				...(platform ? { platform } : {}),
 			});
 		},
 	});

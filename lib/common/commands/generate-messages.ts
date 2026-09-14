@@ -19,14 +19,13 @@ export const generateMessagesCommandDefinition = defineCommand({
 	description: "Regenerates the CLI's message contracts.",
 	options: generateMessagesCommandOptions,
 	arguments: "none",
-	setup: () => ({
-		$fs: inject<IFileSystem>("fs"),
-		$messageContractGenerator: inject<IServiceContractGenerator>(
+	async run(context): Promise<void> {
+		const $fs = inject<IFileSystem>("fs");
+		const $messageContractGenerator = inject<IServiceContractGenerator>(
 			"messageContractGenerator",
-		),
-	}),
-	async run(context, services): Promise<void> {
-		const result = await services.$messageContractGenerator.generate();
+		);
+
+		const result = await $messageContractGenerator.generate();
 		const innerMessagesDirectory = path.join(__dirname, "../messages");
 		const outerMessagesDirectory = path.join(__dirname, "../..");
 		let interfaceFilePath: string;
@@ -52,7 +51,7 @@ export const generateMessagesCommandDefinition = defineCommand({
 			);
 		}
 
-		services.$fs.writeFile(interfaceFilePath, result.interfaceFile);
-		services.$fs.writeFile(implementationFilePath, result.implementationFile);
+		$fs.writeFile(interfaceFilePath, result.interfaceFile);
+		$fs.writeFile(implementationFilePath, result.implementationFile);
 	},
 });

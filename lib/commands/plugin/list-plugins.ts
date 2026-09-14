@@ -9,21 +9,6 @@ import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { color } from "../../color";
 
-export function setupListPluginsCommand() {
-	const services = {
-		$pluginsService: inject<IPluginsService>("pluginsService"),
-		$projectData: inject<IProjectData>("projectData"),
-		$logger: inject<ILogger>("logger"),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IListPluginsCommandServices = ReturnType<
-	typeof setupListPluginsCommand
->;
-
 function createTableCells(items: IBasePluginData[]): string[][] {
 	return items.map((item) => [item.name, item.version]);
 }
@@ -32,12 +17,17 @@ export const listPluginsCommandDefinition = defineCommand({
 	name: "plugin|*list",
 	description: "Lists all installed plugins.",
 	arguments: "none",
-	setup: setupListPluginsCommand,
-	async run(context, services): Promise<void> {
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	async run(): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		const $logger = inject<ILogger>("logger");
 		const installedPlugins: IPackageJsonDepedenciesResult =
-			services.$pluginsService.getDependenciesFromPackageJson(
-				services.$projectData.projectDir,
-			);
+			$pluginsService.getDependenciesFromPackageJson($projectData.projectDir);
 
 		const headers: string[] = ["Plugin", "Version"];
 		const dependenciesData: string[][] = createTableCells(
@@ -45,8 +35,8 @@ export const listPluginsCommandDefinition = defineCommand({
 		);
 
 		const dependenciesTable: any = createTable(headers, dependenciesData);
-		services.$logger.info("Dependencies:");
-		services.$logger.info(dependenciesTable.toString());
+		$logger.info("Dependencies:");
+		$logger.info(dependenciesTable.toString());
 
 		if (
 			installedPlugins.devDependencies &&
@@ -61,10 +51,10 @@ export const listPluginsCommandDefinition = defineCommand({
 				devDependenciesData,
 			);
 
-			services.$logger.info("Dev Dependencies:");
-			services.$logger.info(devDependenciesTable.toString());
+			$logger.info("Dev Dependencies:");
+			$logger.info(devDependenciesTable.toString());
 		} else {
-			services.$logger.info("There are no dev dependencies.");
+			$logger.info("There are no dev dependencies.");
 		}
 
 		const viewDependenciesCommand: string = color.cyan(
@@ -74,11 +64,11 @@ export const listPluginsCommandDefinition = defineCommand({
 			"npm view <pluginName> grep devDependencies",
 		);
 
-		services.$logger.warn("NOTE:");
-		services.$logger.warn(
+		$logger.warn("NOTE:");
+		$logger.warn(
 			`If you want to check the dependencies of installed plugin use ${viewDependenciesCommand}`,
 		);
-		services.$logger.warn(
+		$logger.warn(
 			`If you want to check the dev dependencies of installed plugin use ${viewDevDependenciesCommand}`,
 		);
 	},

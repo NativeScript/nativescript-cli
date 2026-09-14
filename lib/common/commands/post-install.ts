@@ -7,11 +7,10 @@ export const postInstallCommandDefinition = defineCommand({
 	description: "Deprecated; use `ns dev-post-install-cli`.",
 	arguments: "none",
 	disableAnalytics: true,
-	setup: () => ({
-		$errors: inject<IErrors>("errors"),
-	}),
-	async run(context, services): Promise<void> {
-		services.$errors.fail(
+	async run(): Promise<void> {
+		const $errors = inject<IErrors>("errors");
+
+		$errors.fail(
 			"This command is deprecated. Use `ns dev-post-install-cli` instead",
 		);
 	},
