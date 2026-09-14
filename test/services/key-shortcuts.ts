@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { EventEmitter } from "events";
+import { RunOnDeviceEvents } from "../../lib/constants";
 import { runInInjectionContext } from "../../lib/common/di/inject";
 import { Injector } from "../../lib/common/di/injector";
 import { runCommand } from "../../lib/common/services/command-definition-adapter";
@@ -13,6 +14,7 @@ import {
 	keyShortcutsEnabled,
 	NsKeyContext,
 	resolveShortcuts,
+	restartShortcut,
 } from "../../lib/services/key-shortcuts";
 
 class FakeStdin extends EventEmitter {
@@ -182,6 +184,7 @@ describe("key shortcuts", () => {
 				"V",
 				"r",
 				"R",
+				"B",
 				"w",
 				"c",
 				"n",
@@ -195,7 +198,16 @@ describe("key shortcuts", () => {
 				context({ platform: "Android", processType: "run" }),
 			);
 
-			assert.deepEqual(keysOf(resolved), ["A", "r", "R", "w", "c", "n", "?"]);
+			assert.deepEqual(keysOf(resolved), [
+				"A",
+				"r",
+				"R",
+				"B",
+				"w",
+				"c",
+				"n",
+				"?",
+			]);
 		});
 
 		it("routes the IDE shortcuts through the open commands", async () => {
@@ -226,6 +238,172 @@ describe("key shortcuts", () => {
 				"open|visionos",
 				"install",
 			]);
+		});
+	});
+
+	describe("restartShortcut", () => {
+		const session = (
+			overrides: {
+				descriptors?: string[];
+				devicesByPlatform?: { [platform: string]: string[] };
+			} = {},
+		) => {
+			const restarts: any[] = [];
+			const liveSyncOperations: any[] = [];
+			const registrations = new Map<any, any>([
+				[
+					"runController",
+					{
+						restartApplication: async (data: any): Promise<void> =>
+							void restarts.push(data),
+						getDeviceDescriptors: () =>
+							(overrides.descriptors || ["device-1"]).map((identifier) => ({
+								identifier,
+							})),
+					},
+				],
+				[
+					"projectDataService",
+					{ getProjectData: () => ({ projectDir: "/project" }) },
+				],
+				[
+					"devicesService",
+					{
+						getDevicesForPlatform: (platform: string) =>
+							((overrides.devicesByPlatform || {})[platform] || []).map(
+								(identifier) => ({ deviceInfo: { identifier } }),
+							),
+					},
+				],
+				[
+					"liveSyncCommandHelper",
+					{
+						getDeviceInstances: async (platform: string) => [{ platform }],
+						executeLiveSyncOperation: async (
+							devices: any[],
+							platform: string,
+							options: any,
+						): Promise<void> =>
+							void liveSyncOperations.push({ devices, platform, options }),
+					},
+				],
+			]);
+
+			return {
+				restarts,
+				liveSyncOperations,
+				ctx: (overrides: Partial<NsKeyContext> = {}): NsKeyContext => ({
+					injector: fakeInjector(registrations),
+					processType: "run",
+					...overrides,
+				}),
+			};
+		};
+
+		it("names the key and the promise each variant makes", () => {
+			assert.deepEqual(
+				[
+					restartShortcut(),
+					restartShortcut({ full: true }),
+					restartShortcut({ forceRebuildNativeApp: true }),
+				].map((shortcut) => [shortcut.key, shortcut.description]),
+				[
+					["r", "Restart the app"],
+					[
+						"R",
+						"Re-prepare and restart the app (rebuilds native app if needed)",
+					],
+					["B", "Rebuild native app and restart"],
+				],
+			);
+		});
+
+		it("restarts the app on the watched platform's devices", async () => {
+			const { restarts, ctx } = session({
+				descriptors: ["android-1", "ios-1"],
+				devicesByPlatform: { Android: ["android-1", "android-2"] },
+			});
+
+			await restartShortcut().action(ctx({ platform: "Android" }));
+
+			assert.deepEqual(restarts, [
+				{ projectDir: "/project", deviceIdentifiers: ["android-1"] },
+			]);
+		});
+
+		it("restarts the app on every device of the session when no platform is set", async () => {
+			const { restarts, ctx } = session();
+
+			await restartShortcut().action(ctx());
+
+			assert.deepEqual(restarts, [{ projectDir: "/project" }]);
+		});
+
+		it("says so instead of restarting everything when the platform has no session device", async () => {
+			const { restarts, ctx } = session({
+				descriptors: ["android-1"],
+				devicesByPlatform: { Android: ["android-1"] },
+			});
+			const infos: string[] = [];
+			const originalInfo = console.info;
+			console.info = (message?: any) => void infos.push(String(message));
+
+			try {
+				await restartShortcut().action(ctx({ platform: "iOS" }));
+			} finally {
+				console.info = originalInfo;
+			}
+
+			assert.deepEqual(restarts, []);
+			assert.include(infos.join("\n"), "no iOS device");
+		});
+
+		it("re-runs the live sync for `R`, without forcing a native rebuild", async () => {
+			const { liveSyncOperations, ctx } = session();
+
+			await restartShortcut({ full: true }).action(ctx());
+
+			assert.deepEqual(liveSyncOperations, [
+				{
+					devices: [{ platform: undefined }],
+					platform: undefined,
+					options: { restartLiveSync: true },
+				},
+			]);
+		});
+
+		it("forces the native rebuild only when asked for it", async () => {
+			const { liveSyncOperations, ctx } = session();
+
+			await restartShortcut({
+				forceRebuildNativeApp: true,
+				platform: "iOS",
+			}).action(ctx());
+
+			assert.deepEqual(liveSyncOperations, [
+				{
+					devices: [{ platform: "iOS" }],
+					platform: "iOS",
+					options: {
+						restartLiveSync: true,
+						skipNativePrepare: false,
+						forceRebuildNativeApp: true,
+					},
+				},
+			]);
+		});
+
+		it("hands the restart over to a caller that brought its own", async () => {
+			const { restarts, liveSyncOperations, ctx } = session();
+			let replacements = 0;
+
+			await restartShortcut({
+				restart: async () => void replacements++,
+			}).action(ctx());
+
+			assert.equal(replacements, 1);
+			assert.lengthOf(restarts, 0);
+			assert.lengthOf(liveSyncOperations, 0);
 		});
 	});
 
@@ -722,6 +900,53 @@ describe("key shortcuts", () => {
 
 			assert.lengthOf(info, 1);
 			assert.include(info[0], "press ? to list shortcuts");
+		});
+
+		const settle = () =>
+			new Promise<void>((resolve) => setTimeout(resolve, 260));
+
+		it("repeats the hint once a burst of syncs has settled", async () => {
+			const runController = new EventEmitter();
+			registrations.set("runController", runController);
+			service.attach({ shortcuts: [] });
+
+			runController.emit(RunOnDeviceEvents.runOnDeviceStarted);
+			runController.emit(RunOnDeviceEvents.runOnDeviceExecuted);
+			runController.emit(RunOnDeviceEvents.runOnDeviceError);
+			assert.lengthOf(info, 0);
+
+			await settle();
+
+			assert.lengthOf(info, 1);
+			assert.include(info[0], "press ? to list shortcuts");
+		});
+
+		it("stops repeating the hint once it detaches", async () => {
+			const runController = new EventEmitter();
+			registrations.set("runController", runController);
+			service.attach({ shortcuts: [] });
+			service.detach();
+
+			runController.emit(RunOnDeviceEvents.runOnDeviceExecuted);
+			await settle();
+
+			assert.lengthOf(info, 0);
+			assert.equal(
+				runController.listenerCount(RunOnDeviceEvents.runOnDeviceExecuted),
+				0,
+			);
+		});
+
+		it("does not listen for syncs when it attaches over IPC", () => {
+			const runController = new EventEmitter();
+			registrations.set("runController", runController);
+			stdin.isTTY = false;
+			service.attach({ shortcuts: [] });
+
+			assert.equal(
+				runController.listenerCount(RunOnDeviceEvents.runOnDeviceExecuted),
+				0,
+			);
 		});
 	});
 

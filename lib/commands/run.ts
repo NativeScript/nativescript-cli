@@ -159,6 +159,7 @@ export function runCommandShortcuts(
 
 	return [
 		restartShortcut({ platform }),
+		restartShortcut({ platform, full: true }),
 		restartShortcut({ platform, forceRebuildNativeApp: true }),
 		watcherShortcut(),
 	];

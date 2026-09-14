@@ -1,5 +1,7 @@
+import { EventEmitter } from "events";
 import { stripVTControlCharacters } from "node:util";
 import { color } from "../color";
+import { RunOnDeviceEvents } from "../constants";
 import { IChildProcess } from "../common/declarations";
 import { Injector } from "../common/di/injector";
 import {
@@ -13,12 +15,25 @@ import {
 } from "../common/contracts/key-shortcuts";
 import { runCommand } from "../common/services/command-definition-adapter";
 import { injector } from "../common/yok";
+import { IProjectDataService } from "../definitions/project";
 import { IStartService } from "../definitions/start-service";
 
 /** A terminal in raw mode delivers this byte instead of raising SIGINT. */
 const CTRL_C = "\u0003";
 const HELP_KEY = "?";
 const WORKFLOW_GROUP = "Development Workflow";
+
+/**
+ * Session events that end a burst of output; the hint is repeated after them
+ * so it sits below the latest sync rather than scrolled out of view.
+ */
+const HINT_EVENTS: string[] = [
+	RunOnDeviceEvents.runOnDeviceStarted,
+	RunOnDeviceEvents.runOnDeviceExecuted,
+	RunOnDeviceEvents.runOnDeviceError,
+];
+/** Several devices report the same sync within this window; print once. */
+const HINT_DEBOUNCE_MS = 200;
 
 // The shortcut vocabulary lives with the registry contract, so that the
 // command API can type a `shortcuts` field without reaching into this module.
@@ -133,6 +148,49 @@ const launch =
 	(ctx: NsKeyContext): Promise<void> =>
 		run(ctx.injector.get<IStartService>("startService"));
 
+/** The devices of the running session, narrowed to one platform. */
+const sessionDevicesOnPlatform = (
+	ctx: NsKeyContext,
+	projectDir: string,
+	platform: DevicePlatformName,
+): string[] => {
+	const $devicesService =
+		ctx.injector.get<Mobile.IDevicesService>("devicesService");
+	const onPlatform = $devicesService
+		.getDevicesForPlatform(platform)
+		.map((device) => device.deviceInfo.identifier);
+
+	return ctx.injector
+		.get<IRunController>("runController")
+		.getDeviceDescriptors({ projectDir })
+		.map((descriptor) => descriptor.identifier)
+		.filter((identifier) => onPlatform.includes(identifier));
+};
+
+const restartApp = async (
+	ctx: NsKeyContext,
+	platform: DevicePlatformName,
+): Promise<void> => {
+	const $runController = ctx.injector.get<IRunController>("runController");
+	const { projectDir } = ctx.injector
+		.get<IProjectDataService>("projectDataService")
+		.getProjectData();
+	const target = platform || ctx.platform;
+	if (!target) {
+		await $runController.restartApplication({ projectDir });
+		return;
+	}
+
+	// An empty list would mean "every device" to the run controller.
+	const deviceIdentifiers = sessionDevicesOnPlatform(ctx, projectDir, target);
+	if (!deviceIdentifiers.length) {
+		console.info(`There is no ${target} device in the running session.`);
+		return;
+	}
+
+	await $runController.restartApplication({ projectDir, deviceIdentifiers });
+};
+
 const restart = async (
 	ctx: NsKeyContext,
 	platform: DevicePlatformName,
@@ -189,7 +247,9 @@ const cleanProject = async (ctx: NsKeyContext): Promise<void> => {
 };
 
 export interface RestartShortcutOptions {
-	/** Declares `R`, which always rebuilds the native app, rather than `r`. */
+	/** Declares `R`: prepares the project again before restarting the app. */
+	full?: boolean;
+	/** Declares `B`: rebuilds the native app whether or not it changed. */
 	forceRebuildNativeApp?: boolean;
 	/** Restricts the restart to one platform; unset takes it from the context. */
 	platform?: DevicePlatformName;
@@ -198,25 +258,34 @@ export interface RestartShortcutOptions {
 	 * caller whose restart has to carry state the shared one knows nothing of,
 	 * such as an attached debug session.
 	 */
-	restart?(forceRebuildNativeApp: boolean): Promise<void>;
+	restart?(): Promise<void>;
 }
 
-/** One half of the restart pair: `r` rebuilds only if needed, `R` always. */
+/**
+ * One rung of the restart ladder: `r` restarts the running app and nothing
+ * else, `R` prepares the project again first, `B` also rebuilds the native
+ * app whether or not anything changed.
+ */
 export function restartShortcut(
 	options: RestartShortcutOptions = {},
 ): KeyShortcut<NsKeyContext> {
 	const force = options.forceRebuildNativeApp === true;
+	const full = force || options.full === true;
 
 	return {
-		key: force ? "R" : "r",
+		key: force ? "B" : full ? "R" : "r",
 		description: force
-			? "Force rebuild native app and restart"
-			: "Rebuild native app if needed and restart",
+			? "Rebuild native app and restart"
+			: full
+				? "Re-prepare and restart the app (rebuilds native app if needed)"
+				: "Restart the app",
 		group: WORKFLOW_GROUP,
 		action: (ctx) =>
 			options.restart
-				? options.restart(force)
-				: restart(ctx, options.platform, force),
+				? options.restart()
+				: full
+					? restart(ctx, options.platform, force)
+					: restartApp(ctx, options.platform),
 	};
 }
 
@@ -285,6 +354,7 @@ export function keyShortcuts(): KeyShortcut<NsKeyContext>[] {
 		},
 		openIdeShortcut("visionOS"),
 		restartShortcut(),
+		restartShortcut({ full: true }),
 		restartShortcut({ forceRebuildNativeApp: true }),
 		watcherShortcut(),
 		{
@@ -308,6 +378,8 @@ export class KeyShortcutService implements IKeyShortcutService {
 	private context: KeyContextBase;
 	private running: boolean = false;
 	private attached: boolean = false;
+	private hintSource: EventEmitter;
+	private hintTimer: NodeJS.Timeout;
 
 	constructor(
 		private $injector: Injector,
@@ -346,6 +418,7 @@ export class KeyShortcutService implements IKeyShortcutService {
 		stdin.on("data", this.onData);
 		process.once("exit", this.onExit);
 		this.attached = true;
+		this.repeatHintAfterSyncs();
 
 		return true;
 	}
@@ -357,6 +430,7 @@ export class KeyShortcutService implements IKeyShortcutService {
 			return;
 		}
 		this.attached = false;
+		this.stopRepeatingHint();
 
 		process.off("message", this.onMessage);
 		process.off("exit", this.onExit);
@@ -402,6 +476,47 @@ export class KeyShortcutService implements IKeyShortcutService {
 
 		console.info(color.dim(` › press ${HELP_KEY} to list shortcuts`));
 	}
+
+	/**
+	 * The run controller is optional here: the engine also serves commands
+	 * that never start a session, and the tests build it without one.
+	 */
+	private repeatHintAfterSyncs(): void {
+		const runController = this.$injector.get<EventEmitter>("runController", {
+			optional: true,
+		});
+		if (!runController || typeof runController.on !== "function") {
+			return;
+		}
+
+		this.hintSource = runController;
+		for (const event of HINT_EVENTS) {
+			runController.on(event, this.onSyncSettled);
+		}
+	}
+
+	private stopRepeatingHint(): void {
+		clearTimeout(this.hintTimer);
+		this.hintTimer = undefined;
+
+		if (!this.hintSource) {
+			return;
+		}
+		for (const event of HINT_EVENTS) {
+			this.hintSource.off(event, this.onSyncSettled);
+		}
+		this.hintSource = undefined;
+	}
+
+	private onSyncSettled = (): void => {
+		clearTimeout(this.hintTimer);
+		this.hintTimer = setTimeout(() => {
+			this.hintTimer = undefined;
+			this.printHint();
+		}, HINT_DEBOUNCE_MS);
+		// A pending hint must not be what keeps the CLI alive.
+		this.hintTimer.unref?.();
+	};
 
 	/**
 	 * Help and dispatch each read the registry through this one function, so a

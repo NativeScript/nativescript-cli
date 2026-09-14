@@ -146,6 +146,7 @@ export default class StartService implements IStartService {
 			forward("w"),
 			forward("r"),
 			forward("R"),
+			forward("B"),
 			{
 				...findShortcut(shortcuts, "c"),
 				quiet: true,

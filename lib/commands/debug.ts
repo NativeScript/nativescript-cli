@@ -180,9 +180,13 @@ export async function runDebugCommand(
 		return;
 	}
 
-	// The device map is what keeps the debugger attached across a restart, so
-	// the shared restart — which knows nothing of it — cannot stand in here.
-	const restartDebugSession = (forceRebuildNativeApp: boolean): Promise<void> =>
+	// The device map is what keeps the debugger attached across a re-prepare,
+	// so the shared restart — which knows nothing of it — cannot stand in here.
+	// The plain app restart needs no stand-in: it goes through the run
+	// controller, whose persisted descriptor already has debugging enabled.
+	const restartDebugSession = (
+		forceRebuildNativeApp: boolean = false,
+	): Promise<void> =>
 		services.$liveSyncCommandHelper.executeLiveSyncOperation(
 			[selectedDeviceForDebug],
 			services.platform,
@@ -193,10 +197,11 @@ export async function runDebugCommand(
 		);
 
 	context.injector.get(KeyShortcutRegistry).add(
-		restartShortcut({ restart: restartDebugSession }),
+		restartShortcut(),
+		restartShortcut({ full: true, restart: () => restartDebugSession() }),
 		restartShortcut({
 			forceRebuildNativeApp: true,
-			restart: restartDebugSession,
+			restart: () => restartDebugSession(true),
 		}),
 		watcherShortcut(),
 	);
