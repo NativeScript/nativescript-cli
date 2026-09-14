@@ -23,13 +23,16 @@ import {
 	CommandArgumentValues,
 	CommandContext,
 	CommandDefinition,
+	CommandClass,
+	CommandName,
 	CommandNamesOf,
 	CommandOptionSpec,
 	CommandOptionType,
 	CommandOptionsSchema,
 	DefinedCommand,
+	RegisterableCommand,
 	defineCommand,
-	isCommandDefinition,
+	toCommandDefinition,
 } from "../define-command";
 
 const OPTION_TYPES: IDictionary<OptionType> = {
@@ -564,8 +567,9 @@ export async function runCommand(
 }
 
 /**
- * Registers a command with the CLI. Takes either the result of defineCommand()
- * or the definition itself, which it defines on the caller's behalf.
+ * Registers a command with the CLI. Takes a Command() class, the result of
+ * defineCommand(), or a bare definition, which it defines on the caller's
+ * behalf.
  *
  * Registration targets the injector of the current injection context, and
  * `providers` scope the command to a child of it. To register against some
@@ -583,13 +587,14 @@ export function registerCommand<
 	TSetup = any,
 >(
 	definition:
+		| CommandClass<CommandName, TSchema, TResult>
 		| DefinedCommand<TSchema, TResult, TSetup>
 		| CommandDefinition<TSchema, TResult, TSetup>,
 	providers: Provider[] = [],
 ): DeferredCommandResult {
-	const defined = isCommandDefinition(definition)
-		? definition
-		: defineCommand(<CommandDefinition<TSchema, TResult, TSetup>>definition);
+	const defined =
+		toCommandDefinition(definition) ||
+		defineCommand(<CommandDefinition<TSchema, TResult, TSetup>>definition);
 	const target = contextInjector();
 	const scope = providers.length ? target.createChild(providers) : target;
 	const owner = target.get(COMMAND_OWNER, { optional: true }) || CLI_OWNER;
@@ -648,7 +653,7 @@ type MissingTypeArgument =
  * aborts startup instead of returning a result nobody would check.
  */
 export function registerBuiltInCommand<
-	TDefinition extends DefinedCommand<any, any, any> = never,
+	TDefinition extends RegisterableCommand = never,
 >(
 	name: [TDefinition] extends [never]
 		? MissingTypeArgument
@@ -669,7 +674,7 @@ export function registerBuiltInCommand<
 }
 
 export function registerLazyCommand<
-	TDefinition extends DefinedCommand<any, any, any> = never,
+	TDefinition extends RegisterableCommand = never,
 >(
 	name: [TDefinition] extends [never]
 		? MissingTypeArgument
@@ -684,13 +689,16 @@ export function registerLazyCommand<
 	return registry.registerDeferredCommand(commandName, {
 		owner: target.get(COMMAND_OWNER, { optional: true }) || CLI_OWNER,
 		load: () => {
-			const definition = load();
+			const loaded = load();
 
 			// The compile-time check above is only as good as the type argument the
 			// call site passes, so the same mismatch is caught here as well.
-			if (!isCommandDefinition(definition)) {
+			const definition = toCommandDefinition(loaded);
+			if (!definition) {
 				throw new Error(
-					"the loader did not return a defineCommand() definition",
+					typeof loaded === "function"
+						? "the loader returned a class that did not come from Command()"
+						: "the loader did not return a defineCommand() definition or a Command() class",
 				);
 			}
 

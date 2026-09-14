@@ -27,7 +27,7 @@ import {
 	CommandRegistry,
 	describeRejection,
 } from "../common/contracts";
-import { DefinedCommand, isCommandDefinition } from "../common/define-command";
+import { DefinedCommand, toCommandDefinition } from "../common/define-command";
 import { registerDefinitionAs } from "../common/services/command-definition-adapter";
 
 function isNonEmptyString(value: any): boolean {
@@ -449,9 +449,10 @@ export class ExtensibilityService implements IExtensibilityService {
 		const exported = this.loadInExtensionScope(extensionName, () =>
 			require(absoluteModulePath),
 		);
-		const candidate = (exported && exported.default) ?? exported;
+		const exportedValue = (exported && exported.default) ?? exported;
 
-		if (!isCommandDefinition(candidate)) {
+		const candidate = toCommandDefinition(exportedValue);
+		if (!candidate) {
 			return;
 		}
 

@@ -6,7 +6,9 @@
  * lib/common/services/command-definition-adapter.
  */
 
+import { COMMAND_CONTEXT } from "./contracts/command-context";
 import type { KeyShortcut } from "./contracts/key-shortcuts";
+import { inject } from "./di/inject";
 import type { Injector } from "./di/injector";
 
 /**
@@ -255,7 +257,10 @@ const OPTION_TYPES: CommandOptionType[] = [
 const ACCEPTED_FORM =
 	'defineCommand({ name: "widget|add", run(ctx) { ... } }) — with the ' +
 	"optional fields description, options, arguments, allowUnknownOptions, " +
-	"setup, canExecute, shortcuts, postRun, disableAnalytics and enableHooks.";
+	"setup, canExecute, shortcuts, postRun, disableAnalytics and enableHooks. " +
+	'Or the class form, class WidgetAdd extends Command({ name: "widget|add" }) ' +
+	"{ run() { ... } }, which declares the same fields except the handlers and " +
+	"implements run, and optionally canExecute, postRun and shortcuts, as methods.";
 
 const describeDefinition = (definition: any): string => {
 	const name = definition && definition.name;
@@ -556,12 +561,18 @@ export type CommandName = string | readonly string[];
  * be checked against them.
  */
 export type CommandNamesOf<TDefinition> = TDefinition extends {
-	name: infer TName;
+	definition: infer TClassDefinition;
 }
-	? TName extends readonly (infer TAlias)[]
-		? TAlias
-		: TName
-	: never;
+	? // A constructor's own `name` is Function.name, so the class form has to be
+		// read through its static definition before the `name` branch sees it.
+		CommandNamesOf<TClassDefinition>
+	: TDefinition extends {
+				name: infer TName;
+		  }
+		? TName extends readonly (infer TAlias)[]
+			? TAlias
+			: TName
+		: never;
 
 export function defineCommand<
 	TSchema extends CommandOptionsSchema = {},
@@ -582,4 +593,205 @@ export function isCommandDefinition(
 	value: any,
 ): value is DefinedCommand<any, any, any> {
 	return !!value && (<any>value)[COMMAND_DEFINITION_MARKER] === true;
+}
+
+/**
+ * Marks a constructor produced by `Command()`. Same `Symbol.for` reasoning as
+ * COMMAND_DEFINITION_MARKER, and the same reason it is read rather than
+ * `instanceof`: an extension bundles its own copy of this module.
+ */
+export const COMMAND_CLASS_MARKER: unique symbol = Symbol.for(
+	"nativescript:cli:commandClass",
+);
+
+/** The meta `Command()` was called with, inherited by every subclass. */
+const COMMAND_CLASS_META = Symbol.for("nativescript:cli:commandClassMeta");
+
+/** Per-constructor cache of the derived definition; own-property only. */
+const COMMAND_CLASS_DEFINITION = Symbol.for(
+	"nativescript:command:classDefinition",
+);
+
+/**
+ * What the class form declares up front: a definition without the handlers,
+ * which the class supplies as methods instead.
+ */
+export type CommandMeta<
+	TName extends CommandName = CommandName,
+	TSchema extends CommandOptionsSchema = {},
+> = Omit<
+	CommandDefinition<TSchema, any, any>,
+	"name" | "setup" | "canExecute" | "run" | "postRun" | "shortcuts"
+> & { name: TName };
+
+/**
+ * The instance side of the class form. Exported because it names the base of
+ * every `Command()` class — a subclass's declaration emit refers to it — not
+ * because anything should extend it directly.
+ */
+export abstract class CommandBase<
+	TSchema extends CommandOptionsSchema = {},
+	TResult = void,
+> {
+	/**
+	 * The instance is built once per invocation, as that invocation's `setup`,
+	 * so the context captured here is the one its own run was handed.
+	 */
+	protected readonly context: CommandContext<TSchema> = inject(COMMAND_CONTEXT);
+
+	protected get options(): CommandOptionValues<TSchema> {
+		return this.context.options;
+	}
+
+	protected get args(): string[] {
+		return this.context.args;
+	}
+
+	abstract run(): Promise<TResult> | TResult;
+	canExecute?(): Promise<boolean> | boolean;
+	postRun?(result: Awaited<TResult>): Promise<void> | void;
+	shortcuts?(): KeyShortcut[];
+}
+
+/**
+ * The static side. An abstract construct signature, so the compiler still
+ * requires a subclass to implement `run`, and a named type, so declaration
+ * emit for `class X extends Command({ ... })` has something to refer to.
+ */
+export type CommandClass<
+	TName extends CommandName = CommandName,
+	TSchema extends CommandOptionsSchema = {},
+	TResult = void,
+> = (abstract new () => CommandBase<TSchema, TResult>) & {
+	readonly definition: NamedCommand<
+		TSchema,
+		TResult,
+		CommandBase<TSchema, TResult>,
+		TName
+	>;
+	readonly [COMMAND_CLASS_MARKER]: true;
+};
+
+/** Either accepted form of a command, as a registration site takes it. */
+export type RegisterableCommand =
+	DefinedCommand<any, any, any> | CommandClass<any, any, any>;
+
+export function isCommandClass(
+	value: any,
+): value is CommandClass<any, any, any> {
+	return (
+		typeof value === "function" && (<any>value)[COMMAND_CLASS_MARKER] === true
+	);
+}
+
+const buildClassDefinition = (ctor: any): DefinedCommand<any, any, any> => {
+	const meta = ctor[COMMAND_CLASS_META];
+	const prototype = ctor.prototype;
+	const implementsMethod = (method: string): boolean =>
+		typeof prototype[method] === "function";
+
+	if (!implementsMethod("run")) {
+		invalid(
+			meta,
+			`the class '${ctor.name || "<anonymous>"}' implements no 'run' method`,
+		);
+	}
+
+	// The instance IS the setup result, so every handler reaches it as the
+	// second argument the adapter already threads through.
+	const definition: any = {
+		...meta,
+		setup: () => new ctor(),
+		run: (context: any, instance: any) => instance.run(),
+	};
+
+	if (implementsMethod("canExecute")) {
+		definition.canExecute = (context: any, instance: any) =>
+			instance.canExecute();
+	}
+
+	if (implementsMethod("postRun")) {
+		definition.postRun = (context: any, result: any, instance: any) =>
+			instance.postRun(result);
+	}
+
+	if (implementsMethod("shortcuts")) {
+		definition.shortcuts = (context: any, instance: any) =>
+			instance.shortcuts();
+	}
+
+	return defineCommand(definition);
+};
+
+/**
+ * The definition a `Command()` class stands for, cached on the constructor it
+ * was read from. The cache entry is an own property so a class extending
+ * another command class never serves its parent's definition.
+ */
+export function classCommandDefinition(
+	ctor: any,
+): DefinedCommand<any, any, any> {
+	if (!isCommandClass(ctor)) {
+		throw new Error(
+			`${describeDefinition(ctor)} is not a command class: it did not come ` +
+				`from Command(). Accepted form: ${ACCEPTED_FORM}`,
+		);
+	}
+
+	const target: any = ctor;
+	if (Object.prototype.hasOwnProperty.call(target, COMMAND_CLASS_DEFINITION)) {
+		return target[COMMAND_CLASS_DEFINITION];
+	}
+
+	const definition = buildClassDefinition(target);
+	Object.defineProperty(target, COMMAND_CLASS_DEFINITION, {
+		value: definition,
+	});
+
+	return definition;
+}
+
+/** The definition behind either form, or null for anything else. */
+export function toCommandDefinition(
+	value: any,
+): DefinedCommand<any, any, any> | null {
+	if (isCommandClass(value)) {
+		return classCommandDefinition(value);
+	}
+
+	return isCommandDefinition(value) ? value : null;
+}
+
+/**
+ * The class authoring form: sugar over defineCommand, not a second execution
+ * path. The returned base carries a `definition` that reads the class it is
+ * accessed through, so the subclass — not this base — is what `setup`
+ * instantiates, and registration keeps taking definitions only.
+ *
+ *     export class PlatformClean extends Command({
+ *       name: "platform|clean",
+ *       options: { frameworkPath: stringOption() },
+ *     }) {
+ *       private $helper = inject<IPlatformCommandHelper>("platformCommandHelper");
+ *       run() { return this.$helper.clean(this.args, this.options.frameworkPath); }
+ *     }
+ */
+export function Command<
+	const TName extends CommandName,
+	TSchema extends CommandOptionsSchema = {},
+	TResult = void,
+>(meta: CommandMeta<TName, TSchema>): CommandClass<TName, TSchema, TResult> {
+	abstract class Base extends CommandBase<TSchema, TResult> {
+		// A getter, because `this` in a static accessor is the constructor the
+		// property was read through: that is the only hook that resolves the
+		// subclass without the subclass having to name itself.
+		static get definition(): DefinedCommand<any, any, any> {
+			return classCommandDefinition(this);
+		}
+	}
+
+	Object.defineProperty(Base, COMMAND_CLASS_MARKER, { value: true });
+	Object.defineProperty(Base, COMMAND_CLASS_META, { value: meta });
+
+	return <any>Base;
 }
