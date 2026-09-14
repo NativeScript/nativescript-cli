@@ -9,12 +9,16 @@
 import {
 	arrayOption,
 	booleanOption,
+	Command,
 	defineCommand,
 	numberOption,
 	stringOption,
 } from "../../lib/common/define-command";
 import type { CommandArgumentValues } from "../../lib/common/define-command";
-import { registerLazyCommand } from "../../lib/common/services/command-definition-adapter";
+import {
+	registerBuiltInCommand,
+	registerLazyCommand,
+} from "../../lib/common/services/command-definition-adapter";
 import type { Injector } from "../../lib/common/di/injector";
 
 type IsExact<A, B> =
@@ -244,3 +248,76 @@ registerLazyCommand(
 );
 
 declare function setupLazyCommand(): { projectDir: string };
+
+// The class form types this.options, this.args and this.context off the schema
+// the meta declares, exactly as the object form types ctx.
+class TypefixturePlatformClean extends Command({
+	name: "typefixture|class-clean",
+	options: {
+		frameworkPath: stringOption({ default: "platforms" }),
+		verbose: booleanOption(),
+	},
+	arguments: "any",
+}) {
+	run(): void {
+		const frameworkPath = this.options.frameworkPath;
+		const verbose = this.options.verbose;
+		const args = this.args;
+		const fail = this.context.fail;
+
+		expectExactType<IsExact<typeof frameworkPath, string>>();
+		expectExactType<IsExact<typeof verbose, boolean | undefined>>();
+		expectExactType<IsExact<typeof args, string[]>>();
+		expectExactType<IsExact<ReturnType<typeof fail>, never>>();
+
+		// @ts-expect-error - the schema types this.options and nothing else
+		this.options.undeclared;
+	}
+}
+
+class TypefixtureResult extends Command<"typefixture|class-result", {}, number>(
+	{ name: "typefixture|class-result" },
+) {
+	run(): number {
+		return 1;
+	}
+
+	postRun(result: number): void {
+		expectExactType<IsExact<typeof result, number>>();
+	}
+}
+
+// @ts-expect-error - run is abstract; a command class has to implement it
+class TypefixtureNoRun extends Command({ name: "typefixture|class-no-run" }) {}
+
+// The static definition is what a registration site is checked against, so the
+// literal name has to survive from the meta through to the call.
+registerBuiltInCommand<typeof TypefixturePlatformClean>(
+	"typefixture|class-clean",
+	() => require("./commands/clean").TypefixturePlatformClean,
+);
+
+registerBuiltInCommand<typeof TypefixturePlatformClean>(
+	// @ts-expect-error - the class declares 'typefixture|class-clean'
+	"typefixture|class-cleann",
+	() => require("./commands/clean").TypefixturePlatformClean,
+);
+
+class TypefixtureAliased extends Command({
+	name: ["typefixture|class-vision", "typefixture|class-visionos"],
+}) {
+	run(): void {
+		return undefined;
+	}
+}
+
+registerLazyCommand<typeof TypefixtureAliased>(
+	"typefixture|class-visionos",
+	() => require("./commands/clean").TypefixtureAliased,
+);
+
+registerLazyCommand<typeof TypefixtureAliased>(
+	// @ts-expect-error - not one of the names the class declares
+	"typefixture|class-vision2",
+	() => require("./commands/clean").TypefixtureAliased,
+);

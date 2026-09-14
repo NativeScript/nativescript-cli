@@ -23,15 +23,7 @@ export type PreviewCommandContext = CommandContext<
 	typeof previewCommandOptions
 >;
 
-export interface IPreviewCommandServices {
-	$childProcess: IChildProcess;
-	$errors: IErrors;
-	$logger: ILogger;
-	$packageManager: IPackageManager;
-	$projectData: IProjectData;
-}
-
-export function setupPreviewCommand(): IPreviewCommandServices {
+export function setupPreviewCommand() {
 	return {
 		$childProcess: inject<IChildProcess>("childProcess"),
 		$errors: inject<IErrors>("errors"),
@@ -40,6 +32,8 @@ export function setupPreviewCommand(): IPreviewCommandServices {
 		$projectData: inject<IProjectData>("projectData"),
 	};
 }
+
+export type IPreviewCommandServices = ReturnType<typeof setupPreviewCommand>;
 
 function getPreviewCLIPath(services: IPreviewCommandServices): string {
 	return resolvePackagePath(PREVIEW_CLI_PACKAGE, {

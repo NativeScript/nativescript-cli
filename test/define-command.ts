@@ -8,6 +8,7 @@ import {
 	InjectionToken,
 	runInInjectionContext,
 } from "../lib/common/di";
+import { COMMAND_CONTEXT } from "../lib/common/contracts/command-context";
 import {
 	COMMAND_OWNER,
 	CommandRegistry,
@@ -20,13 +21,16 @@ import { LoggerStub, HooksServiceStub } from "./stubs";
 import {
 	arrayOption,
 	booleanOption,
+	Command,
 	defineCommand,
+	isCommandClass,
 	isCommandDefinition,
 	numberOption,
 	stringOption,
 } from "../lib/common/define-command";
 import {
 	createCommandFromDefinition,
+	registerBuiltInCommand,
 	registerCommand,
 	registerLazyCommand,
 } from "../lib/common/services/command-definition-adapter";
@@ -2272,6 +2276,318 @@ describe("defineCommand", () => {
 
 			assert.isTrue(injectFailed);
 			assert.strictEqual(late, 42);
+		});
+	});
+
+	describe("class form", () => {
+		it("runs with the declared options and arguments", async () => {
+			const testInjector = createTestInjector({ release: true });
+			const seen: any[] = [];
+
+			class Widget extends Command({
+				name: "dctest-class",
+				options: { release: booleanOption({ default: false }) },
+				arguments: "any",
+			}) {
+				public run(): void {
+					seen.push([this.options.release, this.args, this.context.params]);
+				}
+			}
+
+			assert.isTrue(isCommandClass(Widget));
+			assert.isTrue(isCommandDefinition(Widget.definition));
+
+			const command = createCommandFromDefinition(
+				Widget.definition,
+				testInjector,
+			);
+			await command.execute(["android"]);
+
+			assert.deepEqual(seen, [[true, ["android"], {}]]);
+		});
+
+		it("derives one definition per class, not per access", () => {
+			class Widget extends Command({ name: "dctest-class-cached" }) {
+				public run(): void {
+					/* intentionally left blank */
+				}
+			}
+
+			assert.strictEqual(Widget.definition, Widget.definition);
+			assert.equal(Widget.definition.name, "dctest-class-cached");
+		});
+
+		it("builds one instance per invocation, with inject() fields resolved", async () => {
+			const testInjector = createTestInjector();
+			testInjector.register("dcTestGreeter", { greet: () => "hello" });
+			const instances: any[] = [];
+
+			class Widget extends Command({ name: "dctest-class-instances" }) {
+				private $greeter = inject<any>("dcTestGreeter");
+
+				public run(): void {
+					instances.push(this);
+					assert.equal(this.$greeter.greet(), "hello");
+				}
+			}
+
+			const command = createCommandFromDefinition(
+				Widget.definition,
+				testInjector,
+			);
+			await command.execute([]);
+			await command.execute([]);
+
+			assert.lengthOf(instances, 2);
+			assert.notStrictEqual(instances[0], instances[1]);
+			assert.instanceOf(instances[0], Widget);
+		});
+
+		it("honours an optional canExecute and leaves it out when undeclared", async () => {
+			const testInjector = createTestInjector();
+
+			class Refusing extends Command({
+				name: "dctest-class-refuses",
+				arguments: "any",
+			}) {
+				public canExecute(): boolean {
+					return this.args[0] === "yes";
+				}
+
+				public run(): void {
+					/* intentionally left blank */
+				}
+			}
+
+			class Plain extends Command({ name: "dctest-class-plain" }) {
+				public run(): void {
+					/* intentionally left blank */
+				}
+			}
+
+			assert.isUndefined(Plain.definition.canExecute);
+
+			const refusing = createCommandFromDefinition(
+				Refusing.definition,
+				testInjector,
+			);
+			assert.isFalse(await refusing.canExecute(["no"]));
+			assert.isTrue(await refusing.canExecute(["yes"]));
+
+			const plain = createCommandFromDefinition(Plain.definition, testInjector);
+			assert.isTrue(await plain.canExecute([]));
+		});
+
+		it("wires postRun to the result run returned", async () => {
+			const testInjector = createTestInjector();
+			const order: string[] = [];
+
+			class Widget extends Command<"dctest-class-postrun", {}, number>({
+				name: "dctest-class-postrun",
+			}) {
+				public run(): number {
+					order.push("run");
+					return 7;
+				}
+
+				public postRun(result: number): void {
+					order.push(`postRun:${result}`);
+				}
+			}
+
+			const command = createCommandFromDefinition(
+				Widget.definition,
+				testInjector,
+			);
+			await command.execute([]);
+			await command.postCommandAction([]);
+
+			assert.deepEqual(order, ["run", "postRun:7"]);
+		});
+
+		it("wires shortcuts, and declares none when the class has no method", async () => {
+			const savedSetting = process.env.NS_COMMAND_SHORTCUTS;
+			process.env.NS_COMMAND_SHORTCUTS = "true";
+
+			try {
+				const testInjector = createTestInjector();
+				const attached: string[][] = [];
+				testInjector.register("keyShortcutService", {
+					attach(options: { shortcuts: KeyShortcut[] }): boolean {
+						attached.push(options.shortcuts.map((shortcut) => shortcut.key));
+						return true;
+					},
+					printHint: (): void => undefined,
+				});
+
+				class Widget extends Command({ name: "dctest-class-shortcuts" }) {
+					public run(): void {
+						/* intentionally left blank */
+					}
+
+					public shortcuts(): KeyShortcut[] {
+						return [
+							{
+								key: "r",
+								description: `Restart ${this.args[0]}`,
+								action: (): void => undefined,
+							},
+						];
+					}
+				}
+
+				class Plain extends Command({ name: "dctest-class-no-shortcuts" }) {
+					public run(): void {
+						/* intentionally left blank */
+					}
+				}
+
+				assert.isUndefined(Plain.definition.shortcuts);
+
+				const command = createCommandFromDefinition(
+					Widget.definition,
+					testInjector,
+				);
+				await command.execute(["ios"]);
+
+				assert.deepEqual(attached, [["r"]]);
+			} finally {
+				if (savedSetting === undefined) {
+					delete process.env.NS_COMMAND_SHORTCUTS;
+				} else {
+					process.env.NS_COMMAND_SHORTCUTS = savedSetting;
+				}
+			}
+		});
+
+		it("registers through registerCommand and registerBuiltInCommand", async () => {
+			const testInjector = createTestInjector();
+			const ran: string[] = [];
+
+			class Direct extends Command({ name: "dctest-class-direct" }) {
+				public run(): void {
+					ran.push("direct");
+				}
+			}
+
+			class Lazy extends Command({ name: "dctest-class-lazy" }) {
+				public run(): void {
+					ran.push("lazy");
+				}
+			}
+
+			runInInjectionContext(testInjector, () => registerCommand(Direct));
+			runInInjectionContext(testInjector, () =>
+				registerBuiltInCommand<typeof Lazy>(
+					"dctest-class-lazy",
+					() => <any>Lazy,
+				),
+			);
+
+			await testInjector.resolveCommand("dctest-class-direct").execute([]);
+			await testInjector.resolveCommand("dctest-class-lazy").execute([]);
+
+			assert.deepEqual(ran, ["direct", "lazy"]);
+		});
+
+		it("rejects a class that implements no run", () => {
+			const noRun: any = Command({ name: "dctest-class-norun" });
+
+			assert.throws(
+				() => noRun.definition,
+				/Invalid command definition for 'dctest-class-norun'.*implements no 'run' method.*Accepted form:/s,
+			);
+		});
+
+		it("reports a class Command() did not produce, through the deferred loader", () => {
+			const testInjector = createTestInjector();
+
+			class Impostor {
+				public run(): void {
+					/* intentionally left blank */
+				}
+			}
+
+			assert.isFalse(isCommandClass(Impostor));
+
+			runInInjectionContext(testInjector, () =>
+				registerLazyCommand<any>("dctest-class-impostor2", () => <any>Impostor),
+			);
+
+			assert.throws(
+				() => testInjector.resolveCommand("dctest-class-impostor2"),
+				/class that did not come from Command\(\)/,
+			);
+		});
+	});
+
+	describe("COMMAND_CONTEXT", () => {
+		it("resolves to the context the handlers of the same stage receive", async () => {
+			const testInjector = createTestInjector();
+			let injectedInSetup: any;
+			let injectedInRun: any;
+			let setupContext: any;
+			let runContext: any;
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context",
+					setup: (ctx) => {
+						setupContext = ctx;
+						injectedInSetup = inject(COMMAND_CONTEXT);
+					},
+					run: (ctx) => {
+						runContext = ctx;
+						injectedInRun = inject(COMMAND_CONTEXT);
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.strictEqual(injectedInSetup, setupContext);
+			assert.strictEqual(injectedInRun, runContext);
+		});
+
+		it("is scoped to the invocation, so the root injector never sees it", async () => {
+			const testInjector = createTestInjector();
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context-scope",
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.isNull(testInjector.get(COMMAND_CONTEXT, { optional: true }));
+			assert.throws(
+				() => testInjector.get(COMMAND_CONTEXT),
+				/unable to resolve/,
+			);
+		});
+
+		it("gives each invocation a context of its own", async () => {
+			const testInjector = createTestInjector();
+			const seen: any[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context-per-invocation",
+					setup: () => seen.push(inject(COMMAND_CONTEXT)),
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+			await command.execute([]);
+
+			assert.lengthOf(seen, 2);
+			assert.notStrictEqual(seen[0], seen[1]);
 		});
 	});
 

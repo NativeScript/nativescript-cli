@@ -3,21 +3,15 @@ import { CommandName, defineCommand } from "../define-command";
 import { inject } from "../di";
 import { PlatformTypes } from "../../constants";
 
-export interface IDoctorCommandServices {
-	platform: PlatformTypes;
-	$doctorService: IDoctorService;
-	$projectHelper: IProjectHelper;
-}
-
-export function setupDoctorCommand(
-	platform?: PlatformTypes,
-): IDoctorCommandServices {
+export function setupDoctorCommand(platform?: PlatformTypes) {
 	return {
 		platform,
 		$doctorService: inject<IDoctorService>("doctorService"),
 		$projectHelper: inject<IProjectHelper>("projectHelper"),
 	};
 }
+
+export type IDoctorCommandServices = ReturnType<typeof setupDoctorCommand>;
 
 const defineDoctorCommand = <const TName extends CommandName>(
 	name: TName,

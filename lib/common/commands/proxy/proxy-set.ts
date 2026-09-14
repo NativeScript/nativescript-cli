@@ -17,7 +17,6 @@ import { inject } from "../../di";
 import { isInteractive } from "../../helpers";
 import {
 	injectProxyCommandServices,
-	IProxyCommandServices,
 	tryTrackProxyCommandUsage,
 } from "./proxy-base";
 const { getCredentialsFromAuth } = require("proxy-lib/lib/utils");
@@ -32,14 +31,7 @@ export type ProxySetCommandContext = CommandContext<
 	typeof proxySetCommandOptions
 >;
 
-export interface IProxySetCommandServices extends IProxyCommandServices {
-	$errors: IErrors;
-	$hostInfo: IHostInfo;
-	$prompter: IPrompter;
-	$staticConfig: Config.IStaticConfig;
-}
-
-export function setupProxySetCommand(): IProxySetCommandServices {
+export function setupProxySetCommand() {
 	return {
 		...injectProxyCommandServices(),
 		$errors: inject<IErrors>("errors"),
@@ -48,6 +40,8 @@ export function setupProxySetCommand(): IProxySetCommandServices {
 		$staticConfig: inject<Config.IStaticConfig>("staticConfig"),
 	};
 }
+
+export type IProxySetCommandServices = ReturnType<typeof setupProxySetCommand>;
 
 function isPasswordRequired(username: string, password: string): boolean {
 	return !!(username && !password);

@@ -2,12 +2,7 @@ import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
 
-export interface IUninstallExtensionCommandServices {
-	$extensibilityService: IExtensibilityService;
-	$logger: ILogger;
-}
-
-export function setupUninstallExtensionCommand(): IUninstallExtensionCommandServices {
+export function setupUninstallExtensionCommand() {
 	return {
 		$extensibilityService: inject<IExtensibilityService>(
 			"extensibilityService",
@@ -15,6 +10,10 @@ export function setupUninstallExtensionCommand(): IUninstallExtensionCommandServ
 		$logger: inject<ILogger>("logger"),
 	};
 }
+
+export type IUninstallExtensionCommandServices = ReturnType<
+	typeof setupUninstallExtensionCommand
+>;
 
 export const uninstallExtensionCommandDefinition = defineCommand({
 	name: "extension|uninstall",

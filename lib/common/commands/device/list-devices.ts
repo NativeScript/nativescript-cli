@@ -3,6 +3,7 @@ import { DeviceConnectionType } from "../../../constants";
 import { IErrors } from "../../declarations";
 import {
 	booleanOption,
+	Command,
 	CommandContext,
 	CommandName,
 	CommandOptionsSchema,
@@ -20,15 +21,7 @@ export type ListDevicesCommandContext = CommandContext<
 	typeof listDevicesCommandOptions
 >;
 
-export interface IListDevicesCommandServices {
-	$devicesService: Mobile.IDevicesService;
-	$emulatorHelper: Mobile.IEmulatorHelper;
-	$errors: IErrors;
-	$logger: ILogger;
-	$mobileHelper: Mobile.IMobileHelper;
-}
-
-export function setupListDevicesCommand(): IListDevicesCommandServices {
+export function setupListDevicesCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 		$emulatorHelper: inject<Mobile.IEmulatorHelper>("emulatorHelper"),
@@ -37,6 +30,10 @@ export function setupListDevicesCommand(): IListDevicesCommandServices {
 		$mobileHelper: inject<Mobile.IMobileHelper>("mobileHelper"),
 	};
 }
+
+export type IListDevicesCommandServices = ReturnType<
+	typeof setupListDevicesCommand
+>;
 
 function printEmulators(
 	services: IListDevicesCommandServices,
@@ -164,21 +161,21 @@ export async function runListDevicesCommand(
 	}
 }
 
-export const listDevicesCommandDefinition = defineCommand({
+export class ListDevicesCommand extends Command({
 	name: ["device|*list", "devices|*list"],
 	description: "Lists the connected devices and emulators.",
 	options: listDevicesCommandOptions,
 	arguments: [{ name: "platform" }],
-	setup: setupListDevicesCommand,
-	run(context, services): Promise<void> {
-		return runListDevicesCommand(context, services, context.args[0]);
-	},
-});
+}) {
+	private services = setupListDevicesCommand();
 
-interface IListPlatformDevicesCommandServices extends IListDevicesCommandServices {
-	platform: string;
+	public run(): Promise<void> {
+		return runListDevicesCommand(this.context, this.services, this.args[0]);
+	}
 }
 
+// One definition per platform, generated: the object form is what a family of
+// commands needs, where the class form fits a single named command.
 const defineListPlatformDevicesCommand = <const TName extends CommandName>(
 	name: TName,
 	listedPlatform: "iOS" | "Android",
@@ -188,7 +185,7 @@ const defineListPlatformDevicesCommand = <const TName extends CommandName>(
 		description: "Lists the connected devices and emulators for one platform.",
 		options: listDevicesCommandOptions,
 		arguments: "none",
-		setup(): IListPlatformDevicesCommandServices {
+		setup() {
 			const $devicePlatformsConstants =
 				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
 

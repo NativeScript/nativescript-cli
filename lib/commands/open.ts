@@ -14,23 +14,7 @@ import { IOptions } from "../declarations";
 import { IProjectData } from "../definitions/project";
 import type { IOSProjectService } from "../services/ios-project-service";
 
-export interface IOpenXcodeProjectServices {
-	$iOSProjectService: IOSProjectService;
-	$logger: ILogger;
-	$childProcess: IChildProcess;
-	$projectData: IProjectData;
-	$xcodeSelectService: IXcodeSelectService;
-	$xcodebuildArgsService: IXcodebuildArgsService;
-}
-
-export interface IOpenAndroidStudioServices {
-	$logger: ILogger;
-	$liveSyncCommandHelper: ILiveSyncCommandHelper;
-	$childProcess: IChildProcess;
-	$projectData: IProjectData;
-}
-
-export function injectOpenXcodeProjectServices(): IOpenXcodeProjectServices {
+export function injectOpenXcodeProjectServices() {
 	return {
 		$iOSProjectService: inject<IOSProjectService>("iOSProjectService"),
 		$logger: inject<ILogger>("logger"),
@@ -43,7 +27,11 @@ export function injectOpenXcodeProjectServices(): IOpenXcodeProjectServices {
 	};
 }
 
-export function injectOpenAndroidStudioServices(): IOpenAndroidStudioServices {
+export type IOpenXcodeProjectServices = ReturnType<
+	typeof injectOpenXcodeProjectServices
+>;
+
+export function injectOpenAndroidStudioServices() {
 	return {
 		$logger: inject<ILogger>("logger"),
 		$liveSyncCommandHelper: inject<ILiveSyncCommandHelper>(
@@ -53,6 +41,10 @@ export function injectOpenAndroidStudioServices(): IOpenAndroidStudioServices {
 		$projectData: inject<IProjectData>("projectData"),
 	};
 }
+
+export type IOpenAndroidStudioServices = ReturnType<
+	typeof injectOpenAndroidStudioServices
+>;
 
 export function getAndroidStudioPath(): string | null {
 	const os = currentPlatform();

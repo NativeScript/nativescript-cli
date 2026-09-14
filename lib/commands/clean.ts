@@ -88,19 +88,7 @@ const cleanCommandOptions = {
 
 export type CleanCommandContext = CommandContext<typeof cleanCommandOptions>;
 
-export interface ICleanCommandServices {
-	$childProcess: IChildProcess;
-	$logger: ILogger;
-	$projectCleanupService: IProjectCleanupService;
-	$projectConfigService: IProjectConfigService;
-	$projectData: IProjectData;
-	$projectService: IProjectService;
-	$prompter: IPrompter;
-	$staticConfig: IStaticConfig;
-	$terminalSpinnerService: ITerminalSpinnerService;
-}
-
-export function setupCleanCommand(): ICleanCommandServices {
+export function setupCleanCommand() {
 	return {
 		$childProcess: inject<IChildProcess>("childProcess"),
 		$logger: inject<ILogger>("logger"),
@@ -119,6 +107,8 @@ export function setupCleanCommand(): ICleanCommandServices {
 		),
 	};
 }
+
+export type ICleanCommandServices = ReturnType<typeof setupCleanCommand>;
 
 async function getNSProjectPathsInDirectory(
 	services: ICleanCommandServices,

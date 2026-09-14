@@ -3,7 +3,7 @@ import * as stubs from "./stubs";
 import { addPlatformCommandDefinition } from "../lib/commands/add-platform";
 import { removePlatformCommandDefinition } from "../lib/commands/remove-platform";
 import { updatePlatformCommandDefinition } from "../lib/commands/update-platform";
-import { platformCleanCommandDefinition } from "../lib/commands/platform-clean";
+import { PlatformCleanCommand } from "../lib/commands/platform-clean";
 import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import * as StaticConfigLib from "../lib/config";
 import * as CommandsServiceLib from "../lib/common/services/commands-service";
@@ -171,7 +171,7 @@ function createTestInjector() {
 		registerCommand(updatePlatformCommandDefinition),
 	);
 	runInInjectionContext(testInjector, () =>
-		registerCommand(platformCleanCommandDefinition),
+		registerCommand(PlatformCleanCommand),
 	);
 	testInjector.register("resources", {});
 	testInjector.register("commandsService", {

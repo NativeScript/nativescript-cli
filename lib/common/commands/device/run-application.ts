@@ -15,19 +15,17 @@ export type RunApplicationOnDeviceCommandContext = CommandContext<
 	typeof runApplicationOnDeviceCommandOptions
 >;
 
-export interface IRunApplicationOnDeviceCommandServices {
-	$devicesService: Mobile.IDevicesService;
-	$errors: IErrors;
-	$staticConfig: Config.IStaticConfig;
-}
-
-export function setupRunApplicationOnDeviceCommand(): IRunApplicationOnDeviceCommandServices {
+export function setupRunApplicationOnDeviceCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 		$errors: inject<IErrors>("errors"),
 		$staticConfig: inject<Config.IStaticConfig>("staticConfig"),
 	};
 }
+
+export type IRunApplicationOnDeviceCommandServices = ReturnType<
+	typeof setupRunApplicationOnDeviceCommand
+>;
 
 export async function runRunApplicationOnDeviceCommand(
 	context: RunApplicationOnDeviceCommandContext,

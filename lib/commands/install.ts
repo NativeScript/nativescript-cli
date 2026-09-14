@@ -29,20 +29,7 @@ export type InstallCommandContext = CommandContext<
 	typeof installCommandOptions
 >;
 
-export interface IInstallCommandServices {
-	$options: IOptions;
-	$mobileHelper: Mobile.IMobileHelper;
-	$platformsDataService: IPlatformsDataService;
-	$platformCommandHelper: IPlatformCommandHelper;
-	$projectData: IProjectData;
-	$projectDataService: IProjectDataService;
-	$pluginsService: IPluginsService;
-	$logger: ILogger;
-	$fs: IFileSystem;
-	$packageManager: INodePackageManager;
-}
-
-export function setupInstallCommand(): IInstallCommandServices {
+export function setupInstallCommand() {
 	const services = {
 		$options: inject<IOptions>("options"),
 		$mobileHelper: inject<Mobile.IMobileHelper>("mobileHelper"),
@@ -63,6 +50,8 @@ export function setupInstallCommand(): IInstallCommandServices {
 
 	return services;
 }
+
+export type IInstallCommandServices = ReturnType<typeof setupInstallCommand>;
 
 async function installProjectDependencies(
 	context: InstallCommandContext,

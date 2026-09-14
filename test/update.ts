@@ -1,6 +1,6 @@
 import * as stubs from "./stubs";
 import * as yok from "../lib/common/yok";
-import { updateCommandDefinition } from "../lib/commands/update";
+import { UpdateCommand } from "../lib/commands/update";
 import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import { ICommand } from "../lib/common/definitions/commands";
 import { assert } from "chai";
@@ -45,9 +45,7 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 		},
 	});
 
-	runInInjectionContext(testInjector, () =>
-		registerCommand(updateCommandDefinition),
-	);
+	runInInjectionContext(testInjector, () => registerCommand(UpdateCommand));
 
 	return testInjector;
 }

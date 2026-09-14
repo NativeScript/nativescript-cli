@@ -28,7 +28,6 @@ import {
 import {
 	canExecuteCommandBase,
 	injectPlatformCommandServices,
-	IPlatformCommandServices,
 } from "./command-base";
 import * as _ from "lodash";
 
@@ -53,21 +52,7 @@ const debugCommandOptions = {
 
 export type DebugCommandContext = CommandContext<typeof debugCommandOptions>;
 
-export interface IDebugCommandServices extends IPlatformCommandServices {
-	platform: string;
-	$cleanupService: ICleanupService;
-	$debugController: IDebugController;
-	$debugDataService: IDebugDataService;
-	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
-	$devicesService: Mobile.IDevicesService;
-	$errors: IErrors;
-	$liveSyncCommandHelper: ILiveSyncCommandHelper;
-	$migrateController: IMigrateController;
-}
-
-export function setupDebugCommand(
-	debugPlatform: DebugPlatform,
-): IDebugCommandServices {
+export function setupDebugCommand(debugPlatform: DebugPlatform) {
 	const $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
 		"devicePlatformsConstants",
 	);
@@ -87,6 +72,8 @@ export function setupDebugCommand(
 		$migrateController: inject<IMigrateController>("migrateController"),
 	};
 }
+
+export type IDebugCommandServices = ReturnType<typeof setupDebugCommand>;
 
 export async function canExecuteDebugCommand(
 	context: DebugCommandContext,
@@ -213,13 +200,8 @@ export async function runDebugCommand(
 	}
 }
 
-interface IDebugApplePlatformCommandServices extends IDebugCommandServices {
-	$sysInfo: ISysInfo;
-}
-
 const setupDebugApplePlatformCommand =
-	(debugPlatform: "iOS" | "visionOS") =>
-	(): IDebugApplePlatformCommandServices => {
+	(debugPlatform: "iOS" | "visionOS") => () => {
 		const services = {
 			...setupDebugCommand(debugPlatform),
 			$sysInfo: inject<ISysInfo>("sysInfo"),
@@ -237,6 +219,10 @@ const setupDebugApplePlatformCommand =
 
 		return services;
 	};
+
+type IDebugApplePlatformCommandServices = ReturnType<
+	ReturnType<typeof setupDebugApplePlatformCommand>
+>;
 
 function isValidTimeoutOption(timeout: string): boolean {
 	if (!timeout) {

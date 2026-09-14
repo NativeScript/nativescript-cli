@@ -14,5 +14,6 @@ export type {
 	DeferredCommandRejection,
 	DeferredCommandResult,
 } from "./command-registry";
+export { COMMAND_CONTEXT } from "./command-context";
 export { ModuleRegistry } from "./module-registry";
 export { PublicApiBuilder } from "./public-api-builder";

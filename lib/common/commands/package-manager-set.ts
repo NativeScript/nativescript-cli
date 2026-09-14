@@ -3,19 +3,17 @@ import { IErrors, IUserSettingsService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
 
-export interface IPackageManagerSetCommandServices {
-	$userSettingsService: IUserSettingsService;
-	$errors: IErrors;
-	$logger: ILogger;
-}
-
-export function setupPackageManagerSetCommand(): IPackageManagerSetCommandServices {
+export function setupPackageManagerSetCommand() {
 	return {
 		$userSettingsService: inject<IUserSettingsService>("userSettingsService"),
 		$errors: inject<IErrors>("errors"),
 		$logger: inject<ILogger>("logger"),
 	};
 }
+
+export type IPackageManagerSetCommandServices = ReturnType<
+	typeof setupPackageManagerSetCommand
+>;
 
 export const packageManagerSetCommandDefinition = defineCommand({
 	name: "package-manager|set",

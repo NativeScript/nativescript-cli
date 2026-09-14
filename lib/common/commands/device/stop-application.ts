@@ -14,15 +14,15 @@ export type StopApplicationOnDeviceCommandContext = CommandContext<
 	typeof stopApplicationOnDeviceCommandOptions
 >;
 
-export interface IStopApplicationOnDeviceCommandServices {
-	$devicesService: Mobile.IDevicesService;
-}
-
-export function setupStopApplicationOnDeviceCommand(): IStopApplicationOnDeviceCommandServices {
+export function setupStopApplicationOnDeviceCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 	};
 }
+
+export type IStopApplicationOnDeviceCommandServices = ReturnType<
+	typeof setupStopApplicationOnDeviceCommand
+>;
 
 export async function runStopApplicationOnDeviceCommand(
 	context: StopApplicationOnDeviceCommandContext,

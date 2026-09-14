@@ -25,19 +25,7 @@ export type TypingsCommandContext = CommandContext<
 	typeof typingsCommandOptions
 >;
 
-export interface ITypingsCommandServices {
-	$childProcess: IChildProcess;
-	$fs: IFileSystem;
-	$hostInfo: IHostInfo;
-	$logger: ILogger;
-	$mobileHelper: Mobile.IMobileHelper;
-	$options: IOptions;
-	$projectData: IProjectData;
-	$prompter: IPrompter;
-	$staticConfig: IStaticConfig;
-}
-
-export function setupTypingsCommand(): ITypingsCommandServices {
+export function setupTypingsCommand() {
 	return {
 		$childProcess: inject<IChildProcess>("childProcess"),
 		$fs: inject<IFileSystem>("fs"),
@@ -50,6 +38,8 @@ export function setupTypingsCommand(): ITypingsCommandServices {
 		$staticConfig: inject<IStaticConfig>("staticConfig"),
 	};
 }
+
+export type ITypingsCommandServices = ReturnType<typeof setupTypingsCommand>;
 
 async function resolveGradleDependencies(
 	services: ITypingsCommandServices,

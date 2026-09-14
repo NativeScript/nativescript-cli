@@ -7,14 +7,7 @@ import * as fontFinder from "font-finder";
 import { createTable } from "../common/helpers";
 import * as path from "path";
 
-export interface IFontsCommandServices {
-	$projectData: IProjectData;
-	$fs: IFileSystem;
-	$logger: ILogger;
-	$projectConfigService: IProjectConfigService;
-}
-
-export function setupFontsCommand(): IFontsCommandServices {
+export function setupFontsCommand() {
 	const services = {
 		$projectData: inject<IProjectData>("projectData"),
 		$fs: inject<IFileSystem>("fs"),
@@ -27,6 +20,8 @@ export function setupFontsCommand(): IFontsCommandServices {
 
 	return services;
 }
+
+export type IFontsCommandServices = ReturnType<typeof setupFontsCommand>;
 
 export const fontsCommandDefinition = defineCommand({
 	name: "fonts",

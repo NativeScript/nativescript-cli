@@ -31,20 +31,7 @@ const testInitCommandOptions = {
 	framework: stringOption(),
 } satisfies CommandOptionsSchema;
 
-interface ITestInitCommandServices {
-	$errors: IErrors;
-	$fs: IFileSystem;
-	$logger: ILogger;
-	$options: IOptions;
-	$packageManager: INodePackageManager;
-	$pluginsService: IPluginsService;
-	$projectData: IProjectData;
-	$prompter: IPrompter;
-	$resources: IResourceLoader;
-	$testInitializationService: ITestInitializationService;
-}
-
-function setupTestInitCommand(): ITestInitCommandServices {
+function setupTestInitCommand() {
 	const services = {
 		$errors: inject<IErrors>("errors"),
 		$fs: inject<IFileSystem>("fs"),
@@ -63,6 +50,8 @@ function setupTestInitCommand(): ITestInitCommandServices {
 
 	return services;
 }
+
+type ITestInitCommandServices = ReturnType<typeof setupTestInitCommand>;
 
 /**
  * Android blocks cleartext traffic by default (API 28+), which would

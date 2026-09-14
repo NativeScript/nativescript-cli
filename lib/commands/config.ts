@@ -5,13 +5,7 @@ import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { color } from "../color";
 
-export interface IConfigCommandServices {
-	$projectConfigService: IProjectConfigService;
-	$logger: ILogger;
-	$errors: IErrors;
-}
-
-export function injectConfigCommandServices(): IConfigCommandServices {
+export function injectConfigCommandServices() {
 	return {
 		$projectConfigService: inject<IProjectConfigService>(
 			"projectConfigService",
@@ -20,6 +14,10 @@ export function injectConfigCommandServices(): IConfigCommandServices {
 		$errors: inject<IErrors>("errors"),
 	};
 }
+
+export type IConfigCommandServices = ReturnType<
+	typeof injectConfigCommandServices
+>;
 
 function getValueString(value: SupportedConfigValues, depth = 0): string {
 	const indent = () => "  ".repeat(depth);

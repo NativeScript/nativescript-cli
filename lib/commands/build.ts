@@ -5,7 +5,6 @@ import {
 import {
 	canExecuteCommandBase,
 	injectPlatformCommandServices,
-	IPlatformCommandServices,
 	validatePlatformOptions,
 } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
@@ -40,17 +39,6 @@ const buildCommandOptions = {
 	keyStoreAliasPassword: stringOption(),
 } satisfies CommandOptionsSchema;
 
-interface IBuildCommandServices extends IPlatformCommandServices {
-	platform: string;
-	isAndroid: boolean;
-	$errors: IErrors;
-	$logger: ILogger;
-	$buildController: IBuildController;
-	$buildDataService: IBuildDataService;
-	$migrateController: IMigrateController;
-	$androidBundleValidatorHelper: IAndroidBundleValidatorHelper;
-}
-
 const defineBuildCommand = <const TName extends CommandName>(
 	name: TName,
 	buildPlatform: BuildPlatform,
@@ -60,7 +48,7 @@ const defineBuildCommand = <const TName extends CommandName>(
 		description: "Builds the project for the selected target platform.",
 		options: buildCommandOptions,
 		arguments: "none",
-		setup(): IBuildCommandServices {
+		setup() {
 			const devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
 				"devicePlatformsConstants",
 			);

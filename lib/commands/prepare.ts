@@ -1,7 +1,6 @@
 import {
 	canExecuteCommandBase,
 	injectPlatformCommandServices,
-	IPlatformCommandServices,
 	platformArgument,
 	validatePlatformArgument,
 	validatePlatformOptions,
@@ -28,13 +27,7 @@ export type PrepareCommandContext = CommandContext<
 	typeof prepareCommandOptions
 >;
 
-export interface IPrepareCommandServices extends IPlatformCommandServices {
-	$prepareController: PrepareController;
-	$prepareDataService: PrepareDataService;
-	$migrateController: IMigrateController;
-}
-
-export function setupPrepareCommand(): IPrepareCommandServices {
+export function setupPrepareCommand() {
 	const services = {
 		...injectPlatformCommandServices(),
 		$prepareController: inject<PrepareController>("prepareController"),
@@ -45,6 +38,8 @@ export function setupPrepareCommand(): IPrepareCommandServices {
 
 	return services;
 }
+
+export type IPrepareCommandServices = ReturnType<typeof setupPrepareCommand>;
 
 export async function canExecutePrepareCommand(
 	context: PrepareCommandContext,

@@ -48,6 +48,10 @@ spread, so `{ ...baseDefinition, name: "widget|add2" }` is still recognised.
 `defineCommand` does not register anything by itself — see
 [Registering a definition](#registering-a-definition).
 
+A command may also be written as a class, with the handlers as methods — see
+[Class form](#class-form). It is sugar over `defineCommand`: everything below
+describes both.
+
 Validation happens where you can see it
 ---------------------------------------
 
@@ -169,11 +173,11 @@ options: {
 
 So a redeclaration of the same name with the same type is silent. What the CLI
 still warns about at registration is a redeclaration that changes what the
-spelling *means*:
+spelling _means_:
 
 - a declared option whose name matches a CLI-wide one but whose type differs —
   `verbose: stringOption()` against the CLI's boolean `--verbose`;
-- an alias that belongs to a *different* CLI-wide option — `output:
+- an alias that belongs to a _different_ CLI-wide option — `output:
 stringOption({ alias: "p" })` steals `--path`'s shorthand. Restating an
   option's own shorthand (`path: stringOption({ alias: "p" })`) is fine.
 
@@ -449,6 +453,40 @@ top of `run`; nothing else changes. "Once per invocation" means once across
 `canExecute`, `run` and `postRun` together — whichever of them the CLI reaches
 first triggers it, and the rest reuse the value.
 
+When several commands share a setup, or a helper outside the definition takes
+the services as a parameter, lift it into a named function and derive the type
+from it instead of writing the shape out by hand:
+
+```ts
+export function setupWidgetAddCommand() {
+	const projectData = inject(ProjectData);
+	projectData.initializeProjectData();
+	return { projectData, widgets: inject(WidgetService) };
+}
+export type IWidgetAddCommandServices = ReturnType<
+	typeof setupWidgetAddCommand
+>;
+
+export function canAddWidget(services: IWidgetAddCommandServices): boolean {
+	return !!services.projectData.projectDir;
+}
+
+export default defineCommand({
+	name: "widget|add",
+	arguments: "any",
+	setup: setupWidgetAddCommand,
+	canExecute: (ctx, services) => canAddWidget(services),
+	async run(ctx, { widgets }) {
+		await widgets.add(ctx.args);
+	},
+});
+```
+
+Leave the setup function's return type off: the alias reads what the body
+infers, so annotating the function with the alias makes the pair circular. Read
+a setup curried over a parameter — `setupX(platform)` returning the setup
+itself — through its inner function, `ReturnType<ReturnType<typeof setupX>>`.
+
 `run`'s return value, and `postRun`
 -----------------------------------
 
@@ -484,6 +522,120 @@ Other flags
 Both are simply passed through to the command the CLI executes; omitting them
 leaves the CLI's defaults in place.
 
+Class form
+----------
+
+`Command(meta)` returns a base class to extend. It is sugar over
+`defineCommand` and nothing more: the class carries a `static definition` built
+by `defineCommand`, and that definition is the only thing the CLI ever
+executes.
+
+```ts
+import { Command, inject, stringOption } from "nativescript/contracts";
+
+export class PlatformCleanCommand extends Command({
+	name: "platform|clean",
+	description: "Removes and adds again the selected platform.",
+	options: { frameworkPath: stringOption() },
+	arguments: "any",
+}) {
+	private $platformCommandHelper = inject<IPlatformCommandHelper>(
+		"platformCommandHelper",
+	);
+	private $projectData = inject<IProjectData>("projectData");
+
+	constructor() {
+		super();
+		this.$projectData.initializeProjectData();
+	}
+
+	public async run(): Promise<void> {
+		await this.$platformCommandHelper.cleanPlatforms(
+			this.args,
+			this.$projectData,
+			this.options.frameworkPath,
+		);
+	}
+}
+```
+
+`meta` is the definition minus its handlers: `name`, `description`, `options`,
+`arguments`, `allowUnknownOptions`, `disableAnalytics` and `enableHooks`. The
+handlers are methods instead — `run` is required, and `canExecute`, `postRun`
+and `shortcuts` are optional, each with the same meaning and the same ordering
+as the fields of the same name. `postRun(result)` receives what `run` returned;
+`shortcuts()` returns the same table `shortcuts(ctx, setup)` does. A method the
+class does not declare is left out of the definition entirely, so a class
+without `postRun` gets no `postCommandAction`, exactly as an object without one
+does.
+
+**Which form to use.** The class form is for a single named command. When a
+function generates variants of one command — the `run|ios` / `run|vision`
+family, one definition per platform — the object form is what fits, because
+the thing being parameterized is a value and definitions are values.
+Registering the same class twice under two names is not the equivalent: the
+class is one definition.
+
+**The class is the setup.** One instance is constructed per invocation, as that
+invocation's `setup`, before `canExecute` runs. So field initializers and the
+constructor run inside the injection context: `inject()` in a field initializer
+resolves, and a constructor — optional, and if written it must call a bare
+`super()` — is where the work a legacy command did in its own constructor goes.
+Because construction is the setup, `inject()` is valid throughout it; after the
+first `await` inside a method, use `this.context.injector.get(token)` as
+[Injection, and the first `await`](#injection-and-the-first-await) describes.
+
+**`this.context`, `this.options` and `this.args`** are the same context the
+object form's handlers receive, typed from the `options` the meta declares:
+`this.options.frameworkPath` is `string | undefined` above, and a name the
+schema does not declare is a compile error. `this.context` also carries
+`params`, `injector` and `fail`.
+
+**Per-command providers see the invocation.** The context is provided to the
+invocation's own child injector under the `COMMAND_CONTEXT` token, which is how
+the base class reads it. A provider registered for one command — through the
+`providers` argument of `registerCommand` or `registerLazyCommand` — can inject
+it too, and resolves nothing outside a running invocation.
+
+**Share through functions, not base classes.** Two commands that need the same
+services share an `inject()`-based helper, not a common ancestor:
+
+```ts
+export function injectPlatformCommandServices() {
+	const projectData = inject(ProjectData);
+	projectData.initializeProjectData();
+	return { projectData, platformHelper: inject(PlatformCommandHelper) };
+}
+
+export class PlatformAddCommand extends Command({ name: "platform|add" }) {
+	private services = injectPlatformCommandServices();
+	// ...
+}
+```
+
+A helper composes — a command can call two of them — and it stays readable
+without the reader walking a chain of files. A base class between `Command()`
+and the command does not: it is the pattern the legacy `ICommand` hierarchy
+used, and untangling it is most of why this API exists.
+
+Registration takes the class itself; see
+[Registering a definition](#registering-a-definition):
+
+```ts
+registerBuiltInCommand<
+	typeof import("./commands/platform-clean").PlatformCleanCommand
+>(
+	"platform|clean",
+	() => require("./commands/platform-clean").PlatformCleanCommand,
+);
+```
+
+`isCommandClass(value)` is the exported check, and `Ctor.definition` is the
+definition the class stands for — derived once per class, and derived for the
+subclass rather than for the base `Command()` returned. A class that implements
+no `run`, or a class that did not come from `Command()`, is refused with the
+same message shape a bad object gets.
+
 Registering a definition
 ------------------------
 
@@ -499,12 +651,17 @@ registerCommand({
 });
 ```
 
+Every registration helper — `registerCommand`, `registerLazyCommand` and
+`registerBuiltInCommand` — takes a [class form](#class-form) command wherever
+it takes a definition, and reads the name it declares through its
+`static definition`.
+
 It takes either a `DefinedCommand` — the result of `defineCommand`, marker and
 all — or the definition itself, which it defines on your behalf, so registering
 a command is one call. Either way the definition is validated before it reaches
 the registry. It claims every name the definition declares, through the
 `CommandRegistry` the target injector provides, and returns a
-`DeferredCommandResult` — see *The owner is ambient* below. The command instance
+`DeferredCommandResult` — see _The owner is ambient_ below. The command instance
 is built by a factory on first resolution and cached.
 
 Pass providers as the second argument to scope the command to a child injector
@@ -523,7 +680,7 @@ That is how one definition serves several commands that differ only in data —
 the platform each one targets — instead of one command subclassing another.
 
 **Which injector it registers against is not a parameter.** It is the injector
-of the current injection context — see *The owner is ambient* below — and the
+of the current injection context — see _The owner is ambient_ below — and the
 CLI's own injector outside one. To register against some other injector, run
 the call in its context:
 
@@ -722,16 +879,16 @@ A definition is compiled into an ordinary `ICommand`, so nothing downstream —
 the registry, the router, hooks, help, analytics — knows the difference. The
 mapping is:
 
-| Definition                        | `ICommand`                                          |
-| --------------------------------- | --------------------------------------------------- |
-| `options`                         | `dashedOptions`                                     |
-| `run`                             | `execute`, wrapped in an injection context          |
-| `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement  |
-| `setup`                           | — run inside `canExecute`/`execute`, memoised       |
-| `postRun`                         | `postCommandAction`, with `run`'s return value      |
-| `allowUnknownOptions`             | `skipOptionsValidation`                             |
-| —                                 | `allowedParameters`, always `[]`                    |
-| `disableAnalytics`, `enableHooks` | passed through unchanged                            |
+| Definition                        | `ICommand`                                         |
+| --------------------------------- | -------------------------------------------------- |
+| `options`                         | `dashedOptions`                                    |
+| `run`                             | `execute`, wrapped in an injection context         |
+| `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement |
+| `setup`                           | — run inside `canExecute`/`execute`, memoised      |
+| `postRun`                         | `postCommandAction`, with `run`'s return value     |
+| `allowUnknownOptions`             | `skipOptionsValidation`                            |
+| —                                 | `allowedParameters`, always `[]`                   |
+| `disableAnalytics`, `enableHooks` | passed through unchanged                           |
 
 The compiled command always exposes `canExecute`, because `CommandsService`
 stops consulting `allowedParameters` as soon as a command has one — the adapter

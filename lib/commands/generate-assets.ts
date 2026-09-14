@@ -34,15 +34,7 @@ export type GenerateAssetsCommandContext = CommandContext<
 	typeof generateAssetsCommandOptions
 >;
 
-export interface IGenerateAssetsCommandServices {
-	assets: GeneratedAssets;
-	$assetsGenerationService: IAssetsGenerationService;
-	$projectData: IProjectData;
-}
-
-export function setupGenerateAssetsCommand(
-	assets: GeneratedAssets,
-): IGenerateAssetsCommandServices {
+export function setupGenerateAssetsCommand(assets: GeneratedAssets) {
 	const services = {
 		assets,
 		$assetsGenerationService: inject<IAssetsGenerationService>(
@@ -54,6 +46,10 @@ export function setupGenerateAssetsCommand(
 
 	return services;
 }
+
+export type IGenerateAssetsCommandServices = ReturnType<
+	typeof setupGenerateAssetsCommand
+>;
 
 export function runGenerateAssetsCommand(
 	context: GenerateAssetsCommandContext,

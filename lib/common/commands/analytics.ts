@@ -26,16 +26,7 @@ export type AnalyticsCommandContext = CommandContext<
 	typeof analyticsCommandOptions
 >;
 
-export interface IAnalyticsCommandServices {
-	settingName: string;
-	humanReadableSettingName: string;
-	$analyticsService: IAnalyticsService;
-	$logger: ILogger;
-}
-
-export function setupAnalyticsCommand(
-	setting: IAnalyticsSetting,
-): IAnalyticsCommandServices {
+export function setupAnalyticsCommand(setting: IAnalyticsSetting) {
 	const $staticConfig = inject<Config.IStaticConfig>("staticConfig");
 
 	return {
@@ -45,6 +36,10 @@ export function setupAnalyticsCommand(
 		$logger: inject<ILogger>("logger"),
 	};
 }
+
+export type IAnalyticsCommandServices = ReturnType<
+	typeof setupAnalyticsCommand
+>;
 
 export function validateAnalyticsState(value: string): boolean | string {
 	switch ((value || "").toLowerCase()) {

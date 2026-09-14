@@ -17,15 +17,7 @@ import { IExtensibilityService } from "../definitions/extensibility";
 // disabled for now (6/24/2020)
 // const FEEDBACK_FORM_URL = "https://www.nativescript.org/uninstall-feedback";
 
-export interface IPreUninstallCommandServices {
-	$analyticsService: IAnalyticsService;
-	$extensibilityService: IExtensibilityService;
-	$fs: IFileSystem;
-	$packageInstallationManager: IPackageInstallationManager;
-	$settingsService: ISettingsService;
-}
-
-export function setupPreUninstallCommand(): IPreUninstallCommandServices {
+export function setupPreUninstallCommand() {
 	return {
 		$analyticsService: inject<IAnalyticsService>("analyticsService"),
 		$extensibilityService: inject<IExtensibilityService>(
@@ -38,6 +30,10 @@ export function setupPreUninstallCommand(): IPreUninstallCommandServices {
 		$settingsService: inject<ISettingsService>("settingsService"),
 	};
 }
+
+export type IPreUninstallCommandServices = ReturnType<
+	typeof setupPreUninstallCommand
+>;
 
 async function handleFeedbackForm(): Promise<void> {
 	// disabled for now (6/24/2020)

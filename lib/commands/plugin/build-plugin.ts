@@ -25,18 +25,7 @@ export type BuildPluginCommandContext = CommandContext<
 	typeof buildPluginCommandOptions
 >;
 
-export interface IBuildPluginCommandServices {
-	pluginProjectPath: string;
-	$androidPluginBuildService: IAndroidPluginBuildService;
-	$errors: IErrors;
-	$logger: ILogger;
-	$fs: IFileSystem;
-	$tempService: ITempService;
-}
-
-export function setupBuildPluginCommand(
-	context: BuildPluginCommandContext,
-): IBuildPluginCommandServices {
+export function setupBuildPluginCommand(context: BuildPluginCommandContext) {
 	return {
 		pluginProjectPath: path.resolve(context.options.path || "."),
 		$androidPluginBuildService: inject<IAndroidPluginBuildService>(
@@ -48,6 +37,10 @@ export function setupBuildPluginCommand(
 		$tempService: inject<ITempService>("tempService"),
 	};
 }
+
+export type IBuildPluginCommandServices = ReturnType<
+	typeof setupBuildPluginCommand
+>;
 
 export async function canExecuteBuildPluginCommand(
 	context: BuildPluginCommandContext,

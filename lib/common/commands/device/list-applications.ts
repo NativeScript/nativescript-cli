@@ -17,17 +17,16 @@ export type ListApplicationsCommandContext = CommandContext<
 	typeof listApplicationsCommandOptions
 >;
 
-export interface IListApplicationsCommandServices {
-	$devicesService: Mobile.IDevicesService;
-	$logger: ILogger;
-}
-
-export function setupListApplicationsCommand(): IListApplicationsCommandServices {
+export function setupListApplicationsCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 		$logger: inject<ILogger>("logger"),
 	};
 }
+
+export type IListApplicationsCommandServices = ReturnType<
+	typeof setupListApplicationsCommand
+>;
 
 export async function runListApplicationsCommand(
 	context: ListApplicationsCommandContext,

@@ -14,17 +14,11 @@ import { IProjectData } from "../definitions/project";
  */
 type NativeAddLanguage = "java" | "kotlin" | "swift" | "objective-c";
 
-export interface INativeAddCommandServices {
-	$projectData: IProjectData;
-	$logger: ILogger;
-	$errors: IErrors;
-}
-
 interface INativeAddLanguageCommandServices extends INativeAddCommandServices {
 	language: NativeAddLanguage;
 }
 
-export function setupNativeAddCommand(): INativeAddCommandServices {
+export function setupNativeAddCommand() {
 	const services = {
 		$projectData: inject<IProjectData>("projectData"),
 		$logger: inject<ILogger>("logger"),
@@ -34,6 +28,10 @@ export function setupNativeAddCommand(): INativeAddCommandServices {
 
 	return services;
 }
+
+export type INativeAddCommandServices = ReturnType<
+	typeof setupNativeAddCommand
+>;
 
 function failWithUsage(services: INativeAddCommandServices): void {
 	services.$errors.failWithHelp(

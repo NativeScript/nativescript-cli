@@ -3,12 +3,7 @@ import { IAutoCompletionService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
 
-export interface IAutoCompleteCommandServices {
-	$autoCompletionService: IAutoCompletionService;
-	$logger: ILogger;
-}
-
-export function injectAutoCompleteCommandServices(): IAutoCompleteCommandServices {
+export function injectAutoCompleteCommandServices() {
 	return {
 		$autoCompletionService: inject<IAutoCompletionService>(
 			"autoCompletionService",
@@ -16,6 +11,10 @@ export function injectAutoCompleteCommandServices(): IAutoCompleteCommandService
 		$logger: inject<ILogger>("logger"),
 	};
 }
+
+export type IAutoCompleteCommandServices = ReturnType<
+	typeof injectAutoCompleteCommandServices
+>;
 
 export const autoCompleteCommandDefinition = defineCommand({
 	name: "autocomplete|*default",

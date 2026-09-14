@@ -51,25 +51,7 @@ const testCommandOptions = {
 
 export type TestCommandContext = CommandContext<typeof testCommandOptions>;
 
-export interface ITestCommandServices {
-	platform: string;
-	$analyticsService: IAnalyticsService;
-	$cleanupService: ICleanupService;
-	$devicesService: Mobile.IDevicesService;
-	$errors: IErrors;
-	$liveSyncCommandHelper: ILiveSyncCommandHelper;
-	$logger: ILogger;
-	$migrateController: IMigrateController;
-	$options: IOptions;
-	$platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
-	$projectData: IProjectData;
-	$testExecutionService: ITestExecutionService;
-	$vitestExecutionService: IVitestExecutionService;
-}
-
-export function setupTestCommand(
-	testPlatform: TestPlatform,
-): ITestCommandServices {
+export function setupTestCommand(testPlatform: TestPlatform) {
 	return {
 		platform: testPlatform,
 		$analyticsService: inject<IAnalyticsService>("analyticsService"),
@@ -94,6 +76,8 @@ export function setupTestCommand(
 		),
 	};
 }
+
+export type ITestCommandServices = ReturnType<typeof setupTestCommand>;
 
 export async function canExecuteTestCommand(
 	context: TestCommandContext,

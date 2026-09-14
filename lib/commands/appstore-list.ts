@@ -22,18 +22,7 @@ export type ListiOSAppsCommandContext = CommandContext<
 	typeof listiOSAppsCommandOptions
 >;
 
-export interface IListiOSAppsCommandServices {
-	$applePortalApplicationService: IApplePortalApplicationService;
-	$applePortalSessionService: IApplePortalSessionService;
-	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
-	$errors: IErrors;
-	$logger: ILogger;
-	$platformValidationService: IPlatformValidationService;
-	$projectData: IProjectData;
-	$prompter: IPrompter;
-}
-
-export function setupListiOSAppsCommand(): IListiOSAppsCommandServices {
+export function setupListiOSAppsCommand() {
 	const services = {
 		$applePortalApplicationService: inject<IApplePortalApplicationService>(
 			"applePortalApplicationService",
@@ -56,6 +45,10 @@ export function setupListiOSAppsCommand(): IListiOSAppsCommandServices {
 
 	return services;
 }
+
+export type IListiOSAppsCommandServices = ReturnType<
+	typeof setupListiOSAppsCommand
+>;
 
 export async function runListiOSAppsCommand(
 	context: ListiOSAppsCommandContext,
