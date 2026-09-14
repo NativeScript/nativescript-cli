@@ -1,22 +1,23 @@
-import { ProxyCommandBase } from "./proxy-base";
-import { IAnalyticsService, IProxyService } from "../../declarations";
-import { injector } from "../../yok";
+import { defineCommand } from "../../define-command";
+import { registerCommand } from "../../services/command-definition-adapter";
+import {
+	injectProxyCommandServices,
+	IProxyCommandServices,
+	tryTrackProxyCommandUsage,
+} from "./proxy-base";
 
 const proxyGetCommandName = "proxy|*get";
 
-export class ProxyGetCommand extends ProxyCommandBase {
-	constructor(
-		protected $analyticsService: IAnalyticsService,
-		protected $logger: ILogger,
-		protected $proxyService: IProxyService
-	) {
-		super($analyticsService, $logger, $proxyService, proxyGetCommandName);
-	}
+export const proxyGetCommandDefinition = defineCommand({
+	name: proxyGetCommandName,
+	description: "Prints the current proxy settings.",
+	arguments: "none",
+	disableAnalytics: true,
+	setup: injectProxyCommandServices,
+	async run(context, services: IProxyCommandServices): Promise<void> {
+		services.$logger.info(await services.$proxyService.getInfo());
+		await tryTrackProxyCommandUsage(services, proxyGetCommandName);
+	},
+});
 
-	public async execute(args: string[]): Promise<void> {
-		this.$logger.info(await this.$proxyService.getInfo());
-		await this.tryTrackUsage();
-	}
-}
-
-injector.registerCommand(proxyGetCommandName, ProxyGetCommand);
+registerCommand(proxyGetCommandDefinition);

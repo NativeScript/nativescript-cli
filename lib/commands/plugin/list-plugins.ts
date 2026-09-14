@@ -5,73 +5,86 @@ import {
 	IPackageJsonDepedenciesResult,
 	IBasePluginData,
 } from "../../definitions/plugins";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
+import { registerCommand } from "../../common/services/command-definition-adapter";
 import { color } from "../../color";
 
-export class ListPluginsCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export interface IListPluginsCommandServices {
+	$pluginsService: IPluginsService;
+	$projectData: IProjectData;
+	$logger: ILogger;
+}
 
-	constructor(
-		private $pluginsService: IPluginsService,
-		private $projectData: IProjectData,
-		private $logger: ILogger
-	) {
-		this.$projectData.initializeProjectData();
-	}
+export function setupListPluginsCommand(): IListPluginsCommandServices {
+	const services = {
+		$pluginsService: inject<IPluginsService>("pluginsService"),
+		$projectData: inject<IProjectData>("projectData"),
+		$logger: inject<ILogger>("logger"),
+	};
+	services.$projectData.initializeProjectData();
 
-	public async execute(args: string[]): Promise<void> {
-		const installedPlugins: IPackageJsonDepedenciesResult = this.$pluginsService.getDependenciesFromPackageJson(
-			this.$projectData.projectDir
-		);
+	return services;
+}
+
+function createTableCells(items: IBasePluginData[]): string[][] {
+	return items.map((item) => [item.name, item.version]);
+}
+
+export const listPluginsCommandDefinition = defineCommand({
+	name: "plugin|*list",
+	description: "Lists all installed plugins.",
+	arguments: "none",
+	setup: setupListPluginsCommand,
+	async run(context, services): Promise<void> {
+		const installedPlugins: IPackageJsonDepedenciesResult =
+			services.$pluginsService.getDependenciesFromPackageJson(
+				services.$projectData.projectDir,
+			);
 
 		const headers: string[] = ["Plugin", "Version"];
-		const dependenciesData: string[][] = this.createTableCells(
-			installedPlugins.dependencies
+		const dependenciesData: string[][] = createTableCells(
+			installedPlugins.dependencies,
 		);
 
 		const dependenciesTable: any = createTable(headers, dependenciesData);
-		this.$logger.info("Dependencies:");
-		this.$logger.info(dependenciesTable.toString());
+		services.$logger.info("Dependencies:");
+		services.$logger.info(dependenciesTable.toString());
 
 		if (
 			installedPlugins.devDependencies &&
 			installedPlugins.devDependencies.length
 		) {
-			const devDependenciesData: string[][] = this.createTableCells(
-				installedPlugins.devDependencies
+			const devDependenciesData: string[][] = createTableCells(
+				installedPlugins.devDependencies,
 			);
 
 			const devDependenciesTable: any = createTable(
 				headers,
-				devDependenciesData
+				devDependenciesData,
 			);
 
-			this.$logger.info("Dev Dependencies:");
-			this.$logger.info(devDependenciesTable.toString());
+			services.$logger.info("Dev Dependencies:");
+			services.$logger.info(devDependenciesTable.toString());
 		} else {
-			this.$logger.info("There are no dev dependencies.");
+			services.$logger.info("There are no dev dependencies.");
 		}
 
 		const viewDependenciesCommand: string = color.cyan(
-			"npm view <pluginName> grep dependencies"
+			"npm view <pluginName> grep dependencies",
 		);
 		const viewDevDependenciesCommand: string = color.cyan(
-			"npm view <pluginName> grep devDependencies"
+			"npm view <pluginName> grep devDependencies",
 		);
 
-		this.$logger.warn("NOTE:");
-		this.$logger.warn(
-			`If you want to check the dependencies of installed plugin use ${viewDependenciesCommand}`
+		services.$logger.warn("NOTE:");
+		services.$logger.warn(
+			`If you want to check the dependencies of installed plugin use ${viewDependenciesCommand}`,
 		);
-		this.$logger.warn(
-			`If you want to check the dev dependencies of installed plugin use ${viewDevDependenciesCommand}`
+		services.$logger.warn(
+			`If you want to check the dev dependencies of installed plugin use ${viewDevDependenciesCommand}`,
 		);
-	}
+	},
+});
 
-	private createTableCells(items: IBasePluginData[]): string[][] {
-		return items.map((item) => [item.name, item.version]);
-	}
-}
-
-injector.registerCommand("plugin|*list", ListPluginsCommand);
+registerCommand(listPluginsCommandDefinition);

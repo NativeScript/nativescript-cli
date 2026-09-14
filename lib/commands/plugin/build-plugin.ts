@@ -1,101 +1,138 @@
 import { EOL } from "os";
 import * as path from "path";
 import * as constants from "../../constants";
-import { IOptions } from "../../declarations";
 import {
 	IAndroidPluginBuildService,
 	IPluginBuildOptions,
 } from "../../definitions/android-plugin-migrator";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors, IFileSystem } from "../../common/declarations";
-import { injector } from "../../common/yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../common/define-command";
+import { inject } from "../../common/di";
+import { registerCommand } from "../../common/services/command-definition-adapter";
 import { ITempService } from "../../definitions/temp-service";
 
-export class BuildPluginCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-	public pluginProjectPath: string;
+const buildPluginCommandOptions = {
+	path: stringOption(),
+	gradlePath: stringOption(),
+	gradleArgs: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	constructor(
-		private $androidPluginBuildService: IAndroidPluginBuildService,
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $fs: IFileSystem,
-		private $options: IOptions,
-		private $tempService: ITempService
+export type BuildPluginCommandContext = CommandContext<
+	typeof buildPluginCommandOptions
+>;
+
+export interface IBuildPluginCommandServices {
+	pluginProjectPath: string;
+	$androidPluginBuildService: IAndroidPluginBuildService;
+	$errors: IErrors;
+	$logger: ILogger;
+	$fs: IFileSystem;
+	$tempService: ITempService;
+}
+
+export function setupBuildPluginCommand(
+	context: BuildPluginCommandContext,
+): IBuildPluginCommandServices {
+	return {
+		pluginProjectPath: path.resolve(context.options.path || "."),
+		$androidPluginBuildService: inject<IAndroidPluginBuildService>(
+			"androidPluginBuildService",
+		),
+		$errors: inject<IErrors>("errors"),
+		$logger: inject<ILogger>("logger"),
+		$fs: inject<IFileSystem>("fs"),
+		$tempService: inject<ITempService>("tempService"),
+	};
+}
+
+export async function canExecuteBuildPluginCommand(
+	context: BuildPluginCommandContext,
+	services: IBuildPluginCommandServices,
+): Promise<boolean> {
+	if (
+		!services.$fs.exists(
+			path.join(
+				services.pluginProjectPath,
+				constants.PLATFORMS_DIR_NAME,
+				"android",
+			),
+		)
 	) {
-		this.pluginProjectPath = path.resolve(this.$options.path || ".");
+		services.$errors.fail(
+			"No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`.",
+		);
 	}
 
-	public async execute(args: string[]): Promise<void> {
-		const platformsAndroidPath = path.join(
-			this.pluginProjectPath,
-			constants.PLATFORMS_DIR_NAME,
-			"android"
-		);
-		let pluginName = "";
+	return true;
+}
 
-		const pluginPackageJsonPath = path.join(
-			this.pluginProjectPath,
-			constants.PACKAGE_JSON_FILE_NAME
-		);
+export async function runBuildPluginCommand(
+	context: BuildPluginCommandContext,
+	services: IBuildPluginCommandServices,
+): Promise<void> {
+	const platformsAndroidPath = path.join(
+		services.pluginProjectPath,
+		constants.PLATFORMS_DIR_NAME,
+		"android",
+	);
+	let pluginName = "";
 
-		if (this.$fs.exists(pluginPackageJsonPath)) {
-			const packageJsonContents = this.$fs.readJson(pluginPackageJsonPath);
+	const pluginPackageJsonPath = path.join(
+		services.pluginProjectPath,
+		constants.PACKAGE_JSON_FILE_NAME,
+	);
 
-			if (packageJsonContents && packageJsonContents["name"]) {
-				pluginName = packageJsonContents["name"];
-			}
-		}
+	if (services.$fs.exists(pluginPackageJsonPath)) {
+		const packageJsonContents = services.$fs.readJson(pluginPackageJsonPath);
 
-		const tempAndroidProject = await this.$tempService.mkdirSync(
-			"android-project"
-		);
-
-		const options: IPluginBuildOptions = {
-			gradlePath: this.$options.gradlePath,
-			gradleArgs: this.$options.gradleArgs,
-			aarOutputDir: platformsAndroidPath,
-			platformsAndroidDirPath: platformsAndroidPath,
-			pluginName: pluginName,
-			tempPluginDirPath: tempAndroidProject,
-		};
-
-		const androidPluginBuildResult = await this.$androidPluginBuildService.buildAar(
-			options
-		);
-
-		if (androidPluginBuildResult) {
-			this.$logger.info(
-				`${pluginName} successfully built aar at ${platformsAndroidPath}.${EOL}Temporary Android project can be found at ${tempAndroidProject}.`
-			);
-		}
-
-		const migratedIncludeGradle = this.$androidPluginBuildService.migrateIncludeGradle(
-			options
-		);
-
-		if (migratedIncludeGradle) {
-			this.$logger.info(`${pluginName} include gradle updated.`);
+		if (packageJsonContents && packageJsonContents["name"]) {
+			pluginName = packageJsonContents["name"];
 		}
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
-		if (
-			!this.$fs.exists(
-				path.join(
-					this.pluginProjectPath,
-					constants.PLATFORMS_DIR_NAME,
-					"android"
-				)
-			)
-		) {
-			this.$errors.fail(
-				"No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`."
-			);
-		}
+	const tempAndroidProject =
+		await services.$tempService.mkdirSync("android-project");
 
-		return true;
+	const options: IPluginBuildOptions = {
+		gradlePath: context.options.gradlePath,
+		gradleArgs: context.options.gradleArgs,
+		aarOutputDir: platformsAndroidPath,
+		platformsAndroidDirPath: platformsAndroidPath,
+		pluginName: pluginName,
+		tempPluginDirPath: tempAndroidProject,
+	};
+
+	const androidPluginBuildResult =
+		await services.$androidPluginBuildService.buildAar(options);
+
+	if (androidPluginBuildResult) {
+		services.$logger.info(
+			`${pluginName} successfully built aar at ${platformsAndroidPath}.${EOL}Temporary Android project can be found at ${tempAndroidProject}.`,
+		);
+	}
+
+	const migratedIncludeGradle =
+		services.$androidPluginBuildService.migrateIncludeGradle(options);
+
+	if (migratedIncludeGradle) {
+		services.$logger.info(`${pluginName} include gradle updated.`);
 	}
 }
 
-injector.registerCommand("plugin|build", BuildPluginCommand);
+export const buildPluginCommandDefinition = defineCommand({
+	name: "plugin|build",
+	description:
+		"Builds the Android parts of a NativeScript plugin into an `.aar`.",
+	options: buildPluginCommandOptions,
+	arguments: "any",
+	setup: setupBuildPluginCommand,
+	canExecute: canExecuteBuildPluginCommand,
+	run: runBuildPluginCommand,
+});
+
+registerCommand(buildPluginCommandDefinition);

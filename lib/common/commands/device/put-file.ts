@@ -1,56 +1,81 @@
 import { IProjectData } from "../../../definitions/project";
-import { IOptions } from "../../../declarations";
-import { ICommand, ICommandParameter } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { injector } from "../../yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
+import { registerCommand } from "../../services/command-definition-adapter";
 
-export class PutFileCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $stringParameter: ICommandParameter,
-		private $options: IOptions,
-		private $projectData: IProjectData,
-		private $errors: IErrors
-	) {}
+const putFileCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [
-		this.$stringParameter,
-		this.$stringParameter,
-		this.$stringParameter,
-	];
+export type PutFileCommandContext = CommandContext<
+	typeof putFileCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
-			skipInferPlatform: true,
-		});
-		let appIdentifier = args[2];
-
-		if (!appIdentifier) {
-			try {
-				this.$projectData.initializeProjectData();
-			} catch (err) {
-				// ignore the error
-			}
-			if (!this.$projectData.projectIdentifiers) {
-				this.$errors.fail(
-					"Please enter application identifier or execute this command in project."
-				);
-			}
-		}
-
-		const action = async (device: Mobile.IDevice) => {
-			appIdentifier =
-				appIdentifier ||
-				this.$projectData.projectIdentifiers[
-					device.deviceInfo.platform.toLowerCase()
-				];
-			await device.fileSystem.putFile(args[0], args[1], appIdentifier);
-		};
-		await this.$devicesService.execute(action);
-	}
+export interface IPutFileCommandServices {
+	$devicesService: Mobile.IDevicesService;
+	$errors: IErrors;
+	$projectData: IProjectData;
 }
-injector.registerCommand(
-	["device|put-file", "devices|put-file"],
-	PutFileCommand
-);
+
+export function setupPutFileCommand(): IPutFileCommandServices {
+	return {
+		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
+		$errors: inject<IErrors>("errors"),
+		$projectData: inject<IProjectData>("projectData"),
+	};
+}
+
+export async function runPutFileCommand(
+	context: PutFileCommandContext,
+	services: IPutFileCommandServices,
+): Promise<void> {
+	await services.$devicesService.initialize({
+		deviceId: context.options.device,
+		skipInferPlatform: true,
+	});
+	let appIdentifier = context.args[2];
+
+	if (!appIdentifier) {
+		try {
+			services.$projectData.initializeProjectData();
+		} catch (err) {
+			// ignore the error
+		}
+		if (!services.$projectData.projectIdentifiers) {
+			services.$errors.fail(
+				"Please enter application identifier or execute this command in project.",
+			);
+		}
+	}
+
+	const action = async (device: Mobile.IDevice) => {
+		appIdentifier =
+			appIdentifier ||
+			services.$projectData.projectIdentifiers[
+				device.deviceInfo.platform.toLowerCase()
+			];
+		await device.fileSystem.putFile(
+			context.args[0],
+			context.args[1],
+			appIdentifier,
+		);
+	};
+	await services.$devicesService.execute(action);
+}
+
+export const putFileCommandDefinition = defineCommand({
+	name: ["device|put-file", "devices|put-file"],
+	description: "Uploads a file to a connected device.",
+	options: putFileCommandOptions,
+	arguments: [{ name: "localPath" }, { name: "devicePath" }, { name: "appId" }],
+	setup: setupPutFileCommand,
+	run: runPutFileCommand,
+});
+
+registerCommand(putFileCommandDefinition);

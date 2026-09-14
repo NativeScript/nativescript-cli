@@ -1,19 +1,22 @@
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { printHeader } from "../common/header";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 import { IStartService } from "../definitions/start-service";
 
-export class StartCommand implements ICommand {
-	constructor(private $startService: IStartService) {}
-	async execute(args: string[]): Promise<void> {
+export const startCommandDefinition = defineCommand({
+	name: "start",
+	description: "Starts the NativeScript interactive command line.",
+	arguments: "any",
+	setup: () => ({
+		$startService: inject<IStartService>("startService"),
+	}),
+	async run(context, services): Promise<void> {
 		printHeader();
-		this.$startService.start();
+		// Left unawaited: the command returns while the service keeps running.
+		services.$startService.start();
 		return;
-	}
-	allowedParameters: ICommandParameter[];
-	async canExecute?(args: string[]): Promise<boolean> {
-		return true;
-	}
-}
+	},
+});
 
-injector.registerCommand("start", StartCommand);
+registerCommand(startCommandDefinition);

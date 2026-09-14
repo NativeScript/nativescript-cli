@@ -1,28 +1,51 @@
-import { IOptions } from "../../../declarations";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
-import { injector } from "../../yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
+import { registerCommand } from "../../services/command-definition-adapter";
 
-export class UninstallApplicationCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $stringParameter: ICommandParameter,
-		private $options: IOptions
-	) {}
+const uninstallApplicationCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [this.$stringParameter];
+export type UninstallApplicationCommandContext = CommandContext<
+	typeof uninstallApplicationCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
-			skipInferPlatform: true,
-		});
-
-		const action = (device: Mobile.IDevice) =>
-			device.applicationManager.uninstallApplication(args[0]);
-		await this.$devicesService.execute(action);
-	}
+export interface IUninstallApplicationCommandServices {
+	$devicesService: Mobile.IDevicesService;
 }
-injector.registerCommand(
-	["device|uninstall", "devices|uninstall"],
-	UninstallApplicationCommand
-);
+
+export function setupUninstallApplicationCommand(): IUninstallApplicationCommandServices {
+	return {
+		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
+	};
+}
+
+export async function runUninstallApplicationCommand(
+	context: UninstallApplicationCommandContext,
+	services: IUninstallApplicationCommandServices,
+): Promise<void> {
+	await services.$devicesService.initialize({
+		deviceId: context.options.device,
+		skipInferPlatform: true,
+	});
+
+	const action = (device: Mobile.IDevice) =>
+		device.applicationManager.uninstallApplication(context.args[0]);
+	await services.$devicesService.execute(action);
+}
+
+export const uninstallApplicationCommandDefinition = defineCommand({
+	name: ["device|uninstall", "devices|uninstall"],
+	description: "Uninstalls an application from all connected devices.",
+	options: uninstallApplicationCommandOptions,
+	arguments: [{ name: "appId" }],
+	setup: setupUninstallApplicationCommand,
+	run: runUninstallApplicationCommand,
+});
+
+registerCommand(uninstallApplicationCommandDefinition);

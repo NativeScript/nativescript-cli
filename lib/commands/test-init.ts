@@ -8,7 +8,13 @@ import {
 } from "../definitions/project";
 import { INodePackageManager, IOptions } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import {
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 import {
 	IDictionary,
 	IErrors,
@@ -16,122 +22,149 @@ import {
 	IResourceLoader,
 	IDependencyInformation,
 } from "../common/declarations";
-import { injector } from "../common/yok";
 import { color } from "../color";
 
-class TestInitCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+const karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
+	mocha: ["chai"],
+};
 
-	private karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
-		mocha: ["chai"],
+const testInitCommandOptions = {
+	framework: stringOption(),
+} satisfies CommandOptionsSchema;
+
+interface ITestInitCommandServices {
+	$errors: IErrors;
+	$fs: IFileSystem;
+	$logger: ILogger;
+	$options: IOptions;
+	$packageManager: INodePackageManager;
+	$pluginsService: IPluginsService;
+	$projectData: IProjectData;
+	$prompter: IPrompter;
+	$resources: IResourceLoader;
+	$testInitializationService: ITestInitializationService;
+}
+
+function setupTestInitCommand(): ITestInitCommandServices {
+	const services = {
+		$errors: inject<IErrors>("errors"),
+		$fs: inject<IFileSystem>("fs"),
+		$logger: inject<ILogger>("logger"),
+		$options: inject<IOptions>("options"),
+		$packageManager: inject<INodePackageManager>("packageManager"),
+		$pluginsService: inject<IPluginsService>("pluginsService"),
+		$projectData: inject<IProjectData>("projectData"),
+		$prompter: inject<IPrompter>("prompter"),
+		$resources: inject<IResourceLoader>("resources"),
+		$testInitializationService: inject<ITestInitializationService>(
+			"testInitializationService",
+		),
 	};
+	services.$projectData.initializeProjectData();
 
-	/**
-	 * Android blocks cleartext traffic by default (API 28+), which would
-	 * reject the runner's ws:// connection to the host. Scope the exception
-	 * to the emulator loopback alias and adb-reverse loopback only.
-	 */
-	private ensureAndroidNetworkSecurityConfig(bufferedLogs: string[]): void {
-		const manifestPath = path.join(
-			this.$projectData.appResourcesDirectoryPath,
-			"Android",
-			"src",
-			"main",
-			"AndroidManifest.xml",
-		);
-		if (!this.$fs.exists(manifestPath)) {
-			bufferedLogs.push(
-				color.yellow(
-					"Could not locate App_Resources/Android/src/main/AndroidManifest.xml. For Android test runs, allow cleartext traffic to 10.0.2.2 and 127.0.0.1 via a network security config.",
-				),
-			);
-			return;
-		}
+	return services;
+}
 
-		const manifestContent = this.$fs.readText(manifestPath);
-		if (manifestContent.indexOf("networkSecurityConfig") !== -1) {
-			bufferedLogs.push(
-				color.yellow(
-					"AndroidManifest.xml already sets android:networkSecurityConfig — make sure it permits cleartext traffic to 10.0.2.2 and 127.0.0.1 for test runs.",
-				),
-			);
-			return;
-		}
-
-		const xmlDirectory = path.join(
-			this.$projectData.appResourcesDirectoryPath,
-			"Android",
-			"src",
-			"main",
-			"res",
-			"xml",
-		);
-		this.$fs.ensureDirectoryExists(xmlDirectory);
-		const securityConfigPath = path.join(xmlDirectory, "network_security.xml");
-		if (!this.$fs.exists(securityConfigPath)) {
-			this.$fs.copyFile(
-				this.$resources.resolvePath("test/network_security.xml"),
-				securityConfigPath,
-			);
-			bufferedLogs.push(
-				`Added ${color.yellow("App_Resources/Android/src/main/res/xml/network_security.xml")}`,
-			);
-		}
-
-		this.$fs.writeFile(
-			manifestPath,
-			manifestContent.replace(
-				/<application\b/,
-				'<application android:networkSecurityConfig="@xml/network_security"',
+/**
+ * Android blocks cleartext traffic by default (API 28+), which would
+ * reject the runner's ws:// connection to the host. Scope the exception
+ * to the emulator loopback alias and adb-reverse loopback only.
+ */
+function ensureAndroidNetworkSecurityConfig(
+	services: ITestInitCommandServices,
+	bufferedLogs: string[],
+): void {
+	const manifestPath = path.join(
+		services.$projectData.appResourcesDirectoryPath,
+		"Android",
+		"src",
+		"main",
+		"AndroidManifest.xml",
+	);
+	if (!services.$fs.exists(manifestPath)) {
+		bufferedLogs.push(
+			color.yellow(
+				"Could not locate App_Resources/Android/src/main/AndroidManifest.xml. For Android test runs, allow cleartext traffic to 10.0.2.2 and 127.0.0.1 via a network security config.",
 			),
 		);
+		return;
+	}
+
+	const manifestContent = services.$fs.readText(manifestPath);
+	if (manifestContent.indexOf("networkSecurityConfig") !== -1) {
 		bufferedLogs.push(
-			`Set ${color.yellow("android:networkSecurityConfig")} in AndroidManifest.xml`,
+			color.yellow(
+				"AndroidManifest.xml already sets android:networkSecurityConfig — make sure it permits cleartext traffic to 10.0.2.2 and 127.0.0.1 for test runs.",
+			),
+		);
+		return;
+	}
+
+	const xmlDirectory = path.join(
+		services.$projectData.appResourcesDirectoryPath,
+		"Android",
+		"src",
+		"main",
+		"res",
+		"xml",
+	);
+	services.$fs.ensureDirectoryExists(xmlDirectory);
+	const securityConfigPath = path.join(xmlDirectory, "network_security.xml");
+	if (!services.$fs.exists(securityConfigPath)) {
+		services.$fs.copyFile(
+			services.$resources.resolvePath("test/network_security.xml"),
+			securityConfigPath,
+		);
+		bufferedLogs.push(
+			`Added ${color.yellow("App_Resources/Android/src/main/res/xml/network_security.xml")}`,
 		);
 	}
 
-	constructor(
-		private $packageManager: INodePackageManager,
-		private $projectData: IProjectData,
-		private $errors: IErrors,
-		private $options: IOptions,
-		private $prompter: IPrompter,
-		private $fs: IFileSystem,
-		private $resources: IResourceLoader,
-		private $pluginsService: IPluginsService,
-		private $logger: ILogger,
-		private $testInitializationService: ITestInitializationService,
-	) {
-		this.$projectData.initializeProjectData();
-	}
+	services.$fs.writeFile(
+		manifestPath,
+		manifestContent.replace(
+			/<application\b/,
+			'<application android:networkSecurityConfig="@xml/network_security"',
+		),
+	);
+	bufferedLogs.push(
+		`Set ${color.yellow("android:networkSecurityConfig")} in AndroidManifest.xml`,
+	);
+}
 
-	public async execute(args: string[]): Promise<void> {
-		const projectDir = this.$projectData.projectDir;
+export const testInitCommandDefinition = defineCommand({
+	name: "test|init",
+	description: "Configures your project for unit testing.",
+	options: testInitCommandOptions,
+	arguments: "none",
+	setup: setupTestInitCommand,
+	async run(context, services: ITestInitCommandServices): Promise<void> {
+		const projectDir = services.$projectData.projectDir;
 
 		const frameworkToInstall =
-			this.$options.framework ||
-			(await this.$prompter.promptForChoice(
+			context.options.framework ||
+			(await services.$prompter.promptForChoice(
 				"Select testing framework:",
 				TESTING_FRAMEWORKS,
 			));
 		if (TESTING_FRAMEWORKS.indexOf(frameworkToInstall) === -1) {
-			this.$errors.failWithHelp(
+			services.$errors.failWithHelp(
 				`Unknown or unsupported unit testing framework: ${frameworkToInstall}.`,
 			);
 		}
 
 		const projectFilesExtension =
-			this.$projectData.projectType === ProjectTypes.TsFlavorName ||
-			this.$projectData.projectType === ProjectTypes.NgFlavorName
+			services.$projectData.projectType === ProjectTypes.TsFlavorName ||
+			services.$projectData.projectType === ProjectTypes.NgFlavorName
 				? ".ts"
 				: ".js";
 
 		let modulesToInstall: IDependencyInformation[] = [];
 		try {
 			modulesToInstall =
-				this.$testInitializationService.getDependencies(frameworkToInstall);
+				services.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
-			this.$errors.fail(
+			services.$errors.fail(
 				`Unable to install the unit testing dependencies. Error: '${err.message}'`,
 			);
 		}
@@ -145,26 +178,28 @@ class TestInitCommand implements ICommand {
 		for (const mod of modulesToInstall) {
 			let moduleToInstall = mod.name;
 			moduleToInstall += `@${mod.version}`;
-			await this.$packageManager.install(moduleToInstall, projectDir, {
+			await services.$packageManager.install(moduleToInstall, projectDir, {
 				// Packages with native code must land in "dependencies" — the CLI
 				// integrates plugin platform files (pods, aars) only from there.
 				...(mod.saveInDependencies ? { save: true } : { "save-dev": true }),
 				"save-exact": true,
 				optional: false,
-				disableNpmInstall: this.$options.disableNpmInstall,
-				frameworkPath: this.$options.frameworkPath,
-				ignoreScripts: this.$options.ignoreScripts,
-				path: this.$options.path,
+				disableNpmInstall: services.$options.disableNpmInstall,
+				frameworkPath: services.$options.frameworkPath,
+				ignoreScripts: services.$options.ignoreScripts,
+				path: services.$options.path,
 			});
 
 			const modulePath = path.join(projectDir, "node_modules", mod.name);
 			const modulePackageJsonPath = path.join(modulePath, "package.json");
-			const modulePackageJsonContent = this.$fs.readJson(modulePackageJsonPath);
+			const modulePackageJsonContent = services.$fs.readJson(
+				modulePackageJsonPath,
+			);
 			const modulePeerDependencies =
 				modulePackageJsonContent.peerDependencies || {};
 			const modulePeerDependenciesMeta =
 				modulePackageJsonContent.peerDependenciesMeta || {};
-			const projectPackageJson = this.$fs.readJson(
+			const projectPackageJson = services.$fs.readJson(
 				path.join(projectDir, "package.json"),
 			);
 			const installedProjectDependencies = {
@@ -201,20 +236,20 @@ class TestInitCommand implements ICommand {
 				// catch errors when a peerDependency is already installed
 				// e.g karma is installed; karma-jasmine depends on karma and will try to install it again
 				try {
-					await this.$packageManager.install(
+					await services.$packageManager.install(
 						`${peerDependency}@${dependencyVersion}`,
 						projectDir,
 						{
 							"save-dev": true,
 							"save-exact": true,
 							disableNpmInstall: false,
-							frameworkPath: this.$options.frameworkPath,
-							ignoreScripts: this.$options.ignoreScripts,
-							path: this.$options.path,
+							frameworkPath: services.$options.frameworkPath,
+							ignoreScripts: services.$options.ignoreScripts,
+							path: services.$options.path,
 						},
 					);
 				} catch (e) {
-					this.$logger.error(e.message);
+					services.$logger.error(e.message);
 				}
 			}
 		}
@@ -224,27 +259,27 @@ class TestInitCommand implements ICommand {
 		if (!isVitest) {
 			// The Karma client only exists in the v4 line — v5+ is Vitest-only, so
 			// an unpinned install would break these setups once v5 is `latest`.
-			await this.$pluginsService.add(
+			await services.$pluginsService.add(
 				"@nativescript/unit-test-runner@^4.0.0",
-				this.$projectData,
+				services.$projectData,
 			);
 		}
 
-		this.$logger.clearScreen();
+		services.$logger.clearScreen();
 
 		const bufferedLogs = [];
 
-		const testsDir = path.join(this.$projectData.appDirectoryPath, "tests");
+		const testsDir = path.join(services.$projectData.appDirectoryPath, "tests");
 		const projectTestsDir = path.relative(
-			this.$projectData.projectDir,
+			services.$projectData.projectDir,
 			testsDir,
 		);
 		const relativeTestsDir = path.relative(
-			this.$projectData.appDirectoryPath,
+			services.$projectData.appDirectoryPath,
 			testsDir,
 		);
 		let shouldCreateSampleTests = true;
-		if (this.$fs.exists(testsDir)) {
+		if (services.$fs.exists(testsDir)) {
 			const specFilenamePattern = `<filename>.spec${projectFilesExtension}`;
 			bufferedLogs.push(
 				color.yellow(
@@ -258,37 +293,38 @@ class TestInitCommand implements ICommand {
 			shouldCreateSampleTests = false;
 		}
 
-		this.$fs.ensureDirectoryExists(testsDir);
+		services.$fs.ensureDirectoryExists(testsDir);
 
 		if (isVitest) {
-			const vitestConfigResourcePath = this.$resources.resolvePath(
+			const vitestConfigResourcePath = services.$resources.resolvePath(
 				"test/vitest.config.mts",
 			);
-			this.$fs.copyFile(
+			services.$fs.copyFile(
 				vitestConfigResourcePath,
 				path.join(projectDir, "vitest.config.mts"),
 			);
 			bufferedLogs.push(`Added/replaced ${color.yellow("vitest.config.mts")}`);
-			this.ensureAndroidNetworkSecurityConfig(bufferedLogs);
+			ensureAndroidNetworkSecurityConfig(services, bufferedLogs);
 		} else {
 			const frameworks = [frameworkToInstall]
-				.concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
+				.concat(karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
 				.map((fw) => `'${fw}'`)
 				.join(", ");
 			const testFiles = `'${fromWindowsRelativePathToUnix(
 				relativeTestsDir,
 			)}/**/*${projectFilesExtension}'`;
-			const karmaConfTemplate = this.$resources.readText("test/karma.conf.js");
+			const karmaConfTemplate =
+				services.$resources.readText("test/karma.conf.js");
 			const karmaConf = _.template(karmaConfTemplate)({
 				frameworks,
 				testFiles,
-				basePath: this.$projectData.getAppDirectoryRelativePath(),
+				basePath: services.$projectData.getAppDirectoryRelativePath(),
 			});
 
-			this.$fs.writeFile(path.join(projectDir, "karma.conf.js"), karmaConf);
+			services.$fs.writeFile(path.join(projectDir, "karma.conf.js"), karmaConf);
 		}
 
-		const exampleFilePath = this.$resources.resolvePath(
+		const exampleFilePath = services.$resources.resolvePath(
 			`test/example.${frameworkToInstall}${projectFilesExtension}`,
 		);
 		const targetExampleTestPath = path.join(
@@ -296,8 +332,8 @@ class TestInitCommand implements ICommand {
 			`example.spec${projectFilesExtension}`,
 		);
 
-		if (shouldCreateSampleTests && this.$fs.exists(exampleFilePath)) {
-			this.$fs.copyFile(exampleFilePath, targetExampleTestPath);
+		if (shouldCreateSampleTests && services.$fs.exists(exampleFilePath)) {
+			services.$fs.copyFile(exampleFilePath, targetExampleTestPath);
 			const targetExampleTestRelativePath = path.relative(
 				projectDir,
 				targetExampleTestPath,
@@ -308,18 +344,18 @@ class TestInitCommand implements ICommand {
 		}
 
 		// test main entry
-		const testMainResourcesPath = this.$resources.resolvePath(
+		const testMainResourcesPath = services.$resources.resolvePath(
 			isVitest
 				? `test/test-main.vitest${projectFilesExtension}`
 				: `test/test-main${projectFilesExtension}`,
 		);
 		const testMainPath = path.join(
-			this.$projectData.appDirectoryPath,
+			services.$projectData.appDirectoryPath,
 			`test${projectFilesExtension}`,
 		);
 
-		if (!this.$fs.exists(testMainPath)) {
-			this.$fs.copyFile(testMainResourcesPath, testMainPath);
+		if (!services.$fs.exists(testMainPath)) {
+			services.$fs.copyFile(testMainResourcesPath, testMainPath);
 			const testMainRelativePath = path.relative(projectDir, testMainPath);
 			bufferedLogs.push(
 				`Main test entrypoint created: ${color.yellow(testMainRelativePath)}`,
@@ -327,14 +363,14 @@ class TestInitCommand implements ICommand {
 		}
 
 		if (!isVitest || projectFilesExtension === ".ts") {
-			const testTsConfigTemplate = this.$resources.readText(
+			const testTsConfigTemplate = services.$resources.readText(
 				"test/tsconfig.spec.json",
 			);
 			const testTsConfig = _.template(testTsConfigTemplate)({
-				basePath: this.$projectData.getAppDirectoryRelativePath(),
+				basePath: services.$projectData.getAppDirectoryRelativePath(),
 			});
 
-			this.$fs.writeFile(
+			services.$fs.writeFile(
 				path.join(projectDir, "tsconfig.spec.json"),
 				testTsConfig,
 			);
@@ -381,7 +417,7 @@ class TestInitCommand implements ICommand {
 					"",
 				];
 
-		this.$logger.info(
+		services.$logger.info(
 			[
 				[
 					color.green(`Tests using`),
@@ -394,7 +430,7 @@ class TestInitCommand implements ICommand {
 				...closingNotes,
 			].join("\n"),
 		);
-	}
-}
+	},
+});
 
-injector.registerCommand("test|init", TestInitCommand);
+registerCommand(testInitCommandDefinition);

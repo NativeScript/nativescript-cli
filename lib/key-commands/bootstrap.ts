@@ -1,4 +1,5 @@
 import { SpecialKeys } from "../common/definitions/key-commands";
+import { registerBuiltInCommand } from "../common/services/command-definition-adapter";
 import { injector } from "../common/yok";
 
 const path = "./key-commands/index";
@@ -17,7 +18,20 @@ injector.requireKeyCommand("n", path);
 
 injector.requireKeyCommand(SpecialKeys.QuestionMark, path);
 injector.requireKeyCommand(SpecialKeys.CtrlC, path);
-injector.requireCommand("open|ios", path);
-injector.requireCommand("open|android", path);
-injector.requireCommand("open|visionos", path);
-injector.requireCommand("open|vision", path);
+
+registerBuiltInCommand<typeof import("../commands/open").iosOpenCommand>(
+	"open|ios",
+	() => require("../commands/open").iosOpenCommand,
+);
+registerBuiltInCommand<typeof import("../commands/open").androidOpenCommand>(
+	"open|android",
+	() => require("../commands/open").androidOpenCommand,
+);
+registerBuiltInCommand<typeof import("../commands/open").visionOpenCommand>(
+	"open|visionos",
+	() => require("../commands/open").visionOpenCommand,
+);
+registerBuiltInCommand<typeof import("../commands/open").visionOpenCommand>(
+	"open|vision",
+	() => require("../commands/open").visionOpenCommand,
+);

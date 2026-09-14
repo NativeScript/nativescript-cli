@@ -6,66 +6,114 @@ import {
 	IPlatformValidationService,
 } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
-import { injector } from "../common/yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class CleanCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+const platformCleanCommandOptions = {
+	frameworkPath: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	constructor(
-		private $errors: IErrors,
-		private $options: IOptions,
-		private $platformCommandHelper: IPlatformCommandHelper,
-		private $platformValidationService: IPlatformValidationService,
-		private $platformEnvironmentRequirements: IPlatformEnvironmentRequirements,
-		private $projectData: IProjectData
-	) {
-		this.$projectData.initializeProjectData();
-	}
+export type PlatformCleanCommandContext = CommandContext<
+	typeof platformCleanCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$platformCommandHelper.cleanPlatforms(
-			args,
-			this.$projectData,
-			this.$options.frameworkPath
+export interface IPlatformCleanCommandServices {
+	$errors: IErrors;
+	$options: IOptions;
+	$platformCommandHelper: IPlatformCommandHelper;
+	$platformValidationService: IPlatformValidationService;
+	$platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
+	$projectData: IProjectData;
+}
+
+export function setupPlatformCleanCommand(): IPlatformCleanCommandServices {
+	const services = {
+		$errors: inject<IErrors>("errors"),
+		$options: inject<IOptions>("options"),
+		$platformCommandHelper: inject<IPlatformCommandHelper>(
+			"platformCommandHelper",
+		),
+		$platformValidationService: inject<IPlatformValidationService>(
+			"platformValidationService",
+		),
+		$platformEnvironmentRequirements: inject<IPlatformEnvironmentRequirements>(
+			"platformEnvironmentRequirements",
+		),
+		$projectData: inject<IProjectData>("projectData"),
+	};
+	services.$projectData.initializeProjectData();
+
+	return services;
+}
+
+export async function canExecutePlatformCleanCommand(
+	context: PlatformCleanCommandContext,
+	services: IPlatformCleanCommandServices,
+): Promise<boolean> {
+	const args = context.args;
+	if (!args || args.length === 0) {
+		services.$errors.failWithHelp(
+			"No platform specified. Please specify a platform to clean.",
 		);
 	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
-		if (!args || args.length === 0) {
-			this.$errors.failWithHelp(
-				"No platform specified. Please specify a platform to clean."
-			);
-		}
+	_.each(args, (platform) => {
+		services.$platformValidationService.validatePlatform(
+			platform,
+			services.$projectData,
+		);
+	});
 
-		_.each(args, (platform) => {
-			this.$platformValidationService.validatePlatform(
-				platform,
-				this.$projectData
-			);
-		});
+	for (const platform of args) {
+		services.$platformValidationService.validatePlatformInstalled(
+			platform,
+			services.$projectData,
+		);
 
-		for (const platform of args) {
-			this.$platformValidationService.validatePlatformInstalled(
+		const currentRuntimeVersion =
+			services.$platformCommandHelper.getCurrentPlatformVersion(
 				platform,
-				this.$projectData
+				services.$projectData,
 			);
-
-			const currentRuntimeVersion = this.$platformCommandHelper.getCurrentPlatformVersion(
+		await services.$platformEnvironmentRequirements.checkEnvironmentRequirements(
+			{
 				platform,
-				this.$projectData
-			);
-			await this.$platformEnvironmentRequirements.checkEnvironmentRequirements({
-				platform,
-				projectDir: this.$projectData.projectDir,
+				projectDir: services.$projectData.projectDir,
 				runtimeVersion: currentRuntimeVersion,
-				options: this.$options,
-			});
-		}
-
-		return true;
+				options: services.$options,
+			},
+		);
 	}
+
+	return true;
 }
 
-injector.registerCommand("platform|clean", CleanCommand);
+export async function runPlatformCleanCommand(
+	context: PlatformCleanCommandContext,
+	services: IPlatformCleanCommandServices,
+): Promise<void> {
+	await services.$platformCommandHelper.cleanPlatforms(
+		context.args,
+		services.$projectData,
+		context.options.frameworkPath,
+	);
+}
+
+export const platformCleanCommandDefinition = defineCommand({
+	name: "platform|clean",
+	description: "Removes and adds again the selected platform.",
+	options: platformCleanCommandOptions,
+	arguments: "any",
+	setup: setupPlatformCleanCommand,
+	canExecute: canExecutePlatformCleanCommand,
+	run: runPlatformCleanCommand,
+});
+
+registerCommand(platformCleanCommandDefinition);

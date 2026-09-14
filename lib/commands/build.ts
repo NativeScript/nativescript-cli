@@ -2,279 +2,161 @@ import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	AndroidAppBundleMessages,
 } from "../constants";
-import { ValidatePlatformCommandBase } from "./command-base";
-import { hasValidAndroidSigning } from "../common/helpers";
-import { IProjectData } from "../definitions/project";
 import {
-	IOptions,
-	IPlatformValidationService,
-	IAndroidBundleValidatorHelper,
-} from "../declarations";
-import { IPlatformsDataService } from "../definitions/platform";
+	canExecuteCommandBase,
+	injectPlatformCommandServices,
+	IPlatformCommandServices,
+	validatePlatformOptions,
+} from "./command-base";
+import { hasValidAndroidSigning } from "../common/helpers";
+import { IAndroidBundleValidatorHelper } from "../declarations";
 import { IBuildController, IBuildDataService } from "../definitions/build";
 import { IMigrateController } from "../definitions/migrate";
 import { IErrors } from "../common/declarations";
-import { OptionType } from "../common/enums";
-import { ICommandParameter, ICommand } from "../common/definitions/commands";
+import {
+	booleanOption,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../common/define-command";
+import { inject, InjectionToken } from "../common/di";
+import { registerCommandDefinition } from "../common/services/command-definition-adapter";
 import { injector } from "../common/yok";
 
-export abstract class BuildCommandBase extends ValidatePlatformCommandBase {
-	constructor(
-		$options: IOptions,
-		protected $errors: IErrors,
-		$projectData: IProjectData,
-		$platformsDataService: IPlatformsDataService,
-		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		protected $buildController: IBuildController,
-		$platformValidationService: IPlatformValidationService,
-		private $buildDataService: IBuildDataService,
-		protected $logger: ILogger,
-	) {
-		super(
-			$options,
-			$platformsDataService,
-			$platformValidationService,
-			$projectData,
-		);
-		this.$projectData.initializeProjectData();
-	}
+/**
+ * Which `$devicePlatformsConstants` entry this registration builds for. The
+ * constants stay the source of truth for the platform spelling.
+ */
+const BUILD_PLATFORM = new InjectionToken<"iOS" | "Android" | "visionOS">(
+	"buildCommandPlatform",
+);
 
-	public dashedOptions = {
-		watch: {
-			type: OptionType.Boolean,
-			default: false,
-			hasSensitiveValue: false,
-		},
-		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
-	};
+const buildCommandOptions = {
+	watch: booleanOption({ default: false }),
+	hmr: booleanOption({ default: false }),
+	force: booleanOption(),
+	release: booleanOption(),
+	aab: booleanOption(),
+	keyStorePath: stringOption(),
+	keyStorePassword: stringOption(),
+	keyStoreAlias: stringOption(),
+	keyStoreAliasPassword: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	public async executeCore(args: string[]): Promise<string> {
-		const platform = args[0].toLowerCase();
-		const buildData = this.$buildDataService.getBuildData(
-			this.$projectData.projectDir,
-			platform,
-			this.$options,
-		);
-		const outputPath = await this.$buildController.prepareAndBuild(buildData);
-
-		return outputPath;
-	}
-
-	protected validatePlatform(platform: string): void {
-		if (
-			!this.$platformValidationService.isPlatformSupportedForOS(
-				platform,
-				this.$projectData,
-			)
-		) {
-			this.$errors.fail(
-				`Applications for platform ${platform} can not be built on this OS`,
-			);
-		}
-	}
-
-	protected async validateArgs(
-		args: string[],
-		platform: string,
-	): Promise<boolean> {
-		if (args.length !== 0) {
-			this.$errors.failWithHelp(
-				`The arguments '${args.join(
-					" ",
-				)}' are not valid for the current command.`,
-			);
-		}
-
-		const result = await this.$platformValidationService.validateOptions(
-			this.$options.provision,
-			this.$options.teamId,
-			this.$projectData,
-			platform,
-		);
-
-		return result;
-	}
+interface IBuildCommandServices extends IPlatformCommandServices {
+	platform: string;
+	isAndroid: boolean;
+	$errors: IErrors;
+	$logger: ILogger;
+	$buildController: IBuildController;
+	$buildDataService: IBuildDataService;
+	$migrateController: IMigrateController;
+	$androidBundleValidatorHelper: IAndroidBundleValidatorHelper;
 }
 
-export class BuildIosCommand extends BuildCommandBase implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-
-	constructor(
-		protected $options: IOptions,
-		$errors: IErrors,
-		$projectData: IProjectData,
-		$platformsDataService: IPlatformsDataService,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$buildController: IBuildController,
-		$platformValidationService: IPlatformValidationService,
-		$logger: ILogger,
-		$buildDataService: IBuildDataService,
-		protected $migrateController: IMigrateController,
-	) {
-		super(
-			$options,
-			$errors,
-			$projectData,
-			$platformsDataService,
-			$devicePlatformsConstants,
-			$buildController,
-			$platformValidationService,
-			$buildDataService,
-			$logger,
+export const buildCommandDefinition = defineCommand({
+	name: "build",
+	description: "Builds the project for the selected target platform.",
+	options: buildCommandOptions,
+	arguments: "none",
+	setup(): IBuildCommandServices {
+		const devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
+			"devicePlatformsConstants",
 		);
-	}
+		const platform = devicePlatformsConstants[inject(BUILD_PLATFORM)];
+		const isAndroid = devicePlatformsConstants.isAndroid(platform);
+		const services = {
+			...injectPlatformCommandServices(),
+			platform,
+			isAndroid,
+			$errors: inject<IErrors>("errors"),
+			$logger: inject<ILogger>("logger"),
+			$buildController: inject<IBuildController>("buildController"),
+			$buildDataService: inject<IBuildDataService>("buildDataService"),
+			$migrateController: inject<IMigrateController>("migrateController"),
+			// Only the android build checks the runtime version.
+			$androidBundleValidatorHelper: isAndroid
+				? inject<IAndroidBundleValidatorHelper>("androidBundleValidatorHelper")
+				: null,
+		};
+		services.$projectData.initializeProjectData();
 
-	public async execute(args: string[]): Promise<void> {
-		await this.executeCore([this.$devicePlatformsConstants.iOS.toLowerCase()]);
-	}
+		return services;
+	},
+	async canExecute(context, services): Promise<boolean> {
+		const { platform } = services;
 
-	public async canExecute(args: string[]): Promise<boolean> {
-		const platform = this.$devicePlatformsConstants.iOS;
-		if (!this.$options.force) {
-			await this.$migrateController.validate({
-				projectDir: this.$projectData.projectDir,
+		if (!context.options.force) {
+			await services.$migrateController.validate({
+				projectDir: services.$projectData.projectDir,
 				platforms: [platform],
 			});
 		}
 
-		super.validatePlatform(platform);
-
-		let canExecute = await super.canExecuteCommandBase(platform);
-		if (canExecute) {
-			canExecute = await super.validateArgs(args, platform);
+		if (services.isAndroid) {
+			services.$androidBundleValidatorHelper.validateRuntimeVersion(
+				services.$projectData,
+			);
+		} else if (
+			!services.$platformValidationService.isPlatformSupportedForOS(
+				platform,
+				services.$projectData,
+			)
+		) {
+			services.$errors.fail(
+				`Applications for platform ${platform} can not be built on this OS`,
+			);
 		}
 
-		return canExecute;
-	}
-}
+		if (!(await canExecuteCommandBase(services, platform))) {
+			return false;
+		}
 
-injector.registerCommand("build|ios", BuildIosCommand);
+		if (
+			services.isAndroid &&
+			context.options.release &&
+			!hasValidAndroidSigning(context.options)
+		) {
+			services.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+		}
 
-export class BuildAndroidCommand extends BuildCommandBase implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-
-	constructor(
-		protected $options: IOptions,
-		protected $errors: IErrors,
-		$projectData: IProjectData,
-		platformsDataService: IPlatformsDataService,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$buildController: IBuildController,
-		$platformValidationService: IPlatformValidationService,
-		protected $androidBundleValidatorHelper: IAndroidBundleValidatorHelper,
-		$buildDataService: IBuildDataService,
-		protected $logger: ILogger,
-		private $migrateController: IMigrateController,
-	) {
-		super(
-			$options,
-			$errors,
-			$projectData,
-			platformsDataService,
-			$devicePlatformsConstants,
-			$buildController,
-			$platformValidationService,
-			$buildDataService,
-			$logger,
+		return validatePlatformOptions(services, platform);
+	},
+	async run(context, services): Promise<string> {
+		const buildData = services.$buildDataService.getBuildData(
+			services.$projectData.projectDir,
+			services.platform.toLowerCase(),
+			services.$options,
 		);
-	}
+		const outputPath =
+			await services.$buildController.prepareAndBuild(buildData);
 
-	public async execute(args: string[]): Promise<void> {
-		await this.executeCore([
-			this.$devicePlatformsConstants.Android.toLowerCase(),
-		]);
-
-		if (this.$options.aab) {
-			this.$logger.info(
+		if (services.isAndroid && context.options.aab) {
+			services.$logger.info(
 				AndroidAppBundleMessages.ANDROID_APP_BUNDLE_DOCS_MESSAGE,
 			);
 
-			if (this.$options.release) {
-				this.$logger.info(
+			if (context.options.release) {
+				services.$logger.info(
 					AndroidAppBundleMessages.ANDROID_APP_BUNDLE_PUBLISH_DOCS_MESSAGE,
 				);
 			}
 		}
-	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
-		const platform = this.$devicePlatformsConstants.Android;
-		if (!this.$options.force) {
-			await this.$migrateController.validate({
-				projectDir: this.$projectData.projectDir,
-				platforms: [platform],
-			});
-		}
-		this.$androidBundleValidatorHelper.validateRuntimeVersion(
-			this.$projectData,
-		);
-		let canExecute = await super.canExecuteCommandBase(platform);
-		if (canExecute) {
-			if (this.$options.release && !hasValidAndroidSigning(this.$options)) {
-				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
-			}
+		return outputPath;
+	},
+});
 
-			canExecute = await super.validateArgs(args, platform);
-		}
+const buildCommandPlatforms: [string, "iOS" | "Android" | "visionOS"][] = [
+	["build|ios", "iOS"],
+	["build|android", "Android"],
+	["build|vision", "visionOS"],
+	["build|visionos", "visionOS"],
+];
 
-		return canExecute;
-	}
+for (const [name, platform] of buildCommandPlatforms) {
+	registerCommandDefinition(
+		{ ...buildCommandDefinition, name },
+		injector.createChild([{ provide: BUILD_PLATFORM, useValue: platform }]),
+	);
 }
-
-injector.registerCommand("build|android", BuildAndroidCommand);
-
-export class BuildVisionOsCommand extends BuildIosCommand implements ICommand {
-	constructor(
-		protected $options: IOptions,
-		$errors: IErrors,
-		$projectData: IProjectData,
-		$platformsDataService: IPlatformsDataService,
-		$devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		$buildController: IBuildController,
-		$platformValidationService: IPlatformValidationService,
-		$logger: ILogger,
-		$buildDataService: IBuildDataService,
-		protected $migrateController: IMigrateController,
-	) {
-		super(
-			$options,
-			$errors,
-			$projectData,
-			$platformsDataService,
-			$devicePlatformsConstants,
-			$buildController,
-			$platformValidationService,
-			$logger,
-			$buildDataService,
-			$migrateController,
-		);
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		await this.executeCore([
-			this.$devicePlatformsConstants.visionOS.toLowerCase(),
-		]);
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
-		const platform = this.$devicePlatformsConstants.visionOS;
-		if (!this.$options.force) {
-			await this.$migrateController.validate({
-				projectDir: this.$projectData.projectDir,
-				platforms: [platform],
-			});
-		}
-
-		super.validatePlatform(platform);
-
-		let canExecute = await super.canExecuteCommandBase(platform);
-		if (canExecute) {
-			canExecute = await super.validateArgs(args, platform);
-		}
-
-		return canExecute;
-	}
-}
-
-injector.registerCommand("build|vision", BuildVisionOsCommand);
-injector.registerCommand("build|visionos", BuildVisionOsCommand);

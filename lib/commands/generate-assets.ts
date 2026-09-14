@@ -1,106 +1,99 @@
-import { IProjectData } from "../definitions/project";
-import { IOptions, IAssetsGenerationService } from "../declarations";
 import {
-	ICommand,
-	ICommandParameter,
-	IStringParameterBuilder,
-} from "../common/definitions/commands";
-import { IInjector } from "../common/definitions/yok";
-import { injector } from "../common/yok";
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../common/define-command";
+import { inject, InjectionToken } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
+import { getInjector } from "../common/yok";
+import {
+	IAssetsGenerationService,
+	IResourceGenerationData,
+} from "../declarations";
+import { IProjectData } from "../definitions/project";
 
-export abstract class GenerateCommandBase implements ICommand {
-	public allowedParameters: ICommandParameter[] = [
-		this.$stringParameterBuilder.createMandatoryParameter(
-			"You have to provide path to image to generate other images based on it."
+/** Which set of assets a registration generates from the source image. */
+type GeneratedAssets = "icons" | "splashes";
+
+const GENERATED_ASSETS = new InjectionToken<GeneratedAssets>("generatedAssets");
+
+const generators: Record<
+	GeneratedAssets,
+	(
+		service: IAssetsGenerationService,
+		data: IResourceGenerationData,
+	) => Promise<void>
+> = {
+	icons: (service, data) => service.generateIcons(data),
+	splashes: (service, data) => service.generateSplashScreens(data),
+};
+
+export const generateAssetsCommandOptions = {
+	background: stringOption(),
+} satisfies CommandOptionsSchema;
+
+export type GenerateAssetsCommandContext = CommandContext<
+	typeof generateAssetsCommandOptions
+>;
+
+export interface IGenerateAssetsCommandServices {
+	assets: GeneratedAssets;
+	$assetsGenerationService: IAssetsGenerationService;
+	$projectData: IProjectData;
+}
+
+export function setupGenerateAssetsCommand(): IGenerateAssetsCommandServices {
+	const services = {
+		assets: inject(GENERATED_ASSETS),
+		$assetsGenerationService: inject<IAssetsGenerationService>(
+			"assetsGenerationService",
 		),
-	];
+		$projectData: inject<IProjectData>("projectData"),
+	};
+	services.$projectData.initializeProjectData();
 
-	constructor(
-		protected $options: IOptions,
-		protected $injector: IInjector,
-		protected $projectData: IProjectData,
-		protected $stringParameterBuilder: IStringParameterBuilder,
-		protected $assetsGenerationService: IAssetsGenerationService
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		const [imagePath] = args;
-		await this.generate(imagePath, this.$options.background);
-	}
-
-	protected abstract generate(
-		imagePath: string,
-		background?: string
-	): Promise<void>;
+	return services;
 }
 
-export class GenerateIconsCommand
-	extends GenerateCommandBase
-	implements ICommand {
-	constructor(
-		protected $options: IOptions,
-		$injector: IInjector,
-		protected $projectData: IProjectData,
-		protected $stringParameterBuilder: IStringParameterBuilder,
-		$assetsGenerationService: IAssetsGenerationService
-	) {
-		super(
-			$options,
-			$injector,
-			$projectData,
-			$stringParameterBuilder,
-			$assetsGenerationService
-		);
-	}
-
-	protected async generate(
-		imagePath: string,
-		background?: string
-	): Promise<void> {
-		await this.$assetsGenerationService.generateIcons({
-			imagePath,
-			background,
-			projectDir: this.$projectData.projectDir,
-		});
-	}
+export function runGenerateAssetsCommand(
+	context: GenerateAssetsCommandContext,
+	services: IGenerateAssetsCommandServices,
+): Promise<void> {
+	return generators[services.assets](services.$assetsGenerationService, {
+		imagePath: context.args[0],
+		background: context.options.background,
+		projectDir: services.$projectData.projectDir,
+	});
 }
 
-injector.registerCommand("resources|generate|icons", GenerateIconsCommand);
+export const generateAssetsCommandDefinition = defineCommand({
+	name: "resources|generate|icons",
+	description:
+		"Generates icons and splash screens based on the provided image.",
+	options: generateAssetsCommandOptions,
+	arguments: [
+		{
+			name: "imagePath",
+			required: true,
+			errorMessage:
+				"You have to provide path to image to generate other images based on it.",
+		},
+	],
+	setup: setupGenerateAssetsCommand,
+	run: runGenerateAssetsCommand,
+});
 
-export class GenerateSplashScreensCommand
-	extends GenerateCommandBase
-	implements ICommand {
-	constructor(
-		protected $options: IOptions,
-		$injector: IInjector,
-		protected $projectData: IProjectData,
-		protected $stringParameterBuilder: IStringParameterBuilder,
-		$assetsGenerationService: IAssetsGenerationService
-	) {
-		super(
-			$options,
-			$injector,
-			$projectData,
-			$stringParameterBuilder,
-			$assetsGenerationService
-		);
-	}
+const generateAssetsCommands: [string, GeneratedAssets][] = [
+	["resources|generate|icons", "icons"],
+	["resources|generate|splashes", "splashes"],
+];
 
-	protected async generate(
-		imagePath: string,
-		background?: string
-	): Promise<void> {
-		await this.$assetsGenerationService.generateSplashScreens({
-			imagePath,
-			background,
-			projectDir: this.$projectData.projectDir,
-		});
-	}
+for (const [name, assets] of generateAssetsCommands) {
+	registerCommand(
+		{ ...generateAssetsCommandDefinition, name },
+		getInjector().createChild([
+			{ provide: GENERATED_ASSETS, useValue: assets },
+		]),
+	);
 }
-
-injector.registerCommand(
-	"resources|generate|splashes",
-	GenerateSplashScreensCommand
-);

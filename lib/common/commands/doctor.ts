@@ -1,62 +1,57 @@
-import { injector } from "../yok";
-import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IDoctorService, IProjectHelper } from "../declarations";
+import { defineCommand } from "../define-command";
+import { inject, InjectionToken } from "../di";
+import { registerCommand } from "../services/command-definition-adapter";
+import { getInjector } from "../yok";
 import { PlatformTypes } from "../../constants";
 
-export class DoctorCommand implements ICommand {
-	constructor(
-		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
-	) {}
+/** Which platform this registration checks; absent for the whole environment. */
+const DOCTOR_PLATFORM = new InjectionToken<PlatformTypes>(
+	"doctorCommandPlatform",
+);
 
-	public allowedParameters: ICommandParameter[] = [];
-
-	public execute(args: string[]): Promise<void> {
-		return this.$doctorService.printWarnings({
-			trackResult: false,
-			projectDir: this.$projectHelper.projectDir,
-			forceCheck: true,
-		});
-	}
-}
-injector.registerCommand("doctor|*all", DoctorCommand);
-
-export class DoctorIosCommand implements ICommand {
-	constructor(
-		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
-	) {}
-
-	public allowedParameters: ICommandParameter[] = [];
-
-	public execute(args: string[]): Promise<void> {
-		return this.$doctorService.printWarnings({
-			trackResult: false,
-			projectDir: this.$projectHelper.projectDir,
-			forceCheck: true,
-			platform: PlatformTypes.ios,
-		});
-	}
+export interface IDoctorCommandServices {
+	platform: PlatformTypes;
+	$doctorService: IDoctorService;
+	$projectHelper: IProjectHelper;
 }
 
-injector.registerCommand("doctor|ios", DoctorIosCommand);
-
-export class DoctorAndroidCommand implements ICommand {
-	constructor(
-		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
-	) {}
-
-	public allowedParameters: ICommandParameter[] = [];
-
-	public execute(args: string[]): Promise<void> {
-		return this.$doctorService.printWarnings({
-			trackResult: false,
-			projectDir: this.$projectHelper.projectDir,
-			forceCheck: true,
-			platform: PlatformTypes.android,
-		});
-	}
+export function setupDoctorCommand(): IDoctorCommandServices {
+	return {
+		platform: inject(DOCTOR_PLATFORM, { optional: true }),
+		$doctorService: inject<IDoctorService>("doctorService"),
+		$projectHelper: inject<IProjectHelper>("projectHelper"),
+	};
 }
 
-injector.registerCommand("doctor|android", DoctorAndroidCommand);
+export const doctorCommandDefinition = defineCommand({
+	name: "doctor|*all",
+	description:
+		"Checks the local environment for configuration issues, and prints what it finds.",
+	arguments: "none",
+	setup: setupDoctorCommand,
+	run(context, services): Promise<void> {
+		return services.$doctorService.printWarnings({
+			trackResult: false,
+			projectDir: services.$projectHelper.projectDir,
+			forceCheck: true,
+			...(services.platform ? { platform: services.platform } : {}),
+		});
+	},
+});
+
+const doctorPlatforms: [string, PlatformTypes][] = [
+	["doctor|ios", PlatformTypes.ios],
+	["doctor|android", PlatformTypes.android],
+];
+
+registerCommand(doctorCommandDefinition);
+
+for (const [name, platform] of doctorPlatforms) {
+	registerCommand(
+		{ ...doctorCommandDefinition, name },
+		getInjector().createChild([
+			{ provide: DOCTOR_PLATFORM, useValue: platform },
+		]),
+	);
+}

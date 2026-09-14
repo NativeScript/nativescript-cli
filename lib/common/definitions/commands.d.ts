@@ -4,6 +4,7 @@ interface ICommand extends ICommandOptions {
 	execute(args: string[]): Promise<void>;
 	allowedParameters: ICommandParameter[];
 
+	/** @deprecated Read by the command dispatcher, set by nothing. */
 	isDisabled?: boolean;
 
 	// Implement this method in cases when you want to have your own logic for validation. In case you do not implement it,
@@ -12,6 +13,7 @@ interface ICommand extends ICommandOptions {
 	// but at least one of them is required. Used in prop|add, prop|set, etc. commands as their logic is complicated and
 	// default validation in CommandsService is not applicable.
 	canExecute?(args: string[]): Promise<boolean>;
+	/** @deprecated Declared here, referenced nowhere. */
 	completionData?: string[];
 	dashedOptions?: IDictionary<IDashedOption>;
 	isHierarchicalCommand?: boolean;

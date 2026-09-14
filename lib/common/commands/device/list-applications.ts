@@ -1,45 +1,69 @@
+import * as _ from "lodash";
 import { EOL } from "os";
 import * as util from "util";
-import * as _ from "lodash";
-import { IOptions } from "../../../declarations";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
-import { injector } from "../../yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
+import { registerCommand } from "../../services/command-definition-adapter";
 
-export class ListApplicationsCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $logger: ILogger,
-		private $options: IOptions
-	) {}
+const listApplicationsCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [];
+export type ListApplicationsCommandContext = CommandContext<
+	typeof listApplicationsCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
-			skipInferPlatform: true,
-		});
-		const output: string[] = [];
-
-		const action = async (device: Mobile.IDevice) => {
-			const applications = await device.applicationManager.getInstalledApplications();
-			output.push(
-				util.format(
-					"%s=====Installed applications on device with UDID '%s' are:",
-					EOL,
-					device.deviceInfo.identifier
-				)
-			);
-			_.each(applications, (applicationId: string) =>
-				output.push(applicationId)
-			);
-		};
-		await this.$devicesService.execute(action);
-
-		this.$logger.info(output.join(EOL));
-	}
+export interface IListApplicationsCommandServices {
+	$devicesService: Mobile.IDevicesService;
+	$logger: ILogger;
 }
-injector.registerCommand(
-	["device|list-applications", "devices|list-applications"],
-	ListApplicationsCommand
-);
+
+export function setupListApplicationsCommand(): IListApplicationsCommandServices {
+	return {
+		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
+		$logger: inject<ILogger>("logger"),
+	};
+}
+
+export async function runListApplicationsCommand(
+	context: ListApplicationsCommandContext,
+	services: IListApplicationsCommandServices,
+): Promise<void> {
+	await services.$devicesService.initialize({
+		deviceId: context.options.device,
+		skipInferPlatform: true,
+	});
+	const output: string[] = [];
+
+	const action = async (device: Mobile.IDevice) => {
+		const applications =
+			await device.applicationManager.getInstalledApplications();
+		output.push(
+			util.format(
+				"%s=====Installed applications on device with UDID '%s' are:",
+				EOL,
+				device.deviceInfo.identifier,
+			),
+		);
+		_.each(applications, (applicationId: string) => output.push(applicationId));
+	};
+	await services.$devicesService.execute(action);
+
+	services.$logger.info(output.join(EOL));
+}
+
+export const listApplicationsCommandDefinition = defineCommand({
+	name: ["device|list-applications", "devices|list-applications"],
+	description: "Lists the installed applications on all connected devices.",
+	options: listApplicationsCommandOptions,
+	arguments: "none",
+	setup: setupListApplicationsCommand,
+	run: runListApplicationsCommand,
+});
+
+registerCommand(listApplicationsCommandDefinition);

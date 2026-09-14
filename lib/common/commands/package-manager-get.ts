@@ -1,32 +1,34 @@
-import { injector } from "../yok";
-import { IUserSettingsService, IErrors } from "../declarations";
-import { ICommand, ICommandParameter } from "../definitions/commands";
+import { IUserSettingsService } from "../declarations";
+import { defineCommand } from "../define-command";
+import { inject } from "../di";
+import { registerCommand } from "../services/command-definition-adapter";
 
-export class PackageManagerGetCommand implements ICommand {
-	constructor(
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $userSettingsService: IUserSettingsService
-	) {}
-
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
-		if (args && args.length) {
-			this.$errors.failWithHelp(
-				`The arguments '${args.join(
-					" "
-				)}' are not valid for the 'package-manager get' command.`
-			);
-		}
-
-		const result = await this.$userSettingsService.getSettingValue(
-			"packageManager"
-		);
-		this.$logger.printMarkdown(
-			`Your current package manager is \`${result || "npm"}\`.`
-		);
-	}
+export interface IPackageManagerGetCommandServices {
+	$logger: ILogger;
+	$userSettingsService: IUserSettingsService;
 }
 
-injector.registerCommand("package-manager|*get", PackageManagerGetCommand);
+export function setupPackageManagerGetCommand(): IPackageManagerGetCommandServices {
+	return {
+		$logger: inject<ILogger>("logger"),
+		$userSettingsService: inject<IUserSettingsService>("userSettingsService"),
+	};
+}
+
+export const packageManagerGetCommandDefinition = defineCommand({
+	name: "package-manager|*get",
+	description: "Prints the value of the current package manager.",
+	setup: setupPackageManagerGetCommand,
+	async run(
+		context,
+		services: IPackageManagerGetCommandServices,
+	): Promise<void> {
+		const result =
+			await services.$userSettingsService.getSettingValue("packageManager");
+		services.$logger.printMarkdown(
+			`Your current package manager is \`${result || "npm"}\`.`,
+		);
+	},
+});
+
+registerCommand(packageManagerGetCommandDefinition);

@@ -1,15 +1,18 @@
-import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IHelpService } from "../common/declarations";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class GenerateHelpCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export const generateHelpCommandDefinition = defineCommand({
+	name: "dev-generate-help",
+	description: "Generates the HTML help pages from the man pages.",
+	arguments: "none",
+	setup: () => ({
+		$helpService: inject<IHelpService>("helpService"),
+	}),
+	run(context, services): Promise<void> {
+		return services.$helpService.generateHtmlPages();
+	},
+});
 
-	constructor(private $helpService: IHelpService) {}
-
-	public async execute(args: string[]): Promise<void> {
-		return this.$helpService.generateHtmlPages();
-	}
-}
-
-injector.registerCommand("dev-generate-help", GenerateHelpCommand);
+registerCommand(generateHelpCommandDefinition);

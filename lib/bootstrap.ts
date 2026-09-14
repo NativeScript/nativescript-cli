@@ -207,8 +207,6 @@ injector.require(
 	"vitestExecutionService",
 	"./services/vitest-execution-service",
 );
-injector.requireCommand("dev-test|android", "./commands/test");
-injector.requireCommand("dev-test|ios", "./commands/test");
 injector.requireCommand("test|android", "./commands/test");
 injector.requireCommand("test|ios", "./commands/test");
 injector.requireCommand("test|vision", "./commands/test");

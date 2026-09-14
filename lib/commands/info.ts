@@ -1,15 +1,18 @@
 import { IInfoService } from "../declarations";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class InfoCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export const infoCommandDefinition = defineCommand({
+	name: "info",
+	description: "Displays version information about the CLI and its components.",
+	arguments: "none",
+	setup: () => ({
+		$infoService: inject<IInfoService>("infoService"),
+	}),
+	run(context, services): Promise<void> {
+		return services.$infoService.printComponentsInfo();
+	},
+});
 
-	constructor(private $infoService: IInfoService) {}
-
-	public async execute(args: string[]): Promise<void> {
-		return this.$infoService.printComponentsInfo();
-	}
-}
-
-injector.registerCommand("info", InfoCommand);
+registerCommand(infoCommandDefinition);

@@ -1,38 +1,56 @@
-import { IOptions } from "../../../declarations";
-import { injector } from "../../yok";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
+import { registerCommand } from "../../services/command-definition-adapter";
 
-export class StopApplicationOnDeviceCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $stringParameter: ICommandParameter,
-		private $options: IOptions
-	) {}
+const stopApplicationOnDeviceCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [
-		this.$stringParameter,
-		this.$stringParameter,
-		this.$stringParameter,
-	];
+export type StopApplicationOnDeviceCommandContext = CommandContext<
+	typeof stopApplicationOnDeviceCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
-			skipInferPlatform: true,
-			platform: args[1],
-		});
-
-		const action = (device: Mobile.IDevice) =>
-			device.applicationManager.stopApplication({
-				appId: args[0],
-				projectName: args[2],
-				projectDir: null,
-			});
-		await this.$devicesService.execute(action);
-	}
+export interface IStopApplicationOnDeviceCommandServices {
+	$devicesService: Mobile.IDevicesService;
 }
 
-injector.registerCommand(
-	["device|stop", "devices|stop"],
-	StopApplicationOnDeviceCommand
-);
+export function setupStopApplicationOnDeviceCommand(): IStopApplicationOnDeviceCommandServices {
+	return {
+		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
+	};
+}
+
+export async function runStopApplicationOnDeviceCommand(
+	context: StopApplicationOnDeviceCommandContext,
+	services: IStopApplicationOnDeviceCommandServices,
+): Promise<void> {
+	await services.$devicesService.initialize({
+		deviceId: context.options.device,
+		skipInferPlatform: true,
+		platform: context.args[1],
+	});
+
+	const action = (device: Mobile.IDevice) =>
+		device.applicationManager.stopApplication({
+			appId: context.args[0],
+			projectName: context.args[2],
+			projectDir: null,
+		});
+	await services.$devicesService.execute(action);
+}
+
+export const stopApplicationOnDeviceCommandDefinition = defineCommand({
+	name: ["device|stop", "devices|stop"],
+	description: "Stops the selected application on a connected device.",
+	options: stopApplicationOnDeviceCommandOptions,
+	arguments: [{ name: "appId" }, { name: "platform" }, { name: "projectName" }],
+	setup: setupStopApplicationOnDeviceCommand,
+	run: runStopApplicationOnDeviceCommand,
+});
+
+registerCommand(stopApplicationOnDeviceCommandDefinition);

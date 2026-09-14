@@ -1,50 +1,61 @@
 import * as path from "path";
-import { IOptions } from "../../declarations";
-import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IFileSystem, IServiceContractGenerator } from "../declarations";
-import { injector } from "../yok";
+import {
+	booleanOption,
+	CommandOptionsSchema,
+	defineCommand,
+} from "../define-command";
+import { inject } from "../di";
+import { registerCommand } from "../services/command-definition-adapter";
 
-export class GenerateMessages implements ICommand {
-	private static MESSAGES_DEFINITIONS_FILE_NAME = "messages.interface.d.ts";
-	private static MESSAGES_IMPLEMENTATION_FILE_NAME = "messages.ts";
+const MESSAGES_DEFINITIONS_FILE_NAME = "messages.interface.d.ts";
+const MESSAGES_IMPLEMENTATION_FILE_NAME = "messages.ts";
 
-	constructor(
-		private $fs: IFileSystem,
-		private $messageContractGenerator: IServiceContractGenerator,
-		private $options: IOptions
-	) {}
+const generateMessagesCommandOptions = {
+	default: booleanOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [];
-
-	async execute(args: string[]): Promise<void> {
-		const result = await this.$messageContractGenerator.generate();
+export const generateMessagesCommandDefinition = defineCommand({
+	name: "dev-generate-messages",
+	description: "Regenerates the CLI's message contracts.",
+	options: generateMessagesCommandOptions,
+	arguments: "none",
+	setup: () => ({
+		$fs: inject<IFileSystem>("fs"),
+		$messageContractGenerator: inject<IServiceContractGenerator>(
+			"messageContractGenerator",
+		),
+	}),
+	async run(context, services): Promise<void> {
+		const result = await services.$messageContractGenerator.generate();
 		const innerMessagesDirectory = path.join(__dirname, "../messages");
 		const outerMessagesDirectory = path.join(__dirname, "../..");
 		let interfaceFilePath: string;
 		let implementationFilePath: string;
 
-		if (this.$options.default) {
+		if (context.options.default) {
 			interfaceFilePath = path.join(
 				innerMessagesDirectory,
-				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME
+				MESSAGES_DEFINITIONS_FILE_NAME,
 			);
 			implementationFilePath = path.join(
 				innerMessagesDirectory,
-				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME
+				MESSAGES_IMPLEMENTATION_FILE_NAME,
 			);
 		} else {
 			interfaceFilePath = path.join(
 				outerMessagesDirectory,
-				GenerateMessages.MESSAGES_DEFINITIONS_FILE_NAME
+				MESSAGES_DEFINITIONS_FILE_NAME,
 			);
 			implementationFilePath = path.join(
 				outerMessagesDirectory,
-				GenerateMessages.MESSAGES_IMPLEMENTATION_FILE_NAME
+				MESSAGES_IMPLEMENTATION_FILE_NAME,
 			);
 		}
 
-		this.$fs.writeFile(interfaceFilePath, result.interfaceFile);
-		this.$fs.writeFile(implementationFilePath, result.implementationFile);
-	}
-}
-injector.registerCommand("dev-generate-messages", GenerateMessages);
+		services.$fs.writeFile(interfaceFilePath, result.interfaceFile);
+		services.$fs.writeFile(implementationFilePath, result.implementationFile);
+	},
+});
+
+registerCommand(generateMessagesCommandDefinition);

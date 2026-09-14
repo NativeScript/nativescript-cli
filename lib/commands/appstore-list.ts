@@ -1,98 +1,134 @@
-import { createTable } from "../common/helpers";
-import { StringCommandParameter } from "../common/command-params";
-import { IProjectData } from "../definitions/project";
-import { IPlatformValidationService, IOptions } from "../declarations";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { IInjector } from "../common/definitions/yok";
-import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
+import { createTable } from "../common/helpers";
+import { registerCommand } from "../common/services/command-definition-adapter";
+import { IPlatformValidationService } from "../declarations";
+import { IProjectData } from "../definitions/project";
 import {
 	IApplePortalApplicationService,
 	IApplePortalSessionService,
 } from "../services/apple-portal/definitions";
 
-export class ListiOSApps implements ICommand {
-	public allowedParameters: ICommandParameter[] = [
-		new StringCommandParameter(this.$injector),
-		new StringCommandParameter(this.$injector),
-	];
+const listiOSAppsCommandOptions = {
+	appleSessionBase64: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	constructor(
-		private $injector: IInjector,
-		private $applePortalApplicationService: IApplePortalApplicationService,
-		private $applePortalSessionService: IApplePortalSessionService,
-		private $logger: ILogger,
-		private $projectData: IProjectData,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformValidationService: IPlatformValidationService,
-		private $errors: IErrors,
-		private $prompter: IPrompter,
-		private $options: IOptions
+export type ListiOSAppsCommandContext = CommandContext<
+	typeof listiOSAppsCommandOptions
+>;
+
+export interface IListiOSAppsCommandServices {
+	$applePortalApplicationService: IApplePortalApplicationService;
+	$applePortalSessionService: IApplePortalSessionService;
+	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
+	$errors: IErrors;
+	$logger: ILogger;
+	$platformValidationService: IPlatformValidationService;
+	$projectData: IProjectData;
+	$prompter: IPrompter;
+}
+
+export function setupListiOSAppsCommand(): IListiOSAppsCommandServices {
+	const services = {
+		$applePortalApplicationService: inject<IApplePortalApplicationService>(
+			"applePortalApplicationService",
+		),
+		$applePortalSessionService: inject<IApplePortalSessionService>(
+			"applePortalSessionService",
+		),
+		$devicePlatformsConstants: inject<Mobile.IDevicePlatformsConstants>(
+			"devicePlatformsConstants",
+		),
+		$errors: inject<IErrors>("errors"),
+		$logger: inject<ILogger>("logger"),
+		$platformValidationService: inject<IPlatformValidationService>(
+			"platformValidationService",
+		),
+		$projectData: inject<IProjectData>("projectData"),
+		$prompter: inject<IPrompter>("prompter"),
+	};
+	services.$projectData.initializeProjectData();
+
+	return services;
+}
+
+export async function runListiOSAppsCommand(
+	context: ListiOSAppsCommandContext,
+	services: IListiOSAppsCommandServices,
+): Promise<void> {
+	if (
+		!services.$platformValidationService.isPlatformSupportedForOS(
+			services.$devicePlatformsConstants.iOS,
+			services.$projectData,
+		)
 	) {
-		this.$projectData.initializeProjectData();
+		services.$errors.fail(
+			`Applications for platform ${services.$devicePlatformsConstants.iOS} can not be built on this OS`,
+		);
 	}
 
-	public async execute(args: string[]): Promise<void> {
-		if (
-			!this.$platformValidationService.isPlatformSupportedForOS(
-				this.$devicePlatformsConstants.iOS,
-				this.$projectData
-			)
-		) {
-			this.$errors.fail(
-				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`
-			);
-		}
+	let username = context.args[0];
+	let password = context.args[1];
 
-		let username = args[0];
-		let password = args[1];
+	if (!username) {
+		username = await services.$prompter.getString("Apple ID", {
+			allowEmpty: false,
+		});
+	}
 
-		if (!username) {
-			username = await this.$prompter.getString("Apple ID", {
-				allowEmpty: false,
-			});
-		}
+	if (!password) {
+		password = await services.$prompter.getPassword("Apple ID password");
+	}
 
-		if (!password) {
-			password = await this.$prompter.getPassword("Apple ID password");
-		}
-
-		const user = await this.$applePortalSessionService.createUserSession(
-			{ username, password },
-			{
-				sessionBase64: this.$options.appleSessionBase64,
-			}
+	const user = await services.$applePortalSessionService.createUserSession(
+		{ username, password },
+		{
+			sessionBase64: context.options.appleSessionBase64,
+		},
+	);
+	if (!user.areCredentialsValid) {
+		services.$errors.fail(
+			`Invalid username and password combination. Used '${username}' as the username.`,
 		);
-		if (!user.areCredentialsValid) {
-			this.$errors.fail(
-				`Invalid username and password combination. Used '${username}' as the username.`
-			);
-		}
+	}
 
-		const applications = await this.$applePortalApplicationService.getApplications(
-			user
+	const applications =
+		await services.$applePortalApplicationService.getApplications(user);
+
+	if (!applications || !applications.length) {
+		services.$logger.info("Seems you don't have any applications yet.");
+	} else {
+		const table: any = createTable(
+			["Application Name", "Bundle Identifier", "In Flight Version"],
+			applications.map((application) => {
+				const version =
+					(application &&
+						application.versionSets &&
+						application.versionSets.length &&
+						application.versionSets[0].inFlightVersion &&
+						application.versionSets[0].inFlightVersion.version) ||
+					"";
+				return [application.name, application.bundleId, version];
+			}),
 		);
 
-		if (!applications || !applications.length) {
-			this.$logger.info("Seems you don't have any applications yet.");
-		} else {
-			const table: any = createTable(
-				["Application Name", "Bundle Identifier", "In Flight Version"],
-				applications.map((application) => {
-					const version =
-						(application &&
-							application.versionSets &&
-							application.versionSets.length &&
-							application.versionSets[0].inFlightVersion &&
-							application.versionSets[0].inFlightVersion.version) ||
-						"";
-					return [application.name, application.bundleId, version];
-				})
-			);
-
-			this.$logger.info(table.toString());
-		}
+		services.$logger.info(table.toString());
 	}
 }
 
-injector.registerCommand("appstore|*list", ListiOSApps);
+export const listiOSAppsCommandDefinition = defineCommand({
+	name: "appstore|*list",
+	description: "Lists the applications in App Store Connect.",
+	options: listiOSAppsCommandOptions,
+	arguments: [{ name: "appleId" }, { name: "password" }],
+	setup: setupListiOSAppsCommand,
+	run: runListiOSAppsCommand,
+});
+
+registerCommand(listiOSAppsCommandDefinition);

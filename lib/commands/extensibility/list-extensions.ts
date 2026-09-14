@@ -1,30 +1,43 @@
 import * as _ from "lodash";
-import * as helpers from "../../common/helpers";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
+import * as helpers from "../../common/helpers";
+import { registerCommand } from "../../common/services/command-definition-adapter";
 
-export class ListExtensionsCommand implements ICommand {
-	constructor(
-		private $extensibilityService: IExtensibilityService,
-		private $logger: ILogger
-	) {}
+export interface IListExtensionsCommandServices {
+	$extensibilityService: IExtensibilityService;
+	$logger: ILogger;
+}
 
-	public async execute(args: string[]): Promise<void> {
-		const installedExtensions = this.$extensibilityService.getInstalledExtensions();
+export function setupListExtensionsCommand(): IListExtensionsCommandServices {
+	return {
+		$extensibilityService: inject<IExtensibilityService>(
+			"extensibilityService",
+		),
+		$logger: inject<ILogger>("logger"),
+	};
+}
+
+export const listExtensionsCommandDefinition = defineCommand({
+	name: "extension|*list",
+	description: "Lists all installed extensions.",
+	setup: setupListExtensionsCommand,
+	run(context, services: IListExtensionsCommandServices): void {
+		const installedExtensions =
+			services.$extensibilityService.getInstalledExtensions();
 		if (_.keys(installedExtensions).length) {
-			this.$logger.info("Installed extensions:");
+			services.$logger.info("Installed extensions:");
 			const data = _.map(installedExtensions, (version, name) => {
 				return [name, version];
 			});
 
 			const table = helpers.createTable(["Name", "Version"], data);
-			this.$logger.info(table.toString());
+			services.$logger.info(table.toString());
 		} else {
-			this.$logger.info("No extensions installed.");
+			services.$logger.info("No extensions installed.");
 		}
-	}
+	},
+});
 
-	allowedParameters: ICommandParameter[] = [];
-}
-injector.registerCommand("extension|*list", ListExtensionsCommand);
+registerCommand(listExtensionsCommandDefinition);

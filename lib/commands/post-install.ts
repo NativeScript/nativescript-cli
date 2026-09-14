@@ -1,74 +1,97 @@
-import { doesCurrentNpmCommandMatch } from "../common/helpers";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { color } from "../color";
 import {
+	IAnalyticsService,
 	IFileSystem,
 	IHelpService,
-	ISettingsService,
-	IAnalyticsService,
 	IHostInfo,
+	ISettingsService,
 } from "../common/declarations";
-import { injector } from "../common/yok";
-import { color } from "../color";
+import { CommandContext, defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
+import { doesCurrentNpmCommandMatch } from "../common/helpers";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class PostInstallCliCommand implements ICommand {
-	constructor(
-		private $fs: IFileSystem,
-		private $commandsService: ICommandsService,
-		private $helpService: IHelpService,
-		private $settingsService: ISettingsService,
-		private $analyticsService: IAnalyticsService,
-		private $logger: ILogger,
-		private $hostInfo: IHostInfo,
-	) {}
+export interface IPostInstallCliCommandServices {
+	$fs: IFileSystem;
+	$commandsService: ICommandsService;
+	$helpService: IHelpService;
+	$settingsService: ISettingsService;
+	$analyticsService: IAnalyticsService;
+	$logger: ILogger;
+	$hostInfo: IHostInfo;
+}
 
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
+export function setupPostInstallCliCommand(): IPostInstallCliCommandServices {
+	return {
+		$fs: inject<IFileSystem>("fs"),
+		$commandsService: inject<ICommandsService>("commandsService"),
+		$helpService: inject<IHelpService>("helpService"),
+		$settingsService: inject<ISettingsService>("settingsService"),
+		$analyticsService: inject<IAnalyticsService>("analyticsService"),
+		$logger: inject<ILogger>("logger"),
+		$hostInfo: inject<IHostInfo>("hostInfo"),
+	};
+}
 
-	public async execute(args: string[]): Promise<void> {
-		const isRunningWithSudoUser = !!process.env.SUDO_USER;
+export async function runPostInstallCliCommand(
+	context: CommandContext,
+	services: IPostInstallCliCommandServices,
+): Promise<void> {
+	const isRunningWithSudoUser = !!process.env.SUDO_USER;
 
-		if (!this.$hostInfo.isWindows) {
-			// when running under 'sudo' we create a working dir with wrong owner (root) and
-			// it is no longer accessible for the user initiating the installation
-			// patch the owner here
-			if (isRunningWithSudoUser) {
-				// TODO: Check if this is the correct place, probably we should set this at the end of the command.
-				await this.$fs.setCurrentUserAsOwner(
-					this.$settingsService.getProfileDir(),
-					process.env.SUDO_USER,
-				);
-			}
-		}
-
-		const canExecutePostInstallTask =
-			!isRunningWithSudoUser || doesCurrentNpmCommandMatch([/^--unsafe-perm$/]);
-
-		if (canExecutePostInstallTask) {
-			await this.$helpService.generateHtmlPages();
-
-			// Explicitly ask for confirmation of usage-reporting:
-			await this.$analyticsService.checkConsent();
-			await this.$commandsService.tryExecuteCommand("autocomplete", []);
+	if (!services.$hostInfo.isWindows) {
+		// when running under 'sudo' we create a working dir with wrong owner (root) and
+		// it is no longer accessible for the user initiating the installation
+		// patch the owner here
+		if (isRunningWithSudoUser) {
+			// TODO: Check if this is the correct place, probably we should set this at the end of the command.
+			await services.$fs.setCurrentUserAsOwner(
+				services.$settingsService.getProfileDir(),
+				process.env.SUDO_USER,
+			);
 		}
 	}
 
-	public async postCommandAction(args: string[]): Promise<void> {
-		this.$logger.info("");
-		this.$logger.info(
-			color.styleText(
-				["green", "bold"],
-				"You have successfully installed the NativeScript CLI!",
-			),
-		);
-		this.$logger.info("");
-		this.$logger.info("Your next step is to create a new project:");
-		this.$logger.info(color.styleText(["green", "bold"], "ns create"));
+	const canExecutePostInstallTask =
+		!isRunningWithSudoUser || doesCurrentNpmCommandMatch([/^--unsafe-perm$/]);
 
-		this.$logger.info("");
-		this.$logger.printMarkdown(
-			"If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Discord channel: `https://nativescript.org/discord`",
-		);
+	if (canExecutePostInstallTask) {
+		await services.$helpService.generateHtmlPages();
+
+		// Explicitly ask for confirmation of usage-reporting:
+		await services.$analyticsService.checkConsent();
+		await services.$commandsService.tryExecuteCommand("autocomplete", []);
 	}
 }
 
-injector.registerCommand("post-install-cli", PostInstallCliCommand);
+export function reportSuccessfulInstallation(
+	services: IPostInstallCliCommandServices,
+): void {
+	services.$logger.info("");
+	services.$logger.info(
+		color.styleText(
+			["green", "bold"],
+			"You have successfully installed the NativeScript CLI!",
+		),
+	);
+	services.$logger.info("");
+	services.$logger.info("Your next step is to create a new project:");
+	services.$logger.info(color.styleText(["green", "bold"], "ns create"));
+
+	services.$logger.info("");
+	services.$logger.printMarkdown(
+		"If you have any questions, check Stack Overflow: `https://stackoverflow.com/questions/tagged/nativescript` and our public Discord channel: `https://nativescript.org/discord`",
+	);
+}
+
+export const postInstallCliCommandDefinition = defineCommand({
+	name: "post-install-cli",
+	description: "Completes the CLI installation.",
+	disableAnalytics: true,
+	setup: setupPostInstallCliCommand,
+	run: runPostInstallCliCommand,
+	postRun: (context, result, services) =>
+		reportSuccessfulInstallation(services),
+});
+
+registerCommand(postInstallCliCommandDefinition);

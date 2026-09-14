@@ -1,6 +1,7 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
-import { CreateProjectCommand } from "../lib/commands/create-project";
+import { createProjectCommandDefinition } from "../lib/commands/create-project";
+import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import { StringCommandParameter } from "../lib/common/command-params";
 import { setIsInteractive } from "../lib/common/helpers";
 import * as constants from "../lib/constants";
@@ -168,7 +169,7 @@ function createTestInjector() {
 		ng: false,
 		template: undefined,
 	});
-	testInjector.register("createCommand", CreateProjectCommand);
+	registerCommand(createProjectCommandDefinition, testInjector);
 	testInjector.register("stringParameter", StringCommandParameter);
 	testInjector.register("prompter", PrompterStub);
 
@@ -226,7 +227,7 @@ describe("Project commands tests", () => {
 		createProjectCalledWithForce = false;
 		selectedTemplateName = undefined;
 		options = testInjector.resolve("$options");
-		createProjectCommand = testInjector.resolve("$createCommand");
+		createProjectCommand = testInjector.resolveCommand("create");
 	});
 
 	afterEach(() => {

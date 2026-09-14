@@ -1,8 +1,10 @@
-import * as fs from "fs";
-import { platform as currentPlatform } from "os";
-import * as path from "path";
 import { color } from "../color";
-import { PrepareCommand } from "../commands/prepare";
+import {
+	getAndroidStudioPath,
+	openAndroidStudioProject,
+	openVisionOSProject,
+	openXcodeProject,
+} from "../commands/open";
 import { IChildProcess, IXcodeSelectService } from "../common/declarations";
 import { ICommand } from "../common/definitions/commands";
 import {
@@ -47,95 +49,24 @@ export class ShiftA implements IKeyCommand {
 		private $logger: ILogger,
 		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 		private $childProcess: IChildProcess,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {}
 
 	getAndroidStudioPath(): string | null {
-		const os = currentPlatform();
-
-		if (os === "darwin") {
-			const possibleStudioPaths = [
-				"/Applications/Android Studio.app",
-				`${process.env.HOME}/Applications/Android Studio.app`,
-			];
-
-			return possibleStudioPaths.find((p) => fs.existsSync(p)) || null;
-		} else if (os === "win32") {
-			const studioPath = path.join(
-				"C:",
-				"Program Files",
-				"Android",
-				"Android Studio",
-				"bin",
-				"studio64.exe"
-			);
-			return fs.existsSync(studioPath) ? studioPath : null;
-		} else if (os === "linux") {
-			const studioPath = "/usr/local/android-studio/bin/studio.sh";
-			return fs.existsSync(studioPath) ? studioPath : null;
-		}
-
-		return null;
+		return getAndroidStudioPath();
 	}
 
 	async execute(): Promise<void> {
-		this.$liveSyncCommandHelper.validatePlatform(this.platform);
-		this.$projectData.initializeProjectData();
-		const androidDir = `${this.$projectData.platformsDir}/android`;
-
-		if (!fs.existsSync(androidDir)) {
-			const prepareCommand = injector.resolveCommand(
-				"prepare"
-			) as PrepareCommand;
-			await prepareCommand.execute([this.platform]);
-			if (this.isInteractive) {
-				process.stdin.resume();
-			}
-		}
-
-		let studioPath = null;
-
-		studioPath = process.env.NATIVESCRIPT_ANDROID_STUDIO_PATH;
-
-		if (!studioPath) {
-			studioPath = this.getAndroidStudioPath();
-
-			if (!studioPath) {
-				this.$logger.error(
-					"Android Studio is not installed, or is not in a standard location. Use NATIVESCRIPT_ANDROID_STUDIO_PATH."
-				);
-				return;
-			}
-		}
-
-		const os = currentPlatform();
-		if (os === "darwin") {
-			this.$childProcess.exec(`open -a "${studioPath}" ${androidDir}`);
-		} else if (os === "win32") {
-			const child = this.$childProcess.spawn(studioPath, [androidDir], {
-				detached: true,
-				stdio: "ignore",
-			});
-			child.unref();
-		} else if (os === "linux") {
-			this.$childProcess.exec(`${studioPath} ${androidDir}`);
-		}
-	}
-}
-export class OpenAndroidCommand extends ShiftA {
-	constructor(
-		$logger: ILogger,
-		$liveSyncCommandHelper: ILiveSyncCommandHelper,
-		$childProcess: IChildProcess,
-		$projectData: IProjectData,
-		private $options: IOptions
-	) {
-		super($logger, $liveSyncCommandHelper, $childProcess, $projectData);
-		this.isInteractive = false;
-	}
-	async execute(): Promise<void> {
-		this.$options.watch = false;
-		super.execute();
+		await openAndroidStudioProject(
+			{
+				$logger: this.$logger,
+				$liveSyncCommandHelper: this.$liveSyncCommandHelper,
+				$childProcess: this.$childProcess,
+				$projectData: this.$projectData,
+			},
+			this.platform,
+			this.isInteractive,
+		);
 	}
 }
 
@@ -170,72 +101,22 @@ export class ShiftI implements IKeyCommand {
 		private $childProcess: IChildProcess,
 		private $projectData: IProjectData,
 		private $xcodeSelectService: IXcodeSelectService,
-		private $xcodebuildArgsService: IXcodebuildArgsService
+		private $xcodebuildArgsService: IXcodebuildArgsService,
 	) {}
 
 	async execute(): Promise<void> {
-		const os = currentPlatform();
-		if (os === "darwin") {
-			this.$projectData.initializeProjectData();
-			const iosDir = path.resolve(this.$projectData.platformsDir, "ios");
-
-			if (!fs.existsSync(iosDir)) {
-				const prepareCommand = injector.resolveCommand(
-					"prepare"
-				) as PrepareCommand;
-
-				await prepareCommand.execute(["ios"]);
-				if (this.isInteractive) {
-					process.stdin.resume();
-				}
-			}
-			const platformData = this.$iOSProjectService.getPlatformData(
-				this.$projectData
-			);
-			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
-				platformData,
-				this.$projectData
-			)[1];
-
-			if (fs.existsSync(xcprojectFile)) {
-				this.$xcodeSelectService
-					.getDeveloperDirectoryPath()
-					.then(() => this.$childProcess.exec(`open ${xcprojectFile}`, {}))
-					.catch((e) => {
-						this.$logger.error(e.message);
-					});
-			} else {
-				this.$logger.error(`Unable to open project file: ${xcprojectFile}`);
-			}
-		} else {
-			this.$logger.error("Opening a project in XCode requires macOS.");
-		}
-	}
-}
-
-export class OpenIOSCommand extends ShiftI {
-	constructor(
-		$iOSProjectService: IOSProjectService,
-		$logger: ILogger,
-		$childProcess: IChildProcess,
-		$projectData: IProjectData,
-		$xcodeSelectService: IXcodeSelectService,
-		$xcodebuildArgsService: IXcodebuildArgsService,
-		private $options: IOptions
-	) {
-		super(
-			$iOSProjectService,
-			$logger,
-			$childProcess,
-			$projectData,
-			$xcodeSelectService,
-			$xcodebuildArgsService
+		await openXcodeProject(
+			{
+				$iOSProjectService: this.$iOSProjectService,
+				$logger: this.$logger,
+				$childProcess: this.$childProcess,
+				$projectData: this.$projectData,
+				$xcodeSelectService: this.$xcodeSelectService,
+				$xcodebuildArgsService: this.$xcodebuildArgsService,
+			},
+			"ios",
+			this.isInteractive,
 		);
-		this.isInteractive = false;
-	}
-	async execute(): Promise<void> {
-		this.$options.watch = false;
-		super.execute();
 	}
 }
 
@@ -271,78 +152,22 @@ export class ShiftV implements IKeyCommand {
 		private $projectData: IProjectData,
 		private $xcodeSelectService: IXcodeSelectService,
 		private $xcodebuildArgsService: IXcodebuildArgsService,
-		protected $options: IOptions
+		protected $options: IOptions,
 	) {}
 
 	async execute(): Promise<void> {
-		this.$options.platformOverride = "visionOS";
-		const os = currentPlatform();
-		if (os === "darwin") {
-			this.$projectData.initializeProjectData();
-			const visionOSDir = path.resolve(
-				this.$projectData.platformsDir,
-				"visionos"
-			);
-
-			if (!fs.existsSync(visionOSDir)) {
-				const prepareCommand = injector.resolveCommand(
-					"prepare"
-				) as PrepareCommand;
-
-				await prepareCommand.execute(["visionos"]);
-				if (this.isInteractive) {
-					process.stdin.resume();
-				}
-			}
-			const platformData = this.$iOSProjectService.getPlatformData(
-				this.$projectData
-			);
-			const xcprojectFile = this.$xcodebuildArgsService.getXcodeProjectArgs(
-				platformData,
-				this.$projectData
-			)[1];
-
-			if (fs.existsSync(xcprojectFile)) {
-				this.$xcodeSelectService
-					.getDeveloperDirectoryPath()
-					.then(() => this.$childProcess.exec(`open ${xcprojectFile}`, {}))
-					.catch((e) => {
-						this.$logger.error(e.message);
-					});
-			} else {
-				this.$logger.error(`Unable to open project file: ${xcprojectFile}`);
-			}
-		} else {
-			this.$logger.error("Opening a project in XCode requires macOS.");
-		}
-		this.$options.platformOverride = null;
-	}
-}
-
-export class OpenVisionOSCommand extends ShiftV {
-	constructor(
-		$iOSProjectService: IOSProjectService,
-		$logger: ILogger,
-		$childProcess: IChildProcess,
-		$projectData: IProjectData,
-		$xcodeSelectService: IXcodeSelectService,
-		$xcodebuildArgsService: IXcodebuildArgsService,
-		protected $options: IOptions
-	) {
-		super(
-			$iOSProjectService,
-			$logger,
-			$childProcess,
-			$projectData,
-			$xcodeSelectService,
-			$xcodebuildArgsService,
-			$options
+		await openVisionOSProject(
+			{
+				$iOSProjectService: this.$iOSProjectService,
+				$logger: this.$logger,
+				$childProcess: this.$childProcess,
+				$projectData: this.$projectData,
+				$xcodeSelectService: this.$xcodeSelectService,
+				$xcodebuildArgsService: this.$xcodebuildArgsService,
+			},
+			this.$options,
+			this.isInteractive,
 		);
-		this.isInteractive = false;
-	}
-	async execute(): Promise<void> {
-		this.$options.watch = false;
-		super.execute();
 	}
 }
 
@@ -356,16 +181,15 @@ export class R implements IKeyCommand {
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
 
 	async execute(platform: string): Promise<void> {
-		const devices = await this.$liveSyncCommandHelper.getDeviceInstances(
-			platform
-		);
+		const devices =
+			await this.$liveSyncCommandHelper.getDeviceInstances(platform);
 
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation(
 			devices,
 			platform,
 			{
 				restartLiveSync: true,
-			} as ILiveSyncCommandHelperAdditionalOptions
+			} as ILiveSyncCommandHelperAdditionalOptions,
 		);
 	}
 }
@@ -380,9 +204,8 @@ export class ShiftR implements IKeyCommand {
 	constructor(private $liveSyncCommandHelper: ILiveSyncCommandHelper) {}
 
 	async execute(platform: string): Promise<void> {
-		const devices = await this.$liveSyncCommandHelper.getDeviceInstances(
-			platform
-		);
+		const devices =
+			await this.$liveSyncCommandHelper.getDeviceInstances(platform);
 		await this.$liveSyncCommandHelper.executeLiveSyncOperation(
 			devices,
 			platform,
@@ -390,7 +213,7 @@ export class ShiftR implements IKeyCommand {
 				skipNativePrepare: false,
 				forceRebuildNativeApp: true,
 				restartLiveSync: true,
-			} as ILiveSyncCommandHelperAdditionalOptions
+			} as ILiveSyncCommandHelperAdditionalOptions,
 		);
 	}
 }
@@ -422,7 +245,7 @@ export class W implements IKeyCommand {
 			process.stdout.write(
 				paused
 					? color.gray("Paused watching file changes... Press 'w' to resume.")
-					: color.bgGreen("Resumed watching file changes")
+					: color.bgGreen("Resumed watching file changes"),
 			);
 		} catch (e) {}
 	}
@@ -437,7 +260,7 @@ export class C implements IKeyCommand {
 
 	constructor(
 		private $childProcess: IChildProcess,
-		private $liveSyncCommandHelper: ILiveSyncCommandHelper
+		private $liveSyncCommandHelper: ILiveSyncCommandHelper,
 	) {}
 
 	async execute(): Promise<void> {
@@ -515,8 +338,3 @@ injector.registerKeyCommand("A", ShiftA);
 injector.registerKeyCommand("n", N);
 injector.registerKeyCommand(SpecialKeys.QuestionMark, QuestionMark);
 injector.registerKeyCommand(SpecialKeys.CtrlC, CtrlC);
-
-injector.registerCommand("open|ios", OpenIOSCommand);
-injector.registerCommand("open|visionos", OpenVisionOSCommand);
-injector.registerCommand("open|vision", OpenVisionOSCommand);
-injector.registerCommand("open|android", OpenAndroidCommand);

@@ -1,47 +1,68 @@
-import { IOptions } from "../../../declarations";
-import { ICommand, ICommandParameter } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { injector } from "../../yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
+import { registerCommand } from "../../services/command-definition-adapter";
 
-export class RunApplicationOnDeviceCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
-		private $stringParameter: ICommandParameter,
-		private $staticConfig: Config.IStaticConfig,
-		private $options: IOptions
-	) {}
+const runApplicationOnDeviceCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	public allowedParameters: ICommandParameter[] = [
-		this.$stringParameter,
-		this.$stringParameter,
-	];
+export type RunApplicationOnDeviceCommandContext = CommandContext<
+	typeof runApplicationOnDeviceCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
-			skipInferPlatform: true,
-		});
-
-		if (this.$devicesService.deviceCount > 1) {
-			this.$errors.failWithHelp(
-				"More than one device found. Specify device explicitly with --device option. To discover device ID, use $%s device command.",
-				this.$staticConfig.CLIENT_NAME.toLowerCase()
-			);
-		}
-
-		await this.$devicesService.execute(
-			async (device: Mobile.IDevice) =>
-				await device.applicationManager.startApplication({
-					appId: args[0],
-					projectName: args[1],
-					projectDir: null,
-				})
-		);
-	}
+export interface IRunApplicationOnDeviceCommandServices {
+	$devicesService: Mobile.IDevicesService;
+	$errors: IErrors;
+	$staticConfig: Config.IStaticConfig;
 }
 
-injector.registerCommand(
-	["device|run", "devices|run"],
-	RunApplicationOnDeviceCommand
-);
+export function setupRunApplicationOnDeviceCommand(): IRunApplicationOnDeviceCommandServices {
+	return {
+		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
+		$errors: inject<IErrors>("errors"),
+		$staticConfig: inject<Config.IStaticConfig>("staticConfig"),
+	};
+}
+
+export async function runRunApplicationOnDeviceCommand(
+	context: RunApplicationOnDeviceCommandContext,
+	services: IRunApplicationOnDeviceCommandServices,
+): Promise<void> {
+	await services.$devicesService.initialize({
+		deviceId: context.options.device,
+		skipInferPlatform: true,
+	});
+
+	if (services.$devicesService.deviceCount > 1) {
+		services.$errors.failWithHelp(
+			"More than one device found. Specify device explicitly with --device option. To discover device ID, use $%s device command.",
+			services.$staticConfig.CLIENT_NAME.toLowerCase(),
+		);
+	}
+
+	await services.$devicesService.execute(
+		async (device: Mobile.IDevice) =>
+			await device.applicationManager.startApplication({
+				appId: context.args[0],
+				projectName: context.args[1],
+				projectDir: null,
+			}),
+	);
+}
+
+export const runApplicationOnDeviceCommandDefinition = defineCommand({
+	name: ["device|run", "devices|run"],
+	description: "Runs the selected application on a connected device.",
+	options: runApplicationOnDeviceCommandOptions,
+	arguments: [{ name: "appId" }, { name: "projectName" }],
+	setup: setupRunApplicationOnDeviceCommand,
+	run: runRunApplicationOnDeviceCommand,
+});
+
+registerCommand(runApplicationOnDeviceCommandDefinition);

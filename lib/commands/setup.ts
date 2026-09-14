@@ -1,14 +1,19 @@
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IDoctorService } from "../common/declarations";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class SetupCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export const setupCommandDefinition = defineCommand({
+	name: "setup|*",
+	description:
+		"Run the setup script to try to automatically configure your environment.",
+	arguments: "none",
+	setup: () => ({
+		$doctorService: inject<IDoctorService>("doctorService"),
+	}),
+	run(context, services): Promise<any> {
+		return services.$doctorService.runSetupScript();
+	},
+});
 
-	constructor(private $doctorService: IDoctorService) {}
-
-	public execute(args: string[]): Promise<any> {
-		return this.$doctorService.runSetupScript();
-	}
-}
-injector.registerCommand("setup|*", SetupCommand);
+registerCommand(setupCommandDefinition);

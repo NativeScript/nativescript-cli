@@ -1,89 +1,99 @@
-import { ValidatePlatformCommandBase } from "./command-base";
+import {
+	canExecuteCommandBase,
+	injectPlatformCommandServices,
+	IPlatformCommandServices,
+	platformArgument,
+	validatePlatformArgument,
+	validatePlatformOptions,
+} from "./command-base";
 import { PrepareController } from "../controllers/prepare-controller";
 import { PrepareDataService } from "../services/prepare-data-service";
-import { IProjectData } from "../definitions/project";
-import { IOptions, IPlatformValidationService } from "../declarations";
-import { IPlatformsDataService } from "../definitions/platform";
 import { IMigrateController } from "../definitions/migrate";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { OptionType } from "../common/enums";
-import { injector } from "../common/yok";
+import {
+	booleanOption,
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+} from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommandDefinition } from "../common/services/command-definition-adapter";
 
-export class PrepareCommand
-	extends ValidatePlatformCommandBase
-	implements ICommand
-{
-	public allowedParameters = [this.$platformCommandParameter];
+export const prepareCommandOptions = {
+	watch: booleanOption({ default: false }),
+	hmr: booleanOption({ default: false }),
+	skipNative: booleanOption({ default: false }),
+	force: booleanOption(),
+} satisfies CommandOptionsSchema;
 
-	public dashedOptions = {
-		watch: {
-			type: OptionType.Boolean,
-			default: false,
-			hasSensitiveValue: false,
-		},
-		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
-		skipNative: {
-			type: OptionType.Boolean,
-			default: false,
-			hasSensitiveValue: false,
-		},
-	};
+export type PrepareCommandContext = CommandContext<
+	typeof prepareCommandOptions
+>;
 
-	constructor(
-		public $options: IOptions,
-		public $prepareController: PrepareController,
-		public $platformValidationService: IPlatformValidationService,
-		public $projectData: IProjectData,
-		public $platformCommandParameter: ICommandParameter,
-		public $platformsDataService: IPlatformsDataService,
-		public $prepareDataService: PrepareDataService,
-		public $migrateController: IMigrateController,
-	) {
-		super(
-			$options,
-			$platformsDataService,
-			$platformValidationService,
-			$projectData,
-		);
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		const platform = args[0];
-
-		const prepareData = this.$prepareDataService.getPrepareData(
-			this.$projectData.projectDir,
-			platform,
-			this.$options,
-		);
-		await this.$prepareController.prepare(prepareData);
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
-		const platform = args[0];
-		const result =
-			(await this.$platformCommandParameter.validate(platform)) &&
-			(await this.$platformValidationService.validateOptions(
-				this.$options.provision,
-				this.$options.teamId,
-				this.$projectData,
-				platform,
-			));
-
-		if (!this.$options.force) {
-			await this.$migrateController.validate({
-				projectDir: this.$projectData.projectDir,
-				platforms: [platform],
-			});
-		}
-
-		if (!result) {
-			return false;
-		}
-
-		const canExecuteOutput = await super.canExecuteCommandBase(platform);
-		return canExecuteOutput;
-	}
+export interface IPrepareCommandServices extends IPlatformCommandServices {
+	$prepareController: PrepareController;
+	$prepareDataService: PrepareDataService;
+	$migrateController: IMigrateController;
 }
 
-injector.registerCommand("prepare", PrepareCommand);
+export function setupPrepareCommand(): IPrepareCommandServices {
+	const services = {
+		...injectPlatformCommandServices(),
+		$prepareController: inject<PrepareController>("prepareController"),
+		$prepareDataService: inject<PrepareDataService>("prepareDataService"),
+		$migrateController: inject<IMigrateController>("migrateController"),
+	};
+	services.$projectData.initializeProjectData();
+
+	return services;
+}
+
+export async function canExecutePrepareCommand(
+	context: PrepareCommandContext,
+	services: IPrepareCommandServices,
+): Promise<boolean> {
+	const platform = context.args[0];
+	if (!platform) {
+		// The declared argument validates only a platform that was passed; an
+		// absent one is rejected by the same check.
+		validatePlatformArgument(context.injector, platform);
+	}
+
+	const result = await validatePlatformOptions(services, platform);
+
+	if (!context.options.force) {
+		await services.$migrateController.validate({
+			projectDir: services.$projectData.projectDir,
+			platforms: [platform],
+		});
+	}
+
+	if (!result) {
+		return false;
+	}
+
+	return canExecuteCommandBase(services, platform);
+}
+
+export async function runPrepareCommand(
+	context: PrepareCommandContext,
+	services: IPrepareCommandServices,
+): Promise<void> {
+	const prepareData = services.$prepareDataService.getPrepareData(
+		services.$projectData.projectDir,
+		context.args[0],
+		services.$options,
+	);
+	await services.$prepareController.prepare(prepareData);
+}
+
+export const prepareCommandDefinition = defineCommand({
+	name: "prepare",
+	description: "Copies common and platform-specific content to the platform.",
+	options: prepareCommandOptions,
+	arguments: [platformArgument],
+	setup: setupPrepareCommand,
+	canExecute: canExecutePrepareCommand,
+	run: runPrepareCommand,
+});
+
+registerCommandDefinition(prepareCommandDefinition);

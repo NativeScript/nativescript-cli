@@ -1,43 +1,59 @@
 import { IProjectData } from "../definitions/project";
 import { IMigrateController, IMigrationData } from "../definitions/migrate";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class MigrateCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export interface IMigrateCommandServices {
+	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
+	$migrateController: IMigrateController;
+	$staticConfig: Config.IStaticConfig;
+	$projectData: IProjectData;
+	$logger: ILogger;
+}
 
-	constructor(
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $migrateController: IMigrateController,
-		private $staticConfig: Config.IStaticConfig,
-		private $projectData: IProjectData,
-		private $logger: ILogger
-	) {
-		this.$projectData.initializeProjectData();
-	}
+export function setupMigrateCommand(): IMigrateCommandServices {
+	const services = {
+		$devicePlatformsConstants: inject<Mobile.IDevicePlatformsConstants>(
+			"devicePlatformsConstants",
+		),
+		$migrateController: inject<IMigrateController>("migrateController"),
+		$staticConfig: inject<Config.IStaticConfig>("staticConfig"),
+		$projectData: inject<IProjectData>("projectData"),
+		$logger: inject<ILogger>("logger"),
+	};
+	services.$projectData.initializeProjectData();
 
-	public async execute(args: string[]): Promise<void> {
+	return services;
+}
+
+export const migrateCommandDefinition = defineCommand({
+	name: "migrate",
+	description:
+		"Migrates the project's dependencies to the ones the current CLI supports.",
+	arguments: "none",
+	setup: setupMigrateCommand,
+	async run(context, services): Promise<void> {
 		const migrationData: IMigrationData = {
-			projectDir: this.$projectData.projectDir,
+			projectDir: services.$projectData.projectDir,
 			platforms: [
-				this.$devicePlatformsConstants.Android,
-				this.$devicePlatformsConstants.iOS,
+				services.$devicePlatformsConstants.Android,
+				services.$devicePlatformsConstants.iOS,
 			],
 		};
-		const shouldMigrateResult = await this.$migrateController.shouldMigrate(
-			migrationData
-		);
+		const shouldMigrateResult =
+			await services.$migrateController.shouldMigrate(migrationData);
 
 		if (!shouldMigrateResult) {
-			const cliVersion = this.$staticConfig.version;
-			this.$logger.printMarkdown(
-				`__Project is compatible with NativeScript \`v${cliVersion}\`__`
+			const cliVersion = services.$staticConfig.version;
+			services.$logger.printMarkdown(
+				`__Project is compatible with NativeScript \`v${cliVersion}\`__`,
 			);
 			return;
 		}
 
-		await this.$migrateController.migrate(migrationData);
-	}
-}
+		await services.$migrateController.migrate(migrationData);
+	},
+});
 
-injector.registerCommand("migrate", MigrateCommand);
+registerCommand(migrateCommandDefinition);

@@ -1,73 +1,102 @@
-import { ValidatePlatformCommandBase } from "./command-base";
-import { IProjectData } from "../definitions/project";
 import {
-	IOptions,
-	IPlatformCommandHelper,
-	IPlatformValidationService,
-} from "../declarations";
-import { IPlatformsDataService } from "../definitions/platform";
-import { ICommandParameter, ICommand } from "../common/definitions/commands";
+	canExecuteCommandBase,
+	injectPlatformCommandServices,
+	IPlatformCommandServices,
+} from "./command-base";
+import { IPlatformCommandHelper } from "../declarations";
 import { IErrors } from "../common/declarations";
-import { injector } from "../common/yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class AddPlatformCommand
-	extends ValidatePlatformCommandBase
-	implements ICommand
-{
-	public allowedParameters: ICommandParameter[] = [];
+const addPlatformCommandOptions = {
+	frameworkPath: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	constructor(
-		$options: IOptions,
-		private $platformCommandHelper: IPlatformCommandHelper,
-		$platformValidationService: IPlatformValidationService,
-		$projectData: IProjectData,
-		$platformsDataService: IPlatformsDataService,
-		private $errors: IErrors
-	) {
-		super(
-			$options,
-			$platformsDataService,
-			$platformValidationService,
-			$projectData
+export type AddPlatformCommandContext = CommandContext<
+	typeof addPlatformCommandOptions
+>;
+
+export interface IAddPlatformCommandServices extends IPlatformCommandServices {
+	$errors: IErrors;
+	$platformCommandHelper: IPlatformCommandHelper;
+}
+
+export function setupAddPlatformCommand(): IAddPlatformCommandServices {
+	const services = {
+		...injectPlatformCommandServices(),
+		$errors: inject<IErrors>("errors"),
+		$platformCommandHelper: inject<IPlatformCommandHelper>(
+			"platformCommandHelper",
+		),
+	};
+	services.$projectData.initializeProjectData();
+
+	return services;
+}
+
+export async function canExecuteAddPlatformCommand(
+	context: AddPlatformCommandContext,
+	services: IAddPlatformCommandServices,
+): Promise<boolean> {
+	const args = context.args;
+	if (!args || args.length === 0) {
+		services.$errors.failWithHelp(
+			"No platform specified. Please specify a platform to add.",
 		);
-		this.$projectData.initializeProjectData();
 	}
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$platformCommandHelper.addPlatforms(
-			args,
-			this.$projectData,
-			this.$options.frameworkPath
+	let canExecute = true;
+	for (const arg of args) {
+		services.$platformValidationService.validatePlatform(
+			arg,
+			services.$projectData,
 		);
-	}
 
-	public async canExecute(args: string[]): Promise<boolean> {
-		if (!args || args.length === 0) {
-			this.$errors.failWithHelp(
-				"No platform specified. Please specify a platform to add."
+		if (
+			!services.$platformValidationService.isPlatformSupportedForOS(
+				arg,
+				services.$projectData,
+			)
+		) {
+			services.$errors.fail(
+				`Applications for platform ${arg} cannot be built on this OS`,
 			);
 		}
 
-		let canExecute = true;
-		for (const arg of args) {
-			this.$platformValidationService.validatePlatform(arg, this.$projectData);
-
-			if (
-				!this.$platformValidationService.isPlatformSupportedForOS(
-					arg,
-					this.$projectData
-				)
-			) {
-				this.$errors.fail(
-					`Applications for platform ${arg} cannot be built on this OS`
-				);
-			}
-
-			canExecute = await super.canExecuteCommandBase(arg);
-		}
-
-		return canExecute;
+		// The assignment overwrites the previous platform's verdict, so only the
+		// last one decides. Kept as it was.
+		canExecute = await canExecuteCommandBase(services, arg);
 	}
+
+	return canExecute;
 }
 
-injector.registerCommand("platform|add", AddPlatformCommand);
+export async function runAddPlatformCommand(
+	context: AddPlatformCommandContext,
+	services: IAddPlatformCommandServices,
+): Promise<void> {
+	await services.$platformCommandHelper.addPlatforms(
+		context.args,
+		services.$projectData,
+		context.options.frameworkPath,
+	);
+}
+
+export const addPlatformCommandDefinition = defineCommand({
+	name: "platform|add",
+	description:
+		"Configures the current project to target the selected platform.",
+	options: addPlatformCommandOptions,
+	arguments: "any",
+	setup: setupAddPlatformCommand,
+	canExecute: canExecuteAddPlatformCommand,
+	run: runAddPlatformCommand,
+});
+
+registerCommand(addPlatformCommandDefinition);

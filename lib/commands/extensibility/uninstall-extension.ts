@@ -1,28 +1,44 @@
-import {
-	ICommand,
-	IStringParameterBuilder,
-	ICommandParameter,
-} from "../../common/definitions/commands";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
+import { registerCommand } from "../../common/services/command-definition-adapter";
 
-export class UninstallExtensionCommand implements ICommand {
-	constructor(
-		private $extensibilityService: IExtensibilityService,
-		private $stringParameterBuilder: IStringParameterBuilder,
-		private $logger: ILogger
-	) {}
-
-	public async execute(args: string[]): Promise<void> {
-		const extensionName = args[0];
-		await this.$extensibilityService.uninstallExtension(extensionName);
-		this.$logger.info(`Successfully uninstalled extension ${extensionName}`);
-	}
-
-	allowedParameters: ICommandParameter[] = [
-		this.$stringParameterBuilder.createMandatoryParameter(
-			"You have to provide a valid name for extension that you want to uninstall."
-		),
-	];
+export interface IUninstallExtensionCommandServices {
+	$extensibilityService: IExtensibilityService;
+	$logger: ILogger;
 }
-injector.registerCommand("extension|uninstall", UninstallExtensionCommand);
+
+export function setupUninstallExtensionCommand(): IUninstallExtensionCommandServices {
+	return {
+		$extensibilityService: inject<IExtensibilityService>(
+			"extensibilityService",
+		),
+		$logger: inject<ILogger>("logger"),
+	};
+}
+
+export const uninstallExtensionCommandDefinition = defineCommand({
+	name: "extension|uninstall",
+	description: "Uninstalls the specified extension.",
+	arguments: [
+		{
+			name: "extensionName",
+			required: true,
+			errorMessage:
+				"You have to provide a valid name for extension that you want to uninstall.",
+		},
+	],
+	setup: setupUninstallExtensionCommand,
+	async run(
+		context,
+		services: IUninstallExtensionCommandServices,
+	): Promise<void> {
+		const extensionName = context.args[0];
+		await services.$extensibilityService.uninstallExtension(extensionName);
+		services.$logger.info(
+			`Successfully uninstalled extension ${extensionName}`,
+		);
+	},
+});
+
+registerCommand(uninstallExtensionCommandDefinition);

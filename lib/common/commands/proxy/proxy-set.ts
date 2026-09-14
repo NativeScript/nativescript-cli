@@ -1,188 +1,214 @@
-import * as commandParams from "../../command-params";
-import { isInteractive } from "../../helpers";
-import { ProxyCommandBase } from "./proxy-base";
-import { HttpProtocolToPort } from "../../constants";
+import { EOL, platform } from "os";
 import { parse } from "url";
-import { platform, EOL } from "os";
-import { IOptions } from "../../../declarations";
+import { HttpProtocolToPort } from "../../constants";
 import {
 	IErrors,
 	IHostInfo,
-	IAnalyticsService,
-	IProxyService,
 	IProxyLibSettings,
 	IPrompterQuestion,
 } from "../../declarations";
-import { IInjector } from "../../definitions/yok";
-import { injector } from "../../yok";
+import {
+	booleanOption,
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+} from "../../define-command";
+import { inject } from "../../di";
+import { isInteractive } from "../../helpers";
+import { registerCommand } from "../../services/command-definition-adapter";
+import {
+	injectProxyCommandServices,
+	IProxyCommandServices,
+	tryTrackProxyCommandUsage,
+} from "./proxy-base";
 const { getCredentialsFromAuth } = require("proxy-lib/lib/utils");
 
 const proxySetCommandName = "proxy|set";
 
-export class ProxySetCommand extends ProxyCommandBase {
-	public allowedParameters = [
-		new commandParams.StringCommandParameter(this.$injector),
-		new commandParams.StringCommandParameter(this.$injector),
-		new commandParams.StringCommandParameter(this.$injector),
-	];
+const proxySetCommandOptions = {
+	insecure: booleanOption(),
+} satisfies CommandOptionsSchema;
 
-	constructor(
-		private $errors: IErrors,
-		private $injector: IInjector,
-		private $prompter: IPrompter,
-		private $hostInfo: IHostInfo,
-		private $staticConfig: Config.IStaticConfig,
-		protected $analyticsService: IAnalyticsService,
-		protected $logger: ILogger,
-		protected $options: IOptions,
-		protected $proxyService: IProxyService
-	) {
-		super($analyticsService, $logger, $proxyService, proxySetCommandName);
-	}
+export type ProxySetCommandContext = CommandContext<
+	typeof proxySetCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		let urlString = args[0];
-		let username = args[1];
-		let password = args[2];
-
-		const noUrl = !urlString;
-		if (noUrl) {
-			if (!isInteractive()) {
-				this.$errors.failWithHelp(
-					"Console is not interactive - you need to supply all command parameters."
-				);
-			} else {
-				urlString = await this.$prompter.getString("Url", {
-					allowEmpty: false,
-				});
-			}
-		}
-
-		let urlObj = parse(urlString);
-		if ((!urlObj.protocol || !urlObj.hostname) && !isInteractive()) {
-			this.$errors.fail(
-				"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname."
-			);
-		}
-
-		while (!urlObj.protocol || !urlObj.hostname) {
-			this.$logger.warn(
-				"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname."
-			);
-			urlString = await this.$prompter.getString("Url", { allowEmpty: false });
-			urlObj = parse(urlString);
-		}
-
-		let port =
-			(urlObj.port && +urlObj.port) || HttpProtocolToPort[urlObj.protocol];
-		const noPort = !port || !this.isValidPort(port);
-		const authCredentials = getCredentialsFromAuth(urlObj.auth || "");
-		if (
-			(username &&
-				authCredentials.username &&
-				username !== authCredentials.username) ||
-			(password &&
-				authCredentials.password &&
-				password !== authCredentials.password)
-		) {
-			this.$errors.fail(
-				"The credentials you have provided in the url address mismatch those passed as command line arguments."
-			);
-		}
-		username = username || authCredentials.username;
-		password = password || authCredentials.password;
-
-		if (!isInteractive()) {
-			if (noPort) {
-				this.$errors.fail(
-					`The port you have specified (${port || "none"}) is not valid.`
-				);
-			} else if (this.isPasswordRequired(username, password)) {
-				this.$errors.failWithHelp(
-					"Console is not interactive - you need to supply all command parameters."
-				);
-			}
-		}
-
-		if (noPort) {
-			if (port) {
-				this.$logger.warn(this.getInvalidPortMessage(port));
-			}
-
-			port = await this.getPortFromUserInput();
-		}
-
-		if (!username) {
-			this.$logger.info(
-				"In case your proxy requires authentication, please specify username and password. If authentication is not required, just leave it empty."
-			);
-			username = await this.$prompter.getString("Username", {
-				defaultAction: () => "",
-			});
-		}
-
-		if (this.isPasswordRequired(username, password)) {
-			password = await this.$prompter.getPassword("Password");
-		}
-
-		const settings: IProxyLibSettings = {
-			proxyUrl: urlString,
-			username,
-			password,
-			rejectUnauthorized: !this.$options.insecure,
-		};
-
-		if (!this.$hostInfo.isWindows) {
-			this.$logger.warn(
-				`Note that storing credentials is not supported on ${platform()} yet.`
-			);
-		}
-
-		const clientName = this.$staticConfig.CLIENT_NAME.toLowerCase();
-		const messageNote =
-			(clientName === "tns"
-				? "Note that 'npm' and 'Gradle' need to be configured separately to work with a proxy."
-				: "Note that `npm` needs to be configured separately to work with a proxy.") +
-			EOL;
-
-		this.$logger.warn(
-			`${messageNote}Run '${clientName} proxy set --help' for more information.`
-		);
-
-		await this.$proxyService.setCache(settings);
-		this.$logger.info(`Successfully setup proxy.${EOL}`);
-		this.$logger.info(await this.$proxyService.getInfo());
-		await this.tryTrackUsage();
-	}
-
-	private isPasswordRequired(username: string, password: string): boolean {
-		return !!(username && !password);
-	}
-
-	private isValidPort(port: number): boolean {
-		return !isNaN(port) && port > 0 && port < 65536;
-	}
-
-	private async getPortFromUserInput(): Promise<number> {
-		const schemaName = "port";
-		const schema: IPrompterQuestion = {
-			message: "Port",
-			type: "text",
-			name: schemaName,
-			validate: (value: any) => {
-				return !value || !this.isValidPort(value)
-					? this.getInvalidPortMessage(value)
-					: true;
-			},
-		};
-
-		const prompterResult = await this.$prompter.get([schema]);
-		return parseInt(prompterResult[schemaName]);
-	}
-
-	private getInvalidPortMessage(port: number): string {
-		return `Specified port ${port} is not valid. Please enter a value between 1 and 65535.`;
-	}
+export interface IProxySetCommandServices extends IProxyCommandServices {
+	$errors: IErrors;
+	$hostInfo: IHostInfo;
+	$prompter: IPrompter;
+	$staticConfig: Config.IStaticConfig;
 }
 
-injector.registerCommand(proxySetCommandName, ProxySetCommand);
+export function setupProxySetCommand(): IProxySetCommandServices {
+	return {
+		...injectProxyCommandServices(),
+		$errors: inject<IErrors>("errors"),
+		$hostInfo: inject<IHostInfo>("hostInfo"),
+		$prompter: inject<IPrompter>("prompter"),
+		$staticConfig: inject<Config.IStaticConfig>("staticConfig"),
+	};
+}
+
+function isPasswordRequired(username: string, password: string): boolean {
+	return !!(username && !password);
+}
+
+function isValidPort(port: number): boolean {
+	return !isNaN(port) && port > 0 && port < 65536;
+}
+
+function getInvalidPortMessage(port: number): string {
+	return `Specified port ${port} is not valid. Please enter a value between 1 and 65535.`;
+}
+
+async function getPortFromUserInput(
+	services: IProxySetCommandServices,
+): Promise<number> {
+	const schemaName = "port";
+	const schema: IPrompterQuestion = {
+		message: "Port",
+		type: "text",
+		name: schemaName,
+		validate: (value: any) => {
+			return !value || !isValidPort(value)
+				? getInvalidPortMessage(value)
+				: true;
+		},
+	};
+
+	const prompterResult = await services.$prompter.get([schema]);
+	return parseInt(prompterResult[schemaName]);
+}
+
+export async function runProxySetCommand(
+	context: ProxySetCommandContext,
+	services: IProxySetCommandServices,
+): Promise<void> {
+	let urlString = context.args[0];
+	let username = context.args[1];
+	let password = context.args[2];
+
+	const noUrl = !urlString;
+	if (noUrl) {
+		if (!isInteractive()) {
+			services.$errors.failWithHelp(
+				"Console is not interactive - you need to supply all command parameters.",
+			);
+		} else {
+			urlString = await services.$prompter.getString("Url", {
+				allowEmpty: false,
+			});
+		}
+	}
+
+	let urlObj = parse(urlString);
+	if ((!urlObj.protocol || !urlObj.hostname) && !isInteractive()) {
+		services.$errors.fail(
+			"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname.",
+		);
+	}
+
+	while (!urlObj.protocol || !urlObj.hostname) {
+		services.$logger.warn(
+			"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname.",
+		);
+		urlString = await services.$prompter.getString("Url", {
+			allowEmpty: false,
+		});
+		urlObj = parse(urlString);
+	}
+
+	let port =
+		(urlObj.port && +urlObj.port) || HttpProtocolToPort[urlObj.protocol];
+	const noPort = !port || !isValidPort(port);
+	const authCredentials = getCredentialsFromAuth(urlObj.auth || "");
+	if (
+		(username &&
+			authCredentials.username &&
+			username !== authCredentials.username) ||
+		(password &&
+			authCredentials.password &&
+			password !== authCredentials.password)
+	) {
+		services.$errors.fail(
+			"The credentials you have provided in the url address mismatch those passed as command line arguments.",
+		);
+	}
+	username = username || authCredentials.username;
+	password = password || authCredentials.password;
+
+	if (!isInteractive()) {
+		if (noPort) {
+			services.$errors.fail(
+				`The port you have specified (${port || "none"}) is not valid.`,
+			);
+		} else if (isPasswordRequired(username, password)) {
+			services.$errors.failWithHelp(
+				"Console is not interactive - you need to supply all command parameters.",
+			);
+		}
+	}
+
+	if (noPort) {
+		if (port) {
+			services.$logger.warn(getInvalidPortMessage(port));
+		}
+
+		port = await getPortFromUserInput(services);
+	}
+
+	if (!username) {
+		services.$logger.info(
+			"In case your proxy requires authentication, please specify username and password. If authentication is not required, just leave it empty.",
+		);
+		username = await services.$prompter.getString("Username", {
+			defaultAction: () => "",
+		});
+	}
+
+	if (isPasswordRequired(username, password)) {
+		password = await services.$prompter.getPassword("Password");
+	}
+
+	const settings: IProxyLibSettings = {
+		proxyUrl: urlString,
+		username,
+		password,
+		rejectUnauthorized: !context.options.insecure,
+	};
+
+	if (!services.$hostInfo.isWindows) {
+		services.$logger.warn(
+			`Note that storing credentials is not supported on ${platform()} yet.`,
+		);
+	}
+
+	const clientName = services.$staticConfig.CLIENT_NAME.toLowerCase();
+	const messageNote =
+		(clientName === "tns"
+			? "Note that 'npm' and 'Gradle' need to be configured separately to work with a proxy."
+			: "Note that `npm` needs to be configured separately to work with a proxy.") +
+		EOL;
+
+	services.$logger.warn(
+		`${messageNote}Run '${clientName} proxy set --help' for more information.`,
+	);
+
+	await services.$proxyService.setCache(settings);
+	services.$logger.info(`Successfully setup proxy.${EOL}`);
+	services.$logger.info(await services.$proxyService.getInfo());
+	await tryTrackProxyCommandUsage(services, proxySetCommandName);
+}
+
+export const proxySetCommandDefinition = defineCommand({
+	name: proxySetCommandName,
+	description: "Configures a proxy for the CLI to use.",
+	options: proxySetCommandOptions,
+	arguments: [{ name: "url" }, { name: "username" }, { name: "password" }],
+	disableAnalytics: true,
+	setup: setupProxySetCommand,
+	run: runProxySetCommand,
+});
+
+registerCommand(proxySetCommandDefinition);

@@ -1,62 +1,86 @@
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { injector } from "../../common/yok";
-import { PrepareCommand } from "../prepare";
-import { PrepareController } from "../../controllers/prepare-controller";
-import { IOptions, IPlatformValidationService } from "../../declarations";
-import { IProjectConfigService, IProjectData } from "../../definitions/project";
-import { IPlatformsDataService } from "../../definitions/platform";
-import { PrepareDataService } from "../../services/prepare-data-service";
-import { IMigrateController } from "../../definitions/migrate";
 import { resolve } from "path";
-import { IFileSystem } from "../../common/declarations";
 import { color } from "../../color";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
+import { registerCommandDefinition } from "../../common/services/command-definition-adapter";
+import { IFileSystem } from "../../common/declarations";
+import { IProjectConfigService } from "../../definitions/project";
+import { platformArgument } from "../command-base";
+import {
+	canExecutePrepareCommand,
+	IPrepareCommandServices,
+	prepareCommandOptions,
+	runPrepareCommand,
+	setupPrepareCommand,
+} from "../prepare";
 
-export class EmbedCommand extends PrepareCommand implements ICommand {
-	constructor(
-		public $options: IOptions,
-		public $prepareController: PrepareController,
-		public $platformValidationService: IPlatformValidationService,
-		public $projectData: IProjectData,
-		public $platformCommandParameter: ICommandParameter,
-		public $platformsDataService: IPlatformsDataService,
-		public $prepareDataService: PrepareDataService,
-		public $migrateController: IMigrateController,
+interface IEmbedCommandServices extends IPrepareCommandServices {
+	$fs: IFileSystem;
+	$logger: ILogger;
+	hostProjectPath: string;
+	hostProjectModuleName: string;
+}
 
-		private $logger: ILogger,
-		private $fs: IFileSystem,
-		private $projectConfigService: IProjectConfigService,
-	) {
-		super(
-			$options,
-			$prepareController,
-			$platformValidationService,
-			$projectData,
-			$platformCommandParameter,
-			$platformsDataService,
-			$prepareDataService,
-			$migrateController,
-		);
+function resolveHostProjectPath(
+	projectDir: string,
+	hostProjectPath: string,
+): string {
+	if (hostProjectPath.charAt(0) === ".") {
+		return resolve(projectDir, hostProjectPath);
 	}
 
-	private resolveHostProjectPath(hostProjectPath: string): string {
-		if (hostProjectPath.charAt(0) === ".") {
-			// resolve relative to the project dir
-			const projectDir = this.$projectData.projectDir;
-			return resolve(projectDir, hostProjectPath);
+	return resolve(hostProjectPath);
+}
+
+export const embedCommandDefinition = defineCommand({
+	name: "embed",
+	description:
+		"Prepares the project so it can be embedded into a native host project.",
+	options: prepareCommandOptions,
+	arguments: [
+		platformArgument,
+		{ name: "hostProjectPath" },
+		{ name: "hostProjectModuleName" },
+	],
+	setup(context): IEmbedCommandServices {
+		const services = setupPrepareCommand();
+		const $projectConfigService = inject<IProjectConfigService>(
+			"projectConfigService",
+		);
+		const platform = (context.args[0] || "").toLowerCase();
+		// embed.<platform>.<key>, falling back to embed.<key>
+		const configValue = (key: string) =>
+			$projectConfigService.getValue(
+				`embed.${platform}.${key}`,
+				$projectConfigService.getValue(`embed.${key}`),
+			);
+
+		return {
+			...services,
+			$fs: inject<IFileSystem>("fs"),
+			$logger: inject<ILogger>("logger"),
+			hostProjectPath: context.args[1] || configValue("hostProjectPath"),
+			hostProjectModuleName:
+				context.args[2] || configValue("hostProjectModuleName"),
+		};
+	},
+	async canExecute(context, services): Promise<boolean> {
+		if (!(await canExecutePrepareCommand(context, services))) {
+			return false;
 		}
 
-		return resolve(hostProjectPath);
-	}
+		return !!services.hostProjectPath;
+	},
+	async run(context, services): Promise<void> {
+		const resolvedHostProjectPath = resolveHostProjectPath(
+			services.$projectData.projectDir,
+			services.hostProjectPath,
+		);
 
-	public async execute(args: string[]): Promise<void> {
-		const hostProjectPath = args[1];
-		const resolvedHostProjectPath =
-			this.resolveHostProjectPath(hostProjectPath);
-
-		if (!this.$fs.exists(resolvedHostProjectPath)) {
-			this.$logger.error(
+		if (!services.$fs.exists(resolvedHostProjectPath)) {
+			services.$logger.error(
 				`The host project path ${color.yellow(
-					hostProjectPath,
+					services.hostProjectPath,
 				)} (resolved to: ${color.styleText(
 					["yellow", "dim"],
 					resolvedHostProjectPath,
@@ -65,64 +89,13 @@ export class EmbedCommand extends PrepareCommand implements ICommand {
 			return;
 		}
 
-		this.$options["hostProjectPath"] = resolvedHostProjectPath;
-		if (args.length > 2) {
-			this.$options["hostProjectModuleName"] = args[2];
+		services.$options.hostProjectPath = resolvedHostProjectPath;
+		if (services.hostProjectModuleName) {
+			services.$options.hostProjectModuleName = services.hostProjectModuleName;
 		}
 
-		return super.execute(args);
-	}
+		await runPrepareCommand(context, services);
+	},
+});
 
-	public async canExecute(args: string[]): Promise<boolean> {
-		const canSuperExecute = await super.canExecute(args);
-
-		if (!canSuperExecute) {
-			return false;
-		}
-
-		// args[0] is the platform
-		// args[1] is the path to the host project
-		// args[2] is the host project module name
-
-		const platform = args[0].toLowerCase();
-
-		// also allow these to be set in the nativescript.config.ts
-		if (!args[1]) {
-			const hostProjectPath = this.getEmbedConfigForKey(
-				"hostProjectPath",
-				platform,
-			);
-			if (hostProjectPath) {
-				args[1] = hostProjectPath;
-			}
-		}
-
-		if (!args[2]) {
-			const hostProjectModuleName = this.getEmbedConfigForKey(
-				"hostProjectModuleName",
-				platform,
-			);
-			if (hostProjectModuleName) {
-				args[2] = hostProjectModuleName;
-			}
-		}
-
-		console.log(args);
-
-		if (args.length < 2) {
-			return false;
-		}
-
-		return true;
-	}
-
-	private getEmbedConfigForKey(key: string, platform: string) {
-		// get the embed.<platform>.<key> value, or fallback to embed.<key> value
-		return this.$projectConfigService.getValue(
-			`embed.${platform}.${key}`,
-			this.$projectConfigService.getValue(`embed.${key}`),
-		);
-	}
-}
-
-injector.registerCommand("embed", EmbedCommand);
+registerCommandDefinition(embedCommandDefinition);

@@ -1,28 +1,31 @@
-import { ICommandParameter, ICommand } from "../../definitions/commands";
 import { IAnalyticsService, IProxyService } from "../../declarations";
+import { inject } from "../../di";
 
-export abstract class ProxyCommandBase implements ICommand {
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
+export interface IProxyCommandServices {
+	$analyticsService: IAnalyticsService;
+	$logger: ILogger;
+	$proxyService: IProxyService;
+}
 
-	constructor(
-		protected $analyticsService: IAnalyticsService,
-		protected $logger: ILogger,
-		protected $proxyService: IProxyService,
-		private commandName: string
-	) {}
+export function injectProxyCommandServices(): IProxyCommandServices {
+	return {
+		$analyticsService: inject<IAnalyticsService>("analyticsService"),
+		$logger: inject<ILogger>("logger"),
+		$proxyService: inject<IProxyService>("proxyService"),
+	};
+}
 
-	public abstract execute(args: string[]): Promise<void>;
-
-	protected async tryTrackUsage() {
-		try {
-			// TODO(Analytics): Check why we have set the `disableAnalytics` to true and we track the command as separate one
-			// instead of tracking it through the commandsService.
-			this.$logger.trace(this.commandName);
-			// await this.$analyticsService.trackFeature(this.commandName);
-		} catch (ex) {
-			this.$logger.trace("Error in trying to track proxy command usage:");
-			this.$logger.trace(ex);
-		}
+export async function tryTrackProxyCommandUsage(
+	services: IProxyCommandServices,
+	commandName: string,
+): Promise<void> {
+	try {
+		// TODO(Analytics): Check why we have set the `disableAnalytics` to true and we track the command as separate one
+		// instead of tracking it through the commandsService.
+		services.$logger.trace(commandName);
+		// await services.$analyticsService.trackFeature(commandName);
+	} catch (ex) {
+		services.$logger.trace("Error in trying to track proxy command usage:");
+		services.$logger.trace(ex);
 	}
 }

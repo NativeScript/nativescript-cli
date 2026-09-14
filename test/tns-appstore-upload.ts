@@ -1,4 +1,6 @@
-import { PublishIOS } from "../lib/commands/appstore-upload";
+import { publishIOSCommandDefinition } from "../lib/commands/appstore-upload";
+import { registerCommand } from "../lib/common/services/command-definition-adapter";
+import { Injector } from "../lib/common/di";
 import {
 	PrompterStub,
 	LoggerStub,
@@ -48,9 +50,6 @@ class AppStore {
 			projectRoot: "/Users/person/git/MyProject",
 		};
 		this.initInjector({
-			commands: {
-				appstore: PublishIOS,
-			},
 			services: {
 				errors: {},
 				fs: {},
@@ -95,19 +94,18 @@ class AppStore {
 		this.command = this.injector.resolveCommand("appstore");
 	}
 
-	initInjector(services?: {
-		commands?: { [service: string]: any };
-		services?: { [service: string]: any };
-	}) {
+	initInjector(services?: { services?: { [service: string]: any } }) {
 		this.injector = new yok.Yok();
 		if (services) {
-			for (const cmd in services.commands) {
-				this.injector.registerCommand(cmd, services.commands[cmd]);
-			}
 			for (const serv in services.services) {
 				this.injector.register(serv, services.services[serv]);
 			}
 		}
+
+		registerCommand(
+			{ ...publishIOSCommandDefinition, name: "appstore" },
+			<Injector>(<any>this.injector),
+		);
 
 		this.injector.register("projectDataService", ProjectDataServiceStub);
 	}

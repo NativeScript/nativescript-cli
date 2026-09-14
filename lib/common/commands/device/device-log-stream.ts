@@ -1,50 +1,79 @@
-import { IOptions } from "../../../declarations";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
 import { ICleanupService } from "../../../definitions/cleanup-service";
 import { IErrors } from "../../declarations";
-import { injector } from "../../yok";
+import {
+	CommandContext,
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
+import { registerCommand } from "../../services/command-definition-adapter";
 
-export class OpenDeviceLogStreamCommand implements ICommand {
-	private static NOT_SPECIFIED_DEVICE_ERROR_MESSAGE =
-		"More than one device found. Specify device explicitly.";
+const NOT_SPECIFIED_DEVICE_ERROR_MESSAGE =
+	"More than one device found. Specify device explicitly.";
 
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
-		private $commandsService: ICommandsService,
-		private $options: IOptions,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider,
-		private $loggingLevels: Mobile.ILoggingLevels,
-		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		$cleanupService: ICleanupService
-	) {
-		$iOSSimulatorLogProvider.setShouldDispose(false);
-		$cleanupService.setShouldDispose(false);
-	}
+const openDeviceLogStreamCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [];
+export type OpenDeviceLogStreamCommandContext = CommandContext<
+	typeof openDeviceLogStreamCommandOptions
+>;
 
-	public async execute(args: string[]): Promise<void> {
-		this.$deviceLogProvider.setLogLevel(this.$loggingLevels.full);
-
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
-			skipInferPlatform: true,
-		});
-
-		if (this.$devicesService.deviceCount > 1) {
-			await this.$commandsService.tryExecuteCommand("device", []);
-			this.$errors.failWithHelp(
-				OpenDeviceLogStreamCommand.NOT_SPECIFIED_DEVICE_ERROR_MESSAGE
-			);
-		}
-
-		const action = (device: Mobile.IiOSDevice) => device.openDeviceLogStream();
-		await this.$devicesService.execute(action);
-	}
+export interface IOpenDeviceLogStreamCommandServices {
+	$commandsService: ICommandsService;
+	$deviceLogProvider: Mobile.IDeviceLogProvider;
+	$devicesService: Mobile.IDevicesService;
+	$errors: IErrors;
+	$loggingLevels: Mobile.ILoggingLevels;
 }
 
-injector.registerCommand(
-	["device|log", "devices|log"],
-	OpenDeviceLogStreamCommand
-);
+export function setupOpenDeviceLogStreamCommand(): IOpenDeviceLogStreamCommandServices {
+	// The log stream is the command's whole output, so neither the simulator log
+	// provider nor the cleanup process may be torn down while it is open. The
+	// legacy command did this from its constructor, which ran before anything
+	// looked at the command line.
+	inject<Mobile.IiOSSimulatorLogProvider>(
+		"iOSSimulatorLogProvider",
+	).setShouldDispose(false);
+	inject<ICleanupService>("cleanupService").setShouldDispose(false);
+
+	return {
+		$commandsService: inject<ICommandsService>("commandsService"),
+		$deviceLogProvider: inject<Mobile.IDeviceLogProvider>("deviceLogProvider"),
+		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
+		$errors: inject<IErrors>("errors"),
+		$loggingLevels: inject<Mobile.ILoggingLevels>("loggingLevels"),
+	};
+}
+
+export async function runOpenDeviceLogStreamCommand(
+	context: OpenDeviceLogStreamCommandContext,
+	services: IOpenDeviceLogStreamCommandServices,
+): Promise<void> {
+	services.$deviceLogProvider.setLogLevel(services.$loggingLevels.full);
+
+	await services.$devicesService.initialize({
+		deviceId: context.options.device,
+		skipInferPlatform: true,
+	});
+
+	if (services.$devicesService.deviceCount > 1) {
+		await services.$commandsService.tryExecuteCommand("device", []);
+		services.$errors.failWithHelp(NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
+	}
+
+	const action = (device: Mobile.IiOSDevice) => device.openDeviceLogStream();
+	await services.$devicesService.execute(action);
+}
+
+export const openDeviceLogStreamCommandDefinition = defineCommand({
+	name: ["device|log", "devices|log"],
+	description: "Opens the device log stream for a connected device.",
+	options: openDeviceLogStreamCommandOptions,
+	arguments: "none",
+	setup: setupOpenDeviceLogStreamCommand,
+	run: runOpenDeviceLogStreamCommand,
+});
+
+registerCommand(openDeviceLogStreamCommandDefinition);

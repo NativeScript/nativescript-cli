@@ -1,54 +1,74 @@
 import * as helpers from "../common/helpers";
 import { IProjectData } from "../definitions/project";
 import { IPlatformCommandHelper } from "../declarations";
-import { ICommandParameter, ICommand } from "../common/definitions/commands";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-export class ListPlatformsCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export interface IListPlatformsCommandServices {
+	$platformCommandHelper: IPlatformCommandHelper;
+	$projectData: IProjectData;
+	$logger: ILogger;
+}
 
-	constructor(
-		private $platformCommandHelper: IPlatformCommandHelper,
-		private $projectData: IProjectData,
-		private $logger: ILogger
-	) {
-		this.$projectData.initializeProjectData();
-	}
+export function setupListPlatformsCommand(): IListPlatformsCommandServices {
+	const services = {
+		$platformCommandHelper: inject<IPlatformCommandHelper>(
+			"platformCommandHelper",
+		),
+		$projectData: inject<IProjectData>("projectData"),
+		$logger: inject<ILogger>("logger"),
+	};
+	services.$projectData.initializeProjectData();
 
-	public async execute(args: string[]): Promise<void> {
-		const installedPlatforms = this.$platformCommandHelper.getInstalledPlatforms(
-			this.$projectData
-		);
+	return services;
+}
+
+export const listPlatformsCommandDefinition = defineCommand({
+	name: "platform|*list",
+	description: "Lists all platforms that the project currently targets.",
+	arguments: "none",
+	setup: setupListPlatformsCommand,
+	async run(context, services): Promise<void> {
+		const installedPlatforms =
+			services.$platformCommandHelper.getInstalledPlatforms(
+				services.$projectData,
+			);
 
 		if (installedPlatforms.length > 0) {
-			const preparedPlatforms = this.$platformCommandHelper.getPreparedPlatforms(
-				this.$projectData
-			);
+			const preparedPlatforms =
+				services.$platformCommandHelper.getPreparedPlatforms(
+					services.$projectData,
+				);
 			if (preparedPlatforms.length > 0) {
-				this.$logger.info(
+				services.$logger.info(
 					"The project is prepared for: ",
-					helpers.formatListOfNames(preparedPlatforms, "and")
+					helpers.formatListOfNames(preparedPlatforms, "and"),
 				);
 			} else {
-				this.$logger.info("The project is not prepared for any platform");
+				services.$logger.info("The project is not prepared for any platform");
 			}
 
-			this.$logger.info(
+			services.$logger.info(
 				"Installed platforms: ",
-				helpers.formatListOfNames(installedPlatforms, "and")
+				helpers.formatListOfNames(installedPlatforms, "and"),
 			);
 		} else {
 			const formattedPlatformsList = helpers.formatListOfNames(
-				this.$platformCommandHelper.getAvailablePlatforms(this.$projectData),
-				"and"
+				services.$platformCommandHelper.getAvailablePlatforms(
+					services.$projectData,
+				),
+				"and",
 			);
-			this.$logger.info(
+			services.$logger.info(
 				"Available platforms for this OS: ",
-				formattedPlatformsList
+				formattedPlatformsList,
 			);
-			this.$logger.info("No installed platforms found. Use $ ns platform add");
+			services.$logger.info(
+				"No installed platforms found. Use $ ns platform add",
+			);
 		}
-	}
-}
+	},
+});
 
-injector.registerCommand("platform|*list", ListPlatformsCommand);
+registerCommand(listPlatformsCommandDefinition);

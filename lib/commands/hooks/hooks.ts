@@ -1,104 +1,114 @@
-import { IProjectData } from "../../definitions/project";
-import { IPluginsService, IPluginData } from "../../definitions/plugins";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { injector } from "../../common/yok";
-import { IErrors, IFileSystem } from "../../common/declarations";
+import { IPluginData } from "../../definitions/plugins";
+import { CommandContext, defineCommand } from "../../common/define-command";
+import { registerCommand } from "../../common/services/command-definition-adapter";
 import path = require("path");
 import { HOOKS_DIR_NAME } from "../../constants";
 import { createTable } from "../../common/helpers";
 import nsHooks = require("@nativescript/hook");
-import { HooksVerify, LOCK_FILE_NAME } from "./common";
+import {
+	getPluginsWithHooks,
+	IHooksCommandServices,
+	injectHooksCommandServices,
+	LOCK_FILE_NAME,
+	verifyHooksLock,
+} from "./common";
 
-export class HooksPluginCommand extends HooksVerify implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+function listHooks(
+	services: IHooksCommandServices,
+	pluginsWithHooks: IPluginData[],
+): void {
+	const headers: string[] = ["Plugin", "HookName", "HookPath"];
+	const hookDataData: string[][] = pluginsWithHooks.flatMap((plugin) =>
+		plugin.nativescript.hooks.map((hook: { type: string; script: string }) => {
+			return [plugin.name, hook.type, hook.script];
+		}),
+	);
+	const hookDataTable: any = createTable(headers, hookDataData);
+	services.$logger.info("Hooks:");
+	services.$logger.info(hookDataTable.toString());
+}
 
-	constructor(
-		private $pluginsService: IPluginsService,
-		$projectData: IProjectData,
-		$errors: IErrors,
-		$fs: IFileSystem,
-		$logger: ILogger,
+async function installHooks(
+	services: IHooksCommandServices,
+	pluginsWithHooks: IPluginData[],
+): Promise<void> {
+	const hooksDir = path.join(services.$projectData.projectDir, HOOKS_DIR_NAME);
+
+	if (
+		services.$fs.exists(
+			path.join(services.$projectData.projectDir, LOCK_FILE_NAME),
+		)
 	) {
-		super($projectData, $errors, $fs, $logger);
+		await verifyHooksLock(
+			services,
+			pluginsWithHooks,
+			path.join(services.$projectData.projectDir, LOCK_FILE_NAME),
+		);
 	}
 
-	public async execute(args: string[]): Promise<void> {
-		const isList: boolean =
-			args.length > 0 && args[0] === "list" ? true : false;
-		const plugins: IPluginData[] =
-			await this.$pluginsService.getAllInstalledPlugins(this.$projectData);
-		if (plugins && plugins.length > 0) {
-			const hooksDir = path.join(this.$projectData.projectDir, HOOKS_DIR_NAME);
-			const pluginsWithHooks: IPluginData[] = [];
-			for (const plugin of plugins) {
-				if (plugin.nativescript?.hooks?.length > 0) {
-					pluginsWithHooks.push(plugin);
-				}
-			}
-
-			if (isList) {
-				const headers: string[] = ["Plugin", "HookName", "HookPath"];
-				const hookDataData: string[][] = pluginsWithHooks.flatMap((plugin) =>
-					plugin.nativescript.hooks.map(
-						(hook: { type: string; script: string }) => {
-							return [plugin.name, hook.type, hook.script];
-						},
-					),
-				);
-				const hookDataTable: any = createTable(headers, hookDataData);
-				this.$logger.info("Hooks:");
-				this.$logger.info(hookDataTable.toString());
-			} else {
-				if (
-					this.$fs.exists(
-						path.join(this.$projectData.projectDir, LOCK_FILE_NAME),
-					)
-				) {
-					await this.verifyHooksLock(
-						pluginsWithHooks,
-						path.join(this.$projectData.projectDir, LOCK_FILE_NAME),
-					);
-				}
-
-				if (pluginsWithHooks.length === 0) {
-					if (!this.$fs.exists(hooksDir)) {
-						this.$fs.createDirectory(hooksDir);
-					}
-				}
-				for (const plugin of pluginsWithHooks) {
-					nsHooks(plugin.fullPath).postinstall();
-				}
-			}
+	if (pluginsWithHooks.length === 0) {
+		if (!services.$fs.exists(hooksDir)) {
+			services.$fs.createDirectory(hooksDir);
 		}
 	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
-		if (args.length > 0 && args[0] !== "list") {
-			this.$errors.failWithHelp(
-				`Invalid argument ${args[0]}. Supported argument is "list".`,
-			);
-		}
-		return true;
+	for (const plugin of pluginsWithHooks) {
+		nsHooks(plugin.fullPath).postinstall();
 	}
 }
 
-export class HooksListPluginCommand extends HooksPluginCommand {
-	public allowedParameters: ICommandParameter[] = [];
+export async function runHooksCommand(
+	services: IHooksCommandServices,
+	isList: boolean,
+): Promise<void> {
+	const plugins: IPluginData[] =
+		await services.$pluginsService.getAllInstalledPlugins(
+			services.$projectData,
+		);
+	if (plugins && plugins.length > 0) {
+		const pluginsWithHooks = getPluginsWithHooks(plugins);
 
-	constructor(
-		$pluginsService: IPluginsService,
-		$projectData: IProjectData,
-		$errors: IErrors,
-		$fs: IFileSystem,
-		$logger: ILogger,
-	) {
-		super($pluginsService, $projectData, $errors, $fs, $logger);
-	}
-
-	public async execute(): Promise<void> {
-		await super.execute(["list"]);
+		if (isList) {
+			listHooks(services, pluginsWithHooks);
+		} else {
+			await installHooks(services, pluginsWithHooks);
+		}
 	}
 }
 
-injector.registerCommand(["hooks|install"], HooksPluginCommand);
-injector.registerCommand(["hooks|*list"], HooksListPluginCommand);
+export function canExecuteHooksCommand(
+	context: CommandContext,
+	services: IHooksCommandServices,
+): boolean {
+	if (context.args.length > 0 && context.args[0] !== "list") {
+		services.$errors.failWithHelp(
+			`Invalid argument ${context.args[0]}. Supported argument is "list".`,
+		);
+	}
+	return true;
+}
+
+export const hooksInstallCommandDefinition = defineCommand({
+	name: "hooks|install",
+	description: "Runs the postinstall hook of every installed plugin.",
+	arguments: "any",
+	setup: injectHooksCommandServices,
+	canExecute: canExecuteHooksCommand,
+	run(context, services): Promise<void> {
+		return runHooksCommand(services, context.args[0] === "list");
+	},
+});
+
+export const hooksListCommandDefinition = defineCommand({
+	name: "hooks|*list",
+	description: "Lists the hooks every installed plugin contributes.",
+	arguments: "any",
+	setup: injectHooksCommandServices,
+	// The name accepts "list" as its only argument, and lists either way.
+	canExecute: canExecuteHooksCommand,
+	run(context, services): Promise<void> {
+		return runHooksCommand(services, true);
+	},
+});
+
+registerCommand(hooksInstallCommandDefinition);
+registerCommand(hooksListCommandDefinition);
