@@ -2550,6 +2550,40 @@ describe("defineCommand", () => {
 			assert.strictEqual(injectedInRun, runContext);
 		});
 
+		it("hands one context object to every stage of an invocation", async () => {
+			const testInjector = createTestInjector();
+			const seen: any[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-command-context-shared",
+					setup: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+					},
+					canExecute: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+						return true;
+					},
+					run: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+					},
+					postRun: (ctx) => {
+						seen.push(ctx, inject(COMMAND_CONTEXT));
+					},
+				}),
+				testInjector,
+			);
+
+			await command.canExecute([]);
+			await command.execute([]);
+			await command.postCommandAction([]);
+
+			assert.lengthOf(seen, 8);
+			for (const context of seen) {
+				assert.strictEqual(context, seen[0]);
+			}
+		});
+
 		it("is scoped to the invocation, so the root injector never sees it", async () => {
 			const testInjector = createTestInjector();
 
