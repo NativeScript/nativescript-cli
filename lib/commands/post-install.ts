@@ -9,7 +9,6 @@ import {
 import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { doesCurrentNpmCommandMatch } from "../common/helpers";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export interface IPostInstallCliCommandServices {
 	$fs: IFileSystem;
@@ -93,5 +92,3 @@ export const postInstallCliCommandDefinition = defineCommand({
 	postRun: (context, result, services) =>
 		reportSuccessfulInstallation(services),
 });
-
-registerCommand(postInstallCliCommandDefinition);

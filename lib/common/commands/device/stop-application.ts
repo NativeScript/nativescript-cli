@@ -5,7 +5,6 @@ import {
 	stringOption,
 } from "../../define-command";
 import { inject } from "../../di";
-import { registerCommand } from "../../services/command-definition-adapter";
 
 const stopApplicationOnDeviceCommandOptions = {
 	device: stringOption(),
@@ -52,5 +51,3 @@ export const stopApplicationOnDeviceCommandDefinition = defineCommand({
 	setup: setupStopApplicationOnDeviceCommand,
 	run: runStopApplicationOnDeviceCommand,
 });
-
-registerCommand(stopApplicationOnDeviceCommandDefinition);

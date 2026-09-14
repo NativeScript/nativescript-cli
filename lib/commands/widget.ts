@@ -6,7 +6,6 @@ import * as path from "path";
 import * as plist from "plist";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { capitalizeFirstLetter } from "../common/utils";
 import { EOL } from "os";
 
@@ -927,5 +926,3 @@ export const widgetIOSCommandDefinition = defineCommand({
 		services.generator.startPrompt(context.args);
 	},
 });
-
-registerCommand(widgetIOSCommandDefinition);

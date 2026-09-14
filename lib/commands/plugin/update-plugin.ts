@@ -4,7 +4,6 @@ import { IPluginsService } from "../../definitions/plugins";
 import { IErrors } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 
 export interface IUpdatePluginCommandServices {
 	$pluginsService: IPluginsService;
@@ -76,5 +75,3 @@ export const updatePluginCommandDefinition = defineCommand({
 	canExecute: canExecuteUpdatePluginCommand,
 	run: runUpdatePluginCommand,
 });
-
-registerCommand(updatePluginCommandDefinition);

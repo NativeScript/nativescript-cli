@@ -8,7 +8,6 @@ import {
 	stringOption,
 } from "../../define-command";
 import { inject } from "../../di";
-import { registerCommand } from "../../services/command-definition-adapter";
 
 const listApplicationsCommandOptions = {
 	device: stringOption(),
@@ -65,5 +64,3 @@ export const listApplicationsCommandDefinition = defineCommand({
 	setup: setupListApplicationsCommand,
 	run: runListApplicationsCommand,
 });
-
-registerCommand(listApplicationsCommandDefinition);

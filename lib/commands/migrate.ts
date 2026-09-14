@@ -2,7 +2,6 @@ import { IProjectData } from "../definitions/project";
 import { IMigrateController, IMigrationData } from "../definitions/migrate";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export interface IMigrateCommandServices {
 	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
@@ -55,5 +54,3 @@ export const migrateCommandDefinition = defineCommand({
 		await services.$migrateController.migrate(migrationData);
 	},
 });
-
-registerCommand(migrateCommandDefinition);

@@ -20,6 +20,7 @@ import * as util from "util";
 import { IOptions } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IDictionary } from "../lib/common/declarations";
+import { runInInjectionContext } from "../lib/common/di";
 
 interface IPacoteOutput {
 	packageName: string;
@@ -72,7 +73,9 @@ function createTestInjector() {
 		},
 	});
 
-	registerCommand(createPluginCommandDefinition, testInjector);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(createPluginCommandDefinition),
+	);
 
 	return testInjector;
 }

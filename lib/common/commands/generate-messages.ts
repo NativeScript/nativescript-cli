@@ -6,7 +6,6 @@ import {
 	defineCommand,
 } from "../define-command";
 import { inject } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
 
 const MESSAGES_DEFINITIONS_FILE_NAME = "messages.interface.d.ts";
 const MESSAGES_IMPLEMENTATION_FILE_NAME = "messages.ts";
@@ -57,5 +56,3 @@ export const generateMessagesCommandDefinition = defineCommand({
 		services.$fs.writeFile(implementationFilePath, result.implementationFile);
 	},
 });
-
-registerCommand(generateMessagesCommandDefinition);

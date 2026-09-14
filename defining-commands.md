@@ -485,48 +485,159 @@ leaves the CLI's defaults in place.
 Registering a definition
 ------------------------
 
-Inside the CLI, a definition is registered with `registerCommandDefinition`:
+Inside the CLI, a definition is registered with `registerCommand`:
 
 ```ts
-import { registerCommandDefinition } from "../common/services/command-definition-adapter";
-import addWidgetCommand from "./add-widget";
+import { registerCommand } from "../common/services/command-definition-adapter";
 
-registerCommandDefinition(addWidgetCommand);
+registerCommand({
+	name: "widget|add",
+	options: { force: booleanOption({ default: false }) },
+	run: async (ctx) => { … },
+});
 ```
 
-It takes a `DefinedCommand` — the result of `defineCommand`, marker and all —
-and rejects a bare object of the right shape, so a definition can never reach
-the registry without having been validated. It registers under every name the
-definition declares, through the `CommandRegistry` the target injector provides;
-pass a second argument to target a different injector (tests do this). The
-command instance is built by a factory on first resolution and cached.
+It takes either a `DefinedCommand` — the result of `defineCommand`, marker and
+all — or the definition itself, which it defines on your behalf, so registering
+a command is one call. Either way the definition is validated before it reaches
+the registry. It claims every name the definition declares, through the
+`CommandRegistry` the target injector provides, and returns a
+`DeferredCommandResult` — see *The owner is ambient* below. The command instance
+is built by a factory on first resolution and cached.
 
-`registerCommandDefinition` lives in
+Pass providers as the second argument to scope the command to a child injector
+of the one it registers against — how a definition is parameterized per
+registration:
+
+```ts
+for (const [name, platform] of buildCommandPlatforms) {
+	registerCommand({ ...buildCommandDefinition, name }, [
+		{ provide: BUILD_PLATFORM, useValue: platform },
+	]);
+}
+```
+
+That is how one definition serves several commands that differ only in data —
+the platform each one targets — instead of one command subclassing another.
+
+**Which injector it registers against is not a parameter.** It is the injector
+of the current injection context — see *The owner is ambient* below — and the
+CLI's own injector outside one. To register against some other injector, run
+the call in its context:
+
+```ts
+runInInjectionContext(someInjector, () => registerCommand(definition));
+```
+
+A test registering into its own container does that too, which is the same
+path the CLI itself takes.
+
+`registerCommand` lives in
 `lib/common/services/command-definition-adapter` rather than in
 `nativescript/contracts`, because it reaches into the CLI runtime — the
 side-effect-free contracts entry point deliberately does not pull it in.
 `defineCommand`, the option helpers and all the types are exported from both
 `nativescript/contracts` and `lib/common/define-command`.
 
-Extensions do not need `registerCommandDefinition` at all: a
+Extensions do not need `registerCommand` at all: a
 `nativescript.commands` manifest entry may point straight at a module that
 exports a definition, and the CLI adapts and registers it lazily under the
 manifest key (see [extensions.md](extensions.md)).
 
+### Registering lazily
+
+`registerCommand` needs the definition in hand, which means loading the module
+that holds it. `registerLazyCommand` claims the name instead, and loads the
+module the first time that one command is resolved:
+
+```ts
+import { registerLazyCommand } from "../common/services/command-definition-adapter";
+
+registerLazyCommand<typeof import("./commands/run").iosRunCommand>(
+	"run|ios",
+	() => require("./commands/run").iosRunCommand,
+);
+```
+
+The name routes immediately — including through the `run` dispatcher the CLI
+synthesizes for it — so listing commands, resolving a sibling, or printing help
+for the parent never loads `run.js`. The loader runs on the resolution of
+`run|ios` alone, and what it returns is registered under the name that was
+claimed.
+
+**The type argument is mandatory.** `require()` is typed `any`, so nothing can
+be inferred from the loader: without the type argument the name would be
+checked against nothing at all. Leave it off and the `name` parameter says so:
+
+```
+error TS2345: Argument of type '"run|ios"' is not assignable to parameter of type
+'"Pass the definition type: registerLazyCommand<typeof import('./commands/x').cmd>(...)"'
+```
+
+With the type argument, the name is checked against the one the definition
+declares — every one of them, for a definition that declares aliases:
+
+```
+error TS2345: Argument of type '"run|iosss"' is not assignable to parameter of
+type '"run|ios"'
+```
+
+and a type argument that is not a definition is rejected against the
+constraint. The loader is re-checked at runtime as well, because the guarantee
+is only as good as the type the call site passed.
+
+**The loader must be synchronous.** `CommandsService` reads the resolved
+command's `dashedOptions` before it validates the command line, so a command
+that is still being imported has no options to validate against — a dynamic
+`import()` here would report every flag as unknown. `require` is the tool for
+this job.
+
+**Providers are optional and cost nothing until the command runs.** The child
+injector is built inside the loader, so a name that is never resolved never
+creates one:
+
+```ts
+registerLazyCommand<typeof import("./commands/x").cmd>(
+	"x",
+	() => require("./commands/x").cmd,
+	[{ provide: SOME_TOKEN, useValue: "value" }],
+);
+```
+
+**The owner is ambient.** Every registration has an owner, which attributes
+conflicts and load failures and makes re-registering the same name under the
+same owner a no-op instead of a conflict. It is not a parameter: the helper
+targets the injector of the current injection context when there is one, and
+reads `COMMAND_OWNER` off it. Outside a context it targets the CLI's own
+injector, and the CLI is the owner. An extension's module is loaded inside a
+context whose injector provides `COMMAND_OWNER`, so a command the module
+registers on its own is attributed to the extension without the module naming
+itself — through `registerCommand` just as much as through this helper.
+
+`registerCommand` therefore returns a `DeferredCommandResult` too: every
+registration is arbitrated against the names already claimed, rather than
+overwriting one.
+
+**Conflicts are returned, not thrown.** The result is the same
+`DeferredCommandResult` the extension manifest path gets — `{ registered:
+true }`, or `registered: false` with a `rejection` to branch on. The CLI's own
+bootstrap wraps the call and throws, because a name it cannot claim is a
+mistake in `bootstrap.ts`; a host loading someone else's command usually wants
+to warn and carry on. `describeRejection(rejection)` renders one for a human.
+
 ### One definition, several registrations
 
 A family of commands that differ only in a value — `run|android` and `run|ios`,
-say — is one definition registered several times, each against a child injector
-that provides the value:
+say — is one definition registered several times, each with providers that
+carry the value:
 
 ```ts
 const PLATFORM = new InjectionToken<string>("commandPlatform");
 
 for (const platform of ["android", "ios"]) {
-	registerCommandDefinition(
-		{ ...definition, name: `run|${platform}` },
-		injector.createChild([{ provide: PLATFORM, useValue: platform }]),
-	);
+	registerCommand({ ...definition, name: `run|${platform}` }, [
+		{ provide: PLATFORM, useValue: platform },
+	]);
 }
 ```
 

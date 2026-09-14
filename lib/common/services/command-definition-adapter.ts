@@ -1,20 +1,28 @@
 import { EOL } from "os";
 import { OptionType } from "../enums";
-import { injector } from "../yok";
-import { runInInjectionContext } from "../di/inject";
+import { getRootInjector } from "../yok";
+import { getCurrentInjector, runInInjectionContext } from "../di/inject";
 import { Injector } from "../di/injector";
 import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { ICommand } from "../definitions/commands";
-import { CommandRegistry } from "../contracts/command-registry";
+import {
+	COMMAND_OWNER,
+	CommandRegistry,
+	DeferredCommandResult,
+	describeRejection,
+} from "../contracts/command-registry";
+import { Provider } from "../di/providers";
 import {
 	ArgumentSpec,
 	CommandArgumentValues,
 	CommandContext,
 	CommandDefinition,
+	CommandNamesOf,
 	CommandOptionSpec,
 	CommandOptionType,
 	CommandOptionsSchema,
 	DefinedCommand,
+	defineCommand,
 	isCommandDefinition,
 } from "../define-command";
 
@@ -175,7 +183,7 @@ export function createCommandFromDefinition<
 	TSetup = any,
 >(
 	definition: CommandDefinition<TSchema, TResult, TSetup>,
-	targetInjector: Injector = injector,
+	targetInjector: Injector = <Injector>(<any>getRootInjector()),
 ): ICommand {
 	const schema = definition.options || <TSchema>{};
 	const optionNames = Object.keys(schema);
@@ -411,7 +419,7 @@ export function registerDefinitionAs<
 >(
 	name: string,
 	definition: DefinedCommand<TSchema, TResult, TSetup>,
-	targetInjector: Injector = injector,
+	targetInjector: Injector = <Injector>(<any>getRootInjector()),
 ): void {
 	// The registry facet rather than the injector itself, so a child injector
 	// that provides its own CommandRegistry receives the registration.
@@ -423,26 +431,164 @@ export function registerDefinitionAs<
 	);
 }
 
-export function registerCommandDefinition<
+/** Names the CLI's own registrations in conflict and failure reports. */
+const CLI_OWNER = "the NativeScript CLI";
+
+const namesOf = (definition: DefinedCommand<any, any, any>): string[] =>
+	Array.isArray(definition.name) ? definition.name : [definition.name];
+
+/**
+ * Where a registration lands: the injector serving the code that is running,
+ * so an extension module loaded under a scope of its own registers into that
+ * scope without naming it. Outside any context it is the CLI's own injector.
+ */
+const registrationTarget = (): Injector =>
+	getCurrentInjector() || <Injector>(<any>getRootInjector());
+
+/**
+ * Registers a command with the CLI. Takes either the result of defineCommand()
+ * or the definition itself, which it defines on the caller's behalf.
+ *
+ * Registration targets the injector of the current injection context, and
+ * `providers` scope the command to a child of it. To register against some
+ * other injector, run the call in its context:
+ * `runInInjectionContext(injector, () => registerCommand(definition))`.
+ *
+ * Every registration has an owner and claims its names, the way
+ * registerLazyCommand does: the owner is ambient in the context the caller
+ * runs under - an extension's, for a module loaded under its scope - and the
+ * CLI itself outside one.
+ */
+export function registerCommand<
 	TSchema extends CommandOptionsSchema,
 	TResult = any,
 	TSetup = any,
 >(
-	definition: DefinedCommand<TSchema, TResult, TSetup>,
-	targetInjector: Injector = injector,
+	definition:
+		| DefinedCommand<TSchema, TResult, TSetup>
+		| CommandDefinition<TSchema, TResult, TSetup>,
+	providers: Provider[] = [],
+): DeferredCommandResult {
+	const defined = isCommandDefinition(definition)
+		? definition
+		: defineCommand(<CommandDefinition<TSchema, TResult, TSetup>>definition);
+	const target = registrationTarget();
+	const scope = providers.length ? target.createChild(providers) : target;
+	const owner = target.get(COMMAND_OWNER, { optional: true }) || CLI_OWNER;
+	const registry = target.get(CommandRegistry);
+
+	for (const name of namesOf(defined)) {
+		const result = registry.registerDeferredCommand(name, {
+			owner,
+			load: () => registerDefinitionAs(name, defined, scope),
+		});
+
+		if (!result.registered) {
+			return result;
+		}
+	}
+
+	return { registered: true };
+}
+
+/**
+ * Reads as the `name` parameter's type when the type argument is left off, so
+ * the compiler names the fix in the error it reports on the command name.
+ */
+type MissingTypeArgument =
+	"Pass the definition type: registerLazyCommand<typeof import('./commands/x').cmd>(...)";
+
+/**
+ * Registers a command name against a definition the loader produces on first
+ * use: the name routes — including through a synthesized parent — without the
+ * module being loaded, and `load` runs when that one command is resolved. It
+ * must stay synchronous, because CommandsService reads the resolved command's
+ * options before it validates the command line.
+ *
+ * The definition's type is a required type argument: `require()` is `any`, so
+ * nothing infers from `load`, and without it the name would be checked against
+ * nothing.
+ *
+ *     registerLazyCommand<typeof import("./commands/run").iosRunCommand>(
+ *       "run|ios",
+ *       () => require("./commands/run").iosRunCommand,
+ *     );
+ *
+ * `providers` scope the command to a child injector, built when the command is
+ * constructed rather than when its name is claimed.
+ *
+ * Registration targets the injector of the current injection context, if there
+ * is one, and takes its owner from that injector's COMMAND_OWNER — which is
+ * how a command an extension's module registers while loading is attributed to
+ * the extension. Outside a context it is the CLI's own injector, and the CLI
+ * itself is the owner. To register against some other injector, run the call
+ * in its context with runInInjectionContext.
+ */
+/**
+ * Registers one of the CLI's own commands. A built-in that cannot claim its
+ * name is a bug in the bootstrap rather than a conflict to arbitrate, so this
+ * aborts startup instead of returning a result nobody would check.
+ */
+export function registerBuiltInCommand<
+	TDefinition extends DefinedCommand<any, any, any> = never,
+>(
+	name: [TDefinition] extends [never]
+		? MissingTypeArgument
+		: CommandNamesOf<TDefinition> & string,
+	load: () => NoInfer<TDefinition>,
+	providers: Provider[] = [],
 ): void {
-	if (!isCommandDefinition(definition)) {
+	// The conditional name type cannot be narrowed while forwarding it.
+	const result = registerLazyCommand<TDefinition>(<any>name, load, providers);
+
+	if (!result.registered) {
 		throw new Error(
-			"registerCommandDefinition() takes the result of defineCommand(); " +
-				"the value passed carries no command-definition marker.",
+			`Unable to register command '${name}': ${describeRejection(
+				result.rejection,
+			)}.`,
 		);
 	}
+}
 
-	const names = Array.isArray(definition.name)
-		? definition.name
-		: [definition.name];
+export function registerLazyCommand<
+	TDefinition extends DefinedCommand<any, any, any> = never,
+>(
+	name: [TDefinition] extends [never]
+		? MissingTypeArgument
+		: CommandNamesOf<TDefinition> & string,
+	load: () => NoInfer<TDefinition>,
+	providers: Provider[] = [],
+): DeferredCommandResult {
+	const commandName = <string>(<any>name);
+	const target = registrationTarget();
+	const registry = target.get(CommandRegistry);
 
-	for (const name of names) {
-		registerDefinitionAs(name, definition, targetInjector);
-	}
+	return registry.registerDeferredCommand(commandName, {
+		owner: target.get(COMMAND_OWNER, { optional: true }) || CLI_OWNER,
+		load: () => {
+			const definition = load();
+
+			// The compile-time check above is only as good as the type argument the
+			// call site passes, so the same mismatch is caught here as well.
+			if (!isCommandDefinition(definition)) {
+				throw new Error(
+					"the loader did not return a defineCommand() definition",
+				);
+			}
+
+			const declared = namesOf(definition);
+			if (declared.indexOf(commandName) === -1) {
+				throw new Error(
+					"the definition it loaded declares itself as " +
+						declared.map((entry) => `'${entry}'`).join(", "),
+				);
+			}
+
+			registerDefinitionAs(
+				commandName,
+				definition,
+				providers.length ? target.createChild(providers) : target,
+			);
+		},
+	});
 }

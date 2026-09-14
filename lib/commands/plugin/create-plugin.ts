@@ -9,7 +9,6 @@ import {
 	stringOption,
 } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 
 export const USER_MESSAGE =
@@ -275,5 +274,3 @@ export const createPluginCommandDefinition = defineCommand({
 	},
 	run: runCreatePluginCommand,
 });
-
-registerCommand(createPluginCommandDefinition);

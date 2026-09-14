@@ -1,7 +1,6 @@
 import { IInfoService } from "../declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export const infoCommandDefinition = defineCommand({
 	name: "info",
@@ -14,5 +13,3 @@ export const infoCommandDefinition = defineCommand({
 		return services.$infoService.printComponentsInfo();
 	},
 });
-
-registerCommand(infoCommandDefinition);

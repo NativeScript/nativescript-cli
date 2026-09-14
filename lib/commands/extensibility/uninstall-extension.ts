@@ -1,7 +1,6 @@
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 
 export interface IUninstallExtensionCommandServices {
 	$extensibilityService: IExtensibilityService;
@@ -40,5 +39,3 @@ export const uninstallExtensionCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(uninstallExtensionCommandDefinition);

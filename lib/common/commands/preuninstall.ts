@@ -12,7 +12,6 @@ import {
 } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
 import { IExtensibilityService } from "../definitions/extensibility";
 
 // disabled for now (6/24/2020)
@@ -90,5 +89,3 @@ export const preUninstallCommandDefinition = defineCommand({
 		await services.$analyticsService.finishTracking();
 	},
 });
-
-registerCommand(preUninstallCommandDefinition);

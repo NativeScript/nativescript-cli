@@ -9,7 +9,6 @@ import {
 	defineCommand,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { PackageManagers } from "../constants";
 import { IPackageManager } from "../declarations";
 import { IProjectData } from "../definitions/project";
@@ -134,5 +133,3 @@ export const previewCommandDefinition = defineCommand({
 	setup: setupPreviewCommand,
 	run: runPreviewCommand,
 });
-
-registerCommand(previewCommandDefinition);

@@ -13,7 +13,6 @@ import {
 	stringOption,
 } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 import { ITempService } from "../../definitions/temp-service";
 
 const buildPluginCommandOptions = {
@@ -134,5 +133,3 @@ export const buildPluginCommandDefinition = defineCommand({
 	canExecute: canExecuteBuildPluginCommand,
 	run: runBuildPluginCommand,
 });
-
-registerCommand(buildPluginCommandDefinition);

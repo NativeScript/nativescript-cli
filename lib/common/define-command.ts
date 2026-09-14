@@ -128,7 +128,7 @@ export interface CommandDefinition<
 	TSetup = void,
 > {
 	/** `"widget|add"`; `|` separates hierarchy levels. Several names alias one command. */
-	name: string | string[];
+	name: CommandName;
 	description?: string;
 	options?: TSchema;
 	/**
@@ -169,7 +169,7 @@ export interface CommandDefinition<
 
 /**
  * What `defineCommand` returns: a definition carrying the marker in its type,
- * so `registerCommandDefinition` can require a definition that went through
+ * so `registerCommand` can require a definition that went through
  * define-time validation rather than any object of the right shape.
  */
 export type DefinedCommand<
@@ -521,13 +521,43 @@ const validateDefinition = (definition: any): void => {
 	}
 };
 
+/**
+ * A definition that carries the name it declares in its own type. `Omit` rather
+ * than an intersection: intersecting the declared name with the wider `name` of
+ * `CommandDefinition` widens it straight back to `string`.
+ */
+export type NamedCommand<
+	TSchema extends CommandOptionsSchema,
+	TResult,
+	TSetup,
+	TName extends CommandName,
+> = Omit<DefinedCommand<TSchema, TResult, TSetup>, "name"> & {
+	readonly name: TName;
+};
+
+/** What a definition's `name` may be: one name, or aliases for one command. */
+export type CommandName = string | readonly string[];
+
+/**
+ * The names a definition declares, as literal types, so a registration site can
+ * be checked against them.
+ */
+export type CommandNamesOf<TDefinition> = TDefinition extends {
+	name: infer TName;
+}
+	? TName extends readonly (infer TAlias)[]
+		? TAlias
+		: TName
+	: never;
+
 export function defineCommand<
 	TSchema extends CommandOptionsSchema = {},
 	TResult = void,
 	TSetup = void,
+	const TName extends CommandName = CommandName,
 >(
-	definition: CommandDefinition<TSchema, TResult, TSetup>,
-): DefinedCommand<TSchema, TResult, TSetup> {
+	definition: CommandDefinition<TSchema, TResult, TSetup> & { name: TName },
+): NamedCommand<TSchema, TResult, TSetup, TName> {
 	validateDefinition(definition);
 
 	const marked: any = { ...definition };

@@ -7,7 +7,6 @@ import {
 import { IErrors } from "../common/declarations";
 import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export interface IRemovePlatformCommandServices {
 	$errors: IErrors;
@@ -72,5 +71,3 @@ export const removePlatformCommandDefinition = defineCommand({
 	canExecute: canExecuteRemovePlatformCommand,
 	run: runRemovePlatformCommand,
 });
-
-registerCommand(removePlatformCommandDefinition);

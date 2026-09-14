@@ -12,7 +12,6 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 const addPlatformCommandOptions = {
 	frameworkPath: stringOption(),
@@ -98,5 +97,3 @@ export const addPlatformCommandDefinition = defineCommand({
 	canExecute: canExecuteAddPlatformCommand,
 	run: runAddPlatformCommand,
 });
-
-registerCommand(addPlatformCommandDefinition);

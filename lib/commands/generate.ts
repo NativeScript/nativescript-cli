@@ -2,7 +2,6 @@
 import { IErrors } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export const generateCommandDefinition = defineCommand({
 	name: "generate",
@@ -23,8 +22,6 @@ export const generateCommandDefinition = defineCommand({
 		}
 	},
 });
-
-registerCommand(generateCommandDefinition);
 
 /**
  * Converts an array of command line arguments to options for the executed schematic.

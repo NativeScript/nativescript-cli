@@ -218,7 +218,7 @@ rejected with a warning.
 **The manifest key decides how a command is invoked.** It has to: the CLI routes
 `ns hello world` to your module before that module has been loaded, so the key
 is the only name it can know. A `name` inside the definition is metadata — it is
-what `registerCommandDefinition` uses when a module registers itself, and it is
+what `registerCommand` uses when a module registers itself, and it is
 useful documentation, but a manifest entry overrides it. If the two disagree the
 CLI warns, naming both, and runs the command under the manifest key.
 

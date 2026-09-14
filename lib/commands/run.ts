@@ -7,14 +7,13 @@ import {
 import {
 	booleanOption,
 	CommandContext,
+	CommandName,
 	CommandOptionsSchema,
 	defineCommand,
 	stringOption,
 } from "../common/define-command";
-import { inject, InjectionToken } from "../common/di";
+import { inject } from "../common/di";
 import { hasValidAndroidSigning } from "../common/helpers";
-import { registerCommandDefinition } from "../common/services/command-definition-adapter";
-import { injector } from "../common/yok";
 import {
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
@@ -22,14 +21,6 @@ import {
 import { IOptions, IPlatformValidationService } from "../declarations";
 import { IMigrateController } from "../definitions/migrate";
 import { IProjectData, IProjectDataService } from "../definitions/project";
-
-/**
- * Which `$devicePlatformsConstants` entry this registration runs. `run|*all`
- * has none and registers without providing it.
- */
-const RUN_PLATFORM = new InjectionToken<"iOS" | "Android" | "visionOS">(
-	"runCommandPlatform",
-);
 
 const runCommandOptions = {
 	force: booleanOption(),
@@ -83,12 +74,15 @@ export function setupRunCommand(): IRunCommandServices {
 	};
 }
 
-function setupRunPlatformCommand(): IRunCommandServices {
-	const services = setupRunCommand();
-	services.platform = services.$devicePlatformsConstants[inject(RUN_PLATFORM)];
+type RunPlatform = "iOS" | "Android" | "visionOS";
 
-	return services;
-}
+const setupPlatformRunCommand =
+	(platform: RunPlatform) => (): IRunCommandServices => {
+		const services = setupRunCommand();
+		services.platform = services.$devicePlatformsConstants[platform];
+
+		return services;
+	};
 
 export async function canExecuteRunCommand(
 	context: RunCommandContext,
@@ -150,50 +144,61 @@ export const runCommandDefinition = defineCommand({
 	run: runRunCommand,
 });
 
-registerCommandDefinition(runCommandDefinition);
+async function canExecuteApplePlatformRunCommand(
+	context: RunCommandContext,
+	services: IRunCommandServices,
+): Promise<boolean> {
+	const projectData = services.$projectDataService.getProjectData();
 
-export const runApplePlatformCommandDefinition = defineCommand({
-	name: "run|ios",
-	description: "Runs your project on a connected Apple device or simulator.",
-	options: runCommandOptions,
-	arguments: "any",
-	setup: setupRunPlatformCommand,
-	async canExecute(
-		context: RunCommandContext,
-		services: IRunCommandServices,
-	): Promise<boolean> {
-		const projectData = services.$projectDataService.getProjectData();
+	if (
+		!services.$platformValidationService.isPlatformSupportedForOS(
+			services.platform,
+			projectData,
+		)
+	) {
+		services.$errors.fail(
+			`Applications for platform ${services.platform} can not be built on this OS`,
+		);
+	}
 
-		if (
-			!services.$platformValidationService.isPlatformSupportedForOS(
-				services.platform,
-				projectData,
-			)
-		) {
-			services.$errors.fail(
-				`Applications for platform ${services.platform} can not be built on this OS`,
-			);
-		}
+	const result =
+		(await canExecuteRunCommand(context, services)) &&
+		(await services.$platformValidationService.validateOptions(
+			services.$options.provision,
+			services.$options.teamId,
+			projectData,
+			services.platform.toLowerCase(),
+		));
+	return result;
+}
 
-		const result =
-			(await canExecuteRunCommand(context, services)) &&
-			(await services.$platformValidationService.validateOptions(
-				services.$options.provision,
-				services.$options.teamId,
-				projectData,
-				services.platform.toLowerCase(),
-			));
-		return result;
-	},
-	run: runRunCommand,
-});
+const defineApplePlatformRunCommand = <const TName extends CommandName>(
+	name: TName,
+	platform: "iOS" | "visionOS",
+) =>
+	defineCommand({
+		name,
+		description: "Runs your project on a connected Apple device or simulator.",
+		options: runCommandOptions,
+		arguments: "any",
+		setup: setupPlatformRunCommand(platform),
+		canExecute: canExecuteApplePlatformRunCommand,
+		run: runRunCommand,
+	});
 
-export const runAndroidCommandDefinition = defineCommand({
+export const iosRunCommand = defineApplePlatformRunCommand("run|ios", "iOS");
+
+export const visionRunCommand = defineApplePlatformRunCommand(
+	["run|vision", "run|visionos"],
+	"visionOS",
+);
+
+export const androidRunCommand = defineCommand({
 	name: "run|android",
 	description: "Runs your project on a connected Android device or emulator.",
 	options: runCommandOptions,
 	arguments: "any",
-	setup: setupRunPlatformCommand,
+	setup: setupPlatformRunCommand("Android"),
 	async canExecute(
 		context: RunCommandContext,
 		services: IRunCommandServices,
@@ -234,21 +239,3 @@ export const runAndroidCommandDefinition = defineCommand({
 	},
 	run: runRunCommand,
 });
-
-const runApplePlatforms: [string, "iOS" | "visionOS"][] = [
-	["run|ios", "iOS"],
-	["run|vision", "visionOS"],
-	["run|visionos", "visionOS"],
-];
-
-for (const [name, platform] of runApplePlatforms) {
-	registerCommandDefinition(
-		{ ...runApplePlatformCommandDefinition, name },
-		injector.createChild([{ provide: RUN_PLATFORM, useValue: platform }]),
-	);
-}
-
-registerCommandDefinition(
-	runAndroidCommandDefinition,
-	injector.createChild([{ provide: RUN_PLATFORM, useValue: "Android" }]),
-);

@@ -9,7 +9,6 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export const SHOULD_MIGRATE_PROJECT_MESSAGE =
 	'This project is not compatible with the current NativeScript version and cannot be updated. Use "ns migrate" to make your project compatible.';
@@ -109,5 +108,3 @@ export const updateCommandDefinition = defineCommand({
 	canExecute: canExecuteUpdateCommand,
 	run: runUpdateCommand,
 });
-
-registerCommand(updateCommandDefinition);

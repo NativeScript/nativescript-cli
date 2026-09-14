@@ -1,22 +1,19 @@
 import {
 	CommandContext,
+	CommandName,
 	CommandOptionsSchema,
 	defineCommand,
 	stringOption,
 } from "../common/define-command";
-import { inject, InjectionToken } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
-import { getInjector } from "../common/yok";
+import { inject } from "../common/di";
 import {
 	IAssetsGenerationService,
 	IResourceGenerationData,
 } from "../declarations";
 import { IProjectData } from "../definitions/project";
 
-/** Which set of assets a registration generates from the source image. */
+/** Which set of assets a command generates from the source image. */
 type GeneratedAssets = "icons" | "splashes";
-
-const GENERATED_ASSETS = new InjectionToken<GeneratedAssets>("generatedAssets");
 
 const generators: Record<
 	GeneratedAssets,
@@ -43,9 +40,11 @@ export interface IGenerateAssetsCommandServices {
 	$projectData: IProjectData;
 }
 
-export function setupGenerateAssetsCommand(): IGenerateAssetsCommandServices {
+export function setupGenerateAssetsCommand(
+	assets: GeneratedAssets,
+): IGenerateAssetsCommandServices {
 	const services = {
-		assets: inject(GENERATED_ASSETS),
+		assets,
 		$assetsGenerationService: inject<IAssetsGenerationService>(
 			"assetsGenerationService",
 		),
@@ -67,33 +66,33 @@ export function runGenerateAssetsCommand(
 	});
 }
 
-export const generateAssetsCommandDefinition = defineCommand({
-	name: "resources|generate|icons",
-	description:
-		"Generates icons and splash screens based on the provided image.",
-	options: generateAssetsCommandOptions,
-	arguments: [
-		{
-			name: "imagePath",
-			required: true,
-			errorMessage:
-				"You have to provide path to image to generate other images based on it.",
-		},
-	],
-	setup: setupGenerateAssetsCommand,
-	run: runGenerateAssetsCommand,
-});
+const defineGenerateAssetsCommand = <const TName extends CommandName>(
+	name: TName,
+	assets: GeneratedAssets,
+) =>
+	defineCommand({
+		name,
+		description:
+			"Generates icons and splash screens based on the provided image.",
+		options: generateAssetsCommandOptions,
+		arguments: [
+			{
+				name: "imagePath",
+				required: true,
+				errorMessage:
+					"You have to provide path to image to generate other images based on it.",
+			},
+		],
+		setup: () => setupGenerateAssetsCommand(assets),
+		run: runGenerateAssetsCommand,
+	});
 
-const generateAssetsCommands: [string, GeneratedAssets][] = [
-	["resources|generate|icons", "icons"],
-	["resources|generate|splashes", "splashes"],
-];
+export const generateIconsCommand = defineGenerateAssetsCommand(
+	"resources|generate|icons",
+	"icons",
+);
 
-for (const [name, assets] of generateAssetsCommands) {
-	registerCommand(
-		{ ...generateAssetsCommandDefinition, name },
-		getInjector().createChild([
-			{ provide: GENERATED_ASSETS, useValue: assets },
-		]),
-	);
-}
+export const generateSplashesCommand = defineGenerateAssetsCommand(
+	"resources|generate|splashes",
+	"splashes",
+);

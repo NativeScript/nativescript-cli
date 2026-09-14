@@ -1,7 +1,6 @@
 import { IDoctorService } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export const setupCommandDefinition = defineCommand({
 	name: "setup|*",
@@ -15,5 +14,3 @@ export const setupCommandDefinition = defineCommand({
 		return services.$doctorService.runSetupScript();
 	},
 });
-
-registerCommand(setupCommandDefinition);

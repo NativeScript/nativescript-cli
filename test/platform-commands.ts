@@ -35,6 +35,7 @@ import { IPlatformCommandHelper } from "../lib/declarations";
 import { IErrors, IFailOptions, IFileSystem } from "../lib/common/declarations";
 import * as _ from "lodash";
 import { IInjector } from "../lib/common/definitions/yok";
+import { runInInjectionContext } from "../lib/common/di";
 
 let isCommandExecuted = true;
 
@@ -155,10 +156,18 @@ function createTestInjector() {
 	testInjector.register("prompter", {});
 	testInjector.register("sysInfo", {});
 	testInjector.register("commands-service", CommandsServiceLib.CommandsService);
-	registerCommand(addPlatformCommandDefinition, testInjector);
-	registerCommand(removePlatformCommandDefinition, testInjector);
-	registerCommand(updatePlatformCommandDefinition, testInjector);
-	registerCommand(platformCleanCommandDefinition, testInjector);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(addPlatformCommandDefinition),
+	);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(removePlatformCommandDefinition),
+	);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(updatePlatformCommandDefinition),
+	);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(platformCleanCommandDefinition),
+	);
 	testInjector.register("resources", {});
 	testInjector.register("commandsService", {
 		tryExecuteCommand: () => {

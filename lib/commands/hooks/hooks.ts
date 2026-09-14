@@ -1,6 +1,5 @@
 import { IPluginData } from "../../definitions/plugins";
 import { CommandContext, defineCommand } from "../../common/define-command";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 import path = require("path");
 import { HOOKS_DIR_NAME } from "../../constants";
 import { createTable } from "../../common/helpers";
@@ -109,6 +108,3 @@ export const hooksListCommandDefinition = defineCommand({
 		return runHooksCommand(services, true);
 	},
 });
-
-registerCommand(hooksInstallCommandDefinition);
-registerCommand(hooksListCommandDefinition);

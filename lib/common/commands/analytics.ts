@@ -2,14 +2,13 @@ import { IAnalyticsService } from "../declarations";
 import {
 	booleanOption,
 	CommandContext,
+	CommandName,
 	CommandOptionsSchema,
 	defineCommand,
 } from "../define-command";
-import { inject, InjectionToken } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
-import { getInjector } from "../yok";
+import { inject } from "../di";
 
-/** Which reporting the registration configures. */
+/** Which reporting a command configures. */
 interface IAnalyticsSetting {
 	/** The static config property naming the setting the CLI stores it under. */
 	staticConfigKey: keyof Pick<
@@ -18,10 +17,6 @@ interface IAnalyticsSetting {
 	>;
 	humanReadableSettingName: string;
 }
-
-const ANALYTICS_SETTING = new InjectionToken<IAnalyticsSetting>(
-	"analyticsSetting",
-);
 
 export const analyticsCommandOptions = {
 	json: booleanOption(),
@@ -38,8 +33,9 @@ export interface IAnalyticsCommandServices {
 	$logger: ILogger;
 }
 
-export function setupAnalyticsCommand(): IAnalyticsCommandServices {
-	const setting = inject(ANALYTICS_SETTING);
+export function setupAnalyticsCommand(
+	setting: IAnalyticsSetting,
+): IAnalyticsCommandServices {
 	const $staticConfig = inject<Config.IStaticConfig>("staticConfig");
 
 	return {
@@ -95,38 +91,26 @@ export async function runAnalyticsCommand(
 	}
 }
 
-export const analyticsCommandDefinition = defineCommand({
-	name: "usage-reporting",
-	description: "Configures anonymous reporting for the CLI.",
-	options: analyticsCommandOptions,
-	arguments: [{ name: "state", validate: validateAnalyticsState }],
-	disableAnalytics: true,
-	setup: setupAnalyticsCommand,
-	run: runAnalyticsCommand,
+const defineAnalyticsCommand = <const TName extends CommandName>(
+	name: TName,
+	setting: IAnalyticsSetting,
+) =>
+	defineCommand({
+		name,
+		description: "Configures anonymous reporting for the CLI.",
+		options: analyticsCommandOptions,
+		arguments: [{ name: "state", validate: validateAnalyticsState }],
+		disableAnalytics: true,
+		setup: () => setupAnalyticsCommand(setting),
+		run: runAnalyticsCommand,
+	});
+
+export const usageReportingCommand = defineAnalyticsCommand("usage-reporting", {
+	staticConfigKey: "TRACK_FEATURE_USAGE_SETTING_NAME",
+	humanReadableSettingName: "Usage reporting",
 });
 
-const analyticsCommands: [string, IAnalyticsSetting][] = [
-	[
-		"usage-reporting",
-		{
-			staticConfigKey: "TRACK_FEATURE_USAGE_SETTING_NAME",
-			humanReadableSettingName: "Usage reporting",
-		},
-	],
-	[
-		"error-reporting",
-		{
-			staticConfigKey: "ERROR_REPORT_SETTING_NAME",
-			humanReadableSettingName: "Error reporting",
-		},
-	],
-];
-
-for (const [name, setting] of analyticsCommands) {
-	registerCommand(
-		{ ...analyticsCommandDefinition, name },
-		getInjector().createChild([
-			{ provide: ANALYTICS_SETTING, useValue: setting },
-		]),
-	);
-}
+export const errorReportingCommand = defineAnalyticsCommand("error-reporting", {
+	staticConfigKey: "ERROR_REPORT_SETTING_NAME",
+	humanReadableSettingName: "Error reporting",
+});

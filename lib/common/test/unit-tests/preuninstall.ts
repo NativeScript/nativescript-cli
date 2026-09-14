@@ -9,6 +9,7 @@ import { IEventActionData } from "../../definitions/google-analytics";
 import { IFileSystem, IAnalyticsService } from "../../declarations";
 import { ICommand } from "../../definitions/commands";
 import { IExtensibilityService } from "../../definitions/extensibility";
+import { runInInjectionContext } from "../../di";
 const helpers = require("../../helpers");
 
 describe("preuninstall", () => {
@@ -43,7 +44,9 @@ describe("preuninstall", () => {
 			finishTracking: async (): Promise<void> => undefined,
 		});
 
-		registerCommand(preUninstallCommandDefinition, testInjector);
+		runInInjectionContext(testInjector, () =>
+			registerCommand(preUninstallCommandDefinition),
+		);
 
 		return testInjector;
 	};

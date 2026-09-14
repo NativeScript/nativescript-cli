@@ -2,7 +2,6 @@ import { PackageManagers } from "../../constants";
 import { IErrors, IUserSettingsService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
 
 export interface IPackageManagerSetCommandServices {
 	$userSettingsService: IUserSettingsService;
@@ -50,5 +49,3 @@ export const packageManagerSetCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(packageManagerSetCommandDefinition);

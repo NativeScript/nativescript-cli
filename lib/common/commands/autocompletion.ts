@@ -2,7 +2,6 @@ import * as helpers from "../helpers";
 import { IAutoCompletionService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
 
 export interface IAutoCompleteCommandServices {
 	$autoCompletionService: IAutoCompletionService;
@@ -101,8 +100,3 @@ export const autoCompleteStatusCommandDefinition = defineCommand({
 		}
 	},
 });
-
-registerCommand(autoCompleteCommandDefinition);
-registerCommand(disableAutoCompleteCommandDefinition);
-registerCommand(enableAutoCompleteCommandDefinition);
-registerCommand(autoCompleteStatusCommandDefinition);

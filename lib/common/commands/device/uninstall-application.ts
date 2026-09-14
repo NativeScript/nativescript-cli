@@ -5,7 +5,6 @@ import {
 	stringOption,
 } from "../../define-command";
 import { inject } from "../../di";
-import { registerCommand } from "../../services/command-definition-adapter";
 
 const uninstallApplicationCommandOptions = {
 	device: stringOption(),
@@ -47,5 +46,3 @@ export const uninstallApplicationCommandDefinition = defineCommand({
 	setup: setupUninstallApplicationCommand,
 	run: runUninstallApplicationCommand,
 });
-
-registerCommand(uninstallApplicationCommandDefinition);

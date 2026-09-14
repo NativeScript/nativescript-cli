@@ -2,7 +2,6 @@ import { resolve } from "path";
 import { color } from "../../color";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommandDefinition } from "../../common/services/command-definition-adapter";
 import { IFileSystem } from "../../common/declarations";
 import { IProjectConfigService } from "../../definitions/project";
 import { platformArgument } from "../command-base";
@@ -97,5 +96,3 @@ export const embedCommandDefinition = defineCommand({
 		await runPrepareCommand(context, services);
 	},
 });
-
-registerCommandDefinition(embedCommandDefinition);

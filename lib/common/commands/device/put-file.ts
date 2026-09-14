@@ -7,7 +7,6 @@ import {
 	stringOption,
 } from "../../define-command";
 import { inject } from "../../di";
-import { registerCommand } from "../../services/command-definition-adapter";
 
 const putFileCommandOptions = {
 	device: stringOption(),
@@ -77,5 +76,3 @@ export const putFileCommandDefinition = defineCommand({
 	setup: setupPutFileCommand,
 	run: runPutFileCommand,
 });
-
-registerCommand(putFileCommandDefinition);

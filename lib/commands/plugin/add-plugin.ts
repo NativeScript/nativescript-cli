@@ -4,7 +4,6 @@ import { IPluginsService, IPluginData } from "../../definitions/plugins";
 import { IErrors } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 
 export interface IAddPluginCommandServices {
 	$pluginsService: IPluginsService;
@@ -58,5 +57,3 @@ export const addPluginCommandDefinition = defineCommand({
 		return services.$pluginsService.add(context.args[0], services.$projectData);
 	},
 });
-
-registerCommand(addPluginCommandDefinition);

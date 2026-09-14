@@ -1,7 +1,6 @@
 import { IErrors } from "../common/declarations";
 import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { IApplePortalSessionService } from "../services/apple-portal/definitions";
 
 export type AppleLoginCommandContext = CommandContext;
@@ -61,5 +60,3 @@ export const appleLoginCommandDefinition = defineCommand({
 	setup: setupAppleLoginCommand,
 	run: runAppleLoginCommand,
 });
-
-registerCommand(appleLoginCommandDefinition);

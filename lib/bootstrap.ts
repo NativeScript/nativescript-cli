@@ -1,7 +1,14 @@
 import { injector } from "./common/yok";
+import { registerBuiltInCommand } from "./common/services/command-definition-adapter";
+import type { fontsCommandDefinition } from "./commands/fonts";
 
 require("./common/bootstrap");
 
+/**
+ * The CLI owns every name it registers here, so a refusal is a mistake in this
+ * file rather than a condition to report and carry on from, the way a
+ * conflicting extension is.
+ */
 injector.requirePublicClass("logger", "./common/logger/logger");
 injector.require("config", "./config");
 injector.require("options", "./options");
@@ -168,62 +175,199 @@ injector.require(
 	"./services/analytics/google-analytics-provider",
 );
 injector.require("platformCommandParameter", "./platform-command-param");
-injector.requireCommand("create", "./commands/create-project");
-injector.requireCommand("clean", "./commands/clean");
-injector.requireCommand("config|*list", "./commands/config");
-injector.requireCommand("config|get", "./commands/config");
-injector.requireCommand("config|set", "./commands/config");
-injector.requireCommand("generate", "./commands/generate");
-injector.requireCommand("platform|*list", "./commands/list-platforms");
-injector.requireCommand("platform|add", "./commands/add-platform");
-injector.requireCommand("platform|remove", "./commands/remove-platform");
-injector.requireCommand("platform|update", "./commands/update-platform");
-injector.requireCommand("run|*all", "./commands/run");
-injector.requireCommand("run|ios", "./commands/run");
-injector.requireCommand("run|android", "./commands/run");
-injector.requireCommand("run|vision", "./commands/run");
-injector.requireCommand("run|visionos", "./commands/run");
-injector.requireCommand("typings", "./commands/typings");
+registerBuiltInCommand<
+	typeof import("./commands/create-project").createProjectCommandDefinition
+>(
+	"create",
+	() => require("./commands/create-project").createProjectCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/clean").cleanCommandDefinition
+>("clean", () => require("./commands/clean").cleanCommandDefinition);
+registerBuiltInCommand<
+	typeof import("./commands/config").configListCommandDefinition
+>(
+	"config|*list",
+	() => require("./commands/config").configListCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/config").configGetCommandDefinition
+>("config|get", () => require("./commands/config").configGetCommandDefinition);
+registerBuiltInCommand<
+	typeof import("./commands/config").configSetCommandDefinition
+>("config|set", () => require("./commands/config").configSetCommandDefinition);
+registerBuiltInCommand<
+	typeof import("./commands/generate").generateCommandDefinition
+>("generate", () => require("./commands/generate").generateCommandDefinition);
+registerBuiltInCommand<
+	typeof import("./commands/list-platforms").listPlatformsCommandDefinition
+>(
+	"platform|*list",
+	() => require("./commands/list-platforms").listPlatformsCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/add-platform").addPlatformCommandDefinition
+>(
+	"platform|add",
+	() => require("./commands/add-platform").addPlatformCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/remove-platform").removePlatformCommandDefinition
+>(
+	"platform|remove",
+	() => require("./commands/remove-platform").removePlatformCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/update-platform").updatePlatformCommandDefinition
+>(
+	"platform|update",
+	() => require("./commands/update-platform").updatePlatformCommandDefinition,
+);
+registerBuiltInCommand<typeof import("./commands/run").runCommandDefinition>(
+	"run|*all",
+	() => require("./commands/run").runCommandDefinition,
+);
+registerBuiltInCommand<typeof import("./commands/run").iosRunCommand>(
+	"run|ios",
+	() => require("./commands/run").iosRunCommand,
+);
+registerBuiltInCommand<typeof import("./commands/run").androidRunCommand>(
+	"run|android",
+	() => require("./commands/run").androidRunCommand,
+);
+registerBuiltInCommand<typeof import("./commands/run").visionRunCommand>(
+	"run|vision",
+	() => require("./commands/run").visionRunCommand,
+);
+registerBuiltInCommand<typeof import("./commands/run").visionRunCommand>(
+	"run|visionos",
+	() => require("./commands/run").visionRunCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/typings").typingsCommandDefinition
+>("typings", () => require("./commands/typings").typingsCommandDefinition);
 
-injector.requireCommand("preview", "./commands/preview");
+registerBuiltInCommand<
+	typeof import("./commands/preview").previewCommandDefinition
+>("preview", () => require("./commands/preview").previewCommandDefinition);
 
-injector.requireCommand("debug|ios", "./commands/debug");
-injector.requireCommand("debug|android", "./commands/debug");
-injector.requireCommand("debug|vision", "./commands/debug");
-injector.requireCommand("debug|visionos", "./commands/debug");
-injector.requireCommand("fonts", "./commands/fonts");
+registerBuiltInCommand<typeof import("./commands/debug").iosDebugCommand>(
+	"debug|ios",
+	() => require("./commands/debug").iosDebugCommand,
+);
+registerBuiltInCommand<typeof import("./commands/debug").androidDebugCommand>(
+	"debug|android",
+	() => require("./commands/debug").androidDebugCommand,
+);
+registerBuiltInCommand<typeof import("./commands/debug").visionDebugCommand>(
+	"debug|vision",
+	() => require("./commands/debug").visionDebugCommand,
+);
+registerBuiltInCommand<typeof import("./commands/debug").visionDebugCommand>(
+	"debug|visionos",
+	() => require("./commands/debug").visionDebugCommand,
+);
+registerBuiltInCommand<typeof fontsCommandDefinition>(
+	"fonts",
+	() => require("./commands/fonts").fontsCommandDefinition,
+);
 
-injector.requireCommand("prepare", "./commands/prepare");
-injector.requireCommand("build|ios", "./commands/build");
-injector.requireCommand("build|android", "./commands/build");
-injector.requireCommand("build|vision", "./commands/build");
-injector.requireCommand("build|visionos", "./commands/build");
-injector.requireCommand("deploy", "./commands/deploy");
+registerBuiltInCommand<
+	typeof import("./commands/prepare").prepareCommandDefinition
+>("prepare", () => require("./commands/prepare").prepareCommandDefinition);
+registerBuiltInCommand<typeof import("./commands/build").iosBuildCommand>(
+	"build|ios",
+	() => require("./commands/build").iosBuildCommand,
+);
+registerBuiltInCommand<typeof import("./commands/build").androidBuildCommand>(
+	"build|android",
+	() => require("./commands/build").androidBuildCommand,
+);
+registerBuiltInCommand<typeof import("./commands/build").visionBuildCommand>(
+	"build|vision",
+	() => require("./commands/build").visionBuildCommand,
+);
+registerBuiltInCommand<typeof import("./commands/build").visionBuildCommand>(
+	"build|visionos",
+	() => require("./commands/build").visionBuildCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/deploy").deployCommandDefinition
+>("deploy", () => require("./commands/deploy").deployCommandDefinition);
 
-injector.requireCommand("embed", "./commands/embedding/embed");
+registerBuiltInCommand<
+	typeof import("./commands/embedding/embed").embedCommandDefinition
+>("embed", () => require("./commands/embedding/embed").embedCommandDefinition);
 
 injector.require("testExecutionService", "./services/test-execution-service");
 injector.require(
 	"vitestExecutionService",
 	"./services/vitest-execution-service",
 );
-injector.requireCommand("test|android", "./commands/test");
-injector.requireCommand("test|ios", "./commands/test");
-injector.requireCommand("test|vision", "./commands/test");
-injector.requireCommand("test|visionos", "./commands/test");
-injector.requireCommand("test|init", "./commands/test-init");
-injector.requireCommand("dev-generate-help", "./commands/generate-help");
+registerBuiltInCommand<
+	typeof import("./commands/test").testAndroidCommandDefinition
+>(
+	"test|android",
+	() => require("./commands/test").testAndroidCommandDefinition,
+);
+registerBuiltInCommand<typeof import("./commands/test").testCommandDefinition>(
+	"test|ios",
+	() => require("./commands/test").testCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/test").testVisionOSCommandDefinition
+>(
+	"test|vision",
+	() => require("./commands/test").testVisionOSCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/test").testVisionOSCommandDefinition
+>(
+	"test|visionos",
+	() => require("./commands/test").testVisionOSCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/test-init").testInitCommandDefinition
+>("test|init", () => require("./commands/test-init").testInitCommandDefinition);
+registerBuiltInCommand<
+	typeof import("./commands/generate-help").generateHelpCommandDefinition
+>(
+	"dev-generate-help",
+	() => require("./commands/generate-help").generateHelpCommandDefinition,
+);
 
-injector.requireCommand("appstore|*list", "./commands/appstore-list");
-injector.requireCommand("appstore|upload", "./commands/appstore-upload");
-injector.requireCommand("publish|ios", "./commands/appstore-upload");
-injector.requireCommand("apple-login", "./commands/apple-login");
+registerBuiltInCommand<
+	typeof import("./commands/appstore-list").listiOSAppsCommandDefinition
+>(
+	"appstore|*list",
+	() => require("./commands/appstore-list").listiOSAppsCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/appstore-upload").publishIOSCommandDefinition
+>(
+	"appstore|upload",
+	() => require("./commands/appstore-upload").publishIOSCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/appstore-upload").publishIOSCommandDefinition
+>(
+	"publish|ios",
+	() => require("./commands/appstore-upload").publishIOSCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/apple-login").appleLoginCommandDefinition
+>(
+	"apple-login",
+	() => require("./commands/apple-login").appleLoginCommandDefinition,
+);
 injector.require(
 	"itmsTransporterService",
 	"./services/itmstransporter-service",
 );
 
-injector.requireCommand("setup|*", "./commands/setup");
+registerBuiltInCommand<
+	typeof import("./commands/setup").setupCommandDefinition
+>("setup|*", () => require("./commands/setup").setupCommandDefinition);
 
 injector.requirePublic("packageManager", "./package-manager");
 injector.requirePublic("npm", "./node-package-manager");
@@ -231,13 +375,21 @@ injector.requirePublic("yarn", "./yarn-package-manager");
 injector.requirePublic("yarn2", "./yarn2-package-manager");
 injector.requirePublic("pnpm", "./pnpm-package-manager");
 injector.requirePublic("bun", "./bun-package-manager");
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./common/commands/package-manager-get").packageManagerGetCommandDefinition
+>(
 	"package-manager|*get",
-	"./commands/package-manager-get",
+	() =>
+		require("./common/commands/package-manager-get")
+			.packageManagerGetCommandDefinition,
 );
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./common/commands/package-manager-set").packageManagerSetCommandDefinition
+>(
 	"package-manager|set",
-	"./commands/package-manager-set",
+	() =>
+		require("./common/commands/package-manager-set")
+			.packageManagerSetCommandDefinition,
 );
 
 injector.require(
@@ -258,44 +410,112 @@ injector.require(
 	"./services/plugin-variables-service",
 );
 injector.require("pluginsService", "./services/plugins-service");
-injector.requireCommand("plugin|*list", "./commands/plugin/list-plugins");
-injector.requireCommand("plugin|add", "./commands/plugin/add-plugin");
-injector.requireCommand("plugin|install", "./commands/plugin/add-plugin");
-injector.requireCommand("plugin|remove", "./commands/plugin/remove-plugin");
-injector.requireCommand("plugin|update", "./commands/plugin/update-plugin");
-injector.requireCommand("plugin|build", "./commands/plugin/build-plugin");
-injector.requireCommand("plugin|create", "./commands/plugin/create-plugin");
-
-injector.requireCommand(
-	["hooks|*list", "hooks|install"],
-	"./commands/hooks/hooks",
+registerBuiltInCommand<
+	typeof import("./commands/plugin/list-plugins").listPluginsCommandDefinition
+>(
+	"plugin|*list",
+	() => require("./commands/plugin/list-plugins").listPluginsCommandDefinition,
 );
-injector.requireCommand(
-	["hooks|lock", "hooks|verify"],
-	"./commands/hooks/hooks-lock",
+registerBuiltInCommand<
+	typeof import("./commands/plugin/add-plugin").addPluginCommandDefinition
+>(
+	"plugin|add",
+	() => require("./commands/plugin/add-plugin").addPluginCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/plugin/add-plugin").addPluginCommandDefinition
+>(
+	"plugin|install",
+	() => require("./commands/plugin/add-plugin").addPluginCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/plugin/remove-plugin").removePluginCommandDefinition
+>(
+	"plugin|remove",
+	() =>
+		require("./commands/plugin/remove-plugin").removePluginCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/plugin/update-plugin").updatePluginCommandDefinition
+>(
+	"plugin|update",
+	() =>
+		require("./commands/plugin/update-plugin").updatePluginCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/plugin/build-plugin").buildPluginCommandDefinition
+>(
+	"plugin|build",
+	() => require("./commands/plugin/build-plugin").buildPluginCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/plugin/create-plugin").createPluginCommandDefinition
+>(
+	"plugin|create",
+	() =>
+		require("./commands/plugin/create-plugin").createPluginCommandDefinition,
+);
+
+registerBuiltInCommand<
+	typeof import("./commands/hooks/hooks").hooksListCommandDefinition
+>(
+	"hooks|*list",
+	() => require("./commands/hooks/hooks").hooksListCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/hooks/hooks").hooksInstallCommandDefinition
+>(
+	"hooks|install",
+	() => require("./commands/hooks/hooks").hooksInstallCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/hooks/hooks-lock").hooksLockCommandDefinition
+>(
+	"hooks|lock",
+	() => require("./commands/hooks/hooks-lock").hooksLockCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/hooks/hooks-lock").hooksVerifyCommandDefinition
+>(
+	"hooks|verify",
+	() => require("./commands/hooks/hooks-lock").hooksVerifyCommandDefinition,
 );
 
 injector.require("doctorService", "./services/doctor-service");
 injector.require("xcprojService", "./services/xcproj-service");
 injector.require("versionsService", "./services/versions-service");
-injector.requireCommand("install", "./commands/install");
+registerBuiltInCommand<
+	typeof import("./commands/install").installCommandDefinition
+>("install", () => require("./commands/install").installCommandDefinition);
 
 injector.require("infoService", "./services/info-service");
-injector.requireCommand("info", "./commands/info");
+registerBuiltInCommand<typeof import("./commands/info").infoCommandDefinition>(
+	"info",
+	() => require("./commands/info").infoCommandDefinition,
+);
 
 injector.require(
 	"androidResourcesMigrationService",
 	"./services/android-resources-migration-service",
 );
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/resources/resources-update").resourcesUpdateCommandDefinition
+>(
 	"resources|update",
-	"./commands/resources/resources-update",
+	() =>
+		require("./commands/resources/resources-update")
+			.resourcesUpdateCommandDefinition,
 );
 
 injector.require("androidToolsInfo", "./android-tools-info");
 injector.require("devicePathProvider", "./device-path-provider");
 
-injector.requireCommand("platform|clean", "./commands/platform-clean");
+registerBuiltInCommand<
+	typeof import("./commands/platform-clean").platformCleanCommandDefinition
+>(
+	"platform|clean",
+	() => require("./commands/platform-clean").platformCleanCommandDefinition,
+);
 
 injector.require(
 	"androidBundleValidatorHelper",
@@ -338,9 +558,18 @@ injector.require(
 );
 injector.require("messages", "./common/messages/messages");
 
-injector.requireCommand("post-install-cli", "./commands/post-install");
-injector.requireCommand("migrate", "./commands/migrate");
-injector.requireCommand("update", "./commands/update");
+registerBuiltInCommand<
+	typeof import("./commands/post-install").postInstallCliCommandDefinition
+>(
+	"post-install-cli",
+	() => require("./commands/post-install").postInstallCliCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/migrate").migrateCommandDefinition
+>("migrate", () => require("./commands/migrate").migrateCommandDefinition);
+registerBuiltInCommand<
+	typeof import("./commands/update").updateCommandDefinition
+>("update", () => require("./commands/update").updateCommandDefinition);
 
 injector.require("iOSLogFilter", "./services/ios-log-filter");
 injector.require("logSourceMapService", "./services/log-source-map-service");
@@ -353,17 +582,29 @@ injector.require("staticConfig", "./config");
 
 injector.require("requireService", "./services/require-service");
 
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/extensibility/list-extensions").listExtensionsCommandDefinition
+>(
 	"extension|*list",
-	"./commands/extensibility/list-extensions",
+	() =>
+		require("./commands/extensibility/list-extensions")
+			.listExtensionsCommandDefinition,
 );
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/extensibility/install-extension").installExtensionCommandDefinition
+>(
 	"extension|install",
-	"./commands/extensibility/install-extension",
+	() =>
+		require("./commands/extensibility/install-extension")
+			.installExtensionCommandDefinition,
 );
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/extensibility/uninstall-extension").uninstallExtensionCommandDefinition
+>(
 	"extension|uninstall",
-	"./commands/extensibility/uninstall-extension",
+	() =>
+		require("./commands/extensibility/uninstall-extension")
+			.uninstallExtensionCommandDefinition,
 );
 injector.requirePublicClass(
 	"extensibilityService",
@@ -384,13 +625,17 @@ injector.require(
 	"./services/platform-environment-requirements",
 );
 
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/generate-assets").generateIconsCommand
+>(
 	"resources|generate|icons",
-	"./commands/generate-assets",
+	() => require("./commands/generate-assets").generateIconsCommand,
 );
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/generate-assets").generateSplashesCommand
+>(
 	"resources|generate|splashes",
-	"./commands/generate-assets",
+	() => require("./commands/generate-assets").generateSplashesCommand,
 );
 injector.requirePublic(
 	"assetsGenerationService",
@@ -462,17 +707,41 @@ injector.require("sharedEventBus", "./shared-event-bus");
 
 injector.require("keyCommandHelper", "./helpers/key-command-helper");
 
-injector.requireCommand("start", "./commands/start");
+registerBuiltInCommand<
+	typeof import("./commands/start").startCommandDefinition
+>("start", () => require("./commands/start").startCommandDefinition);
 injector.require("startService", "./services/start-service");
-injector.requireCommand(
-	[
-		"native|add",
-		"native|add|java",
-		"native|add|kotlin",
-		"native|add|swift",
-		"native|add|objective-c",
-	],
-	"./commands/native-add",
+registerBuiltInCommand<
+	typeof import("./commands/native-add").nativeAddCommandDefinition
+>(
+	"native|add",
+	() => require("./commands/native-add").nativeAddCommandDefinition,
 );
-injector.requireCommand(["widget|ios"], "./commands/widget");
+registerBuiltInCommand<
+	typeof import("./commands/native-add").javaNativeAddCommand
+>(
+	"native|add|java",
+	() => require("./commands/native-add").javaNativeAddCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/native-add").kotlinNativeAddCommand
+>(
+	"native|add|kotlin",
+	() => require("./commands/native-add").kotlinNativeAddCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/native-add").swiftNativeAddCommand
+>(
+	"native|add|swift",
+	() => require("./commands/native-add").swiftNativeAddCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/native-add").objectiveCNativeAddCommand
+>(
+	"native|add|objective-c",
+	() => require("./commands/native-add").objectiveCNativeAddCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/widget").widgetIOSCommandDefinition
+>("widget|ios", () => require("./commands/widget").widgetIOSCommandDefinition);
 require("./key-commands/bootstrap");

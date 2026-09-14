@@ -1,7 +1,6 @@
 import { IHelpService } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export const generateHelpCommandDefinition = defineCommand({
 	name: "dev-generate-help",
@@ -14,5 +13,3 @@ export const generateHelpCommandDefinition = defineCommand({
 		return services.$helpService.generateHtmlPages();
 	},
 });
-
-registerCommand(generateHelpCommandDefinition);

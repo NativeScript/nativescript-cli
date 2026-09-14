@@ -16,6 +16,7 @@ import { IOptions } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { ICommand } from "../lib/common/definitions/commands";
 import { IDictionary } from "../lib/common/declarations";
+import { runInInjectionContext } from "../lib/common/di";
 
 let selectedTemplateName: string;
 let isProjectCreated: boolean;
@@ -169,7 +170,9 @@ function createTestInjector() {
 		ng: false,
 		template: undefined,
 	});
-	registerCommand(createProjectCommandDefinition, testInjector);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(createProjectCommandDefinition),
+	);
 	testInjector.register("stringParameter", StringCommandParameter);
 	testInjector.register("prompter", PrompterStub);
 

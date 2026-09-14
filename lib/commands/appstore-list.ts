@@ -7,7 +7,6 @@ import {
 } from "../common/define-command";
 import { inject } from "../common/di";
 import { createTable } from "../common/helpers";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { IPlatformValidationService } from "../declarations";
 import { IProjectData } from "../definitions/project";
 import {
@@ -130,5 +129,3 @@ export const listiOSAppsCommandDefinition = defineCommand({
 	setup: setupListiOSAppsCommand,
 	run: runListiOSAppsCommand,
 });
-
-registerCommand(listiOSAppsCommandDefinition);

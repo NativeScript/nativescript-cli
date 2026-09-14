@@ -14,6 +14,7 @@ import {
 	stringOption,
 } from "../../lib/common/define-command";
 import type { CommandArgumentValues } from "../../lib/common/define-command";
+import { registerLazyCommand } from "../../lib/common/services/command-definition-adapter";
 import type { Injector } from "../../lib/common/di/injector";
 
 type IsExact<A, B> =
@@ -186,3 +187,60 @@ defineCommand({
 	allowUnknownOptions: "yes",
 	run: () => undefined,
 });
+
+// A lazy registration is only checked when the call site names the type of the
+// definition it loads: `require()` is `any`, so nothing infers from the loader.
+declare const require: (id: string) => any;
+
+const lazyPlatform = defineCommand({
+	name: "typefixture|lazy-ios",
+	run: () => undefined,
+});
+
+const lazyAliases = defineCommand({
+	name: ["typefixture|lazy-vision", "typefixture|lazy-visionos"],
+	run: () => undefined,
+});
+
+registerLazyCommand<typeof lazyPlatform>(
+	"typefixture|lazy-ios",
+	() => require("./commands/lazy").lazyPlatform,
+);
+
+registerLazyCommand<typeof lazyPlatform>(
+	// @ts-expect-error - the definition loaded declares 'typefixture|lazy-ios'
+	"typefixture|lazy-iosss",
+	() => require("./commands/lazy").lazyPlatform,
+);
+
+registerLazyCommand<typeof lazyAliases>(
+	"typefixture|lazy-visionos",
+	() => require("./commands/lazy").lazyAliases,
+);
+
+registerLazyCommand<typeof lazyAliases>(
+	// @ts-expect-error - not one of the names the definition declares
+	"typefixture|lazy-vision2",
+	() => require("./commands/lazy").lazyAliases,
+);
+
+registerLazyCommand<
+	// @ts-expect-error - the loader must point at a defineCommand() definition
+	typeof setupLazyCommand
+>("typefixture|lazy-ios", () => require("./commands/lazy").setupLazyCommand);
+
+// Omitting the type argument checks nothing, so the name parameter turns into
+// the instruction to pass one.
+registerLazyCommand(
+	// @ts-expect-error - the definition's type must be passed explicitly
+	"typefixture|lazy-ios",
+	() => require("./commands/lazy").lazyPlatform,
+);
+
+registerLazyCommand(
+	// @ts-expect-error - a name no definition backs is still not enough
+	"typefixture|lazy-anything",
+	() => require("./commands/lazy").lazyPlatform,
+);
+
+declare function setupLazyCommand(): { projectDir: string };

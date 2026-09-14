@@ -6,7 +6,6 @@ import {
 	stringOption,
 } from "../../define-command";
 import { inject } from "../../di";
-import { registerCommand } from "../../services/command-definition-adapter";
 
 const runApplicationOnDeviceCommandOptions = {
 	device: stringOption(),
@@ -64,5 +63,3 @@ export const runApplicationOnDeviceCommandDefinition = defineCommand({
 	setup: setupRunApplicationOnDeviceCommand,
 	run: runRunApplicationOnDeviceCommand,
 });
-
-registerCommand(runApplicationOnDeviceCommandDefinition);

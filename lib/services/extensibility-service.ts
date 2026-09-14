@@ -21,9 +21,12 @@ import {
 import { injector } from "../common/yok";
 import { IInjector } from "../common/definitions/yok";
 import { CommandsDelimiters } from "../common/constants";
-import { inject } from "../common/di/inject";
-import { CommandRegistry } from "../common/contracts";
-import type { DeferredCommandRejection } from "../common/contracts";
+import { inject, runInInjectionContext } from "../common/di/inject";
+import {
+	COMMAND_OWNER,
+	CommandRegistry,
+	describeRejection,
+} from "../common/contracts";
 import { DefinedCommand, isCommandDefinition } from "../common/define-command";
 import { registerDefinitionAs } from "../common/services/command-definition-adapter";
 
@@ -59,21 +62,6 @@ function getEntryModulePath(value: any): string {
 
 const isDefaultCommandName = (name: string): boolean =>
 	name.indexOf(CommandsDelimiters.DefaultHierarchicalCommand) !== -1;
-
-function describeRejection(rejection: DeferredCommandRejection): string {
-	switch (rejection.reason) {
-		case "invalid-name":
-			return rejection.detail;
-		case "claimed":
-			return `it is already registered by extension ${rejection.owner}`;
-		case "built-in":
-			return "it is already provided by the CLI";
-		case "subcommand-parent":
-			return "it is already in use as the parent of its subcommands";
-		case "parent-is-command":
-			return `'${rejection.parent}' is already registered as a command of its own, so the subcommand could never be reached`;
-	}
-}
 
 /**
  * Reads the names of the commands an extension contributes out of either shape
@@ -249,7 +237,9 @@ export class ExtensibilityService implements IExtensibilityService {
 					detail: extensionName,
 					logger: this.$logger,
 				});
-				this.$requireService.require(pathToExtension);
+				this.loadInExtensionScope(extensionName, () =>
+					this.$requireService.require(pathToExtension),
+				);
 			}
 
 			return this.getInstalledExtensionData(extensionName);
@@ -379,6 +369,21 @@ export class ExtensibilityService implements IExtensibilityService {
 	}
 
 	/**
+	 * Runs an extension's module load under an injector of the extension's own,
+	 * so a command the module registers while loading is attributed — and
+	 * scoped — to the extension instead of to the CLI. Module loading is
+	 * synchronous, so the context covers the whole of the module's body.
+	 */
+	private loadInExtensionScope<T>(extensionName: string, load: () => T): T {
+		return runInInjectionContext(
+			this.$injector.createChild([
+				{ provide: COMMAND_OWNER, useValue: extensionName },
+			]),
+			load,
+		);
+	}
+
+	/**
 	 * Registers each declared command as a deferred load of its own module, so
 	 * nothing from the extension is loaded until one of its commands is executed.
 	 * A module may either register itself on load (a legacy-style
@@ -441,7 +446,9 @@ export class ExtensibilityService implements IExtensibilityService {
 		commandName: string,
 		absoluteModulePath: string,
 	): void {
-		const exported = require(absoluteModulePath);
+		const exported = this.loadInExtensionScope(extensionName, () =>
+			require(absoluteModulePath),
+		);
 		const candidate = (exported && exported.default) ?? exported;
 
 		if (!isCommandDefinition(candidate)) {

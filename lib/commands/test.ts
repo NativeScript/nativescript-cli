@@ -10,11 +10,9 @@ import {
 	defineCommand,
 	stringOption,
 } from "../common/define-command";
-import { inject, InjectionToken } from "../common/di";
+import { inject } from "../common/di";
 import { ErrorCodes } from "../common/enums";
 import { hasValidAndroidSigning } from "../common/helpers";
-import { registerCommand } from "../common/services/command-definition-adapter";
-import { getInjector } from "../common/yok";
 import {
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
@@ -30,9 +28,7 @@ import {
 } from "../definitions/project";
 
 /** The platform spelling the test services receive, verbatim. */
-const TEST_PLATFORM = new InjectionToken<"android" | "iOS" | "visionOS">(
-	"testCommandPlatform",
-);
+type TestPlatform = "android" | "iOS" | "visionOS";
 
 const testCommandOptions = {
 	// The CLI-wide default is true; unit testing has always opted out of it.
@@ -71,9 +67,11 @@ export interface ITestCommandServices {
 	$vitestExecutionService: IVitestExecutionService;
 }
 
-export function setupTestCommand(): ITestCommandServices {
+export function setupTestCommand(
+	testPlatform: TestPlatform,
+): ITestCommandServices {
 	return {
-		platform: inject(TEST_PLATFORM),
+		platform: testPlatform,
 		$analyticsService: inject<IAnalyticsService>("analyticsService"),
 		$cleanupService: inject<ICleanupService>("cleanupService"),
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
@@ -244,7 +242,7 @@ export const testCommandDefinition = defineCommand({
 	options: testCommandOptions,
 	// Arguments have never been rejected here, only ignored.
 	arguments: "any",
-	setup: setupTestCommand,
+	setup: () => setupTestCommand("iOS"),
 	canExecute: canExecuteTestCommand,
 	run: runTestCommand,
 });
@@ -255,7 +253,7 @@ export const testAndroidCommandDefinition = defineCommand({
 		"Runs the tests in your project on connected Android devices or Android emulators.",
 	options: testCommandOptions,
 	arguments: "any",
-	setup: setupTestCommand,
+	setup: () => setupTestCommand("android"),
 	async canExecute(
 		context: TestCommandContext,
 		services: ITestCommandServices,
@@ -287,7 +285,7 @@ export const testVisionOSCommandDefinition = defineCommand({
 		"Runs the tests in your project in the visionOS Simulator or on connected Apple Vision Pro devices.",
 	options: testCommandOptions,
 	arguments: "any",
-	setup: setupTestCommand,
+	setup: () => setupTestCommand("visionOS"),
 	async canExecute(
 		context: TestCommandContext,
 		services: ITestCommandServices,
@@ -307,18 +305,3 @@ export const testVisionOSCommandDefinition = defineCommand({
 	},
 	run: runTestCommand,
 });
-
-registerCommand(
-	testCommandDefinition,
-	getInjector().createChild([{ provide: TEST_PLATFORM, useValue: "iOS" }]),
-);
-
-registerCommand(
-	testAndroidCommandDefinition,
-	getInjector().createChild([{ provide: TEST_PLATFORM, useValue: "android" }]),
-);
-
-registerCommand(
-	testVisionOSCommandDefinition,
-	getInjector().createChild([{ provide: TEST_PLATFORM, useValue: "visionOS" }]),
-);

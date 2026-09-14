@@ -7,7 +7,6 @@ import {
 	stringOption,
 } from "../../define-command";
 import { inject } from "../../di";
-import { registerCommand } from "../../services/command-definition-adapter";
 
 const NOT_SPECIFIED_DEVICE_ERROR_MESSAGE =
 	"More than one device found. Specify device explicitly.";
@@ -75,5 +74,3 @@ export const openDeviceLogStreamCommandDefinition = defineCommand({
 	setup: setupOpenDeviceLogStreamCommand,
 	run: runOpenDeviceLogStreamCommand,
 });
-
-registerCommand(openDeviceLogStreamCommandDefinition);

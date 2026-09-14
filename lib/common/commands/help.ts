@@ -8,7 +8,6 @@ import {
 	defineCommand,
 } from "../define-command";
 import { inject } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
 
 export const helpCommandOptions = {
 	help: booleanOption(),
@@ -68,5 +67,3 @@ export const helpCommandDefinition = defineCommand({
 	setup: setupHelpCommand,
 	run: runHelpCommand,
 });
-
-registerCommand(helpCommandDefinition);

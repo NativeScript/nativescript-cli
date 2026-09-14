@@ -2,14 +2,13 @@ import { IErrors, ISysInfo } from "../common/declarations";
 import {
 	booleanOption,
 	CommandContext,
+	CommandName,
 	CommandOptionsSchema,
 	defineCommand,
 	stringOption,
 } from "../common/define-command";
-import { inject, InjectionToken } from "../common/di";
+import { inject } from "../common/di";
 import { hasValidAndroidSigning } from "../common/helpers";
-import { registerCommandDefinition } from "../common/services/command-definition-adapter";
-import { injector } from "../common/yok";
 import { ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE } from "../constants";
 import { ICleanupService } from "../definitions/cleanup-service";
 import {
@@ -26,10 +25,8 @@ import {
 } from "./command-base";
 import * as _ from "lodash";
 
-/** Which `$devicePlatformsConstants` entry this registration debugs. */
-const DEBUG_PLATFORM = new InjectionToken<"iOS" | "Android" | "visionOS">(
-	"debugCommandPlatform",
-);
+/** Which `$devicePlatformsConstants` entry a command debugs. */
+type DebugPlatform = "iOS" | "Android" | "visionOS";
 
 const debugCommandOptions = {
 	force: booleanOption(),
@@ -61,14 +58,16 @@ export interface IDebugCommandServices extends IPlatformCommandServices {
 	$migrateController: IMigrateController;
 }
 
-export function setupDebugCommand(): IDebugCommandServices {
+export function setupDebugCommand(
+	debugPlatform: DebugPlatform,
+): IDebugCommandServices {
 	const $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
 		"devicePlatformsConstants",
 	);
 
 	return {
 		...injectPlatformCommandServices(),
-		platform: $devicePlatformsConstants[inject(DEBUG_PLATFORM)],
+		platform: $devicePlatformsConstants[debugPlatform],
 		$cleanupService: inject<ICleanupService>("cleanupService"),
 		$debugController: inject<IDebugController>("debugController"),
 		$debugDataService: inject<IDebugDataService>("debugDataService"),
@@ -170,24 +169,26 @@ interface IDebugApplePlatformCommandServices extends IDebugCommandServices {
 	$sysInfo: ISysInfo;
 }
 
-function setupDebugApplePlatformCommand(): IDebugApplePlatformCommandServices {
-	const services = {
-		...setupDebugCommand(),
-		$sysInfo: inject<ISysInfo>("sysInfo"),
+const setupDebugApplePlatformCommand =
+	(debugPlatform: "iOS" | "visionOS") =>
+	(): IDebugApplePlatformCommandServices => {
+		const services = {
+			...setupDebugCommand(debugPlatform),
+			$sysInfo: inject<ISysInfo>("sysInfo"),
+		};
+		services.$projectData.initializeProjectData();
+
+		// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
+		// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
+		// That's why the `$ ns debug ios --justlaunch` command will not release the terminal.
+		// In case we do not set it to false, the dispose will be called once the command finishes its execution, which will prevent the debugging.
+		inject<IIOSDeviceOperations>("iosDeviceOperations").setShouldDispose(false);
+		inject<Mobile.IiOSSimulatorLogProvider>(
+			"iOSSimulatorLogProvider",
+		).setShouldDispose(false);
+
+		return services;
 	};
-	services.$projectData.initializeProjectData();
-
-	// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
-	// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
-	// That's why the `$ ns debug ios --justlaunch` command will not release the terminal.
-	// In case we do not set it to false, the dispose will be called once the command finishes its execution, which will prevent the debugging.
-	inject<IIOSDeviceOperations>("iosDeviceOperations").setShouldDispose(false);
-	inject<Mobile.IiOSSimulatorLogProvider>(
-		"iOSSimulatorLogProvider",
-	).setShouldDispose(false);
-
-	return services;
-}
 
 function isValidTimeoutOption(timeout: string): boolean {
 	if (!timeout) {
@@ -206,58 +207,73 @@ function isValidTimeoutOption(timeout: string): boolean {
 	return true;
 }
 
-export const debugApplePlatformCommandDefinition = defineCommand({
-	name: "debug|ios",
-	description: "Debugs your project on a connected Apple device or simulator.",
-	options: debugCommandOptions,
-	// Arguments have never been rejected here, only ignored.
-	arguments: "any",
-	setup: setupDebugApplePlatformCommand,
-	async canExecute(
-		context: DebugCommandContext,
-		services: IDebugApplePlatformCommandServices,
-	): Promise<boolean> {
-		if (
-			!services.$platformValidationService.isPlatformSupportedForOS(
-				services.platform,
-				services.$projectData,
-			)
-		) {
-			services.$errors.fail(
-				`Applications for platform ${services.platform} can not be built on this OS`,
-			);
-		}
-
-		if (!isValidTimeoutOption(context.options.timeout)) {
-			services.$errors.fail(
-				`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`,
-			);
-		}
-
-		if (context.options.inspector) {
-			const macOSWarning = await services.$sysInfo.getMacOSWarningMessage();
+const defineApplePlatformDebugCommand = <const TName extends CommandName>(
+	name: TName,
+	debugPlatform: "iOS" | "visionOS",
+) =>
+	defineCommand({
+		name,
+		description:
+			"Debugs your project on a connected Apple device or simulator.",
+		options: debugCommandOptions,
+		// Arguments have never been rejected here, only ignored.
+		arguments: "any",
+		setup: setupDebugApplePlatformCommand(debugPlatform),
+		async canExecute(
+			context: DebugCommandContext,
+			services: IDebugApplePlatformCommandServices,
+		): Promise<boolean> {
 			if (
-				macOSWarning &&
-				macOSWarning.severity === SystemWarningsSeverity.high
+				!services.$platformValidationService.isPlatformSupportedForOS(
+					services.platform,
+					services.$projectData,
+				)
 			) {
 				services.$errors.fail(
-					`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`,
+					`Applications for platform ${services.platform} can not be built on this OS`,
 				);
 			}
-		}
 
-		return canExecuteDebugCommand(context, services);
-	},
-	run: runDebugCommand,
-});
+			if (!isValidTimeoutOption(context.options.timeout)) {
+				services.$errors.fail(
+					`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`,
+				);
+			}
 
-export const debugAndroidCommandDefinition = defineCommand({
+			if (context.options.inspector) {
+				const macOSWarning = await services.$sysInfo.getMacOSWarningMessage();
+				if (
+					macOSWarning &&
+					macOSWarning.severity === SystemWarningsSeverity.high
+				) {
+					services.$errors.fail(
+						`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`,
+					);
+				}
+			}
+
+			return canExecuteDebugCommand(context, services);
+		},
+		run: runDebugCommand,
+	});
+
+export const iosDebugCommand = defineApplePlatformDebugCommand(
+	"debug|ios",
+	"iOS",
+);
+
+export const visionDebugCommand = defineApplePlatformDebugCommand(
+	["debug|vision", "debug|visionos"],
+	"visionOS",
+);
+
+export const androidDebugCommand = defineCommand({
 	name: "debug|android",
 	description: "Debugs your project on a connected Android device or emulator.",
 	options: debugCommandOptions,
 	arguments: "any",
 	setup(): IDebugCommandServices {
-		const services = setupDebugCommand();
+		const services = setupDebugCommand("Android");
 		services.$projectData.initializeProjectData();
 
 		return services;
@@ -277,21 +293,3 @@ export const debugAndroidCommandDefinition = defineCommand({
 	},
 	run: runDebugCommand,
 });
-
-const debugApplePlatforms: [string, "iOS" | "visionOS"][] = [
-	["debug|ios", "iOS"],
-	["debug|vision", "visionOS"],
-	["debug|visionos", "visionOS"],
-];
-
-for (const [name, platform] of debugApplePlatforms) {
-	registerCommandDefinition(
-		{ ...debugApplePlatformCommandDefinition, name },
-		injector.createChild([{ provide: DEBUG_PLATFORM, useValue: platform }]),
-	);
-}
-
-registerCommandDefinition(
-	debugAndroidCommandDefinition,
-	injector.createChild([{ provide: DEBUG_PLATFORM, useValue: "Android" }]),
-);

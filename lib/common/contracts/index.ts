@@ -4,7 +4,11 @@
 // default. Each token resolves to the facade itself until its subsystem is
 // physically extracted — at which point the provider is swapped and consumers
 // keep working unchanged.
-export { CommandRegistry } from "./command-registry";
+export {
+	CommandRegistry,
+	COMMAND_OWNER,
+	describeRejection,
+} from "./command-registry";
 export type {
 	DeferredCommandOptions,
 	DeferredCommandRejection,

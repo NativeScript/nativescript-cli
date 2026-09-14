@@ -18,7 +18,6 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommandDefinition } from "../common/services/command-definition-adapter";
 
 const deployCommandOptions = {
 	watch: booleanOption({ default: false }),
@@ -83,5 +82,3 @@ export const deployCommandDefinition = defineCommand({
 		await services.$deployCommandHelper.deploy(context.args[0]);
 	},
 });
-
-registerCommandDefinition(deployCommandDefinition);

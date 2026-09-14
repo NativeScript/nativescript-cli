@@ -9,7 +9,6 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { BuildController } from "../controllers/build-controller";
 import { IOSBuildData } from "../data/build-data";
 import {
@@ -200,5 +199,3 @@ export const publishIOSCommandDefinition = defineCommand({
 	canExecute: canExecutePublishIOSCommand,
 	run: runPublishIOSCommand,
 });
-
-registerCommand(publishIOSCommandDefinition);

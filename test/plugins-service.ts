@@ -52,6 +52,7 @@ import {
 // import { ProjectConfigService } from "../lib/services/project-config-service";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectHelper } from "../lib/common/project-helper";
+import { runInInjectionContext } from "../lib/common/di";
 // import { basename } from 'path';
 
 let isErrorThrown = false;
@@ -327,7 +328,9 @@ describe("Plugins service", () => {
 	const commands = ["add", "install"];
 	beforeEach(() => {
 		testInjector = createTestInjector();
-		registerCommand(addPluginCommandDefinition, testInjector);
+		runInInjectionContext(testInjector, () =>
+			registerCommand(addPluginCommandDefinition),
+		);
 	});
 
 	_.each(commands, (command) => {

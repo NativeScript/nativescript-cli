@@ -1,6 +1,5 @@
 import { IPluginData } from "../../definitions/plugins";
 import { defineCommand } from "../../common/define-command";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 import path = require("path");
 import * as crypto from "crypto";
 import {
@@ -103,6 +102,3 @@ export const hooksVerifyCommandDefinition = defineCommand({
 		}
 	},
 });
-
-registerCommand(hooksLockCommandDefinition);
-registerCommand(hooksVerifyCommandDefinition);

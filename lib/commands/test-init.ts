@@ -14,7 +14,6 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import {
 	IDictionary,
 	IErrors,
@@ -432,5 +431,3 @@ export const testInitCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(testInitCommandDefinition);

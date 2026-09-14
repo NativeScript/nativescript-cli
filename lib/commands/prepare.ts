@@ -16,7 +16,6 @@ import {
 	defineCommand,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommandDefinition } from "../common/services/command-definition-adapter";
 
 export const prepareCommandOptions = {
 	watch: booleanOption({ default: false }),
@@ -95,5 +94,3 @@ export const prepareCommandDefinition = defineCommand({
 	canExecute: canExecutePrepareCommand,
 	run: runPrepareCommand,
 });
-
-registerCommandDefinition(prepareCommandDefinition);

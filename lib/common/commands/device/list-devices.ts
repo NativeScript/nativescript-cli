@@ -4,18 +4,12 @@ import { IErrors } from "../../declarations";
 import {
 	booleanOption,
 	CommandContext,
+	CommandName,
 	CommandOptionsSchema,
 	defineCommand,
 } from "../../define-command";
-import { inject, InjectionToken } from "../../di";
+import { inject } from "../../di";
 import { createTable, formatListOfNames } from "../../helpers";
-import { registerCommandDefinition } from "../../services/command-definition-adapter";
-import { injector } from "../../yok";
-
-/** Which `$devicePlatformsConstants` entry this registration lists. */
-const LIST_DEVICES_PLATFORM = new InjectionToken<"iOS" | "Android">(
-	"listDevicesCommandPlatform",
-);
 
 const listDevicesCommandOptions = {
 	availableDevices: booleanOption(),
@@ -181,42 +175,39 @@ export const listDevicesCommandDefinition = defineCommand({
 	},
 });
 
-registerCommandDefinition(listDevicesCommandDefinition);
-
 interface IListPlatformDevicesCommandServices extends IListDevicesCommandServices {
 	platform: string;
 }
 
-export const listPlatformDevicesCommandDefinition = defineCommand({
-	name: ["device|android", "devices|android"],
-	description: "Lists the connected devices and emulators for one platform.",
-	options: listDevicesCommandOptions,
-	arguments: "none",
-	setup(): IListPlatformDevicesCommandServices {
-		const $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
-			"devicePlatformsConstants",
-		);
+const defineListPlatformDevicesCommand = <const TName extends CommandName>(
+	name: TName,
+	listedPlatform: "iOS" | "Android",
+) =>
+	defineCommand({
+		name,
+		description: "Lists the connected devices and emulators for one platform.",
+		options: listDevicesCommandOptions,
+		arguments: "none",
+		setup(): IListPlatformDevicesCommandServices {
+			const $devicePlatformsConstants =
+				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
 
-		return {
-			...setupListDevicesCommand(),
-			platform: $devicePlatformsConstants[inject(LIST_DEVICES_PLATFORM)],
-		};
-	},
-	run(context, services): Promise<void> {
-		return runListDevicesCommand(context, services, services.platform);
-	},
-});
+			return {
+				...setupListDevicesCommand(),
+				platform: $devicePlatformsConstants[listedPlatform],
+			};
+		},
+		run(context, services): Promise<void> {
+			return runListDevicesCommand(context, services, services.platform);
+		},
+	});
 
-const listDevicesPlatforms: [string[], "iOS" | "Android"][] = [
-	[["device|android", "devices|android"], "Android"],
-	[["device|ios", "devices|ios"], "iOS"],
-];
+export const androidListDevicesCommand = defineListPlatformDevicesCommand(
+	["device|android", "devices|android"],
+	"Android",
+);
 
-for (const [name, platform] of listDevicesPlatforms) {
-	registerCommandDefinition(
-		{ ...listPlatformDevicesCommandDefinition, name },
-		injector.createChild([
-			{ provide: LIST_DEVICES_PLATFORM, useValue: platform },
-		]),
-	);
-}
+export const iosListDevicesCommand = defineListPlatformDevicesCommand(
+	["device|ios", "devices|ios"],
+	"iOS",
+);

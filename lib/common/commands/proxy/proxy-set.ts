@@ -15,7 +15,6 @@ import {
 } from "../../define-command";
 import { inject } from "../../di";
 import { isInteractive } from "../../helpers";
-import { registerCommand } from "../../services/command-definition-adapter";
 import {
 	injectProxyCommandServices,
 	IProxyCommandServices,
@@ -210,5 +209,3 @@ export const proxySetCommandDefinition = defineCommand({
 	setup: setupProxySetCommand,
 	run: runProxySetCommand,
 });
-
-registerCommand(proxySetCommandDefinition);

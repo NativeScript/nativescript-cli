@@ -3,7 +3,6 @@ import { SupportedConfigValues } from "../tools/config-manipulation/config-trans
 import { IErrors } from "../common/declarations";
 import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { color } from "../color";
 
 export interface IConfigCommandServices {
@@ -141,7 +140,3 @@ export const configSetCommandDefinition = defineCommand({
 		}
 	},
 });
-
-registerCommand(configListCommandDefinition);
-registerCommand(configGetCommandDefinition);
-registerCommand(configSetCommandDefinition);

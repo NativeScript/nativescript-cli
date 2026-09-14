@@ -1,7 +1,6 @@
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 
 export interface IInstallExtensionCommandServices {
 	$extensibilityService: IExtensibilityService;
@@ -48,5 +47,3 @@ export const installExtensionCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(installExtensionCommandDefinition);

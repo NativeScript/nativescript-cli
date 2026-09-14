@@ -210,16 +210,18 @@ export class Yok extends Injector implements IInjector {
 					options.load();
 				} catch (err) {
 					throw new Error(
-						`Unable to load command '${name}' of ${options.owner} from ` +
-							`${options.source}: ${err.message}`,
+						`Unable to load command '${name}' of ${options.owner}` +
+							`${options.source ? ` from ${options.source}` : ""}: ` +
+							`${err.message}`,
 					);
 				}
 
 				if (!this.hasResolver(commandRecordName)) {
 					throw new Error(
 						`Command '${name}' of ${options.owner} was not registered when ` +
-							`${options.source} loaded. The module must export a ` +
-							`defineCommand() definition or register the command itself.`,
+							`${options.source || "its module"} loaded. The module must ` +
+							`export a defineCommand() definition or register the command ` +
+							`itself.`,
 					);
 				}
 			},
@@ -501,6 +503,12 @@ export class Yok extends Injector implements IInjector {
 							commandName = defaultCommand
 								? this.getHierarchicalCommandName(name, defaultCommand)
 								: "help";
+
+							if (commandName === "help") {
+								// Without this the help command opens a browser, so a
+								// mistyped subcommand would launch one.
+								this.resolve("options").help = true;
+							}
 							// If we'll execute the default command, but it's full name had been written by the user
 							// for example "ns run ios", we have to remove the "ios" option from the arguments that we'll pass to the command.
 							if (
@@ -773,8 +781,8 @@ export class Yok extends Injector implements IInjector {
 
 // The global is the published legacy surface. It is an accessor pair so a
 // direct `global.$injector = x` assignment — allowed for third parties —
-// stays synchronized with the module binding that getInjector() and internal
-// code read; a plain data property would silently fork the two.
+// stays synchronized with the module binding that getRootInjector() and
+// internal code read; a plain data property would silently fork the two.
 injector = (<any>global).$injector || new Yok();
 Object.defineProperty(global, "$injector", {
 	get: () => injector,
@@ -785,13 +793,15 @@ Object.defineProperty(global, "$injector", {
 });
 
 /**
- * Accessor for the process-wide facade, for code that cannot receive the
- * injector through DI or a static import (import cycles, decorator bodies).
- * Prefer inject(Injector) in an injection context; prefer a constructor
- * dependency in services. Never read global.$injector directly — the global
- * exists only as the published legacy surface for extensions and hooks.
+ * Accessor for the process-wide facade — the root of every injector in the
+ * process, as opposed to getCurrentInjector(), which serves whichever one the
+ * caller is running under. For code that cannot receive the injector through
+ * DI or a static import (import cycles, decorator bodies). Prefer
+ * inject(Injector) in an injection context; prefer a constructor dependency in
+ * services. Never read global.$injector directly — the global exists only as
+ * the published legacy surface for extensions and hooks.
  */
-export function getInjector(): IInjector {
+export function getRootInjector(): IInjector {
 	return injector;
 }
 

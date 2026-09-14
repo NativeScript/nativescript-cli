@@ -5,6 +5,7 @@ import { registerCommand } from "../../lib/common/services/command-definition-ad
 import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { IHelpService, IAnalyticsService } from "../../lib/common/declarations";
+import { runInInjectionContext } from "../../lib/common/di";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -45,7 +46,9 @@ const createTestInjector = (): IInjector => {
 
 	testInjector.register("settingsService", SettingsService);
 
-	registerCommand(postInstallCliCommandDefinition, testInjector);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(postInstallCliCommandDefinition),
+	);
 
 	testInjector.register("hostInfo", {});
 

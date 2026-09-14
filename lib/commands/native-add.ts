@@ -2,23 +2,17 @@ import * as fs from "fs";
 import { EOL } from "os";
 import * as path from "path";
 import { IErrors } from "../common/declarations";
-import { defineCommand } from "../common/define-command";
-import { inject, InjectionToken } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
+import { CommandName, defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
 import { capitalizeFirstLetter } from "../common/utils";
-import { getInjector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
 
 /**
- * Which language a registration generates a source file for. It also decides
- * the platform: java and kotlin write under App_Resources/Android, swift and
+ * Which language a command generates a source file for. It also decides the
+ * platform: java and kotlin write under App_Resources/Android, swift and
  * objective-c under App_Resources/iOS.
  */
 type NativeAddLanguage = "java" | "kotlin" | "swift" | "objective-c";
-
-const NATIVE_ADD_LANGUAGE = new InjectionToken<NativeAddLanguage>(
-	"nativeAddLanguage",
-);
 
 export interface INativeAddCommandServices {
 	$projectData: IProjectData;
@@ -373,44 +367,50 @@ export const nativeAddCommandDefinition = defineCommand({
 	},
 });
 
-export const nativeAddLanguageCommandDefinition = defineCommand({
-	name: "native|add|swift",
-	description: "Adds a native source file to the application.",
-	// The one usage message answers both too few and too many arguments; a
-	// declared argument spec would report them with two different ones.
-	arguments: "any",
-	setup(): INativeAddLanguageCommandServices {
-		return {
-			...setupNativeAddCommand(),
-			language: inject(NATIVE_ADD_LANGUAGE),
-		};
-	},
-	canExecute(context, services: INativeAddLanguageCommandServices): boolean {
-		if (context.args.length !== 1) {
-			failWithUsage(services);
-		}
+const defineNativeAddLanguageCommand = <const TName extends CommandName>(
+	name: TName,
+	language: NativeAddLanguage,
+) =>
+	defineCommand({
+		name,
+		description: "Adds a native source file to the application.",
+		// The one usage message answers both too few and too many arguments; a
+		// declared argument spec would report them with two different ones.
+		arguments: "any",
+		setup(): INativeAddLanguageCommandServices {
+			return {
+				...setupNativeAddCommand(),
+				language,
+			};
+		},
+		canExecute(context, services: INativeAddLanguageCommandServices): boolean {
+			if (context.args.length !== 1) {
+				failWithUsage(services);
+			}
 
-		return true;
-	},
-	run(context, services: INativeAddLanguageCommandServices): void {
-		generators[services.language](services, context.args[0]);
-	},
-});
+			return true;
+		},
+		run(context, services: INativeAddLanguageCommandServices): void {
+			generators[services.language](services, context.args[0]);
+		},
+	});
 
-registerCommand(nativeAddCommandDefinition);
+export const javaNativeAddCommand = defineNativeAddLanguageCommand(
+	"native|add|java",
+	"java",
+);
 
-const nativeAddLanguages: [string, NativeAddLanguage][] = [
-	["native|add|java", "java"],
-	["native|add|kotlin", "kotlin"],
-	["native|add|swift", "swift"],
-	["native|add|objective-c", "objective-c"],
-];
+export const kotlinNativeAddCommand = defineNativeAddLanguageCommand(
+	"native|add|kotlin",
+	"kotlin",
+);
 
-for (const [name, language] of nativeAddLanguages) {
-	registerCommand(
-		{ ...nativeAddLanguageCommandDefinition, name },
-		getInjector().createChild([
-			{ provide: NATIVE_ADD_LANGUAGE, useValue: language },
-		]),
-	);
-}
+export const swiftNativeAddCommand = defineNativeAddLanguageCommand(
+	"native|add|swift",
+	"swift",
+);
+
+export const objectiveCNativeAddCommand = defineNativeAddLanguageCommand(
+	"native|add|objective-c",
+	"objective-c",
+);

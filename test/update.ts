@@ -9,6 +9,7 @@ import { StaticConfig } from "../lib/config";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { IInjector } from "../lib/common/definitions/yok";
+import { runInInjectionContext } from "../lib/common/di";
 const projectFolder = "test";
 
 function createTestInjector(projectDir: string = projectFolder): IInjector {
@@ -44,7 +45,9 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 		},
 	});
 
-	registerCommand(updateCommandDefinition, testInjector);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(updateCommandDefinition),
+	);
 
 	return testInjector;
 }

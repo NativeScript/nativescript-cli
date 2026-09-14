@@ -7,7 +7,6 @@ import {
 } from "../../definitions/plugins";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 import { color } from "../../color";
 
 export interface IListPluginsCommandServices {
@@ -86,5 +85,3 @@ export const listPluginsCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(listPluginsCommandDefinition);

@@ -2,7 +2,6 @@ import { IProjectConfigService, IProjectData } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import * as constants from "../constants";
 import * as fontFinder from "font-finder";
 import { createTable } from "../common/helpers";
@@ -80,5 +79,3 @@ export const fontsCommandDefinition = defineCommand({
 		services.$logger.info(table.toString());
 	},
 });
-
-registerCommand(fontsCommandDefinition);

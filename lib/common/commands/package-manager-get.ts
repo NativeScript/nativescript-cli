@@ -1,7 +1,6 @@
 import { IUserSettingsService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
 
 export interface IPackageManagerGetCommandServices {
 	$logger: ILogger;
@@ -30,5 +29,3 @@ export const packageManagerGetCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(packageManagerGetCommandDefinition);

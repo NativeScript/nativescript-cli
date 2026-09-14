@@ -3,7 +3,6 @@ import { IAndroidResourcesMigrationService } from "../../declarations";
 import { IErrors } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 
 export interface IResourcesUpdateCommandServices {
 	$projectData: IProjectData;
@@ -70,5 +69,3 @@ export const resourcesUpdateCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(resourcesUpdateCommandDefinition);

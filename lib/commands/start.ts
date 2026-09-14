@@ -1,7 +1,6 @@
 import { printHeader } from "../common/header";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { IStartService } from "../definitions/start-service";
 
 export const startCommandDefinition = defineCommand({
@@ -18,5 +17,3 @@ export const startCommandDefinition = defineCommand({
 		return;
 	},
 });
-
-registerCommand(startCommandDefinition);

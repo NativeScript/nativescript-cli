@@ -1,5 +1,4 @@
 import { defineCommand } from "../../define-command";
-import { registerCommand } from "../../services/command-definition-adapter";
 import {
 	injectProxyCommandServices,
 	IProxyCommandServices,
@@ -19,5 +18,3 @@ export const proxyGetCommandDefinition = defineCommand({
 		await tryTrackProxyCommandUsage(services, proxyGetCommandName);
 	},
 });
-
-registerCommand(proxyGetCommandDefinition);

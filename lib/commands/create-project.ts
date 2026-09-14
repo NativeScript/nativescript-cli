@@ -9,7 +9,6 @@ import {
 } from "../common/define-command";
 import { inject } from "../common/di";
 import { isInteractive } from "../common/helpers";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import * as constants from "../constants";
 import { ICreateProjectData, IProjectService } from "../definitions/project";
 
@@ -530,5 +529,3 @@ export const createProjectCommandDefinition = defineCommand({
 	run: runCreateProjectCommand,
 	postRun: reportCreatedProject,
 });
-
-registerCommand(createProjectCommandDefinition);

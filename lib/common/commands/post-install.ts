@@ -1,7 +1,6 @@
 import { IErrors } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
-import { registerCommand } from "../services/command-definition-adapter";
 
 export const postInstallCommandDefinition = defineCommand({
 	name: "dev-post-install",
@@ -17,5 +16,3 @@ export const postInstallCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(postInstallCommandDefinition);

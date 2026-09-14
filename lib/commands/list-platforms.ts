@@ -3,7 +3,6 @@ import { IProjectData } from "../definitions/project";
 import { IPlatformCommandHelper } from "../declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 
 export interface IListPlatformsCommandServices {
 	$platformCommandHelper: IPlatformCommandHelper;
@@ -70,5 +69,3 @@ export const listPlatformsCommandDefinition = defineCommand({
 		}
 	},
 });
-
-registerCommand(listPlatformsCommandDefinition);

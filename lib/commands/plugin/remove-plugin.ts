@@ -4,7 +4,6 @@ import { IPluginsService } from "../../definitions/plugins";
 import { IErrors } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 
 export interface IRemovePluginCommandServices {
 	$pluginsService: IPluginsService;
@@ -67,5 +66,3 @@ export const removePluginCommandDefinition = defineCommand({
 		);
 	},
 });
-
-registerCommand(removePluginCommandDefinition);

@@ -15,6 +15,7 @@ import { IOSBuildData } from "../lib/data/build-data";
 import { IITMSData } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { ICommand } from "../lib/common/definitions/commands";
+import { runInInjectionContext } from "../lib/common/di";
 
 class AppStore {
 	static itunesconnect = {
@@ -102,9 +103,8 @@ class AppStore {
 			}
 		}
 
-		registerCommand(
-			{ ...publishIOSCommandDefinition, name: "appstore" },
-			<Injector>(<any>this.injector),
+		runInInjectionContext(<Injector>(<any>this.injector), () =>
+			registerCommand({ ...publishIOSCommandDefinition, name: "appstore" }),
 		);
 
 		this.injector.register("projectDataService", ProjectDataServiceStub);

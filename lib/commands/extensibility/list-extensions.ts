@@ -3,7 +3,6 @@ import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
 import * as helpers from "../../common/helpers";
-import { registerCommand } from "../../common/services/command-definition-adapter";
 
 export interface IListExtensionsCommandServices {
 	$extensibilityService: IExtensibilityService;
@@ -39,5 +38,3 @@ export const listExtensionsCommandDefinition = defineCommand({
 		}
 	},
 });
-
-registerCommand(listExtensionsCommandDefinition);

@@ -8,7 +8,6 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { PlatformTypes } from "../constants";
 import {
 	INodePackageManager,
@@ -148,5 +147,3 @@ export const installCommandDefinition = defineCommand({
 	setup: setupInstallCommand,
 	run: runInstallCommand,
 });
-
-registerCommand(installCommandDefinition);

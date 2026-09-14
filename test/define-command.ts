@@ -1,10 +1,18 @@
 import { assert } from "chai";
 import { spawnSync } from "child_process";
 import * as path from "path";
-import { Yok } from "../lib/common/yok";
+import { getRootInjector, Yok } from "../lib/common/yok";
 import { IInjector } from "../lib/common/definitions/yok";
-import { inject, InjectionToken } from "../lib/common/di";
-import { CommandRegistry } from "../lib/common/contracts/command-registry";
+import {
+	inject,
+	InjectionToken,
+	runInInjectionContext,
+} from "../lib/common/di";
+import {
+	COMMAND_OWNER,
+	CommandRegistry,
+	DeferredCommandResult,
+} from "../lib/common/contracts/command-registry";
 import { CommandsService } from "../lib/common/services/commands-service";
 import { Options } from "../lib/options";
 import { Errors } from "../lib/common/errors";
@@ -19,7 +27,8 @@ import {
 } from "../lib/common/define-command";
 import {
 	createCommandFromDefinition,
-	registerCommandDefinition,
+	registerCommand,
+	registerLazyCommand,
 } from "../lib/common/services/command-definition-adapter";
 
 const createTestInjector = (options: any = {}): IInjector => {
@@ -247,7 +256,7 @@ describe("defineCommand", () => {
 			});
 
 			const testInjector = createTestInjector();
-			registerCommandDefinition(definition, testInjector);
+			runInInjectionContext(testInjector, () => registerCommand(definition));
 
 			const command = testInjector.resolveCommand("dctestwidget|add");
 			assert.isFunction(command.execute);
@@ -264,9 +273,10 @@ describe("defineCommand", () => {
 
 		it("caches one command instance per registered name", () => {
 			const testInjector = createTestInjector();
-			registerCommandDefinition(
-				defineCommand({ name: "dctestflat", run: (): void => undefined }),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({ name: "dctestflat", run: (): void => undefined }),
+				),
 			);
 
 			assert.strictEqual(
@@ -277,26 +287,39 @@ describe("defineCommand", () => {
 
 		it("registers every alias of a multi-name definition", () => {
 			const testInjector = createTestInjector();
-			registerCommandDefinition(
-				defineCommand({
-					name: ["dctestalias", "dctestalias2"],
-					run: (): void => undefined,
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: ["dctestalias", "dctestalias2"],
+						run: (): void => undefined,
+					}),
+				),
 			);
 
 			assert.isFunction(testInjector.resolveCommand("dctestalias").execute);
 			assert.isFunction(testInjector.resolveCommand("dctestalias2").execute);
 		});
 
-		it("refuses a value that did not come from defineCommand", () => {
+		it("defines a bare definition on the caller's behalf", () => {
+			const testInjector = createTestInjector();
+
+			runInInjectionContext(testInjector, () =>
+				registerCommand({ name: "dctestraw", run: (): void => undefined }),
+			);
+
+			assert.isFunction(testInjector.resolveCommand("dctestraw").execute);
+		});
+
+		it("still validates a bare definition at registration", () => {
 			assert.throws(
 				() =>
-					registerCommandDefinition(
-						<any>{ name: "dctestraw", run: (): void => undefined },
-						createTestInjector(),
+					runInInjectionContext(createTestInjector(), () =>
+						registerCommand(<any>{
+							name: "dctestrawbad",
+							run: "not a function",
+						}),
 					),
-				/carries no command-definition marker/,
+				/run/,
 			);
 		});
 
@@ -306,42 +329,91 @@ describe("defineCommand", () => {
 			testInjector.register({
 				provide: CommandRegistry,
 				useValue: {
-					registerCommand: (name: string) => registered.push(name),
+					registerDeferredCommand: (name: string): DeferredCommandResult => {
+						registered.push(name);
+						return { registered: true };
+					},
 				},
 			});
 
-			registerCommandDefinition(
-				defineCommand({
-					name: ["dctestfacet", "dctestfacet2"],
-					run: (): void => undefined,
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: ["dctestfacet", "dctestfacet2"],
+						run: (): void => undefined,
+					}),
+				),
 			);
 
 			assert.deepEqual(registered, ["dctestfacet", "dctestfacet2"]);
 			assert.isNull(testInjector.resolveCommand("dctestfacet"));
 		});
 
-		it("keeps a registered command when a subcommand would shadow it", () => {
+		it("refuses a subcommand that would shadow a registered command", () => {
 			const testInjector = createTestInjector();
-			registerCommandDefinition(
-				defineCommand({ name: "dctestowned", run: (): void => undefined }),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({ name: "dctestowned", run: (): void => undefined }),
+				),
 			);
 
-			registerCommandDefinition(
-				defineCommand({ name: "dctestowned|sub", run: (): void => undefined }),
-				testInjector,
+			const result = runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctestowned|sub",
+						run: (): void => undefined,
+					}),
+				),
 			);
+
+			assert.deepStrictEqual(result, {
+				registered: false,
+				rejection: { reason: "parent-is-command", parent: "dctestowned" },
+			});
 
 			const owner = testInjector.resolveCommand("dctestowned");
 			assert.isUndefined(owner.isHierarchicalCommand);
-			assert.isFunction(testInjector.resolveCommand("dctestowned|sub").execute);
+			assert.isNull(testInjector.resolveCommand("dctestowned|sub"));
 
 			const logger: LoggerStub = testInjector.resolve("logger");
-			assert.match(
-				logger.warnOutput,
-				/'dctestowned' is already registered as a command of its own.*'dctestowned\|sub' cannot be reached/,
+			assert.isEmpty(logger.warnOutput);
+		});
+
+		it("registers against the injection context and takes its owner", async () => {
+			const testInjector = createTestInjector();
+			const scope = testInjector.createChild([
+				{ provide: COMMAND_OWNER, useValue: "dctest-ambient-extension" },
+			]);
+			let seenInjector: any;
+			const definition = defineCommand({
+				name: "dctestambient",
+				run: (ctx): void => {
+					seenInjector = ctx.injector;
+				},
+			});
+
+			assert.deepStrictEqual(
+				runInInjectionContext(scope, () => registerCommand(definition)),
+				{ registered: true },
+			);
+
+			await testInjector.resolveCommand("dctestambient").execute([]);
+			assert.strictEqual(seenInjector, scope);
+
+			assert.deepStrictEqual(
+				runInInjectionContext(testInjector, () =>
+					registerLazyCommand<typeof definition>(
+						"dctestambient",
+						() => definition,
+					),
+				),
+				{
+					registered: false,
+					rejection: {
+						reason: "claimed",
+						owner: "dctest-ambient-extension",
+					},
+				},
 			);
 		});
 	});
@@ -982,16 +1054,17 @@ describe("defineCommand", () => {
 			const testInjector = createCommandsServiceInjector({ verbose: true });
 			let ran: any;
 
-			registerCommandDefinition(
-				defineCommand({
-					name: "dctest-e2e",
-					options: { verbose: booleanOption({ default: false }) },
-					arguments: "any",
-					run: (context) => {
-						ran = context;
-					},
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-e2e",
+						options: { verbose: booleanOption({ default: false }) },
+						arguments: "any",
+						run: (context) => {
+							ran = context;
+						},
+					}),
+				),
 			);
 
 			const commandsService: ICommandsService =
@@ -1009,14 +1082,15 @@ describe("defineCommand", () => {
 			const testInjector = createCommandsServiceInjector();
 			let ran = false;
 
-			registerCommandDefinition(
-				defineCommand({
-					name: "dctest-e2e-none",
-					run: () => {
-						ran = true;
-					},
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-e2e-none",
+						run: () => {
+							ran = true;
+						},
+					}),
+				),
 			);
 
 			const commandsService: ICommandsService =
@@ -1032,15 +1106,16 @@ describe("defineCommand", () => {
 			const testInjector = createCommandsServiceInjector();
 			let ran = false;
 
-			registerCommandDefinition(
-				defineCommand({
-					name: "dctest-e2e-refine",
-					canExecute: () => true,
-					run: () => {
-						ran = true;
-					},
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-e2e-refine",
+						canExecute: () => true,
+						run: () => {
+							ran = true;
+						},
+					}),
+				),
 			);
 
 			const commandsService: ICommandsService =
@@ -1056,15 +1131,16 @@ describe("defineCommand", () => {
 			const testInjector = createCommandsServiceInjector();
 			let ran: any;
 
-			registerCommandDefinition(
-				defineCommand({
-					name: "dctest-widget|add",
-					arguments: "any",
-					run: (context) => {
-						ran = context;
-					},
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-widget|add",
+						arguments: "any",
+						run: (context) => {
+							ran = context;
+						},
+					}),
+				),
 			);
 
 			const commandsService: ICommandsService =
@@ -1081,15 +1157,16 @@ describe("defineCommand", () => {
 			const testInjector = createCommandsServiceInjector();
 			const runs: string[][] = [];
 
-			registerCommandDefinition(
-				defineCommand({
-					name: "dctest-gadget|*all",
-					arguments: "any",
-					run: (context) => {
-						runs.push(context.args);
-					},
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-gadget|*all",
+						arguments: "any",
+						run: (context) => {
+							runs.push(context.args);
+						},
+					}),
+				),
 			);
 
 			const commandsService: ICommandsService =
@@ -1710,16 +1787,17 @@ describe("defineCommand", () => {
 			testInjector.register("commandsService", CommandsService);
 
 			let ran = false;
-			registerCommandDefinition(
-				defineCommand({
-					name: "dctest-unknown-e2e",
-					allowUnknownOptions: true,
-					arguments: "any",
-					run: () => {
-						ran = true;
-					},
-				}),
-				testInjector,
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-unknown-e2e",
+						allowUnknownOptions: true,
+						arguments: "any",
+						run: () => {
+							ran = true;
+						},
+					}),
+				),
 			);
 
 			const commandsService: ICommandsService =
@@ -1730,6 +1808,215 @@ describe("defineCommand", () => {
 			// Validation still runs - it is the rejection of unknown flags that
 			// is suppressed, so a passthrough command keeps its own options.
 			assert.isTrue(validatedWith.allowUnknown);
+		});
+	});
+
+	describe("lazy registration", () => {
+		it("claims the name and routes without loading the definition", () => {
+			const testInjector = createTestInjector();
+			let loads = 0;
+			const definition = defineCommand({
+				name: "dctestlazy|sub",
+				run: (): void => undefined,
+			});
+
+			runInInjectionContext(testInjector, () =>
+				registerLazyCommand<typeof definition>("dctestlazy|sub", () => {
+					loads++;
+					return definition;
+				}),
+			);
+
+			assert.strictEqual(loads, 0);
+			assert.deepStrictEqual(
+				testInjector.getChildrenCommandsNames("dctestlazy"),
+				["sub"],
+			);
+			assert.deepStrictEqual(
+				testInjector.buildHierarchicalCommand("dctestlazy", ["sub", "extra"]),
+				{ commandName: "dctestlazy|sub", remainingArguments: ["extra"] },
+			);
+			assert.strictEqual(loads, 0);
+
+			assert.isFunction(testInjector.resolveCommand("dctestlazy|sub").execute);
+			assert.strictEqual(loads, 1);
+		});
+
+		it("rejects a definition that declares another name", () => {
+			const testInjector = createTestInjector();
+			const definition = defineCommand({
+				name: "dctestlazyother",
+				run: (): void => undefined,
+			});
+
+			runInInjectionContext(testInjector, () =>
+				registerLazyCommand<any>("dctestlazymismatch", () => definition),
+			);
+
+			assert.throws(
+				() => testInjector.resolveCommand("dctestlazymismatch"),
+				/declares itself as 'dctestlazyother'/,
+			);
+		});
+
+		it("rejects a loader that does not return a definition", () => {
+			const testInjector = createTestInjector();
+
+			runInInjectionContext(testInjector, () =>
+				registerLazyCommand<any>(
+					"dctestlazyraw",
+					() => <any>{ name: "dctestlazyraw", run: (): void => undefined },
+				),
+			);
+
+			assert.throws(
+				() => testInjector.resolveCommand("dctestlazyraw"),
+				/defineCommand\(\) definition/,
+			);
+		});
+
+		it("scopes the command to a child injector built on first resolution", async () => {
+			const testInjector = createTestInjector();
+			const GREETING = new InjectionToken<string>("dctestLazyGreeting");
+			let seen: string;
+			const definition = defineCommand({
+				name: "dctestlazyscoped",
+				setup: () => inject(GREETING),
+				run: (context, greeting: string): void => {
+					seen = greeting;
+				},
+			});
+
+			let children = 0;
+			const createChild = (<any>testInjector).createChild.bind(testInjector);
+			(<any>testInjector).createChild = (providers: any) => {
+				children++;
+				return createChild(providers);
+			};
+
+			runInInjectionContext(testInjector, () =>
+				registerLazyCommand<typeof definition>(
+					"dctestlazyscoped",
+					() => definition,
+					[{ provide: GREETING, useValue: "hello" }],
+				),
+			);
+
+			assert.strictEqual(children, 0);
+
+			const command = testInjector.resolveCommand("dctestlazyscoped");
+			assert.strictEqual(children, 1);
+
+			await command.execute([]);
+			assert.strictEqual(seen, "hello");
+			// The provider lives in the command's own scope, not the injector the
+			// registration was made against.
+			assert.isNotOk((<any>testInjector).get(GREETING, { optional: true }));
+		});
+
+		it("reports a name the CLI already provides", () => {
+			const testInjector = createTestInjector();
+			testInjector.registerCommand("dctestlazytaken", () => ({
+				allowedParameters: <any[]>[],
+				execute: async (): Promise<void> => undefined,
+			}));
+
+			const result = runInInjectionContext(testInjector, () =>
+				registerLazyCommand<any>("dctestlazytaken", () => <any>null),
+			);
+
+			assert.deepStrictEqual(result, {
+				registered: false,
+				rejection: { reason: "built-in" },
+			});
+		});
+
+		it("registers against the injection context and takes its owner", async () => {
+			const testInjector = createTestInjector();
+			const scope = testInjector.createChild([
+				{ provide: COMMAND_OWNER, useValue: "dctest-extension" },
+			]);
+			let seenInjector: any;
+			const definition = defineCommand({
+				name: "dctestlazyambient",
+				run: (ctx): void => {
+					seenInjector = ctx.injector;
+				},
+			});
+
+			const result = runInInjectionContext(scope, () =>
+				registerLazyCommand<typeof definition>(
+					"dctestlazyambient",
+					() => definition,
+				),
+			);
+			assert.deepStrictEqual(result, { registered: true });
+
+			await testInjector.resolveCommand("dctestlazyambient").execute([]);
+			assert.strictEqual(seenInjector, scope);
+
+			assert.deepStrictEqual(
+				runInInjectionContext(testInjector, () =>
+					registerLazyCommand<typeof definition>(
+						"dctestlazyambient",
+						() => definition,
+					),
+				),
+				{
+					registered: false,
+					rejection: { reason: "claimed", owner: "dctest-extension" },
+				},
+			);
+		});
+
+		it("belongs to the CLI outside an injection context", () => {
+			const testInjector = createTestInjector();
+			const definition = defineCommand({
+				name: "dctestlazyunowned",
+				run: (): void => undefined,
+			});
+
+			const register = () =>
+				runInInjectionContext(testInjector, () =>
+					registerLazyCommand<typeof definition>(
+						"dctestlazyunowned",
+						() => definition,
+					),
+				);
+
+			assert.deepStrictEqual(register(), { registered: true });
+			// Same owner: re-registering the CLI's own name is a no-op, not a
+			// conflict.
+			assert.deepStrictEqual(register(), { registered: true });
+
+			const rootDefinition = defineCommand({
+				name: "dctestlazyroot|sub",
+				run: (): void => undefined,
+			});
+			registerLazyCommand<typeof rootDefinition>(
+				"dctestlazyroot|sub",
+				() => rootDefinition,
+			);
+			assert.deepStrictEqual(
+				getRootInjector().getChildrenCommandsNames("dctestlazyroot"),
+				["sub"],
+			);
+
+			const scope = testInjector.createChild([
+				{ provide: COMMAND_OWNER, useValue: "dctest-extension" },
+			]);
+			assert.deepStrictEqual(
+				runInInjectionContext(scope, () =>
+					registerLazyCommand<typeof definition>(
+						"dctestlazyunowned",
+						() => definition,
+					),
+				),
+				{
+					registered: false,
+					rejection: { reason: "claimed", owner: "the NativeScript CLI" },
+				},
+			);
 		});
 	});
 
@@ -1801,9 +2088,10 @@ describe("defineCommand", () => {
 			});
 
 			for (const platform of ["android", "ios"]) {
-				registerCommandDefinition(
-					{ ...definition, name: `dctest-run|${platform}` },
-					testInjector.createChild([{ provide: PLATFORM, useValue: platform }]),
+				runInInjectionContext(testInjector, () =>
+					registerCommand({ ...definition, name: `dctest-run|${platform}` }, [
+						{ provide: PLATFORM, useValue: platform },
+					]),
 				);
 			}
 

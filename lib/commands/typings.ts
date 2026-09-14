@@ -11,7 +11,6 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { registerCommand } from "../common/services/command-definition-adapter";
 import { IOptions, IStaticConfig } from "../declarations";
 import { IProjectData } from "../definitions/project";
 
@@ -295,5 +294,3 @@ export const typingsCommandDefinition = defineCommand({
 	canExecute: canExecuteTypingsCommand,
 	run: runTypingsCommand,
 });
-
-registerCommand(typingsCommandDefinition);
