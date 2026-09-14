@@ -1,10 +1,6 @@
 import { ERROR_NO_VALID_SUBCOMMAND_FORMAT } from "../common/constants";
 import { IErrors, IHostInfo } from "../common/declarations";
 import {
-	IKeyCommandHelper,
-	IKeyCommandPlatform,
-} from "../common/definitions/key-commands";
-import {
 	booleanOption,
 	CommandContext,
 	CommandName,
@@ -21,6 +17,11 @@ import {
 import { IOptions, IPlatformValidationService } from "../declarations";
 import { IMigrateController } from "../definitions/migrate";
 import { IProjectData, IProjectDataService } from "../definitions/project";
+import {
+	DevicePlatformName,
+	IKeyShortcutService,
+	keyShortcuts,
+} from "../services/key-shortcuts";
 
 const runCommandOptions = {
 	force: booleanOption(),
@@ -43,7 +44,7 @@ export interface IRunCommandServices {
 	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
 	$errors: IErrors;
 	$hostInfo: IHostInfo;
-	$keyCommandHelper: IKeyCommandHelper;
+	$keyShortcutService: IKeyShortcutService;
 	$liveSyncCommandHelper: ILiveSyncCommandHelper;
 	$migrateController: IMigrateController;
 	$options: IOptions;
@@ -60,7 +61,7 @@ export function setupRunCommand(): IRunCommandServices {
 		),
 		$errors: inject<IErrors>("errors"),
 		$hostInfo: inject<IHostInfo>("hostInfo"),
-		$keyCommandHelper: inject<IKeyCommandHelper>("keyCommandHelper"),
+		$keyShortcutService: inject<IKeyShortcutService>("keyShortcutService"),
 		$liveSyncCommandHelper: inject<ILiveSyncCommandHelper>(
 			"liveSyncCommandHelper",
 		),
@@ -126,10 +127,13 @@ export async function runRunCommand(
 	);
 
 	if (process.env.NS_IS_INTERACTIVE) {
-		services.$keyCommandHelper.attachKeyCommands(
-			<IKeyCommandPlatform>services.platform,
-			"run",
-		);
+		services.$keyShortcutService.attach({
+			context: {
+				platform: <DevicePlatformName>services.platform,
+				processType: "run",
+			},
+			shortcuts: keyShortcuts(),
+		});
 	}
 }
 

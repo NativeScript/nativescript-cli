@@ -1,13 +1,16 @@
 import { ChildProcess } from "child_process";
 import { IChildProcess } from "../common/declarations";
-import {
-	IKeyCommandHelper,
-	IValidKeyName,
-} from "../common/definitions/key-commands";
 import { injector } from "../common/yok";
 import { IProjectData } from "../definitions/project";
 import { IStartService } from "./../definitions/start-service.d";
 import { IStaticConfig } from "../declarations";
+import {
+	findShortcut,
+	IKeyShortcutService,
+	KeyShortcut,
+	keyShortcuts,
+	NsKeyContext,
+} from "./key-shortcuts";
 
 export default class StartService implements IStartService {
 	ios: ChildProcess;
@@ -16,18 +19,18 @@ export default class StartService implements IStartService {
 	verbose: boolean = false;
 
 	constructor(
-		private $keyCommandHelper: IKeyCommandHelper,
+		private $keyShortcutService: IKeyShortcutService,
 		private $childProcess: IChildProcess,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $projectData: IProjectData,
 		private $logger: ILogger,
-		private $staticConfig: IStaticConfig
+		private $staticConfig: IStaticConfig,
 	) {}
 
 	toggleVerbose(): void {
 		this.verbose = true;
 		this.$logger.info(
-			this.verbose ? `Verbose logging enabled` : `Verbose logging disabled`
+			this.verbose ? `Verbose logging enabled` : `Verbose logging disabled`,
 		);
 	}
 
@@ -37,9 +40,9 @@ export default class StartService implements IStartService {
 
 	async runForPlatform(platform: string) {
 		const platformLowerCase = platform.toLowerCase();
-		(this as any)[platformLowerCase] = this.$childProcess.spawn(
-			"node",
-			[this.$staticConfig.cliBinPath, "run", platform.toLowerCase()],
+		const child = this.$childProcess.spawn(
+			process.execPath,
+			[this.$staticConfig.cliBinPath, "run", platformLowerCase],
 			{
 				cwd: this.$projectData.projectDir,
 				stdio: ["ipc"],
@@ -49,28 +52,45 @@ export default class StartService implements IStartService {
 					NS_IS_INTERACTIVE: true,
 					...process.env,
 				},
-			}
+			},
 		);
+		(this as any)[platformLowerCase] = child;
 
-		(this as any)[platformLowerCase].stdout.on("data", (data: Buffer) => {
+		child.stdout.on("data", (data: Buffer) => {
 			process.stdout.write(this.format(data, platform));
 		});
 
-		(this as any)[platformLowerCase].stderr.on("data", (data: Buffer) => {
+		child.stderr.on("data", (data: Buffer) => {
 			process.stderr.write(this.format(data, platform));
+		});
+
+		child.on("exit", (code: number) => {
+			if (code) {
+				this.$logger.error(
+					`Running the ${platform} app exited with code ${code}.`,
+				);
+			}
+		});
+
+		await new Promise<void>((resolve, reject) => {
+			child.once("spawn", () => {
+				child.on("error", (error: Error) => this.$logger.error(error.message));
+				resolve();
+			});
+			child.once("error", reject);
 		});
 	}
 
 	async runIOS(): Promise<void> {
-		this.runForPlatform(this.$devicePlatformsConstants.iOS);
+		await this.runForPlatform(this.$devicePlatformsConstants.iOS);
 	}
 
 	async runVisionOS(): Promise<void> {
-		this.runForPlatform(this.$devicePlatformsConstants.visionOS);
+		await this.runForPlatform(this.$devicePlatformsConstants.visionOS);
 	}
 
 	async runAndroid(): Promise<void> {
-		this.runForPlatform(this.$devicePlatformsConstants.Android);
+		await this.runForPlatform(this.$devicePlatformsConstants.Android);
 	}
 	async stopIOS(): Promise<void> {
 		if (this.ios) {
@@ -89,42 +109,66 @@ export default class StartService implements IStartService {
 	}
 
 	start() {
-		this.addKeyCommandOverrides();
-		this.$keyCommandHelper.attachKeyCommands("all", "start");
-		this.$keyCommandHelper.printCommands("all");
-	}
+		const shortcuts = keyShortcuts();
+		const attached = this.$keyShortcutService.attach({
+			context: { processType: "start" },
+			shortcuts: [...shortcuts, ...this.delegatedShortcuts(shortcuts)],
+		});
 
-	addKeyCommandOverrides() {
-		const keys: IValidKeyName[] = ["w", "r", "R"];
-
-		for (let key of keys) {
-			this.$keyCommandHelper.addOverride(key, async () => {
-				this.ios?.send(key);
-				this.android?.send(key);
-
-				return false;
-			});
+		if (!attached) {
+			this.$logger.info(
+				"Key shortcuts need an interactive terminal. Set NS_KEY_SHORTCUTS=true to override, or run the platform commands directly.",
+			);
+			return;
 		}
 
-		this.$keyCommandHelper.addOverride("c", async () => {
-			await this.stopIOS();
-			await this.stopAndroid();
+		this.$keyShortcutService.printHelp();
+	}
 
-			const clean = this.$childProcess.spawn("node", [
-				this.$staticConfig.cliBinPath,
-				"clean",
-			]);
-			clean.stdout.on("data", (data) => {
-				process.stdout.write(data);
-				if (
-					data.toString().includes("Project successfully cleaned.") ||
-					data.toString().includes("Project unsuccessfully cleaned.")
-				) {
-					clean.kill("SIGINT");
-				}
-			});
-			return false;
+	/**
+	 * The live sync runs in the spawned `ns run` children, so these keys are
+	 * handed to them rather than acted on here; `c` has to stop them first.
+	 * Each keeps the help text of the entry it replaces.
+	 */
+	private delegatedShortcuts(
+		shortcuts: KeyShortcut<NsKeyContext>[],
+	): KeyShortcut<NsKeyContext>[] {
+		const forward = (key: string): KeyShortcut<NsKeyContext> => ({
+			...findShortcut(shortcuts, key),
+			quiet: true,
+			action: () => {
+				this.ios?.send(key);
+				this.android?.send(key);
+			},
 		});
+
+		return [
+			forward("w"),
+			forward("r"),
+			forward("R"),
+			{
+				...findShortcut(shortcuts, "c"),
+				quiet: true,
+				action: async () => {
+					await this.stopIOS();
+					await this.stopAndroid();
+
+					const clean = this.$childProcess.spawn("node", [
+						this.$staticConfig.cliBinPath,
+						"clean",
+					]);
+					clean.stdout.on("data", (data: Buffer) => {
+						process.stdout.write(data);
+						if (
+							data.toString().includes("Project successfully cleaned.") ||
+							data.toString().includes("Project unsuccessfully cleaned.")
+						) {
+							clean.kill("SIGINT");
+						}
+					});
+				},
+			},
+		];
 	}
 }
 

@@ -243,6 +243,22 @@ registerBuiltInCommand<typeof import("./commands/run").visionRunCommand>(
 	"run|visionos",
 	() => require("./commands/run").visionRunCommand,
 );
+registerBuiltInCommand<typeof import("./commands/open").iosOpenCommand>(
+	"open|ios",
+	() => require("./commands/open").iosOpenCommand,
+);
+registerBuiltInCommand<typeof import("./commands/open").androidOpenCommand>(
+	"open|android",
+	() => require("./commands/open").androidOpenCommand,
+);
+registerBuiltInCommand<typeof import("./commands/open").visionOpenCommand>(
+	"open|visionos",
+	() => require("./commands/open").visionOpenCommand,
+);
+registerBuiltInCommand<typeof import("./commands/open").visionOpenCommand>(
+	"open|vision",
+	() => require("./commands/open").visionOpenCommand,
+);
 registerBuiltInCommand<
 	typeof import("./commands/typings").typingsCommandDefinition
 >("typings", () => require("./commands/typings").typingsCommandDefinition);
@@ -705,7 +721,7 @@ injector.require("tempService", "./services/temp-service");
 
 injector.require("sharedEventBus", "./shared-event-bus");
 
-injector.require("keyCommandHelper", "./helpers/key-command-helper");
+injector.require("keyShortcutService", "./services/key-shortcuts");
 
 registerBuiltInCommand<
 	typeof import("./commands/start").startCommandDefinition
@@ -744,4 +760,3 @@ registerBuiltInCommand<
 registerBuiltInCommand<
 	typeof import("./commands/widget").widgetIOSCommandDefinition
 >("widget|ios", () => require("./commands/widget").widgetIOSCommandDefinition);
-require("./key-commands/bootstrap");

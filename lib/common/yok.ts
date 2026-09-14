@@ -7,15 +7,9 @@ import { CommandsDelimiters } from "./constants";
 import { IDictionary } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { ICommandArgument, ICommand } from "./definitions/commands";
-import { IKeyCommand, IValidKeyName } from "./definitions/key-commands";
 import { Injector } from "./di/injector";
 import type { Provider } from "./di/providers";
-import {
-	CommandRegistry,
-	KeyCommandRegistry,
-	ModuleRegistry,
-	PublicApiBuilder,
-} from "./contracts";
+import { CommandRegistry, ModuleRegistry, PublicApiBuilder } from "./contracts";
 import type {
 	DeferredCommandOptions,
 	DeferredCommandRejection,
@@ -64,10 +58,10 @@ export interface IDependency {
 
 /**
  * The Yok facade IS the token-based `Injector` — it extends it — plus the
- * legacy surface: command routing, the key-command namespace, the module
- * loader, and the public-API builder. Those subsystems historically shared
- * the container object and migrate out separately; until then they live here,
- * individually marked @deprecated.
+ * legacy surface: command routing, the module loader, and the public-API
+ * builder. Those subsystems historically shared the container object and
+ * migrate out separately; until then they live here, individually marked
+ * @deprecated.
  */
 export class Yok extends Injector implements IInjector {
 	/**
@@ -83,7 +77,6 @@ export class Yok extends Injector implements IInjector {
 		// consumers of the token.
 		this.register([
 			{ provide: CommandRegistry, useValue: this },
-			{ provide: KeyCommandRegistry, useValue: this },
 			{ provide: ModuleRegistry, useValue: this },
 			{ provide: PublicApiBuilder, useValue: this },
 		]);
@@ -102,7 +95,6 @@ export class Yok extends Injector implements IInjector {
 	 * meant to replace it once that module registers itself.
 	 */
 	private placeholderParents = new Set<string>();
-	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
 	// Keyed by command names, which extensions choose freely: a null prototype
 	// keeps a name like 'constructor' from reading back as an inherited member.
 	private hierarchicalCommands: IDictionary<string[]> = Object.create(null);
@@ -263,14 +255,6 @@ export class Yok extends Injector implements IInjector {
 	}
 
 	/**
-	 * @deprecated Key-command counterpart of requireCommand; replaced together
-	 * with the command registry.
-	 */
-	public requireKeyCommand(name: any, file: string): void {
-		this.requireOne(this.createKeyCommandName(name), file);
-	}
-
-	/**
 	 * @deprecated Backing store of the require('nativescript') surface.
 	 * Do not add new entries through it.
 	 */
@@ -379,13 +363,6 @@ export class Yok extends Injector implements IInjector {
 				this.createHierarchicalCommand(parentCommandName, name);
 			}
 		});
-	}
-
-	/**
-	 * @deprecated Replaced together with the command registry.
-	 */
-	public registerKeyCommand(name: IValidKeyName, resolver: IKeyCommand): void {
-		this.register(this.createKeyCommandName(name), resolver);
 	}
 
 	private getDefaultCommand(name: string, commandArguments: string[]) {
@@ -656,21 +633,6 @@ export class Yok extends Injector implements IInjector {
 	}
 
 	/**
-	 * @deprecated Legacy command-registry lookup.
-	 */
-	public resolveKeyCommand(name: string): IKeyCommand {
-		let command: IKeyCommand;
-		const commandModuleName = this.createKeyCommandName(name);
-		if (!this.has(commandModuleName)) {
-			return null;
-		}
-
-		command = this.resolve(commandModuleName);
-
-		return command;
-	}
-
-	/**
 	 * @deprecated Use inject(Token) in an injection context, or Injector.get /
 	 * createInstance from lib/common/di (via `Yok.di`).
 	 */
@@ -743,19 +705,6 @@ export class Yok extends Injector implements IInjector {
 	}
 
 	/**
-	 * @deprecated Legacy command-registry enumeration.
-	 */
-	public getRegisteredKeyCommandsNames(): string[] {
-		const commandsNames = this.getRegisteredNames(
-			`${this.KEY_COMMANDS_NAMESPACE}.`,
-		);
-		const commands = _.map(commandsNames, (commandName: string) =>
-			commandName.slice(this.KEY_COMMANDS_NAMESPACE.length + 1),
-		);
-		return commands;
-	}
-
-	/**
 	 * @deprecated Legacy command-registry routing.
 	 */
 	public getChildrenCommandsNames(commandName: string): string[] {
@@ -764,10 +713,6 @@ export class Yok extends Injector implements IInjector {
 
 	private createCommandName(name: string) {
 		return `${this.COMMANDS_NAMESPACE}.${name}`;
-	}
-
-	private createKeyCommandName(name: string) {
-		return `${this.KEY_COMMANDS_NAMESPACE}.${name}`;
 	}
 
 	/**

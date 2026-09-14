@@ -3,7 +3,6 @@ import { Yok, getRootInjector } from "../../lib/common/yok";
 import { Injector, inject, runInInjectionContext } from "../../lib/common/di";
 import {
 	CommandRegistry,
-	KeyCommandRegistry,
 	ModuleRegistry,
 	PublicApiBuilder,
 } from "../../lib/common/contracts";
@@ -18,15 +17,11 @@ const FACADE_METHODS = [
 	"requirePublic",
 	"requirePublicClass",
 	"requireCommand",
-	"requireKeyCommand",
 	"resolve",
 	"resolveCommand",
-	"resolveKeyCommand",
 	"register",
 	"registerCommand",
-	"registerKeyCommand",
 	"getRegisteredCommandsNames",
-	"getRegisteredKeyCommandsNames",
 	"dynamicCall",
 	"getDynamicCallData",
 	"isDefaultCommand",
@@ -106,12 +101,7 @@ describe("injector facade surface", () => {
 	it("registers its subsystem faces as tokens that resolve to the facade", () => {
 		const inj = new Yok();
 
-		for (const token of [
-			CommandRegistry,
-			KeyCommandRegistry,
-			ModuleRegistry,
-			PublicApiBuilder,
-		]) {
+		for (const token of [CommandRegistry, ModuleRegistry, PublicApiBuilder]) {
 			assert.strictEqual(inj.get(<any>token), inj);
 		}
 		assert.strictEqual(inj.resolve("commandRegistry"), inj);

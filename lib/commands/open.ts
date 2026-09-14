@@ -195,9 +195,20 @@ const openCommandOptions = {
 /**
  * `prepare` reads the options service rather than this command's context, so
  * the CLI-wide `--watch` has to be pinned there and not just defaulted here.
+ * It is restored afterwards because a key shortcut runs this inside a process
+ * whose own live sync is still watching.
  */
-const disableWatch = ($options: IOptions): void => {
+const withoutWatch = async <T>(
+	$options: IOptions,
+	work: () => Promise<T>,
+): Promise<T> => {
+	const previous = $options.watch;
 	$options.watch = false;
+	try {
+		return await work();
+	} finally {
+		$options.watch = previous;
+	}
 };
 
 export const iosOpenCommand = defineCommand({
@@ -212,8 +223,9 @@ export const iosOpenCommand = defineCommand({
 		};
 	},
 	async run(context, services): Promise<void> {
-		disableWatch(services.$options);
-		await openXcodeProject(services, "ios", false);
+		await withoutWatch(services.$options, () =>
+			openXcodeProject(services, "ios", false),
+		);
 	},
 });
 
@@ -229,8 +241,9 @@ export const visionOpenCommand = defineCommand({
 		};
 	},
 	async run(context, services): Promise<void> {
-		disableWatch(services.$options);
-		await openVisionOSProject(services, services.$options, false);
+		await withoutWatch(services.$options, () =>
+			openVisionOSProject(services, services.$options, false),
+		);
 	},
 });
 
@@ -246,7 +259,8 @@ export const androidOpenCommand = defineCommand({
 		};
 	},
 	async run(context, services): Promise<void> {
-		disableWatch(services.$options);
-		await openAndroidStudioProject(services, "Android", false);
+		await withoutWatch(services.$options, () =>
+			openAndroidStudioProject(services, "Android", false),
+		);
 	},
 });
