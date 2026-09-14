@@ -7,9 +7,8 @@ import {
 } from "../../definitions/android-plugin-migrator";
 import { IErrors, IFileSystem } from "../../common/declarations";
 import {
-	CommandContext,
+	Command,
 	CommandOptionsSchema,
-	defineCommand,
 	stringOption,
 } from "../../common/define-command";
 import { inject } from "../../common/di";
@@ -21,108 +20,88 @@ const buildPluginCommandOptions = {
 	gradleArgs: stringOption(),
 } satisfies CommandOptionsSchema;
 
-export type BuildPluginCommandContext = CommandContext<
-	typeof buildPluginCommandOptions
->;
-
-export function setupBuildPluginCommand(context: BuildPluginCommandContext) {
-	return {
-		pluginProjectPath: path.resolve(context.options.path || "."),
-		$androidPluginBuildService: inject<IAndroidPluginBuildService>(
-			"androidPluginBuildService",
-		),
-		$errors: inject<IErrors>("errors"),
-		$logger: inject<ILogger>("logger"),
-		$fs: inject<IFileSystem>("fs"),
-		$tempService: inject<ITempService>("tempService"),
-	};
-}
-
-export type IBuildPluginCommandServices = ReturnType<
-	typeof setupBuildPluginCommand
->;
-
-export async function canExecuteBuildPluginCommand(
-	context: BuildPluginCommandContext,
-	services: IBuildPluginCommandServices,
-): Promise<boolean> {
-	if (
-		!services.$fs.exists(
-			path.join(
-				services.pluginProjectPath,
-				constants.PLATFORMS_DIR_NAME,
-				"android",
-			),
-		)
-	) {
-		services.$errors.fail(
-			"No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`.",
-		);
-	}
-
-	return true;
-}
-
-export async function runBuildPluginCommand(
-	context: BuildPluginCommandContext,
-	services: IBuildPluginCommandServices,
-): Promise<void> {
-	const platformsAndroidPath = path.join(
-		services.pluginProjectPath,
-		constants.PLATFORMS_DIR_NAME,
-		"android",
-	);
-	let pluginName = "";
-
-	const pluginPackageJsonPath = path.join(
-		services.pluginProjectPath,
-		constants.PACKAGE_JSON_FILE_NAME,
-	);
-
-	if (services.$fs.exists(pluginPackageJsonPath)) {
-		const packageJsonContents = services.$fs.readJson(pluginPackageJsonPath);
-
-		if (packageJsonContents && packageJsonContents["name"]) {
-			pluginName = packageJsonContents["name"];
-		}
-	}
-
-	const tempAndroidProject =
-		await services.$tempService.mkdirSync("android-project");
-
-	const options: IPluginBuildOptions = {
-		gradlePath: context.options.gradlePath,
-		gradleArgs: context.options.gradleArgs,
-		aarOutputDir: platformsAndroidPath,
-		platformsAndroidDirPath: platformsAndroidPath,
-		pluginName: pluginName,
-		tempPluginDirPath: tempAndroidProject,
-	};
-
-	const androidPluginBuildResult =
-		await services.$androidPluginBuildService.buildAar(options);
-
-	if (androidPluginBuildResult) {
-		services.$logger.info(
-			`${pluginName} successfully built aar at ${platformsAndroidPath}.${EOL}Temporary Android project can be found at ${tempAndroidProject}.`,
-		);
-	}
-
-	const migratedIncludeGradle =
-		services.$androidPluginBuildService.migrateIncludeGradle(options);
-
-	if (migratedIncludeGradle) {
-		services.$logger.info(`${pluginName} include gradle updated.`);
-	}
-}
-
-export const buildPluginCommandDefinition = defineCommand({
+export class BuildPluginCommand extends Command({
 	name: "plugin|build",
 	description:
 		"Builds the Android parts of a NativeScript plugin into an `.aar`.",
 	options: buildPluginCommandOptions,
 	arguments: "any",
-	setup: setupBuildPluginCommand,
-	canExecute: canExecuteBuildPluginCommand,
-	run: runBuildPluginCommand,
-});
+}) {
+	private $androidPluginBuildService = inject<IAndroidPluginBuildService>(
+		"androidPluginBuildService",
+	);
+	private $errors = inject<IErrors>("errors");
+	private $logger = inject<ILogger>("logger");
+	private $fs = inject<IFileSystem>("fs");
+	private $tempService = inject<ITempService>("tempService");
+
+	private pluginProjectPath = path.resolve(this.options.path || ".");
+
+	public async canExecute(): Promise<boolean> {
+		if (
+			!this.$fs.exists(
+				path.join(
+					this.pluginProjectPath,
+					constants.PLATFORMS_DIR_NAME,
+					"android",
+				),
+			)
+		) {
+			this.$errors.fail(
+				"No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`.",
+			);
+		}
+
+		return true;
+	}
+
+	public async run(): Promise<void> {
+		const platformsAndroidPath = path.join(
+			this.pluginProjectPath,
+			constants.PLATFORMS_DIR_NAME,
+			"android",
+		);
+		let pluginName = "";
+
+		const pluginPackageJsonPath = path.join(
+			this.pluginProjectPath,
+			constants.PACKAGE_JSON_FILE_NAME,
+		);
+
+		if (this.$fs.exists(pluginPackageJsonPath)) {
+			const packageJsonContents = this.$fs.readJson(pluginPackageJsonPath);
+
+			if (packageJsonContents && packageJsonContents["name"]) {
+				pluginName = packageJsonContents["name"];
+			}
+		}
+
+		const tempAndroidProject =
+			await this.$tempService.mkdirSync("android-project");
+
+		const options: IPluginBuildOptions = {
+			gradlePath: this.options.gradlePath,
+			gradleArgs: this.options.gradleArgs,
+			aarOutputDir: platformsAndroidPath,
+			platformsAndroidDirPath: platformsAndroidPath,
+			pluginName: pluginName,
+			tempPluginDirPath: tempAndroidProject,
+		};
+
+		const androidPluginBuildResult =
+			await this.$androidPluginBuildService.buildAar(options);
+
+		if (androidPluginBuildResult) {
+			this.$logger.info(
+				`${pluginName} successfully built aar at ${platformsAndroidPath}.${EOL}Temporary Android project can be found at ${tempAndroidProject}.`,
+			);
+		}
+
+		const migratedIncludeGradle =
+			this.$androidPluginBuildService.migrateIncludeGradle(options);
+
+		if (migratedIncludeGradle) {
+			this.$logger.info(`${pluginName} include gradle updated.`);
+		}
+	}
+}

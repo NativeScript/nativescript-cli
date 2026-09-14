@@ -1,13 +1,13 @@
+import { canExecuteCommandBase } from "./command-base";
 import {
-	canExecuteCommandBase,
-	injectPlatformCommandServices,
-} from "./command-base";
-import { IPlatformCommandHelper } from "../declarations";
+	IPlatformCommandHelper,
+	IPlatformValidationService,
+} from "../declarations";
+import { IProjectData } from "../definitions/project";
 import { IErrors } from "../common/declarations";
 import {
-	CommandContext,
+	Command,
 	CommandOptionsSchema,
-	defineCommand,
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
@@ -16,82 +16,63 @@ const addPlatformCommandOptions = {
 	frameworkPath: stringOption(),
 } satisfies CommandOptionsSchema;
 
-export type AddPlatformCommandContext = CommandContext<
-	typeof addPlatformCommandOptions
->;
-
-export function setupAddPlatformCommand() {
-	const services = {
-		...injectPlatformCommandServices(),
-		$errors: inject<IErrors>("errors"),
-		$platformCommandHelper: inject<IPlatformCommandHelper>(
-			"platformCommandHelper",
-		),
-	};
-	services.$projectData.initializeProjectData();
-
-	return services;
-}
-
-export type IAddPlatformCommandServices = ReturnType<
-	typeof setupAddPlatformCommand
->;
-
-export async function canExecuteAddPlatformCommand(
-	context: AddPlatformCommandContext,
-	services: IAddPlatformCommandServices,
-): Promise<boolean> {
-	const args = context.args;
-	if (!args || args.length === 0) {
-		services.$errors.failWithHelp(
-			"No platform specified. Please specify a platform to add.",
-		);
-	}
-
-	let canExecute = true;
-	for (const arg of args) {
-		services.$platformValidationService.validatePlatform(
-			arg,
-			services.$projectData,
-		);
-
-		if (
-			!services.$platformValidationService.isPlatformSupportedForOS(
-				arg,
-				services.$projectData,
-			)
-		) {
-			services.$errors.fail(
-				`Applications for platform ${arg} cannot be built on this OS`,
-			);
-		}
-
-		// The assignment overwrites the previous platform's verdict, so only the
-		// last one decides. Kept as it was.
-		canExecute = await canExecuteCommandBase(services, arg);
-	}
-
-	return canExecute;
-}
-
-export async function runAddPlatformCommand(
-	context: AddPlatformCommandContext,
-	services: IAddPlatformCommandServices,
-): Promise<void> {
-	await services.$platformCommandHelper.addPlatforms(
-		context.args,
-		services.$projectData,
-		context.options.frameworkPath,
-	);
-}
-
-export const addPlatformCommandDefinition = defineCommand({
+export class AddPlatformCommand extends Command({
 	name: "platform|add",
 	description:
 		"Configures the current project to target the selected platform.",
 	options: addPlatformCommandOptions,
 	arguments: "any",
-	setup: setupAddPlatformCommand,
-	canExecute: canExecuteAddPlatformCommand,
-	run: runAddPlatformCommand,
-});
+}) {
+	private $errors = inject<IErrors>("errors");
+	private $platformCommandHelper = inject<IPlatformCommandHelper>(
+		"platformCommandHelper",
+	);
+	private $platformValidationService = inject<IPlatformValidationService>(
+		"platformValidationService",
+	);
+	private $projectData = inject<IProjectData>("projectData");
+
+	constructor() {
+		super();
+		this.$projectData.initializeProjectData();
+	}
+
+	public async canExecute(): Promise<boolean> {
+		const args = this.args;
+		if (!args || args.length === 0) {
+			this.$errors.failWithHelp(
+				"No platform specified. Please specify a platform to add.",
+			);
+		}
+
+		let canExecute = true;
+		for (const arg of args) {
+			this.$platformValidationService.validatePlatform(arg, this.$projectData);
+
+			if (
+				!this.$platformValidationService.isPlatformSupportedForOS(
+					arg,
+					this.$projectData,
+				)
+			) {
+				this.$errors.fail(
+					`Applications for platform ${arg} cannot be built on this OS`,
+				);
+			}
+
+			// The assignment overwrites the previous platform's verdict, so only the
+			// last one decides.
+			canExecute = await canExecuteCommandBase(this.context, arg);
+		}
+
+		return canExecute;
+	}
+
+	public async run(): Promise<void> {
+		await this.$platformCommandHelper.addPlatforms(
+			this.args,
+			this.$projectData,
+			this.options.frameworkPath,
+		);
+	}
+}

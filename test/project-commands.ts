@@ -1,6 +1,6 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
-import { createProjectCommandDefinition } from "../lib/commands/create-project";
+import { CreateProjectCommand } from "../lib/commands/create-project";
 import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import { StringCommandParameter } from "../lib/common/command-params";
 import { setIsInteractive } from "../lib/common/helpers";
@@ -171,7 +171,7 @@ function createTestInjector() {
 		template: undefined,
 	});
 	runInInjectionContext(testInjector, () =>
-		registerCommand(createProjectCommandDefinition),
+		registerCommand(CreateProjectCommand),
 	);
 	testInjector.register("stringParameter", StringCommandParameter);
 	testInjector.register("prompter", PrompterStub);

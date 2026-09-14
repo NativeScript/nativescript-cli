@@ -4,9 +4,8 @@ import { color } from "../color";
 import { IChildProcess, IErrors } from "../common/declarations";
 import {
 	booleanOption,
-	CommandContext,
+	Command,
 	CommandOptionsSchema,
-	defineCommand,
 } from "../common/define-command";
 import { inject } from "../common/di";
 import { PackageManagers } from "../constants";
@@ -19,37 +18,40 @@ const previewCommandOptions = {
 	disableNpmInstall: booleanOption(),
 } satisfies CommandOptionsSchema;
 
-export type PreviewCommandContext = CommandContext<
-	typeof previewCommandOptions
->;
+export class PreviewCommand extends Command({
+	name: "preview",
+	description: "Runs your project with the NativeScript Preview CLI.",
+	options: previewCommandOptions,
+	// Arguments have never been rejected here, only ignored: they reach the
+	// preview CLI through the raw argv instead.
+	arguments: "any",
+	allowUnknownOptions: true,
+}) {
+	private $childProcess = inject<IChildProcess>("childProcess");
+	private $errors = inject<IErrors>("errors");
+	private $logger = inject<ILogger>("logger");
+	private $packageManager = inject<IPackageManager>("packageManager");
+	private $projectData = inject<IProjectData>("projectData");
 
-export function setupPreviewCommand() {
-	return {
-		$childProcess: inject<IChildProcess>("childProcess"),
-		$errors: inject<IErrors>("errors"),
-		$logger: inject<ILogger>("logger"),
-		$packageManager: inject<IPackageManager>("packageManager"),
-		$projectData: inject<IProjectData>("projectData"),
-	};
-}
+	public async run(): Promise<void> {
+		if (!this.options.disableNpmInstall) {
+			await this.installLatestPreviewCLI();
+		}
 
-export type IPreviewCommandServices = ReturnType<typeof setupPreviewCommand>;
+		const previewCLIPath = this.getPreviewCLIPath();
 
-function getPreviewCLIPath(services: IPreviewCommandServices): string {
-	return resolvePackagePath(PREVIEW_CLI_PACKAGE, {
-		paths: [services.$projectData.projectDir],
-	});
-}
+		if (!previewCLIPath) {
+			await this.failMissingPreviewCLI();
+		}
 
-export async function runPreviewCommand(
-	context: PreviewCommandContext,
-	services: IPreviewCommandServices,
-): Promise<void> {
-	if (!context.options.disableNpmInstall) {
-		// ensure latest is installed
-		await services.$packageManager.install(
+		const previewCLIBinPath = path.resolve(previewCLIPath, "./dist/index.js");
+		this.spawnPreviewCLI(previewCLIBinPath);
+	}
+
+	private async installLatestPreviewCLI(): Promise<void> {
+		await this.$packageManager.install(
 			`${PREVIEW_CLI_PACKAGE}@latest`,
-			services.$projectData.projectDir,
+			this.$projectData.projectDir,
 			{
 				"save-dev": true,
 				"save-exact": true,
@@ -57,11 +59,15 @@ export async function runPreviewCommand(
 		);
 	}
 
-	const previewCLIPath = getPreviewCLIPath(services);
+	private getPreviewCLIPath(): string {
+		return resolvePackagePath(PREVIEW_CLI_PACKAGE, {
+			paths: [this.$projectData.projectDir],
+		});
+	}
 
-	if (!previewCLIPath) {
+	private async failMissingPreviewCLI(): Promise<void> {
 		const packageManagerName =
-			await services.$packageManager.getPackageManagerName();
+			await this.$packageManager.getPackageManagerName();
 		let installCommand = "";
 
 		switch (packageManagerName) {
@@ -79,7 +85,7 @@ export async function runPreviewCommand(
 				installCommand = "npm install --save-dev @nativescript/preview-cli";
 				break;
 		}
-		services.$logger.info(
+		this.$logger.info(
 			[
 				`Uhh ohh, no Preview CLI found.`,
 				"",
@@ -97,33 +103,21 @@ export async function runPreviewCommand(
 			].join("\n"),
 		);
 
-		services.$errors.fail("Running preview failed.");
+		this.$errors.fail("Running preview failed.");
 	}
 
-	const previewCLIBinPath = path.resolve(previewCLIPath, "./dist/index.js");
-
-	// The preview CLI takes the command line verbatim, including flags this CLI
-	// does not know, so the raw process arguments are what it gets rather than
-	// anything the command layer parsed.
-	const commandIndex = process.argv.indexOf("preview");
-	const commandArgs = process.argv.slice(commandIndex + 1);
-	services.$childProcess.spawn(
-		process.execPath,
-		[previewCLIBinPath, ...commandArgs],
-		{
-			stdio: "inherit",
-		},
-	);
+	private spawnPreviewCLI(previewCLIBinPath: string): void {
+		// The preview CLI takes the command line verbatim, including flags this CLI
+		// does not know, so the raw process arguments are what it gets rather than
+		// anything the command layer parsed.
+		const commandIndex = process.argv.indexOf("preview");
+		const commandArgs = process.argv.slice(commandIndex + 1);
+		this.$childProcess.spawn(
+			process.execPath,
+			[previewCLIBinPath, ...commandArgs],
+			{
+				stdio: "inherit",
+			},
+		);
+	}
 }
-
-export const previewCommandDefinition = defineCommand({
-	name: "preview",
-	description: "Runs your project with the NativeScript Preview CLI.",
-	options: previewCommandOptions,
-	// Arguments have never been rejected here, only ignored: they reach the
-	// preview CLI through the raw argv instead.
-	arguments: "any",
-	allowUnknownOptions: true,
-	setup: setupPreviewCommand,
-	run: runPreviewCommand,
-});

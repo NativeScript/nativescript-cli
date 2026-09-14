@@ -1,16 +1,13 @@
 import { resolve } from "path";
 import { color } from "../../color";
-import { defineCommand } from "../../common/define-command";
-import { inject } from "../../common/di";
+import { IOptions } from "../../declarations";
+import { IProjectConfigService, IProjectData } from "../../definitions/project";
+import { Command } from "../../common/define-command";
 import { IFileSystem } from "../../common/declarations";
-import { IProjectConfigService } from "../../definitions/project";
+import { inject } from "../../common/di";
+import { canExecuteCommand } from "../../common/services/command-definition-adapter";
 import { platformArgument } from "../command-base";
-import {
-	canExecutePrepareCommand,
-	prepareCommandOptions,
-	runPrepareCommand,
-	setupPrepareCommand,
-} from "../prepare";
+import { prepareCommandOptions, runPrepareCommand } from "../prepare";
 
 function resolveHostProjectPath(
 	projectDir: string,
@@ -23,7 +20,7 @@ function resolveHostProjectPath(
 	return resolve(hostProjectPath);
 }
 
-export const embedCommandDefinition = defineCommand({
+export class EmbedCommand extends Command({
 	name: "embed",
 	description:
 		"Prepares the project so it can be embedded into a native host project.",
@@ -33,45 +30,45 @@ export const embedCommandDefinition = defineCommand({
 		{ name: "hostProjectPath" },
 		{ name: "hostProjectModuleName" },
 	],
-	setup(context) {
-		const services = setupPrepareCommand();
-		const $projectConfigService = inject<IProjectConfigService>(
-			"projectConfigService",
-		);
-		const platform = (context.args[0] || "").toLowerCase();
-		// embed.<platform>.<key>, falling back to embed.<key>
-		const configValue = (key: string): string =>
-			$projectConfigService.getValue(
-				`embed.${platform}.${key}`,
-				$projectConfigService.getValue(`embed.${key}`),
-			);
+}) {
+	private $fs = inject<IFileSystem>("fs");
+	private $logger = inject<ILogger>("logger");
+	private $options = inject<IOptions>("options");
+	private $projectConfigService = inject<IProjectConfigService>(
+		"projectConfigService",
+	);
+	private $projectData = inject<IProjectData>("projectData");
 
-		return {
-			...services,
-			$fs: inject<IFileSystem>("fs"),
-			$logger: inject<ILogger>("logger"),
-			hostProjectPath: context.args[1] || configValue("hostProjectPath"),
-			hostProjectModuleName:
-				context.args[2] || configValue("hostProjectModuleName"),
-		};
-	},
-	async canExecute(context, services): Promise<boolean> {
-		if (!(await canExecutePrepareCommand(context, services))) {
+	private platform = (this.args[0] || "").toLowerCase();
+	private hostProjectPath = this.args[1] || this.configValue("hostProjectPath");
+	private hostProjectModuleName =
+		this.args[2] || this.configValue("hostProjectModuleName");
+
+	constructor() {
+		super();
+		this.$projectData.initializeProjectData();
+	}
+
+	public async canExecute(): Promise<boolean> {
+		// `prepare` takes the platform alone; the host project arguments are this
+		// command's own and it would reject them.
+		if (!(await canExecuteCommand("prepare", this.args.slice(0, 1)))) {
 			return false;
 		}
 
-		return !!services.hostProjectPath;
-	},
-	async run(context, services): Promise<void> {
+		return !!this.hostProjectPath;
+	}
+
+	public async run(): Promise<void> {
 		const resolvedHostProjectPath = resolveHostProjectPath(
-			services.$projectData.projectDir,
-			services.hostProjectPath,
+			this.$projectData.projectDir,
+			this.hostProjectPath,
 		);
 
-		if (!services.$fs.exists(resolvedHostProjectPath)) {
-			services.$logger.error(
+		if (!this.$fs.exists(resolvedHostProjectPath)) {
+			this.$logger.error(
 				`The host project path ${color.yellow(
-					services.hostProjectPath,
+					this.hostProjectPath,
 				)} (resolved to: ${color.styleText(
 					["yellow", "dim"],
 					resolvedHostProjectPath,
@@ -80,11 +77,19 @@ export const embedCommandDefinition = defineCommand({
 			return;
 		}
 
-		services.$options.hostProjectPath = resolvedHostProjectPath;
-		if (services.hostProjectModuleName) {
-			services.$options.hostProjectModuleName = services.hostProjectModuleName;
+		this.$options.hostProjectPath = resolvedHostProjectPath;
+		if (this.hostProjectModuleName) {
+			this.$options.hostProjectModuleName = this.hostProjectModuleName;
 		}
 
-		await runPrepareCommand(context, services);
-	},
-});
+		await runPrepareCommand(this.context);
+	}
+
+	/** embed.<platform>.<key>, falling back to embed.<key>. */
+	private configValue(key: string): string {
+		return this.$projectConfigService.getValue(
+			`embed.${this.platform}.${key}`,
+			this.$projectConfigService.getValue(`embed.${key}`),
+		);
+	}
+}
