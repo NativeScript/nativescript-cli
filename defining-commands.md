@@ -872,10 +872,11 @@ that holds an injector can call `CommandsService.runCommand` directly.
 
 ### Asking another command
 
-Both methods take the command's registered name, or — the typed way — the
-definition or `Command()` class it was registered from, whose first name is
-used: `runCommand(prepareCommandDefinition)` cannot go stale the way a string
-can.
+Both methods take a registered name, or — the typed way — a definition or
+`Command()` class. A name is looked up in the registry; a definition runs as
+given, whether or not it is registered, so `runCommand(prepareCommandDefinition)`
+runs exactly what you hold and cannot go stale the way a string can. Its first
+name still identifies it for hooks and reporting.
 
 `CommandsService.canExecuteCommand(command, args)` — or the
 `canExecuteCommand` convenience — asks a registered command whether it *could*

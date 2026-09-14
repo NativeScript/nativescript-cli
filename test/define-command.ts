@@ -1434,7 +1434,7 @@ describe("defineCommand", () => {
 			assert.isTrue(ran);
 		});
 
-		it("takes the definition or class in place of the name", async () => {
+		it("runs a definition or class as given, registered or not", async () => {
 			const testInjector = createInProcessInjector();
 			const runs: string[] = [];
 			const definition = defineCommand({
@@ -1453,10 +1453,18 @@ describe("defineCommand", () => {
 					runs.push("class");
 				}
 			}
-
+			// Registered under the same name as the definition, to show the
+			// definition wins over the lookup.
 			runInInjectionContext(testInjector, () => {
-				registerCommand(definition);
-				registerCommand(RefCommand);
+				registerCommand(
+					defineCommand({
+						name: "dctest-ref-primary",
+						arguments: "any",
+						run: () => {
+							runs.push("registered");
+						},
+					}),
+				);
 			});
 			const service = testInjector.get(CommandsServiceContract);
 
@@ -1464,11 +1472,12 @@ describe("defineCommand", () => {
 			assert.isFalse(await service.canExecuteCommand(definition, ["no"]));
 			await service.runCommand(definition, ["ok"]);
 			await service.runCommand(RefCommand);
-			assert.deepEqual(runs, ["definition", "class"]);
+			await service.runCommand("dctest-ref-primary");
+			assert.deepEqual(runs, ["definition", "class", "registered"]);
 
 			await assert.isRejected(
 				service.runCommand(<any>{ name: "not-a-definition" }),
-				/neither a command name/,
+				/Expected a command name/,
 			);
 		});
 

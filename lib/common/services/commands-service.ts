@@ -11,7 +11,8 @@ import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 import { IGoogleAnalyticsPageviewData } from "../definitions/google-analytics";
 import { CommandsService as CommandsServiceContract } from "../contracts/commands-service";
-import { CommandReference, commandNameOf } from "../define-command";
+import { CommandReference, toCommandDefinition } from "../define-command";
+import { createCommandFromDefinition } from "./command-definition-adapter";
 import {
 	ICommandParameter,
 	ICommand,
@@ -247,24 +248,28 @@ export class CommandsService
 	 * `checkConsent` may prompt on a terminal the caller has put in raw mode.
 	 */
 	public async runCommand(
-		command: CommandReference,
+		reference: CommandReference,
 		commandArguments: string[] = [],
 	): Promise<void> {
-		const commandName = commandNameOf(command);
+		// Known before the lookup, so a failure to resolve reports under the name
+		// the caller used.
+		let commandName = typeof reference === "string" ? reference : undefined;
 		this.inProcessDepth++;
 		try {
-			const command = this.$injector.resolveCommand(commandName);
-			if (!command) {
-				this.$errors.failWithHelp(
-					`Unknown command '${helpers.stringReplaceAll(commandName, "|", " ")}'.`,
-				);
-			}
+			const resolved = this.resolveReference(reference);
+			const command = resolved.command;
+			commandName = resolved.commandName;
 
 			this.commands.push({ commandName, commandArguments });
 			const restoreOptions = this.primeOptions(command);
 			try {
 				if (
-					!(await this.canExecuteResolvedCommand(commandName, commandArguments))
+					!(await this.canExecuteResolvedCommand(
+						commandName,
+						commandArguments,
+						undefined,
+						command,
+					))
 				) {
 					let commandWithArgs = commandName;
 					if (commandArguments && commandArguments.length) {
@@ -301,18 +306,12 @@ export class CommandsService
 	 * reuse another's precondition without importing its handlers.
 	 */
 	public async canExecuteCommand(
-		command: CommandReference,
+		reference: CommandReference,
 		commandArguments: string[] = [],
 	): Promise<boolean> {
-		const commandName = commandNameOf(command);
 		this.inProcessDepth++;
 		try {
-			const command = this.$injector.resolveCommand(commandName);
-			if (!command) {
-				this.$errors.failWithHelp(
-					`Unknown command '${helpers.stringReplaceAll(commandName, "|", " ")}'.`,
-				);
-			}
+			const { commandName, command } = this.resolveReference(reference);
 
 			this.commands.push({ commandName, commandArguments });
 			const restoreOptions = this.primeOptions(command);
@@ -320,6 +319,8 @@ export class CommandsService
 				return await this.canExecuteResolvedCommand(
 					commandName,
 					commandArguments,
+					undefined,
+					command,
 				);
 			} finally {
 				restoreOptions();
@@ -352,6 +353,42 @@ export class CommandsService
 	 * and the host keeps reading the replacement long after the command is
 	 * done. An in-process dispatch has to put the parser back where it found it.
 	 */
+	/**
+	 * A name is looked up in the registry; a definition or class is run as the
+	 * caller holds it, registered or not, so what runs is what was referenced.
+	 * Its first name still identifies it for hooks and reporting.
+	 */
+	private resolveReference(reference: CommandReference): {
+		commandName: string;
+		command: ICommand;
+	} {
+		if (typeof reference === "string") {
+			const command = this.$injector.resolveCommand(reference);
+			if (!command) {
+				this.$errors.failWithHelp(
+					`Unknown command '${helpers.stringReplaceAll(reference, "|", " ")}'.`,
+				);
+			}
+
+			return { commandName: reference, command };
+		}
+
+		const definition = toCommandDefinition(reference);
+		if (!definition) {
+			throw new Error(
+				"Expected a command name, a defineCommand() definition or a " +
+					"Command() class to run.",
+			);
+		}
+
+		return {
+			commandName: Array.isArray(definition.name)
+				? definition.name[0]
+				: definition.name,
+			command: createCommandFromDefinition(definition, <any>this.$injector),
+		};
+	}
+
 	private primeOptions(command: ICommand): () => void {
 		if (command.isHierarchicalCommand) {
 			return () => undefined;
@@ -375,8 +412,9 @@ export class CommandsService
 		commandName: string,
 		commandArguments: string[],
 		isDynamicCommand?: boolean,
+		resolved?: ICommand,
 	): Promise<boolean> {
-		const command = this.$injector.resolveCommand(commandName);
+		const command = resolved || this.$injector.resolveCommand(commandName);
 		const beautifiedName = helpers.stringReplaceAll(commandName, "|", " ");
 		if (command) {
 			// Verify command is enabled

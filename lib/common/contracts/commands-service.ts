@@ -22,8 +22,9 @@ export abstract class CommandsService {
 	 * failure throws instead of exiting, so a process that has to keep running
 	 * can catch it. Analytics do not fire: this is not a new CLI invocation.
 	 *
-	 * `command` is the registered name, or the definition or `Command()` class
-	 * it was registered from — the typed way to refer to a command.
+	 * `command` is a registered name, looked up in the registry, or a
+	 * definition or `Command()` class, which runs as given whether or not it is
+	 * registered — the typed way to refer to a command.
 	 */
 	abstract runCommand(
 		command: CommandReference,

@@ -763,26 +763,10 @@ export function toCommandDefinition(
 }
 
 /**
- * What a dispatcher accepts in place of a command name: the name itself, or
- * the definition or class it was registered from, whose first name is used.
+ * What a dispatcher accepts: a registered command's name, or a definition or
+ * class to run as given.
  */
 export type CommandReference = string | RegisterableCommand;
-
-export function commandNameOf(command: CommandReference): string {
-	if (typeof command === "string") {
-		return command;
-	}
-
-	const definition = toCommandDefinition(command);
-	if (!definition) {
-		throw new Error(
-			`${describeDefinition(command)} is neither a command name, a ` +
-				`defineCommand() definition nor a Command() class.`,
-		);
-	}
-
-	return Array.isArray(definition.name) ? definition.name[0] : definition.name;
-}
 
 /**
  * The class authoring form: sugar over defineCommand, not a second execution
