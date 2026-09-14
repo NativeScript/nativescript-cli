@@ -1335,6 +1335,13 @@ export class CommandsService implements ICommandsService {
 		return Promise.resolve();
 	}
 
+	public canExecuteCommandInProcess(
+		commandName: string,
+		commandArguments?: string[],
+	): Promise<boolean> {
+		return Promise.resolve(true);
+	}
+
 	public completeCommand(): Promise<boolean> {
 		return Promise.resolve(true);
 	}

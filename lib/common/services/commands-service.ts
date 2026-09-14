@@ -284,6 +284,39 @@ export class CommandsService implements ICommandsService {
 	}
 
 	/**
+	 * The `canExecute` half of {@link executeCommandInProcess}: the named command
+	 * is resolved and its options are primed the same way, and its own
+	 * `canExecute` returns the verdict. The child builds its own setup from its
+	 * own services — nothing is threaded in from the caller — which is what lets
+	 * one command reuse another's precondition without importing its handlers.
+	 */
+	public async canExecuteCommandInProcess(
+		commandName: string,
+		commandArguments: string[] = [],
+	): Promise<boolean> {
+		this.inProcessDepth++;
+		try {
+			const command = this.$injector.resolveCommand(commandName);
+			if (!command) {
+				this.$errors.failWithHelp(
+					`Unknown command '${helpers.stringReplaceAll(commandName, "|", " ")}'.`,
+				);
+			}
+
+			this.commands.push({ commandName, commandArguments });
+			const restoreOptions = this.primeOptions(command);
+			try {
+				return await this.canExecuteCommand(commandName, commandArguments);
+			} finally {
+				restoreOptions();
+				this.commands.pop();
+			}
+		} finally {
+			this.inProcessDepth--;
+		}
+	}
+
+	/**
 	 * Merging a command's options into the parser rewrites the values the host
 	 * process is still running on: a declared default replaces the CLI-wide one
 	 * and the host keeps reading the replacement long after the command is

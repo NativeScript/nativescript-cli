@@ -29,6 +29,7 @@ import {
 	stringOption,
 } from "../lib/common/define-command";
 import {
+	canExecuteCommand,
 	createCommandFromDefinition,
 	registerBuiltInCommand,
 	registerCommand,
@@ -1341,6 +1342,128 @@ describe("defineCommand", () => {
 			await commandsService.tryExecuteCommand("dctest-gadget", []);
 
 			assert.deepEqual(runs, [["beta"], []]);
+		});
+	});
+
+	describe("canExecuteCommand", () => {
+		const createInProcessInjector = (): IInjector => {
+			const testInjector = new Yok();
+			testInjector.register("errors", {
+				beginCommand: async (action: () => Promise<boolean>) => action(),
+				failWithHelp: (message: string) => {
+					throw new Error(message);
+				},
+				fail: (message: string) => {
+					throw new Error(message);
+				},
+				reportCommandError: async (ex: Error) => {
+					throw ex;
+				},
+			});
+			testInjector.register("hooksService", HooksServiceStub);
+			testInjector.register("logger", LoggerStub);
+			testInjector.register("staticConfig", {
+				disableAnalytics: true,
+				disableCommandHooks: true,
+			});
+			testInjector.register("extensibilityService", {});
+			testInjector.register("optionsTracker", {});
+			testInjector.register("options", {
+				validateOptions: (): void => undefined,
+			});
+			testInjector.register("commandsService", CommandsService);
+			return testInjector;
+		};
+
+		it("returns the named command's own verdict without running it", async () => {
+			const testInjector = createInProcessInjector();
+			let ran = false;
+
+			runInInjectionContext(testInjector, () => {
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-yes",
+						arguments: "any",
+						canExecute: (context) => context.args[0] === "ok",
+						run: () => {
+							ran = true;
+						},
+					}),
+				);
+			});
+
+			const verdicts = [
+				await runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-yes", ["ok"]),
+				),
+				await runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-yes", ["nope"]),
+				),
+			];
+
+			assert.deepEqual(verdicts, [true, false]);
+			assert.isFalse(ran);
+		});
+
+		it("enforces the child's arguments policy before its canExecute", async () => {
+			const testInjector = createInProcessInjector();
+			let consulted = false;
+
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-none",
+						canExecute: () => {
+							consulted = true;
+							return true;
+						},
+						run: (): void => undefined,
+					}),
+				),
+			);
+
+			await assert.isRejected(
+				runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-none", ["stray"]),
+				),
+				/doesn't accept parameters/,
+			);
+			assert.isFalse(consulted);
+		});
+
+		it("builds the child's setup from the child's own services", async () => {
+			const testInjector = createInProcessInjector();
+			testInjector.register("gadgetService", { ready: true });
+
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-can-setup",
+						setup: () => ({
+							$gadgetService: inject<any>("gadgetService"),
+						}),
+						canExecute: (context, services) => services.$gadgetService.ready,
+						run: (): void => undefined,
+					}),
+				),
+			);
+
+			assert.isTrue(
+				await runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-setup"),
+				),
+			);
+		});
+
+		it("fails by name for a command that is not registered", async () => {
+			const testInjector = createInProcessInjector();
+
+			await assert.isRejected(
+				runInInjectionContext(testInjector, () =>
+					canExecuteCommand("dctest-can-missing"),
+				),
+				/Unknown command 'dctest-can-missing'/,
+			);
 		});
 	});
 

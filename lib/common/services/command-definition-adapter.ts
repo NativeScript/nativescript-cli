@@ -560,6 +560,26 @@ export async function runCommand(
 }
 
 /**
+ * Asks a registered command whether it could run on `args`, without running it.
+ * The named command is resolved and its options primed exactly as `runCommand`
+ * does, and its own `canExecute` returns the verdict.
+ *
+ * This is how one command reuses another's precondition — `embed` asking
+ * whether `prepare` would run. The child resolves its own services, so nothing
+ * crosses between the two but the name and the arguments; pass only the
+ * arguments the child's own `arguments` policy accepts.
+ */
+export async function canExecuteCommand(
+	name: string,
+	args: string[] = [],
+): Promise<boolean> {
+	const commandsService =
+		contextInjector().get<ICommandsService>("commandsService");
+
+	return commandsService.canExecuteCommandInProcess(name, args);
+}
+
+/**
  * Registers a command with the CLI. Takes a Command() class, the result of
  * defineCommand(), or a bare definition, which it defines on the caller's
  * behalf.
