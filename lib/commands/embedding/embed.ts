@@ -7,18 +7,10 @@ import { IProjectConfigService } from "../../definitions/project";
 import { platformArgument } from "../command-base";
 import {
 	canExecutePrepareCommand,
-	IPrepareCommandServices,
 	prepareCommandOptions,
 	runPrepareCommand,
 	setupPrepareCommand,
 } from "../prepare";
-
-interface IEmbedCommandServices extends IPrepareCommandServices {
-	$fs: IFileSystem;
-	$logger: ILogger;
-	hostProjectPath: string;
-	hostProjectModuleName: string;
-}
 
 function resolveHostProjectPath(
 	projectDir: string,
@@ -41,14 +33,14 @@ export const embedCommandDefinition = defineCommand({
 		{ name: "hostProjectPath" },
 		{ name: "hostProjectModuleName" },
 	],
-	setup(context): IEmbedCommandServices {
+	setup(context) {
 		const services = setupPrepareCommand();
 		const $projectConfigService = inject<IProjectConfigService>(
 			"projectConfigService",
 		);
 		const platform = (context.args[0] || "").toLowerCase();
 		// embed.<platform>.<key>, falling back to embed.<key>
-		const configValue = (key: string) =>
+		const configValue = (key: string): string =>
 			$projectConfigService.getValue(
 				`embed.${platform}.${key}`,
 				$projectConfigService.getValue(`embed.${key}`),

@@ -9,20 +9,8 @@ import {
 import { ArgumentSpec } from "../common/define-command";
 import { inject, Injector } from "../common/di";
 
-/**
- * What the platform-validation helpers below need. A command definition's
- * `setup` returns this shape (see `injectPlatformCommandServices`), so its
- * result can be handed straight to them.
- */
-export interface IPlatformCommandServices {
-	$options: IOptions;
-	$platformsDataService: IPlatformsDataService;
-	$platformValidationService: IPlatformValidationService;
-	$projectData: IProjectData;
-}
-
 /** Callable from `setup` and from `canExecute` before their first `await`. */
-export function injectPlatformCommandServices(): IPlatformCommandServices {
+export function injectPlatformCommandServices() {
 	return {
 		$options: inject<IOptions>("options"),
 		$platformsDataService: inject<IPlatformsDataService>(
@@ -34,6 +22,15 @@ export function injectPlatformCommandServices(): IPlatformCommandServices {
 		$projectData: inject<IProjectData>("projectData"),
 	};
 }
+
+/**
+ * What the platform-validation helpers below need. A command definition's
+ * `setup` returns this shape (see `injectPlatformCommandServices`), so its
+ * result can be handed straight to them.
+ */
+export type IPlatformCommandServices = ReturnType<
+	typeof injectPlatformCommandServices
+>;
 
 /**
  * The declarative form of `$platformCommandParameter`. Initializing the

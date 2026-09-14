@@ -4,13 +4,7 @@ import { IPlatformCommandHelper } from "../declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 
-export interface IListPlatformsCommandServices {
-	$platformCommandHelper: IPlatformCommandHelper;
-	$projectData: IProjectData;
-	$logger: ILogger;
-}
-
-export function setupListPlatformsCommand(): IListPlatformsCommandServices {
+export function setupListPlatformsCommand() {
 	const services = {
 		$platformCommandHelper: inject<IPlatformCommandHelper>(
 			"platformCommandHelper",
@@ -22,6 +16,10 @@ export function setupListPlatformsCommand(): IListPlatformsCommandServices {
 
 	return services;
 }
+
+export type IListPlatformsCommandServices = ReturnType<
+	typeof setupListPlatformsCommand
+>;
 
 export const listPlatformsCommandDefinition = defineCommand({
 	name: "platform|*list",

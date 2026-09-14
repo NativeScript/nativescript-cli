@@ -15,17 +15,14 @@ export const helpCommandOptions = {
 
 export type HelpCommandContext = CommandContext<typeof helpCommandOptions>;
 
-export interface IHelpCommandServices {
-	$commandRegistry: CommandRegistry;
-	$helpService: IHelpService;
-}
-
-export function setupHelpCommand(): IHelpCommandServices {
+export function setupHelpCommand() {
 	return {
 		$commandRegistry: inject(CommandRegistry),
 		$helpService: inject<IHelpService>("helpService"),
 	};
 }
+
+export type IHelpCommandServices = ReturnType<typeof setupHelpCommand>;
 
 export async function runHelpCommand(
 	context: HelpCommandContext,

@@ -3,15 +3,7 @@ import { IMigrateController, IMigrationData } from "../definitions/migrate";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 
-export interface IMigrateCommandServices {
-	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
-	$migrateController: IMigrateController;
-	$staticConfig: Config.IStaticConfig;
-	$projectData: IProjectData;
-	$logger: ILogger;
-}
-
-export function setupMigrateCommand(): IMigrateCommandServices {
+export function setupMigrateCommand() {
 	const services = {
 		$devicePlatformsConstants: inject<Mobile.IDevicePlatformsConstants>(
 			"devicePlatformsConstants",
@@ -25,6 +17,8 @@ export function setupMigrateCommand(): IMigrateCommandServices {
 
 	return services;
 }
+
+export type IMigrateCommandServices = ReturnType<typeof setupMigrateCommand>;
 
 export const migrateCommandDefinition = defineCommand({
 	name: "migrate",

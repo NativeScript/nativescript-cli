@@ -16,19 +16,15 @@ export type PutFileCommandContext = CommandContext<
 	typeof putFileCommandOptions
 >;
 
-export interface IPutFileCommandServices {
-	$devicesService: Mobile.IDevicesService;
-	$errors: IErrors;
-	$projectData: IProjectData;
-}
-
-export function setupPutFileCommand(): IPutFileCommandServices {
+export function setupPutFileCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 		$errors: inject<IErrors>("errors"),
 		$projectData: inject<IProjectData>("projectData"),
 	};
 }
+
+export type IPutFileCommandServices = ReturnType<typeof setupPutFileCommand>;
 
 export async function runPutFileCommand(
 	context: PutFileCommandContext,

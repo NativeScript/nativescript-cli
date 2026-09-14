@@ -21,17 +21,7 @@ const updateCommandOptions = {
 
 export type UpdateCommandContext = CommandContext<typeof updateCommandOptions>;
 
-export interface IUpdateCommandServices {
-	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
-	$updateController: IUpdateController;
-	$migrateController: IMigrateController;
-	$errors: IErrors;
-	$logger: ILogger;
-	$projectData: IProjectData;
-	$markingModeService: IMarkingModeService;
-}
-
-export function setupUpdateCommand(): IUpdateCommandServices {
+export function setupUpdateCommand() {
 	const services = {
 		$devicePlatformsConstants: inject<Mobile.IDevicePlatformsConstants>(
 			"devicePlatformsConstants",
@@ -47,6 +37,8 @@ export function setupUpdateCommand(): IUpdateCommandServices {
 
 	return services;
 }
+
+export type IUpdateCommandServices = ReturnType<typeof setupUpdateCommand>;
 
 export async function canExecuteUpdateCommand(
 	context: UpdateCommandContext,

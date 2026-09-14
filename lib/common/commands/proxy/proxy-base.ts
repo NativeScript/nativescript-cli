@@ -1,19 +1,17 @@
 import { IAnalyticsService, IProxyService } from "../../declarations";
 import { inject } from "../../di";
 
-export interface IProxyCommandServices {
-	$analyticsService: IAnalyticsService;
-	$logger: ILogger;
-	$proxyService: IProxyService;
-}
-
-export function injectProxyCommandServices(): IProxyCommandServices {
+export function injectProxyCommandServices() {
 	return {
 		$analyticsService: inject<IAnalyticsService>("analyticsService"),
 		$logger: inject<ILogger>("logger"),
 		$proxyService: inject<IProxyService>("proxyService"),
 	};
 }
+
+export type IProxyCommandServices = ReturnType<
+	typeof injectProxyCommandServices
+>;
 
 export async function tryTrackProxyCommandUsage(
 	services: IProxyCommandServices,

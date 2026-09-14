@@ -17,19 +17,15 @@ export type GetFileCommandContext = CommandContext<
 	typeof getFileCommandOptions
 >;
 
-export interface IGetFileCommandServices {
-	$devicesService: Mobile.IDevicesService;
-	$errors: IErrors;
-	$projectData: IProjectData;
-}
-
-export function setupGetFileCommand(): IGetFileCommandServices {
+export function setupGetFileCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 		$errors: inject<IErrors>("errors"),
 		$projectData: inject<IProjectData>("projectData"),
 	};
 }
+
+export type IGetFileCommandServices = ReturnType<typeof setupGetFileCommand>;
 
 export async function runGetFileCommand(
 	context: GetFileCommandContext,

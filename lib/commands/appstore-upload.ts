@@ -32,21 +32,7 @@ export type PublishIOSCommandContext = CommandContext<
 	typeof publishIOSCommandOptions
 >;
 
-export interface IPublishIOSCommandServices {
-	$applePortalSessionService: IApplePortalSessionService;
-	$buildController: BuildController;
-	$devicePlatformsConstants: Mobile.IDevicePlatformsConstants;
-	$errors: IErrors;
-	$hostInfo: IHostInfo;
-	$itmsTransporterService: IITMSTransporterService;
-	$logger: ILogger;
-	$options: IOptions;
-	$platformValidationService: IPlatformValidationService;
-	$projectData: IProjectData;
-	$prompter: IPrompter;
-}
-
-export function setupPublishIOSCommand(): IPublishIOSCommandServices {
+export function setupPublishIOSCommand() {
 	const services = {
 		$applePortalSessionService: inject<IApplePortalSessionService>(
 			"applePortalSessionService",
@@ -72,6 +58,10 @@ export function setupPublishIOSCommand(): IPublishIOSCommandServices {
 
 	return services;
 }
+
+export type IPublishIOSCommandServices = ReturnType<
+	typeof setupPublishIOSCommand
+>;
 
 export function canExecutePublishIOSCommand(
 	context: PublishIOSCommandContext,

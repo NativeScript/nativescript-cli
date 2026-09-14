@@ -1,7 +1,6 @@
 import {
 	canExecuteCommandBase,
 	injectPlatformCommandServices,
-	IPlatformCommandServices,
 } from "./command-base";
 import { IPlatformCommandHelper } from "../declarations";
 import { IErrors } from "../common/declarations";
@@ -21,12 +20,7 @@ export type AddPlatformCommandContext = CommandContext<
 	typeof addPlatformCommandOptions
 >;
 
-export interface IAddPlatformCommandServices extends IPlatformCommandServices {
-	$errors: IErrors;
-	$platformCommandHelper: IPlatformCommandHelper;
-}
-
-export function setupAddPlatformCommand(): IAddPlatformCommandServices {
+export function setupAddPlatformCommand() {
 	const services = {
 		...injectPlatformCommandServices(),
 		$errors: inject<IErrors>("errors"),
@@ -38,6 +32,10 @@ export function setupAddPlatformCommand(): IAddPlatformCommandServices {
 
 	return services;
 }
+
+export type IAddPlatformCommandServices = ReturnType<
+	typeof setupAddPlatformCommand
+>;
 
 export async function canExecuteAddPlatformCommand(
 	context: AddPlatformCommandContext,

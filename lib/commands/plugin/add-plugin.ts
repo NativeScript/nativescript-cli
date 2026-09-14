@@ -5,13 +5,7 @@ import { IErrors } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 
-export interface IAddPluginCommandServices {
-	$pluginsService: IPluginsService;
-	$projectData: IProjectData;
-	$errors: IErrors;
-}
-
-export function setupAddPluginCommand(): IAddPluginCommandServices {
+export function setupAddPluginCommand() {
 	const services = {
 		$pluginsService: inject<IPluginsService>("pluginsService"),
 		$projectData: inject<IProjectData>("projectData"),
@@ -21,6 +15,10 @@ export function setupAddPluginCommand(): IAddPluginCommandServices {
 
 	return services;
 }
+
+export type IAddPluginCommandServices = ReturnType<
+	typeof setupAddPluginCommand
+>;
 
 export async function canExecuteAddPluginCommand(
 	context: CommandContext,

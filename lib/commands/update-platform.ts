@@ -13,16 +13,7 @@ import { IErrors } from "../common/declarations";
 import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 
-export interface IUpdatePlatformCommandServices {
-	$errors: IErrors;
-	$options: IOptions;
-	$platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
-	$platformCommandHelper: IPlatformCommandHelper;
-	$platformValidationService: IPlatformValidationService;
-	$projectData: IProjectData;
-}
-
-export function setupUpdatePlatformCommand(): IUpdatePlatformCommandServices {
+export function setupUpdatePlatformCommand() {
 	const services = {
 		$errors: inject<IErrors>("errors"),
 		$options: inject<IOptions>("options"),
@@ -41,6 +32,10 @@ export function setupUpdatePlatformCommand(): IUpdatePlatformCommandServices {
 
 	return services;
 }
+
+export type IUpdatePlatformCommandServices = ReturnType<
+	typeof setupUpdatePlatformCommand
+>;
 
 export async function canExecuteUpdatePlatformCommand(
 	context: CommandContext,

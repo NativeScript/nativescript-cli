@@ -16,16 +16,8 @@ export interface OutputPlugin {
 	hooks: OutputHook[];
 }
 
-export interface IHooksCommandServices {
-	$pluginsService: IPluginsService;
-	$projectData: IProjectData;
-	$errors: IErrors;
-	$fs: IFileSystem;
-	$logger: ILogger;
-}
-
 /** Callable from `setup` and from `canExecute` before their first `await`. */
-export function injectHooksCommandServices(): IHooksCommandServices {
+export function injectHooksCommandServices() {
 	const services = {
 		$pluginsService: inject<IPluginsService>("pluginsService"),
 		$projectData: inject<IProjectData>("projectData"),
@@ -37,6 +29,10 @@ export function injectHooksCommandServices(): IHooksCommandServices {
 
 	return services;
 }
+
+export type IHooksCommandServices = ReturnType<
+	typeof injectHooksCommandServices
+>;
 
 export function getPluginsWithHooks(plugins: IPluginData[]): IPluginData[] {
 	const pluginsWithHooks: IPluginData[] = [];

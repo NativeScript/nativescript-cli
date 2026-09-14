@@ -4,12 +4,7 @@ import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
 import * as helpers from "../../common/helpers";
 
-export interface IListExtensionsCommandServices {
-	$extensibilityService: IExtensibilityService;
-	$logger: ILogger;
-}
-
-export function setupListExtensionsCommand(): IListExtensionsCommandServices {
+export function setupListExtensionsCommand() {
 	return {
 		$extensibilityService: inject<IExtensibilityService>(
 			"extensibilityService",
@@ -17,6 +12,10 @@ export function setupListExtensionsCommand(): IListExtensionsCommandServices {
 		$logger: inject<ILogger>("logger"),
 	};
 }
+
+export type IListExtensionsCommandServices = ReturnType<
+	typeof setupListExtensionsCommand
+>;
 
 export const listExtensionsCommandDefinition = defineCommand({
 	name: "extension|*list",

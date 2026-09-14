@@ -19,15 +19,7 @@ export type OpenDeviceLogStreamCommandContext = CommandContext<
 	typeof openDeviceLogStreamCommandOptions
 >;
 
-export interface IOpenDeviceLogStreamCommandServices {
-	$commandsService: ICommandsService;
-	$deviceLogProvider: Mobile.IDeviceLogProvider;
-	$devicesService: Mobile.IDevicesService;
-	$errors: IErrors;
-	$loggingLevels: Mobile.ILoggingLevels;
-}
-
-export function setupOpenDeviceLogStreamCommand(): IOpenDeviceLogStreamCommandServices {
+export function setupOpenDeviceLogStreamCommand() {
 	// The log stream is the command's whole output, so neither the simulator log
 	// provider nor the cleanup process may be torn down while it is open. The
 	// legacy command did this from its constructor, which ran before anything
@@ -45,6 +37,10 @@ export function setupOpenDeviceLogStreamCommand(): IOpenDeviceLogStreamCommandSe
 		$loggingLevels: inject<Mobile.ILoggingLevels>("loggingLevels"),
 	};
 }
+
+export type IOpenDeviceLogStreamCommandServices = ReturnType<
+	typeof setupOpenDeviceLogStreamCommand
+>;
 
 export async function runOpenDeviceLogStreamCommand(
 	context: OpenDeviceLogStreamCommandContext,

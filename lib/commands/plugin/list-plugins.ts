@@ -9,13 +9,7 @@ import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { color } from "../../color";
 
-export interface IListPluginsCommandServices {
-	$pluginsService: IPluginsService;
-	$projectData: IProjectData;
-	$logger: ILogger;
-}
-
-export function setupListPluginsCommand(): IListPluginsCommandServices {
+export function setupListPluginsCommand() {
 	const services = {
 		$pluginsService: inject<IPluginsService>("pluginsService"),
 		$projectData: inject<IProjectData>("projectData"),
@@ -25,6 +19,10 @@ export function setupListPluginsCommand(): IListPluginsCommandServices {
 
 	return services;
 }
+
+export type IListPluginsCommandServices = ReturnType<
+	typeof setupListPluginsCommand
+>;
 
 function createTableCells(items: IBasePluginData[]): string[][] {
 	return items.map((item) => [item.name, item.version]);

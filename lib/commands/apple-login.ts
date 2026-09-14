@@ -5,14 +5,7 @@ import { IApplePortalSessionService } from "../services/apple-portal/definitions
 
 export type AppleLoginCommandContext = CommandContext;
 
-export interface IAppleLoginCommandServices {
-	$applePortalSessionService: IApplePortalSessionService;
-	$errors: IErrors;
-	$logger: ILogger;
-	$prompter: IPrompter;
-}
-
-export function setupAppleLoginCommand(): IAppleLoginCommandServices {
+export function setupAppleLoginCommand() {
 	return {
 		$applePortalSessionService: inject<IApplePortalSessionService>(
 			"applePortalSessionService",
@@ -22,6 +15,10 @@ export function setupAppleLoginCommand(): IAppleLoginCommandServices {
 		$prompter: inject<IPrompter>("prompter"),
 	};
 }
+
+export type IAppleLoginCommandServices = ReturnType<
+	typeof setupAppleLoginCommand
+>;
 
 export async function runAppleLoginCommand(
 	context: AppleLoginCommandContext,

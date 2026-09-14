@@ -5,14 +5,7 @@ import { IErrors } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 
-export interface IRemovePluginCommandServices {
-	$pluginsService: IPluginsService;
-	$errors: IErrors;
-	$logger: ILogger;
-	$projectData: IProjectData;
-}
-
-export function setupRemovePluginCommand(): IRemovePluginCommandServices {
+export function setupRemovePluginCommand() {
 	const services = {
 		$pluginsService: inject<IPluginsService>("pluginsService"),
 		$errors: inject<IErrors>("errors"),
@@ -23,6 +16,10 @@ export function setupRemovePluginCommand(): IRemovePluginCommandServices {
 
 	return services;
 }
+
+export type IRemovePluginCommandServices = ReturnType<
+	typeof setupRemovePluginCommand
+>;
 
 export async function canExecuteRemovePluginCommand(
 	context: CommandContext,

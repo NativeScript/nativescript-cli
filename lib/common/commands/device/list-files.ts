@@ -16,19 +16,17 @@ export type ListFilesCommandContext = CommandContext<
 	typeof listFilesCommandOptions
 >;
 
-export interface IListFilesCommandServices {
-	$devicesService: Mobile.IDevicesService;
-	$errors: IErrors;
-	$projectData: IProjectData;
-}
-
-export function setupListFilesCommand(): IListFilesCommandServices {
+export function setupListFilesCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 		$errors: inject<IErrors>("errors"),
 		$projectData: inject<IProjectData>("projectData"),
 	};
 }
+
+export type IListFilesCommandServices = ReturnType<
+	typeof setupListFilesCommand
+>;
 
 export async function runListFilesCommand(
 	context: ListFilesCommandContext,

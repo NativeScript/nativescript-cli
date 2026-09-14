@@ -53,19 +53,17 @@ export type CreateProjectCommandContext = CommandContext<
 	typeof createProjectCommandOptions
 >;
 
-export interface ICreateProjectCommandServices {
-	$projectService: IProjectService;
-	$logger: ILogger;
-	$prompter: IPrompter;
-}
-
-export function setupCreateProjectCommand(): ICreateProjectCommandServices {
+export function setupCreateProjectCommand() {
 	return {
 		$projectService: inject<IProjectService>("projectService"),
 		$logger: inject<ILogger>("logger"),
 		$prompter: inject<IPrompter>("prompter"),
 	};
 }
+
+export type ICreateProjectCommandServices = ReturnType<
+	typeof setupCreateProjectCommand
+>;
 
 interface ITemplateChoice {
 	key?: string;

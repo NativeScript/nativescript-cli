@@ -8,14 +8,7 @@ import { IErrors } from "../common/declarations";
 import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 
-export interface IRemovePlatformCommandServices {
-	$errors: IErrors;
-	$platformCommandHelper: IPlatformCommandHelper;
-	$platformValidationService: IPlatformValidationService;
-	$projectData: IProjectData;
-}
-
-export function setupRemovePlatformCommand(): IRemovePlatformCommandServices {
+export function setupRemovePlatformCommand() {
 	const services = {
 		$errors: inject<IErrors>("errors"),
 		$platformCommandHelper: inject<IPlatformCommandHelper>(
@@ -30,6 +23,10 @@ export function setupRemovePlatformCommand(): IRemovePlatformCommandServices {
 
 	return services;
 }
+
+export type IRemovePlatformCommandServices = ReturnType<
+	typeof setupRemovePlatformCommand
+>;
 
 export async function canExecuteRemovePlatformCommand(
 	context: CommandContext,

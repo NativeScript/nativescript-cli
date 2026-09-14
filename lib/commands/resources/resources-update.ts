@@ -4,13 +4,7 @@ import { IErrors } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 
-export interface IResourcesUpdateCommandServices {
-	$projectData: IProjectData;
-	$errors: IErrors;
-	$androidResourcesMigrationService: IAndroidResourcesMigrationService;
-}
-
-export function setupResourcesUpdateCommand(): IResourcesUpdateCommandServices {
+export function setupResourcesUpdateCommand() {
 	const services = {
 		$projectData: inject<IProjectData>("projectData"),
 		$errors: inject<IErrors>("errors"),
@@ -23,6 +17,10 @@ export function setupResourcesUpdateCommand(): IResourcesUpdateCommandServices {
 
 	return services;
 }
+
+export type IResourcesUpdateCommandServices = ReturnType<
+	typeof setupResourcesUpdateCommand
+>;
 
 export async function canExecuteResourcesUpdateCommand(
 	context: CommandContext,

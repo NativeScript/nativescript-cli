@@ -2,17 +2,16 @@ import { IUserSettingsService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
 
-export interface IPackageManagerGetCommandServices {
-	$logger: ILogger;
-	$userSettingsService: IUserSettingsService;
-}
-
-export function setupPackageManagerGetCommand(): IPackageManagerGetCommandServices {
+export function setupPackageManagerGetCommand() {
 	return {
 		$logger: inject<ILogger>("logger"),
 		$userSettingsService: inject<IUserSettingsService>("userSettingsService"),
 	};
 }
+
+export type IPackageManagerGetCommandServices = ReturnType<
+	typeof setupPackageManagerGetCommand
+>;
 
 export const packageManagerGetCommandDefinition = defineCommand({
 	name: "package-manager|*get",

@@ -20,15 +20,7 @@ export type ListDevicesCommandContext = CommandContext<
 	typeof listDevicesCommandOptions
 >;
 
-export interface IListDevicesCommandServices {
-	$devicesService: Mobile.IDevicesService;
-	$emulatorHelper: Mobile.IEmulatorHelper;
-	$errors: IErrors;
-	$logger: ILogger;
-	$mobileHelper: Mobile.IMobileHelper;
-}
-
-export function setupListDevicesCommand(): IListDevicesCommandServices {
+export function setupListDevicesCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 		$emulatorHelper: inject<Mobile.IEmulatorHelper>("emulatorHelper"),
@@ -37,6 +29,10 @@ export function setupListDevicesCommand(): IListDevicesCommandServices {
 		$mobileHelper: inject<Mobile.IMobileHelper>("mobileHelper"),
 	};
 }
+
+export type IListDevicesCommandServices = ReturnType<
+	typeof setupListDevicesCommand
+>;
 
 function printEmulators(
 	services: IListDevicesCommandServices,
@@ -175,10 +171,6 @@ export const listDevicesCommandDefinition = defineCommand({
 	},
 });
 
-interface IListPlatformDevicesCommandServices extends IListDevicesCommandServices {
-	platform: string;
-}
-
 const defineListPlatformDevicesCommand = <const TName extends CommandName>(
 	name: TName,
 	listedPlatform: "iOS" | "Android",
@@ -188,7 +180,7 @@ const defineListPlatformDevicesCommand = <const TName extends CommandName>(
 		description: "Lists the connected devices and emulators for one platform.",
 		options: listDevicesCommandOptions,
 		arguments: "none",
-		setup(): IListPlatformDevicesCommandServices {
+		setup() {
 			const $devicePlatformsConstants =
 				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
 

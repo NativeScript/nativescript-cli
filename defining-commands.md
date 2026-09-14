@@ -169,11 +169,11 @@ options: {
 
 So a redeclaration of the same name with the same type is silent. What the CLI
 still warns about at registration is a redeclaration that changes what the
-spelling *means*:
+spelling _means_:
 
 - a declared option whose name matches a CLI-wide one but whose type differs —
   `verbose: stringOption()` against the CLI's boolean `--verbose`;
-- an alias that belongs to a *different* CLI-wide option — `output:
+- an alias that belongs to a _different_ CLI-wide option — `output:
 stringOption({ alias: "p" })` steals `--path`'s shorthand. Restating an
   option's own shorthand (`path: stringOption({ alias: "p" })`) is fine.
 
@@ -449,6 +449,40 @@ top of `run`; nothing else changes. "Once per invocation" means once across
 `canExecute`, `run` and `postRun` together — whichever of them the CLI reaches
 first triggers it, and the rest reuse the value.
 
+When several commands share a setup, or a helper outside the definition takes
+the services as a parameter, lift it into a named function and derive the type
+from it instead of writing the shape out by hand:
+
+```ts
+export function setupWidgetAddCommand() {
+	const projectData = inject(ProjectData);
+	projectData.initializeProjectData();
+	return { projectData, widgets: inject(WidgetService) };
+}
+export type IWidgetAddCommandServices = ReturnType<
+	typeof setupWidgetAddCommand
+>;
+
+export function canAddWidget(services: IWidgetAddCommandServices): boolean {
+	return !!services.projectData.projectDir;
+}
+
+export default defineCommand({
+	name: "widget|add",
+	arguments: "any",
+	setup: setupWidgetAddCommand,
+	canExecute: (ctx, services) => canAddWidget(services),
+	async run(ctx, { widgets }) {
+		await widgets.add(ctx.args);
+	},
+});
+```
+
+Leave the setup function's return type off: the alias reads what the body
+infers, so annotating the function with the alias makes the pair circular. Read
+a setup curried over a parameter — `setupX(platform)` returning the setup
+itself — through its inner function, `ReturnType<ReturnType<typeof setupX>>`.
+
 `run`'s return value, and `postRun`
 -----------------------------------
 
@@ -504,7 +538,7 @@ all — or the definition itself, which it defines on your behalf, so registerin
 a command is one call. Either way the definition is validated before it reaches
 the registry. It claims every name the definition declares, through the
 `CommandRegistry` the target injector provides, and returns a
-`DeferredCommandResult` — see *The owner is ambient* below. The command instance
+`DeferredCommandResult` — see _The owner is ambient_ below. The command instance
 is built by a factory on first resolution and cached.
 
 Pass providers as the second argument to scope the command to a child injector
@@ -523,7 +557,7 @@ That is how one definition serves several commands that differ only in data —
 the platform each one targets — instead of one command subclassing another.
 
 **Which injector it registers against is not a parameter.** It is the injector
-of the current injection context — see *The owner is ambient* below — and the
+of the current injection context — see _The owner is ambient_ below — and the
 CLI's own injector outside one. To register against some other injector, run
 the call in its context:
 
@@ -722,16 +756,16 @@ A definition is compiled into an ordinary `ICommand`, so nothing downstream —
 the registry, the router, hooks, help, analytics — knows the difference. The
 mapping is:
 
-| Definition                        | `ICommand`                                          |
-| --------------------------------- | --------------------------------------------------- |
-| `options`                         | `dashedOptions`                                     |
-| `run`                             | `execute`, wrapped in an injection context          |
-| `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement  |
-| `setup`                           | — run inside `canExecute`/`execute`, memoised       |
-| `postRun`                         | `postCommandAction`, with `run`'s return value      |
-| `allowUnknownOptions`             | `skipOptionsValidation`                             |
-| —                                 | `allowedParameters`, always `[]`                    |
-| `disableAnalytics`, `enableHooks` | passed through unchanged                            |
+| Definition                        | `ICommand`                                         |
+| --------------------------------- | -------------------------------------------------- |
+| `options`                         | `dashedOptions`                                    |
+| `run`                             | `execute`, wrapped in an injection context         |
+| `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement |
+| `setup`                           | — run inside `canExecute`/`execute`, memoised      |
+| `postRun`                         | `postCommandAction`, with `run`'s return value     |
+| `allowUnknownOptions`             | `skipOptionsValidation`                            |
+| —                                 | `allowedParameters`, always `[]`                   |
+| `disableAnalytics`, `enableHooks` | passed through unchanged                           |
 
 The compiled command always exposes `canExecute`, because `CommandsService`
 stops consulting `allowedParameters` as soon as a command has one — the adapter

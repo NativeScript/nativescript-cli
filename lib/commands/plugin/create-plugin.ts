@@ -35,18 +35,7 @@ export type CreatePluginCommandContext = CommandContext<
 	typeof createPluginCommandOptions
 >;
 
-export interface ICreatePluginCommandServices {
-	$errors: IErrors;
-	$terminalSpinnerService: ITerminalSpinnerService;
-	$logger: ILogger;
-	$pacoteService: IPacoteService;
-	$fs: IFileSystem;
-	$childProcess: IChildProcess;
-	$prompter: IPrompter;
-	$packageManager: INodePackageManager;
-}
-
-export function setupCreatePluginCommand(): ICreatePluginCommandServices {
+export function setupCreatePluginCommand() {
 	return {
 		$errors: inject<IErrors>("errors"),
 		$terminalSpinnerService: inject<ITerminalSpinnerService>(
@@ -60,6 +49,10 @@ export function setupCreatePluginCommand(): ICreatePluginCommandServices {
 		$packageManager: inject<INodePackageManager>("packageManager"),
 	};
 }
+
+export type ICreatePluginCommandServices = ReturnType<
+	typeof setupCreatePluginCommand
+>;
 
 function ensurePackageDir(
 	services: ICreatePluginCommandServices,

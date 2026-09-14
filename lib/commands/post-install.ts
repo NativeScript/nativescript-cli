@@ -10,17 +10,7 @@ import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { doesCurrentNpmCommandMatch } from "../common/helpers";
 
-export interface IPostInstallCliCommandServices {
-	$fs: IFileSystem;
-	$commandsService: ICommandsService;
-	$helpService: IHelpService;
-	$settingsService: ISettingsService;
-	$analyticsService: IAnalyticsService;
-	$logger: ILogger;
-	$hostInfo: IHostInfo;
-}
-
-export function setupPostInstallCliCommand(): IPostInstallCliCommandServices {
+export function setupPostInstallCliCommand() {
 	return {
 		$fs: inject<IFileSystem>("fs"),
 		$commandsService: inject<ICommandsService>("commandsService"),
@@ -31,6 +21,10 @@ export function setupPostInstallCliCommand(): IPostInstallCliCommandServices {
 		$hostInfo: inject<IHostInfo>("hostInfo"),
 	};
 }
+
+export type IPostInstallCliCommandServices = ReturnType<
+	typeof setupPostInstallCliCommand
+>;
 
 export async function runPostInstallCliCommand(
 	context: CommandContext,

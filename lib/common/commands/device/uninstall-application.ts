@@ -14,15 +14,15 @@ export type UninstallApplicationCommandContext = CommandContext<
 	typeof uninstallApplicationCommandOptions
 >;
 
-export interface IUninstallApplicationCommandServices {
-	$devicesService: Mobile.IDevicesService;
-}
-
-export function setupUninstallApplicationCommand(): IUninstallApplicationCommandServices {
+export function setupUninstallApplicationCommand() {
 	return {
 		$devicesService: inject<Mobile.IDevicesService>("devicesService"),
 	};
 }
+
+export type IUninstallApplicationCommandServices = ReturnType<
+	typeof setupUninstallApplicationCommand
+>;
 
 export async function runUninstallApplicationCommand(
 	context: UninstallApplicationCommandContext,

@@ -23,16 +23,7 @@ export type PlatformCleanCommandContext = CommandContext<
 	typeof platformCleanCommandOptions
 >;
 
-export interface IPlatformCleanCommandServices {
-	$errors: IErrors;
-	$options: IOptions;
-	$platformCommandHelper: IPlatformCommandHelper;
-	$platformValidationService: IPlatformValidationService;
-	$platformEnvironmentRequirements: IPlatformEnvironmentRequirements;
-	$projectData: IProjectData;
-}
-
-export function setupPlatformCleanCommand(): IPlatformCleanCommandServices {
+export function setupPlatformCleanCommand() {
 	const services = {
 		$errors: inject<IErrors>("errors"),
 		$options: inject<IOptions>("options"),
@@ -51,6 +42,10 @@ export function setupPlatformCleanCommand(): IPlatformCleanCommandServices {
 
 	return services;
 }
+
+export type IPlatformCleanCommandServices = ReturnType<
+	typeof setupPlatformCleanCommand
+>;
 
 export async function canExecutePlatformCleanCommand(
 	context: PlatformCleanCommandContext,
