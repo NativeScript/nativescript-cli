@@ -1,45 +1,48 @@
+import * as _ from "lodash";
 import { EOL } from "os";
 import * as util from "util";
-import * as _ from "lodash";
-import { IOptions } from "../../../declarations";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
-import { injector } from "../../yok";
+import {
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
 
-export class ListApplicationsCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $logger: ILogger,
-		private $options: IOptions
-	) {}
+const listApplicationsCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [];
+export const listApplicationsCommandDefinition = defineCommand({
+	name: ["device|list-applications", "devices|list-applications"],
+	description: "Lists the installed applications on all connected devices.",
+	options: listApplicationsCommandOptions,
+	arguments: "none",
+	async run(context): Promise<void> {
+		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
+		const $logger = inject<ILogger>("logger");
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
+		await $devicesService.initialize({
+			deviceId: context.options.device,
 			skipInferPlatform: true,
 		});
 		const output: string[] = [];
 
 		const action = async (device: Mobile.IDevice) => {
-			const applications = await device.applicationManager.getInstalledApplications();
+			const applications =
+				await device.applicationManager.getInstalledApplications();
 			output.push(
 				util.format(
 					"%s=====Installed applications on device with UDID '%s' are:",
 					EOL,
-					device.deviceInfo.identifier
-				)
+					device.deviceInfo.identifier,
+				),
 			);
 			_.each(applications, (applicationId: string) =>
-				output.push(applicationId)
+				output.push(applicationId),
 			);
 		};
-		await this.$devicesService.execute(action);
+		await $devicesService.execute(action);
 
-		this.$logger.info(output.join(EOL));
-	}
-}
-injector.registerCommand(
-	["device|list-applications", "devices|list-applications"],
-	ListApplicationsCommand
-);
+		$logger.info(output.join(EOL));
+	},
+});

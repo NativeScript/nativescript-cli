@@ -1,50 +1,48 @@
 import * as _ from "lodash";
 import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors } from "../../common/declarations";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 
-export class RemovePluginCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export const removePluginCommandDefinition = defineCommand({
+	name: "plugin|remove",
+	description: "Uninstalls the specified plugin and its dependencies.",
+	arguments: "any",
+	async canExecute(context): Promise<boolean> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $errors = inject<IErrors>("errors");
+		const $logger = inject<ILogger>("logger");
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-	constructor(
-		private $pluginsService: IPluginsService,
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $projectData: IProjectData
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		return this.$pluginsService.remove(args[0], this.$projectData);
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
-		if (!args[0]) {
-			this.$errors.failWithHelp("You must specify plugin name.");
+		if (!context.args[0]) {
+			$errors.failWithHelp("You must specify plugin name.");
 		}
 
 		let pluginNames: string[] = [];
 		try {
 			// try installing the plugins, so we can get information from node_modules about their native code, libs, etc.
-			const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
-				this.$projectData
-			);
+			const installedPlugins =
+				await $pluginsService.getAllInstalledPlugins($projectData);
 			pluginNames = installedPlugins.map((pl) => pl.name);
 		} catch (err) {
-			this.$logger.trace("Error while installing plugins. Error is:", err);
-			pluginNames = _.keys(this.$projectData.dependencies);
+			$logger.trace("Error while installing plugins. Error is:", err);
+			pluginNames = _.keys($projectData.dependencies);
 		}
 
-		const pluginName = args[0].toLowerCase();
+		const pluginName = context.args[0].toLowerCase();
 		if (!_.some(pluginNames, (name) => name.toLowerCase() === pluginName)) {
-			this.$errors.fail(`Plugin "${pluginName}" is not installed.`);
+			$errors.fail(`Plugin "${pluginName}" is not installed.`);
 		}
 
 		return true;
-	}
-}
+	},
+	run(context): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-injector.registerCommand("plugin|remove", RemovePluginCommand);
+		return $pluginsService.remove(context.args[0], $projectData);
+	},
+});

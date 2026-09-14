@@ -271,6 +271,7 @@ interface IHttpRequestError extends Error {
 interface ICommandOptions {
 	disableAnalytics?: boolean;
 	enableHooks?: boolean;
+	/** @deprecated Declared here, referenced nowhere. */
 	disableCommandHelpSuggestion?: boolean;
 }
 

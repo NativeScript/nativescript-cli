@@ -4,42 +4,43 @@ import {
 	IPlatformCommandHelper,
 	IPlatformValidationService,
 } from "../declarations";
-import { injector } from "../common/yok";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
 
-export class RemovePlatformCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export const removePlatformCommandDefinition = defineCommand({
+	name: "platform|remove",
+	description:
+		"Removes the selected platform from the platforms that the project currently targets.",
+	arguments: "any",
+	async canExecute(context): Promise<boolean> {
+		const $errors = inject<IErrors>("errors");
+		const $platformValidationService = inject<IPlatformValidationService>(
+			"platformValidationService",
+		);
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-	constructor(
-		private $errors: IErrors,
-		private $platformCommandHelper: IPlatformCommandHelper,
-		private $platformValidationService: IPlatformValidationService,
-		private $projectData: IProjectData
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public execute(args: string[]): Promise<void> {
-		return this.$platformCommandHelper.removePlatforms(args, this.$projectData);
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
+		const args = context.args;
 		if (!args || args.length === 0) {
-			this.$errors.failWithHelp(
-				"No platform specified. Please specify a platform to remove."
+			$errors.failWithHelp(
+				"No platform specified. Please specify a platform to remove.",
 			);
 		}
 
 		_.each(args, (platform) => {
-			this.$platformValidationService.validatePlatform(
-				platform,
-				this.$projectData
-			);
+			$platformValidationService.validatePlatform(platform, $projectData);
 		});
 
 		return true;
-	}
-}
+	},
+	run(context): Promise<void> {
+		const $platformCommandHelper = inject<IPlatformCommandHelper>(
+			"platformCommandHelper",
+		);
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-injector.registerCommand("platform|remove", RemovePlatformCommand);
+		return $platformCommandHelper.removePlatforms(context.args, $projectData);
+	},
+});

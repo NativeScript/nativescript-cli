@@ -28,6 +28,13 @@ export type {
 	AbstractType,
 } from "../common/di/providers";
 
+export { KeyShortcutRegistry } from "../common/contracts/key-shortcuts";
+export type {
+	KeyContextBase,
+	KeyShortcut,
+	KeyShortcutRegistration,
+} from "../common/contracts/key-shortcuts";
+
 export { ChildProcess } from "./child-process";
 export { DevicesService } from "./devices-service";
 export { DoctorService } from "./doctor-service";
@@ -48,16 +55,31 @@ export { PBXPROJ_DOM_XCODE } from "./pbxproj-dom-xcode";
 export { XCODE } from "./xcode";
 
 export {
+	Command,
+	CommandBase,
+	COMMAND_CLASS_MARKER,
 	defineCommand,
+	isCommandClass,
 	isCommandDefinition,
+	toCommandDefinition,
 	booleanOption,
 	stringOption,
 	numberOption,
 	arrayOption,
+	objectOption,
 } from "../common/define-command";
 export type {
+	ArgumentSpec,
+	ArgumentsPolicy,
+	CommandArgumentValues,
+	CommandClass,
 	CommandDefinition,
+	CommandMeta,
+	CommandName,
+	CommandNamesOf,
 	DefinedCommand,
+	NamedCommand,
+	RegisterableCommand,
 	CommandContext,
 	CommandOptionSpec,
 	DefaultedCommandOptionSpec,
@@ -66,6 +88,12 @@ export type {
 	CommandOptionType,
 	CommandOptionValues,
 } from "../common/define-command";
+// Promoted from the internal contracts index: the class form reads it in a
+// field initializer, and a per-command provider is written against it.
+export { COMMAND_CONTEXT } from "../common/contracts/command-context";
+// The in-process dispatcher a command or plugin runs or consults other
+// commands through.
+export { CommandsService } from "../common/contracts/commands-service";
 export { defineHook, isHookDefinition } from "../common/define-hook";
 export type {
 	HookContext,

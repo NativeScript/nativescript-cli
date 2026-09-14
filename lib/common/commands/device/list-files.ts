@@ -1,40 +1,42 @@
 import { IProjectData } from "../../../definitions/project";
-import { IOptions } from "../../../declarations";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { injector } from "../../yok";
+import {
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
 
-export class ListFilesCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $stringParameter: ICommandParameter,
-		private $options: IOptions,
-		private $projectData: IProjectData,
-		private $errors: IErrors
-	) {}
+const listFilesCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	public allowedParameters: ICommandParameter[] = [
-		this.$stringParameter,
-		this.$stringParameter,
-	];
+export const listFilesCommandDefinition = defineCommand({
+	name: ["device|list-files", "devices|list-files"],
+	description: "Lists the files in a directory on a connected device.",
+	options: listFilesCommandOptions,
+	arguments: [{ name: "path" }, { name: "appId" }],
+	async run(context): Promise<void> {
+		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
+		const $errors = inject<IErrors>("errors");
+		const $projectData = inject<IProjectData>("projectData");
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
+		await $devicesService.initialize({
+			deviceId: context.options.device,
 			skipInferPlatform: true,
 		});
-		const pathToList = args[0];
-		let appIdentifier = args[1];
+		const pathToList = context.args[0];
+		let appIdentifier = context.args[1];
 
 		if (!appIdentifier) {
 			try {
-				this.$projectData.initializeProjectData();
+				$projectData.initializeProjectData();
 			} catch (err) {
 				// ignore the error
 			}
-			if (!this.$projectData.projectIdentifiers) {
-				this.$errors.fail(
-					"Please enter application identifier or execute this command in project."
+			if (!$projectData.projectIdentifiers) {
+				$errors.fail(
+					"Please enter application identifier or execute this command in project.",
 				);
 			}
 		}
@@ -42,16 +44,11 @@ export class ListFilesCommand implements ICommand {
 		const action = async (device: Mobile.IDevice) => {
 			appIdentifier =
 				appIdentifier ||
-				this.$projectData.projectIdentifiers[
+				$projectData.projectIdentifiers[
 					device.deviceInfo.platform.toLowerCase()
 				];
 			await device.fileSystem.listFiles(pathToList, appIdentifier);
 		};
-		await this.$devicesService.execute(action);
-	}
-}
-
-injector.registerCommand(
-	["device|list-files", "devices|list-files"],
-	ListFilesCommand
-);
+		await $devicesService.execute(action);
+	},
+});

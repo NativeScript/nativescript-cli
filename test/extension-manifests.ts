@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { ExtensibilityService } from "../lib/services/extensibility-service";
-import { Yok, getInjector, setGlobalInjector } from "../lib/common/yok";
+import { Yok, getRootInjector, setGlobalInjector } from "../lib/common/yok";
 import { LoggerStub } from "./stubs";
 import { clearReportedDeprecations } from "../lib/common/deprecation";
 import { CommandsDelimiters } from "../lib/common/constants";
@@ -13,6 +13,8 @@ import {
 	IExtensionData,
 } from "../lib/common/definitions/extensibility";
 import { IStringDictionary } from "../lib/common/declarations";
+import { runInInjectionContext } from "../lib/common/di";
+import { registerLazyCommand } from "../lib/common/services/command-definition-adapter";
 
 // Every assertion about registered commands goes through the per-test
 // injector: the service takes $injector as a constructor dependency. The
@@ -39,7 +41,7 @@ describe("extension manifests", () => {
 	beforeEach(() => {
 		profileDir = fs.mkdtempSync(path.join(os.tmpdir(), "ns-ext-manifest-"));
 		testInjector = getTestInjector();
-		previousProcessInjector = getInjector();
+		previousProcessInjector = getRootInjector();
 		setGlobalInjector(testInjector);
 		requiredPaths = [];
 		capture = (<any>global).__nsmCapture = {
@@ -137,6 +139,30 @@ describe("extension manifests", () => {
 		}
 		global.__nsmCapture.loadedModules.push(${JSON.stringify(marker)});
 		global.$injector.registerCommand(${JSON.stringify(commandName)}, TestCommand);`;
+
+	/**
+	 * A legacy-shape main module that registers a definition of its own, the
+	 * way an extension written against the CLI's helper does - through the
+	 * running CLI's copy of it, resolved by path because the fixture is written
+	 * outside the repo.
+	 */
+	const selfRegisteringModule = (commandName: string, marker: string): string =>
+		`const { registerCommand } = require(${JSON.stringify(
+			require.resolve("../lib/common/services/command-definition-adapter"),
+		)});
+		const { COMMAND_OWNER } = require(${JSON.stringify(
+			require.resolve("../lib/common/contracts/command-registry"),
+		)});
+		registerCommand({
+			name: ${JSON.stringify(commandName)},
+			arguments: "any",
+			run: (ctx) => {
+				global.__nsmCapture.executed.push({
+					marker: ${JSON.stringify(marker)},
+					owner: ctx.injector.get(COMMAND_OWNER, { optional: true }),
+				});
+			},
+		});`;
 
 	const getTestInjector = (): IInjector => {
 		const testInjector = new Yok();
@@ -346,6 +372,33 @@ describe("extension manifests", () => {
 			assert.deepStrictEqual(requiredPaths, [pathToExtension]);
 			assert.include(getLogger(testInjector).traceOutput, DEPRECATION_API);
 			assert.isUndefined(extensionData.commands);
+		});
+
+		it("attributes a definition the main module registers to the extension", async () => {
+			const extensionName = "nsm-self-register-ext";
+			writeExtension(
+				extensionName,
+				{ commands: ["nsmselfreg"] },
+				{ "main.js": selfRegisteringModule("nsmselfreg", "self-run") },
+			);
+
+			const extensibilityService = resolveService(testInjector);
+			await extensibilityService.loadExtension(extensionName);
+
+			await testInjector.resolveCommand("nsmselfreg").execute([]);
+			assert.deepStrictEqual(capture.executed, [
+				{ marker: "self-run", owner: extensionName },
+			]);
+
+			assert.deepStrictEqual(
+				runInInjectionContext(testInjector, () =>
+					registerLazyCommand<any>("nsmselfreg", () => <any>null),
+				),
+				{
+					registered: false,
+					rejection: { reason: "claimed", owner: extensionName },
+				},
+			);
 		});
 	});
 

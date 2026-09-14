@@ -1,51 +1,63 @@
-import { createTable } from "../common/helpers";
-import { StringCommandParameter } from "../common/command-params";
-import { IProjectData } from "../definitions/project";
-import { IPlatformValidationService, IOptions } from "../declarations";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { IInjector } from "../common/definitions/yok";
-import { injector } from "../common/yok";
 import { IErrors } from "../common/declarations";
+import {
+	Command,
+	CommandOptionsSchema,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
+import { createTable } from "../common/helpers";
+import { IPlatformValidationService } from "../declarations";
+import { IProjectData } from "../definitions/project";
 import {
 	IApplePortalApplicationService,
 	IApplePortalSessionService,
 } from "../services/apple-portal/definitions";
 
-export class ListiOSApps implements ICommand {
-	public allowedParameters: ICommandParameter[] = [
-		new StringCommandParameter(this.$injector),
-		new StringCommandParameter(this.$injector),
-	];
+const listiOSAppsCommandOptions = {
+	appleSessionBase64: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	constructor(
-		private $injector: IInjector,
-		private $applePortalApplicationService: IApplePortalApplicationService,
-		private $applePortalSessionService: IApplePortalSessionService,
-		private $logger: ILogger,
-		private $projectData: IProjectData,
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $platformValidationService: IPlatformValidationService,
-		private $errors: IErrors,
-		private $prompter: IPrompter,
-		private $options: IOptions
-	) {
+export class ListiOSAppsCommand extends Command({
+	name: "appstore|*list",
+	description: "Lists the applications in App Store Connect.",
+	options: listiOSAppsCommandOptions,
+	arguments: [{ name: "appleId" }, { name: "password" }],
+}) {
+	private $applePortalApplicationService =
+		inject<IApplePortalApplicationService>("applePortalApplicationService");
+	private $applePortalSessionService = inject<IApplePortalSessionService>(
+		"applePortalSessionService",
+	);
+	private $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
+		"devicePlatformsConstants",
+	);
+	private $errors = inject<IErrors>("errors");
+	private $logger = inject<ILogger>("logger");
+	private $platformValidationService = inject<IPlatformValidationService>(
+		"platformValidationService",
+	);
+	private $projectData = inject<IProjectData>("projectData");
+	private $prompter = inject<IPrompter>("prompter");
+
+	constructor() {
+		super();
 		this.$projectData.initializeProjectData();
 	}
 
-	public async execute(args: string[]): Promise<void> {
+	public async run(): Promise<void> {
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				this.$devicePlatformsConstants.iOS,
-				this.$projectData
+				this.$projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`
+				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`,
 			);
 		}
 
-		let username = args[0];
-		let password = args[1];
+		let username = this.args[0];
+		let password = this.args[1];
 
 		if (!username) {
 			username = await this.$prompter.getString("Apple ID", {
@@ -60,18 +72,17 @@ export class ListiOSApps implements ICommand {
 		const user = await this.$applePortalSessionService.createUserSession(
 			{ username, password },
 			{
-				sessionBase64: this.$options.appleSessionBase64,
-			}
+				sessionBase64: this.options.appleSessionBase64,
+			},
 		);
 		if (!user.areCredentialsValid) {
 			this.$errors.fail(
-				`Invalid username and password combination. Used '${username}' as the username.`
+				`Invalid username and password combination. Used '${username}' as the username.`,
 			);
 		}
 
-		const applications = await this.$applePortalApplicationService.getApplications(
-			user
-		);
+		const applications =
+			await this.$applePortalApplicationService.getApplications(user);
 
 		if (!applications || !applications.length) {
 			this.$logger.info("Seems you don't have any applications yet.");
@@ -87,12 +98,10 @@ export class ListiOSApps implements ICommand {
 							application.versionSets[0].inFlightVersion.version) ||
 						"";
 					return [application.name, application.bundleId, version];
-				})
+				}),
 			);
 
 			this.$logger.info(table.toString());
 		}
 	}
 }
-
-injector.registerCommand("appstore|*list", ListiOSApps);

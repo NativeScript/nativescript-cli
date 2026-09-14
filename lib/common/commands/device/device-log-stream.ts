@@ -1,50 +1,55 @@
-import { IOptions } from "../../../declarations";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
 import { ICleanupService } from "../../../definitions/cleanup-service";
+import { CommandsService } from "../../contracts/commands-service";
 import { IErrors } from "../../declarations";
-import { injector } from "../../yok";
+import {
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
 
-export class OpenDeviceLogStreamCommand implements ICommand {
-	private static NOT_SPECIFIED_DEVICE_ERROR_MESSAGE =
-		"More than one device found. Specify device explicitly.";
+const NOT_SPECIFIED_DEVICE_ERROR_MESSAGE =
+	"More than one device found. Specify device explicitly.";
 
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
-		private $commandsService: ICommandsService,
-		private $options: IOptions,
-		private $deviceLogProvider: Mobile.IDeviceLogProvider,
-		private $loggingLevels: Mobile.ILoggingLevels,
-		$iOSSimulatorLogProvider: Mobile.IiOSSimulatorLogProvider,
-		$cleanupService: ICleanupService
-	) {
-		$iOSSimulatorLogProvider.setShouldDispose(false);
-		$cleanupService.setShouldDispose(false);
-	}
+const openDeviceLogStreamCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [];
+export const openDeviceLogStreamCommandDefinition = defineCommand({
+	name: ["device|log", "devices|log"],
+	description: "Opens the device log stream for a connected device.",
+	options: openDeviceLogStreamCommandOptions,
+	arguments: "none",
+	// The log stream is the command's whole output, so neither the simulator log
+	// provider nor the cleanup process may be torn down while it is open. In
+	// setup, so the flags are set at the point in the invocation they always were.
+	setup(): void {
+		inject<Mobile.IiOSSimulatorLogProvider>(
+			"iOSSimulatorLogProvider",
+		).setShouldDispose(false);
+		inject<ICleanupService>("cleanupService").setShouldDispose(false);
+	},
+	async run(context): Promise<void> {
+		const $commandsService = inject(CommandsService);
+		const $deviceLogProvider =
+			inject<Mobile.IDeviceLogProvider>("deviceLogProvider");
+		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
+		const $errors = inject<IErrors>("errors");
+		const $loggingLevels = inject<Mobile.ILoggingLevels>("loggingLevels");
 
-	public async execute(args: string[]): Promise<void> {
-		this.$deviceLogProvider.setLogLevel(this.$loggingLevels.full);
+		$deviceLogProvider.setLogLevel($loggingLevels.full);
 
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
+		await $devicesService.initialize({
+			deviceId: context.options.device,
 			skipInferPlatform: true,
 		});
 
-		if (this.$devicesService.deviceCount > 1) {
-			await this.$commandsService.tryExecuteCommand("device", []);
-			this.$errors.failWithHelp(
-				OpenDeviceLogStreamCommand.NOT_SPECIFIED_DEVICE_ERROR_MESSAGE
-			);
+		if ($devicesService.deviceCount > 1) {
+			await $commandsService.runCommand("device");
+			$errors.failWithHelp(NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
 		}
 
 		const action = (device: Mobile.IiOSDevice) => device.openDeviceLogStream();
-		await this.$devicesService.execute(action);
-	}
-}
-
-injector.registerCommand(
-	["device|log", "devices|log"],
-	OpenDeviceLogStreamCommand
-);
+		await $devicesService.execute(action);
+	},
+});

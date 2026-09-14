@@ -261,6 +261,142 @@ describe("RunController", () => {
 		});
 	});
 
+	describe("restartApplication", () => {
+		let restartedApps: Array<{ device: string; isFullSync: boolean }> = null;
+		let infoMessages: string[] = null;
+
+		beforeEach(() => {
+			restartedApps = [];
+			infoMessages = [];
+
+			const logger = injector.resolve("logger");
+			logger.info = (message: string) => infoMessages.push(message);
+
+			for (const service of ["iOSLiveSyncService", "androidLiveSyncService"]) {
+				const liveSyncService = injector.resolve(service);
+				liveSyncService.getAppData = async (syncInfo: IFullSyncInfo) => ({
+					appIdentifier,
+					device: syncInfo.device,
+					platform: syncInfo.device.deviceInfo.platform,
+				});
+				liveSyncService.shouldRestart = async () => false;
+				liveSyncService.tryRefreshApplication = async () => true;
+				liveSyncService.restartApplication = async (
+					_projectData: any,
+					liveSyncResultInfo: ILiveSyncResultInfo,
+				) => {
+					restartedApps.push({
+						device:
+							liveSyncResultInfo.deviceAppData.device.deviceInfo.identifier,
+						isFullSync: liveSyncResultInfo.isFullSync,
+					});
+				};
+			}
+		});
+
+		function startSession(
+			descriptors: ILiveSyncDeviceDescriptor[],
+			devices: Mobile.IDevice[],
+		): void {
+			mockDevicesService(injector, devices);
+			injector.resolve("liveSyncProcessDataService").persistData(
+				projectDir,
+				descriptors,
+				devices.map((device) => device.deviceInfo.platform),
+				liveSyncInfo,
+			);
+		}
+
+		it("restarts the app on every device of the session", async () => {
+			startSession(
+				[iOSDeviceDescriptor, androidDeviceDescriptor],
+				[iOSDevice, androidDevice],
+			);
+
+			await runController.restartApplication({ projectDir });
+
+			assert.deepStrictEqual(restartedApps, [
+				{ device: "myiOSDevice", isFullSync: false },
+				{ device: "myAndroidDevice", isFullSync: false },
+			]);
+		});
+
+		it("restarts the app only on the devices it was asked for", async () => {
+			startSession(
+				[iOSDeviceDescriptor, androidDeviceDescriptor],
+				[iOSDevice, androidDevice],
+			);
+
+			await runController.restartApplication({
+				projectDir,
+				deviceIdentifiers: ["myAndroidDevice"],
+			});
+
+			assert.deepStrictEqual(restartedApps, [
+				{ device: "myAndroidDevice", isFullSync: false },
+			]);
+		});
+
+		it("neither prepares nor builds", async () => {
+			startSession([iOSDeviceDescriptor], [iOSDevice]);
+			prepareData = null;
+
+			await runController.restartApplication({ projectDir });
+
+			assert.isNull(prepareData);
+			assert.lengthOf(restartedApps, 1);
+		});
+
+		it("re-attaches the debugger of a debug session", async () => {
+			const attached: string[] = [];
+			injector.resolve(
+				"debugController",
+			).enableDebuggingCoreWithoutWaitingCurrentAction = async (
+				_projectDir: string,
+				deviceIdentifier: string,
+			) => {
+				attached.push(deviceIdentifier);
+			};
+
+			startSession(
+				[<any>{ ...iOSDeviceDescriptor, debuggingEnabled: true }],
+				[iOSDevice],
+			);
+
+			await runController.restartApplication({ projectDir });
+
+			assert.deepStrictEqual(attached, ["myiOSDevice"]);
+		});
+
+		it("says so rather than restarting when the session has stopped", async () => {
+			startSession([iOSDeviceDescriptor], [iOSDevice]);
+			await runController.stop({ projectDir });
+			infoMessages = [];
+
+			await runController.restartApplication({ projectDir });
+
+			assert.lengthOf(restartedApps, 0);
+			assert.deepStrictEqual(infoMessages, [
+				"There is no running application to restart. Start a run or debug session first.",
+			]);
+		});
+
+		it("says so rather than restarting when no device matches", async () => {
+			startSession([iOSDeviceDescriptor], [iOSDevice]);
+			infoMessages = [];
+
+			await runController.restartApplication({
+				projectDir,
+				deviceIdentifiers: ["someOtherDevice"],
+			});
+
+			assert.lengthOf(restartedApps, 0);
+			assert.deepStrictEqual(infoMessages, [
+				"There is no device to restart the application on.",
+			]);
+		});
+	});
+
 	describe("stopRunOnDevices", () => {
 		const testCases = [
 			{

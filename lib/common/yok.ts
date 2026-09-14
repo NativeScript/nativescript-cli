@@ -7,15 +7,9 @@ import { CommandsDelimiters } from "./constants";
 import { IDictionary } from "./declarations";
 import { IInjector } from "./definitions/yok";
 import { ICommandArgument, ICommand } from "./definitions/commands";
-import { IKeyCommand, IValidKeyName } from "./definitions/key-commands";
 import { Injector } from "./di/injector";
 import type { Provider } from "./di/providers";
-import {
-	CommandRegistry,
-	KeyCommandRegistry,
-	ModuleRegistry,
-	PublicApiBuilder,
-} from "./contracts";
+import { CommandRegistry, ModuleRegistry, PublicApiBuilder } from "./contracts";
 import type {
 	DeferredCommandOptions,
 	DeferredCommandRejection,
@@ -64,10 +58,10 @@ export interface IDependency {
 
 /**
  * The Yok facade IS the token-based `Injector` — it extends it — plus the
- * legacy surface: command routing, the key-command namespace, the module
- * loader, and the public-API builder. Those subsystems historically shared
- * the container object and migrate out separately; until then they live here,
- * individually marked @deprecated.
+ * legacy surface: command routing, the module loader, and the public-API
+ * builder. Those subsystems historically shared the container object and
+ * migrate out separately; until then they live here, individually marked
+ * @deprecated.
  */
 export class Yok extends Injector implements IInjector {
 	/**
@@ -83,7 +77,6 @@ export class Yok extends Injector implements IInjector {
 		// consumers of the token.
 		this.register([
 			{ provide: CommandRegistry, useValue: this },
-			{ provide: KeyCommandRegistry, useValue: this },
 			{ provide: ModuleRegistry, useValue: this },
 			{ provide: PublicApiBuilder, useValue: this },
 		]);
@@ -102,7 +95,6 @@ export class Yok extends Injector implements IInjector {
 	 * meant to replace it once that module registers itself.
 	 */
 	private placeholderParents = new Set<string>();
-	private KEY_COMMANDS_NAMESPACE: string = "keyCommands";
 	// Keyed by command names, which extensions choose freely: a null prototype
 	// keeps a name like 'constructor' from reading back as an inherited member.
 	private hierarchicalCommands: IDictionary<string[]> = Object.create(null);
@@ -210,16 +202,18 @@ export class Yok extends Injector implements IInjector {
 					options.load();
 				} catch (err) {
 					throw new Error(
-						`Unable to load command '${name}' of ${options.owner} from ` +
-							`${options.source}: ${err.message}`,
+						`Unable to load command '${name}' of ${options.owner}` +
+							`${options.source ? ` from ${options.source}` : ""}: ` +
+							`${err.message}`,
 					);
 				}
 
 				if (!this.hasResolver(commandRecordName)) {
 					throw new Error(
 						`Command '${name}' of ${options.owner} was not registered when ` +
-							`${options.source} loaded. The module must export a ` +
-							`defineCommand() definition or register the command itself.`,
+							`${options.source || "its module"} loaded. The module must ` +
+							`export a defineCommand() definition or register the command ` +
+							`itself.`,
 					);
 				}
 			},
@@ -258,14 +252,6 @@ export class Yok extends Injector implements IInjector {
 	 */
 	public require(names: any, file: string): void {
 		forEachName(names, (name) => this.requireOne(name, file));
-	}
-
-	/**
-	 * @deprecated Key-command counterpart of requireCommand; replaced together
-	 * with the command registry.
-	 */
-	public requireKeyCommand(name: any, file: string): void {
-		this.requireOne(this.createKeyCommandName(name), file);
 	}
 
 	/**
@@ -377,13 +363,6 @@ export class Yok extends Injector implements IInjector {
 				this.createHierarchicalCommand(parentCommandName, name);
 			}
 		});
-	}
-
-	/**
-	 * @deprecated Replaced together with the command registry.
-	 */
-	public registerKeyCommand(name: IValidKeyName, resolver: IKeyCommand): void {
-		this.register(this.createKeyCommandName(name), resolver);
 	}
 
 	private getDefaultCommand(name: string, commandArguments: string[]) {
@@ -501,6 +480,12 @@ export class Yok extends Injector implements IInjector {
 							commandName = defaultCommand
 								? this.getHierarchicalCommandName(name, defaultCommand)
 								: "help";
+
+							if (commandName === "help") {
+								// Without this the help command opens a browser, so a
+								// mistyped subcommand would launch one.
+								this.resolve("options").help = true;
+							}
 							// If we'll execute the default command, but it's full name had been written by the user
 							// for example "ns run ios", we have to remove the "ios" option from the arguments that we'll pass to the command.
 							if (
@@ -648,21 +633,6 @@ export class Yok extends Injector implements IInjector {
 	}
 
 	/**
-	 * @deprecated Legacy command-registry lookup.
-	 */
-	public resolveKeyCommand(name: string): IKeyCommand {
-		let command: IKeyCommand;
-		const commandModuleName = this.createKeyCommandName(name);
-		if (!this.has(commandModuleName)) {
-			return null;
-		}
-
-		command = this.resolve(commandModuleName);
-
-		return command;
-	}
-
-	/**
 	 * @deprecated Use inject(Token) in an injection context, or Injector.get /
 	 * createInstance from lib/common/di (via `Yok.di`).
 	 */
@@ -735,19 +705,6 @@ export class Yok extends Injector implements IInjector {
 	}
 
 	/**
-	 * @deprecated Legacy command-registry enumeration.
-	 */
-	public getRegisteredKeyCommandsNames(): string[] {
-		const commandsNames = this.getRegisteredNames(
-			`${this.KEY_COMMANDS_NAMESPACE}.`,
-		);
-		const commands = _.map(commandsNames, (commandName: string) =>
-			commandName.slice(this.KEY_COMMANDS_NAMESPACE.length + 1),
-		);
-		return commands;
-	}
-
-	/**
 	 * @deprecated Legacy command-registry routing.
 	 */
 	public getChildrenCommandsNames(commandName: string): string[] {
@@ -756,10 +713,6 @@ export class Yok extends Injector implements IInjector {
 
 	private createCommandName(name: string) {
 		return `${this.COMMANDS_NAMESPACE}.${name}`;
-	}
-
-	private createKeyCommandName(name: string) {
-		return `${this.KEY_COMMANDS_NAMESPACE}.${name}`;
 	}
 
 	/**
@@ -773,8 +726,8 @@ export class Yok extends Injector implements IInjector {
 
 // The global is the published legacy surface. It is an accessor pair so a
 // direct `global.$injector = x` assignment — allowed for third parties —
-// stays synchronized with the module binding that getInjector() and internal
-// code read; a plain data property would silently fork the two.
+// stays synchronized with the module binding that getRootInjector() and
+// internal code read; a plain data property would silently fork the two.
 injector = (<any>global).$injector || new Yok();
 Object.defineProperty(global, "$injector", {
 	get: () => injector,
@@ -785,13 +738,15 @@ Object.defineProperty(global, "$injector", {
 });
 
 /**
- * Accessor for the process-wide facade, for code that cannot receive the
- * injector through DI or a static import (import cycles, decorator bodies).
- * Prefer inject(Injector) in an injection context; prefer a constructor
- * dependency in services. Never read global.$injector directly — the global
- * exists only as the published legacy surface for extensions and hooks.
+ * Accessor for the process-wide facade — the root of every injector in the
+ * process, as opposed to getCurrentInjector(), which serves whichever one the
+ * caller is running under. For code that cannot receive the injector through
+ * DI or a static import (import cycles, decorator bodies). Prefer
+ * inject(Injector) in an injection context; prefer a constructor dependency in
+ * services. Never read global.$injector directly — the global exists only as
+ * the published legacy surface for extensions and hooks.
  */
-export function getInjector(): IInjector {
+export function getRootInjector(): IInjector {
 	return injector;
 }
 

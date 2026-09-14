@@ -56,6 +56,9 @@ interface IBundlerCompilation {
 /* for specific bundling debugging separate from logger */
 const debugLog = false;
 
+/** Grace period a bundler child gets to honour SIGINT before it is killed. */
+const BUNDLER_STOP_TIMEOUT_MS = 5000;
+
 export class BundlerCompilerService
 	extends EventEmitter
 	implements IBundlerCompilerService
@@ -382,7 +385,10 @@ export class BundlerCompilerService
 					this.$logger.trace(
 						`Unable to start ${projectData.bundler} process in watch mode. Error is: ${err}`,
 					);
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					this.forgetBundlerProcess(
+						platformData.platformNameLowerCase,
+						childProcess,
+					);
 					reject(err);
 				});
 
@@ -399,7 +405,10 @@ export class BundlerCompilerService
 						`Executing ${projectData.bundler} failed with exit code ${exitCode}.`,
 					);
 					error.code = exitCode;
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					this.forgetBundlerProcess(
+						platformData.platformNameLowerCase,
+						childProcess,
+					);
 					reject(error);
 				});
 			} catch (err) {
@@ -430,7 +439,10 @@ export class BundlerCompilerService
 					this.$logger.trace(
 						`Unable to start ${projectData.bundler} process in non-watch mode. Error is: ${err}`,
 					);
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					this.forgetBundlerProcess(
+						platformData.platformNameLowerCase,
+						childProcess,
+					);
 					reject(err);
 				});
 
@@ -441,7 +453,10 @@ export class BundlerCompilerService
 						childProcess.pid.toString(),
 					);
 
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					this.forgetBundlerProcess(
+						platformData.platformNameLowerCase,
+						childProcess,
+					);
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					if (exitCode === 0) {
 						// Non-watch Vite builds spawn the child with stdio:"inherit"
@@ -748,7 +763,9 @@ export class BundlerCompilerService
 			await this.$cleanupService.addKillProcess(childProcess.pid.toString());
 
 			childProcess.once("exit", (code: number) => {
-				delete this.viteServeProcesses[key];
+				if (this.viteServeProcesses[key] === childProcess) {
+					delete this.viteServeProcesses[key];
+				}
 				if (code) {
 					this.$logger.warn(
 						`Vite dev server for ${key} exited with code ${code}.`,
@@ -1000,22 +1017,84 @@ export class BundlerCompilerService
 		this.$logger.trace(
 			`Stopping ${this.getBundler()} watch for platform ${platform}.`,
 		);
+
 		const bundlerProcess = this.bundlerProcesses[platform];
-		await this.$cleanupService.removeKillProcess(bundlerProcess.pid.toString());
 		if (bundlerProcess) {
-			bundlerProcess.kill("SIGINT");
-			delete this.bundlerProcesses[platform];
+			// A compilation already in flight can still reach us between the
+			// kill and the exit; nothing downstream may act on output from a
+			// watcher the caller has torn down.
+			bundlerProcess.removeAllListeners("message");
+			bundlerProcess.stdout?.removeAllListeners("data");
+			bundlerProcess.stderr?.removeAllListeners("data");
+
+			await this.terminate(bundlerProcess);
+			this.forgetBundlerProcess(platform, bundlerProcess);
 		}
 
 		// Tear down the Vite dev server we manage alongside the build watcher.
 		const viteServeProcess = this.viteServeProcesses[platform];
 		if (viteServeProcess) {
-			await this.$cleanupService.removeKillProcess(
-				viteServeProcess.pid.toString(),
-			);
-			viteServeProcess.kill("SIGINT");
-			delete this.viteServeProcesses[platform];
+			await this.terminate(viteServeProcess);
+			if (this.viteServeProcesses[platform] === viteServeProcess) {
+				delete this.viteServeProcesses[platform];
+			}
 		}
+	}
+
+	/**
+	 * Drops a platform's entry only while it still points at `childProcess`, so
+	 * an exit arriving after a restart cannot evict the replacement watcher.
+	 */
+	private forgetBundlerProcess(
+		platform: string,
+		childProcess: child_process.ChildProcess,
+	): void {
+		if (this.bundlerProcesses[platform] === childProcess) {
+			delete this.bundlerProcesses[platform];
+		}
+	}
+
+	/**
+	 * Resolves once the child is gone, so a caller that restarts the bundler
+	 * cannot spawn a replacement while the old one still holds the watch.
+	 */
+	private async terminate(
+		childProcess: child_process.ChildProcess,
+		timeoutMs: number = BUNDLER_STOP_TIMEOUT_MS,
+	): Promise<void> {
+		await this.$cleanupService.removeKillProcess(childProcess.pid.toString());
+
+		childProcess.kill("SIGINT");
+		if (await this.waitForExit(childProcess, timeoutMs)) {
+			return;
+		}
+
+		this.$logger.trace(
+			`Process ${childProcess.pid} did not exit on SIGINT within ${timeoutMs}ms; sending SIGKILL.`,
+		);
+		childProcess.kill("SIGKILL");
+		await this.waitForExit(childProcess, timeoutMs);
+	}
+
+	private waitForExit(
+		childProcess: child_process.ChildProcess,
+		timeoutMs: number,
+	): Promise<boolean> {
+		return new Promise<boolean>((resolve) => {
+			const settle = (exited: boolean) => {
+				clearTimeout(timer);
+				childProcess.removeListener("exit", onExit);
+				childProcess.removeListener("close", onExit);
+				resolve(exited);
+			};
+			const onExit = () => settle(true);
+			const timer = setTimeout(() => settle(false), timeoutMs);
+			// A pending timer must not be what keeps the CLI alive.
+			timer.unref?.();
+
+			childProcess.once("exit", onExit);
+			childProcess.once("close", onExit);
+		});
 	}
 
 	private handleHMRMessage(

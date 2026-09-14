@@ -1,102 +1,102 @@
 import * as helpers from "../helpers";
-import { ICommandParameter, ICommand } from "../definitions/commands";
 import { IAutoCompletionService } from "../declarations";
-import { injector } from "../yok";
+import { defineCommand } from "../define-command";
+import { inject } from "../di";
 
-export class AutoCompleteCommand implements ICommand {
-	constructor(
-		private $autoCompletionService: IAutoCompletionService,
-		private $logger: ILogger,
-		private $prompter: IPrompter
-	) {}
+export const autoCompleteCommandDefinition = defineCommand({
+	name: "autocomplete|*default",
+	description: "Prompts to enable command-line completion for the CLI.",
+	arguments: "none",
+	disableAnalytics: true,
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
+		const $prompter = inject<IPrompter>("prompter");
 
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
 		if (helpers.isInteractive()) {
-			if (this.$autoCompletionService.isAutoCompletionEnabled()) {
-				if (this.$autoCompletionService.isObsoleteAutoCompletionEnabled()) {
+			if ($autoCompletionService.isAutoCompletionEnabled()) {
+				if ($autoCompletionService.isObsoleteAutoCompletionEnabled()) {
 					// obsolete autocompletion is enabled, update it to the new one:
-					await this.$autoCompletionService.enableAutoCompletion();
+					await $autoCompletionService.enableAutoCompletion();
 				} else {
-					this.$logger.info("Autocompletion is already enabled");
+					$logger.info("Autocompletion is already enabled");
 				}
 			} else {
-				this.$logger.info(
-					"If you are using bash or zsh, you can enable command-line completion."
+				$logger.info(
+					"If you are using bash or zsh, you can enable command-line completion.",
 				);
 				const message = "Do you want to enable it now?";
 
-				const autoCompetionStatus = await this.$prompter.confirm(
+				const autoCompetionStatus = await $prompter.confirm(
 					message,
-					() => true
+					() => true,
 				);
 				if (autoCompetionStatus) {
-					await this.$autoCompletionService.enableAutoCompletion();
+					await $autoCompletionService.enableAutoCompletion();
 				} else {
 					// make sure we've removed all autocompletion code from all shell profiles
-					this.$autoCompletionService.disableAutoCompletion();
+					$autoCompletionService.disableAutoCompletion();
 				}
 			}
 		}
-	}
-}
-injector.registerCommand("autocomplete|*default", AutoCompleteCommand);
+	},
+});
 
-export class DisableAutoCompleteCommand implements ICommand {
-	constructor(
-		private $autoCompletionService: IAutoCompletionService,
-		private $logger: ILogger
-	) {}
+export const disableAutoCompleteCommandDefinition = defineCommand({
+	name: "autocomplete|disable",
+	description: "Disables command-line completion for the CLI.",
+	arguments: "none",
+	disableAnalytics: true,
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
 
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
-		if (this.$autoCompletionService.isAutoCompletionEnabled()) {
-			this.$autoCompletionService.disableAutoCompletion();
+		if ($autoCompletionService.isAutoCompletionEnabled()) {
+			$autoCompletionService.disableAutoCompletion();
 		} else {
-			this.$logger.info("Autocompletion is already disabled.");
+			$logger.info("Autocompletion is already disabled.");
 		}
-	}
-}
-injector.registerCommand("autocomplete|disable", DisableAutoCompleteCommand);
+	},
+});
 
-export class EnableAutoCompleteCommand implements ICommand {
-	constructor(
-		private $autoCompletionService: IAutoCompletionService,
-		private $logger: ILogger
-	) {}
+export const enableAutoCompleteCommandDefinition = defineCommand({
+	name: "autocomplete|enable",
+	description: "Enables command-line completion for the CLI.",
+	arguments: "none",
+	disableAnalytics: true,
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
 
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
-		if (this.$autoCompletionService.isAutoCompletionEnabled()) {
-			this.$logger.info("Autocompletion is already enabled.");
+		if ($autoCompletionService.isAutoCompletionEnabled()) {
+			$logger.info("Autocompletion is already enabled.");
 		} else {
-			await this.$autoCompletionService.enableAutoCompletion();
+			await $autoCompletionService.enableAutoCompletion();
 		}
-	}
-}
-injector.registerCommand("autocomplete|enable", EnableAutoCompleteCommand);
+	},
+});
 
-export class AutoCompleteStatusCommand implements ICommand {
-	constructor(
-		private $autoCompletionService: IAutoCompletionService,
-		private $logger: ILogger
-	) {}
+export const autoCompleteStatusCommandDefinition = defineCommand({
+	name: "autocomplete|status",
+	description: "Prints whether command-line completion is enabled.",
+	arguments: "none",
+	disableAnalytics: true,
+	async run(): Promise<void> {
+		const $autoCompletionService = inject<IAutoCompletionService>(
+			"autoCompletionService",
+		);
+		const $logger = inject<ILogger>("logger");
 
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
-		if (this.$autoCompletionService.isAutoCompletionEnabled()) {
-			this.$logger.info("Autocompletion is enabled.");
+		if ($autoCompletionService.isAutoCompletionEnabled()) {
+			$logger.info("Autocompletion is enabled.");
 		} else {
-			this.$logger.info("Autocompletion is disabled.");
+			$logger.info("Autocompletion is disabled.");
 		}
-	}
-}
-injector.registerCommand("autocomplete|status", AutoCompleteStatusCommand);
+	},
+});
