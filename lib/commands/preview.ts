@@ -12,7 +12,7 @@ const PREVIEW_CLI_PACKAGE = "@nativescript/preview-cli";
 
 export class PreviewCommand implements ICommand {
 	allowedParameters: ICommandParameter[] = [];
-	skipOptionsValidation = true;
+	allowUnknownOptions = true;
 
 	constructor(
 		private $logger: ILogger,

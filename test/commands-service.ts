@@ -5,10 +5,12 @@ import { ICommand } from "../lib/common/definitions/commands";
 
 function createTestInjector(command: ICommand): {
 	injector: Yok;
-	validatedWith: { called: boolean };
+	validatedWith: { called: boolean; allowUnknown?: boolean };
 } {
 	const injector = new Yok();
-	const validatedWith = { called: false };
+	const validatedWith: { called: boolean; allowUnknown?: boolean } = {
+		called: false,
+	};
 
 	injector.register("errors", {
 		fail: (message: string): void => {
@@ -21,8 +23,9 @@ function createTestInjector(command: ICommand): {
 	injector.register("hooksService", {});
 	injector.register("logger", { warn: (): void => undefined });
 	injector.register("options", {
-		validateOptions: (): void => {
+		validateOptions: (dashedOptions: any, allowUnknown?: boolean): void => {
 			validatedWith.called = true;
+			validatedWith.allowUnknown = allowUnknown;
 		},
 	});
 	injector.register("staticConfig", {});
@@ -51,16 +54,19 @@ describe("commands-service", () => {
 			assert.isTrue(validatedWith.called);
 		});
 
-		it("skips validation for a command that forwards its options", async () => {
+		it("tolerates unknown options for a command that forwards them", async () => {
 			const { injector, validatedWith } = createTestInjector({
 				...baseCommand,
-				skipOptionsValidation: true,
+				allowUnknownOptions: true,
 			});
 			const service = injector.resolve(CommandsService);
 
 			await (<any>service).tryExecuteCommandAction("preview", []);
 
-			assert.isFalse(validatedWith.called);
+			// Validation still runs so the command's own options are merged;
+			// only the rejection of foreign flags is suppressed.
+			assert.isTrue(validatedWith.called);
+			assert.isTrue(validatedWith.allowUnknown);
 		});
 	});
 });

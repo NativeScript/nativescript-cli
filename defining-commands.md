@@ -59,10 +59,11 @@ accepted form:
 
 ```
 Invalid command definition for 'widget|add': unknown field(s) 'handler'; a
-definition accepts name, description, options, arguments, canExecute,
-disableAnalytics, enableHooks, run. Accepted form: defineCommand({ name:
-"widget|add", run(ctx) { ... } }) — with the optional fields description,
-options, arguments, canExecute, disableAnalytics and enableHooks.
+definition accepts name, description, options, arguments, allowUnknownOptions,
+canExecute, disableAnalytics, enableHooks, setup, run, postRun. Accepted form:
+defineCommand({ name: "widget|add", run(ctx) { ... } }) — with the optional
+fields description, options, arguments, allowUnknownOptions, setup, canExecute,
+postRun, disableAnalytics and enableHooks.
 ```
 
 Names and the command hierarchy
@@ -132,9 +133,11 @@ options: {
   nothing renders it yet.
 
 The schema types `ctx.options` and nothing else: `ctx.options` carries exactly
-the declared keys, and a typo is a compile error. Values that the CLI parses
-globally (`--path`, `--log`, …) are not exposed there; resolve the `options`
-service if you need them.
+the declared keys, and a typo is a compile error. There is deliberately no
+"give me everything" escape hatch — a command declares every option it reads,
+CLI-wide ones (`--release`, `--path`, `--bundle`, …) included. Declaring one
+that the CLI already knows is supported and carries its value through to
+`ctx.options` exactly as a command-specific one does.
 
 ### Sharing a schema between commands
 
@@ -149,17 +152,34 @@ const buildOptions = {
 } satisfies CommandOptionsSchema;
 ```
 
-### Do not shadow a CLI-wide option
+### Redeclaring a CLI-wide option, and shadowing one
 
 `--verbose`, `--path`, `--log`, `--release`, `--env` and friends are declared by
-the CLI itself. Declaring one of those names in a command's schema makes the
-command's declaration win for the duration of that command, which means the
-same flag means different things depending on which command is running. The CLI
-warns at registration naming both sides of the collision; pick another name.
+the CLI itself. A command's declaration is merged over the CLI-wide dictionary
+for the duration of that command, and that merge is the sanctioned way to give
+a global option a per-command default — `watch`, `hmr` and `skipNative` all
+carry different defaults on `build`, `prepare`, `deploy` and `test`:
 
-Aliases count too, in both directions: an `alias: "p"` collides with `--path`'s
-shorthand just as `output: stringOption()` would collide with a CLI-wide
-`--output`.
+```ts
+options: {
+	// CLI-wide --watch, but this command defaults it off
+	watch: booleanOption({ default: false }),
+}
+```
+
+So a redeclaration of the same name with the same type is silent. What the CLI
+still warns about at registration is a redeclaration that changes what the
+spelling *means*:
+
+- a declared option whose name matches a CLI-wide one but whose type differs —
+  `verbose: stringOption()` against the CLI's boolean `--verbose`;
+- an alias that belongs to a *different* CLI-wide option — `output:
+stringOption({ alias: "p" })` steals `--path`'s shorthand. Restating an
+  option's own shorthand (`path: stringOption({ alias: "p" })`) is fine.
+
+The merge replaces the CLI-wide entry rather than patching it, so a
+redeclaration inherits nothing: restate the `alias` and `hasSensitiveValue` the
+global declaration carries if the command still wants them.
 
 ### How validation behaves
 
@@ -181,17 +201,101 @@ So adding an option is a matter of adding a schema entry; forgetting to declare
 one that users pass is a warning today and a failure later, never a silent
 `undefined`.
 
+### `allowUnknownOptions`
+
+A command that forwards its command line to a separately installed CLI cannot
+know which flags are legitimate, so validating them here would reject the other
+CLI's own options. `allowUnknownOptions: true` turns the check off for that
+command:
+
+```ts
+defineCommand({
+	name: "preview",
+	allowUnknownOptions: true,
+	options: { disableNpmInstall: booleanOption({ default: false }) },
+	async run(ctx) {
+		/* spawn the other CLI with process.argv */
+	},
+});
+```
+
+It maps onto `skipOptionsValidation` on the compiled command, which means the
+CLI never re-primes its parser for this command at all. A command-specific
+option therefore never reaches `ctx.options` under this flag — only options the
+CLI already knows globally carry values. Reach for it only when forwarding.
+
 Positional arguments
 --------------------
 
-`arguments` declares whether the command takes positional arguments at all:
+`arguments` declares what the command takes after its name:
 
 - `"none"` (the default) — the command accepts no positional arguments. Passing
   any is rejected with `This command doesn't accept parameters.`
-- `"any"` — positional arguments are accepted and handed to `run` as
-  `ctx.args`.
+- `"any"` — any number of positional arguments is accepted and handed to `run`
+  as `ctx.args`.
+- an array of specs — each argument is declared, named, and validated.
 
-Anything finer than that belongs in `canExecute`.
+### Declared arguments
+
+```ts
+defineCommand({
+	name: "widget|add",
+	arguments: [
+		{
+			name: "platform",
+			required: true,
+			errorMessage: "Specify the platform to add the widget for.",
+			validate: (value) =>
+				["android", "ios"].includes(value) ||
+				`'${value}' is not a supported platform.`,
+		},
+		{ name: "template" },
+		{ name: "files", variadic: true },
+	],
+	async run(ctx) {
+		ctx.arguments.platform; // "android"
+		ctx.arguments.template; // "blank", or absent
+		ctx.arguments.files; // string[], possibly empty
+	},
+});
+```
+
+A spec accepts:
+
+- `name` — the key the value appears under on `ctx.arguments`, and the name
+  messages use.
+- `required` — defaults to false. A required argument may not follow an
+  optional one; positional matching would never be able to satisfy it.
+- `variadic` — collects every remaining argument as a `string[]`. Must be the
+  last spec. A required variadic wants at least one value.
+- `description` — reserved for generated help, like an option's.
+- `errorMessage` — replaces `Missing required argument '<name>'.` when the
+  argument is required and absent.
+- `validate(value, ctx)` — run per value, `ctx` being the same context `run`
+  receives. Return `true` to accept; return `false` for a default message, or
+  return the message itself as a string. It may be `async`.
+
+Enforcement happens before `canExecute`, in this order: missing required
+arguments (every missing one is named at once), then too many arguments, then
+each `validate`.
+
+### Matching is strictly positional
+
+The first spec takes the first argument, the second spec the second, and so on.
+This is a deliberate divergence from the `ICommandParameter` machinery a
+hand-written command class uses, where `CommandsService` scans the validators
+and lets a mandatory parameter claim whichever argument happens to satisfy it —
+so `ns command b a` could satisfy `[a, b]`. Nothing in the CLI depends on that
+behaviour, and positional is what the declaration reads like.
+
+The practical consequence: `ctx.arguments.template` is `args[1]` whether or not
+`args[1]` looks like a template. An argument that could be several things is a
+job for `validate` or for `canExecute`, not for the matcher.
+
+`ctx.arguments` is always present, even with `arguments: "none"` or `"any"` —
+it is simply `{}` when no specs are declared. An optional non-variadic argument
+the command line did not reach is absent from it; a variadic one is always
+there, as an array.
 
 ### `canExecute` refines, it does not replace
 
@@ -230,8 +334,12 @@ The run context
 
 - `ctx.args` — `string[]`, the positional arguments left after the command name
   (including any subcommand segments) has been consumed.
+- `ctx.arguments` — the same arguments keyed by the names the `arguments` specs
+  declare, `{}` when there are none.
 - `ctx.options` — the current value of each declared option, read at the moment
   the command executes.
+- `ctx.injector` — the injector this command was registered against; see
+  [Injection, and the first `await`](#injection-and-the-first-await).
 - `ctx.fail(message)` — fails the command with `message` and a usage help
   suggestion.
 
@@ -265,8 +373,11 @@ Throwing is equivalent and keeps working — `ctx.fail` is sugar over the
 --help`" line. Throw when you already have an `Error` to propagate; call
 `ctx.fail` when you are writing the message.
 
-`run` starts inside a dependency-injection context, so `inject()` works
-directly:
+Injection, and the first `await`
+--------------------------------
+
+`setup`, `canExecute`, `run` and `postRun` each start inside a
+dependency-injection context, so `inject()` works directly:
 
 ```ts
 import { defineCommand, inject } from "nativescript/contracts";
@@ -281,10 +392,85 @@ export default defineCommand({
 });
 ```
 
-The injection context is synchronous: `inject()` is valid up to the first
-`await` in `run`, and not after it. Capture what you need at the top of `run`,
-or inject the `Injector` itself and use `injector.get()` for late lookups. See
-`dependency-injection.md`.
+The injection context is synchronous, so **`inject()` is valid up to the first
+`await` in a handler, and not after it**. After that first `await`, use
+`ctx.injector.get(token)`:
+
+```ts
+async run(ctx) {
+	const packageManager = inject(PackageManager); // fine, no await yet
+	await packageManager.install(name);
+	// inject() would throw here
+	const platform = ctx.injector.get(PlatformService);
+}
+```
+
+`ctx.injector` is deliberately the injector itself rather than a bound
+`ctx.inject(...)`: it is a visibly different mechanism because it obeys
+different rules, and mistaking one for the other is exactly the bug this shape
+prevents. It is the injector the command was **registered against**, so it also
+resolves providers a child scope supplied — see
+[Registering a definition](#registering-a-definition). The same guidance, and
+the reasoning behind it, is in `dependency-injection.md`.
+
+`setup` — hoisting work out of `run`
+------------------------------------
+
+`setup(ctx)` runs once per invocation, before `canExecute`, and its return
+value is handed to `canExecute`, `run` and `postRun` as their second argument:
+
+```ts
+export default defineCommand({
+	name: "widget|add",
+	arguments: "any",
+	setup() {
+		const projectData = inject(ProjectData);
+		projectData.initializeProjectData();
+		return { projectData, widgets: inject(WidgetService) };
+	},
+	canExecute(ctx, { projectData }) {
+		return !!projectData.projectDir;
+	},
+	async run(ctx, { widgets }) {
+		await widgets.add(ctx.args);
+	},
+});
+```
+
+It exists for two reasons. It is the place to inject services before the first
+`await` when several handlers need them, and it is where the work a command
+class used to do in its constructor goes — most often
+`$projectData.initializeProjectData()`.
+
+`setup` is sugar. A command may ignore it entirely and call `inject()` at the
+top of `run`; nothing else changes. "Once per invocation" means once across
+`canExecute`, `run` and `postRun` together — whichever of them the CLI reaches
+first triggers it, and the rest reuse the value.
+
+`run`'s return value, and `postRun`
+-----------------------------------
+
+`run` may return a value. When the definition declares `postRun`, that value is
+passed to it after `run` succeeds:
+
+```ts
+export default defineCommand({
+	name: "create",
+	arguments: [{ name: "appName", required: true }],
+	async run(ctx) {
+		const projectDir = await createProject(ctx.arguments.appName as string);
+		return { projectDir };
+	},
+	postRun(ctx, { projectDir }) {
+		printSuccessMessage(projectDir);
+	},
+});
+```
+
+`postRun` maps onto the legacy `postCommandAction`: the CLI runs it after the
+command itself, outside the command's own error handling. The value travels
+through `run`'s return rather than through a mutable field on the definition,
+because a definition object is shared by every registration of it.
 
 Other flags
 -----------
@@ -327,6 +513,30 @@ Extensions do not need `registerCommandDefinition` at all: a
 exports a definition, and the CLI adapts and registers it lazily under the
 manifest key (see [extensions.md](extensions.md)).
 
+### One definition, several registrations
+
+A family of commands that differ only in a value — `run|android` and `run|ios`,
+say — is one definition registered several times, each against a child injector
+that provides the value:
+
+```ts
+const PLATFORM = new InjectionToken<string>("commandPlatform");
+
+for (const platform of ["android", "ios"]) {
+	registerCommandDefinition(
+		{ ...definition, name: `run|${platform}` },
+		injector.createChild([{ provide: PLATFORM, useValue: platform }]),
+	);
+}
+```
+
+The definition then reads `inject(PLATFORM)` — or `ctx.injector.get(PLATFORM)`
+after the first `await` — and needs to know nothing else. The spread keeps the
+`defineCommand` marker, so the copy is still a `DefinedCommand`.
+
+This replaces the class-inheritance pattern the legacy commands use, where a
+per-platform command subclasses a shared base to override one field.
+
 Relationship to `ICommand`
 --------------------------
 
@@ -334,19 +544,25 @@ A definition is compiled into an ordinary `ICommand`, so nothing downstream —
 the registry, the router, hooks, help, analytics — knows the difference. The
 mapping is:
 
-| Definition                        | `ICommand`                                         |
-| --------------------------------- | -------------------------------------------------- |
-| `options`                         | `dashedOptions`                                    |
-| `run`                             | `execute`, wrapped in an injection context         |
-| `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement |
-| —                                 | `allowedParameters`, always `[]`                   |
-| `disableAnalytics`, `enableHooks` | passed through unchanged                           |
+| Definition                        | `ICommand`                                          |
+| --------------------------------- | --------------------------------------------------- |
+| `options`                         | `dashedOptions`                                     |
+| `run`                             | `execute`, wrapped in an injection context          |
+| `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement  |
+| `setup`                           | — run inside `canExecute`/`execute`, memoised       |
+| `postRun`                         | `postCommandAction`, with `run`'s return value      |
+| `allowUnknownOptions`             | `skipOptionsValidation`                             |
+| —                                 | `allowedParameters`, always `[]`                    |
+| `disableAnalytics`, `enableHooks` | passed through unchanged                            |
 
 The compiled command always exposes `canExecute`, because `CommandsService`
 stops consulting `allowedParameters` as soon as a command has one — the adapter
-therefore enforces the `arguments` policy itself.
+therefore enforces the `arguments` policy itself. `allowedParameters` stays
+empty, which is why declared `arguments` are matched positionally rather than
+by the `ICommandParameter` scan.
 
 Existing command classes need no migration. Reach for a definition when a
 command is mostly "parse these flags and do this"; a class still makes sense
 when a command needs constructor-injected collaborators shared across several
-methods, custom `ICommandParameter` validators, or a `postCommandAction`.
+methods, or `ICommandParameter` validators whose claim-any-argument matching it
+actually depends on.

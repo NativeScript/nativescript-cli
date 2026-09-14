@@ -158,12 +158,12 @@ export class CommandsService implements ICommandsService {
 		commandArguments: string[],
 	): Promise<boolean> {
 		const command = this.$injector.resolveCommand(commandName);
-		if (
-			!command ||
-			(!command.isHierarchicalCommand && !command.skipOptionsValidation)
-		) {
+		if (!command || !command.isHierarchicalCommand) {
 			const dashedOptions = command ? command.dashedOptions : null;
-			this.$options.validateOptions(dashedOptions);
+			this.$options.validateOptions(
+				dashedOptions,
+				command && command.allowUnknownOptions,
+			);
 		}
 
 		return this.canExecuteCommand(commandName, commandArguments);

@@ -54,8 +54,12 @@ export {
 	stringOption,
 	numberOption,
 	arrayOption,
+	objectOption,
 } from "../common/define-command";
 export type {
+	ArgumentSpec,
+	ArgumentsPolicy,
+	CommandArgumentValues,
 	CommandDefinition,
 	DefinedCommand,
 	CommandContext,

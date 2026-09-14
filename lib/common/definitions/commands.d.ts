@@ -19,9 +19,10 @@ interface ICommand extends ICommandOptions {
 	/**
 	 * Set on commands that forward their options to another CLI: the options
 	 * they accept are not knowable from this CLI's option dictionary, so
-	 * validating them here would reject the other CLI's flags.
+	 * rejecting them here would reject the other CLI's flags. The command's
+	 * own declared options are still merged and checked.
 	 */
-	skipOptionsValidation?: boolean;
+	allowUnknownOptions?: boolean;
 
 	/**
 	 * Describes the action that will be executed after the command succeeds.

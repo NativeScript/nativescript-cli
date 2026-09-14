@@ -3,7 +3,7 @@ import { spawnSync } from "child_process";
 import * as path from "path";
 import { Yok } from "../lib/common/yok";
 import { IInjector } from "../lib/common/definitions/yok";
-import { inject } from "../lib/common/di";
+import { inject, InjectionToken } from "../lib/common/di";
 import { CommandRegistry } from "../lib/common/contracts/command-registry";
 import { CommandsService } from "../lib/common/services/commands-service";
 import { Options } from "../lib/options";
@@ -101,7 +101,7 @@ describe("defineCommand", () => {
 		it("rejects an unusable arguments policy", () => {
 			rejects(
 				{ name: "dctest-args", arguments: "one", run: (): void => undefined },
-				/'arguments' is 'one'; it must be "none" or "any"/,
+				/'arguments' is 'one'; it must be "none", "any" or an array of argument specs/,
 			);
 		});
 
@@ -224,11 +224,17 @@ describe("defineCommand", () => {
 				{ encoding: "utf8" },
 			);
 
-			assert.strictEqual(
-				result.status,
-				0,
-				`${result.stdout || ""}${result.stderr || ""}`,
-			);
+			// define-command.ts reaches the DI types, which drag in most of the
+			// repo — none of which was ever strict-clean. Only the fixture and the
+			// module it pins are under test here.
+			const underTest =
+				/^(.*[\\/])?(define-command|define-command-types)\.ts\(/;
+			const failures = `${result.stdout || ""}${result.stderr || ""}`
+				.split(/\r?\n/)
+				.filter((line) => /\.ts\(\d+,\d+\): error TS/.test(line))
+				.filter((line) => underTest.test(line));
+
+			assert.deepEqual(failures, []);
 		});
 	});
 
@@ -487,6 +493,57 @@ describe("defineCommand", () => {
 			});
 		});
 
+		it("carries over what a redeclared CLI option leaves unspecified", () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestredeclare",
+					options: {
+						// Redeclared only to give this command its own default.
+						path: stringOption({ default: "./here" }),
+						watch: booleanOption({ default: false }),
+					},
+					run: (): void => undefined,
+				}),
+				createTestInjector({
+					options: {
+						path: { type: "string", alias: "p", hasSensitiveValue: true },
+						watch: { type: "boolean", hasSensitiveValue: false },
+					},
+				}),
+			);
+
+			assert.deepEqual(command.dashedOptions, {
+				path: {
+					type: "string",
+					hasSensitiveValue: true,
+					default: "./here",
+					alias: "p",
+				},
+				watch: { type: "boolean", hasSensitiveValue: false, default: false },
+			});
+		});
+
+		it("lets a redeclaration override what it does specify", () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestoverride",
+					options: {
+						path: stringOption({ alias: "q", hasSensitiveValue: false }),
+					},
+					run: (): void => undefined,
+				}),
+				createTestInjector({
+					options: {
+						path: { type: "string", alias: "p", hasSensitiveValue: true },
+					},
+				}),
+			);
+
+			assert.deepEqual(command.dashedOptions, {
+				path: { type: "string", hasSensitiveValue: false, alias: "q" },
+			});
+		});
+
 		it("is empty when no options are declared", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({ name: "dctestnoopts", run: (): void => undefined }),
@@ -508,7 +565,7 @@ describe("defineCommand", () => {
 				defineCommand({
 					name: "dctestshadow",
 					options: {
-						verbose: booleanOption(),
+						verbose: stringOption(),
 						output: stringOption({ alias: ["p", "o"] }),
 						fresh: booleanOption({ alias: "f" }),
 					},
@@ -528,6 +585,32 @@ describe("defineCommand", () => {
 			);
 			assert.notInclude(logger.warnOutput, "--fresh");
 			assert.notInclude(logger.warnOutput, "'-o'");
+		});
+
+		it("stays quiet when a command only redefines a CLI-wide option's default", () => {
+			const testInjector = createTestInjector({
+				options: {
+					watch: { type: "boolean" },
+					path: { type: "string", alias: "p" },
+				},
+			});
+
+			createCommandFromDefinition(
+				defineCommand({
+					name: "dctestredeclare",
+					options: {
+						watch: booleanOption({ default: true }),
+						path: stringOption({ alias: "p" }),
+					},
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			assert.strictEqual(
+				(<LoggerStub>testInjector.resolve("logger")).warnOutput,
+				"",
+			);
 		});
 
 		it("stays quiet when nothing collides", () => {
@@ -755,6 +838,7 @@ describe("defineCommand", () => {
 		interface IValidationRun {
 			failures: string[];
 			options: any;
+			injector: IInjector;
 		}
 
 		// The options service parses process.argv in its constructor, so each run
@@ -782,7 +866,7 @@ describe("defineCommand", () => {
 				const command = createCommandFromDefinition(definition, testInjector);
 				const options: any = testInjector.resolve("options");
 				options.validateOptions(command.dashedOptions);
-				return { failures, options };
+				return { failures, options, injector: testInjector };
 			} finally {
 				process.argv = originalArgv;
 			}
@@ -808,6 +892,40 @@ describe("defineCommand", () => {
 				assert.deepEqual(run.failures, [], `rejected ${spelling}`);
 				assert.strictEqual(run.options.outputDir, "dist");
 			}
+		});
+
+		it("carries a declared option that is also CLI-wide onto ctx.options", async () => {
+			const definition = defineCommand({
+				name: "dctest-cliwide",
+				options: {
+					// --release is declared by the CLI itself; a command that reads it
+					// declares it too, and the declaration only supplies the default.
+					release: booleanOption({ default: false, alias: "r" }),
+					outputDir: stringOption(),
+				},
+				run: (): void => undefined,
+			});
+
+			const run = validate(definition, ["--release", "--output-dir", "dist"]);
+			assert.deepEqual(run.failures, []);
+
+			let seen: any;
+			const command = createCommandFromDefinition(
+				{
+					...definition,
+					run: (ctx): void => {
+						seen = ctx.options;
+					},
+				},
+				run.injector,
+			);
+			await command.execute([]);
+
+			assert.deepEqual(seen, { release: true, outputDir: "dist" });
+			assert.strictEqual(
+				(<LoggerStub>run.injector.resolve("logger")).warnOutput,
+				"",
+			);
 		});
 
 		it("still rejects an option the definition did not declare", () => {
@@ -980,6 +1098,722 @@ describe("defineCommand", () => {
 			await commandsService.tryExecuteCommand("dctest-gadget", []);
 
 			assert.deepEqual(runs, [["beta"], []]);
+		});
+	});
+
+	describe("positional argument specs", () => {
+		const platformCommand = (extra: any = {}) =>
+			createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-positional",
+					arguments: [
+						{ name: "platform", required: true },
+						{ name: "target" },
+						...(extra.variadic ? [{ name: "rest", variadic: true }] : []),
+					],
+					run: (ctx) => {
+						extra.seen = ctx.arguments;
+					},
+				}),
+				createTestInjector(),
+			);
+
+		it("maps arguments onto ctx.arguments strictly by position", async () => {
+			const extra: any = {};
+			const command = platformCommand(extra);
+
+			assert.isTrue(await command.canExecute(["android", "device"]));
+			await command.execute(["android", "device"]);
+
+			assert.deepEqual(extra.seen, { platform: "android", target: "device" });
+		});
+
+		it("leaves an unfilled optional argument off ctx.arguments", async () => {
+			const extra: any = {};
+			const command = platformCommand(extra);
+
+			await command.execute(["android"]);
+
+			assert.deepEqual(extra.seen, { platform: "android" });
+		});
+
+		it("collects the rest into a variadic argument, empty array included", async () => {
+			const extra: any = { variadic: true };
+			const command = platformCommand(extra);
+
+			await command.execute(["android", "device", "a", "b"]);
+			assert.deepEqual(extra.seen, {
+				platform: "android",
+				target: "device",
+				rest: ["a", "b"],
+			});
+
+			await command.execute(["android", "device"]);
+			assert.deepEqual(extra.seen, {
+				platform: "android",
+				target: "device",
+				rest: [],
+			});
+		});
+
+		it("exposes an empty ctx.arguments when no specs are declared", async () => {
+			let seen: any;
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-noargspecs",
+					arguments: "any",
+					run: (ctx) => {
+						seen = ctx.arguments;
+					},
+				}),
+				createTestInjector(),
+			);
+
+			await command.execute(["one"]);
+
+			assert.deepEqual(seen, {});
+		});
+
+		it("fails naming every missing required argument", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-missing",
+					arguments: [
+						{ name: "platform", required: true },
+						{
+							name: "device",
+							required: true,
+							errorMessage: "Provide a device identifier.",
+						},
+					],
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			await assert.isRejected(
+				command.canExecute([]),
+				/Missing required argument 'platform'[\s\S]*Provide a device identifier\./,
+			);
+			// The generic preamble precedes the specific messages, as the
+			// parameter machinery printed it.
+			await assert.isRejected(
+				command.canExecute(["android"]),
+				/^You need to provide all the required parameters\.\s+Provide a device identifier\.$/,
+			);
+			assert.isTrue(await command.canExecute(["android", "emulator-1"]));
+		});
+
+		it("treats a required variadic argument as needing at least one value", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-reqvariadic",
+					arguments: [{ name: "files", required: true, variadic: true }],
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			await assert.isRejected(
+				command.canExecute([]),
+				/Missing required argument 'files'/,
+			);
+			assert.isTrue(await command.canExecute(["a.ts", "b.ts"]));
+		});
+
+		it("rejects more arguments than the specs declare", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-toomany",
+					arguments: [{ name: "platform" }],
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			await assert.isRejected(
+				command.canExecute(["android", "extra"]),
+				/accepts at most 1 parameter\(s\), but 2 were provided/,
+			);
+			assert.isTrue(await command.canExecute(["android"]));
+		});
+
+		it("rejects any argument when the spec array is empty", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-emptyspecs",
+					arguments: [],
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			await assert.isRejected(
+				command.canExecute(["stray"]),
+				/doesn't accept parameters/,
+			);
+		});
+
+		it("runs validate per value and uses a returned string as the message", async () => {
+			const seen: string[] = [];
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-validate",
+					arguments: [
+						{
+							name: "platforms",
+							variadic: true,
+							validate: async (value) => {
+								seen.push(value);
+								await Promise.resolve();
+								return (
+									value === "android" || `'${value}' is not a known platform.`
+								);
+							},
+						},
+					],
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			assert.isTrue(await command.canExecute(["android", "android"]));
+			assert.deepEqual(seen, ["android", "android"]);
+
+			await assert.isRejected(
+				command.canExecute(["android", "blackberry"]),
+				/'blackberry' is not a known platform\./,
+			);
+		});
+
+		it("falls back to a default message when validate just returns false", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-validate-false",
+					arguments: [{ name: "platform", validate: () => false }],
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			await assert.isRejected(
+				command.canExecute(["ios"]),
+				/The parameter 'ios' is not valid for 'platform'\./,
+			);
+		});
+
+		it("hands validate the command context", async () => {
+			const testInjector = createTestInjector({ force: true });
+			let capturedContext: any;
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-validate-ctx",
+					options: { force: booleanOption() },
+					arguments: [
+						{
+							name: "platform",
+							validate: (value, ctx) => {
+								capturedContext = ctx;
+								return true;
+							},
+						},
+					],
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			await command.canExecute(["android"]);
+
+			assert.deepEqual(capturedContext.options, { force: true });
+			assert.deepEqual(capturedContext.arguments, { platform: "android" });
+		});
+
+		it("enforces the specs before consulting the definition canExecute", async () => {
+			let refined = false;
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-specs-first",
+					arguments: [{ name: "platform", required: true }],
+					canExecute: () => {
+						refined = true;
+						return true;
+					},
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			await assert.isRejected(command.canExecute([]), /Missing required/);
+			assert.isFalse(refined);
+		});
+	});
+
+	describe("argument-spec validation", () => {
+		const rejects = (specs: any, expected: RegExp) =>
+			assert.throws(
+				() =>
+					defineCommand(<any>{
+						name: "dctest-spec",
+						arguments: specs,
+						run: (): void => undefined,
+					}),
+				expected,
+			);
+
+		it("rejects a spec that is not an object, or has no name", () => {
+			rejects(["platform"], /argument #1 of 'arguments' must be an object/);
+			rejects(
+				[{ required: true }],
+				/argument #1 of 'arguments' has no usable 'name'/,
+			);
+			rejects(
+				[{ name: "  " }],
+				/argument #1 of 'arguments' has no usable 'name'/,
+			);
+		});
+
+		it("rejects a typo'd spec field", () => {
+			rejects(
+				[{ name: "platform", requried: true }],
+				/argument 'platform' has unknown field\(s\) 'requried'/,
+			);
+		});
+
+		it("rejects a duplicate argument name", () => {
+			rejects(
+				[{ name: "platform" }, { name: "platform" }],
+				/'arguments' declares 'platform' twice/,
+			);
+		});
+
+		it("rejects unusable required, variadic, description, errorMessage and validate", () => {
+			rejects(
+				[{ name: "platform", required: "yes" }],
+				/argument 'platform' declares a non-boolean 'required'/,
+			);
+			rejects(
+				[{ name: "platform", variadic: 1 }],
+				/argument 'platform' declares a non-boolean 'variadic'/,
+			);
+			rejects(
+				[{ name: "platform", description: 5 }],
+				/argument 'platform' declares a non-string 'description'/,
+			);
+			rejects(
+				[{ name: "platform", errorMessage: 5 }],
+				/argument 'platform' declares a non-string 'errorMessage'/,
+			);
+			rejects(
+				[{ name: "platform", validate: "nope" }],
+				/argument 'platform' has a non-function 'validate'/,
+			);
+		});
+
+		it("rejects a variadic argument that is not the last one", () => {
+			rejects(
+				[{ name: "rest", variadic: true }, { name: "platform" }],
+				/argument 'rest' is variadic but is not the last one/,
+			);
+		});
+
+		it("rejects a required argument that follows an optional one", () => {
+			rejects(
+				[{ name: "platform" }, { name: "device", required: true }],
+				/argument 'device' is required but follows the optional 'platform'/,
+			);
+		});
+
+		it("accepts a well-formed spec array", () => {
+			assert.doesNotThrow(() =>
+				defineCommand({
+					name: "dctest-spec-ok",
+					arguments: [
+						{
+							name: "platform",
+							required: true,
+							description: "The platform",
+							errorMessage: "Provide a platform.",
+							validate: () => true,
+						},
+						{ name: "rest", variadic: true },
+					],
+					run: (): void => undefined,
+				}),
+			);
+		});
+	});
+
+	describe("setup", () => {
+		it("runs before canExecute and hands its result to every stage", async () => {
+			const order: string[] = [];
+			const testInjector = createTestInjector();
+			testInjector.register("dcTestProject", { dir: "/app" });
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-setup",
+					setup: () => {
+						order.push("setup");
+						return inject<any>("dcTestProject").dir;
+					},
+					canExecute: (ctx, projectDir) => {
+						order.push(`canExecute:${projectDir}`);
+						return true;
+					},
+					run: (ctx, projectDir) => {
+						order.push(`run:${projectDir}`);
+						return projectDir.length;
+					},
+					postRun: (ctx, result, projectDir) => {
+						order.push(`postRun:${result}:${projectDir}`);
+					},
+				}),
+				testInjector,
+			);
+
+			await command.canExecute([]);
+			await command.execute([]);
+			await command.postCommandAction([]);
+
+			assert.deepEqual(order, [
+				"setup",
+				"canExecute:/app",
+				"run:/app",
+				"postRun:4:/app",
+			]);
+		});
+
+		it("runs once per invocation, whichever stage comes first", async () => {
+			let runs = 0;
+			const build = () =>
+				createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-setup-once",
+						setup: async () => {
+							runs++;
+							return runs;
+						},
+						run: (): void => undefined,
+					}),
+					createTestInjector(),
+				);
+
+			const viaCanExecute = build();
+			await viaCanExecute.canExecute([]);
+			await viaCanExecute.execute([]);
+			assert.strictEqual(runs, 1);
+
+			runs = 0;
+			const viaExecute = build();
+			await viaExecute.execute([]);
+			assert.strictEqual(runs, 1);
+		});
+
+		it("hands undefined through when no setup is declared", async () => {
+			let seen: any = "untouched";
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-nosetup",
+					run: (ctx, setupResult) => {
+						seen = setupResult;
+					},
+				}),
+				createTestInjector(),
+			);
+
+			await command.execute([]);
+
+			assert.isUndefined(seen);
+		});
+
+		it("can fail the command from setup", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-setup-fail",
+					setup: (ctx) => ctx.fail("no project found"),
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			await assert.isRejected(command.canExecute([]), /no project found/);
+		});
+	});
+
+	describe("postRun", () => {
+		it("is exposed as postCommandAction only when declared", () => {
+			const withPostRun = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-postrun",
+					run: (): void => undefined,
+					postRun: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+			const withoutPostRun = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-nopostrun",
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			assert.isFunction(withPostRun.postCommandAction);
+			assert.isFalse("postCommandAction" in withoutPostRun);
+		});
+
+		it("receives what run returned, inside an injection context", async () => {
+			const testInjector = createTestInjector();
+			testInjector.register("dcTestReporter", { name: "reporter" });
+			let seen: any;
+			let injected: string;
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-postrun-result",
+					arguments: "any",
+					run: async () => {
+						await Promise.resolve();
+						return { created: "my-app" };
+					},
+					postRun: (ctx, result) => {
+						injected = inject<any>("dcTestReporter").name;
+						seen = { args: ctx.args, result };
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute(["my-app"]);
+			await command.postCommandAction(["my-app"]);
+
+			assert.deepEqual(seen, {
+				args: ["my-app"],
+				result: { created: "my-app" },
+			});
+			assert.strictEqual(injected, "reporter");
+		});
+	});
+
+	describe("allowUnknownOptions", () => {
+		it("sets allowUnknownOptions on the compiled command", () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-unknown",
+					allowUnknownOptions: true,
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			assert.isTrue(command.allowUnknownOptions);
+		});
+
+		it("leaves it absent when the definition omits it", () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-unknown-off",
+					run: (): void => undefined,
+				}),
+				createTestInjector(),
+			);
+
+			assert.isFalse("allowUnknownOptions" in command);
+		});
+
+		it("keeps the command's own options working alongside unknown ones", () => {
+			const testInjector = new Yok();
+			testInjector.register("staticConfig", { CLIENT_NAME: "" });
+			testInjector.register("hostInfo", {});
+			testInjector.register("settingsService", {
+				setSettings: (): any => undefined,
+				getProfileDir: () => "profileDir",
+			});
+			testInjector.register("logger", LoggerStub);
+			const failures: string[] = [];
+			const errors = new Errors(testInjector);
+			errors.failWithHelp = <any>((message: string) => failures.push(message));
+			errors.fail = <any>((message: string) => failures.push(message));
+			testInjector.register("errors", errors);
+			testInjector.register("options", Options);
+
+			const definition = defineCommand({
+				name: "dctest-passthrough",
+				allowUnknownOptions: true,
+				options: { tag: stringOption() },
+				run: (): void => undefined,
+			});
+
+			const originalArgv = process.argv;
+			process.argv = [
+				originalArgv[0],
+				originalArgv[1],
+				"--tag",
+				"beta",
+				"--flag-of-another-cli",
+			];
+			process.env.NS_STRICT_OPTIONS = "error";
+			try {
+				const command = createCommandFromDefinition(definition, testInjector);
+				const options: any = testInjector.resolve("options");
+				options.validateOptions(
+					command.dashedOptions,
+					command.allowUnknownOptions,
+				);
+
+				// The foreign flag is tolerated...
+				assert.deepEqual(failures, []);
+				// ...and the command's own option is still parsed.
+				assert.equal(options.tag, "beta");
+			} finally {
+				process.argv = originalArgv;
+				delete process.env.NS_STRICT_OPTIONS;
+			}
+		});
+
+		it("rejects a non-boolean allowUnknownOptions", () => {
+			assert.throws(
+				() =>
+					defineCommand(<any>{
+						name: "dctest-unknown-bad",
+						allowUnknownOptions: "yes",
+						run: (): void => undefined,
+					}),
+				/'allowUnknownOptions' must be a boolean/,
+			);
+		});
+
+		it("tells CommandsService to tolerate unknown options", async () => {
+			let validatedWith: any;
+			const testInjector = new Yok();
+			testInjector.register("errors", {
+				beginCommand: async (action: () => Promise<boolean>) => action(),
+				failWithHelp: (message: string) => {
+					throw new Error(message);
+				},
+			});
+			testInjector.register("hooksService", HooksServiceStub);
+			testInjector.register("logger", LoggerStub);
+			testInjector.register("staticConfig", {
+				disableAnalytics: true,
+				disableCommandHooks: true,
+			});
+			testInjector.register("extensibilityService", {});
+			testInjector.register("optionsTracker", {});
+			testInjector.register("options", {
+				validateOptions: (dashedOptions: any, allowUnknown: boolean) => {
+					validatedWith = { dashedOptions, allowUnknown };
+				},
+			});
+			testInjector.register("commandsService", CommandsService);
+
+			let ran = false;
+			registerCommandDefinition(
+				defineCommand({
+					name: "dctest-unknown-e2e",
+					allowUnknownOptions: true,
+					arguments: "any",
+					run: () => {
+						ran = true;
+					},
+				}),
+				testInjector,
+			);
+
+			const commandsService: ICommandsService =
+				testInjector.resolve("commandsService");
+			await commandsService.tryExecuteCommand("dctest-unknown-e2e", ["stray"]);
+
+			assert.isTrue(ran);
+			// Validation still runs - it is the rejection of unknown flags that
+			// is suppressed, so a passthrough command keeps its own options.
+			assert.isTrue(validatedWith.allowUnknown);
+		});
+	});
+
+	describe("ctx.injector", () => {
+		it("is the injector the command was registered against", async () => {
+			const testInjector = createTestInjector();
+			let seen: any;
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-injector",
+					run: (ctx) => {
+						seen = ctx.injector;
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.strictEqual(seen, testInjector);
+		});
+
+		it("resolves after the first await, where inject() no longer can", async () => {
+			const testInjector = createTestInjector();
+			testInjector.register("dcTestLate", { value: 42 });
+			let late: any;
+			let injectFailed = false;
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-injector-late",
+					run: async (ctx) => {
+						await Promise.resolve();
+						try {
+							inject<any>("dcTestLate");
+						} catch (err) {
+							injectFailed = true;
+						}
+						late = ctx.injector.get("dcTestLate").value;
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute([]);
+
+			assert.isTrue(injectFailed);
+			assert.strictEqual(late, 42);
+		});
+	});
+
+	describe("per-registration parameterization with a child injector", () => {
+		it("registers one definition per platform and resolves the child provider", async () => {
+			const PLATFORM = new InjectionToken<string>("dcTestCommandPlatform");
+			const testInjector = createTestInjector({ release: true });
+			const ran: string[] = [];
+
+			const definition = defineCommand({
+				name: "dctest-run",
+				options: { release: booleanOption({ default: false }) },
+				arguments: "any",
+				setup: () => inject(PLATFORM),
+				run: (ctx, platform) => {
+					ran.push(
+						`${platform}:${ctx.options.release}:${ctx.injector.get(PLATFORM)}`,
+					);
+				},
+			});
+
+			for (const platform of ["android", "ios"]) {
+				registerCommandDefinition(
+					{ ...definition, name: `dctest-run|${platform}` },
+					testInjector.createChild([{ provide: PLATFORM, useValue: platform }]),
+				);
+			}
+
+			for (const platform of ["android", "ios"]) {
+				const command = testInjector.resolveCommand(`dctest-run|${platform}`);
+				assert.isTrue(await command.canExecute([]));
+				await command.execute([]);
+			}
+
+			assert.deepEqual(ran, ["android:true:android", "ios:true:ios"]);
 		});
 	});
 });
