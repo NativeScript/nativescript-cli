@@ -30,6 +30,9 @@ buildscript {
     def getDepPlatformDir = { dep ->
         file("${project.ext.USER_PROJECT_PLATFORMS_ANDROID}/${dep.directory}/$PLATFORMS_ANDROID")
     }
+    def getGeneratedDepPlatformDir = { dep ->
+        file("$rootDir/.plugins/${dep.directory}")
+    }
     def computeKotlinVersion = { -> project.hasProperty("kotlinVersion") ? kotlinVersion : "2.2.20" }
     def kotlinVersion = computeKotlinVersion()
     repositories {
@@ -46,6 +49,7 @@ buildscript {
 
     // Set up styled logger
     project.ext.getDepPlatformDir = getDepPlatformDir
+    project.ext.getGeneratedDepPlatformDir = getGeneratedDepPlatformDir
     project.ext.outLogger = services.get(StyledTextOutputFactory).create("colouredOutputLogger")
 
     // the build script will not work with previous versions of the CLI (3.1 or earlier)
@@ -144,6 +148,10 @@ allprojects {
         pluginDependencies.addAll(nativescriptDependencies.collect {
             "${getDepPlatformDir(it)}/libs"
         })
+
+        pluginDependencies.addAll(nativescriptDependencies.collect {
+            getGeneratedDepPlatformDir(it)
+        })
         mavenLocal()
         mavenCentral()
         maven {
@@ -221,6 +229,14 @@ task addDependenciesFromNativeScriptPlugins {
             def length = aarFile.name.length() - 4
             def fileName = aarFile.name[0..<length]
             outLogger.withStyle(Style.SuccessHeader).println "\t + adding aar plugin dependency: " + aarFile.getAbsolutePath()
+            project.dependencies.add("implementation", [name: fileName, ext: "aar"])
+        }
+
+        def generatedAarFiles = fileTree(dir: getGeneratedDepPlatformDir(dep), include: ["**/*.aar"])
+        generatedAarFiles.each { aarFile ->
+            def length = aarFile.name.length() - 4
+            def fileName = aarFile.name[0..<length]
+            outLogger.withStyle(Style.SuccessHeader).println "\t + adding generated aar plugin dependency: " + aarFile.getAbsolutePath()
             project.dependencies.add("implementation", [name: fileName, ext: "aar"])
         }
 
