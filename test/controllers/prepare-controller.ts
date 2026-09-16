@@ -51,6 +51,9 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 
 	injector.register("mobileHelper", MobileHelper);
 	injector.register("prepareController", PrepareController);
+	injector.register("packageManager", {
+		getInstalledPackagePath: async (): Promise<string> => null,
+	});
 
 	injector.register("nodeModulesDependenciesBuilder", {
 		getProductionDependencies: () => <any>[],

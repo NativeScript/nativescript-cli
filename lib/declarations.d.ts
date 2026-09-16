@@ -111,6 +111,17 @@ interface INodePackageManager {
 	 * @returns {string} The full path to npm cache directory
 	 */
 	getCachePath(): Promise<string>;
+
+	/**
+	 * Locates a package the way the package manager laid it out on disk.
+	 * @param  {string} packageName The name of the package.
+	 * @param  {string} fromDir     The directory whose dependencies are searched, usually the project directory.
+	 * @return {Promise<string>} The absolute path of the package directory, or null when it is not installed.
+	 */
+	getInstalledPackagePath(
+		packageName: string,
+		fromDir: string,
+	): Promise<string>;
 }
 
 /** @deprecated Kept so existing annotations compile; use the {@link PackageManager} contract. */

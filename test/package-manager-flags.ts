@@ -223,6 +223,37 @@ describe("package manager flag mapping", () => {
 		});
 	});
 
+	describe("getInstalledPackagePath", () => {
+		const repoRoot = path.join(__dirname, "..", "..");
+
+		for (const { name, ctor } of managers) {
+			it(`${name} resolves an installed package from the given directory`, async () => {
+				const manager = createTestInjector(
+					name,
+					ctor,
+				).resolve<INodePackageManager>(name);
+				const resolved = await manager.getInstalledPackagePath(
+					"lodash",
+					repoRoot,
+				);
+				assert.equal(resolved, path.join(repoRoot, "node_modules", "lodash"));
+			});
+
+			it(`${name} returns null for a package that is not installed`, async () => {
+				const manager = createTestInjector(
+					name,
+					ctor,
+				).resolve<INodePackageManager>(name);
+				assert.isNull(
+					await manager.getInstalledPackagePath(
+						"definitely-not-installed-package",
+						repoRoot,
+					),
+				);
+			});
+		}
+	});
+
 	describe("uninstall", () => {
 		const expected: { [name: string]: string } = {
 			npm: "npm uninstall left-pad --save",

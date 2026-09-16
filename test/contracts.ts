@@ -60,7 +60,7 @@ describe("contracts tranche", () => {
 			async canExecuteLocalBuild(): Promise<boolean> {
 				return true;
 			}
-			checkForDeprecatedShortImportsInAppDir(): void {}
+			async checkForDeprecatedShortImportsInAppDir(): Promise<void> {}
 		}
 
 		const injector = new Injector([provide(DoctorService, StubDoctorService)]);

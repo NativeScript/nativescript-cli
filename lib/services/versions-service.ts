@@ -2,8 +2,11 @@ import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as path from "path";
-import { resolvePackagePath } from "../helpers/package-path-helper";
-import { IVersionsService, IPackageInstallationManager } from "../declarations";
+import {
+	IVersionsService,
+	IPackageInstallationManager,
+	IPackageManager,
+} from "../declarations";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IPluginsService, IBasePluginData } from "../definitions/plugins";
 import { IFileSystem, IVersionInformation } from "../common/declarations";
@@ -29,6 +32,7 @@ class VersionsService implements IVersionsService {
 	constructor(
 		private $fs: IFileSystem,
 		private $packageInstallationManager: IPackageInstallationManager,
+		private $packageManager: IPackageManager,
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $staticConfig: Config.IStaticConfig,
@@ -65,11 +69,12 @@ class VersionsService implements IVersionsService {
 
 		if (this.projectData) {
 			const resolve = (packageName: string) =>
-				resolvePackagePath(packageName, {
-					paths: [this.projectData.projectDir],
-				});
-			let scopedPackagePath = resolve(constants.SCOPED_TNS_CORE_MODULES);
-			let tnsCoreModulesPath = resolve(constants.TNS_CORE_MODULES_NAME);
+				this.$packageManager.getInstalledPackagePath(
+					packageName,
+					this.projectData.projectDir
+				);
+			let scopedPackagePath = await resolve(constants.SCOPED_TNS_CORE_MODULES);
+			let tnsCoreModulesPath = await resolve(constants.TNS_CORE_MODULES_NAME);
 
 			const dependsOnNonScopedPackage = !!this.projectData.dependencies[
 				constants.TNS_CORE_MODULES_NAME
@@ -86,8 +91,8 @@ class VersionsService implements IVersionsService {
 				await this.$pluginsService.ensureAllDependenciesAreInstalled(
 					this.projectData
 				);
-				scopedPackagePath = resolve(constants.SCOPED_TNS_CORE_MODULES);
-				tnsCoreModulesPath = resolve(constants.TNS_CORE_MODULES_NAME);
+				scopedPackagePath = await resolve(constants.SCOPED_TNS_CORE_MODULES);
+				tnsCoreModulesPath = await resolve(constants.TNS_CORE_MODULES_NAME);
 			}
 
 			if (dependsOnNonScopedPackage && tnsCoreModulesPath) {

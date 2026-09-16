@@ -1,4 +1,5 @@
 import { isInteractive } from "../common/helpers";
+import { resolvePackagePath } from "../helpers/package-path-helper";
 import {
 	INodePackageManager,
 	IPackageInstallOptions,
@@ -142,6 +143,13 @@ export abstract class BasePackageManager implements INodePackageManager {
 			name: packageMetadata.name,
 			version: packageMetadata.version,
 		};
+	}
+
+	public async getInstalledPackagePath(
+		packageName: string,
+		fromDir: string,
+	): Promise<string> {
+		return resolvePackagePath(packageName, { paths: [fromDir] }) || null;
 	}
 
 	protected getInstallFlags(options: IPackageInstallOptions): string[] {

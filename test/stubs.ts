@@ -457,6 +457,13 @@ export class PackageInstallationManagerStub implements IPackageInstallationManag
 export class NodePackageManagerStub implements INodePackageManager {
 	constructor() {}
 
+	public async getInstalledPackagePath(
+		packageName: string,
+		fromDir: string,
+	): Promise<string> {
+		return null;
+	}
+
 	public async install(
 		packageName: string,
 		pathToSave: string,

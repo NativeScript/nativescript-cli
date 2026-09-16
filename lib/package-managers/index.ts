@@ -108,6 +108,15 @@ export class PackageManager implements IPackageManager {
 		return this.packageManager.getCachePath();
 	}
 
+	@exported("packageManager")
+	@invokeInit()
+	public getInstalledPackagePath(
+		packageName: string,
+		fromDir: string
+	): Promise<string> {
+		return this.packageManager.getInstalledPackagePath(packageName, fromDir);
+	}
+
 	public async getTagVersion(
 		packageName: string,
 		tag: string
