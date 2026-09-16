@@ -17,7 +17,7 @@ import {
 } from "../definitions/platform";
 import { IProjectDataService, IProjectData } from "../definitions/project";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
 	INodePackageManager,
 	IOptions,
 	IDependencyData,
@@ -59,7 +59,7 @@ export class PluginsService implements IPluginsService {
 		return this.$injector.resolve("projectDataService");
 	}
 
-	private get npmInstallOptions(): INodePackageManagerInstallOptions {
+	private get npmInstallOptions(): IPackageInstallOptions {
 		return _.merge(
 			{
 				disableNpmInstall: this.$options.disableNpmInstall,

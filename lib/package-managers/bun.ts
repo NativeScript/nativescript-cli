@@ -4,7 +4,8 @@ import { exported, cache } from "../common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "../constants";
 import * as _ from "lodash";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 } from "../declarations";
@@ -17,7 +18,21 @@ import {
 } from "../common/declarations";
 import { injector } from "../common/yok";
 
-export class Bun extends BasePackageManager {
+export class BunPackageManager extends BasePackageManager {
+	protected readonly installFlags = {
+		save: "--save",
+		noSave: "--no-save",
+		dev: "--dev",
+		optional: "--optional",
+		exact: "--exact",
+		silent: "--silent",
+		ignoreScripts: "--ignore-scripts",
+	};
+	protected readonly uninstallFlags = {
+		save: "--save",
+		noSave: "--no-save",
+	};
+
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -34,19 +49,16 @@ export class Bun extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		options: IPackageInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		if (config.disableNpmInstall) {
+		if (options.disableNpmInstall) {
 			return;
-		}
-		if (config.ignoreScripts) {
-			config["ignore-scripts"] = true;
 		}
 
 		const packageJsonPath = path.join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		const flags = this.getFlagsString(config, true);
+		const flags = this.getInstallFlags(options);
 		let params = ["install"];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -73,10 +85,10 @@ export class Bun extends BasePackageManager {
 	@exported("bun")
 	public async uninstall(
 		packageName: string,
-		config?: any,
+		options?: IPackageUninstallOptions,
 		cwd?: string
 	): Promise<string> {
-		const flags = this.getFlagsString(config, false);
+		const flags = this.getUninstallFlags(options).join(" ");
 		return this.$childProcess.exec(`bun remove ${packageName} ${flags}`, {
 			cwd,
 		});
@@ -152,4 +164,4 @@ export class Bun extends BasePackageManager {
 	}
 }
 
-injector.register("bun", Bun);
+injector.register("bun", BunPackageManager);

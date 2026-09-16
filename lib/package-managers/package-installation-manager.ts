@@ -3,6 +3,7 @@ import * as constants from "../constants";
 import {
 	INpmInstallOptions,
 	INpmInstallResultInfo,
+	IPackageInstallOptions,
 	IPackageInstallationManager,
 	IPackageManager,
 	IStaticConfig,
@@ -152,13 +153,13 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		try {
 			const pathToSave = projectDir;
 			const version = (opts && opts.version) || null;
-			const dependencyType = (opts && opts.dependencyType) || null;
+			const dev = !!(opts && opts.dev);
 
 			return await this.installCore(
 				packageToInstall,
 				pathToSave,
 				version,
-				dependencyType
+				dev
 			);
 		} catch (error) {
 			this.$logger.trace(error);
@@ -277,7 +278,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		pathToSave: string,
 		version: string,
-		dependencyType: string
+		dev: boolean
 	): Promise<string> {
 		const possiblePackageName = path.resolve(packageName);
 		if (this.$fs.exists(possiblePackageName)) {
@@ -290,7 +291,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			packageName,
 			pathToSave,
 			version,
-			dependencyType
+			dev
 		);
 		const installedPackageName = installResultInfo.name;
 
@@ -307,17 +308,17 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		pathToSave: string,
 		version: string,
-		dependencyType: string
+		dev: boolean
 	): Promise<INpmInstallResultInfo> {
 		this.$logger.info(`Installing ${packageName}`);
 
 		packageName = packageName + (version ? `@${version}` : "");
 
-		const npmOptions: any = { silent: true, "save-exact": true };
-
-		if (dependencyType) {
-			npmOptions[dependencyType] = true;
-		}
+		const npmOptions: IPackageInstallOptions = {
+			silent: true,
+			exact: true,
+			dev,
+		};
 
 		return await this.$packageManager.install(
 			packageName,

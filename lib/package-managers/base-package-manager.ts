@@ -1,7 +1,8 @@
 import { isInteractive } from "../common/helpers";
 import {
 	INodePackageManager,
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 	INpmPackageNameParts,
@@ -13,15 +14,33 @@ import {
 	IHostInfo,
 } from "../common/declarations";
 
+/**
+ * How one package manager spells each IPackageInstallOptions flag on its
+ * command line. A missing entry means the manager has no such flag and the
+ * option is dropped rather than passed through.
+ */
+export interface IPackageManagerFlags {
+	save?: string;
+	noSave?: string;
+	dev?: string;
+	optional?: string;
+	exact?: string;
+	silent?: string;
+	ignoreScripts?: string;
+}
+
 export abstract class BasePackageManager implements INodePackageManager {
+	protected abstract readonly installFlags: IPackageManagerFlags;
+	protected abstract readonly uninstallFlags: IPackageManagerFlags;
+
 	public abstract install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 	public abstract uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		path?: string,
 	): Promise<string>;
 	public abstract view(packageName: string, config: Object): Promise<any>;
@@ -131,6 +150,37 @@ export abstract class BasePackageManager implements INodePackageManager {
 			name: packageMetadata.name,
 			version: packageMetadata.version,
 		};
+	}
+
+	protected getInstallFlags(options: IPackageInstallOptions): string[] {
+		return this.mapFlags(options, this.installFlags);
+	}
+
+	protected getUninstallFlags(options: IPackageUninstallOptions): string[] {
+		return this.mapFlags(options, this.uninstallFlags);
+	}
+
+	private mapFlags(
+		options: IPackageInstallOptions,
+		flags: IPackageManagerFlags,
+	): string[] {
+		const result: string[] = [];
+		if (!options) {
+			return result;
+		}
+		const push = (flag?: string) => {
+			if (flag) {
+				result.push(flag);
+			}
+		};
+		if (options.save === true) push(flags.save);
+		if (options.save === false) push(flags.noSave);
+		if (options.dev) push(flags.dev);
+		if (options.optional) push(flags.optional);
+		if (options.exact) push(flags.exact);
+		if (options.silent) push(flags.silent);
+		if (options.ignoreScripts) push(flags.ignoreScripts);
+		return result;
 	}
 
 	protected getFlagsString(config: any, asArray: boolean): any {

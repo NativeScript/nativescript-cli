@@ -46,11 +46,11 @@ function createTestInjector(): IInjector {
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
-	testInjector.register("npm", NpmLib.NPM);
-	testInjector.register("yarn", YarnLib.Yarn);
-	testInjector.register("yarn2", Yarn2Lib.Yarn2);
-	testInjector.register("pnpm", PnpmLib.PNPM);
-	testInjector.register("bun", BunLib.Bun);
+	testInjector.register("npm", NpmLib.NpmPackageManager);
+	testInjector.register("yarn", YarnLib.YarnPackageManager);
+	testInjector.register("yarn2", Yarn2Lib.Yarn2PackageManager);
+	testInjector.register("pnpm", PnpmLib.PnpmPackageManager);
+	testInjector.register("bun", BunLib.BunPackageManager);
 	testInjector.register("packageManager", PackageManagerLib.PackageManager);
 	testInjector.register("projectConfigService", ProjectConfigServiceStub);
 	testInjector.register(
