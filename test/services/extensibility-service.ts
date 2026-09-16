@@ -87,6 +87,17 @@ describe("extensibilityService", () => {
 		return testInjector;
 	};
 
+	const stubInstalledExtensions = (
+		testInjector: IInjector,
+		resolve: (extensionName: string, fromDir: string) => string,
+	): void => {
+		const packageManager = testInjector.resolve("packageManager");
+		packageManager.getInstalledPackagePath = async (
+			packageName: string,
+			fromDir: string,
+		): Promise<string> => resolve(packageName, fromDir);
+	};
+
 	const getExpectedInstallationPathForExtension = (
 		testInjector: IInjector,
 		extensionName: string,
@@ -320,14 +331,9 @@ describe("extensibilityService", () => {
 				const fs: IFileSystem = testInjector.resolve("fs");
 				const extensionNames = ["extension1", "extension2", "extension3"];
 				fs.exists = (pathToCheck: string): boolean => true;
-				fs.readDirectory = (dir: string): string[] => {
-					assert.deepStrictEqual(
-						path.basename(dir),
-						constants.NODE_MODULES_FOLDER_NAME,
-					);
-					// Simulates extensions are installed in node_modules
-					return extensionNames;
-				};
+				stubInstalledExtensions(testInjector, (name, fromDir) =>
+					path.join(fromDir, constants.NODE_MODULES_FOLDER_NAME, name),
+				);
 
 				mockFsReadJson(testInjector, extensionNames);
 
@@ -359,20 +365,15 @@ describe("extensibilityService", () => {
 				fs.exists = (pathToCheck: string): boolean =>
 					path.basename(pathToCheck) !== extensionNames[0];
 
-				let isFirstReadDirExecution = true;
-				fs.readDirectory = (dir: string): string[] => {
-					assert.deepStrictEqual(
-						path.basename(dir),
-						constants.NODE_MODULES_FOLDER_NAME,
-					);
-					// Simulates extensions are installed in node_modules
-					if (isFirstReadDirExecution) {
-						isFirstReadDirExecution = false;
-						return extensionNames.filter((ext) => ext !== "extension1");
-					} else {
-						return extensionNames;
+				// extension1 is missing until the service installs it
+				let isExtension1Installed = false;
+				stubInstalledExtensions(testInjector, (name, fromDir) => {
+					if (name === "extension1" && !isExtension1Installed) {
+						isExtension1Installed = true;
+						return null;
 					}
-				};
+					return path.join(fromDir, constants.NODE_MODULES_FOLDER_NAME, name);
+				});
 
 				mockFsReadJson(testInjector, extensionNames);
 
@@ -415,14 +416,9 @@ describe("extensibilityService", () => {
 				const fs: IFileSystem = testInjector.resolve("fs");
 				const extensionNames = ["extension1", "extension2", "extension3"];
 				fs.exists = (pathToCheck: string): boolean => true;
-				fs.readDirectory = (dir: string): string[] => {
-					assert.deepStrictEqual(
-						path.basename(dir),
-						constants.NODE_MODULES_FOLDER_NAME,
-					);
-					// Simulates extensions are installed in node_modules
-					return extensionNames;
-				};
+				stubInstalledExtensions(testInjector, (name, fromDir) =>
+					path.join(fromDir, constants.NODE_MODULES_FOLDER_NAME, name),
+				);
 
 				mockFsReadJson(testInjector, extensionNames);
 
@@ -469,7 +465,7 @@ describe("extensibilityService", () => {
 				}
 			});
 
-			it("rejects all promises when unable to read node_modules dir (simulate EPERM error)", async () => {
+			it("rejects all promises when the package manager cannot locate extensions (simulate EPERM error)", async () => {
 				const testInjector = getTestInjector();
 				const extensionNames = ["extension1", "extension2", "extension3"];
 				const fs: IFileSystem = testInjector.resolve("fs");
@@ -480,14 +476,10 @@ describe("extensibilityService", () => {
 				mockFsReadJson(testInjector, extensionNames);
 
 				let isReadDirCalled = false;
-				fs.readDirectory = (dir: string): string[] => {
+				stubInstalledExtensions(testInjector, () => {
 					isReadDirCalled = true;
-					assert.deepStrictEqual(
-						path.basename(dir),
-						constants.NODE_MODULES_FOLDER_NAME,
-					);
 					throw new Error(expectedErrorMessage);
-				};
+				});
 
 				const extensibilityService: IExtensibilityService =
 					testInjector.resolve(ExtensibilityService);
@@ -532,14 +524,10 @@ describe("extensibilityService", () => {
 				mockFsReadJson(testInjector, extensionNames);
 
 				let isReadDirCalled = false;
-				fs.readDirectory = (dir: string): string[] => {
+				stubInstalledExtensions(testInjector, () => {
 					isReadDirCalled = true;
-					assert.deepStrictEqual(
-						path.basename(dir),
-						constants.NODE_MODULES_FOLDER_NAME,
-					);
-					return [];
-				};
+					return null;
+				});
 
 				let isNpmInstallCalled = false;
 				const npm: INodePackageManager = testInjector.resolve("npm");
