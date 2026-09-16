@@ -149,9 +149,9 @@ describe("androidPluginBuildService", () => {
 
 				return result;
 			},
-			view: async (packageName: string, config: any): Promise<any> => {
+			view: async (packageName: string, field?: string): Promise<any> => {
 				let result: any = null;
-				if (config && config.gradle) {
+				if (field === "gradle") {
 					const packageNameParts = packageName.split("@");
 					const packageVersion = packageNameParts[packageNameParts.length - 1];
 					switch (packageVersion) {
@@ -170,7 +170,7 @@ describe("androidPluginBuildService", () => {
 					}
 				}
 
-				if (config && config["dist-tags"]) {
+				if (field === "dist-tags") {
 					result = {
 						latest: "4.1.2",
 					};

@@ -84,7 +84,7 @@ export class PluginsService implements IPluginsService {
 	) {}
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
-		await this.ensure(projectData);
+		await this.ensureAllDependenciesAreInstalled(projectData);
 		const possiblePackageName = path.resolve(plugin);
 		if (
 			possiblePackageName.indexOf(".tgz") !== -1 &&
@@ -702,10 +702,6 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		}));
 	}
 
-	private getNodeModulesPath(projectDir: string): string {
-		return path.join(projectDir, "node_modules");
-	}
-
 	private getPackageJsonFilePath(projectDir: string): string {
 		return path.join(projectDir, "package.json");
 	}
@@ -754,17 +750,10 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		};
 	}
 
-	private async ensure(projectData: IProjectData): Promise<void> {
-		await this.ensureAllDependenciesAreInstalled(projectData);
-		this.$fs.ensureDirectoryExists(
-			this.getNodeModulesPath(projectData.projectDir),
-		);
-	}
-
 	private async getAllInstalledModules(
 		projectData: IProjectData,
 	): Promise<INodeModuleData[]> {
-		await this.ensure(projectData);
+		await this.ensureAllDependenciesAreInstalled(projectData);
 
 		const nodeModules = this.getDependencies(projectData.projectDir);
 		return _.map(nodeModules, (nodeModuleName) =>

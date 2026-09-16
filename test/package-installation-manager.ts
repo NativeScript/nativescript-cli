@@ -67,12 +67,12 @@ function mockNpm(
 	latestVersion: string
 ) {
 	testInjector.register("npm", {
-		view: async (packageName: string, config: any): Promise<string[]> => {
-			if (config.versions) {
+		view: async (packageName: string, field?: string): Promise<string[]> => {
+			if (field === "versions") {
 				return versions;
 			}
 
-			throw new Error(`Unable to find propertyName ${config}.`);
+			throw new Error(`Unable to find propertyName ${field}.`);
 		},
 	});
 }
