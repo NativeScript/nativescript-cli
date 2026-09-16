@@ -125,7 +125,7 @@ export class HttpClient implements Server.IHttpClient {
 		if (Number.isFinite(options.maxRedirects)) {
 			httpOptions.maxRedirects = options.maxRedirects;
 		}
-		if (options.validateStatus) {
+		if (options.validateStatus !== undefined) {
 			httpOptions.validateStatus = options.validateStatus;
 		}
 

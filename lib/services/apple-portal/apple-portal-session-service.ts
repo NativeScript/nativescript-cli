@@ -238,7 +238,7 @@ For more details how to set up your environment, please execute "ns publish ios 
 				url: this.logoutEndpoint,
 				method: "HEAD",
 				maxRedirects: 0,
-				validateStatus: () => true,
+				validateStatus: () => true, // purposfully do not want to follow redirects or fail on error codes.
 			});
 			const location = logoutResponse?.headers?.location;
 			if (location) {
