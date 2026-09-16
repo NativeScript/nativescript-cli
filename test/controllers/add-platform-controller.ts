@@ -5,12 +5,12 @@ import { assert } from "chai";
 import { format } from "util";
 import * as _ from "lodash";
 import { AddPlaformErrors } from "../../lib/constants";
-import { PackageManager } from "../../lib/package-manager";
-import { NodePackageManager } from "../../lib/node-package-manager";
-import { YarnPackageManager } from "../../lib/yarn-package-manager";
-import { Yarn2PackageManager } from "../../lib/yarn2-package-manager";
-import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
-import { BunPackageManager } from "../../lib/bun-package-manager";
+import { PackageManager } from "../../lib/package-managers";
+import { NPM } from "../../lib/package-managers/npm";
+import { Yarn } from "../../lib/package-managers/yarn";
+import { Yarn2 } from "../../lib/package-managers/yarn2";
+import { PNPM } from "../../lib/package-managers/pnpm";
+import { Bun } from "../../lib/package-managers/bun";
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 
 let actualMessage: string = null;
@@ -29,11 +29,11 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 		trackEventActionInGoogleAnalytics: () => ({}),
 	});
 	injector.register("packageManager", PackageManager);
-	injector.register("npm", NodePackageManager);
-	injector.register("yarn", YarnPackageManager);
-	injector.register("yarn2", Yarn2PackageManager);
-	injector.register("pnpm", PnpmPackageManager);
-	injector.register("bun", BunPackageManager);
+	injector.register("npm", NPM);
+	injector.register("yarn", Yarn);
+	injector.register("yarn2", Yarn2);
+	injector.register("pnpm", PNPM);
+	injector.register("bun", Bun);
 
 	injector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,

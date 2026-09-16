@@ -1,17 +1,17 @@
-import { isInteractive } from "./common/helpers";
+import { isInteractive } from "../common/helpers";
 import {
 	INodePackageManager,
 	INodePackageManagerInstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 	INpmPackageNameParts,
-} from "./declarations";
+} from "../declarations";
 import {
 	IDictionary,
 	IChildProcess,
 	IFileSystem,
 	IHostInfo,
-} from "./common/declarations";
+} from "../common/declarations";
 
 export abstract class BasePackageManager implements INodePackageManager {
 	public abstract install(

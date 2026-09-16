@@ -1,12 +1,12 @@
 import * as path from "path";
 import * as _ from "lodash";
 import { BasePackageManager } from "./base-package-manager";
-import { exported } from "./common/decorators";
+import { exported } from "../common/decorators";
 import {
 	INodePackageManagerInstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
@@ -14,10 +14,11 @@ import {
 	IHostInfo,
 	Server,
 	IDictionary,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
-export class YarnPackageManager extends BasePackageManager {
+export class Yarn2 extends BasePackageManager {
+	private $hostInfo_: IHostInfo;
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -27,10 +28,21 @@ export class YarnPackageManager extends BasePackageManager {
 		private $logger: ILogger,
 		$pacoteService: IPacoteService
 	) {
-		super($childProcess, $fs, $hostInfo, $pacoteService, "yarn");
+		super($childProcess, $fs, $hostInfo, $pacoteService, "yarn2");
+		this.$hostInfo_ = $hostInfo;
 	}
 
-	@exported("yarn")
+	protected getPackageManagerExecutableName(): string {
+		let executableName = "yarn";
+
+		if (this.$hostInfo_.isWindows) {
+			executableName += ".cmd";
+		}
+
+		return executableName;
+	}
+
+	@exported("yarn2")
 	public async install(
 		packageName: string,
 		pathToSave: string,
@@ -46,7 +58,11 @@ export class YarnPackageManager extends BasePackageManager {
 		const packageJsonPath = path.join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		const flags = this.getFlagsString(config, true);
+		// remove unsupported flags
+		// todo: refactor all package managers to map typed flags to the actual flags
+		const cleanedConfig = _.omit(config, ["save-dev", "save-exact"]);
+
+		const flags = this.getFlagsString(cleanedConfig, true);
 		let params = [];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -69,7 +85,7 @@ export class YarnPackageManager extends BasePackageManager {
 		}
 	}
 
-	@exported("yarn")
+	@exported("yarn2")
 	public uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
@@ -81,7 +97,7 @@ export class YarnPackageManager extends BasePackageManager {
 		});
 	}
 
-	@exported("yarn")
+	@exported("yarn2")
 	public async view(packageName: string, config: Object): Promise<any> {
 		const wrappedConfig = _.extend({}, config, { json: true });
 
@@ -89,21 +105,21 @@ export class YarnPackageManager extends BasePackageManager {
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(
-				`yarn info ${packageName} ${flags}`
+				`yarn npm info ${packageName} ${flags}`
 			);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
 
 		try {
-			const result = JSON.parse(viewResult);
-			return result.data;
+			return JSON.parse(viewResult);
 		} catch (err) {
+			this.$errors.fail(err.message);
 			return null;
 		}
 	}
 
-	@exported("yarn")
+	@exported("yarn2")
 	public search(
 		filter: string[],
 		config: IDictionary<string | boolean>
@@ -122,9 +138,11 @@ export class YarnPackageManager extends BasePackageManager {
 		return result;
 	}
 
-	@exported("yarn")
+	@exported("yarn2")
 	public async getRegistryPackageData(packageName: string): Promise<any> {
-		const registry = await this.$childProcess.exec(`yarn config get registry`);
+		const registry = await this.$childProcess.exec(
+			`yarn config get npmRegistryServer`
+		);
 		const url = `${registry.trim()}/${packageName}`;
 		this.$logger.trace(
 			`Trying to get data from yarn registry for package ${packageName}, url is: ${url}`
@@ -140,11 +158,11 @@ export class YarnPackageManager extends BasePackageManager {
 		return jsonData;
 	}
 
-	@exported("yarn")
+	@exported("yarn2")
 	public async getCachePath(): Promise<string> {
-		const result = await this.$childProcess.exec(`yarn cache dir`);
+		const result = await this.$childProcess.exec(`yarn config get cacheFolder`);
 		return result.toString().trim();
 	}
 }
 
-injector.register("yarn", YarnPackageManager);
+injector.register("yarn2", Yarn2);

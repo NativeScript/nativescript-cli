@@ -4,13 +4,13 @@ import * as ErrorsLib from "../lib/common/errors";
 import * as FsLib from "../lib/common/file-system";
 import * as HostInfoLib from "../lib/common/host-info";
 import * as LoggerLib from "../lib/common/logger/logger";
-import * as NpmLib from "../lib/node-package-manager";
-import * as YarnLib from "../lib/yarn-package-manager";
-import * as Yarn2Lib from "../lib/yarn2-package-manager";
-import * as PnpmLib from "../lib/pnpm-package-manager";
-import * as BunLib from "../lib/bun-package-manager";
-import * as PackageManagerLib from "../lib/package-manager";
-import * as PackageInstallationManagerLib from "../lib/package-installation-manager";
+import * as NpmLib from "../lib/package-managers/npm";
+import * as YarnLib from "../lib/package-managers/yarn";
+import * as Yarn2Lib from "../lib/package-managers/yarn2";
+import * as PnpmLib from "../lib/package-managers/pnpm";
+import * as BunLib from "../lib/package-managers/bun";
+import * as PackageManagerLib from "../lib/package-managers";
+import * as PackageInstallationManagerLib from "../lib/package-managers/package-installation-manager";
 import * as OptionsLib from "../lib/options";
 import * as StaticConfigLib from "../lib/config";
 import * as yok from "../lib/common/yok";
@@ -46,11 +46,11 @@ function createTestInjector(): IInjector {
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
 	});
-	testInjector.register("npm", NpmLib.NodePackageManager);
-	testInjector.register("yarn", YarnLib.YarnPackageManager);
-	testInjector.register("yarn2", Yarn2Lib.Yarn2PackageManager);
-	testInjector.register("pnpm", PnpmLib.PnpmPackageManager);
-	testInjector.register("bun", BunLib.BunPackageManager);
+	testInjector.register("npm", NpmLib.NPM);
+	testInjector.register("yarn", YarnLib.Yarn);
+	testInjector.register("yarn2", Yarn2Lib.Yarn2);
+	testInjector.register("pnpm", PnpmLib.PNPM);
+	testInjector.register("bun", BunLib.Bun);
 	testInjector.register("packageManager", PackageManagerLib.PackageManager);
 	testInjector.register("projectConfigService", ProjectConfigServiceStub);
 	testInjector.register(

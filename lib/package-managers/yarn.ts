@@ -1,36 +1,36 @@
 import * as path from "path";
-import { BasePackageManager } from "./base-package-manager";
-import { exported, cache } from "./common/decorators";
-import { CACACHE_DIRECTORY_NAME } from "./constants";
 import * as _ from "lodash";
+import { BasePackageManager } from "./base-package-manager";
+import { exported } from "../common/decorators";
 import {
 	INodePackageManagerInstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
 	IFileSystem,
 	IHostInfo,
 	Server,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+	IDictionary,
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
-export class BunPackageManager extends BasePackageManager {
+export class Yarn extends BasePackageManager {
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
 		$fs: IFileSystem,
 		$hostInfo: IHostInfo,
-		private $logger: ILogger,
 		private $httpClient: Server.IHttpClient,
+		private $logger: ILogger,
 		$pacoteService: IPacoteService
 	) {
-		super($childProcess, $fs, $hostInfo, $pacoteService, "bun");
+		super($childProcess, $fs, $hostInfo, $pacoteService, "yarn");
 	}
 
-	@exported("bun")
+	@exported("yarn")
 	public async install(
 		packageName: string,
 		pathToSave: string,
@@ -47,10 +47,10 @@ export class BunPackageManager extends BasePackageManager {
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
 		const flags = this.getFlagsString(config, true);
-		let params = ["install"];
+		let params = [];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
-			params.push(packageName);
+			params.push("add", packageName);
 		}
 
 		params = params.concat(flags);
@@ -63,61 +63,58 @@ export class BunPackageManager extends BasePackageManager {
 				{ cwd, isInstallingAllDependencies }
 			);
 			return result;
-		} catch (err) {
-			// Revert package.json contents to preserve valid state
+		} catch (e) {
 			this.$fs.writeJson(packageJsonPath, jsonContentBefore);
-			throw err;
+			throw e;
 		}
 	}
 
-	@exported("bun")
-	public async uninstall(
+	@exported("yarn")
+	public uninstall(
 		packageName: string,
-		config?: any,
+		config?: IDictionary<string | boolean>,
 		cwd?: string
 	): Promise<string> {
 		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`bun remove ${packageName} ${flags}`, {
+		return this.$childProcess.exec(`yarn remove ${packageName} ${flags}`, {
 			cwd,
 		});
 	}
 
-	// Bun does not have a `view` command; use npm.
-	@exported("bun")
+	@exported("yarn")
 	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
+		const wrappedConfig = _.extend({}, config, { json: true });
 
 		const flags = this.getFlagsString(wrappedConfig, false);
 		let viewResult: any;
 		try {
 			viewResult = await this.$childProcess.exec(
-				`npm view ${packageName} ${flags}`
+				`yarn info ${packageName} ${flags}`
 			);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
 
 		try {
-			return JSON.parse(viewResult);
+			const result = JSON.parse(viewResult);
+			return result.data;
 		} catch (err) {
 			return null;
 		}
 	}
 
-	// Bun does not have a `search` command; use npm.
-	@exported("bun")
-	public async search(filter: string[], config: any): Promise<string> {
-		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`npm search ${filter.join(" ")} ${flags}`);
+	@exported("yarn")
+	public search(
+		filter: string[],
+		config: IDictionary<string | boolean>
+	): Promise<string> {
+		this.$errors.fail(
+			"Method not implemented. Yarn does not support searching for packages in the registry."
+		);
+		return null;
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {
-		// Bugs with npms.io:
-		// 1. API returns no results when a valid package name contains @ or /
-		//    even if using encodeURIComponent().
-		// 2. npms.io's API no longer returns updated results; see
-		//    https://github.com/npms-io/npms-api/issues/112. Better to switch to
-		//    https://registry.npmjs.org/<query>
 		const httpRequestResult = await this.$httpClient.httpRequest(
 			`https://api.npms.io/v2/search?q=keywords:${keyword}`
 		);
@@ -125,31 +122,29 @@ export class BunPackageManager extends BasePackageManager {
 		return result;
 	}
 
-	// Bun does not have a command analogous to `npm config get registry`; Bun
-	// uses `bunfig.toml` to define custom registries.
-	// - TODO: read `bunfig.toml`, if it exists, and return the registry URL.
+	@exported("yarn")
 	public async getRegistryPackageData(packageName: string): Promise<any> {
-		const registry = await this.$childProcess.exec(`npm config get registry`);
-		const url = registry.trim() + packageName;
+		const registry = await this.$childProcess.exec(`yarn config get registry`);
+		const url = `${registry.trim()}/${packageName}`;
 		this.$logger.trace(
-			`Trying to get data from npm registry for package ${packageName}, url is: ${url}`
+			`Trying to get data from yarn registry for package ${packageName}, url is: ${url}`
 		);
 		const responseData = (await this.$httpClient.httpRequest(url)).body;
 		this.$logger.trace(
-			`Successfully received data from npm registry for package ${packageName}. Response data is: ${responseData}`
+			`Successfully received data from yarn registry for package ${packageName}. Response data is: ${responseData}`
 		);
 		const jsonData = JSON.parse(responseData);
 		this.$logger.trace(
-			`Successfully parsed data from npm registry for package ${packageName}.`
+			`Successfully parsed data from yarn registry for package ${packageName}.`
 		);
 		return jsonData;
 	}
 
-	@cache()
+	@exported("yarn")
 	public async getCachePath(): Promise<string> {
-		const cachePath = await this.$childProcess.exec(`bun pm cache`);
-		return path.join(cachePath.trim(), CACACHE_DIRECTORY_NAME);
+		const result = await this.$childProcess.exec(`yarn cache dir`);
+		return result.toString().trim();
 	}
 }
 
-injector.register("bun", BunPackageManager);
+injector.register("yarn", Yarn);

@@ -2,12 +2,12 @@ import { ExtensibilityService } from "../../lib/services/extensibility-service";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
-import { NodePackageManager } from "../../lib/node-package-manager";
-import { PackageManager } from "../../lib/package-manager";
-import { YarnPackageManager } from "../../lib/yarn-package-manager";
-import { Yarn2PackageManager } from "../../lib/yarn2-package-manager";
-import { PnpmPackageManager } from "../../lib/pnpm-package-manager";
-import { BunPackageManager } from "../../lib/bun-package-manager";
+import { NPM } from "../../lib/package-managers/npm";
+import { PackageManager } from "../../lib/package-managers";
+import { Yarn } from "../../lib/package-managers/yarn";
+import { Yarn2 } from "../../lib/package-managers/yarn2";
+import { PNPM } from "../../lib/package-managers/pnpm";
+import { Bun } from "../../lib/package-managers/bun";
 import * as constants from "../../lib/constants";
 import { ChildProcess } from "../../lib/common/child-process";
 import { CommandsDelimiters } from "../../lib/common/constants";
@@ -75,11 +75,11 @@ describe("extensibilityService", () => {
 		testInjector.register("userSettingsService", {
 			getSettingValue: async (settingName: string): Promise<void> => undefined,
 		});
-		testInjector.register("npm", NodePackageManager);
-		testInjector.register("yarn", YarnPackageManager);
-		testInjector.register("yarn2", Yarn2PackageManager);
-		testInjector.register("pnpm", PnpmPackageManager);
-		testInjector.register("bun", BunPackageManager);
+		testInjector.register("npm", NPM);
+		testInjector.register("yarn", Yarn);
+		testInjector.register("yarn2", Yarn2);
+		testInjector.register("pnpm", PNPM);
+		testInjector.register("bun", Bun);
 		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined,
