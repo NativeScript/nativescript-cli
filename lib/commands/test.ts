@@ -108,7 +108,7 @@ async function canExecuteTestCommand(
 
 	if ($vitestExecutionService.isVitestProject($projectData)) {
 		const canStartTestRun =
-			$vitestExecutionService.canStartTestRun($projectData);
+			await $vitestExecutionService.canStartTestRun($projectData);
 		if (!canStartTestRun) {
 			$errors.fail({
 				formatStr:

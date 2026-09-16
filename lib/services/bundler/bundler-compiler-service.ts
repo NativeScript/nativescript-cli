@@ -35,10 +35,6 @@ import {
 import { ICleanupService } from "../../definitions/cleanup-service";
 import { ViteHmrPortService } from "../../contracts/vite-hmr-port-service";
 import { injector } from "../../common/yok";
-import {
-	resolvePackagePath,
-	resolvePackageJSONPath,
-} from "../../helpers/package-path-helper";
 
 // todo: move out of here
 interface IBundlerMessage<T = any> {
@@ -573,10 +569,13 @@ export class BundlerCompilerService
 			additionalNodeArgs.unshift("--max_old_space_size=4096");
 		}
 
+		const bundlerExecutablePath =
+			await this.getBundlerExecutablePath(projectData);
+		const isModernBundler = await this.isModernBundler(projectData);
 		const args = [
 			...additionalNodeArgs,
-			this.getBundlerExecutablePath(projectData),
-			isVite || this.isModernBundler(projectData) ? "build" : null,
+			bundlerExecutablePath,
+			isVite || isModernBundler ? "build" : null,
 			`--config=${projectData.bundlerConfigPath}`,
 			...envParams,
 		].filter(Boolean);
@@ -726,7 +725,7 @@ export class BundlerCompilerService
 			// go after `--` so vite's CLI doesn't choke on unknown options.
 			const args = [
 				...additionalNodeArgs,
-				this.getBundlerExecutablePath(projectData),
+				await this.getBundlerExecutablePath(projectData),
 				"serve",
 				`--config=${projectData.bundlerConfigPath}`,
 				`--mode=development`,
@@ -1170,21 +1169,24 @@ export class BundlerCompilerService
 		});
 	}
 
-	private getBundlerExecutablePath(projectData: IProjectData): string {
+	private async getBundlerExecutablePath(
+		projectData: IProjectData,
+	): Promise<string> {
 		const bundler = this.getBundler();
+		const resolve = (packageName: string) =>
+			this.$packageManager.getInstalledPackagePath(
+				packageName,
+				projectData.projectDir,
+			);
 
 		if (bundler === "vite") {
-			const packagePath = resolvePackagePath(`vite`, {
-				paths: [projectData.projectDir],
-			});
+			const packagePath = await resolve("vite");
 
 			if (packagePath) {
 				return path.resolve(packagePath, "bin", "vite.js");
 			}
-		} else if (this.isModernBundler(projectData)) {
-			const packagePath = resolvePackagePath(this.getBundlerPackageName(), {
-				paths: [projectData.projectDir],
-			});
+		} else if (await this.isModernBundler(projectData)) {
+			const packagePath = await resolve(this.getBundlerPackageName());
 
 			if (packagePath) {
 				return path.resolve(packagePath, "dist", "bin", "index.js");
@@ -1204,9 +1206,7 @@ export class BundlerCompilerService
 			);
 		}
 
-		const packagePath = resolvePackagePath("webpack", {
-			paths: [projectData.projectDir],
-		});
+		const packagePath = await resolve("webpack");
 
 		if (!packagePath) {
 			return "";
@@ -1228,21 +1228,21 @@ export class BundlerCompilerService
 		);
 	}
 
-	private isModernBundler(projectData: IProjectData): boolean {
+	private async isModernBundler(projectData: IProjectData): Promise<boolean> {
 		const bundler = this.getBundler();
 		switch (bundler) {
 			case "rspack":
 				return true;
 			default:
-				const packageJSONPath = resolvePackageJSONPath(
+				const packagePath = await this.$packageManager.getInstalledPackagePath(
 					this.getBundlerPackageName(),
-					{
-						paths: [projectData.projectDir],
-					},
+					projectData.projectDir,
 				);
 
-				if (packageJSONPath) {
-					const packageData = this.$fs.readJson(packageJSONPath);
+				if (packagePath) {
+					const packageData = this.$fs.readJson(
+						path.join(packagePath, "package.json"),
+					);
 					const ver = semver.coerce(packageData.version);
 
 					if (semver.satisfies(ver, ">= 5.0.0")) {
