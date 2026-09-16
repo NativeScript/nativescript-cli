@@ -5,6 +5,7 @@ import { pipeline } from "stream/promises";
 import { Server, IProxySettings, IProxyService } from "./declarations";
 import { injector } from "./yok";
 import axios from "axios";
+import type { AxiosRequestConfig } from "axios";
 import { HttpStatusCodes } from "./constants";
 import * as tunnel from "tunnel";
 
@@ -108,7 +109,7 @@ export class HttpClient implements Server.IHttpClient {
 				},
 			});
 		}
-		const result = await axios({
+		let httpOptions: AxiosRequestConfig = {
 			url: options.url,
 			headers: options.headers,
 			method: options.method,
@@ -119,7 +120,16 @@ export class HttpClient implements Server.IHttpClient {
 			data: options.body,
 			responseType: options.pipeTo ? "stream" : undefined,
 			onDownloadProgress: options.onDownloadProgress,
-		}).catch((err) => {
+		};
+
+		if (Number.isFinite(options.maxRedirects)) {
+			httpOptions.maxRedirects = options.maxRedirects;
+		}
+		if (options.validateStatus !== undefined) {
+			httpOptions.validateStatus = options.validateStatus;
+		}
+
+		const result = await axios(httpOptions).catch((err) => {
 			this.$logger.trace("An error occurred while sending the request:", err);
 			if (err.response) {
 				// The request was made and the server responded with a status code
