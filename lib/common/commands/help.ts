@@ -1,30 +1,29 @@
 import * as _ from "lodash";
-import { IOptions } from "../../declarations";
-import { IInjector } from "../definitions/yok";
-import { injector } from "../yok";
-import { ICommand, ICommandParameter } from "../definitions/commands";
+import { CommandRegistry } from "../contracts/command-registry";
 import { IHelpService } from "../declarations";
+import { booleanOption, defineCommand } from "../define-command";
+import { inject } from "../di";
 
-export class HelpCommand implements ICommand {
-	constructor(
-		private $injector: IInjector,
-		private $helpService: IHelpService,
-		private $options: IOptions
-	) {}
+export const helpCommandDefinition = defineCommand({
+	name: ["help", "/?"],
+	description: "Shows the help for a command.",
+	options: {
+		help: booleanOption(),
+	},
+	// The command names whatever command it explains, so every argument after
+	// the first is that command's own.
+	arguments: "any",
+	enableHooks: false,
+	async run(context): Promise<void> {
+		const $commandRegistry = inject(CommandRegistry);
+		const $helpService = inject<IHelpService>("helpService");
 
-	public enableHooks = false;
-	public async canExecute(args: string[]): Promise<boolean> {
-		return true;
-	}
-
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
+		const args = context.args;
 		let commandName = (args[0] || "").toLowerCase();
 		let commandArguments = _.tail(args);
-		const hierarchicalCommand = this.$injector.buildHierarchicalCommand(
+		const hierarchicalCommand = $commandRegistry.buildHierarchicalCommand(
 			args[0],
-			commandArguments
+			commandArguments,
 		);
 		if (hierarchicalCommand) {
 			commandName = hierarchicalCommand.commandName;
@@ -36,12 +35,10 @@ export class HelpCommand implements ICommand {
 			commandArguments,
 		};
 
-		if (this.$options.help) {
-			await this.$helpService.showCommandLineHelp(commandData);
+		if (context.options.help) {
+			await $helpService.showCommandLineHelp(commandData);
 		} else {
-			await this.$helpService.openHelpForCommandInBrowser(commandData);
+			await $helpService.openHelpForCommandInBrowser(commandData);
 		}
-	}
-}
-
-injector.registerCommand(["help", "/?"], HelpCommand);
+	},
+});

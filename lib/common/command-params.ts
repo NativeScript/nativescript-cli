@@ -5,6 +5,10 @@ import {
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 
+/**
+ * @deprecated Positional arguments of a defineCommand definition are declared with
+ * `arguments`. Kept for commands still implementing ICommand.
+ */
 export class StringCommandParameter implements ICommandParameter {
 	public mandatory = false;
 	public errorMessage: string;
@@ -25,6 +29,10 @@ export class StringCommandParameter implements ICommandParameter {
 }
 injector.register("stringParameter", StringCommandParameter);
 
+/**
+ * @deprecated Use a required `arguments` spec with an errorMessage instead. Kept for
+ * commands still implementing ICommand.
+ */
 export class StringParameterBuilder implements IStringParameterBuilder {
 	constructor(private $injector: IInjector) {}
 

@@ -65,6 +65,15 @@ export function inject<T = any>(
 	return frame.injector.get(token, options);
 }
 
+/**
+ * The injector serving the current injection context, or null outside one.
+ * Unlike inject(), it never throws, so a caller can fall back to a global.
+ */
+export function getCurrentInjector(): Injector | null {
+	const frame = currentFrame();
+	return frame ? frame.injector : null;
+}
+
 export function runInInjectionContext<T>(injector: Injector, fn: () => T): T {
 	const g = <any>globalThis;
 	const previous = g[CONTEXT_SLOT];

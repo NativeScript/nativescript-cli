@@ -8,7 +8,12 @@ import {
 } from "../definitions/project";
 import { INodePackageManager, IOptions } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import {
+	Command,
+	CommandOptionsSchema,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
 import {
 	IDictionary,
 	IErrors,
@@ -16,15 +21,39 @@ import {
 	IResourceLoader,
 	IDependencyInformation,
 } from "../common/declarations";
-import { injector } from "../common/yok";
 import { color } from "../color";
 
-class TestInitCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+const karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
+	mocha: ["chai"],
+};
 
-	private karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
-		mocha: ["chai"],
-	};
+const testInitCommandOptions = {
+	framework: stringOption(),
+} satisfies CommandOptionsSchema;
+
+export class TestInitCommand extends Command({
+	name: "test|init",
+	description: "Configures your project for unit testing.",
+	options: testInitCommandOptions,
+	arguments: "none",
+}) {
+	private $errors = inject<IErrors>("errors");
+	private $fs = inject<IFileSystem>("fs");
+	private $logger = inject<ILogger>("logger");
+	private $options = inject<IOptions>("options");
+	private $packageManager = inject<INodePackageManager>("packageManager");
+	private $pluginsService = inject<IPluginsService>("pluginsService");
+	private $projectData = inject<IProjectData>("projectData");
+	private $prompter = inject<IPrompter>("prompter");
+	private $resources = inject<IResourceLoader>("resources");
+	private $testInitializationService = inject<ITestInitializationService>(
+		"testInitializationService",
+	);
+
+	constructor() {
+		super();
+		this.$projectData.initializeProjectData();
+	}
 
 	/**
 	 * Android blocks cleartext traffic by default (API 28+), which would
@@ -90,58 +119,10 @@ class TestInitCommand implements ICommand {
 		);
 	}
 
-	constructor(
-		private $packageManager: INodePackageManager,
-		private $projectData: IProjectData,
-		private $errors: IErrors,
-		private $options: IOptions,
-		private $prompter: IPrompter,
-		private $fs: IFileSystem,
-		private $resources: IResourceLoader,
-		private $pluginsService: IPluginsService,
-		private $logger: ILogger,
-		private $testInitializationService: ITestInitializationService,
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		const projectDir = this.$projectData.projectDir;
-
-		const frameworkToInstall =
-			this.$options.framework ||
-			(await this.$prompter.promptForChoice(
-				"Select testing framework:",
-				TESTING_FRAMEWORKS,
-			));
-		if (TESTING_FRAMEWORKS.indexOf(frameworkToInstall) === -1) {
-			this.$errors.failWithHelp(
-				`Unknown or unsupported unit testing framework: ${frameworkToInstall}.`,
-			);
-		}
-
-		const projectFilesExtension =
-			this.$projectData.projectType === ProjectTypes.TsFlavorName ||
-			this.$projectData.projectType === ProjectTypes.NgFlavorName
-				? ".ts"
-				: ".js";
-
-		let modulesToInstall: IDependencyInformation[] = [];
-		try {
-			modulesToInstall =
-				this.$testInitializationService.getDependencies(frameworkToInstall);
-		} catch (err) {
-			this.$errors.fail(
-				`Unable to install the unit testing dependencies. Error: '${err.message}'`,
-			);
-		}
-
-		modulesToInstall = modulesToInstall.filter(
-			(moduleToInstall) =>
-				!moduleToInstall.projectType ||
-				moduleToInstall.projectType === projectFilesExtension,
-		);
-
+	private async installModules(
+		modulesToInstall: IDependencyInformation[],
+		projectDir: string,
+	): Promise<void> {
 		for (const mod of modulesToInstall) {
 			let moduleToInstall = mod.name;
 			moduleToInstall += `@${mod.version}`;
@@ -218,6 +199,46 @@ class TestInitCommand implements ICommand {
 				}
 			}
 		}
+	}
+
+	public async run(): Promise<void> {
+		const projectDir = this.$projectData.projectDir;
+
+		const frameworkToInstall =
+			this.options.framework ||
+			(await this.$prompter.promptForChoice(
+				"Select testing framework:",
+				TESTING_FRAMEWORKS,
+			));
+		if (TESTING_FRAMEWORKS.indexOf(frameworkToInstall) === -1) {
+			this.$errors.failWithHelp(
+				`Unknown or unsupported unit testing framework: ${frameworkToInstall}.`,
+			);
+		}
+
+		const projectFilesExtension =
+			this.$projectData.projectType === ProjectTypes.TsFlavorName ||
+			this.$projectData.projectType === ProjectTypes.NgFlavorName
+				? ".ts"
+				: ".js";
+
+		let modulesToInstall: IDependencyInformation[] = [];
+		try {
+			modulesToInstall =
+				this.$testInitializationService.getDependencies(frameworkToInstall);
+		} catch (err) {
+			this.$errors.fail(
+				`Unable to install the unit testing dependencies. Error: '${err.message}'`,
+			);
+		}
+
+		modulesToInstall = modulesToInstall.filter(
+			(moduleToInstall) =>
+				!moduleToInstall.projectType ||
+				moduleToInstall.projectType === projectFilesExtension,
+		);
+
+		await this.installModules(modulesToInstall, projectDir);
 
 		const isVitest = frameworkToInstall === "vitest";
 
@@ -272,7 +293,7 @@ class TestInitCommand implements ICommand {
 			this.ensureAndroidNetworkSecurityConfig(bufferedLogs);
 		} else {
 			const frameworks = [frameworkToInstall]
-				.concat(this.karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
+				.concat(karmaConfigAdditionalFrameworks[frameworkToInstall] || [])
 				.map((fw) => `'${fw}'`)
 				.join(", ");
 			const testFiles = `'${fromWindowsRelativePathToUnix(
@@ -396,5 +417,3 @@ class TestInitCommand implements ICommand {
 		);
 	}
 }
-
-injector.registerCommand("test|init", TestInitCommand);

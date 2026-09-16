@@ -1,67 +1,26 @@
 // import { run, ExecutionOptions } from "@nativescript/schematics-executor";
-// import { IOptions } from "../declarations";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
 
-export class GenerateCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-	// private executionOptions: ExecutionOptions;
+export const generateCommandDefinition = defineCommand({
+	name: "generate",
+	description: "Executes a schematic in the project.",
+	arguments: "any",
+	async run(): Promise<void> {
+		const $logger = inject<ILogger>("logger");
+		const $errors = inject<IErrors>("errors");
 
-	constructor(
-		private $logger: ILogger,
-		// private $options: IOptions,
-		private $errors: IErrors,
-	) {}
-
-	public async execute(_rawArgs: string[]): Promise<void> {
 		try {
-			this.$logger.info(
+			$logger.info(
 				"If you have ideas for this command, please discuss at https://nativescript.org/discord",
 			);
 			// await run(this.executionOptions);
 		} catch (error) {
-			this.$errors.fail(error.message);
+			$errors.fail(error.message);
 		}
-	}
-
-	public async canExecute(rawArgs: string[]): Promise<boolean> {
-		this.setExecutionOptions(rawArgs);
-		this.validateExecutionOptions();
-
-		return true;
-	}
-
-	private validateExecutionOptions() {
-		// if (!this.executionOptions.schematic) {
-		// 	this.$errors.failWithHelp(
-		// 		`The generate command requires a schematic name to be specified.`
-		// 	);
-		// }
-	}
-
-	private setExecutionOptions(rawArgs: string[]) {
-		// const options = this.parseRawArgs(rawArgs);
-		// this.executionOptions = {
-		// 	...options,
-		// 	logger: this.$logger,
-		// 	directory: process.cwd(),
-		// };
-	}
-
-	// private parseRawArgs(rawArgs: string[]) {
-	// 	const collection = this.$options.collection;
-	// 	const schematic = rawArgs.shift();
-	// 	const { options, args } = parseSchematicSettings(rawArgs);
-
-	// 	return {
-	// 		collection,
-	// 		schematic,
-	// 		schematicOptions: options,
-	// 		schematicArgs: args,
-	// 	};
-	// }
-}
+	},
+});
 
 /**
  * Converts an array of command line arguments to options for the executed schematic.
@@ -95,5 +54,3 @@ export class GenerateCommand implements ICommand {
 // 		[[], []]
 // 	);
 // }
-
-injector.registerCommand("generate", GenerateCommand);

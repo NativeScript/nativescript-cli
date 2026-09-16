@@ -5,73 +5,71 @@ import {
 	IPackageJsonDepedenciesResult,
 	IBasePluginData,
 } from "../../definitions/plugins";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 import { color } from "../../color";
 
-export class ListPluginsCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+function createTableCells(items: IBasePluginData[]): string[][] {
+	return items.map((item) => [item.name, item.version]);
+}
 
-	constructor(
-		private $pluginsService: IPluginsService,
-		private $projectData: IProjectData,
-		private $logger: ILogger
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		const installedPlugins: IPackageJsonDepedenciesResult = this.$pluginsService.getDependenciesFromPackageJson(
-			this.$projectData.projectDir
-		);
+export const listPluginsCommandDefinition = defineCommand({
+	name: "plugin|*list",
+	description: "Lists all installed plugins.",
+	arguments: "none",
+	// In setup, not run: it lands ahead of the arguments policy, so being
+	// outside a project is what a bad invocation reports first.
+	setup(): void {
+		inject<IProjectData>("projectData").initializeProjectData();
+	},
+	async run(): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		const $logger = inject<ILogger>("logger");
+		const installedPlugins: IPackageJsonDepedenciesResult =
+			$pluginsService.getDependenciesFromPackageJson($projectData.projectDir);
 
 		const headers: string[] = ["Plugin", "Version"];
-		const dependenciesData: string[][] = this.createTableCells(
-			installedPlugins.dependencies
+		const dependenciesData: string[][] = createTableCells(
+			installedPlugins.dependencies,
 		);
 
 		const dependenciesTable: any = createTable(headers, dependenciesData);
-		this.$logger.info("Dependencies:");
-		this.$logger.info(dependenciesTable.toString());
+		$logger.info("Dependencies:");
+		$logger.info(dependenciesTable.toString());
 
 		if (
 			installedPlugins.devDependencies &&
 			installedPlugins.devDependencies.length
 		) {
-			const devDependenciesData: string[][] = this.createTableCells(
-				installedPlugins.devDependencies
+			const devDependenciesData: string[][] = createTableCells(
+				installedPlugins.devDependencies,
 			);
 
 			const devDependenciesTable: any = createTable(
 				headers,
-				devDependenciesData
+				devDependenciesData,
 			);
 
-			this.$logger.info("Dev Dependencies:");
-			this.$logger.info(devDependenciesTable.toString());
+			$logger.info("Dev Dependencies:");
+			$logger.info(devDependenciesTable.toString());
 		} else {
-			this.$logger.info("There are no dev dependencies.");
+			$logger.info("There are no dev dependencies.");
 		}
 
 		const viewDependenciesCommand: string = color.cyan(
-			"npm view <pluginName> grep dependencies"
+			"npm view <pluginName> grep dependencies",
 		);
 		const viewDevDependenciesCommand: string = color.cyan(
-			"npm view <pluginName> grep devDependencies"
+			"npm view <pluginName> grep devDependencies",
 		);
 
-		this.$logger.warn("NOTE:");
-		this.$logger.warn(
-			`If you want to check the dependencies of installed plugin use ${viewDependenciesCommand}`
+		$logger.warn("NOTE:");
+		$logger.warn(
+			`If you want to check the dependencies of installed plugin use ${viewDependenciesCommand}`,
 		);
-		this.$logger.warn(
-			`If you want to check the dev dependencies of installed plugin use ${viewDevDependenciesCommand}`
+		$logger.warn(
+			`If you want to check the dev dependencies of installed plugin use ${viewDevDependenciesCommand}`,
 		);
-	}
-
-	private createTableCells(items: IBasePluginData[]): string[][] {
-		return items.map((item) => [item.name, item.version]);
-	}
-}
-
-injector.registerCommand("plugin|*list", ListPluginsCommand);
+	},
+});

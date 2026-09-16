@@ -1,45 +1,43 @@
 import * as _ from "lodash";
 import { IProjectData } from "../../definitions/project";
 import { IPluginsService, IPluginData } from "../../definitions/plugins";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors } from "../../common/declarations";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 
-export class AddPluginCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export const addPluginCommandDefinition = defineCommand({
+	name: ["plugin|add", "plugin|install"],
+	description: "Installs the specified plugin and its dependencies.",
+	arguments: "any",
+	async canExecute(context): Promise<boolean> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		const $errors = inject<IErrors>("errors");
+		$projectData.initializeProjectData();
 
-	constructor(
-		private $pluginsService: IPluginsService,
-		private $projectData: IProjectData,
-		private $errors: IErrors
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		return this.$pluginsService.add(args[0], this.$projectData);
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
-		if (!args[0]) {
-			this.$errors.failWithHelp("You must specify plugin name.");
+		if (!context.args[0]) {
+			$errors.failWithHelp("You must specify plugin name.");
 		}
 
-		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
-			this.$projectData
-		);
-		const pluginName = args[0].toLowerCase();
+		const installedPlugins =
+			await $pluginsService.getAllInstalledPlugins($projectData);
+		const pluginName = context.args[0].toLowerCase();
 		if (
 			_.some(
 				installedPlugins,
-				(plugin: IPluginData) => plugin.name.toLowerCase() === pluginName
+				(plugin: IPluginData) => plugin.name.toLowerCase() === pluginName,
 			)
 		) {
-			this.$errors.fail(`Plugin "${pluginName}" is already installed.`);
+			$errors.fail(`Plugin "${pluginName}" is already installed.`);
 		}
 
 		return true;
-	}
-}
+	},
+	run(context): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-injector.registerCommand(["plugin|add", "plugin|install"], AddPluginCommand);
+		return $pluginsService.add(context.args[0], $projectData);
+	},
+});

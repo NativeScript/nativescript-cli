@@ -260,6 +260,7 @@ export class Options {
 
 	public validateOptions(
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
+		allowUnknownOptions?: boolean,
 	): void {
 		this.setupOptions(commandSpecificDashedOptions);
 
@@ -287,11 +288,15 @@ export class Options {
 			validated.push(dedupeKey);
 
 			if (!this.isOptionSupported(optionName)) {
-				this.reportInvalidOption(
-					`The option '${this.getReportedOptionName(
-						originalOptionName,
-					)}' is not supported.`,
-				);
+				// A command that forwards its flags to another CLI cannot know
+				// them; its own declared options are still merged and checked.
+				if (!allowUnknownOptions) {
+					this.reportInvalidOption(
+						`The option '${this.getReportedOptionName(
+							originalOptionName,
+						)}' is not supported.`,
+					);
+				}
 				continue;
 			}
 

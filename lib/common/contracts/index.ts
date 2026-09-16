@@ -4,12 +4,17 @@
 // default. Each token resolves to the facade itself until its subsystem is
 // physically extracted — at which point the provider is swapped and consumers
 // keep working unchanged.
-export { CommandRegistry } from "./command-registry";
+export {
+	CommandRegistry,
+	COMMAND_OWNER,
+	describeRejection,
+} from "./command-registry";
 export type {
 	DeferredCommandOptions,
 	DeferredCommandRejection,
 	DeferredCommandResult,
 } from "./command-registry";
-export { KeyCommandRegistry } from "./key-command-registry";
+export { COMMAND_CONTEXT } from "./command-context";
+export { CommandsService } from "./commands-service";
 export { ModuleRegistry } from "./module-registry";
 export { PublicApiBuilder } from "./public-api-builder";

@@ -1,52 +1,60 @@
 import { IProjectData } from "../../definitions/project";
 import { IAndroidResourcesMigrationService } from "../../declarations";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
 import { IErrors } from "../../common/declarations";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 
-export class ResourcesUpdateCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
+export const resourcesUpdateCommandDefinition = defineCommand({
+	name: "resources|update",
+	description:
+		"Updates the App_Resources directory to the structure the current Android runtime expects.",
+	arguments: "any",
+	async canExecute(context): Promise<boolean> {
+		const $androidResourcesMigrationService =
+			inject<IAndroidResourcesMigrationService>(
+				"androidResourcesMigrationService",
+			);
+		const $errors = inject<IErrors>("errors");
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-	constructor(
-		private $projectData: IProjectData,
-		private $errors: IErrors,
-		private $androidResourcesMigrationService: IAndroidResourcesMigrationService
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		await this.$androidResourcesMigrationService.migrate(
-			this.$projectData.getAppResourcesDirectoryPath()
-		);
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
+		let args = context.args;
 		if (!args || args.length === 0) {
-			// Command defaults to migrating the Android App_Resources, unless explicitly specified
+			// Command defaults to migrating the Android App_Resources, unless explicitly specified.
+			// The default reaches this check only; the migration itself ignores the arguments.
 			args = ["android"];
 		}
 
 		for (const platform of args) {
-			if (!this.$androidResourcesMigrationService.canMigrate(platform)) {
-				this.$errors.fail(
-					`The ${platform} does not need to have its resources updated.`
+			if (!$androidResourcesMigrationService.canMigrate(platform)) {
+				$errors.fail(
+					`The ${platform} does not need to have its resources updated.`,
 				);
 			}
 
 			if (
-				this.$androidResourcesMigrationService.hasMigrated(
-					this.$projectData.getAppResourcesDirectoryPath()
+				$androidResourcesMigrationService.hasMigrated(
+					$projectData.getAppResourcesDirectoryPath(),
 				)
 			) {
-				this.$errors.fail(
-					"The App_Resources have already been updated for the Android platform."
+				$errors.fail(
+					"The App_Resources have already been updated for the Android platform.",
 				);
 			}
 		}
 
 		return true;
-	}
-}
+	},
+	async run(): Promise<void> {
+		const $androidResourcesMigrationService =
+			inject<IAndroidResourcesMigrationService>(
+				"androidResourcesMigrationService",
+			);
+		const $projectData = inject<IProjectData>("projectData");
+		$projectData.initializeProjectData();
 
-injector.registerCommand("resources|update", ResourcesUpdateCommand);
+		await $androidResourcesMigrationService.migrate(
+			$projectData.getAppResourcesDirectoryPath(),
+		);
+	},
+});

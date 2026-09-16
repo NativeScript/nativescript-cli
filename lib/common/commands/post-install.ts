@@ -1,17 +1,17 @@
-import { injector } from "../yok";
-import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IErrors } from "../declarations";
+import { defineCommand } from "../define-command";
+import { inject } from "../di";
 
-export class PostInstallCommand implements ICommand {
-	constructor(protected $errors: IErrors) {}
+export const postInstallCommandDefinition = defineCommand({
+	name: "dev-post-install",
+	description: "Deprecated; use `ns dev-post-install-cli`.",
+	arguments: "none",
+	disableAnalytics: true,
+	async run(): Promise<void> {
+		const $errors = inject<IErrors>("errors");
 
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
-		this.$errors.fail(
-			"This command is deprecated. Use `ns dev-post-install-cli` instead"
+		$errors.fail(
+			"This command is deprecated. Use `ns dev-post-install-cli` instead",
 		);
-	}
-}
-injector.registerCommand("dev-post-install", PostInstallCommand);
+	},
+});

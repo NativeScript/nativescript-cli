@@ -1,32 +1,19 @@
-import { injector } from "../yok";
-import { IUserSettingsService, IErrors } from "../declarations";
-import { ICommand, ICommandParameter } from "../definitions/commands";
+import { IUserSettingsService } from "../declarations";
+import { defineCommand } from "../define-command";
+import { inject } from "../di";
 
-export class PackageManagerGetCommand implements ICommand {
-	constructor(
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $userSettingsService: IUserSettingsService
-	) {}
-
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
-		if (args && args.length) {
-			this.$errors.failWithHelp(
-				`The arguments '${args.join(
-					" "
-				)}' are not valid for the 'package-manager get' command.`
-			);
-		}
-
-		const result = await this.$userSettingsService.getSettingValue(
-			"packageManager"
+export const packageManagerGetCommandDefinition = defineCommand({
+	name: "package-manager|*get",
+	description: "Prints the value of the current package manager.",
+	async run(): Promise<void> {
+		const $logger = inject<ILogger>("logger");
+		const $userSettingsService = inject<IUserSettingsService>(
+			"userSettingsService",
 		);
-		this.$logger.printMarkdown(
-			`Your current package manager is \`${result || "npm"}\`.`
-		);
-	}
-}
 
-injector.registerCommand("package-manager|*get", PackageManagerGetCommand);
+		const result = await $userSettingsService.getSettingValue("packageManager");
+		$logger.printMarkdown(
+			`Your current package manager is \`${result || "npm"}\`.`,
+		);
+	},
+});

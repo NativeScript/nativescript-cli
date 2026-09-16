@@ -1,9 +1,11 @@
 import { Yok } from "../../lib/common/yok";
 import { assert } from "chai";
 import { PostInstallCliCommand } from "../../lib/commands/post-install";
+import { registerCommand } from "../../lib/common/services/command-definition-adapter";
 import { SettingsService } from "../../lib/common/test/unit-tests/stubs";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { IHelpService, IAnalyticsService } from "../../lib/common/declarations";
+import { runInInjectionContext } from "../../lib/common/di";
 
 const createTestInjector = (): IInjector => {
 	const testInjector = new Yok();
@@ -15,9 +17,9 @@ const createTestInjector = (): IInjector => {
 	testInjector.register("staticConfig", {});
 
 	testInjector.register("commandsService", {
-		tryExecuteCommand: async (
+		runCommand: async (
 			commandName: string,
-			commandArguments: string[]
+			commandArguments: string[],
 		): Promise<void> => undefined,
 	});
 
@@ -44,7 +46,9 @@ const createTestInjector = (): IInjector => {
 
 	testInjector.register("settingsService", SettingsService);
 
-	testInjector.registerCommand("post-install-cli", PostInstallCliCommand);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(PostInstallCliCommand),
+	);
 
 	testInjector.register("hostInfo", {});
 
@@ -71,19 +75,17 @@ describe("post-install command", () => {
 			isGenerateHtmlPagesCalled = true;
 		};
 
-		const analyticsService = testInjector.resolve<IAnalyticsService>(
-			"analyticsService"
-		);
+		const analyticsService =
+			testInjector.resolve<IAnalyticsService>("analyticsService");
 		let isCheckConsentCalled = false;
 		analyticsService.checkConsent = async (): Promise<void> => {
 			isCheckConsentCalled = true;
 		};
 
-		const commandsService = testInjector.resolve<ICommandsService>(
-			"commandsService"
-		);
+		const commandsService =
+			testInjector.resolve<ICommandsService>("commandsService");
 		let isTryExecuteCommandCalled = false;
-		commandsService.tryExecuteCommand = async (): Promise<void> => {
+		commandsService.runCommand = async (): Promise<void> => {
 			isTryExecuteCommandCalled = true;
 		};
 
@@ -98,17 +100,17 @@ describe("post-install command", () => {
 		assert.equal(
 			isGenerateHtmlPagesCalled,
 			opts.shouldCallMethod,
-			`post-install-cli command must ${hasNotInMsg} call helpService.generateHtmlPages`
+			`post-install-cli command must ${hasNotInMsg} call helpService.generateHtmlPages`,
 		);
 		assert.equal(
 			isCheckConsentCalled,
 			opts.shouldCallMethod,
-			`post-install-cli command must ${hasNotInMsg} call analyticsService.checkConsent`
+			`post-install-cli command must ${hasNotInMsg} call analyticsService.checkConsent`,
 		);
 		assert.equal(
 			isTryExecuteCommandCalled,
 			opts.shouldCallMethod,
-			`post-install-cli command must ${hasNotInMsg} call commandsService.tryExecuteCommand`
+			`post-install-cli command must ${hasNotInMsg} call commandsService.runCommand`,
 		);
 	};
 
