@@ -457,10 +457,7 @@ export class PackageInstallationManagerStub implements IPackageInstallationManag
 export class NodePackageManagerStub implements INodePackageManager {
 	constructor() {}
 
-	public async getInstalledPackagePath(
-		packageName: string,
-		fromDir: string,
-	): Promise<string> {
+	public getInstalledPackagePath(packageName: string, fromDir: string): string {
 		return null;
 	}
 

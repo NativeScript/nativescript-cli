@@ -512,7 +512,7 @@ export class ExtensibilityService implements IExtensibilityService {
 		extensionName: string,
 	): Promise<void> {
 		this.$logger.trace(`Asserting extension ${extensionName} is installed.`);
-		const installedPath = await this.$packageManager.getInstalledPackagePath(
+		const installedPath = this.$packageManager.getInstalledPackagePath(
 			extensionName,
 			this.pathToExtensions,
 		);

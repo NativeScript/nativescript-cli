@@ -69,6 +69,7 @@ function createTestInjector() {
 	testInjector.register("messagesService", MessagesService);
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
+		getSettingValueSync: (settingName: string): void => undefined,
 	});
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register(

@@ -15,10 +15,7 @@ function getTestExecutionService(
 	injector.register("testExecutionService", TestExecutionService);
 	injector.register("runController", {});
 	injector.register("packageManager", {
-		getInstalledPackagePath: async (
-			packageName: string,
-			fromDir: string,
-		): Promise<string> =>
+		getInstalledPackagePath: (packageName: string, fromDir: string): string =>
 			installedPackages.indexOf(packageName) !== -1
 				? `${fromDir}/node_modules/${packageName}`
 				: null,

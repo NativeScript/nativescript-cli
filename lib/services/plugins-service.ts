@@ -96,7 +96,7 @@ export class PluginsService implements IPluginsService {
 				this.npmInstallOptions,
 			)
 		).name;
-		const pathToRealNpmPackageJson = await this.getPackageJsonFilePathForModule(
+		const pathToRealNpmPackageJson = this.getPackageJsonFilePathForModule(
 			name,
 			projectData.projectDir,
 		);
@@ -144,7 +144,7 @@ export class PluginsService implements IPluginsService {
 			platformData: IPlatformData,
 		): Promise<void> => {
 			const pluginData = this.convertToPluginData(
-				await this.getNodeModuleData(pluginName, projectData.projectDir),
+				this.getNodeModuleData(pluginName, projectData.projectDir),
 				projectData.projectDir,
 			);
 
@@ -297,7 +297,7 @@ export class PluginsService implements IPluginsService {
 		const notInstalledDependencies: string[] = [];
 		for (const dep of allDependencies) {
 			this.$logger.trace(`Checking if ${dep} is installed...`);
-			const pathToPackage = await this.$packageManager.getInstalledPackagePath(
+			const pathToPackage = this.$packageManager.getInstalledPackagePath(
 				dep,
 				projectData.projectDir,
 			);
@@ -694,11 +694,11 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		return path.join(projectDir, "package.json");
 	}
 
-	private async getPackageJsonFilePathForModule(
+	private getPackageJsonFilePathForModule(
 		moduleName: string,
 		projectDir: string,
-	): Promise<string> {
-		const pathToModule = await this.$packageManager.getInstalledPackagePath(
+	): string {
+		const pathToModule = this.$packageManager.getInstalledPackagePath(
 			moduleName,
 			projectDir,
 		);
@@ -710,13 +710,13 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		return _.keys(require(packageJsonFilePath).dependencies);
 	}
 
-	private async getNodeModuleData(
+	private getNodeModuleData(
 		module: string,
 		projectDir: string,
-	): Promise<INodeModuleData> {
+	): INodeModuleData {
 		// module can be  modulePath or moduleName
 		if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
-			const resolvedPath = await this.getPackageJsonFilePathForModule(
+			const resolvedPath = this.getPackageJsonFilePathForModule(
 				module,
 				projectDir,
 			);
@@ -745,12 +745,11 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		await this.ensureAllDependenciesAreInstalled(projectData);
 
 		const nodeModules = this.getDependencies(projectData.projectDir);
-		const modules = await Promise.all(
-			nodeModules.map((nodeModuleName) =>
+		return nodeModules
+			.map((nodeModuleName) =>
 				this.getNodeModuleData(nodeModuleName, projectData.projectDir),
-			),
-		);
-		return modules.filter(Boolean);
+			)
+			.filter(Boolean);
 	}
 
 	private async executeNpmCommand(

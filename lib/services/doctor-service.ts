@@ -139,7 +139,7 @@ export class DoctorServiceImpl implements DoctorService {
 		}
 
 		// todo: check for deprecated imports from `tns-core-modules`
-		await this.checkForDeprecatedShortImportsInAppDir(configOptions.projectDir);
+		this.checkForDeprecatedShortImportsInAppDir(configOptions.projectDir);
 
 		await this.$injector
 			.resolve<IPlatformEnvironmentRequirements>(
@@ -241,14 +241,12 @@ export class DoctorServiceImpl implements DoctorService {
 		return !hasWarnings;
 	}
 
-	public async checkForDeprecatedShortImportsInAppDir(
-		projectDir: string,
-	): Promise<void> {
+	public checkForDeprecatedShortImportsInAppDir(projectDir: string): void {
 		if (projectDir) {
 			try {
 				const files =
 					this.$projectDataService.getAppExecutableFiles(projectDir);
-				const shortImports = await this.getDeprecatedShortImportsInFiles(
+				const shortImports = this.getDeprecatedShortImportsInFiles(
 					files,
 					projectDir,
 				);
@@ -271,11 +269,11 @@ export class DoctorServiceImpl implements DoctorService {
 		}
 	}
 
-	protected async getDeprecatedShortImportsInFiles(
+	protected getDeprecatedShortImportsInFiles(
 		files: string[],
 		projectDir: string,
-	): Promise<{ file: string; line: string }[]> {
-		const shortImportRegExp = await this.getShortImportRegExp(projectDir);
+	): { file: string; line: string }[] {
+		const shortImportRegExp = this.getShortImportRegExp(projectDir);
 		const shortImports: { file: string; line: string }[] = [];
 		if (!shortImportRegExp) {
 			return shortImports;
@@ -306,12 +304,11 @@ export class DoctorServiceImpl implements DoctorService {
 		return shortImports;
 	}
 
-	private async getShortImportRegExp(projectDir: string): Promise<RegExp> {
-		const pathToTnsCoreModules =
-			await this.$packageManager.getInstalledPackagePath(
-				TNS_CORE_MODULES_NAME,
-				projectDir,
-			);
+	private getShortImportRegExp(projectDir: string): RegExp {
+		const pathToTnsCoreModules = this.$packageManager.getInstalledPackagePath(
+			TNS_CORE_MODULES_NAME,
+			projectDir,
+		);
 		if (!pathToTnsCoreModules) {
 			return null;
 		}

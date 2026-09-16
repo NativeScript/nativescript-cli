@@ -579,16 +579,15 @@ Locates a package the way the selected package manager laid it out on disk, so c
 /**
  * @param  {string} packageName The name of the package.
  * @param  {string} fromDir     The directory whose dependencies are searched, usually the project directory.
- * @return {Promise<string>} The absolute path of the package directory, or null when it is not installed.
+ * @return {string} The absolute path of the package directory, or null when it is not installed.
  */
-getInstalledPackagePath(packageName: string, fromDir: string): Promise<string>;
+getInstalledPackagePath(packageName: string, fromDir: string): string;
 ```
 
 * Usage:
 ```JavaScript
-tns.packageManager.getInstalledPackagePath("@nativescript/core", "/tmp/myProject").then(pathToPackage => {
-	console.log(pathToPackage ? `Installed at ${pathToPackage}` : "Not installed");
-});
+const pathToPackage = tns.packageManager.getInstalledPackagePath("@nativescript/core", "/tmp/myProject");
+console.log(pathToPackage ? `Installed at ${pathToPackage}` : "Not installed");
 ```
 
 ### view

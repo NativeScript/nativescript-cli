@@ -145,10 +145,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 		};
 	}
 
-	public async getInstalledPackagePath(
-		packageName: string,
-		fromDir: string,
-	): Promise<string> {
+	public getInstalledPackagePath(packageName: string, fromDir: string): string {
 		return resolvePackagePath(packageName, { paths: [fromDir] }) || null;
 	}
 

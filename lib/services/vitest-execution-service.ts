@@ -25,10 +25,10 @@ export class VitestExecutionService implements IVitestExecutionService {
 		return !!this.getConfigPath(projectData);
 	}
 
-	public async canStartTestRun(projectData: IProjectData): Promise<boolean> {
+	public canStartTestRun(projectData: IProjectData): boolean {
 		return (
 			this.isVitestProject(projectData) &&
-			!!(await this.getVitestPackagePath(projectData))
+			!!this.getVitestPackagePath(projectData)
 		);
 	}
 
@@ -36,7 +36,7 @@ export class VitestExecutionService implements IVitestExecutionService {
 		platform: string,
 		projectData: IProjectData,
 	): Promise<void> {
-		const vitestPackagePath = await this.getVitestPackagePath(projectData);
+		const vitestPackagePath = this.getVitestPackagePath(projectData);
 		if (!vitestPackagePath) {
 			this.$errors.fail(
 				"Unable to find 'vitest' in the project. Run '$ ns test init --framework vitest' first.",
@@ -89,7 +89,7 @@ export class VitestExecutionService implements IVitestExecutionService {
 		return null;
 	}
 
-	private getVitestPackagePath(projectData: IProjectData): Promise<string> {
+	private getVitestPackagePath(projectData: IProjectData): string {
 		return this.$packageManager.getInstalledPackagePath(
 			"vitest",
 			projectData.projectDir,

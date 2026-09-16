@@ -39,6 +39,10 @@ export class UserSettingsService implements IUserSettingsService {
 		);
 	}
 
+	public getSettingValueSync<T>(settingName: string): T {
+		return this.$jsonFileSettingsService.getSettingValueSync<T>(settingName);
+	}
+
 	public saveSetting<T>(
 		key: string,
 		value: T,

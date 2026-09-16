@@ -73,8 +73,8 @@ class VersionsService implements IVersionsService {
 					packageName,
 					this.projectData.projectDir
 				);
-			let scopedPackagePath = await resolve(constants.SCOPED_TNS_CORE_MODULES);
-			let tnsCoreModulesPath = await resolve(constants.TNS_CORE_MODULES_NAME);
+			let scopedPackagePath = resolve(constants.SCOPED_TNS_CORE_MODULES);
+			let tnsCoreModulesPath = resolve(constants.TNS_CORE_MODULES_NAME);
 
 			const dependsOnNonScopedPackage = !!this.projectData.dependencies[
 				constants.TNS_CORE_MODULES_NAME
@@ -91,8 +91,8 @@ class VersionsService implements IVersionsService {
 				await this.$pluginsService.ensureAllDependenciesAreInstalled(
 					this.projectData
 				);
-				scopedPackagePath = await resolve(constants.SCOPED_TNS_CORE_MODULES);
-				tnsCoreModulesPath = await resolve(constants.TNS_CORE_MODULES_NAME);
+				scopedPackagePath = resolve(constants.SCOPED_TNS_CORE_MODULES);
+				tnsCoreModulesPath = resolve(constants.TNS_CORE_MODULES_NAME);
 			}
 
 			if (dependsOnNonScopedPackage && tnsCoreModulesPath) {

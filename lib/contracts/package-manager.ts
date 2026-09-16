@@ -103,12 +103,12 @@ export abstract class PackageManager {
 	 * Locates a package the way the package manager laid it out on disk.
 	 * @param  {string} packageName The name of the package.
 	 * @param  {string} fromDir     The directory whose dependencies are searched, usually the project directory.
-	 * @return {Promise<string>} The absolute path of the package directory, or null when it is not installed.
+	 * @return {string} The absolute path of the package directory, or null when it is not installed.
 	 */
 	abstract getInstalledPackagePath(
 		packageName: string,
 		fromDir: string,
-	): Promise<string>;
+	): string;
 
 	/**
 	 * Gets the name of the package manager used for the current process.
