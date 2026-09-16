@@ -3,12 +3,10 @@ import { Yok } from "../../lib/common/yok";
 import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
-import * as os from "os";
-import * as nodeFs from "fs";
 import * as sinon from "sinon";
 import * as _ from "lodash";
 import { IProjectDataService } from "../../lib/definitions/project";
-import { IVersionsService } from "../../lib/declarations";
+import { IVersionsService, IPackageManager } from "../../lib/declarations";
 import {
 	ICheckEnvironmentRequirementsInput,
 	ICheckEnvironmentRequirementsOutput,
@@ -47,6 +45,7 @@ class DoctorServiceInheritor extends DoctorService {
 		$terminalSpinnerService: ITerminalSpinnerService,
 		$versionsService: IVersionsService,
 		$settingsService: ISettingsService,
+		$packageManager: IPackageManager,
 	) {
 		super(
 			$analyticsService,
@@ -59,13 +58,14 @@ class DoctorServiceInheritor extends DoctorService {
 			$terminalSpinnerService,
 			$versionsService,
 			$settingsService,
+			$packageManager,
 		);
 	}
 
 	public getDeprecatedShortImportsInFiles(
 		files: string[],
 		projectDir: string,
-	): { file: string; line: string }[] {
+	): Promise<{ file: string; line: string }[]> {
 		return super.getDeprecatedShortImportsInFiles(files, projectDir);
 	}
 }
@@ -95,6 +95,15 @@ describe("doctorService", () => {
 				},
 		});
 		testInjector.register("versionsService", {});
+		testInjector.register("packageManager", {
+			getInstalledPackagePath: async (
+				packageName: string,
+				fromDir: string,
+			): Promise<string> =>
+				packageName === "tns-core-modules"
+					? path.join(fromDir, "node_modules", packageName)
+					: null,
+		});
 		testInjector.register("settingsService", {
 			getProfileDir: (): string => "",
 		});
@@ -351,7 +360,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			},
 		];
 
-		it("getDeprecatedShortImportsInFiles returns correct results", () => {
+		it("getDeprecatedShortImportsInFiles returns correct results", async () => {
 			const testInjector = createTestInjector();
 			const doctorService =
 				testInjector.resolve<DoctorServiceInheritor>("doctorService");
@@ -367,54 +376,33 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 				}
 			};
 
-			const projectDir = nodeFs.mkdtempSync(
-				path.join(os.tmpdir(), "ns-doctor-service-"),
-			);
-			const coreModulesDir = path.join(
-				projectDir,
-				"node_modules",
-				"tns-core-modules",
-			);
-			nodeFs.mkdirSync(coreModulesDir, { recursive: true });
-			nodeFs.writeFileSync(
-				path.join(coreModulesDir, "package.json"),
-				JSON.stringify({ name: "tns-core-modules", version: "6.0.0" }),
-			);
+			for (const { filesContents, expectedShortImports } of testData) {
+				fs.readText = (filePath) => filesContents[filePath];
 
-			try {
-				testData.forEach(({ filesContents, expectedShortImports }) => {
-					fs.readText = (filePath) => filesContents[filePath];
-
-					const shortImports = doctorService.getDeprecatedShortImportsInFiles(
+				const shortImports =
+					await doctorService.getDeprecatedShortImportsInFiles(
 						_.keys(filesContents),
-						projectDir,
+						"projectDir",
 					);
-					assert.deepStrictEqual(shortImports, expectedShortImports);
-				});
-			} finally {
-				nodeFs.rmSync(projectDir, { recursive: true, force: true });
+				assert.deepStrictEqual(shortImports, expectedShortImports);
 			}
 		});
 
-		it("getDeprecatedShortImportsInFiles returns no results when tns-core-modules is not installed", () => {
+		it("getDeprecatedShortImportsInFiles returns no results when tns-core-modules is not installed", async () => {
 			const testInjector = createTestInjector();
+			const packageManager = testInjector.resolve("packageManager");
+			packageManager.getInstalledPackagePath = async (): Promise<string> =>
+				null;
 			const doctorService =
 				testInjector.resolve<DoctorServiceInheritor>("doctorService");
 			const fs = testInjector.resolve<IFileSystem>("fs");
 			fs.readText = () => 'const application = require("application");';
 
-			const projectDir = nodeFs.mkdtempSync(
-				path.join(os.tmpdir(), "ns-doctor-service-"),
+			const shortImports = await doctorService.getDeprecatedShortImportsInFiles(
+				["file1"],
+				"projectDir",
 			);
-			try {
-				const shortImports = doctorService.getDeprecatedShortImportsInFiles(
-					["file1"],
-					projectDir,
-				);
-				assert.deepStrictEqual(shortImports, []);
-			} finally {
-				nodeFs.rmSync(projectDir, { recursive: true, force: true });
-			}
+			assert.deepStrictEqual(shortImports, []);
 		});
 	});
 

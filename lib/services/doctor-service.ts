@@ -1,6 +1,5 @@
 import { EOL } from "os";
 import * as path from "path";
-import { resolvePackagePath } from "../helpers/package-path-helper";
 import * as _ from "lodash";
 import * as helpers from "../common/helpers";
 import { cache } from "../common/decorators";
@@ -8,7 +7,7 @@ import { TrackActionNames, TNS_CORE_MODULES_NAME } from "../constants";
 import { DoctorService } from "../contracts/doctor-service";
 import { doctor, constants } from "@nativescript/doctor";
 import { IProjectDataService } from "../definitions/project";
-import { IVersionsService, IOptions } from "../declarations";
+import { IVersionsService, IOptions, IPackageManager } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import {
 	IAnalyticsService,
@@ -70,6 +69,7 @@ export class DoctorServiceImpl implements DoctorService {
 		private $terminalSpinnerService: ITerminalSpinnerService,
 		private $versionsService: IVersionsService,
 		private $settingsService: ISettingsService,
+		private $packageManager: IPackageManager,
 	) {}
 
 	public async printWarnings(configOptions?: {
@@ -139,7 +139,7 @@ export class DoctorServiceImpl implements DoctorService {
 		}
 
 		// todo: check for deprecated imports from `tns-core-modules`
-		this.checkForDeprecatedShortImportsInAppDir(configOptions.projectDir);
+		await this.checkForDeprecatedShortImportsInAppDir(configOptions.projectDir);
 
 		await this.$injector
 			.resolve<IPlatformEnvironmentRequirements>(
@@ -241,12 +241,14 @@ export class DoctorServiceImpl implements DoctorService {
 		return !hasWarnings;
 	}
 
-	public checkForDeprecatedShortImportsInAppDir(projectDir: string): void {
+	public async checkForDeprecatedShortImportsInAppDir(
+		projectDir: string,
+	): Promise<void> {
 		if (projectDir) {
 			try {
 				const files =
 					this.$projectDataService.getAppExecutableFiles(projectDir);
-				const shortImports = this.getDeprecatedShortImportsInFiles(
+				const shortImports = await this.getDeprecatedShortImportsInFiles(
 					files,
 					projectDir,
 				);
@@ -269,11 +271,11 @@ export class DoctorServiceImpl implements DoctorService {
 		}
 	}
 
-	protected getDeprecatedShortImportsInFiles(
+	protected async getDeprecatedShortImportsInFiles(
 		files: string[],
 		projectDir: string,
-	): { file: string; line: string }[] {
-		const shortImportRegExp = this.getShortImportRegExp(projectDir);
+	): Promise<{ file: string; line: string }[]> {
+		const shortImportRegExp = await this.getShortImportRegExp(projectDir);
 		const shortImports: { file: string; line: string }[] = [];
 		if (!shortImportRegExp) {
 			return shortImports;
@@ -304,10 +306,12 @@ export class DoctorServiceImpl implements DoctorService {
 		return shortImports;
 	}
 
-	private getShortImportRegExp(projectDir: string): RegExp {
-		const pathToTnsCoreModules = resolvePackagePath(TNS_CORE_MODULES_NAME, {
-			paths: [projectDir],
-		});
+	private async getShortImportRegExp(projectDir: string): Promise<RegExp> {
+		const pathToTnsCoreModules =
+			await this.$packageManager.getInstalledPackagePath(
+				TNS_CORE_MODULES_NAME,
+				projectDir,
+			);
 		if (!pathToTnsCoreModules) {
 			return null;
 		}

@@ -1,6 +1,5 @@
 import * as path from "path";
 import * as constants from "../constants";
-import { resolvePackagePath } from "../helpers/package-path-helper";
 import {
 	INpmInstallOptions,
 	INpmInstallResultInfo,
@@ -190,9 +189,10 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		projectDir: string
 	): Promise<string> {
 		// local installation takes precedence over cache
-		const inspectorPath = resolvePackagePath(inspectorNpmPackageName, {
-			paths: [projectDir],
-		});
+		const inspectorPath = await this.$packageManager.getInstalledPackagePath(
+			inspectorNpmPackageName,
+			projectDir
+		);
 		if (inspectorPath) {
 			return inspectorPath;
 		}
@@ -281,7 +281,10 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			version,
 			dev
 		);
-		return resolvePackagePath(installResultInfo.name, { paths: [pathToSave] });
+		return this.$packageManager.getInstalledPackagePath(
+			installResultInfo.name,
+			pathToSave
+		);
 	}
 
 	private async npmInstall(

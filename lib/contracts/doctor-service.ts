@@ -34,5 +34,7 @@ export abstract class DoctorService {
 	}): Promise<boolean>;
 
 	/** Checks and notifies users of deprecated short imports in their app. */
-	abstract checkForDeprecatedShortImportsInAppDir(projectDir: string): void;
+	abstract checkForDeprecatedShortImportsInAppDir(
+		projectDir: string,
+	): Promise<void>;
 }
