@@ -17,7 +17,7 @@ import {
 	INpmInstallOptions,
 	INodePackageManager,
 	INpmInstallResultInfo,
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
 	INpmPackageNameParts,
 	INpmsResult,
 	IAndroidToolsInfoData,
@@ -457,10 +457,14 @@ export class PackageInstallationManagerStub implements IPackageInstallationManag
 export class NodePackageManagerStub implements INodePackageManager {
 	constructor() {}
 
+	public getInstalledPackagePath(packageName: string, fromDir: string): string {
+		return null;
+	}
+
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo> {
 		return {
 			name: packageName,
@@ -476,11 +480,11 @@ export class NodePackageManagerStub implements INodePackageManager {
 		return "";
 	}
 
-	public async search(filter: string[], config: any): Promise<string> {
+	public async search(filter: string[]): Promise<string> {
 		return "";
 	}
 
-	public async view(packageName: string, config: Object): Promise<any> {
+	public async view(packageName: string, field?: string): Promise<any> {
 		return {};
 	}
 

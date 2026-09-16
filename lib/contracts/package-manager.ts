@@ -1,7 +1,7 @@
 import { Contract } from "../common/di/contract";
-import type { IDictionary } from "../common/declarations";
 import type {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmPackageNameParts,
 	INpmsResult,
@@ -17,35 +17,35 @@ export abstract class PackageManager {
 	 * Installs dependency
 	 * @param  {string}                            packageName The name of the dependency - can be a path, a url or a string.
 	 * @param  {string}                            pathToSave  The destination of the installation.
-	 * @param  {INodePackageManagerInstallOptions} config      Additional options that can be passed to manipulate installation.
+	 * @param  {IPackageInstallOptions}            options     Package-manager-agnostic installation options.
 	 * @return {Promise<INpmInstallResultInfo>}                Information about installed package.
 	 */
 	abstract install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 
 	/**
 	 * Uninstalls a dependency
 	 * @param  {string}                            packageName The name of the dependency.
-	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate uninstallation.
+	 * @param  {IPackageUninstallOptions}          options     Package-manager-agnostic uninstallation options.
 	 * @param  {string}                            path  The destination of the uninstallation.
 	 * @return {Promise<string>}                The output of the uninstallation.
 	 */
 	abstract uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		path?: string,
 	): Promise<string>;
 
 	/**
 	 * Provides information about a given package.
-	 * @param  {string}                            packageName The name of the package.
-	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
-	 * @return {Promise<any>}                Object, containing information about the package.
+	 * @param  {string} packageName The name of the package, optionally with a version.
+	 * @param  {string} field       @optional A single registry field (e.g. "versions" or "dist-tags") to return instead of the whole document.
+	 * @return {Promise<any>} The parsed registry data, or null when it cannot be parsed.
 	 */
-	abstract view(packageName: string, config: Object): Promise<any>;
+	abstract view(packageName: string, field?: string): Promise<any>;
 
 	/**
 	 * Checks if the specified string is name of a packaged published in the NPM registry.
@@ -74,14 +74,10 @@ export abstract class PackageManager {
 
 	/**
 	 * Searches for a package.
-	 * @param  {string[]}                            filter Keywords with which to perform the search.
-	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
-	 * @return {Promise<string>}                The output of the uninstallation.
+	 * @param  {string[]} filter Keywords with which to perform the search.
+	 * @return {Promise<string>} The raw search output.
 	 */
-	abstract search(
-		filter: string[],
-		config: IDictionary<string | boolean>,
-	): Promise<string>;
+	abstract search(filter: string[]): Promise<string>;
 
 	/**
 	 * Searches for npm packages in npms by keyword.
@@ -102,6 +98,17 @@ export abstract class PackageManager {
 	 * @returns {string} The full path to npm cache directory
 	 */
 	abstract getCachePath(): Promise<string>;
+
+	/**
+	 * Locates a package the way the package manager laid it out on disk.
+	 * @param  {string} packageName The name of the package.
+	 * @param  {string} fromDir     The directory whose dependencies are searched, usually the project directory.
+	 * @return {string} The absolute path of the package directory, or null when it is not installed.
+	 */
+	abstract getInstalledPackagePath(
+		packageName: string,
+		fromDir: string,
+	): string;
 
 	/**
 	 * Gets the name of the package manager used for the current process.

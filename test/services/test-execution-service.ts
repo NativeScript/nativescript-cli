@@ -8,10 +8,18 @@ import { IDictionary } from "../../lib/common/declarations";
 const karmaPluginName = "karma";
 const unitTestsPluginName = "@nativescript/unit-test-runner";
 
-function getTestExecutionService(): ITestExecutionService {
+function getTestExecutionService(
+	installedPackages: string[],
+): ITestExecutionService {
 	const injector = new InjectorStub();
 	injector.register("testExecutionService", TestExecutionService);
 	injector.register("runController", {});
+	injector.register("packageManager", {
+		getInstalledPackagePath: (packageName: string, fromDir: string): string =>
+			installedPackages.indexOf(packageName) !== -1
+				? `${fromDir}/node_modules/${packageName}`
+				: null,
+	});
 
 	return injector.resolve("testExecutionService");
 }
@@ -28,8 +36,7 @@ function getDependenciesObj(deps: string[]): IDictionary<string> {
 describe("testExecutionService", () => {
 	const testCases = [
 		{
-			name:
-				"should return false when the project has no dependencies and dev dependencies",
+			name: "should return false when the project has no dependencies and dev dependencies",
 			expectedCanStartKarmaServer: false,
 			projectData: { dependencies: {}, devDependencies: {} },
 		},
@@ -50,8 +57,7 @@ describe("testExecutionService", () => {
 			},
 		},
 		{
-			name:
-				"should return true when the project has the required plugins as dependencies",
+			name: "should return true when the project has the required plugins as dependencies",
 			expectedCanStartKarmaServer: true,
 			projectData: {
 				dependencies: getDependenciesObj([
@@ -62,8 +68,7 @@ describe("testExecutionService", () => {
 			},
 		},
 		{
-			name:
-				"should return true when the project has the required plugins as dev dependencies",
+			name: "should return true when the project has the required plugins as dev dependencies",
 			expectedCanStartKarmaServer: true,
 			projectData: {
 				dependencies: {},
@@ -74,8 +79,7 @@ describe("testExecutionService", () => {
 			},
 		},
 		{
-			name:
-				"should return true when the project has the required plugins as dev and normal dependencies",
+			name: "should return true when the project has the required plugins as dev and normal dependencies",
 			expectedCanStartKarmaServer: true,
 			projectData: {
 				dependencies: getDependenciesObj([karmaPluginName]),
@@ -87,35 +91,15 @@ describe("testExecutionService", () => {
 	describe("canStartKarmaServer", () => {
 		_.each(testCases, (testCase: any) => {
 			it(`${testCase.name}`, async () => {
-				const testExecutionService = getTestExecutionService();
+				const installedPackages = _.keys({
+					...testCase.projectData.dependencies,
+					...testCase.projectData.devDependencies,
+				});
+				const testExecutionService = getTestExecutionService(installedPackages);
 
-				// todo: cleanup monkey-patch with a friendlier syntax (util?)
-				// MOCK require.resolve
-				const Module = require("module");
-				const originalResolveFilename = Module._resolveFilename;
-
-				Module._resolveFilename = function (...args: any) {
-					if (
-						args[0].startsWith(karmaPluginName) &&
-						(testCase.projectData.dependencies[karmaPluginName] ||
-							testCase.projectData.devDependencies[karmaPluginName])
-					) {
-						// override with a "random" built-in module to
-						// ensure the module can be resolved
-						args[0] = "fs";
-					}
-
-					return originalResolveFilename.apply(this, args);
-				};
-				// END MOCK
-
-				const canStartKarmaServer = await testExecutionService.canStartKarmaServer(
-					testCase.projectData
-				);
+				const canStartKarmaServer =
+					await testExecutionService.canStartKarmaServer(testCase.projectData);
 				assert.equal(canStartKarmaServer, testCase.expectedCanStartKarmaServer);
-
-				// restore mock
-				Module._resolveFilename = originalResolveFilename;
 			});
 		});
 	});

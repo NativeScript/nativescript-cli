@@ -479,7 +479,7 @@ tns.settingsService.setSettings({ userAgentName: "myUserAgent", profileDir: "cus
 `npm` module provides a way to interact with npm specifically the use of install, uninstall, search and view commands.
 
 ### install
-Installs specified package. Note that you can use the third argument in order to pass different options to the installation like `ignore-scripts`, `save` or `save-exact` which work exactly like they would if you would execute npm from the command line and pass them as `--` flags.
+Installs specified package. The third argument takes package-manager-agnostic options (`dev`, `exact`, `save`, `optional`, `silent`, `ignoreScripts`); the selected package manager maps them onto its own command line flags.
 * Auxiliary interfaces:
 ```TypeScript
 /**
@@ -533,11 +533,11 @@ Uninstalls a specified package.
 /**
  * Uninstalls a dependency
  * @param  {string}                            packageName The name of the dependency.
- * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate  uninstallation.
+ * @param  {IPackageUninstallOptions}          options     Package-manager-agnostic uninstallation options (`save`).
  * @param  {string}                            path  The destination of the uninstallation.
  * @return {Promise<any>}                The output of the uninstallation.
 */
-uninstall(packageName: string, config?: IDictionary<string | boolean>, path?: string): Promise<string>;
+uninstall(packageName: string, options?: IPackageUninstallOptions, path?: string): Promise<string>;
 ```
 
 * Usage:
@@ -556,20 +556,38 @@ Searches for a package using keywords.
 ```TypeScript
 /**
  * Searches for a package.
- * @param  {string[]}                            filter Keywords with which to perform the search.
- * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
- * @return {Promise<string>}                The output of the uninstallation.
+ * @param  {string[]} filter Keywords with which to perform the search.
+ * @return {Promise<string>} The raw search output.
  */
-search(filter: string[], config: IDictionary<string | boolean>): Promise<string>;
+search(filter: string[]): Promise<string>;
 ```
 
 * Usage:
 ```JavaScript
-tns.npm.search(["nativescript", "cloud"], { silent: true }).then(output => {
+tns.npm.search(["nativescript", "cloud"]).then(output => {
 	console.log(`Found: ${output}`);
 }, err => {
 	console.log("An error occurred during searching", err);
 });
+```
+
+### getInstalledPackagePath
+Locates a package the way the selected package manager laid it out on disk, so callers never have to assume a `node_modules` layout.
+
+* Definition:
+```TypeScript
+/**
+ * @param  {string} packageName The name of the package.
+ * @param  {string} fromDir     The directory whose dependencies are searched, usually the project directory.
+ * @return {string} The absolute path of the package directory, or null when it is not installed.
+ */
+getInstalledPackagePath(packageName: string, fromDir: string): string;
+```
+
+* Usage:
+```JavaScript
+const pathToPackage = tns.packageManager.getInstalledPackagePath("@nativescript/core", "/tmp/myProject");
+console.log(pathToPackage ? `Installed at ${pathToPackage}` : "Not installed");
 ```
 
 ### view
@@ -578,17 +596,17 @@ Provides information about a given package.
 * Definition
 ```TypeScript
 /**
- * Provides information about a given package.
- * @param  {string}                            packageName The name of the package.
- * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
- * @return {Promise<any>}                Object, containing information about the package.
+ * Provides registry information about a package.
+ * @param  {string} packageName The name of the package, optionally with a version.
+ * @param  {string} field       Optional single registry field (e.g. "versions" or "dist-tags") to return instead of the whole document.
+ * @return {Promise<any>} The parsed registry data.
  */
-view(packageName: string, config: Object): Promise<any>;
+view(packageName: string, field?: string): Promise<any>;
 ```
 
 * Usage:
 ```JavaScript
-tns.npm.view(["nativescript"], {}).then(result => {
+tns.npm.view("nativescript").then(result => {
 	console.log(`${result.name}'s latest version is ${result["dist-tags"].latest}`);
 }, err => {
 	console.log("An error occurred during viewing", err);

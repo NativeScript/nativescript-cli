@@ -95,7 +95,7 @@ async function installModule(
 	}
 
 	await $packageManager.install(moduleName, projectDir, {
-		"save-dev": true,
+		dev: true,
 		disableNpmInstall: context.options.disableNpmInstall,
 		frameworkPath: context.options.frameworkPath,
 		ignoreScripts: context.options.ignoreScripts,

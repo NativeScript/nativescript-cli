@@ -1,23 +1,38 @@
 import { join, relative } from "path";
 import { BasePackageManager } from "./base-package-manager";
-import { exported, cache } from "./common/decorators";
-import { CACACHE_DIRECTORY_NAME } from "./constants";
+import { exported, cache } from "../common/decorators";
+import { CACACHE_DIRECTORY_NAME } from "../constants";
 import * as _ from "lodash";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
 	IFileSystem,
 	IHostInfo,
 	Server,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
-export class NodePackageManager extends BasePackageManager {
+export class NpmPackageManager extends BasePackageManager {
+	protected readonly installFlags = {
+		save: "--save",
+		noSave: "--no-save",
+		dev: "--save-dev",
+		optional: "--save-optional",
+		exact: "--save-exact",
+		silent: "--silent",
+		ignoreScripts: "--ignore-scripts",
+	};
+	protected readonly uninstallFlags = {
+		save: "--save",
+		noSave: "--no-save",
+	};
+
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -34,19 +49,16 @@ export class NodePackageManager extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		options: IPackageInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		if (config.disableNpmInstall) {
+		if (options.disableNpmInstall) {
 			return;
-		}
-		if (config.ignoreScripts) {
-			config["ignore-scripts"] = true;
 		}
 
 		const packageJsonPath = join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		const flags = this.getFlagsString(config, true);
+		const flags = this.getInstallFlags(options);
 		let params = ["install"];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -62,11 +74,11 @@ export class NodePackageManager extends BasePackageManager {
 		const etcExistsPriorToInstallation = this.$fs.exists(etcDirectoryLocation);
 
 		//TODO: plamen5kov: workaround is here for a reason (remove whole file later)
-		if (config.path) {
+		if (options.path) {
 			let relativePathFromCwdToSource = "";
-			if (config.frameworkPath) {
+			if (options.frameworkPath) {
 				relativePathFromCwdToSource = relative(
-					config.frameworkPath,
+					options.frameworkPath,
 					pathToSave
 				);
 				if (this.$fs.exists(relativePathFromCwdToSource)) {
@@ -103,31 +115,26 @@ export class NodePackageManager extends BasePackageManager {
 	@exported("npm")
 	public async uninstall(
 		packageName: string,
-		config?: any,
+		options?: IPackageUninstallOptions,
 		path?: string
 	): Promise<string> {
-		const flags = this.getFlagsString(config, false);
+		const flags = this.getUninstallFlags(options).join(" ");
 		return this.$childProcess.exec(`npm uninstall ${packageName} ${flags}`, {
 			cwd: path,
 		});
 	}
 
 	@exported("npm")
-	public async search(filter: string[], config: any): Promise<string> {
-		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`npm search ${filter.join(" ")} ${flags}`);
+	public async search(filter: string[]): Promise<string> {
+		return this.$childProcess.exec(`npm search ${filter.join(" ")}`);
 	}
 
 	@exported("npm")
-	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
-
-		const flags = this.getFlagsString(wrappedConfig, false);
+	public async view(packageName: string, field?: string): Promise<any> {
+		const args = [packageName, field, "--json"].filter(Boolean).join(" ");
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(
-				`npm view ${packageName} ${flags}`
-			);
+			viewResult = await this.$childProcess.exec(`npm view ${args}`);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
@@ -172,4 +179,4 @@ export class NodePackageManager extends BasePackageManager {
 	}
 }
 
-injector.register("npm", NodePackageManager);
+injector.register("npm", NpmPackageManager);

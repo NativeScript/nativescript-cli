@@ -1,4 +1,3 @@
-import { resolvePackagePath } from "@rigor789/resolve-package-path";
 import * as path from "path";
 import { color } from "../color";
 import { IChildProcess, IErrors } from "../common/declarations";
@@ -53,16 +52,17 @@ export class PreviewCommand extends Command({
 			`${PREVIEW_CLI_PACKAGE}@latest`,
 			this.$projectData.projectDir,
 			{
-				"save-dev": true,
-				"save-exact": true,
-			} as any,
+				dev: true,
+				exact: true,
+			},
 		);
 	}
 
 	private getPreviewCLIPath(): string {
-		return resolvePackagePath(PREVIEW_CLI_PACKAGE, {
-			paths: [this.$projectData.projectDir],
-		});
+		return this.$packageManager.getInstalledPackagePath(
+			PREVIEW_CLI_PACKAGE,
+			this.$projectData.projectDir,
+		);
 	}
 
 	private async failMissingPreviewCLI(): Promise<void> {
