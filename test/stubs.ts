@@ -476,11 +476,11 @@ export class NodePackageManagerStub implements INodePackageManager {
 		return "";
 	}
 
-	public async search(filter: string[], config: any): Promise<string> {
+	public async search(filter: string[]): Promise<string> {
 		return "";
 	}
 
-	public async view(packageName: string, config: Object): Promise<any> {
+	public async view(packageName: string, field?: string): Promise<any> {
 		return {};
 	}
 

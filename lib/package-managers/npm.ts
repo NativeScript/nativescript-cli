@@ -125,21 +125,16 @@ export class NpmPackageManager extends BasePackageManager {
 	}
 
 	@exported("npm")
-	public async search(filter: string[], config: any): Promise<string> {
-		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`npm search ${filter.join(" ")} ${flags}`);
+	public async search(filter: string[]): Promise<string> {
+		return this.$childProcess.exec(`npm search ${filter.join(" ")}`);
 	}
 
 	@exported("npm")
-	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
-
-		const flags = this.getFlagsString(wrappedConfig, false);
+	public async view(packageName: string, field?: string): Promise<any> {
+		const args = [packageName, field, "--json"].filter(Boolean).join(" ");
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(
-				`npm view ${packageName} ${flags}`
-			);
+			viewResult = await this.$childProcess.exec(`npm view ${args}`);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}

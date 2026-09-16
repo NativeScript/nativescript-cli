@@ -55,7 +55,13 @@ interface INodePackageManager {
 	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
 	 * @return {Promise<any>}                Object, containing information about the package.
 	 */
-	view(packageName: string, config: Object): Promise<any>;
+	/**
+	 * Provides registry information about a package.
+	 * @param  {string} packageName The name of the package, optionally with a version.
+	 * @param  {string} field       @optional A single registry field (e.g. "versions" or "dist-tags") to return instead of the whole document.
+	 * @return {Promise<any>} The parsed registry data, or null when it cannot be parsed.
+	 */
+	view(packageName: string, field?: string): Promise<any>;
 
 	/**
 	 * Checks if the specified string is name of a packaged published in the NPM registry.
@@ -84,10 +90,7 @@ interface INodePackageManager {
 	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
 	 * @return {Promise<string>}                The output of the uninstallation.
 	 */
-	search(
-		filter: string[],
-		config: IDictionary<string | boolean>,
-	): Promise<string>;
+	search(filter: string[]): Promise<string>;
 
 	/**
 	 * Searches for npm packages in npms by keyword.

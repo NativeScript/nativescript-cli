@@ -14,7 +14,6 @@ import {
 	IFileSystem,
 	IHostInfo,
 	Server,
-	IDictionary,
 } from "../common/declarations";
 import { injector } from "../common/yok";
 
@@ -103,15 +102,13 @@ export class Yarn2PackageManager extends BasePackageManager {
 	}
 
 	@exported("yarn2")
-	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true });
-
-		const flags = this.getFlagsString(wrappedConfig, false);
+	public async view(packageName: string, field?: string): Promise<any> {
+		const args = [packageName, field && `--fields ${field}`, "--json"]
+			.filter(Boolean)
+			.join(" ");
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(
-				`yarn npm info ${packageName} ${flags}`
-			);
+			viewResult = await this.$childProcess.exec(`yarn npm info ${args}`);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
@@ -125,10 +122,7 @@ export class Yarn2PackageManager extends BasePackageManager {
 	}
 
 	@exported("yarn2")
-	public search(
-		filter: string[],
-		config: IDictionary<string | boolean>
-	): Promise<string> {
+	public search(filter: string[]): Promise<string> {
 		this.$errors.fail(
 			"Method not implemented. Yarn does not support searching for packages in the registry."
 		);

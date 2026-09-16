@@ -1,13 +1,10 @@
 import { EOL } from "os";
 import * as path from "path";
+import { resolvePackagePath } from "../helpers/package-path-helper";
 import * as _ from "lodash";
 import * as helpers from "../common/helpers";
 import { cache } from "../common/decorators";
-import {
-	TrackActionNames,
-	NODE_MODULES_FOLDER_NAME,
-	TNS_CORE_MODULES_NAME,
-} from "../constants";
+import { TrackActionNames, TNS_CORE_MODULES_NAME } from "../constants";
 import { DoctorService } from "../contracts/doctor-service";
 import { doctor, constants } from "@nativescript/doctor";
 import { IProjectDataService } from "../definitions/project";
@@ -278,6 +275,9 @@ export class DoctorServiceImpl implements DoctorService {
 	): { file: string; line: string }[] {
 		const shortImportRegExp = this.getShortImportRegExp(projectDir);
 		const shortImports: { file: string; line: string }[] = [];
+		if (!shortImportRegExp) {
+			return shortImports;
+		}
 
 		for (const file of files) {
 			const fileContent = this.$fs.readText(file);
@@ -305,11 +305,12 @@ export class DoctorServiceImpl implements DoctorService {
 	}
 
 	private getShortImportRegExp(projectDir: string): RegExp {
-		const pathToTnsCoreModules = path.join(
-			projectDir,
-			NODE_MODULES_FOLDER_NAME,
-			TNS_CORE_MODULES_NAME,
-		);
+		const pathToTnsCoreModules = resolvePackagePath(TNS_CORE_MODULES_NAME, {
+			paths: [projectDir],
+		});
+		if (!pathToTnsCoreModules) {
+			return null;
+		}
 		const coreModulesSubDirs = this.$fs
 			.readDirectory(pathToTnsCoreModules)
 			.filter((entry) =>

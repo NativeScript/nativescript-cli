@@ -1,5 +1,6 @@
 import * as path from "path";
 import * as constants from "../constants";
+import { resolvePackagePath } from "../helpers/package-path-helper";
 import {
 	INpmInstallOptions,
 	INpmInstallResultInfo,
@@ -67,9 +68,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		versionRange: string
 	): Promise<string> {
-		const data = await this.$packageManager.view(packageName, {
-			versions: true,
-		});
+		const data = await this.$packageManager.view(packageName, "versions");
 
 		let versions;
 
@@ -190,14 +189,11 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		inspectorNpmPackageName: string,
 		projectDir: string
 	): Promise<string> {
-		const inspectorPath = path.join(
-			projectDir,
-			constants.NODE_MODULES_FOLDER_NAME,
-			inspectorNpmPackageName
-		);
-
 		// local installation takes precedence over cache
-		if (this.inspectorAlreadyInstalled(inspectorPath)) {
+		const inspectorPath = resolvePackagePath(inspectorNpmPackageName, {
+			paths: [projectDir],
+		});
+		if (inspectorPath) {
 			return inspectorPath;
 		}
 
@@ -266,14 +262,6 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		}
 	}
 
-	private inspectorAlreadyInstalled(pathToInspector: string): Boolean {
-		if (this.$fs.exists(pathToInspector)) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private async installCore(
 		packageName: string,
 		pathToSave: string,
@@ -293,15 +281,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			version,
 			dev
 		);
-		const installedPackageName = installResultInfo.name;
-
-		const pathToInstalledPackage = path.join(
-			pathToSave,
-			"node_modules",
-			installedPackageName
-		);
-
-		return pathToInstalledPackage;
+		return resolvePackagePath(installResultInfo.name, { paths: [pathToSave] });
 	}
 
 	private async npmInstall(
@@ -335,9 +315,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		version: string
 	): Promise<string> {
-		let data: any = await this.$packageManager.view(packageName, {
-			"dist-tags": true,
-		});
+		let data: any = await this.$packageManager.view(packageName, "dist-tags");
 		data = data?.["dist-tags"] ?? data;
 		this.$logger.trace("Using version %s. ", data[version]);
 

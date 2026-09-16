@@ -15,7 +15,6 @@ import {
 	IFileSystem,
 	IHostInfo,
 	Server,
-	IDictionary,
 } from "../common/declarations";
 import { injector } from "../common/yok";
 
@@ -98,15 +97,11 @@ export class PnpmPackageManager extends BasePackageManager {
 	}
 
 	@exported("pnpm")
-	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true });
-
-		const flags = this.getFlagsString(wrappedConfig, false);
+	public async view(packageName: string, field?: string): Promise<any> {
+		const args = [packageName, field, "--json"].filter(Boolean).join(" ");
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(
-				`pnpm info ${packageName} ${flags}`,
-			);
+			viewResult = await this.$childProcess.exec(`pnpm info ${args}`);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
@@ -119,12 +114,8 @@ export class PnpmPackageManager extends BasePackageManager {
 	}
 
 	@exported("pnpm")
-	public search(
-		filter: string[],
-		config: IDictionary<string | boolean>,
-	): Promise<string> {
-		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`pnpm search ${filter.join(" ")} ${flags}`);
+	public async search(filter: string[]): Promise<string> {
+		return this.$childProcess.exec(`pnpm search ${filter.join(" ")}`);
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {

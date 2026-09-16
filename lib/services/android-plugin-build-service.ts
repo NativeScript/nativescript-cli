@@ -492,9 +492,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$projectData.nsConfig?.android?.runtimePackageName ||
 			SCOPED_ANDROID_RUNTIME_NAME;
 		try {
-			let result = await this.$packageManager.view(packageName, {
-				"dist-tags": true,
-			});
+			let result = await this.$packageManager.view(packageName, "dist-tags");
 			result = result?.["dist-tags"] ?? result;
 			runtimeVersion = result.latest;
 		} catch (err) {
@@ -590,7 +588,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		try {
 			let output = await this.$packageManager.view(
 				`${packageName}@${runtimeVersion}`,
-				{ version_info: true },
+				"version_info",
 			);
 			output = output?.["version_info"] ?? output;
 
@@ -605,7 +603,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				 */
 				output = await this.$packageManager.view(
 					`${packageName}@${runtimeVersion}`,
-					{ gradle: true },
+					"gradle",
 				);
 				output = output?.["gradle"] ?? output;
 

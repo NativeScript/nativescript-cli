@@ -556,16 +556,15 @@ Searches for a package using keywords.
 ```TypeScript
 /**
  * Searches for a package.
- * @param  {string[]}                            filter Keywords with which to perform the search.
- * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
- * @return {Promise<string>}                The output of the uninstallation.
+ * @param  {string[]} filter Keywords with which to perform the search.
+ * @return {Promise<string>} The raw search output.
  */
-search(filter: string[], config: IDictionary<string | boolean>): Promise<string>;
+search(filter: string[]): Promise<string>;
 ```
 
 * Usage:
 ```JavaScript
-tns.npm.search(["nativescript", "cloud"], { silent: true }).then(output => {
+tns.npm.search(["nativescript", "cloud"]).then(output => {
 	console.log(`Found: ${output}`);
 }, err => {
 	console.log("An error occurred during searching", err);
@@ -578,17 +577,17 @@ Provides information about a given package.
 * Definition
 ```TypeScript
 /**
- * Provides information about a given package.
- * @param  {string}                            packageName The name of the package.
- * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
- * @return {Promise<any>}                Object, containing information about the package.
+ * Provides registry information about a package.
+ * @param  {string} packageName The name of the package, optionally with a version.
+ * @param  {string} field       Optional single registry field (e.g. "versions" or "dist-tags") to return instead of the whole document.
+ * @return {Promise<any>} The parsed registry data.
  */
-view(packageName: string, config: Object): Promise<any>;
+view(packageName: string, field?: string): Promise<any>;
 ```
 
 * Usage:
 ```JavaScript
-tns.npm.view(["nativescript"], {}).then(result => {
+tns.npm.view("nativescript").then(result => {
 	console.log(`${result.name}'s latest version is ${result["dist-tags"].latest}`);
 }, err => {
 	console.log("An error occurred during viewing", err);

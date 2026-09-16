@@ -7,12 +7,7 @@ import {
 	INpmsResult,
 	INpmPackageNameParts,
 } from "../declarations";
-import {
-	IDictionary,
-	IChildProcess,
-	IFileSystem,
-	IHostInfo,
-} from "../common/declarations";
+import { IChildProcess, IFileSystem, IHostInfo } from "../common/declarations";
 
 /**
  * How one package manager spells each IPackageInstallOptions flag on its
@@ -43,11 +38,8 @@ export abstract class BasePackageManager implements INodePackageManager {
 		options?: IPackageUninstallOptions,
 		path?: string,
 	): Promise<string>;
-	public abstract view(packageName: string, config: Object): Promise<any>;
-	public abstract search(
-		filter: string[],
-		config: IDictionary<string | boolean>,
-	): Promise<string>;
+	public abstract view(packageName: string, field?: string): Promise<any>;
+	public abstract search(filter: string[]): Promise<string>;
 	public abstract searchNpms(keyword: string): Promise<INpmsResult>;
 	public abstract getRegistryPackageData(packageName: string): Promise<any>;
 	public abstract getCachePath(): Promise<string>;
@@ -70,7 +62,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 		}
 
 		try {
-			const viewResult = await this.view(packageName, { name: true });
+			const viewResult = await this.view(packageName, "name");
 
 			// `npm view nonExistingPackageName` will return `nativescript`
 			// if executed in the root dir of the CLI (npm 6.4.1)
@@ -181,41 +173,6 @@ export abstract class BasePackageManager implements INodePackageManager {
 		if (options.silent) push(flags.silent);
 		if (options.ignoreScripts) push(flags.ignoreScripts);
 		return result;
-	}
-
-	protected getFlagsString(config: any, asArray: boolean): any {
-		const array: Array<string> = [];
-		for (const flag in config) {
-			if (
-				flag === "global" &&
-				this.packageManager !== "yarn" &&
-				this.packageManager !== "yarn2"
-			) {
-				array.push(`--${flag}`);
-				array.push(`${config[flag]}`);
-			} else if (config[flag]) {
-				if (
-					flag === "dist-tags" ||
-					flag === "versions" ||
-					flag === "name" ||
-					flag === "gradle" ||
-					flag === "version_info"
-				) {
-					if (this.packageManager === "yarn2") {
-						array.push(`--fields ${flag}`);
-					} else {
-						array.push(` ${flag}`);
-					}
-					continue;
-				}
-				array.push(`--${flag}`);
-			}
-		}
-		if (asArray) {
-			return array;
-		}
-
-		return array.join(" ");
 	}
 
 	private isTgz(packageName: string): boolean {

@@ -3,6 +3,8 @@ import { Yok } from "../../lib/common/yok";
 import { LoggerStub, FileSystemStub } from "../stubs";
 import { assert } from "chai";
 import * as path from "path";
+import * as os from "os";
+import * as nodeFs from "fs";
 import * as sinon from "sinon";
 import * as _ from "lodash";
 import { IProjectDataService } from "../../lib/definitions/project";
@@ -365,15 +367,54 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 				}
 			};
 
-			testData.forEach(({ filesContents, expectedShortImports }) => {
-				fs.readText = (filePath) => filesContents[filePath];
+			const projectDir = nodeFs.mkdtempSync(
+				path.join(os.tmpdir(), "ns-doctor-service-"),
+			);
+			const coreModulesDir = path.join(
+				projectDir,
+				"node_modules",
+				"tns-core-modules",
+			);
+			nodeFs.mkdirSync(coreModulesDir, { recursive: true });
+			nodeFs.writeFileSync(
+				path.join(coreModulesDir, "package.json"),
+				JSON.stringify({ name: "tns-core-modules", version: "6.0.0" }),
+			);
 
+			try {
+				testData.forEach(({ filesContents, expectedShortImports }) => {
+					fs.readText = (filePath) => filesContents[filePath];
+
+					const shortImports = doctorService.getDeprecatedShortImportsInFiles(
+						_.keys(filesContents),
+						projectDir,
+					);
+					assert.deepStrictEqual(shortImports, expectedShortImports);
+				});
+			} finally {
+				nodeFs.rmSync(projectDir, { recursive: true, force: true });
+			}
+		});
+
+		it("getDeprecatedShortImportsInFiles returns no results when tns-core-modules is not installed", () => {
+			const testInjector = createTestInjector();
+			const doctorService =
+				testInjector.resolve<DoctorServiceInheritor>("doctorService");
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			fs.readText = () => 'const application = require("application");';
+
+			const projectDir = nodeFs.mkdtempSync(
+				path.join(os.tmpdir(), "ns-doctor-service-"),
+			);
+			try {
 				const shortImports = doctorService.getDeprecatedShortImportsInFiles(
-					_.keys(filesContents),
-					"projectDir",
+					["file1"],
+					projectDir,
 				);
-				assert.deepStrictEqual(shortImports, expectedShortImports);
-			});
+				assert.deepStrictEqual(shortImports, []);
+			} finally {
+				nodeFs.rmSync(projectDir, { recursive: true, force: true });
+			}
 		});
 	});
 
