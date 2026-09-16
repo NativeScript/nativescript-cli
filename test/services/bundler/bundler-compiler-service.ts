@@ -58,7 +58,7 @@ function createTestInjector(
 	const testInjector = new Yok();
 	testInjector.register("packageManager", {
 		getPackageManagerName: async () => packageManager,
-		getInstalledPackagePath: async (): Promise<string> => null,
+		getInstalledPackagePath: (): string => null,
 	});
 	testInjector.register("bundlerCompilerService", BundlerCompilerService);
 	testInjector.register("childProcess", {});

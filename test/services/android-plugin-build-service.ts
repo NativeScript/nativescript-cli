@@ -129,10 +129,7 @@ describe("androidPluginBuildService", () => {
 		addProjectRuntime?: boolean;
 	}): any {
 		return {
-			getInstalledPackagePath: async (
-				packageName: string,
-				fromDir: string,
-			): Promise<string> =>
+			getInstalledPackagePath: (packageName: string, fromDir: string): string =>
 				resolvePackagePath(packageName, { paths: [fromDir] }) || null,
 			getRegistryPackageData: async (packageName: string): Promise<any> => {
 				const result: any = [];

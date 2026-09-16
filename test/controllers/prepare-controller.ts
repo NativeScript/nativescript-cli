@@ -52,7 +52,7 @@ function createTestInjector(data: { hasNativeChanges: boolean }): IInjector {
 	injector.register("mobileHelper", MobileHelper);
 	injector.register("prepareController", PrepareController);
 	injector.register("packageManager", {
-		getInstalledPackagePath: async (): Promise<string> => null,
+		getInstalledPackagePath: (): string => null,
 	});
 
 	injector.register("nodeModulesDependenciesBuilder", {

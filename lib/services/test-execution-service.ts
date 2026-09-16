@@ -144,7 +144,7 @@ export class TestExecutionService implements ITestExecutionService {
 			}
 		});
 
-		const pathToKarma = await this.$packageManager.getInstalledPackagePath(
+		const pathToKarma = this.$packageManager.getInstalledPackagePath(
 			"karma",
 			projectData.projectDir,
 		);

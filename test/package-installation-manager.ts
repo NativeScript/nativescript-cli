@@ -45,6 +45,7 @@ function createTestInjector(): IInjector {
 	});
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
+		getSettingValueSync: (settingName: string): void => undefined,
 	});
 	testInjector.register("npm", NpmLib.NpmPackageManager);
 	testInjector.register("yarn", YarnLib.YarnPackageManager);

@@ -37,6 +37,7 @@ function createInjector(data?: { latestFrameworkVersion: string }) {
 
 	injector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
+		getSettingValueSync: (settingName: string): void => undefined,
 	});
 	injector.register("tempService", TempServiceStub);
 	injector.register("mobileHelper", MobileHelper);

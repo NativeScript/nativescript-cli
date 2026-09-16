@@ -569,9 +569,8 @@ export class BundlerCompilerService
 			additionalNodeArgs.unshift("--max_old_space_size=4096");
 		}
 
-		const bundlerExecutablePath =
-			await this.getBundlerExecutablePath(projectData);
-		const isModernBundler = await this.isModernBundler(projectData);
+		const bundlerExecutablePath = this.getBundlerExecutablePath(projectData);
+		const isModernBundler = this.isModernBundler(projectData);
 		const args = [
 			...additionalNodeArgs,
 			bundlerExecutablePath,
@@ -725,7 +724,7 @@ export class BundlerCompilerService
 			// go after `--` so vite's CLI doesn't choke on unknown options.
 			const args = [
 				...additionalNodeArgs,
-				await this.getBundlerExecutablePath(projectData),
+				this.getBundlerExecutablePath(projectData),
 				"serve",
 				`--config=${projectData.bundlerConfigPath}`,
 				`--mode=development`,
@@ -1165,9 +1164,7 @@ export class BundlerCompilerService
 		});
 	}
 
-	private async getBundlerExecutablePath(
-		projectData: IProjectData,
-	): Promise<string> {
+	private getBundlerExecutablePath(projectData: IProjectData): string {
 		const bundler = this.getBundler();
 		const resolve = (packageName: string) =>
 			this.$packageManager.getInstalledPackagePath(
@@ -1176,13 +1173,13 @@ export class BundlerCompilerService
 			);
 
 		if (bundler === "vite") {
-			const packagePath = await resolve("vite");
+			const packagePath = resolve("vite");
 
 			if (packagePath) {
 				return path.resolve(packagePath, "bin", "vite.js");
 			}
-		} else if (await this.isModernBundler(projectData)) {
-			const packagePath = await resolve(this.getBundlerPackageName());
+		} else if (this.isModernBundler(projectData)) {
+			const packagePath = resolve(this.getBundlerPackageName());
 
 			if (packagePath) {
 				return path.resolve(packagePath, "dist", "bin", "index.js");
@@ -1202,7 +1199,7 @@ export class BundlerCompilerService
 			);
 		}
 
-		const packagePath = await resolve("webpack");
+		const packagePath = resolve("webpack");
 
 		if (!packagePath) {
 			return "";
@@ -1224,13 +1221,13 @@ export class BundlerCompilerService
 		);
 	}
 
-	private async isModernBundler(projectData: IProjectData): Promise<boolean> {
+	private isModernBundler(projectData: IProjectData): boolean {
 		const bundler = this.getBundler();
 		switch (bundler) {
 			case "rspack":
 				return true;
 			default:
-				const packagePath = await this.$packageManager.getInstalledPackagePath(
+				const packagePath = this.$packageManager.getInstalledPackagePath(
 					this.getBundlerPackageName(),
 					projectData.projectDir,
 				);

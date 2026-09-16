@@ -74,6 +74,7 @@ describe("extensibilityService", () => {
 		});
 		testInjector.register("userSettingsService", {
 			getSettingValue: async (settingName: string): Promise<void> => undefined,
+			getSettingValueSync: (settingName: string): void => undefined,
 		});
 		testInjector.register("npm", NpmPackageManager);
 		testInjector.register("yarn", YarnPackageManager);
@@ -92,10 +93,10 @@ describe("extensibilityService", () => {
 		resolve: (extensionName: string, fromDir: string) => string,
 	): void => {
 		const packageManager = testInjector.resolve("packageManager");
-		packageManager.getInstalledPackagePath = async (
+		packageManager.getInstalledPackagePath = (
 			packageName: string,
 			fromDir: string,
-		): Promise<string> => resolve(packageName, fromDir);
+		): string => resolve(packageName, fromDir);
 	};
 
 	const getExpectedInstallationPathForExtension = (

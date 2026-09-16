@@ -494,11 +494,10 @@ export class PrepareController
 				SCOPED_ANDROID_RUNTIME_NAME;
 		}
 		// try reading from installed runtime first before reading from the npm registry...
-		const installedRuntimePath =
-			await this.$packageManager.getInstalledPackagePath(
-				runtimePackageName,
-				projectData.projectDir,
-			);
+		const installedRuntimePath = this.$packageManager.getInstalledPackagePath(
+			runtimePackageName,
+			projectData.projectDir,
+		);
 
 		if (installedRuntimePath) {
 			installedRuntimePackageJSON = this.$fs.readJson(
