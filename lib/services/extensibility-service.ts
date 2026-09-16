@@ -4,7 +4,11 @@ import { cache } from "../common/decorators";
 import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
 import { reportDeprecation } from "../common/deprecation";
-import { INodePackageManager, INpmsSingleResultData } from "../declarations";
+import {
+	INodePackageManager,
+	INpmsSingleResultData,
+	IPackageInstallOptions,
+} from "../declarations";
 import {
 	IDictionary,
 	IFileSystem,
@@ -119,9 +123,9 @@ export class ExtensibilityService implements IExtensibilityService {
 
 		await this.assertPackageJsonExists();
 
-		const npmOpts: any = {
+		const npmOpts: IPackageInstallOptions = {
 			save: true,
-			["save-exact"]: true,
+			exact: true,
 		};
 
 		const localPath = path.resolve(extensionName);

@@ -479,7 +479,7 @@ tns.settingsService.setSettings({ userAgentName: "myUserAgent", profileDir: "cus
 `npm` module provides a way to interact with npm specifically the use of install, uninstall, search and view commands.
 
 ### install
-Installs specified package. Note that you can use the third argument in order to pass different options to the installation like `ignore-scripts`, `save` or `save-exact` which work exactly like they would if you would execute npm from the command line and pass them as `--` flags.
+Installs specified package. The third argument takes package-manager-agnostic options (`dev`, `exact`, `save`, `optional`, `silent`, `ignoreScripts`); the selected package manager maps them onto its own command line flags.
 * Auxiliary interfaces:
 ```TypeScript
 /**
@@ -533,11 +533,11 @@ Uninstalls a specified package.
 /**
  * Uninstalls a dependency
  * @param  {string}                            packageName The name of the dependency.
- * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate  uninstallation.
+ * @param  {IPackageUninstallOptions}          options     Package-manager-agnostic uninstallation options (`save`).
  * @param  {string}                            path  The destination of the uninstallation.
  * @return {Promise<any>}                The output of the uninstallation.
 */
-uninstall(packageName: string, config?: IDictionary<string | boolean>, path?: string): Promise<string>;
+uninstall(packageName: string, options?: IPackageUninstallOptions, path?: string): Promise<string>;
 ```
 
 * Usage:

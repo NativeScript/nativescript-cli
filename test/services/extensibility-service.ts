@@ -2,12 +2,12 @@ import { ExtensibilityService } from "../../lib/services/extensibility-service";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
-import { NPM } from "../../lib/package-managers/npm";
+import { NpmPackageManager } from "../../lib/package-managers/npm";
 import { PackageManager } from "../../lib/package-managers";
-import { Yarn } from "../../lib/package-managers/yarn";
-import { Yarn2 } from "../../lib/package-managers/yarn2";
-import { PNPM } from "../../lib/package-managers/pnpm";
-import { Bun } from "../../lib/package-managers/bun";
+import { YarnPackageManager } from "../../lib/package-managers/yarn";
+import { Yarn2PackageManager } from "../../lib/package-managers/yarn2";
+import { PnpmPackageManager } from "../../lib/package-managers/pnpm";
+import { BunPackageManager } from "../../lib/package-managers/bun";
 import * as constants from "../../lib/constants";
 import { ChildProcess } from "../../lib/common/child-process";
 import { CommandsDelimiters } from "../../lib/common/constants";
@@ -75,11 +75,11 @@ describe("extensibilityService", () => {
 		testInjector.register("userSettingsService", {
 			getSettingValue: async (settingName: string): Promise<void> => undefined,
 		});
-		testInjector.register("npm", NPM);
-		testInjector.register("yarn", Yarn);
-		testInjector.register("yarn2", Yarn2);
-		testInjector.register("pnpm", PNPM);
-		testInjector.register("bun", Bun);
+		testInjector.register("npm", NpmPackageManager);
+		testInjector.register("yarn", YarnPackageManager);
+		testInjector.register("yarn2", Yarn2PackageManager);
+		testInjector.register("pnpm", PnpmPackageManager);
+		testInjector.register("bun", BunPackageManager);
 		testInjector.register("settingsService", SettingsService);
 		testInjector.register("requireService", {
 			require: (pathToRequire: string): any => undefined,
@@ -245,15 +245,16 @@ describe("extensibilityService", () => {
 				);
 			});
 
-			it("passes save and save-exact options to npm install", async () => {
+			it("passes save and exact options to the package manager", async () => {
 				const extensionName = "extension1";
 				const argsPassedToNpmInstall =
 					await getArgsPassedToNpmInstallDuringInstallExtensionCall(
 						extensionName,
 					);
-				const expectedNpmConfg: any = { save: true };
-				expectedNpmConfg["save-exact"] = true;
-				assert.deepStrictEqual(argsPassedToNpmInstall.config, expectedNpmConfg);
+				assert.deepStrictEqual(argsPassedToNpmInstall.config, {
+					save: true,
+					exact: true,
+				});
 			});
 
 			it("passes full path to extensions dir for installation", async () => {

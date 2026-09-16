@@ -17,7 +17,7 @@ import {
 	INpmInstallOptions,
 	INodePackageManager,
 	INpmInstallResultInfo,
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
 	INpmPackageNameParts,
 	INpmsResult,
 	IAndroidToolsInfoData,
@@ -460,7 +460,7 @@ export class NodePackageManagerStub implements INodePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo> {
 		return {
 			name: packageName,

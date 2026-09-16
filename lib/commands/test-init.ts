@@ -126,9 +126,8 @@ export class TestInitCommand extends Command({
 			await this.$packageManager.install(moduleToInstall, projectDir, {
 				// Packages with native code must land in "dependencies" — the CLI
 				// integrates plugin platform files (pods, aars) only from there.
-				...(mod.saveInDependencies ? { save: true } : { "save-dev": true }),
-				"save-exact": true,
-				optional: false,
+				dev: !mod.saveInDependencies,
+				exact: true,
 				disableNpmInstall: this.options.disableNpmInstall,
 				frameworkPath: this.options.frameworkPath,
 				ignoreScripts: this.options.ignoreScripts,
@@ -183,8 +182,8 @@ export class TestInitCommand extends Command({
 						`${peerDependency}@${dependencyVersion}`,
 						projectDir,
 						{
-							"save-dev": true,
-							"save-exact": true,
+							dev: true,
+							exact: true,
 							disableNpmInstall: false,
 							frameworkPath: this.options.frameworkPath,
 							ignoreScripts: this.options.ignoreScripts,

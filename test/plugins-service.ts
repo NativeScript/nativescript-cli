@@ -2,11 +2,11 @@ import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { PackageManager } from "../lib/package-managers";
 import { PackageInstallationManager } from "../lib/package-managers/package-installation-manager";
-import { NPM } from "../lib/package-managers/npm";
-import { Yarn } from "../lib/package-managers/yarn";
-import { Yarn2 } from "../lib/package-managers/yarn2";
-import { PNPM } from "../lib/package-managers/pnpm";
-import { Bun } from "../lib/package-managers/bun";
+import { NpmPackageManager } from "../lib/package-managers/npm";
+import { YarnPackageManager } from "../lib/package-managers/yarn";
+import { Yarn2PackageManager } from "../lib/package-managers/yarn2";
+import { PnpmPackageManager } from "../lib/package-managers/pnpm";
+import { BunPackageManager } from "../lib/package-managers/bun";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
 import { Options } from "../lib/options";
@@ -75,11 +75,11 @@ function createTestInjector() {
 		"projectConfigService",
 		stubs.PackageInstallationManagerStub,
 	);
-	testInjector.register("npm", NPM);
-	testInjector.register("yarn", Yarn);
-	testInjector.register("yarn2", Yarn2);
-	testInjector.register("pnpm", PNPM);
-	testInjector.register("bun", Bun);
+	testInjector.register("npm", NpmPackageManager);
+	testInjector.register("yarn", YarnPackageManager);
+	testInjector.register("yarn2", Yarn2PackageManager);
+	testInjector.register("pnpm", PnpmPackageManager);
+	testInjector.register("bun", BunPackageManager);
 	testInjector.register("fs", FileSystem);
 	// const fileSystemStub = new stubs.FileSystemStub();
 	// fileSystemStub.exists = (fileName: string) => {

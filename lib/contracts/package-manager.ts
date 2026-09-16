@@ -1,7 +1,8 @@
 import { Contract } from "../common/di/contract";
 import type { IDictionary } from "../common/declarations";
 import type {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmPackageNameParts,
 	INpmsResult,
@@ -17,25 +18,25 @@ export abstract class PackageManager {
 	 * Installs dependency
 	 * @param  {string}                            packageName The name of the dependency - can be a path, a url or a string.
 	 * @param  {string}                            pathToSave  The destination of the installation.
-	 * @param  {INodePackageManagerInstallOptions} config      Additional options that can be passed to manipulate installation.
+	 * @param  {IPackageInstallOptions}            options     Package-manager-agnostic installation options.
 	 * @return {Promise<INpmInstallResultInfo>}                Information about installed package.
 	 */
 	abstract install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 
 	/**
 	 * Uninstalls a dependency
 	 * @param  {string}                            packageName The name of the dependency.
-	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate uninstallation.
+	 * @param  {IPackageUninstallOptions}          options     Package-manager-agnostic uninstallation options.
 	 * @param  {string}                            path  The destination of the uninstallation.
 	 * @return {Promise<string>}                The output of the uninstallation.
 	 */
 	abstract uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		path?: string,
 	): Promise<string>;
 

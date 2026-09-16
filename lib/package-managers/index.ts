@@ -5,7 +5,8 @@ import {
 	IPackageManager,
 	INodePackageManager,
 	IOptions,
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 	INpmPackageNameParts,
@@ -50,18 +51,18 @@ export class PackageManager implements IPackageManager {
 	public install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		options: IPackageInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		return this.packageManager.install(packageName, pathToSave, config);
+		return this.packageManager.install(packageName, pathToSave, options);
 	}
 	@exported("packageManager")
 	@invokeInit()
 	public uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		path?: string
 	): Promise<string> {
-		return this.packageManager.uninstall(packageName, config, path);
+		return this.packageManager.uninstall(packageName, options, path);
 	}
 	@exported("packageManager")
 	@invokeInit()
