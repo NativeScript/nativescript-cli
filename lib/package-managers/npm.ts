@@ -4,7 +4,8 @@ import { exported, cache } from "../common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "../constants";
 import * as _ from "lodash";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 } from "../declarations";
@@ -17,7 +18,21 @@ import {
 } from "../common/declarations";
 import { injector } from "../common/yok";
 
-export class NPM extends BasePackageManager {
+export class NpmPackageManager extends BasePackageManager {
+	protected readonly installFlags = {
+		save: "--save",
+		noSave: "--no-save",
+		dev: "--save-dev",
+		optional: "--save-optional",
+		exact: "--save-exact",
+		silent: "--silent",
+		ignoreScripts: "--ignore-scripts",
+	};
+	protected readonly uninstallFlags = {
+		save: "--save",
+		noSave: "--no-save",
+	};
+
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -34,19 +49,16 @@ export class NPM extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		options: IPackageInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		if (config.disableNpmInstall) {
+		if (options.disableNpmInstall) {
 			return;
-		}
-		if (config.ignoreScripts) {
-			config["ignore-scripts"] = true;
 		}
 
 		const packageJsonPath = join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		const flags = this.getFlagsString(config, true);
+		const flags = this.getInstallFlags(options);
 		let params = ["install"];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -62,11 +74,11 @@ export class NPM extends BasePackageManager {
 		const etcExistsPriorToInstallation = this.$fs.exists(etcDirectoryLocation);
 
 		//TODO: plamen5kov: workaround is here for a reason (remove whole file later)
-		if (config.path) {
+		if (options.path) {
 			let relativePathFromCwdToSource = "";
-			if (config.frameworkPath) {
+			if (options.frameworkPath) {
 				relativePathFromCwdToSource = relative(
-					config.frameworkPath,
+					options.frameworkPath,
 					pathToSave
 				);
 				if (this.$fs.exists(relativePathFromCwdToSource)) {
@@ -103,10 +115,10 @@ export class NPM extends BasePackageManager {
 	@exported("npm")
 	public async uninstall(
 		packageName: string,
-		config?: any,
+		options?: IPackageUninstallOptions,
 		path?: string
 	): Promise<string> {
-		const flags = this.getFlagsString(config, false);
+		const flags = this.getUninstallFlags(options).join(" ");
 		return this.$childProcess.exec(`npm uninstall ${packageName} ${flags}`, {
 			cwd: path,
 		});
@@ -172,4 +184,4 @@ export class NPM extends BasePackageManager {
 	}
 }
 
-injector.register("npm", NPM);
+injector.register("npm", NpmPackageManager);

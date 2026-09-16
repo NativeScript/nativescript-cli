@@ -25,8 +25,8 @@ import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
 import { PackageManager } from "../lib/package-managers";
-import { NPM } from "../lib/package-managers/npm";
-import { Yarn } from "../lib/package-managers/yarn";
+import { NpmPackageManager } from "../lib/package-managers/npm";
+import { YarnPackageManager } from "../lib/package-managers/yarn";
 
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
@@ -183,8 +183,8 @@ function createTestInjector(
 	});
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("projectConfigService", ProjectConfigServiceStub);
-	testInjector.register("npm", NPM);
-	testInjector.register("yarn", Yarn);
+	testInjector.register("npm", NpmPackageManager);
+	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("xcconfigService", XcconfigService);
 	testInjector.register("settingsService", SettingsService);
 	testInjector.register("httpClient", {});

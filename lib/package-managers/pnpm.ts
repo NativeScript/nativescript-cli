@@ -4,7 +4,8 @@ import { BasePackageManager } from "./base-package-manager";
 import { exported } from "../common/decorators";
 import { CACACHE_DIRECTORY_NAME } from "../constants";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 } from "../declarations";
@@ -18,7 +19,16 @@ import {
 } from "../common/declarations";
 import { injector } from "../common/yok";
 
-export class PNPM extends BasePackageManager {
+export class PnpmPackageManager extends BasePackageManager {
+	protected readonly installFlags = {
+		dev: "--save-dev",
+		optional: "--save-optional",
+		exact: "--save-exact",
+		silent: "--silent",
+		ignoreScripts: "--ignore-scripts",
+	};
+	protected readonly uninstallFlags = {};
+
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -35,25 +45,16 @@ export class PNPM extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo> {
-		if (config.disableNpmInstall) {
+		if (options.disableNpmInstall) {
 			return;
 		}
-		delete config.dev; // temporary fix for unsupported yarn flag
-		if (config.ignoreScripts) {
-			config["ignore-scripts"] = true;
-		}
-		// CLI-internal options must never reach the command line: pnpm, unlike
-		// npm, hard-fails on unknown options.
-		delete config.ignoreScripts;
-		delete config.path;
-		delete config.frameworkPath;
 
 		const packageJsonPath = path.join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		const flags = this.getFlagsString(config, true);
+		const flags = this.getInstallFlags(options);
 		let params = ["i"];
 		if (!this.projectManagesOwnHoisting(pathToSave)) {
 			// With pnpm's default isolated layout some imports won't be found, so
@@ -87,12 +88,10 @@ export class PNPM extends BasePackageManager {
 	@exported("pnpm")
 	public uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		cwd?: string,
 	): Promise<string> {
-		// pnpm does not want save option in remove. It saves it by default
-		delete config["save"];
-		const flags = this.getFlagsString(config, false);
+		const flags = this.getUninstallFlags(options).join(" ");
 		return this.$childProcess.exec(`pnpm remove ${packageName} ${flags}`, {
 			cwd,
 		});
@@ -199,4 +198,4 @@ export class PNPM extends BasePackageManager {
 	}
 }
 
-injector.register("pnpm", PNPM);
+injector.register("pnpm", PnpmPackageManager);

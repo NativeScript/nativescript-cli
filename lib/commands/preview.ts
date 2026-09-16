@@ -53,9 +53,9 @@ export class PreviewCommand extends Command({
 			`${PREVIEW_CLI_PACKAGE}@latest`,
 			this.$projectData.projectDir,
 			{
-				"save-dev": true,
-				"save-exact": true,
-			} as any,
+				dev: true,
+				exact: true,
+			},
 		);
 	}
 
