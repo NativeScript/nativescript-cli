@@ -3,7 +3,7 @@ import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { assert } from "chai";
 import { setIsInteractive } from "../lib/common/helpers";
-import { PnpmPackageManager } from "../lib/pnpm-package-manager";
+import { PNPM } from "../lib/package-managers/pnpm";
 import { IInjector } from "../lib/common/definitions/yok";
 
 class RecordingChildProcessStub extends stubs.ChildProcessStub {
@@ -66,7 +66,7 @@ function createTestInjector(): IInjector {
 	injector.register("childProcess", RecordingChildProcessStub);
 	injector.register("httpClient", {});
 	injector.register("fs", SelectiveFileSystemStub);
-	injector.register("pnpm", PnpmPackageManager);
+	injector.register("pnpm", PNPM);
 	injector.register("pacoteService", {
 		manifest: () => Promise.resolve({ name: "left-pad", version: "1.3.0" }),
 	});
@@ -80,7 +80,7 @@ describe("pnpm-package-manager", () => {
 	describe("install", () => {
 		it("passes --shamefully-hoist when the project has no pnpm layout config", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 
@@ -94,7 +94,7 @@ describe("pnpm-package-manager", () => {
 
 		it("omits --shamefully-hoist when a pnpm-workspace.yaml governs the project", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 			const fs = testInjector.resolve<SelectiveFileSystemStub>("fs");
@@ -107,7 +107,7 @@ describe("pnpm-package-manager", () => {
 
 		it("omits --shamefully-hoist when an ancestor pnpm-workspace.yaml governs the project", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 			const fs = testInjector.resolve<SelectiveFileSystemStub>("fs");
@@ -120,7 +120,7 @@ describe("pnpm-package-manager", () => {
 
 		it("omits --shamefully-hoist when an .npmrc sets a layout key", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 			const fs = testInjector.resolve<SelectiveFileSystemStub>("fs");
@@ -137,7 +137,7 @@ describe("pnpm-package-manager", () => {
 		["hoist-pattern[]", "public-hoist-pattern[]"].forEach((layoutKey) => {
 			it(`omits --shamefully-hoist when an .npmrc sets array-valued ${layoutKey}`, async () => {
 				const testInjector = createTestInjector();
-				const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+				const pnpm = testInjector.resolve<PNPM>("pnpm");
 				const childProcess =
 					testInjector.resolve<RecordingChildProcessStub>("childProcess");
 				const fs = testInjector.resolve<SelectiveFileSystemStub>("fs");
@@ -154,7 +154,7 @@ describe("pnpm-package-manager", () => {
 
 		it("keeps --shamefully-hoist when an .npmrc has no layout key", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 			const fs = testInjector.resolve<SelectiveFileSystemStub>("fs");
@@ -172,7 +172,7 @@ describe("pnpm-package-manager", () => {
 
 		it("maps ignoreScripts to --ignore-scripts and drops internal options pnpm rejects", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 
@@ -191,7 +191,7 @@ describe("pnpm-package-manager", () => {
 
 		it("spawns non-interactive installs with stdin closed", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 
@@ -213,7 +213,7 @@ describe("pnpm-package-manager", () => {
 
 		it("appends the package name when installing a single package", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 
@@ -231,7 +231,7 @@ describe("pnpm-package-manager", () => {
 	describe("getCachePath", () => {
 		it("uses the configured cache directory when pnpm reports one", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 			childProcess.execResponses["pnpm config get cache"] = "/custom/cache\n";
@@ -243,7 +243,7 @@ describe("pnpm-package-manager", () => {
 
 		it("falls back to the store's parent directory when the cache key is unset", async () => {
 			const testInjector = createTestInjector();
-			const pnpm = testInjector.resolve<PnpmPackageManager>("pnpm");
+			const pnpm = testInjector.resolve<PNPM>("pnpm");
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 			childProcess.execResponses["pnpm config get cache"] = "undefined\n";
