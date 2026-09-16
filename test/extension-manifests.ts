@@ -185,10 +185,7 @@ describe("extension manifests", () => {
 			install: async (): Promise<any> => {
 				throw new Error("Extensions are expected to be installed already.");
 			},
-			getInstalledPackagePath: async (
-				packageName: string,
-				fromDir: string,
-			): Promise<string> =>
+			getInstalledPackagePath: (packageName: string, fromDir: string): string =>
 				resolvePackagePath(packageName, { paths: [fromDir] }) || null,
 			uninstall: async (): Promise<any> => undefined,
 			searchNpms: async (): Promise<any> => ({ results: [] }),

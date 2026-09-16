@@ -65,7 +65,7 @@ class DoctorServiceInheritor extends DoctorService {
 	public getDeprecatedShortImportsInFiles(
 		files: string[],
 		projectDir: string,
-	): Promise<{ file: string; line: string }[]> {
+	): { file: string; line: string }[] {
 		return super.getDeprecatedShortImportsInFiles(files, projectDir);
 	}
 }
@@ -96,10 +96,7 @@ describe("doctorService", () => {
 		});
 		testInjector.register("versionsService", {});
 		testInjector.register("packageManager", {
-			getInstalledPackagePath: async (
-				packageName: string,
-				fromDir: string,
-			): Promise<string> =>
+			getInstalledPackagePath: (packageName: string, fromDir: string): string =>
 				packageName === "tns-core-modules"
 					? path.join(fromDir, "node_modules", packageName)
 					: null,
@@ -380,7 +377,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 				fs.readText = (filePath) => filesContents[filePath];
 
 				const shortImports =
-					await doctorService.getDeprecatedShortImportsInFiles(
+					doctorService.getDeprecatedShortImportsInFiles(
 						_.keys(filesContents),
 						"projectDir",
 					);
@@ -391,14 +388,13 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 		it("getDeprecatedShortImportsInFiles returns no results when tns-core-modules is not installed", async () => {
 			const testInjector = createTestInjector();
 			const packageManager = testInjector.resolve("packageManager");
-			packageManager.getInstalledPackagePath = async (): Promise<string> =>
-				null;
+			packageManager.getInstalledPackagePath = (): string => null;
 			const doctorService =
 				testInjector.resolve<DoctorServiceInheritor>("doctorService");
 			const fs = testInjector.resolve<IFileSystem>("fs");
 			fs.readText = () => 'const application = require("application");';
 
-			const shortImports = await doctorService.getDeprecatedShortImportsInFiles(
+			const shortImports = doctorService.getDeprecatedShortImportsInFiles(
 				["file1"],
 				"projectDir",
 			);

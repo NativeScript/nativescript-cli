@@ -522,7 +522,7 @@ interface ITestExecutionService {
 
 interface IVitestExecutionService {
 	isVitestProject(projectData: IProjectData): boolean;
-	canStartTestRun(projectData: IProjectData): Promise<boolean>;
+	canStartTestRun(projectData: IProjectData): boolean;
 	startTestRun(platform: string, projectData: IProjectData): Promise<void>;
 }
 

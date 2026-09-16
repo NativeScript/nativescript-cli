@@ -232,10 +232,7 @@ describe("package manager flag mapping", () => {
 					name,
 					ctor,
 				).resolve<INodePackageManager>(name);
-				const resolved = await manager.getInstalledPackagePath(
-					"lodash",
-					repoRoot,
-				);
+				const resolved = manager.getInstalledPackagePath("lodash", repoRoot);
 				assert.equal(resolved, path.join(repoRoot, "node_modules", "lodash"));
 			});
 
@@ -245,7 +242,7 @@ describe("package manager flag mapping", () => {
 					ctor,
 				).resolve<INodePackageManager>(name);
 				assert.isNull(
-					await manager.getInstalledPackagePath(
+					manager.getInstalledPackagePath(
 						"definitely-not-installed-package",
 						repoRoot,
 					),

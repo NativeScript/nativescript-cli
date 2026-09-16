@@ -134,7 +134,7 @@ export class TestInitCommand extends Command({
 				path: this.options.path,
 			});
 
-			const modulePath = await this.$packageManager.getInstalledPackagePath(
+			const modulePath = this.$packageManager.getInstalledPackagePath(
 				mod.name,
 				projectDir,
 			);

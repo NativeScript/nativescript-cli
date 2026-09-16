@@ -189,7 +189,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		projectDir: string
 	): Promise<string> {
 		// local installation takes precedence over cache
-		const inspectorPath = await this.$packageManager.getInstalledPackagePath(
+		const inspectorPath = this.$packageManager.getInstalledPackagePath(
 			inspectorNpmPackageName,
 			projectDir
 		);

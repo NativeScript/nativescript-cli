@@ -38,7 +38,7 @@ export class PreviewCommand extends Command({
 			await this.installLatestPreviewCLI();
 		}
 
-		const previewCLIPath = await this.getPreviewCLIPath();
+		const previewCLIPath = this.getPreviewCLIPath();
 
 		if (!previewCLIPath) {
 			await this.failMissingPreviewCLI();
@@ -59,7 +59,7 @@ export class PreviewCommand extends Command({
 		);
 	}
 
-	private getPreviewCLIPath(): Promise<string> {
+	private getPreviewCLIPath(): string {
 		return this.$packageManager.getInstalledPackagePath(
 			PREVIEW_CLI_PACKAGE,
 			this.$projectData.projectDir,
