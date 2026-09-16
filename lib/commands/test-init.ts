@@ -2,6 +2,7 @@ import * as path from "path";
 import * as _ from "lodash";
 import { TESTING_FRAMEWORKS, ProjectTypes } from "../constants";
 import { fromWindowsRelativePathToUnix } from "../common/helpers";
+import { resolvePackageJSONPath } from "../helpers/package-path-helper";
 import { ITestInitializationService } from "../definitions/project";
 import { INodePackageManager } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
@@ -134,9 +135,9 @@ export class TestInitCommand extends Command({
 				path: this.options.path,
 			});
 
-			const modulePath = path.join(projectDir, "node_modules", mod.name);
-			const modulePackageJsonPath = path.join(modulePath, "package.json");
-			const modulePackageJsonContent = this.$fs.readJson(modulePackageJsonPath);
+			const modulePackageJsonContent = this.$fs.readJson(
+				resolvePackageJSONPath(mod.name, { paths: [projectDir] }),
+			);
 			const modulePeerDependencies =
 				modulePackageJsonContent.peerDependencies || {};
 			const modulePeerDependenciesMeta =

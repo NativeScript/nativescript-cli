@@ -14,7 +14,6 @@ import {
 import {
 	IErrors,
 	IUserSettingsService,
-	IDictionary,
 } from "../common/declarations";
 import { injector } from "../common/yok";
 import { IProjectConfigService } from "../definitions/project";
@@ -66,16 +65,13 @@ export class PackageManager implements IPackageManager {
 	}
 	@exported("packageManager")
 	@invokeInit()
-	public view(packageName: string, config: Object): Promise<any> {
-		return this.packageManager.view(packageName, config);
+	public view(packageName: string, field?: string): Promise<any> {
+		return this.packageManager.view(packageName, field);
 	}
 	@exported("packageManager")
 	@invokeInit()
-	public search(
-		filter: string[],
-		config: IDictionary<string | boolean>
-	): Promise<string> {
-		return this.packageManager.search(filter, config);
+	public search(filter: string[]): Promise<string> {
+		return this.packageManager.search(filter);
 	}
 
 	@invokeInit()
@@ -122,7 +118,7 @@ export class PackageManager implements IPackageManager {
 		}
 
 		try {
-			const result = await this.view(packageName, { "dist-tags": true });
+			const result = await this.view(packageName, "dist-tags");
 			version = result[tag];
 		} catch (err) {
 			this.$logger.trace(

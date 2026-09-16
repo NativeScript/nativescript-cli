@@ -94,17 +94,13 @@ export class BunPackageManager extends BasePackageManager {
 		});
 	}
 
-	// Bun does not have a `view` command; use npm.
 	@exported("bun")
-	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
-
-		const flags = this.getFlagsString(wrappedConfig, false);
+	// Bun does not have a `view` command; use npm.
+	public async view(packageName: string, field?: string): Promise<any> {
+		const args = [packageName, field, "--json"].filter(Boolean).join(" ");
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(
-				`npm view ${packageName} ${flags}`
-			);
+			viewResult = await this.$childProcess.exec(`npm view ${args}`);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
@@ -116,11 +112,10 @@ export class BunPackageManager extends BasePackageManager {
 		}
 	}
 
-	// Bun does not have a `search` command; use npm.
 	@exported("bun")
-	public async search(filter: string[], config: any): Promise<string> {
-		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`npm search ${filter.join(" ")} ${flags}`);
+	// Bun does not have a `search` command; use npm.
+	public async search(filter: string[]): Promise<string> {
+		return this.$childProcess.exec(`npm search ${filter.join(" ")}`);
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {

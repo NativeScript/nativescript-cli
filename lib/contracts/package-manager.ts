@@ -1,5 +1,4 @@
 import { Contract } from "../common/di/contract";
-import type { IDictionary } from "../common/declarations";
 import type {
 	IPackageInstallOptions,
 	IPackageUninstallOptions,
@@ -42,11 +41,11 @@ export abstract class PackageManager {
 
 	/**
 	 * Provides information about a given package.
-	 * @param  {string}                            packageName The name of the package.
-	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
-	 * @return {Promise<any>}                Object, containing information about the package.
+	 * @param  {string} packageName The name of the package, optionally with a version.
+	 * @param  {string} field       @optional A single registry field (e.g. "versions" or "dist-tags") to return instead of the whole document.
+	 * @return {Promise<any>} The parsed registry data, or null when it cannot be parsed.
 	 */
-	abstract view(packageName: string, config: Object): Promise<any>;
+	abstract view(packageName: string, field?: string): Promise<any>;
 
 	/**
 	 * Checks if the specified string is name of a packaged published in the NPM registry.
@@ -75,14 +74,10 @@ export abstract class PackageManager {
 
 	/**
 	 * Searches for a package.
-	 * @param  {string[]}                            filter Keywords with which to perform the search.
-	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
-	 * @return {Promise<string>}                The output of the uninstallation.
+	 * @param  {string[]} filter Keywords with which to perform the search.
+	 * @return {Promise<string>} The raw search output.
 	 */
-	abstract search(
-		filter: string[],
-		config: IDictionary<string | boolean>,
-	): Promise<string>;
+	abstract search(filter: string[]): Promise<string>;
 
 	/**
 	 * Searches for npm packages in npms by keyword.
