@@ -571,6 +571,26 @@ tns.npm.search(["nativescript", "cloud"]).then(output => {
 });
 ```
 
+### getInstalledPackagePath
+Locates a package the way the selected package manager laid it out on disk, so callers never have to assume a `node_modules` layout.
+
+* Definition:
+```TypeScript
+/**
+ * @param  {string} packageName The name of the package.
+ * @param  {string} fromDir     The directory whose dependencies are searched, usually the project directory.
+ * @return {Promise<string>} The absolute path of the package directory, or null when it is not installed.
+ */
+getInstalledPackagePath(packageName: string, fromDir: string): Promise<string>;
+```
+
+* Usage:
+```JavaScript
+tns.packageManager.getInstalledPackagePath("@nativescript/core", "/tmp/myProject").then(pathToPackage => {
+	console.log(pathToPackage ? `Installed at ${pathToPackage}` : "Not installed");
+});
+```
+
 ### view
 Provides information about a given package.
 

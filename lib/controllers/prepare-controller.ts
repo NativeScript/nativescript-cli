@@ -25,7 +25,11 @@ import {
 	SupportedPlatform,
 	TrackActionNames,
 } from "../constants";
-import { IOptions, IWatchIgnoreListService } from "../declarations";
+import {
+	IOptions,
+	IWatchIgnoreListService,
+	IPackageManager,
+} from "../declarations";
 import {
 	INodeModulesDependenciesBuilder,
 	IPlatformController,
@@ -40,7 +44,6 @@ import {
 	IProjectDataService,
 	IProjectService,
 } from "../definitions/project";
-import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
@@ -82,6 +85,7 @@ export class PrepareController
 		private $markingModeService: IMarkingModeService,
 		private $projectConfigService: IProjectConfigService,
 		private $projectService: IProjectService,
+		private $packageManager: IPackageManager,
 	) {
 		super();
 	}
@@ -490,16 +494,15 @@ export class PrepareController
 				SCOPED_ANDROID_RUNTIME_NAME;
 		}
 		// try reading from installed runtime first before reading from the npm registry...
-		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
-			runtimePackageName,
-			{
-				paths: [projectData.projectDir],
-			},
-		);
+		const installedRuntimePath =
+			await this.$packageManager.getInstalledPackagePath(
+				runtimePackageName,
+				projectData.projectDir,
+			);
 
-		if (installedRuntimePackageJSONPath) {
+		if (installedRuntimePath) {
 			installedRuntimePackageJSON = this.$fs.readJson(
-				installedRuntimePackageJSONPath,
+				path.join(installedRuntimePath, "package.json"),
 			);
 		}
 		const packageData: any = {

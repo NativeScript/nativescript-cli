@@ -32,10 +32,6 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
-import {
-	resolvePackagePath,
-	resolvePackageJSONPath,
-} from "../helpers/package-path-helper";
 import { color } from "../color";
 
 export class PluginsService implements IPluginsService {
@@ -100,7 +96,7 @@ export class PluginsService implements IPluginsService {
 				this.npmInstallOptions,
 			)
 		).name;
-		const pathToRealNpmPackageJson = this.getPackageJsonFilePathForModule(
+		const pathToRealNpmPackageJson = await this.getPackageJsonFilePathForModule(
 			name,
 			projectData.projectDir,
 		);
@@ -148,7 +144,7 @@ export class PluginsService implements IPluginsService {
 			platformData: IPlatformData,
 		): Promise<void> => {
 			const pluginData = this.convertToPluginData(
-				this.getNodeModuleData(pluginName, projectData.projectDir),
+				await this.getNodeModuleData(pluginName, projectData.projectDir),
 				projectData.projectDir,
 			);
 
@@ -298,24 +294,18 @@ export class PluginsService implements IPluginsService {
 			_.keys(packageJsonContent.devDependencies),
 		);
 
-		const notInstalledDependencies = allDependencies
-			.map((dep) => {
-				this.$logger.trace(`Checking if ${dep} is installed...`);
-				const pathToPackage = resolvePackagePath(dep, {
-					paths: [projectData.projectDir],
-				});
-
-				if (pathToPackage) {
-					// return false if the dependency is installed - we'll filter out boolean values
-					// and end up with an array of dep names that are not installed if we end up
-					// inside the catch block.
-					return false;
-				}
-
+		const notInstalledDependencies: string[] = [];
+		for (const dep of allDependencies) {
+			this.$logger.trace(`Checking if ${dep} is installed...`);
+			const pathToPackage = await this.$packageManager.getInstalledPackagePath(
+				dep,
+				projectData.projectDir,
+			);
+			if (!pathToPackage) {
 				this.$logger.trace(`${dep} is not installed, or couldn't be found`);
-				return dep;
-			})
-			.filter(Boolean);
+				notInstalledDependencies.push(dep);
+			}
+		}
 
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace(
@@ -635,9 +625,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			pluginData.version = cacheData.version;
 			pluginData.fullPath =
 				(<IDependencyData>cacheData).directory ||
-				path.dirname(
-					this.getPackageJsonFilePathForModule(cacheData.name, projectDir),
-				);
+				(<INodeModuleData>cacheData).fullPath;
 			pluginData.isPlugin = !!cacheData.nativescript;
 			pluginData.pluginPlatformsFolderPath = (platform: string) => {
 				if (this.$mobileHelper.isvisionOSPlatform(platform)) {
@@ -706,14 +694,15 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		return path.join(projectDir, "package.json");
 	}
 
-	private getPackageJsonFilePathForModule(
+	private async getPackageJsonFilePathForModule(
 		moduleName: string,
 		projectDir: string,
-	): string {
-		const pathToJsonFile = resolvePackageJSONPath(moduleName, {
-			paths: [projectDir],
-		});
-		return pathToJsonFile;
+	): Promise<string> {
+		const pathToModule = await this.$packageManager.getInstalledPackagePath(
+			moduleName,
+			projectDir,
+		);
+		return pathToModule && path.join(pathToModule, "package.json");
 	}
 
 	private getDependencies(projectDir: string): string[] {
@@ -721,13 +710,13 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		return _.keys(require(packageJsonFilePath).dependencies);
 	}
 
-	private getNodeModuleData(
+	private async getNodeModuleData(
 		module: string,
 		projectDir: string,
-	): INodeModuleData {
+	): Promise<INodeModuleData> {
 		// module can be  modulePath or moduleName
 		if (!this.$fs.exists(module) || path.basename(module) !== "package.json") {
-			const resolvedPath = this.getPackageJsonFilePathForModule(
+			const resolvedPath = await this.getPackageJsonFilePathForModule(
 				module,
 				projectDir,
 			);
@@ -756,9 +745,12 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		await this.ensureAllDependenciesAreInstalled(projectData);
 
 		const nodeModules = this.getDependencies(projectData.projectDir);
-		return _.map(nodeModules, (nodeModuleName) =>
-			this.getNodeModuleData(nodeModuleName, projectData.projectDir),
-		).filter(Boolean);
+		const modules = await Promise.all(
+			nodeModules.map((nodeModuleName) =>
+				this.getNodeModuleData(nodeModuleName, projectData.projectDir),
+			),
+		);
+		return modules.filter(Boolean);
 	}
 
 	private async executeNpmCommand(

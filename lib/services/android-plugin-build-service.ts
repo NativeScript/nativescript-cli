@@ -36,7 +36,6 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
-import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 import { cwd } from "process";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
@@ -507,7 +506,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return runtimeVersion;
 	}
 
-	private getLocalGradleVersions(): IRuntimeGradleVersions {
+	private async getLocalGradleVersions(): Promise<IRuntimeGradleVersions> {
 		// partial interface of the runtime package.json
 		// including new 8.2+ format and legacy
 		interface IRuntimePackageJSON {
@@ -527,19 +526,18 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$projectData.nsConfig?.android?.runtimePackageName ||
 			SCOPED_ANDROID_RUNTIME_NAME;
 		// try reading from installed runtime first before reading from the npm registry...
-		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
-			packageName,
-			{
-				paths: [this.$projectData.projectDir],
-			},
-		);
+		const installedRuntimePath =
+			await this.$packageManager.getInstalledPackagePath(
+				packageName,
+				this.$projectData.projectDir,
+			);
 
-		if (!installedRuntimePackageJSONPath) {
+		if (!installedRuntimePath) {
 			return null;
 		}
 
 		const installedRuntimePackageJSON: IRuntimePackageJSON = this.$fs.readJson(
-			installedRuntimePackageJSONPath,
+			path.join(installedRuntimePath, "package.json"),
 		);
 
 		if (!installedRuntimePackageJSON) {
@@ -575,7 +573,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			versions: { gradle: string; gradleAndroid: string };
 		} = null;
 
-		const localVersionInfo = this.getLocalGradleVersions();
+		const localVersionInfo = await this.getLocalGradleVersions();
 
 		if (localVersionInfo) {
 			return localVersionInfo;

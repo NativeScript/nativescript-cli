@@ -10,6 +10,7 @@ import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
 import * as stubs from "../stubs";
 import { mkdtempSync } from "fs";
+import { resolvePackagePath } from "../../lib/helpers/package-path-helper";
 import { tmpdir } from "os";
 import {
 	IFileSystem,
@@ -128,6 +129,11 @@ describe("androidPluginBuildService", () => {
 		addProjectRuntime?: boolean;
 	}): any {
 		return {
+			getInstalledPackagePath: async (
+				packageName: string,
+				fromDir: string,
+			): Promise<string> =>
+				resolvePackagePath(packageName, { paths: [fromDir] }) || null,
 			getRegistryPackageData: async (packageName: string): Promise<any> => {
 				const result: any = [];
 				result["dist-tags"] = { latest: "4.1.2" };

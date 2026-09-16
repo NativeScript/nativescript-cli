@@ -1,4 +1,3 @@
-import { resolvePackagePath } from "@rigor789/resolve-package-path";
 import * as path from "path";
 import { color } from "../color";
 import { IChildProcess, IErrors } from "../common/declarations";
@@ -38,7 +37,7 @@ export class PreviewCommand extends Command({
 			await this.installLatestPreviewCLI();
 		}
 
-		const previewCLIPath = this.getPreviewCLIPath();
+		const previewCLIPath = await this.getPreviewCLIPath();
 
 		if (!previewCLIPath) {
 			await this.failMissingPreviewCLI();
@@ -59,10 +58,11 @@ export class PreviewCommand extends Command({
 		);
 	}
 
-	private getPreviewCLIPath(): string {
-		return resolvePackagePath(PREVIEW_CLI_PACKAGE, {
-			paths: [this.$projectData.projectDir],
-		});
+	private getPreviewCLIPath(): Promise<string> {
+		return this.$packageManager.getInstalledPackagePath(
+			PREVIEW_CLI_PACKAGE,
+			this.$projectData.projectDir,
+		);
 	}
 
 	private async failMissingPreviewCLI(): Promise<void> {
