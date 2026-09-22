@@ -23,6 +23,7 @@ import {
 export class AndroidApplicationManager extends ApplicationManagerBase {
 	public PID_CHECK_INTERVAL = 100;
 	public PID_CHECK_TIMEOUT = 10000; // 10 secs
+	private listPackagesPerUser = false;
 
 	constructor(
 		private adb: Mobile.IDeviceAndroidDebugBridge,
@@ -41,17 +42,69 @@ export class AndroidApplicationManager extends ApplicationManagerBase {
 		super($logger, $hooksService, $deviceLogProvider);
 	}
 
+	/**
+	 * Lists the identifiers of all packages installed on the device.
+	 * Falls back to listing packages per user when the plain listing yields
+	 * nothing, which happens on devices where shell cannot access every user.
+	 * @returns {Promise<string[]>} Unique package identifiers across all users.
+	 */
 	public async getInstalledApplications(): Promise<string[]> {
-		const result =
-			(await this.adb.executeShellCommand(["pm", "list", "packages"])) || "";
+		if (!this.listPackagesPerUser) {
+			const packages = this.parsePackageList(
+				await this.adb.executeShellCommand(["pm", "list", "packages"]),
+			);
+			if (packages.length) {
+				return packages;
+			}
+		}
+
+		// Listing without `--user` walks every user and prints nothing when shell
+		// is denied access to one of them (e.g. Samsung's Secure Folder, user 150)
+		// without rejecting. Listing per user only loses the inaccessible ones.
+		this.listPackagesPerUser = true;
+		const packages: string[] = [];
+		for (const userId of await this.getUserIds()) {
+			packages.push(
+				...this.parsePackageList(
+					await this.adb.executeShellCommand([
+						"pm",
+						"list",
+						"packages",
+						"--user",
+						userId,
+					]),
+				),
+			);
+		}
+
+		return _.uniq(packages);
+	}
+
+	/**
+	 * Extracts package identifiers from `pm list packages` output.
+	 * @param {string} output Raw shell output, one `package:<id>` line per package.
+	 * @returns {string[]} The package identifiers, in output order.
+	 */
+	private parsePackageList(output: string): string[] {
 		const regex = /package:(.+)/;
-		return result
+		return (output || "")
 			.split(EOL)
-			.map((packageString: string) => {
-				const match = packageString.match(regex);
+			.map((line: string) => {
+				const match = line.match(regex);
 				return match ? match[1] : null;
 			})
 			.filter((parsedPackage: string) => parsedPackage !== null);
+	}
+
+	/**
+	 * Lists the ids of all Android users on the device via `pm list users`.
+	 * @returns {Promise<string[]>} User ids as printed by the device, e.g. ["0", "150"].
+	 */
+	private async getUserIds(): Promise<string[]> {
+		const output: string =
+			(await this.adb.executeShellCommand(["pm", "list", "users"])) || "";
+		const regex = /UserInfo\{(\d+):/g;
+		return Array.from(output.matchAll(regex), (match) => match[1]);
 	}
 
 	@hook("install")
