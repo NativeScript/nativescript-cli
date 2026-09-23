@@ -13,7 +13,7 @@ export const uninstallApplicationCommandDefinition = defineCommand({
 	name: ["device|uninstall", "devices|uninstall"],
 	description: "Uninstalls an application from all connected devices.",
 	options: uninstallApplicationCommandOptions,
-	arguments: [{ name: "appId" }],
+	params: [{ name: "appId" }],
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 

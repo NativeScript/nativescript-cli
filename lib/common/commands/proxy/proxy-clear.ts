@@ -8,7 +8,7 @@ const proxyClearCommandName = "proxy|clear";
 export const proxyClearCommandDefinition = defineCommand({
 	name: proxyClearCommandName,
 	description: "Clears the currently configured proxy settings.",
-	arguments: "none",
+	params: "none",
 	disableAnalytics: true,
 	async run(): Promise<void> {
 		const $logger = inject<ILogger>("logger");

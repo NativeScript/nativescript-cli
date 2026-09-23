@@ -372,7 +372,7 @@ export class CreateProjectCommand extends Command({
 	name: "create",
 	description: "Creates a new NativeScript project.",
 	options: createProjectCommandOptions,
-	arguments: [{ name: "projectName" }],
+	params: [{ name: "projectName" }],
 	enableHooks: false,
 }) {
 	private $projectService = inject<IProjectService>("projectService");

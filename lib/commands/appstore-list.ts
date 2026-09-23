@@ -21,7 +21,7 @@ export class ListiOSAppsCommand extends Command({
 	name: "appstore|*list",
 	description: "Lists the applications in App Store Connect.",
 	options: listiOSAppsCommandOptions,
-	arguments: [{ name: "appleId" }, { name: "password" }],
+	params: [{ name: "appleId" }, { name: "password" }],
 	providers: [provideProject()],
 }) {
 	private $applePortalApplicationService =

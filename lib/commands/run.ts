@@ -148,7 +148,7 @@ export const runCommandDefinition = defineCommand({
 	description: "Runs your project on all connected devices and emulators.",
 	options: runCommandOptions,
 	// The base rejects arguments itself, with the sub-command message.
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	/**
 	 * Undefined for `run|*all`, which targets every platform, except off macOS
@@ -206,7 +206,7 @@ const defineApplePlatformRunCommand = <const TName extends CommandName>(
 		name,
 		description: "Runs your project on a connected Apple device or simulator.",
 		options: runCommandOptions,
-		arguments: "any",
+		params: "any",
 		providers: [provideProject()],
 		canExecute: (context: RunCommandContext) =>
 			canExecuteApplePlatformRunCommand(
@@ -230,7 +230,7 @@ export const androidRunCommand = defineCommand({
 	name: "run|android",
 	description: "Runs your project on a connected Android device or emulator.",
 	options: runCommandOptions,
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async canExecute(context: RunCommandContext): Promise<boolean> {
 		const $platformValidationService = inject<IPlatformValidationService>(

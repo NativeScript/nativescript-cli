@@ -115,10 +115,34 @@ describe("defineCommand", () => {
 			);
 		});
 
-		it("rejects an unusable arguments policy", () => {
+		it("rejects an unusable params policy", () => {
 			rejects(
-				{ name: "dctest-args", arguments: "one", run: (): void => undefined },
-				/'arguments' is 'one'; it must be "none", "any" or an array of argument specs/,
+				{ name: "dctest-args", params: "one", run: (): void => undefined },
+				/'params' is 'one'; it must be "none", "any" or an array of param specs/,
+			);
+		});
+
+		it("points a stale 'arguments' field at 'params'", () => {
+			rejects(
+				{
+					name: "dctest-args-old",
+					arguments: "any",
+					run: (): void => undefined,
+				},
+				/'arguments' is not a field; positional parameters are declared under 'params'/,
+			);
+		});
+
+		it("rejects an option that is both required and defaulted", () => {
+			rejects(
+				{
+					name: "dctest-required-default",
+					options: {
+						device: stringOption(<any>{ required: true, default: "x" }),
+					},
+					run: (): void => undefined,
+				},
+				/option 'device' is required and has a default/,
 			);
 		});
 
@@ -212,7 +236,7 @@ describe("defineCommand", () => {
 						retries: numberOption({ default: 1 }),
 						files: arrayOption({ hasSensitiveValue: true }),
 					},
-					arguments: "any",
+					params: "any",
 					canExecute: () => true,
 					disableAnalytics: true,
 					enableHooks: false,
@@ -901,7 +925,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctestnone2",
-					arguments: "none",
+					params: "none",
 					run: (): void => undefined,
 				}),
 				createTestInjector(),
@@ -918,7 +942,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctestany",
-					arguments: "any",
+					params: "any",
 					run: (): void => undefined,
 				}),
 				createTestInjector(),
@@ -935,7 +959,7 @@ describe("defineCommand", () => {
 				createCommandFromDefinition(
 					defineCommand({
 						name: "dctestverdict",
-						arguments: "any",
+						params: "any",
 						options: { force: booleanOption() },
 						canExecute: (context) => {
 							capturedContext = context;
@@ -960,7 +984,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctestcaninject",
-					arguments: "any",
+					params: "any",
 					canExecute: () => inject<any>("dcTestPolicy").allowed,
 					run: (): void => undefined,
 				}),
@@ -1004,7 +1028,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctestfailcan",
-					arguments: "any",
+					params: "any",
 					canExecute: (ctx) =>
 						ctx.args.length === 1 || ctx.fail("expected one argument"),
 					run: (): void => undefined,
@@ -1054,7 +1078,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctestfailcanplain",
-					arguments: "any",
+					params: "any",
 					canExecute: (ctx) =>
 						ctx.args.length === 1 ||
 						ctx.fail("expected one argument", { help: false }),
@@ -1343,7 +1367,7 @@ describe("defineCommand", () => {
 					defineCommand({
 						name: "dctest-e2e",
 						options: { verbose: booleanOption({ default: false }) },
-						arguments: "any",
+						params: "any",
 						run: (context) => {
 							ran = context;
 						},
@@ -1419,7 +1443,7 @@ describe("defineCommand", () => {
 				registerCommand(
 					defineCommand({
 						name: "dctest-widget|add",
-						arguments: "any",
+						params: "any",
 						run: (context) => {
 							ran = context;
 						},
@@ -1445,7 +1469,7 @@ describe("defineCommand", () => {
 				registerCommand(
 					defineCommand({
 						name: "dctest-gadget|*all",
-						arguments: "any",
+						params: "any",
 						run: (context) => {
 							runs.push(context.args);
 						},
@@ -1500,7 +1524,7 @@ describe("defineCommand", () => {
 				registerCommand(
 					defineCommand({
 						name: "dctest-can-yes",
-						arguments: "any",
+						params: "any",
 						canExecute: (context) => context.args[0] === "ok",
 						run: () => {
 							ran = true;
@@ -1530,7 +1554,7 @@ describe("defineCommand", () => {
 				registerCommand(
 					defineCommand({
 						name: "dctest-can-contract",
-						arguments: "any",
+						params: "any",
 						canExecute: (context) => context.args[0] === "ok",
 						run: () => {
 							ran = true;
@@ -1555,7 +1579,7 @@ describe("defineCommand", () => {
 			const runs: string[] = [];
 			const definition = defineCommand({
 				name: ["dctest-ref-primary", "dctest-ref-alias"],
-				arguments: "any",
+				params: "any",
 				canExecute: (context) => context.args[0] === "ok",
 				run: () => {
 					runs.push("definition");
@@ -1563,7 +1587,7 @@ describe("defineCommand", () => {
 			});
 			class RefCommand extends Command({
 				name: "dctest-ref-class",
-				arguments: "any",
+				params: "any",
 			}) {
 				run(): void {
 					runs.push("class");
@@ -1575,7 +1599,7 @@ describe("defineCommand", () => {
 				registerCommand(
 					defineCommand({
 						name: "dctest-ref-primary",
-						arguments: "any",
+						params: "any",
 						run: () => {
 							runs.push("registered");
 						},
@@ -1664,7 +1688,7 @@ describe("defineCommand", () => {
 			createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-positional",
-					arguments: [
+					params: [
 						{ name: "platform", required: true },
 						{ name: "target" },
 						...(extra.variadic ? [{ name: "rest", variadic: true }] : []),
@@ -1719,7 +1743,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-noargspecs",
-					arguments: "any",
+					params: "any",
 					run: (ctx) => {
 						seen = ctx.params;
 					},
@@ -1736,7 +1760,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-missing",
-					arguments: [
+					params: [
 						{ name: "platform", required: true },
 						{
 							name: "device",
@@ -1766,7 +1790,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-reqvariadic",
-					arguments: [{ name: "files", required: true, variadic: true }],
+					params: [{ name: "files", required: true, variadic: true }],
 					run: (): void => undefined,
 				}),
 				createTestInjector(),
@@ -1783,7 +1807,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-toomany",
-					arguments: [{ name: "platform" }],
+					params: [{ name: "platform" }],
 					run: (): void => undefined,
 				}),
 				createTestInjector(),
@@ -1800,7 +1824,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-emptyspecs",
-					arguments: [],
+					params: [],
 					run: (): void => undefined,
 				}),
 				createTestInjector(),
@@ -1817,7 +1841,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-validate",
-					arguments: [
+					params: [
 						{
 							name: "platforms",
 							variadic: true,
@@ -1848,7 +1872,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-validate-false",
-					arguments: [{ name: "platform", validate: () => false }],
+					params: [{ name: "platform", validate: () => false }],
 					run: (): void => undefined,
 				}),
 				createTestInjector(),
@@ -1866,7 +1890,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-validate-inject",
-					arguments: [
+					params: [
 						{
 							name: "platform",
 							validate: (value, ctx) => {
@@ -1893,7 +1917,7 @@ describe("defineCommand", () => {
 				defineCommand({
 					name: "dctest-validate-ctx",
 					options: { force: booleanOption() },
-					arguments: [
+					params: [
 						{
 							name: "platform",
 							validate: (value, ctx) => {
@@ -1918,7 +1942,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-specs-first",
-					arguments: [{ name: "platform", required: true }],
+					params: [{ name: "platform", required: true }],
 					canExecute: () => {
 						refined = true;
 						return true;
@@ -1939,22 +1963,19 @@ describe("defineCommand", () => {
 				() =>
 					defineCommand(<any>{
 						name: "dctest-spec",
-						arguments: specs,
+						params: specs,
 						run: (): void => undefined,
 					}),
 				expected,
 			);
 
 		it("rejects a spec that is not an object, or has no name", () => {
-			rejects(["platform"], /argument #1 of 'arguments' must be an object/);
+			rejects(["platform"], /argument #1 of 'params' must be an object/);
 			rejects(
 				[{ required: true }],
-				/argument #1 of 'arguments' has no usable 'name'/,
+				/argument #1 of 'params' has no usable 'name'/,
 			);
-			rejects(
-				[{ name: "  " }],
-				/argument #1 of 'arguments' has no usable 'name'/,
-			);
+			rejects([{ name: "  " }], /argument #1 of 'params' has no usable 'name'/);
 		});
 
 		it("rejects a typo'd spec field", () => {
@@ -1967,7 +1988,7 @@ describe("defineCommand", () => {
 		it("rejects a duplicate argument name", () => {
 			rejects(
 				[{ name: "platform" }, { name: "platform" }],
-				/'arguments' declares 'platform' twice/,
+				/'params' declares 'platform' twice/,
 			);
 		});
 
@@ -2004,7 +2025,7 @@ describe("defineCommand", () => {
 		it("rejects a required argument that follows an optional one", () => {
 			rejects(
 				[{ name: "platform" }, { name: "device", required: true }],
-				/argument 'device' is required but follows the optional 'platform'/,
+				/param 'device' is required but follows the optional 'platform'/,
 			);
 		});
 
@@ -2012,7 +2033,7 @@ describe("defineCommand", () => {
 			assert.doesNotThrow(() =>
 				defineCommand({
 					name: "dctest-spec-ok",
-					arguments: [
+					params: [
 						{
 							name: "platform",
 							required: true,
@@ -2200,7 +2221,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-postrun-result",
-					arguments: "any",
+					params: "any",
 					run: async () => {
 						await Promise.resolve();
 						return { created: "my-app" };
@@ -2342,7 +2363,7 @@ describe("defineCommand", () => {
 					defineCommand({
 						name: "dctest-unknown-e2e",
 						allowUnknownOptions: true,
-						arguments: "any",
+						params: "any",
 						run: () => {
 							ran = true;
 						},
@@ -2655,7 +2676,7 @@ describe("defineCommand", () => {
 			class Widget extends Command({
 				name: "dctest-class",
 				options: { release: booleanOption({ default: false }) },
-				arguments: "any",
+				params: "any",
 			}) {
 				public run(): void {
 					seen.push([this.options.release, this.args, this.context.params]);
@@ -2716,7 +2737,7 @@ describe("defineCommand", () => {
 
 			class Refusing extends Command({
 				name: "dctest-class-refuses",
-				arguments: "any",
+				params: "any",
 			}) {
 				public canExecute(): boolean {
 					return this.args[0] === "yes";
@@ -3062,7 +3083,7 @@ describe("defineCommand", () => {
 			const definition = defineCommand({
 				name: "dctest-run",
 				options: { release: booleanOption({ default: false }) },
-				arguments: "any",
+				params: "any",
 				setup: () => inject(PLATFORM),
 				run: (ctx, platform) => {
 					ran.push(
@@ -3098,7 +3119,7 @@ describe("defineCommand", () => {
 				registerCommand(
 					defineCommand({
 						name: "dctest-provider-sees-invocation",
-						arguments: "any",
+						params: "any",
 						run: (ctx) => {
 							const first = ctx.injector.get(LABEL);
 							seen.push(first, ctx.injector.get(LABEL));
@@ -3142,7 +3163,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-definition-providers",
-					arguments: "any",
+					params: "any",
 					providers: [
 						{
 							provide: LABEL,
@@ -3227,7 +3248,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-class-provider",
-					arguments: "any",
+					params: "any",
 					providers: [PerInvocation],
 					run: (ctx) => {
 						seen.push(inject(PerInvocation));
@@ -3277,13 +3298,59 @@ describe("defineCommand", () => {
 		});
 	});
 
+	describe("required options", () => {
+		const define = (canExecute: () => boolean) =>
+			defineCommand({
+				name: "dctest-required-option",
+				options: {
+					hostProjectPath: stringOption({ required: true }),
+					release: booleanOption(),
+				},
+				params: "any",
+				canExecute,
+				run: (): void => undefined,
+			});
+
+		it("fails before canExecute when a required option is missing", async () => {
+			let consulted = false;
+			const command = createCommandFromDefinition(
+				define(() => (consulted = true)),
+				createTestInjector({ release: true }),
+			);
+
+			await assert.isRejected(
+				command.canExecute(["a"]),
+				/The option '--host-project-path' is required\./,
+			);
+			assert.isFalse(consulted);
+		});
+
+		it("passes when the option is present", async () => {
+			let seen: string;
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-required-present",
+					options: { hostProjectPath: stringOption({ required: true }) },
+					run: (ctx) => {
+						seen = ctx.options.hostProjectPath.toUpperCase();
+					},
+				}),
+				createTestInjector({ hostProjectPath: "host" }),
+			);
+
+			assert.isTrue(await command.canExecute([]));
+			await command.execute([]);
+			assert.strictEqual(seen, "HOST");
+		});
+	});
+
 	describe("COMMAND_PRECONDITIONS", () => {
 		it("names the command when an entry is not a function", async () => {
 			const testInjector = createTestInjector();
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-precondition-shape",
-					arguments: "none",
+					params: "none",
 					providers: [
 						{
 							provide: COMMAND_PRECONDITIONS,
@@ -3327,7 +3394,7 @@ describe("defineCommand", () => {
 			await createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-preconditions-shadow",
-					arguments: "none",
+					params: "none",
 					providers: [own],
 					run: (): void => undefined,
 				}),
@@ -3339,7 +3406,7 @@ describe("defineCommand", () => {
 			await createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-preconditions-inherit",
-					arguments: "none",
+					params: "none",
 					providers: [keepScope, own],
 					run: (): void => undefined,
 				}),
@@ -3355,7 +3422,7 @@ describe("defineCommand", () => {
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctest-preconditions",
-					arguments: "none",
+					params: "none",
 					providers: [
 						{
 							provide: COMMAND_PRECONDITIONS,

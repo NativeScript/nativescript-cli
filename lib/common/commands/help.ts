@@ -12,7 +12,7 @@ export const helpCommandDefinition = defineCommand({
 	},
 	// The command names whatever command it explains, so every argument after
 	// the first is that command's own.
-	arguments: "any",
+	params: "any",
 	enableHooks: false,
 	async run(context): Promise<void> {
 		const $commandRegistry = inject(CommandRegistry);

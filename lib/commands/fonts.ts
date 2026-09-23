@@ -12,7 +12,7 @@ import { provideProject } from "./command-base";
 export const fontsCommandDefinition = defineCommand({
 	name: "fonts",
 	description: "Lists the custom fonts the project bundles.",
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 	async run(): Promise<void> {
 		const $projectData = inject(ProjectData);

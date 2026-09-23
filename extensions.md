@@ -178,7 +178,7 @@ const { defineCommand, inject } = require("nativescript/contracts");
 
 module.exports = defineCommand({
 	name: "hello|world",
-	arguments: "any",
+	params: "any",
 	async run(ctx) {
 		inject("logger").info(`Hello, ${ctx.args[0] || "world"}!`);
 	},

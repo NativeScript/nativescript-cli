@@ -14,7 +14,7 @@ export const putFileCommandDefinition = defineCommand({
 	name: ["device|put-file", "devices|put-file"],
 	description: "Uploads a file to a connected device.",
 	options: putFileCommandOptions,
-	arguments: [{ name: "localPath" }, { name: "devicePath" }, { name: "appId" }],
+	params: [{ name: "localPath" }, { name: "devicePath" }, { name: "appId" }],
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 

@@ -77,7 +77,7 @@ function canExecuteHooksCommand(context: CommandContext): boolean {
 export const hooksInstallCommandDefinition = defineCommand({
 	name: "hooks|install",
 	description: "Runs the postinstall hook of every installed plugin.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	canExecute: canExecuteHooksCommand,
 	run(context): Promise<void> {
@@ -88,7 +88,7 @@ export const hooksInstallCommandDefinition = defineCommand({
 export const hooksListCommandDefinition = defineCommand({
 	name: "hooks|*list",
 	description: "Lists the hooks every installed plugin contributes.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	// The name accepts "list" as its only argument, and lists either way.
 	canExecute: canExecuteHooksCommand,

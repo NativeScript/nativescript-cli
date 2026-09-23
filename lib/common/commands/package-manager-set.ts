@@ -6,7 +6,7 @@ import { inject } from "../di";
 export const packageManagerSetCommandDefinition = defineCommand({
 	name: "package-manager|set",
 	description: "Sets the package manager the CLI installs dependencies with.",
-	arguments: [{ name: "packageManager" }],
+	params: [{ name: "packageManager" }],
 	async run(context): Promise<void> {
 		const $userSettingsService = inject<IUserSettingsService>(
 			"userSettingsService",

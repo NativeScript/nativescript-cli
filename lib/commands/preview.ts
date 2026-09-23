@@ -25,7 +25,7 @@ export class PreviewCommand extends Command({
 	options: previewCommandOptions,
 	// Arguments have never been rejected here, only ignored: they reach the
 	// preview CLI through the raw argv instead.
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	allowUnknownOptions: true,
 }) {

@@ -6,7 +6,7 @@ import { inject } from "../di";
 export const autoCompleteCommandDefinition = defineCommand({
 	name: "autocomplete|*default",
 	description: "Prompts to enable command-line completion for the CLI.",
-	arguments: "none",
+	params: "none",
 	disableAnalytics: true,
 	async run(): Promise<void> {
 		const $autoCompletionService = inject<IAutoCompletionService>(
@@ -47,7 +47,7 @@ export const autoCompleteCommandDefinition = defineCommand({
 export const disableAutoCompleteCommandDefinition = defineCommand({
 	name: "autocomplete|disable",
 	description: "Disables command-line completion for the CLI.",
-	arguments: "none",
+	params: "none",
 	disableAnalytics: true,
 	async run(): Promise<void> {
 		const $autoCompletionService = inject<IAutoCompletionService>(
@@ -66,7 +66,7 @@ export const disableAutoCompleteCommandDefinition = defineCommand({
 export const enableAutoCompleteCommandDefinition = defineCommand({
 	name: "autocomplete|enable",
 	description: "Enables command-line completion for the CLI.",
-	arguments: "none",
+	params: "none",
 	disableAnalytics: true,
 	async run(): Promise<void> {
 		const $autoCompletionService = inject<IAutoCompletionService>(
@@ -85,7 +85,7 @@ export const enableAutoCompleteCommandDefinition = defineCommand({
 export const autoCompleteStatusCommandDefinition = defineCommand({
 	name: "autocomplete|status",
 	description: "Prints whether command-line completion is enabled.",
-	arguments: "none",
+	params: "none",
 	disableAnalytics: true,
 	async run(): Promise<void> {
 		const $autoCompletionService = inject<IAutoCompletionService>(

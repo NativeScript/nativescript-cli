@@ -8,7 +8,7 @@ import { provideProject } from "./command-base";
 export const listPlatformsCommandDefinition = defineCommand({
 	name: "platform|*list",
 	description: "Lists all platforms that the project currently targets.",
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 	async run(): Promise<void> {
 		const $platformCommandHelper = inject<IPlatformCommandHelper>(

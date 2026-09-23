@@ -53,7 +53,7 @@ const defineBuildCommand = <const TName extends CommandName>(
 		name,
 		description: "Builds the project for the selected target platform.",
 		options: buildCommandOptions,
-		arguments: "none",
+		params: "none",
 		providers: [provideProject()],
 		async canExecute(context): Promise<boolean> {
 			const $devicePlatformsConstants =

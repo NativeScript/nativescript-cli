@@ -15,7 +15,7 @@ export const getFileCommandDefinition = defineCommand({
 	name: ["device|get-file", "devices|get-file"],
 	description: "Downloads a file from a connected device.",
 	options: getFileCommandOptions,
-	arguments: [{ name: "path" }, { name: "appId" }],
+	params: [{ name: "path" }, { name: "appId" }],
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 

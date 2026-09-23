@@ -4,7 +4,7 @@ import { injector } from "./common/yok";
 import { ICommandParameter } from "./common/definitions/commands";
 
 /**
- * @deprecated Use the platformArgument spec from lib/commands/command-base. Kept for
+ * @deprecated Use the platformParam spec from lib/commands/command-base. Kept for
  * commands still implementing ICommand.
  */
 export class PlatformCommandParameter implements ICommandParameter {

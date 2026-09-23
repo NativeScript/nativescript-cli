@@ -44,7 +44,7 @@ function requireConfigKey(context: CommandContext): void {
 export const configListCommandDefinition = defineCommand({
 	name: "config|*list",
 	description: "Prints the project configuration.",
-	arguments: "none",
+	params: "none",
 	async run(): Promise<void> {
 		const $projectConfigService = inject<IProjectConfigService>(
 			"projectConfigService",
@@ -63,7 +63,7 @@ export const configListCommandDefinition = defineCommand({
 export const configGetCommandDefinition = defineCommand({
 	name: "config|get",
 	description: "Prints the value the project configuration holds for a key.",
-	arguments: "any",
+	params: "any",
 	async canExecute(context): Promise<boolean> {
 		requireConfigKey(context);
 
@@ -88,7 +88,7 @@ export const configGetCommandDefinition = defineCommand({
 export const configSetCommandDefinition = defineCommand({
 	name: "config|set",
 	description: "Sets a value in the project configuration.",
-	arguments: "any",
+	params: "any",
 	async canExecute(context): Promise<boolean> {
 		requireConfigKey(context);
 

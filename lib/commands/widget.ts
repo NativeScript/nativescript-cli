@@ -901,7 +901,7 @@ declare class AppleWidgetUtils extends NSObject {
 export const widgetIOSCommandDefinition = defineCommand({
 	name: "widget|ios",
 	description: "Generates an iOS widget extension for the project.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	run(ctx): void {
 		const $projectData = inject(ProjectData);

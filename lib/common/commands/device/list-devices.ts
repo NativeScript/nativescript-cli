@@ -157,7 +157,7 @@ export class ListDevicesCommand extends Command({
 	name: ["device|*list", "devices|*list"],
 	description: "Lists the connected devices and emulators.",
 	options: listDevicesCommandOptions,
-	arguments: [{ name: "platform" }],
+	params: [{ name: "platform" }],
 }) {
 	public run(): Promise<void> {
 		return listDevices(this.context, this.args[0]);
@@ -174,7 +174,7 @@ const defineListPlatformDevicesCommand = <const TName extends CommandName>(
 		name,
 		description: "Lists the connected devices and emulators for one platform.",
 		options: listDevicesCommandOptions,
-		arguments: "none",
+		params: "none",
 		run(context): Promise<void> {
 			const platform = inject<Mobile.IDevicePlatformsConstants>(
 				"devicePlatformsConstants",

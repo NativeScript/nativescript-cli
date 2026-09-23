@@ -29,7 +29,7 @@ export default defineCommand({
 		overwrite: booleanOption({ default: false }),
 		output: stringOption({ alias: "o" }),
 	},
-	arguments: "any",
+	params: "any",
 	async run(ctx) {
 		// ctx.args    -> string[] of positional arguments
 		// ctx.options -> { overwrite: boolean; output: string | undefined }
@@ -57,7 +57,7 @@ Validation happens where you can see it
 
 A definition is checked at the moment `defineCommand` is called, not when the
 command eventually runs. A misspelled field, a missing `run`, an option
-declared with something other than the five helpers, an `arguments` value that
+declared with something other than the five helpers, an `params` value that
 is neither `"none"`, `"any"` nor a list of argument specs — each throws
 immediately, naming the command and the accepted form. The class form's meta is checked the same way at the
 `Command({ ... })` call, which also rejects handlers passed there; only a
@@ -65,10 +65,10 @@ missing `run` method waits until the definition is first read:
 
 ```
 Invalid command definition for 'widget|add': unknown field(s) 'handler'; a
-definition accepts name, description, options, arguments, allowUnknownOptions,
+definition accepts name, description, options, params, allowUnknownOptions,
 canExecute, disableAnalytics, enableHooks, providers, setup, run, shortcuts,
 postRun. Accepted form: defineCommand({ name: "widget|add", run(ctx) { ... } })
-— with the optional fields description, options, arguments,
+— with the optional fields description, options, params,
 allowUnknownOptions, providers, setup, canExecute, shortcuts, postRun,
 disableAnalytics and enableHooks. Or the class form, class WidgetAdd extends
 Command({ name: "widget|add" }) { run() { ... } }, which declares the same
@@ -140,6 +140,10 @@ options: {
 
 - `default` — value used when the flag is absent.
 - `alias` — single-dash shorthand, or an array of them (`alias: ["o", "out"]`).
+- `required` — the command line must pass the flag. Its absence fails the
+  invocation with `The option '--output' is required.` after the params policy
+  and before `canExecute`, and the handler's value type drops `| undefined`,
+  as it does for a spec with a `default`. The two do not combine.
 - `hasSensitiveValue` — defaults to `false`; set it for anything that must not
   be recorded. There is no reason not to be explicit about credentials, paths
   containing user directories, and tokens.
@@ -242,7 +246,7 @@ when forwarding.
 Positional arguments
 --------------------
 
-`arguments` declares what the command takes after its name:
+`params` declares what the command takes after its name:
 
 - `"none"` (the default) — the command accepts no positional arguments. Passing
   any is rejected with `This command doesn't accept parameters.`
@@ -250,12 +254,12 @@ Positional arguments
   as `ctx.args`.
 - an array of specs — each argument is declared, named, and validated.
 
-### Declared arguments
+### Declared parameters
 
 ```ts
 defineCommand({
 	name: "widget|add",
-	arguments: [
+	params: [
 		{
 			name: "platform",
 			required: true,
@@ -308,7 +312,7 @@ The practical consequence: `ctx.params.template` is `args[1]` whether or not
 `args[1]` looks like a template. An argument that could be several things is a
 job for `validate` or for `canExecute`, not for the matcher.
 
-`ctx.params` is always present, even with `arguments: "none"` or `"any"` —
+`ctx.params` is always present, even with `params: "none"` or `"any"` —
 it is simply `{}` when no specs are declared. An optional non-variadic argument
 the command line did not reach is absent from it; a variadic one is always
 there, as an array.
@@ -318,7 +322,7 @@ there, as an array.
 ```ts
 defineCommand({
 	name: "widget|add",
-	arguments: "any",
+	params: "any",
 	async canExecute(ctx) {
 		return ctx.args.length === 1;
 	},
@@ -328,9 +332,9 @@ defineCommand({
 });
 ```
 
-The two fields compose. The declared `arguments` policy is enforced first, and
+The two fields compose. The declared `params` policy is enforced first, and
 `canExecute` is consulted only for command lines that already satisfy it — so a
-definition that leaves `arguments` at `"none"` still rejects stray positional
+definition that leaves `params` at `"none"` still rejects stray positional
 arguments even when it supplies a `canExecute`, and a `canExecute` that only
 inspects options cannot accidentally widen what the command accepts.
 
@@ -350,9 +354,9 @@ The run context
 
 - `ctx.args` — `string[]`, the positional arguments left after the command name
   (including any subcommand segments) has been consumed.
-- `ctx.params` — the same arguments keyed by the names the `arguments` specs
+- `ctx.params` — the same arguments keyed by the names the `params` specs
   declare, `{}` when there are none. It is spelled `params` because
-  `arguments` is a reserved binding name in strict mode, so a destructuring
+  `params` is a reserved binding name in strict mode, so a destructuring
   `const { args, arguments } = ctx` would not even parse.
 - `ctx.options` — the current value of each declared option, read at the moment
   the command executes.
@@ -379,7 +383,7 @@ the project, a file on disk — the help suggestion only gets in the way. Pass
 ```ts
 defineCommand({
 	name: "widget|add",
-	arguments: "any",
+	params: "any",
 	options: { output: stringOption() },
 	async run(ctx) {
 		if (!ctx.options.output) {
@@ -455,7 +459,7 @@ A handler resolves what it needs itself, at the top of its own body:
 ```ts
 export default defineCommand({
 	name: "widget|add",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async run(ctx) {
 		const widgets = inject(WidgetService);
@@ -590,7 +594,7 @@ passed to it after `run` succeeds:
 ```ts
 export default defineCommand({
 	name: "create",
-	arguments: [{ name: "appName", required: true }],
+	params: [{ name: "appName", required: true }],
 	async run(ctx) {
 		const projectDir = await createProject(ctx.params.appName as string);
 		return { projectDir };
@@ -637,7 +641,7 @@ export class PlatformCleanCommand extends Command({
 	name: "platform|clean",
 	description: "Removes and adds again the selected platform.",
 	options: { frameworkPath: stringOption() },
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 }) {
 	private $platformCommandHelper = inject<IPlatformCommandHelper>(
@@ -656,7 +660,7 @@ export class PlatformCleanCommand extends Command({
 ```
 
 `meta` is the definition minus its handlers: `name`, `description`, `options`,
-`arguments`, `allowUnknownOptions`, `disableAnalytics`, `enableHooks` and
+`params`, `allowUnknownOptions`, `disableAnalytics`, `enableHooks` and
 `providers`. The
 handlers are methods instead — `run` is required, and `canExecute`, `postRun`
 and `shortcuts` are optional, each with the same meaning and the same ordering
@@ -950,7 +954,7 @@ The command gets what a typed command line gives it, in the same order: its
 declared options are primed into the parser — so `ctx.options` holds this
 command's values and its declared defaults rather than the outer command
 line's — then its preconditions, as the invocation opens, then `setup`, then
-the `arguments` policy, then `canExecute`, then `run`, `postRun`, and the
+the `params` policy, then `canExecute`, then `run`, `postRun`, and the
 command's hooks.
 
 Two things differ, both because the caller is a process that has to keep
@@ -1041,7 +1045,7 @@ services. The named command is resolved and its options primed exactly as
 builds its own setup from its own services; nothing crosses between the two
 commands but the name and the arguments.
 
-Pass only the arguments the child's own `arguments` policy accepts. The child
+Pass only the arguments the child's own `params` policy accepts. The child
 enforces that policy before its `canExecute`, so forwarding a caller's whole
 argument list to a child that declares fewer is a rejection, not a wider check.
 
@@ -1083,7 +1087,7 @@ mapping is:
 | --------------------------------- | -------------------------------------------------- |
 | `options`                         | `dashedOptions`                                    |
 | `run`                             | `execute`, wrapped in an injection context         |
-| `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement |
+| `params`, `canExecute`         | `canExecute`: policy enforced, then the refinement |
 | `setup`                           | — run inside `canExecute`/`execute`, memoised      |
 | `postRun`                         | `postCommandAction`, with `run`'s return value     |
 | `allowUnknownOptions`             | `allowUnknownOptions`                              |
@@ -1092,8 +1096,8 @@ mapping is:
 
 The compiled command always exposes `canExecute`, because `CommandsService`
 stops consulting `allowedParameters` as soon as a command has one — the adapter
-therefore enforces the `arguments` policy itself. `allowedParameters` stays
-empty, which is why declared `arguments` are matched positionally rather than
+therefore enforces the `params` policy itself. `allowedParameters` stays
+empty, which is why declared `params` are matched positionally rather than
 by the `ICommandParameter` scan.
 
 Existing command classes need no migration. Reach for a definition when a

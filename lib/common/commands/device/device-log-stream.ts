@@ -18,7 +18,7 @@ export const openDeviceLogStreamCommandDefinition = defineCommand({
 	name: ["device|log", "devices|log"],
 	description: "Opens the device log stream for a connected device.",
 	options: openDeviceLogStreamCommandOptions,
-	arguments: "none",
+	params: "none",
 	// The log stream is the command's whole output, so neither the simulator log
 	// provider nor the cleanup process may be torn down while it is open. In
 	// setup, so the flags are set at the point in the invocation they always were.

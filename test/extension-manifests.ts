@@ -155,7 +155,7 @@ describe("extension manifests", () => {
 		)});
 		registerCommand({
 			name: ${JSON.stringify(commandName)},
-			arguments: "any",
+			params: "any",
 			run: (ctx) => {
 				global.__nsmCapture.executed.push({
 					marker: ${JSON.stringify(marker)},
@@ -523,7 +523,7 @@ describe("extension manifests", () => {
 			global.__nsmCapture.loadedModules.push(${JSON.stringify(marker)});
 			${exportAs} = defineCommand({
 				name: ${JSON.stringify(commandName)},
-				arguments: "any",
+				params: "any",
 				async run(ctx) {
 					global.__nsmCapture.executed.push({ marker: ${JSON.stringify(
 						marker,

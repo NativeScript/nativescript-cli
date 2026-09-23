@@ -6,7 +6,7 @@ import { IStartService } from "../definitions/start-service";
 export const startCommandDefinition = defineCommand({
 	name: "start",
 	description: "Starts the NativeScript interactive command line.",
-	arguments: "any",
+	params: "any",
 	async run(): Promise<void> {
 		const $startService = inject<IStartService>("startService");
 		printHeader();

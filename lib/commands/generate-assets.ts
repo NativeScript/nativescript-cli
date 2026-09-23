@@ -53,7 +53,7 @@ const defineGenerateAssetsCommand = <const TName extends CommandName>(
 		description:
 			"Generates icons and splash screens based on the provided image.",
 		options: generateAssetsCommandOptions,
-		arguments: [
+		params: [
 			{
 				name: "imagePath",
 				required: true,

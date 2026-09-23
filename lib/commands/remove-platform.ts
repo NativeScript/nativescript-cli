@@ -12,7 +12,7 @@ export const removePlatformCommandDefinition = defineCommand({
 	name: "platform|remove",
 	description:
 		"Removes the selected platform from the platforms that the project currently targets.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $platformValidationService = inject<IPlatformValidationService>(

@@ -235,7 +235,7 @@ const defineApplePlatformDebugCommand = <const TName extends CommandName>(
 			"Debugs your project on a connected Apple device or simulator.",
 		options: debugCommandOptions,
 		// Arguments have never been rejected here, only ignored.
-		arguments: "any",
+		params: "any",
 		providers: [provideProject()],
 		async canExecute(context): Promise<boolean> {
 			const $devicePlatformsConstants =
@@ -309,7 +309,7 @@ export const androidDebugCommand = defineCommand({
 	name: "debug|android",
 	description: "Debugs your project on a connected Android device or emulator.",
 	options: debugCommandOptions,
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const canExecuteBase = await canExecuteDebugCommand(context, "Android");

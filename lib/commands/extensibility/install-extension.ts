@@ -5,7 +5,7 @@ import { IExtensibilityService } from "../../common/definitions/extensibility";
 export const installExtensionCommandDefinition = defineCommand({
 	name: "extension|install",
 	description: "Installs the specified extension.",
-	arguments: [
+	params: [
 		{
 			name: "extensionName",
 			required: true,

@@ -33,7 +33,7 @@ export class PublishIOSCommand extends Command({
 	description: "Uploads a project to App Store Connect.",
 	options: publishIOSCommandOptions,
 	// Arguments have never been rejected here, only ignored past the third.
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 }) {
 	private $applePortalSessionService = inject<IApplePortalSessionService>(

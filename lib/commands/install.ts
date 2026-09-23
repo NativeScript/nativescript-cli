@@ -109,7 +109,7 @@ export const installCommandDefinition = defineCommand({
 	description:
 		"Installs all platforms and dependencies described in the project, or a single plugin.",
 	options: installCommandOptions,
-	arguments: [{ name: "moduleName" }],
+	params: [{ name: "moduleName" }],
 	providers: [provideProject()],
 	enableHooks: false,
 	run(context): Promise<void> {

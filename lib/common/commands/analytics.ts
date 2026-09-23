@@ -79,7 +79,7 @@ const defineAnalyticsCommand = <const TName extends CommandName>(
 		name,
 		description: "Configures anonymous reporting for the CLI.",
 		options: analyticsCommandOptions,
-		arguments: [{ name: "state", validate: validateAnalyticsState }],
+		params: [{ name: "state", validate: validateAnalyticsState }],
 		disableAnalytics: true,
 		run: (context) => runAnalyticsCommand(context, setting),
 	});

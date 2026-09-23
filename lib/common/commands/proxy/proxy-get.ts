@@ -8,7 +8,7 @@ const proxyGetCommandName = "proxy|*get";
 export const proxyGetCommandDefinition = defineCommand({
 	name: proxyGetCommandName,
 	description: "Prints the current proxy settings.",
-	arguments: "none",
+	params: "none",
 	disableAnalytics: true,
 	async run(): Promise<void> {
 		const $logger = inject<ILogger>("logger");

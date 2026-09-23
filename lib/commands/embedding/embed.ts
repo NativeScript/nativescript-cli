@@ -6,7 +6,7 @@ import { Command } from "../../common/define-command";
 import { IFileSystem } from "../../common/declarations";
 import { inject } from "../../common/di";
 import { CommandsService } from "../../common/contracts/commands-service";
-import { platformArgument, provideProject } from "../command-base";
+import { platformParam, provideProject } from "../command-base";
 import {
 	prepareCommandDefinition,
 	prepareCommandOptions,
@@ -30,8 +30,8 @@ export class EmbedCommand extends Command({
 	description:
 		"Prepares the project so it can be embedded into a native host project.",
 	options: prepareCommandOptions,
-	arguments: [
-		platformArgument,
+	params: [
+		platformParam,
 		{ name: "hostProjectPath" },
 		{ name: "hostProjectModuleName" },
 	],

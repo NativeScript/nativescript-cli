@@ -39,7 +39,7 @@ export class ProxySetCommand extends Command({
 	name: proxySetCommandName,
 	description: "Configures a proxy for the CLI to use.",
 	options: proxySetCommandOptions,
-	arguments: [{ name: "url" }, { name: "username" }, { name: "password" }],
+	params: [{ name: "url" }, { name: "username" }, { name: "password" }],
 	disableAnalytics: true,
 }) {
 	private $logger = inject<ILogger>("logger");

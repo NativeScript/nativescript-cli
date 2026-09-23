@@ -23,7 +23,7 @@ export class UpdateCommand extends Command({
 	description:
 		"Updates the project with the latest versions of its NativeScript dependencies.",
 	options: updateCommandOptions,
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 }) {
 	private $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(

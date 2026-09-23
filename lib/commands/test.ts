@@ -219,7 +219,7 @@ export const testCommandDefinition = defineCommand({
 	description: "Runs the tests in your project on connected Apple devices.",
 	options: testCommandOptions,
 	// Arguments have never been rejected here, only ignored.
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	canExecute: (context: TestCommandContext) =>
 		canExecuteTestCommand(context, "iOS"),
@@ -231,7 +231,7 @@ export const testAndroidCommandDefinition = defineCommand({
 	description:
 		"Runs the tests in your project on connected Android devices or Android emulators.",
 	options: testCommandOptions,
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async canExecute(context: TestCommandContext): Promise<boolean> {
 		const canExecuteBase = await canExecuteTestCommand(context, "android");
@@ -258,7 +258,7 @@ export const testVisionOSCommandDefinition = defineCommand({
 	description:
 		"Runs the tests in your project in the visionOS Simulator or on connected Apple Vision Pro devices.",
 	options: testCommandOptions,
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async canExecute(context: TestCommandContext): Promise<boolean> {
 		const $projectData = inject(ProjectData);

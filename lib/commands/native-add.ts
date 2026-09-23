@@ -325,7 +325,7 @@ export const nativeAddCommandDefinition = defineCommand({
 	name: "native|add",
 	description:
 		"Commands to add native files to the application placing them in the correct directory.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	canExecute(context): boolean {
 		failWithUsage(context);
@@ -345,7 +345,7 @@ const defineNativeAddLanguageCommand = <const TName extends CommandName>(
 		description: "Adds a native source file to the application.",
 		// The one usage message answers both too few and too many arguments; a
 		// declared argument spec would report them with two different ones.
-		arguments: "any",
+		params: "any",
 		providers: [provideProject()],
 		canExecute(context): boolean {
 			if (context.args.length !== 1) {

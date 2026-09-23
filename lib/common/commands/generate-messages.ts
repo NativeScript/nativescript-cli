@@ -18,7 +18,7 @@ export const generateMessagesCommandDefinition = defineCommand({
 	name: "dev-generate-messages",
 	description: "Regenerates the CLI's message contracts.",
 	options: generateMessagesCommandOptions,
-	arguments: "none",
+	params: "none",
 	async run(context): Promise<void> {
 		const $fs = inject<IFileSystem>("fs");
 		const $messageContractGenerator = inject<IServiceContractGenerator>(

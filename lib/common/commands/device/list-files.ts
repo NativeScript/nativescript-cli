@@ -14,7 +14,7 @@ export const listFilesCommandDefinition = defineCommand({
 	name: ["device|list-files", "devices|list-files"],
 	description: "Lists the files in a directory on a connected device.",
 	options: listFilesCommandOptions,
-	arguments: [{ name: "path" }, { name: "appId" }],
+	params: [{ name: "path" }, { name: "appId" }],
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 

@@ -5,7 +5,7 @@ import { inject } from "../common/di";
 export const generateCommandDefinition = defineCommand({
 	name: "generate",
 	description: "Executes a schematic in the project.",
-	arguments: "any",
+	params: "any",
 	async run(context): Promise<void> {
 		const $logger = inject<ILogger>("logger");
 

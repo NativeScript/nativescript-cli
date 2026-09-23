@@ -8,7 +8,7 @@ export const migrateCommandDefinition = defineCommand({
 	name: "migrate",
 	description:
 		"Migrates the project's dependencies to the ones the current CLI supports.",
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 	async run(): Promise<void> {
 		const $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(

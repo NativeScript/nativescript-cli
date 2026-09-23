@@ -37,7 +37,7 @@ async function handleIntentionalUninstall(
 export const preUninstallCommandDefinition = defineCommand({
 	name: "dev-preuninstall",
 	description: "Runs the CLI's own uninstall bookkeeping.",
-	arguments: "none",
+	params: "none",
 	async run(): Promise<void> {
 		const $analyticsService = inject<IAnalyticsService>("analyticsService");
 		const $extensibilityService = inject<IExtensibilityService>(

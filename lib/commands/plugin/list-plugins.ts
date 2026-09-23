@@ -17,7 +17,7 @@ function createTableCells(items: IBasePluginData[]): string[][] {
 export const listPluginsCommandDefinition = defineCommand({
 	name: "plugin|*list",
 	description: "Lists all installed plugins.",
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 	async run(): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");

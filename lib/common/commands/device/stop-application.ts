@@ -13,7 +13,7 @@ export const stopApplicationOnDeviceCommandDefinition = defineCommand({
 	name: ["device|stop", "devices|stop"],
 	description: "Stops the selected application on a connected device.",
 	options: stopApplicationOnDeviceCommandOptions,
-	arguments: [{ name: "appId" }, { name: "platform" }, { name: "projectName" }],
+	params: [{ name: "appId" }, { name: "platform" }, { name: "projectName" }],
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 

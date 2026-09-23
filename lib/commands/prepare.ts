@@ -1,6 +1,6 @@
 import {
 	canExecuteCommandBase,
-	platformArgument,
+	platformParam,
 	platformSigningOptions,
 	provideProject,
 	validatePlatformArgument,
@@ -80,7 +80,7 @@ export const prepareCommandDefinition = defineCommand({
 	name: "prepare",
 	description: "Copies common and platform-specific content to the platform.",
 	options: prepareCommandOptions,
-	arguments: [platformArgument],
+	params: [platformParam],
 	providers: [provideProject()],
 	canExecute: canExecutePrepareCommand,
 	run: runPrepareCommand,

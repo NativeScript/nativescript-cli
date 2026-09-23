@@ -16,7 +16,7 @@ export const listApplicationsCommandDefinition = defineCommand({
 	name: ["device|list-applications", "devices|list-applications"],
 	description: "Lists the installed applications on all connected devices.",
 	options: listApplicationsCommandOptions,
-	arguments: "none",
+	params: "none",
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 		const $logger = inject<ILogger>("logger");

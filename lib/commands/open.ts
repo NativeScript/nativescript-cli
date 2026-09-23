@@ -190,7 +190,7 @@ export const iosOpenCommand = defineCommand({
 	name: "open|ios",
 	description: "Opens the project in Xcode.",
 	options: openCommandOptions,
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $options = inject<IOptions>("options");
@@ -202,7 +202,7 @@ export const visionOpenCommand = defineCommand({
 	name: ["open|visionos", "open|vision"],
 	description: "Opens the visionOS project in Xcode.",
 	options: openCommandOptions,
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $options = inject<IOptions>("options");
@@ -216,7 +216,7 @@ export const androidOpenCommand = defineCommand({
 	name: "open|android",
 	description: "Opens the project in Android Studio.",
 	options: openCommandOptions,
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $options = inject<IOptions>("options");

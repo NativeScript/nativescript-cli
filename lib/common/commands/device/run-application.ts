@@ -14,7 +14,7 @@ export const runApplicationOnDeviceCommandDefinition = defineCommand({
 	name: ["device|run", "devices|run"],
 	description: "Runs the selected application on a connected device.",
 	options: runApplicationOnDeviceCommandOptions,
-	arguments: [{ name: "appId" }, { name: "projectName" }],
+	params: [{ name: "appId" }, { name: "projectName" }],
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 		const $errors = inject<IErrors>("errors");

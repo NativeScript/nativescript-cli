@@ -5,7 +5,7 @@ import { inject } from "../common/di";
 export const generateHelpCommandDefinition = defineCommand({
 	name: "dev-generate-help",
 	description: "Generates the HTML help pages from the man pages.",
-	arguments: "none",
+	params: "none",
 	run(): Promise<void> {
 		const $helpService = inject<IHelpService>("helpService");
 		return $helpService.generateHtmlPages();

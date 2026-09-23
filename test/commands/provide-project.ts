@@ -63,7 +63,7 @@ describe("provideProject", () => {
 		const command = createCommandFromDefinition(
 			defineCommand({
 				name: "pptest-outside-project",
-				arguments: "none",
+				params: "none",
 				providers: [provideProject()],
 				run: () => {
 					ran = true;

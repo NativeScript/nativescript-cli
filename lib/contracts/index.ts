@@ -69,6 +69,10 @@ export {
 	objectOption,
 } from "../common/define-command";
 export type {
+	ParamSpec,
+	ParamsPolicy,
+	CommandParamValues,
+	RequiredCommandOptionSpec,
 	ArgumentSpec,
 	ArgumentsPolicy,
 	CommandArgumentValues,

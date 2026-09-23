@@ -6,7 +6,7 @@ import {
 	INotConfiguredEnvOptions,
 } from "../common/definitions/commands";
 import {
-	ArgumentSpec,
+	ParamSpec,
 	CommandContext,
 	CommandOptionsSchema,
 	objectOption,
@@ -49,7 +49,7 @@ export function validatePlatformArgument(
 }
 
 /** The `platform` positional argument, shared by prepare, deploy and embed. */
-export const platformArgument: ArgumentSpec<any> = {
+export const platformParam: ParamSpec<any> = {
 	name: "platform",
 	validate(value, context) {
 		validatePlatformArgument(context.injector, value);

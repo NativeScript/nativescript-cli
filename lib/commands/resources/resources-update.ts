@@ -8,7 +8,7 @@ export const resourcesUpdateCommandDefinition = defineCommand({
 	name: "resources|update",
 	description:
 		"Updates the App_Resources directory to the structure the current Android runtime expects.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $androidResourcesMigrationService =

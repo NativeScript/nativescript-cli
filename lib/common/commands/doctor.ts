@@ -11,7 +11,7 @@ const defineDoctorCommand = <const TName extends CommandName>(
 		name,
 		description:
 			"Checks the local environment for configuration issues, and prints what it finds.",
-		arguments: "none",
+		params: "none",
 		run(): Promise<void> {
 			const $doctorService = inject<IDoctorService>("doctorService");
 			const $projectHelper = inject<IProjectHelper>("projectHelper");

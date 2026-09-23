@@ -34,7 +34,7 @@ export class CreatePluginCommand extends Command({
 	name: "plugin|create",
 	description: "Creates a new project for a NativeScript plugin.",
 	options: createPluginCommandOptions,
-	arguments: "any",
+	params: "any",
 }) {
 	private $errors = inject<IErrors>("errors");
 	private $terminalSpinnerService = inject<ITerminalSpinnerService>(

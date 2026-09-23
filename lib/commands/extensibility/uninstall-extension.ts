@@ -5,7 +5,7 @@ import { IExtensibilityService } from "../../common/definitions/extensibility";
 export const uninstallExtensionCommandDefinition = defineCommand({
 	name: "extension|uninstall",
 	description: "Uninstalls the specified extension.",
-	arguments: [
+	params: [
 		{
 			name: "extensionName",
 			required: true,

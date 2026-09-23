@@ -38,7 +38,7 @@ export class TestInitCommand extends Command({
 	name: "test|init",
 	description: "Configures your project for unit testing.",
 	options: testInitCommandOptions,
-	arguments: "none",
+	params: "none",
 	providers: [provideProject()],
 }) {
 	private $fs = inject<IFileSystem>("fs");

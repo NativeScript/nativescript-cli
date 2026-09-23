@@ -116,7 +116,7 @@ describe("CommandsService in-process dispatch", () => {
 		};
 		register(harness.injector, {
 			name: "dctest-bad-priming",
-			arguments: "none",
+			params: "none",
 			run: (): void => undefined,
 		});
 
@@ -142,7 +142,7 @@ describe("CommandsService in-process dispatch", () => {
 		const ownerReader = (seen: string[]) =>
 			defineCommand({
 				name: "dctest-owner-reader",
-				arguments: "none",
+				params: "none",
 				run: () => {
 					seen.push(inject(COMMAND_OWNER, { optional: true }) || "cli");
 				},
@@ -184,7 +184,7 @@ describe("CommandsService in-process dispatch", () => {
 			const harness = createHarness();
 			register(harness.injector, {
 				name: "dctest-registered-scope",
-				arguments: "none",
+				params: "none",
 				run: (): void => undefined,
 			});
 
@@ -204,14 +204,14 @@ describe("CommandsService in-process dispatch", () => {
 		) => {
 			register(harness.injector, {
 				name: "dctest-family|*main",
-				arguments: "any",
+				params: "any",
 				run: (context: any) => {
 					runs.push({ name: "main", args: context.args });
 				},
 			});
 			register(harness.injector, {
 				name: "dctest-family|child",
-				arguments: "any",
+				params: "any",
 				run: (context: any) => {
 					runs.push({ name: "child", args: context.args });
 				},
@@ -320,7 +320,7 @@ describe("CommandsService in-process dispatch", () => {
 			});
 			register(harness.injector, {
 				name: "dctest-asked|child",
-				arguments: "any",
+				params: "any",
 				canExecute: (context: any) => {
 					consulted.push(context.args);
 					return context.args[0] === "ok";
@@ -384,7 +384,7 @@ describe("CommandsService in-process dispatch", () => {
 			const harness = createHarness();
 			register(harness.injector, {
 				name: "dctest-plain",
-				arguments: "any",
+				params: "any",
 				run: (): void => undefined,
 			});
 

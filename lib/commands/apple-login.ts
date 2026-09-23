@@ -5,7 +5,7 @@ import { IApplePortalSessionService } from "../services/apple-portal/definitions
 export const appleLoginCommandDefinition = defineCommand({
 	name: "apple-login",
 	description: "Logs in to an Apple account and prints the session cookie.",
-	arguments: [{ name: "appleId" }, { name: "password" }],
+	params: [{ name: "appleId" }, { name: "password" }],
 	async run(context) {
 		const $applePortalSessionService = inject<IApplePortalSessionService>(
 			"applePortalSessionService",

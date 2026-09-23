@@ -16,7 +16,7 @@ import { provideProject } from "./command-base";
 export class UpdatePlatformCommand extends Command({
 	name: "platform|update",
 	description: "Updates the NativeScript runtime for the specified platform.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 }) {
 	private $options = inject<IOptions>("options");

@@ -14,7 +14,7 @@ import {
 	numberOption,
 	stringOption,
 } from "../../lib/common/define-command";
-import type { CommandArgumentValues } from "../../lib/common/define-command";
+import type { CommandParamValues } from "../../lib/common/define-command";
 import {
 	registerBuiltInCommand,
 	registerLazyCommand,
@@ -41,8 +41,12 @@ defineCommand({
 		attempts: numberOption({ default: 3 }),
 		files: arrayOption(),
 		tags: arrayOption({ default: [] }),
+		device: stringOption({ required: true }),
+		count: numberOption({ required: true }),
 	},
 	run(ctx) {
+		expectExactType<IsExact<typeof ctx.options.device, string>>();
+		expectExactType<IsExact<typeof ctx.options.count, number>>();
 		expectExactType<IsExact<typeof ctx.options.verbose, boolean | undefined>>();
 		expectExactType<IsExact<typeof ctx.options.release, boolean>>();
 		expectExactType<IsExact<typeof ctx.options.output, string | undefined>>();
@@ -84,23 +88,23 @@ defineCommand({
 defineCommand({ name: "typefixture|no-run" });
 
 defineCommand({
-	name: "typefixture|bad-arguments",
-	// @ts-expect-error - `arguments` is a closed set
-	arguments: "one",
+	name: "typefixture|bad-params",
+	// @ts-expect-error - `params` is a closed set
+	params: "one",
 	run: () => undefined,
 });
 
-// `arguments` accepts positional specs, and `ctx.params` keys the values by
+// `params` accepts positional specs, and `ctx.params` keys the values by
 // the declared names. The keys are not inferred from the spec array — the
 // value type is what the declaration pins.
 defineCommand({
 	name: "typefixture|positional",
-	arguments: [
+	params: [
 		{ name: "platform", required: true },
 		{ name: "extra", variadic: true },
 	],
 	run(ctx) {
-		expectExactType<IsExact<typeof ctx.params, CommandArgumentValues>>();
+		expectExactType<IsExact<typeof ctx.params, CommandParamValues>>();
 		expectExactType<
 			IsExact<(typeof ctx.params)["platform"], string | string[]>
 		>();
@@ -110,14 +114,14 @@ defineCommand({
 defineCommand({
 	name: "typefixture|bad-argument-spec",
 	// @ts-expect-error - an argument spec is a closed shape
-	arguments: [{ name: "platform", requried: true }],
+	params: [{ name: "platform", requried: true }],
 	run: () => undefined,
 });
 
 defineCommand({
 	name: "typefixture|validate",
 	options: { force: booleanOption({ default: false }) },
-	arguments: [
+	params: [
 		{
 			name: "platform",
 			validate(value, ctx) {
@@ -257,7 +261,7 @@ class TypefixturePlatformClean extends Command({
 		frameworkPath: stringOption({ default: "platforms" }),
 		verbose: booleanOption(),
 	},
-	arguments: "any",
+	params: "any",
 }) {
 	run(): void {
 		const frameworkPath = this.options.frameworkPath;

@@ -28,6 +28,11 @@ export interface CommandOptionSpec<TValue = any> {
 	type: CommandOptionType;
 	/** Value used when the flag is absent from the command line. */
 	default?: TValue;
+	/**
+	 * The command line must pass the flag; its absence fails the invocation
+	 * before `canExecute`. Not combinable with `default`.
+	 */
+	required?: boolean;
 	/** Single-dash shorthand, e.g. `-o` for `--output`. */
 	alias?: string | string[];
 	/** Keeps the value out of analytics and logs. Defaults to false. */
@@ -47,6 +52,13 @@ export interface DefaultedCommandOptionSpec<
 	default: TValue;
 }
 
+/** A spec marked `required: true`; its value is never `undefined` in a handler. */
+export interface RequiredCommandOptionSpec<
+	TValue = any,
+> extends CommandOptionSpec<TValue> {
+	required: true;
+}
+
 /** The parts of an option spec a caller supplies; `type` comes from the helper. */
 export type CommandOptionSpecInit<TValue = any> = Omit<
 	CommandOptionSpec<TValue>,
@@ -59,11 +71,11 @@ export interface CommandOptionsSchema {
 
 /**
  * An option the command line omitted is absent at runtime, so only a spec that
- * declares a `default` yields a value that is always there.
+ * declares a `default`, or is `required`, yields a value that is always there.
  */
 type CommandOptionValue<TSpec> =
 	TSpec extends CommandOptionSpec<infer TValue>
-		? TSpec extends { default: any }
+		? TSpec extends { default: any } | { required: true }
 			? TValue
 			: TValue | undefined
 		: any;
@@ -73,19 +85,22 @@ export type CommandOptionValues<TSchema extends CommandOptionsSchema> = {
 };
 
 /**
- * Positional arguments keyed by the declaring spec's `name`. A variadic spec
+ * Positional parameters keyed by the declaring spec's `name`. A variadic spec
  * always yields an array; a non-variadic optional one is absent when the
  * command line did not reach it.
  */
-export interface CommandArgumentValues {
-	[argumentName: string]: string | string[];
+export interface CommandParamValues {
+	[paramName: string]: string | string[];
 }
 
+/** @deprecated Use CommandParamValues. */
+export type CommandArgumentValues = CommandParamValues;
+
 /**
- * One positional argument. Specs are matched strictly by position: the first
+ * One positional parameter. Specs are matched strictly by position: the first
  * spec takes the first argument, and so on.
  */
-export interface ArgumentSpec<TSchema extends CommandOptionsSchema = {}> {
+export interface ParamSpec<TSchema extends CommandOptionsSchema = {}> {
 	/** Key under which the value appears on `ctx.params`. */
 	name: string;
 	/** Defaults to false. A required spec may not follow an optional one. */
@@ -94,7 +109,7 @@ export interface ArgumentSpec<TSchema extends CommandOptionsSchema = {}> {
 	variadic?: boolean;
 	/** Reserved for generated help; nothing renders it yet. */
 	description?: string;
-	/** Replaces the default message when a required argument is missing. */
+	/** Replaces the default message when a required parameter is missing. */
 	errorMessage?: string;
 	/** `false` or a message string rejects the value; a string is the message. */
 	validate?(
@@ -103,12 +118,20 @@ export interface ArgumentSpec<TSchema extends CommandOptionsSchema = {}> {
 	): boolean | string | Promise<boolean | string>;
 }
 
+/** @deprecated Use ParamSpec. */
+export type ArgumentSpec<TSchema extends CommandOptionsSchema = {}> =
+	ParamSpec<TSchema>;
+
 /**
  * `"none"` rejects positional arguments; `"any"` accepts any number of them;
  * an array declares them one by one.
  */
+export type ParamsPolicy<TSchema extends CommandOptionsSchema = {}> =
+	"none" | "any" | ParamSpec<TSchema>[];
+
+/** @deprecated Use ParamsPolicy. */
 export type ArgumentsPolicy<TSchema extends CommandOptionsSchema = {}> =
-	"none" | "any" | ArgumentSpec<TSchema>[];
+	ParamsPolicy<TSchema>;
 
 export interface CommandFailOptions {
 	/**
@@ -121,8 +144,8 @@ export interface CommandFailOptions {
 export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
 	/** Positional arguments, after the command name has been consumed. */
 	args: string[];
-	/** The same arguments keyed by the names the `arguments` specs declare. */
-	params: CommandArgumentValues;
+	/** The same arguments keyed by the names the `params` specs declare. */
+	params: CommandParamValues;
 	/** Current value of every option declared in the schema, and nothing else. */
 	options: CommandOptionValues<TSchema>;
 	/**
@@ -148,10 +171,11 @@ export interface CommandDefinition<
 	options?: TSchema;
 	/**
 	 * `"none"` (the default) rejects positional arguments; `"any"` accepts any
-	 * number; an array declares them positionally. Anything finer belongs in
-	 * `canExecute`, which runs after this policy.
+	 * number; an array declares them positionally, and the values land on
+	 * `ctx.params`. Anything finer belongs in `canExecute`, which runs after
+	 * this policy.
 	 */
-	arguments?: ArgumentsPolicy<TSchema>;
+	params?: ParamsPolicy<TSchema>;
 	/**
 	 * Hands options this CLI does not know through to the command instead of
 	 * reporting them. Only for commands that forward their command line to
@@ -217,6 +241,9 @@ interface IOptionHelper<TValue> {
 	(
 		init: CommandOptionSpecInit<TValue> & { default: TValue },
 	): DefaultedCommandOptionSpec<TValue>;
+	(
+		init: CommandOptionSpecInit<TValue> & { required: true },
+	): RequiredCommandOptionSpec<TValue>;
 	(init?: CommandOptionSpecInit<TValue>): CommandOptionSpec<TValue>;
 }
 
@@ -237,7 +264,7 @@ const DEFINITION_FIELDS = [
 	"name",
 	"description",
 	"options",
-	"arguments",
+	"params",
 	"allowUnknownOptions",
 	"canExecute",
 	"disableAnalytics",
@@ -261,6 +288,7 @@ const ARGUMENT_SPEC_FIELDS = [
 const OPTION_SPEC_FIELDS = [
 	"type",
 	"default",
+	"required",
 	"alias",
 	"hasSensitiveValue",
 	"description",
@@ -276,7 +304,7 @@ const OPTION_TYPES: CommandOptionType[] = [
 
 const ACCEPTED_FORM =
 	'defineCommand({ name: "widget|add", run(ctx) { ... } }) — with the ' +
-	"optional fields description, options, arguments, allowUnknownOptions, " +
+	"optional fields description, options, params, allowUnknownOptions, " +
 	"providers, setup, canExecute, shortcuts, postRun, disableAnalytics and " +
 	"enableHooks. " +
 	'Or the class form, class WidgetAdd extends Command({ name: "widget|add" }) ' +
@@ -339,7 +367,7 @@ const validateOptionSpec = (
 	if (!isPlainObject(spec)) {
 		invalid(
 			definition,
-			`option '${optionName}' must be declared with one of booleanOption(), stringOption(), numberOption() or arrayOption()`,
+			`option '${optionName}' must be declared with one of booleanOption(), stringOption(), numberOption(), arrayOption() or objectOption()`,
 		);
 	}
 
@@ -348,7 +376,7 @@ const validateOptionSpec = (
 			definition,
 			`option '${optionName}' has type '${spec.type}'; the supported types are ${OPTION_TYPES.join(
 				", ",
-			)} — declare it with one of booleanOption(), stringOption(), numberOption() or arrayOption()`,
+			)} — declare it with one of booleanOption(), stringOption(), numberOption(), arrayOption() or objectOption()`,
 		);
 	}
 
@@ -361,6 +389,16 @@ const validateOptionSpec = (
 			`option '${optionName}' has unknown field(s) ${unknownFields
 				.map((field) => `'${field}'`)
 				.join(", ")}; an option spec accepts ${OPTION_SPEC_FIELDS.join(", ")}`,
+		);
+	}
+
+	if (spec.required !== undefined && typeof spec.required !== "boolean") {
+		invalid(definition, `option '${optionName}': 'required' must be a boolean`);
+	}
+	if (spec.required === true && spec.default !== undefined) {
+		invalid(
+			definition,
+			`option '${optionName}' is required and has a default; one of the two`,
 		);
 	}
 
@@ -395,7 +433,7 @@ const validateOptionSpec = (
 	}
 };
 
-const validateArgumentSpecs = (definition: any, specs: any[]): void => {
+const validateParamSpecs = (definition: any, specs: any[]): void => {
 	const seen: string[] = [];
 	let optionalSeen: string | null = null;
 
@@ -406,12 +444,12 @@ const validateArgumentSpecs = (definition: any, specs: any[]): void => {
 		if (!isPlainObject(spec)) {
 			invalid(
 				definition,
-				`${position} of 'arguments' must be an object declaring at least a 'name'`,
+				`${position} of 'params' must be an object declaring at least a 'name'`,
 			);
 		}
 
 		if (typeof spec.name !== "string" || !spec.name.trim()) {
-			invalid(definition, `${position} of 'arguments' has no usable 'name'`);
+			invalid(definition, `${position} of 'params' has no usable 'name'`);
 		}
 
 		const unknownFields = Object.keys(spec).filter(
@@ -431,7 +469,7 @@ const validateArgumentSpecs = (definition: any, specs: any[]): void => {
 		if (seen.indexOf(spec.name) !== -1) {
 			invalid(
 				definition,
-				`'arguments' declares '${spec.name}' twice; argument names key ctx.params and must be unique`,
+				`'params' declares '${spec.name}' twice; param names key ctx.params and must be unique`,
 			);
 		}
 		seen.push(spec.name);
@@ -473,7 +511,7 @@ const validateArgumentSpecs = (definition: any, specs: any[]): void => {
 		if (spec.required === true && optionalSeen) {
 			invalid(
 				definition,
-				`argument '${spec.name}' is required but follows the optional '${optionalSeen}'; required arguments come first`,
+				`param '${spec.name}' is required but follows the optional '${optionalSeen}'; required params come first`,
 			);
 		}
 
@@ -486,6 +524,13 @@ const validateArgumentSpecs = (definition: any, specs: any[]): void => {
 const validateDefinition = (definition: any): void => {
 	if (!isPlainObject(definition)) {
 		invalid(definition, "expected an object");
+	}
+
+	if ("arguments" in definition) {
+		invalid(
+			definition,
+			"'arguments' is not a field; positional parameters are declared under 'params' and read from ctx.params",
+		);
 	}
 
 	const unknownFields = Object.keys(definition).filter(
@@ -506,16 +551,13 @@ const validateDefinition = (definition: any): void => {
 		invalid(definition, "'run' must be a function");
 	}
 
-	if (definition.arguments !== undefined) {
-		if (Array.isArray(definition.arguments)) {
-			validateArgumentSpecs(definition, definition.arguments);
-		} else if (
-			definition.arguments !== "none" &&
-			definition.arguments !== "any"
-		) {
+	if (definition.params !== undefined) {
+		if (Array.isArray(definition.params)) {
+			validateParamSpecs(definition, definition.params);
+		} else if (definition.params !== "none" && definition.params !== "any") {
 			invalid(
 				definition,
-				`'arguments' is '${definition.arguments}'; it must be "none", "any" or an array of argument specs`,
+				`'params' is '${definition.params}'; it must be "none", "any" or an array of param specs`,
 			);
 		}
 	}

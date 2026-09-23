@@ -8,7 +8,7 @@ import { provideProject } from "../command-base";
 export const removePluginCommandDefinition = defineCommand({
 	name: "plugin|remove",
 	description: "Uninstalls the specified plugin and its dependencies.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");

@@ -315,7 +315,7 @@ export const cleanCommandDefinition = defineCommand({
 	name: "clean",
 	description: "Cleans the project's build artefacts and dependencies.",
 	options: cleanCommandOptions,
-	arguments: "none",
+	params: "none",
 	async run(context): Promise<void> {
 		const $projectCleanupService = inject<IProjectCleanupService>(
 			"projectCleanupService",

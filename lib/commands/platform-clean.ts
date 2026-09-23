@@ -22,7 +22,7 @@ export class PlatformCleanCommand extends Command({
 	name: "platform|clean",
 	description: "Removes and adds again the selected platform.",
 	options: platformCleanCommandOptions,
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 }) {
 	private $options = inject<IOptions>("options");

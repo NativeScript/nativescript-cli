@@ -25,8 +25,8 @@ import {
 } from "../contracts/key-shortcuts";
 import { Provider } from "../di/providers";
 import {
-	ArgumentSpec,
-	CommandArgumentValues,
+	ParamSpec,
+	CommandParamValues,
 	CommandContext,
 	CommandDefinition,
 	CommandFailOptions,
@@ -244,23 +244,21 @@ export function createCommandFromDefinition<
 			: errors.failWithHelp(message);
 	};
 
-	const argumentSpecs: ArgumentSpec<TSchema>[] = Array.isArray(
-		definition.arguments,
-	)
-		? definition.arguments
+	const paramSpecs: ParamSpec<TSchema>[] = Array.isArray(definition.params)
+		? definition.params
 		: null;
-	const acceptsArguments = definition.arguments === "any";
+	const acceptsAnyParams = definition.params === "any";
 
 	// Strictly positional: spec[i] owns args[i], and a trailing variadic spec
 	// takes everything from its own position on.
-	const mapArguments = (args: string[]): CommandArgumentValues => {
-		const values: CommandArgumentValues = {};
-		if (!argumentSpecs) {
+	const mapParams = (args: string[]): CommandParamValues => {
+		const values: CommandParamValues = {};
+		if (!paramSpecs) {
 			return values;
 		}
 
-		for (let index = 0; index < argumentSpecs.length; index++) {
-			const spec = argumentSpecs[index];
+		for (let index = 0; index < paramSpecs.length; index++) {
+			const spec = paramSpecs[index];
 			if (spec.variadic) {
 				values[spec.name] = args.slice(index);
 			} else if (index < args.length) {
@@ -282,7 +280,7 @@ export function createCommandFromDefinition<
 
 		return {
 			args,
-			params: mapArguments(args),
+			params: mapParams(args),
 			options,
 			// The invocation's child injector provides this very object under
 			// COMMAND_CONTEXT, so it can only be created - and assigned here -
@@ -292,23 +290,47 @@ export function createCommandFromDefinition<
 		};
 	};
 
-	const missingArgumentMessage = (spec: ArgumentSpec<TSchema>): string =>
+	const missingArgumentMessage = (spec: ParamSpec<TSchema>): string =>
 		spec.errorMessage || `Missing required argument '${spec.name}'.`;
 
-	const enforceArguments = async (
+	const requiredOptionNames = Object.keys(schema).filter(
+		(optionName) => schema[optionName].required === true,
+	);
+	const toDashedName = (optionName: string): string =>
+		optionName.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+
+	// Runs after the params policy, so a missing parameter is reported ahead
+	// of a missing flag, and before canExecute, which may rely on the value.
+	const enforceRequiredOptions = (context: CommandContext<TSchema>): void => {
+		const missing = requiredOptionNames.filter(
+			(optionName) => (<any>context.options)[optionName] === undefined,
+		);
+		if (missing.length) {
+			fail(
+				missing
+					.map(
+						(optionName) =>
+							`The option '--${toDashedName(optionName)}' is required.`,
+					)
+					.join(EOL),
+			);
+		}
+	};
+
+	const enforceParams = async (
 		context: CommandContext<TSchema>,
 	): Promise<void> => {
 		const args = context.args;
 
-		if (!argumentSpecs) {
-			if (!acceptsArguments && args.length) {
+		if (!paramSpecs) {
+			if (!acceptsAnyParams && args.length) {
 				fail("This command doesn't accept parameters.");
 			}
 
 			return;
 		}
 
-		const missing = argumentSpecs.filter(
+		const missing = paramSpecs.filter(
 			(spec, index) => spec.required && index >= args.length,
 		);
 		if (missing.length) {
@@ -323,18 +345,17 @@ export function createCommandFromDefinition<
 		}
 
 		const variadic =
-			argumentSpecs.length > 0 &&
-			argumentSpecs[argumentSpecs.length - 1].variadic;
-		if (!variadic && args.length > argumentSpecs.length) {
+			paramSpecs.length > 0 && paramSpecs[paramSpecs.length - 1].variadic;
+		if (!variadic && args.length > paramSpecs.length) {
 			fail(
-				argumentSpecs.length === 0
+				paramSpecs.length === 0
 					? "This command doesn't accept parameters."
-					: `This command accepts at most ${argumentSpecs.length} parameter(s), but ${args.length} were provided.`,
+					: `This command accepts at most ${paramSpecs.length} parameter(s), but ${args.length} were provided.`,
 			);
 		}
 
-		for (let index = 0; index < argumentSpecs.length; index++) {
-			const spec = argumentSpecs[index];
+		for (let index = 0; index < paramSpecs.length; index++) {
+			const spec = paramSpecs[index];
 			if (!spec.validate) {
 				continue;
 			}
@@ -537,7 +558,8 @@ export function createCommandFromDefinition<
 			const context = invocation.context;
 			const setupResult = await invocation.setup;
 
-			await enforceArguments(context);
+			await enforceParams(context);
+			enforceRequiredOptions(context);
 
 			const refine = definition.canExecute;
 			if (!refine) {

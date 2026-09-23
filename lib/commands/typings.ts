@@ -27,7 +27,7 @@ export class TypingsCommand extends Command({
 	options: typingsCommandOptions,
 	// Only the first argument is read; the rest are gradle targets this command
 	// takes off the raw argv, so the policy must not reject them.
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 }) {
 	private $childProcess = inject<IChildProcess>("childProcess");

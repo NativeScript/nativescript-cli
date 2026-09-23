@@ -25,7 +25,7 @@ export class BuildPluginCommand extends Command({
 	description:
 		"Builds the Android parts of a NativeScript plugin into an `.aar`.",
 	options: buildPluginCommandOptions,
-	arguments: "any",
+	params: "any",
 }) {
 	private $androidPluginBuildService = inject<IAndroidPluginBuildService>(
 		"androidPluginBuildService",

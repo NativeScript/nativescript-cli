@@ -20,7 +20,7 @@ export class AddPlatformCommand extends Command({
 	description:
 		"Configures the current project to target the selected platform.",
 	options: addPlatformCommandOptions,
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 }) {
 	private $platformCommandHelper = inject<IPlatformCommandHelper>(

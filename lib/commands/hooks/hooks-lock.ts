@@ -67,7 +67,7 @@ export const hooksLockCommandDefinition = defineCommand({
 	name: "hooks|lock",
 	description:
 		"Records a hash of every plugin hook in the project's lock file.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
@@ -92,7 +92,7 @@ export const hooksVerifyCommandDefinition = defineCommand({
 	name: "hooks|verify",
 	description:
 		"Checks every plugin hook against the hashes in the project's lock file.",
-	arguments: "any",
+	params: "any",
 	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");

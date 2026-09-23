@@ -4,7 +4,7 @@ import {
 } from "../constants";
 import {
 	canExecuteCommandBase,
-	platformArgument,
+	platformParam,
 	platformSigningOptions,
 	provideProject,
 } from "./command-base";
@@ -37,7 +37,7 @@ export const deployCommandDefinition = defineCommand({
 	name: "deploy",
 	description: "Builds and deploys the project to a connected device.",
 	options: deployCommandOptions,
-	arguments: [platformArgument],
+	params: [platformParam],
 	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $migrateController = inject<IMigrateController>("migrateController");
