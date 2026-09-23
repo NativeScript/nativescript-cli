@@ -33,16 +33,6 @@ interface ICommandsService {
 		commandArguments?: string[],
 		options?: import("../contracts/commands-service").CommandDispatchOptions,
 	): Promise<boolean>;
-	/** @deprecated Use `runCommand`. */
-	executeCommandInProcess(
-		commandName: string,
-		commandArguments?: string[],
-	): Promise<void>;
-	/** @deprecated Use `canExecuteCommand`. */
-	canExecuteCommandInProcess(
-		commandName: string,
-		commandArguments?: string[],
-	): Promise<boolean>;
 }
 
 /**

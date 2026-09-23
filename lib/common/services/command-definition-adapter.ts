@@ -6,6 +6,7 @@ import { Injector } from "../di/injector";
 import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { ICommand } from "../definitions/commands";
 import { COMMAND_CONTEXT } from "../contracts/command-context";
+import { IOptions } from "../../declarations";
 import {
 	COMMAND_PRECONDITIONS,
 	CommandPrecondition,
@@ -39,16 +40,8 @@ import {
 	RegisterableCommand,
 	defineCommand,
 	toCommandDefinition,
+	isPlainObject,
 } from "../define-command";
-
-function isPlainObject(value: unknown): boolean {
-	if (value === null || typeof value !== "object") {
-		return false;
-	}
-
-	const prototype = Object.getPrototypeOf(value);
-	return prototype === Object.prototype || prototype === null;
-}
 
 const OPTION_TYPES: IDictionary<OptionType> = {
 	boolean: OptionType.Boolean,
@@ -121,7 +114,7 @@ const warnOnCliOptionCollisions = (
 	targetInjector: Injector,
 	definition: CommandDefinition<any, any, any>,
 	schema: CommandOptionsSchema,
-	optionsService: any,
+	optionsService: IOptions | undefined,
 ): void => {
 	const cliOptions = optionsService && optionsService.options;
 	if (!cliOptions) {
@@ -217,7 +210,7 @@ export function createCommandFromDefinition<
 
 	// Only a definition that declares options may depend on the options service
 	// being registered - a bare command must work without one.
-	const optionsService: any = optionNames.length
+	const optionsService: IOptions | undefined = optionNames.length
 		? targetInjector.get("options")
 		: null;
 
@@ -284,7 +277,7 @@ export function createCommandFromDefinition<
 	const buildContext = (args: string[]): CommandContext<TSchema> => {
 		const options: any = {};
 		for (const optionName of optionNames) {
-			options[optionName] = optionsService[optionName];
+			options[optionName] = (<any>optionsService)[optionName];
 		}
 
 		return {

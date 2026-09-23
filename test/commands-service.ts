@@ -191,14 +191,14 @@ describe("commands-service", () => {
 		});
 	});
 
-	describe("executeCommandInProcess", () => {
+	describe("runCommand", () => {
 		it("primes the command's declared options before it runs", async () => {
 			const { injector, record } = createDispatchInjector(null);
 			const command = definedCommand(record, { allowUnknownOptions: true });
 			injector.resolveCommand = () => command;
 			const service = injector.resolve(CommandsService);
 
-			await service.executeCommandInProcess("open|ios");
+			await service.runCommand("open|ios");
 
 			assert.deepEqual(record.primedWith, [
 				{ dashedOptions: command.dashedOptions, allowUnknown: true },
@@ -212,7 +212,7 @@ describe("commands-service", () => {
 			injector.resolveCommand = () => definedCommand(record);
 			const service = injector.resolve(CommandsService);
 
-			await service.executeCommandInProcess("open|ios");
+			await service.runCommand("open|ios");
 
 			assert.deepEqual(options.options, { watch: cliOption });
 			assert.strictEqual(options.argv, initialArgv);
@@ -229,7 +229,7 @@ describe("commands-service", () => {
 				});
 			const service = injector.resolve(CommandsService);
 
-			await assert.isRejected(service.executeCommandInProcess("open|ios"));
+			await assert.isRejected(service.runCommand("open|ios"));
 
 			assert.deepEqual(options.options, { watch: cliOption });
 			assert.strictEqual(options.argv, initialArgv);
@@ -244,7 +244,7 @@ describe("commands-service", () => {
 			const service = injector.resolve(CommandsService);
 
 			await assert.isRejected(
-				service.executeCommandInProcess("open|ios"),
+				service.runCommand("open|ios"),
 				"Command 'open|ios' cannot be executed.",
 			);
 
@@ -258,7 +258,7 @@ describe("commands-service", () => {
 			const service = injector.resolve(CommandsService);
 
 			await assert.isRejected(
-				service.executeCommandInProcess("open|ios", ["extra"]),
+				service.runCommand("open|ios", ["extra"]),
 				"This command doesn't accept parameters.",
 			);
 
@@ -275,7 +275,7 @@ describe("commands-service", () => {
 				});
 			const service = injector.resolve(CommandsService);
 
-			await service.executeCommandInProcess("install", ["lodash"]);
+			await service.runCommand("install", ["lodash"]);
 
 			assert.deepEqual(record.executed, [["lodash"]]);
 			assert.deepEqual(record.postCommandActions, [["lodash"]]);
@@ -294,7 +294,7 @@ describe("commands-service", () => {
 
 			let raised: Error = null;
 			try {
-				await service.executeCommandInProcess("open|ios");
+				await service.runCommand("open|ios");
 			} catch (err) {
 				raised = err;
 			}
@@ -309,7 +309,7 @@ describe("commands-service", () => {
 			const service = injector.resolve(CommandsService);
 
 			await assert.isRejected(
-				service.executeCommandInProcess("nope"),
+				service.runCommand("nope"),
 				"Unknown command 'nope'.",
 			);
 
@@ -322,8 +322,8 @@ describe("commands-service", () => {
 			injector.resolveCommand = () => definedCommand(record);
 			const service = injector.resolve(CommandsService);
 
-			await service.executeCommandInProcess("open|ios");
-			await service.executeCommandInProcess("open|ios");
+			await service.runCommand("open|ios");
+			await service.runCommand("open|ios");
 
 			assert.deepEqual(record.executed, [[], []]);
 			assert.equal(record.primedWith.length, 2);
@@ -334,7 +334,7 @@ describe("commands-service", () => {
 			injector.resolveCommand = () => definedCommand(record);
 			const service = injector.resolve(CommandsService);
 
-			await service.executeCommandInProcess("open|ios");
+			await service.runCommand("open|ios");
 
 			assert.deepEqual(record.hooks, [
 				"before:open-ios",

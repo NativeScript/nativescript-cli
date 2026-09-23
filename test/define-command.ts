@@ -691,9 +691,7 @@ describe("defineCommand", () => {
 
 			const commandsService: ICommandsService =
 				testInjector.resolve("commandsService");
-			await commandsService.executeCommandInProcess(
-				"dctest-shortcuts-in-process",
-			);
+			await commandsService.runCommand("dctest-shortcuts-in-process");
 
 			assert.isTrue(ran);
 			assert.deepEqual(keyShortcutService.attached, []);

@@ -453,22 +453,6 @@ export class CommandsService
 		return helpers.stringReplaceAll(name, "|", " ");
 	}
 
-	/** @deprecated Use {@link runCommand}. */
-	public executeCommandInProcess(
-		commandName: string,
-		commandArguments: string[] = [],
-	): Promise<void> {
-		return this.runCommand(commandName, commandArguments);
-	}
-
-	/** @deprecated Use {@link canExecuteCommand}. */
-	public canExecuteCommandInProcess(
-		commandName: string,
-		commandArguments: string[] = [],
-	): Promise<boolean> {
-		return this.canExecuteCommand(commandName, commandArguments);
-	}
-
 	/**
 	 * A name is looked up in the registry; a definition or class is run as the
 	 * caller holds it, registered or not, so what runs is what was referenced.
@@ -561,10 +545,6 @@ export class CommandsService
 	 * done. An in-process dispatch has to put the parser back where it found it.
 	 */
 	private primeOptions(command: ICommand): () => void {
-		if (command.isHierarchicalCommand) {
-			return () => undefined;
-		}
-
 		const declaredOptions = { ...this.$options.options };
 		const parsedArgv = this.$options.argv;
 

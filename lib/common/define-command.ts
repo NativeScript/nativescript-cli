@@ -303,8 +303,14 @@ const invalid = (definition: any, problem: string): never => {
 	);
 };
 
-const isPlainObject = (value: any): boolean =>
-	!!value && typeof value === "object" && !Array.isArray(value);
+export function isPlainObject(value: unknown): boolean {
+	if (value === null || typeof value !== "object") {
+		return false;
+	}
+
+	const prototype = Object.getPrototypeOf(value);
+	return prototype === Object.prototype || prototype === null;
+}
 
 const validateName = (definition: any): void => {
 	const name = definition.name;
@@ -809,9 +815,7 @@ const buildClassDefinition = (ctor: any): DefinedCommand<any, any, any> => {
  * was read from. The cache entry is an own property so a class extending
  * another command class never serves its parent's definition.
  */
-export function classCommandDefinition(
-	ctor: any,
-): DefinedCommand<any, any, any> {
+function classCommandDefinition(ctor: any): DefinedCommand<any, any, any> {
 	if (!isCommandClass(ctor)) {
 		throw new Error(
 			`${describeDefinition(ctor)} is not a command class: it did not come ` +
