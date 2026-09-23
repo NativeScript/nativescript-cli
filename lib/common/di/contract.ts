@@ -7,6 +7,9 @@
  */
 export const CONTRACT_NAME = Symbol.for("nativescript:di:contractName");
 
+/** Same `Symbol.for` reasoning as CONTRACT_NAME. */
+export const PROVIDED_IN = Symbol.for("nativescript:di:providedIn");
+
 export interface IContractOptions {
 	/**
 	 * Canonical token name, without the `$` prefix. Must be an explicit string
@@ -14,6 +17,38 @@ export interface IContractOptions {
 	 * minification.
 	 */
 	name: string;
+	/**
+	 * The scope every implementation of the contract lives in, unless the
+	 * implementation or its provider says otherwise. See `ProviderScope`.
+	 */
+	providedIn?: string;
+}
+
+/**
+ * Marks a class with the scope its instances live in — `"invocation"` for a
+ * service that reads the invocation's option groups or context. Read when the
+ * class is registered, by class or by name.
+ */
+export function ProvidedIn(scope: string): (target: Function) => void {
+	return (target: Function): void => {
+		Object.defineProperty(target, PROVIDED_IN, {
+			value: scope,
+			writable: false,
+			enumerable: false,
+			configurable: false,
+		});
+	};
+}
+
+/** Own-property read, as for the contract name. */
+export function getProvidedIn(target: any): string | undefined {
+	if (
+		typeof target === "function" &&
+		Object.prototype.hasOwnProperty.call(target, PROVIDED_IN)
+	) {
+		return (<any>target)[PROVIDED_IN];
+	}
+	return undefined;
 }
 
 // Per module instance on purpose: a duplicated CLI copy in an extensions tree
@@ -52,7 +87,7 @@ export function mintTokenName(name: string, owner: object): void {
 export function Contract(
 	options: IContractOptions,
 ): (target: Function) => void {
-	const { name } = options;
+	const { name, providedIn } = options;
 	return (target: Function): void => {
 		mintTokenName(name, target);
 		Object.defineProperty(target, CONTRACT_NAME, {
@@ -61,6 +96,9 @@ export function Contract(
 			enumerable: false,
 			configurable: false,
 		});
+		if (providedIn !== undefined) {
+			ProvidedIn(providedIn)(target);
+		}
 	};
 }
 

@@ -11,23 +11,38 @@ import {
 import { OptionType } from "./common/enums";
 import { injector } from "./common/yok";
 import { APP_FOLDER_NAME } from "./constants";
+import { CliOptions } from "./common/contracts/cli-options";
+import { OptionContributions } from "./common/contracts/option-contributions";
+import {
+	compileOptionsSchema,
+	readOptionValues,
+} from "./common/define-command";
+import type { Injector } from "./common/di/injector";
 export class Options {
 	private static DASHED_OPTION_REGEX = /(.+?)([A-Z])(.*)/;
 	private static NONDASHED_OPTION_REGEX = /(.+?)[-]([a-zA-Z])(.*)/;
 
 	private optionsWhiteList = ["_", "$0"]; // yargs artifacts, not options
-	private globalOptions: IDictionary<IDashedOption> = {
-		log: { type: OptionType.String, hasSensitiveValue: false },
-		verbose: { type: OptionType.Boolean, hasSensitiveValue: false },
-		version: { type: OptionType.Boolean, alias: "v", hasSensitiveValue: false },
-		help: { type: OptionType.Boolean, alias: "h", hasSensitiveValue: false },
-		profileDir: { type: OptionType.String, hasSensitiveValue: true },
-		analyticsClient: { type: OptionType.String, hasSensitiveValue: false },
-		path: { type: OptionType.String, alias: "p", hasSensitiveValue: true },
-		config: { type: OptionType.String, alias: "c", hasSensitiveValue: true },
+
+	/**
+	 * The process-level table: CliOptions and every root group contributed so
+	 * far, so it is read again whenever the table is rebuilt.
+	 */
+	private get globalOptions(): IDictionary<IDashedOption> {
+		const contributions = this.$injector.get(OptionContributions, {
+			optional: true,
+		});
+		const table: IDictionary<IDashedOption> = {};
+		for (const group of [
+			CliOptions,
+			...(contributions ? contributions.forRoot() : []),
+		]) {
+			_.extend(table, compileOptionsSchema(group.schema));
+		}
 		// This will parse all non-hyphenated values as strings.
-		_: { type: OptionType.String, hasSensitiveValue: false },
-	};
+		table._ = { type: OptionType.String, hasSensitiveValue: false };
+		return table;
+	}
 
 	private initialArgv: yargs.Arguments;
 	public argv: yargs.Arguments;
@@ -36,8 +51,12 @@ export class Options {
 	public setupOptions(
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
 	): void {
-		if (commandSpecificDashedOptions) {
-			_.extend(this.options, commandSpecificDashedOptions);
+		const rootOptions = this.globalOptions;
+		const rootGrew = Object.keys(rootOptions).some(
+			(optionName) => !this.options[optionName],
+		);
+		if (commandSpecificDashedOptions || rootGrew) {
+			_.extend(this.options, rootOptions, commandSpecificDashedOptions || {});
 			this.setArgv();
 		}
 
@@ -69,6 +88,7 @@ export class Options {
 		private $errors: IErrors,
 		private $settingsService: ISettingsService,
 		private $logger: ILogger,
+		private $injector: Injector,
 	) {
 		this.options = _.extend({}, this.commonOptions, this.globalOptions);
 		this.setArgv();
@@ -542,3 +562,9 @@ export class Options {
 	}
 }
 injector.register("options", Options);
+// The startup parse, which no command changes, so one read serves the process.
+injector.register({
+	provide: CliOptions,
+	useFactory: () =>
+		readOptionValues(CliOptions.schema, injector.resolve("options")),
+});

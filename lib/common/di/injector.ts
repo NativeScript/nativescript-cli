@@ -1,5 +1,5 @@
 import { annotate } from "../helpers";
-import { getContractName } from "./contract";
+import { getContractName, getProvidedIn } from "./contract";
 import { resolveForwardRef } from "./forward-ref";
 import { runInInjectionContext } from "./inject";
 import { getInjectionTokenName } from "./injection-token";
@@ -48,6 +48,16 @@ interface IProviderRecord {
 	constructing: boolean;
 	/** One record per `multi` provider, in registration order. */
 	multiRecords?: IProviderRecord[];
+	/**
+	 * Instances live on the nearest injector of this scope in the resolving
+	 * chain, not on the record's owner; see `Injector.scoped`.
+	 */
+	providedIn?: string;
+}
+
+export interface CreateChildOptions {
+	/** The scope name `providedIn` providers match against. */
+	scope?: string;
 }
 
 // Shared across the whole injector tree so cycle reports show the full path
@@ -57,10 +67,13 @@ const resolutionStack: string[] = [];
 export class Injector {
 	private providers = new Map<TokenKey, IProviderRecord>();
 	private instantiationOrder: any[] = [];
+	/** Instances of `providedIn` records that this injector is the scope of. */
+	private scopedInstances = new Map<IProviderRecord, any>();
 
 	constructor(
 		providers: Provider[] = [],
 		private parent?: Injector,
+		private readonly scope?: string,
 	) {
 		this.register({ provide: <any>Injector, useValue: this });
 		this.register(providers);
@@ -100,7 +113,78 @@ export class Injector {
 			}
 			throw new Error("unable to resolve " + displayNameOf(token));
 		}
+		if (this.isScoped(found.record)) {
+			return this.scoped(found.record);
+		}
 		return found.owner.instantiate(found.record);
+	}
+
+	/**
+	 * A deferred registration only declares its scope once its loader has run,
+	 * so the loader runs before the scope is read: an instance built at the
+	 * owner because the marker was not visible yet would outlive its scope.
+	 */
+	private isScoped(record: IProviderRecord): boolean {
+		if (record.pendingLoader) {
+			const loader = record.pendingLoader;
+			loader();
+			record.pendingLoader = undefined;
+		}
+		return !!record.providedIn;
+	}
+
+	/**
+	 * A `providedIn` record resolves at the nearest injector of its scope above
+	 * the one the lookup started from, which caches the instance and is the
+	 * injector its dependencies resolve against. No such injector in the chain
+	 * is an error rather than a fallback: a root singleton holding a per-scope
+	 * instance would be the leak the scope exists to prevent.
+	 */
+	private scoped(record: IProviderRecord): any {
+		const host = this.nearestScope(record.providedIn);
+		if (!host) {
+			throw new Error(
+				`${record.displayName} is provided in the '${record.providedIn}' scope; it cannot be resolved from outside one`,
+			);
+		}
+		if (host.scopedInstances.has(record)) {
+			return host.scopedInstances.get(record);
+		}
+		if (record.kind === undefined) {
+			throw new Error("no resolver registered for " + record.displayName);
+		}
+		if (record.kind === "value") {
+			return record.instances[0];
+		}
+		if (record.constructing) {
+			const cyclePath = resolutionStack.concat(record.displayName).join(" -> ");
+			throw new Error(
+				`Cyclic dependency detected on dependency '${record.displayName}'. Resolution path: ${cyclePath}`,
+			);
+		}
+		record.constructing = true;
+		resolutionStack.push(record.displayName);
+		let instance: any;
+		try {
+			instance = host.construct(record);
+		} finally {
+			resolutionStack.pop();
+			record.constructing = false;
+		}
+		host.scopedInstances.set(record, instance);
+		host.instantiationOrder.push(instance);
+		return instance;
+	}
+
+	private nearestScope(scope: string): Injector | undefined {
+		let injector: Injector | undefined = this;
+		while (injector) {
+			if (injector.scope === scope || (scope === "root" && !injector.parent)) {
+				return injector;
+			}
+			injector = injector.parent;
+		}
+		return undefined;
 	}
 
 	/**
@@ -119,11 +203,17 @@ export class Injector {
 		if (!found) {
 			throw new Error("unable to resolve " + displayNameOf(token));
 		}
+		if (this.isScoped(found.record)) {
+			return this.scoped(found.record);
+		}
 		return found.owner.instantiate(found.record, ctorArguments);
 	}
 
-	public createChild(providers: Provider[] = []): Injector {
-		return new Injector(providers, this);
+	public createChild(
+		providers: Provider[] = [],
+		options: CreateChildOptions = {},
+	): Injector {
+		return new Injector(providers, this, options.scope);
 	}
 
 	/**
@@ -167,6 +257,11 @@ export class Injector {
 						`${record.displayName} is registered as a single provider; it cannot also take multi providers`,
 					);
 				}
+				if (scopeOf(provider)) {
+					throw new Error(
+						`${record.displayName}: a multi provider cannot be scoped with providedIn; scope the token's consumers instead`,
+					);
+				}
 				const entry: IProviderRecord = {
 					displayName: record.displayName,
 					shared: true,
@@ -183,6 +278,9 @@ export class Injector {
 					);
 				}
 				this.applyProvider(record, provider);
+				if (!("useLazyRequire" in provider)) {
+					record.providedIn = scopeOf(provider);
+				}
 			}
 			for (const key of keys) {
 				this.providers.set(key, record);
@@ -449,6 +547,18 @@ export class Injector {
 
 function normalizeName(name: string): string {
 	return name[0] === "$" ? name.slice(1) : name;
+}
+
+/** The provider's own field, else the implementation's marker, else the token's. */
+function scopeOf(provider: ObjectProvider): string | undefined {
+	if ("useLazyRequire" in provider) {
+		return undefined;
+	}
+	return (
+		provider.providedIn ||
+		getProvidedIn((<any>provider).useClass || (<any>provider).useLegacyClass) ||
+		getProvidedIn(provider.provide)
+	);
 }
 
 /** The name a non-string token aliases in the legacy registry, if it has one. */

@@ -7,10 +7,12 @@ import { INodePackageManager } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
 import {
 	Command,
+	CommandOptionsInput,
 	CommandOptionsSchema,
 	booleanOption,
 	stringOption,
 } from "../common/define-command";
+import { CliOptions } from "../common/contracts/cli-options";
 import { inject } from "../common/di";
 import {
 	IDictionary,
@@ -26,13 +28,15 @@ const karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
 	mocha: ["chai"],
 };
 
-const testInitCommandOptions = {
-	framework: stringOption(),
-	disableNpmInstall: booleanOption(),
-	frameworkPath: stringOption(),
-	ignoreScripts: booleanOption(),
-	path: stringOption(),
-} satisfies CommandOptionsSchema;
+const testInitCommandOptions = [
+	CliOptions,
+	{
+		framework: stringOption(),
+		disableNpmInstall: booleanOption(),
+		frameworkPath: stringOption(),
+		ignoreScripts: booleanOption(),
+	} satisfies CommandOptionsSchema,
+] satisfies CommandOptionsInput;
 
 export class TestInitCommand extends Command({
 	name: "test|init",

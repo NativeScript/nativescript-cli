@@ -7,6 +7,7 @@ import {
 	InjectionToken,
 	provide,
 	forwardRef,
+	ProvidedIn,
 } from "../lib/common/di";
 
 @Contract({ name: "diTestGreeter" })
@@ -726,6 +727,342 @@ describe("di: multi providers", () => {
 					{ provide: HOOKS, multi: true, useValue: "a" },
 				]),
 			/registered as a single provider/,
+		);
+	});
+});
+
+describe("di: providedIn scopes", () => {
+	const SCOPED_ARGS = new InjectionToken<{ args: string[] }>(
+		"diTestScopedArgs",
+	);
+
+	@Contract({ name: "diTestScopedMarkedContract", providedIn: "invocation" })
+	abstract class MarkedContract {
+		abstract id: number;
+	}
+
+	@Contract({ name: "diTestScopedPlainContract" })
+	abstract class PlainContract {
+		abstract id: number;
+	}
+
+	let seq = 0;
+
+	class Counter {
+		public id = ++seq;
+	}
+
+	@ProvidedIn("invocation")
+	class MarkedCounter {
+		public id = ++seq;
+	}
+
+	@ProvidedIn("root")
+	class RootMarkedCounter {
+		public id = ++seq;
+	}
+
+	const invocationOf = (root: Injector, providers: any[] = []): Injector =>
+		root.createChild(providers, { scope: "invocation" });
+
+	it("instantiates once per scoped injector, not on the record's owner", () => {
+		const root = new Injector([
+			{
+				provide: "diTestScopedCounter",
+				providedIn: "invocation",
+				useClass: Counter,
+			},
+		]);
+		const first = invocationOf(root);
+		const second = invocationOf(root);
+
+		const a = first.get<Counter>("diTestScopedCounter");
+		assert.strictEqual(first.get("diTestScopedCounter"), a);
+		assert.notStrictEqual(second.get("diTestScopedCounter"), a);
+		assert.strictEqual(first.createChild().get("diTestScopedCounter"), a);
+	});
+
+	it("resolves the instance's inject() dependencies against the scoped injector", () => {
+		class ReadsArgs {
+			public args = inject(SCOPED_ARGS);
+			public injector = inject(Injector);
+		}
+		const root = new Injector([
+			{
+				provide: "diTestScopedReader",
+				providedIn: "invocation",
+				useClass: ReadsArgs,
+			},
+		]);
+		const payload = { args: ["one"] };
+		const invocation = invocationOf(root, [
+			{ provide: SCOPED_ARGS, useValue: payload },
+		]);
+
+		const reader = invocation
+			.createChild()
+			.get<ReadsArgs>("diTestScopedReader");
+		assert.strictEqual(reader.args, payload);
+		assert.strictEqual(reader.injector, invocation);
+	});
+
+	it("resolves a legacy class's $-parameters against the scoped injector", () => {
+		class LegacyReader {
+			constructor(public $diTestScopedArgs: any) {}
+		}
+		const root = new Injector([
+			{
+				provide: "diTestScopedLegacy",
+				providedIn: "invocation",
+				useLegacyClass: LegacyReader,
+			},
+		]);
+		const payload = { args: ["legacy"] };
+		const invocation = invocationOf(root, [
+			{ provide: SCOPED_ARGS, useValue: payload },
+		]);
+
+		assert.strictEqual(
+			invocation.get<LegacyReader>("diTestScopedLegacy").$diTestScopedArgs,
+			payload,
+		);
+	});
+
+	it("reads @ProvidedIn from useClass, useLegacyClass and a bare class provider", () => {
+		const root = new Injector([
+			{ provide: "diTestScopedViaUseClass", useClass: MarkedCounter },
+			{ provide: "diTestScopedViaLegacy", useLegacyClass: MarkedCounter },
+			MarkedCounter,
+		]);
+		const invocation = invocationOf(root);
+
+		for (const token of <any[]>[
+			"diTestScopedViaUseClass",
+			"diTestScopedViaLegacy",
+			MarkedCounter,
+		]) {
+			assert.throws(
+				() => root.get(token),
+				/provided in the 'invocation' scope/,
+			);
+			const instance = invocation.get(token);
+			assert.instanceOf(instance, MarkedCounter);
+			assert.strictEqual(invocation.get(token), instance);
+		}
+	});
+
+	it("reads providedIn from the token's @Contract", () => {
+		class MarkedImpl extends MarkedContract {
+			public id = ++seq;
+		}
+		const root = new Injector([provide(MarkedContract, MarkedImpl)]);
+
+		assert.throws(
+			() => root.get(MarkedContract),
+			/diTestScopedMarkedContract is provided in the 'invocation' scope/,
+		);
+		const first = invocationOf(root).get(MarkedContract);
+		assert.instanceOf(first, MarkedImpl);
+		assert.notStrictEqual(invocationOf(root).get(MarkedContract), first);
+	});
+
+	it("prefers the provider field, then the class marker, then the token marker", () => {
+		class PlainImpl extends MarkedContract {
+			public id = ++seq;
+		}
+		@ProvidedIn("root")
+		class RootMarkedImpl extends MarkedContract {
+			public id = ++seq;
+		}
+		@ProvidedIn("invocation")
+		class InvocationMarkedImpl extends PlainContract {
+			public id = ++seq;
+		}
+
+		const fieldOverToken = new Injector([
+			{ provide: MarkedContract, providedIn: "root", useClass: PlainImpl },
+		]);
+		assert.strictEqual(
+			invocationOf(fieldOverToken).get(MarkedContract),
+			fieldOverToken.get(MarkedContract),
+		);
+
+		const fieldOverClass = new Injector([
+			{
+				provide: "diTestScopedFieldOverClass",
+				providedIn: "root",
+				useClass: MarkedCounter,
+			},
+		]);
+		assert.instanceOf(
+			fieldOverClass.get("diTestScopedFieldOverClass"),
+			MarkedCounter,
+		);
+
+		const classOverToken = new Injector([
+			provide(MarkedContract, RootMarkedImpl),
+		]);
+		assert.instanceOf(classOverToken.get(MarkedContract), RootMarkedImpl);
+
+		const classOverUnmarkedToken = new Injector([
+			provide(PlainContract, InvocationMarkedImpl),
+		]);
+		assert.throws(
+			() => classOverUnmarkedToken.get(PlainContract),
+			/provided in the 'invocation' scope/,
+		);
+	});
+
+	it("matches 'root' to the injector with no parent", () => {
+		const root = new Injector([RootMarkedCounter]);
+		const nested = invocationOf(root).createChild();
+
+		assert.strictEqual(
+			nested.get(RootMarkedCounter),
+			root.get(RootMarkedCounter),
+		);
+	});
+
+	it("matches any scope name given to createChild", () => {
+		const root = new Injector([
+			{
+				provide: "diTestScopedDevice",
+				providedIn: "device",
+				useClass: Counter,
+			},
+		]);
+		const deviceA = root.createChild([], { scope: "device" });
+		const deviceB = root.createChild([], { scope: "device" });
+
+		assert.throws(
+			() => invocationOf(root).get("diTestScopedDevice"),
+			/provided in the 'device' scope/,
+		);
+		assert.notStrictEqual(
+			deviceA.get("diTestScopedDevice"),
+			deviceB.get("diTestScopedDevice"),
+		);
+	});
+
+	it("throws outside the scope even for an optional lookup", () => {
+		const root = new Injector([
+			{
+				provide: "diTestScopedOutside",
+				providedIn: "invocation",
+				useClass: Counter,
+			},
+		]);
+		const expected =
+			/diTestScopedOutside is provided in the 'invocation' scope; it cannot be resolved from outside one/;
+
+		assert.throws(() => root.get("diTestScopedOutside"), expected);
+		assert.throws(
+			() => root.createChild().get("diTestScopedOutside"),
+			expected,
+		);
+		assert.throws(
+			() => root.get("diTestScopedOutside", { optional: true }),
+			expected,
+		);
+		runInInjectionContext(root, () => {
+			assert.throws(
+				() => inject("diTestScopedOutside", { optional: true }),
+				expected,
+			);
+		});
+	});
+
+	it("refuses a root singleton that injects an invocation-scoped service", () => {
+		class HoldsScoped {
+			public scoped = inject("diTestScopedHeld");
+		}
+		const root = new Injector([
+			{
+				provide: "diTestScopedHeld",
+				providedIn: "invocation",
+				useClass: Counter,
+			},
+			{ provide: "diTestScopedHolder", useClass: HoldsScoped },
+		]);
+
+		// The singleton is built by its owner, the root, even when the lookup
+		// starts inside an invocation.
+		assert.throws(
+			() => invocationOf(root).get("diTestScopedHolder"),
+			/diTestScopedHeld is provided in the 'invocation' scope/,
+		);
+	});
+
+	it("reports a cycle between scoped services", () => {
+		class ScopedA {
+			constructor(public $diTestScopedCycleB: any) {}
+		}
+		class ScopedB {
+			constructor(public $diTestScopedCycleA: any) {}
+		}
+		const root = new Injector([
+			{
+				provide: "diTestScopedCycleA",
+				providedIn: "invocation",
+				useLegacyClass: ScopedA,
+			},
+			{
+				provide: "diTestScopedCycleB",
+				providedIn: "invocation",
+				useLegacyClass: ScopedB,
+			},
+		]);
+
+		assert.throws(
+			() => invocationOf(root).get("diTestScopedCycleA"),
+			/Cyclic dependency detected on dependency 'diTestScopedCycleA'/,
+		);
+	});
+
+	it("leaves disposal of scoped instances to the scoped injector", () => {
+		const disposed: string[] = [];
+		const root = new Injector([
+			{
+				provide: "diTestScopedDisposable",
+				providedIn: "invocation",
+				useFactory: () => ({ dispose: () => disposed.push("scoped") }),
+			},
+		]);
+		const invocation = invocationOf(root);
+		invocation.get("diTestScopedDisposable");
+
+		root.dispose();
+		assert.deepEqual(disposed, []);
+
+		invocation.dispose();
+		assert.deepEqual(disposed, ["scoped"]);
+	});
+
+	it("rejects providedIn on a multi provider", () => {
+		const MULTI = new InjectionToken<number[]>("diTestScopedMulti");
+		const expected =
+			/InjectionToken\(diTestScopedMulti\): a multi provider cannot be scoped with providedIn; scope the token's consumers instead/;
+
+		assert.throws(
+			() =>
+				new Injector([
+					{
+						provide: MULTI,
+						multi: true,
+						providedIn: "invocation",
+						useValue: 1,
+					},
+				]),
+			expected,
+		);
+		assert.throws(
+			() =>
+				new Injector().register({
+					provide: MULTI,
+					multi: true,
+					useClass: MarkedCounter,
+				}),
+			expected,
 		);
 	});
 });

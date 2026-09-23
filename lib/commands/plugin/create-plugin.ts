@@ -4,9 +4,11 @@ import { INodePackageManager } from "../../declarations";
 import { IErrors, IFileSystem, IChildProcess } from "../../common/declarations";
 import {
 	Command,
+	CommandOptionsInput,
 	CommandOptionsSchema,
 	stringOption,
 } from "../../common/define-command";
+import { CliOptions } from "../../common/contracts/cli-options";
 import { inject } from "../../common/di";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 
@@ -21,14 +23,16 @@ export const INCLUDE_ANGULAR_DEMO_MESSAGE =
 export const PATH_ALREADY_EXISTS_MESSAGE_TEMPLATE =
 	"Path already exists and is not empty %s";
 
-const createPluginCommandOptions = {
-	path: stringOption(),
-	template: stringOption(),
-	username: stringOption(),
-	pluginName: stringOption(),
-	includeTypeScriptDemo: stringOption(),
-	includeAngularDemo: stringOption(),
-} satisfies CommandOptionsSchema;
+const createPluginCommandOptions = [
+	CliOptions,
+	{
+		template: stringOption(),
+		username: stringOption(),
+		pluginName: stringOption(),
+		includeTypeScriptDemo: stringOption(),
+		includeAngularDemo: stringOption(),
+	} satisfies CommandOptionsSchema,
+] satisfies CommandOptionsInput;
 
 export class CreatePluginCommand extends Command({
 	name: "plugin|create",

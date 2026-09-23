@@ -6,6 +6,7 @@ import { reportDeprecation } from "../deprecation";
 import { createHookInvocation, isHookDefinition } from "../define-hook";
 import type { HookMiddleware, HookDefinition } from "../define-hook";
 import { runInInjectionContext } from "../di/inject";
+import { currentInvocationInjector } from "../invocations";
 import { AnalyticsEventLabelDelimiter } from "../../constants";
 import { IOptions, IPerformanceService } from "../../declarations";
 import {
@@ -308,8 +309,13 @@ export class HooksService implements IHooksService {
 					});
 				}
 
-				const maybePromise = this.$injector.resolve(
+				// A hook fires inside a command, so its by-name dependencies come
+				// from that invocation when one is running: the invocation's own
+				// providers and scoped services, then the root as before.
+				const hookInjector = currentInvocationInjector() || this.$injector;
+				const maybePromise = hookInjector.createInstance(
 					hookEntryPoint,
+					[],
 					hookArguments,
 				);
 				if (maybePromise) {
@@ -395,8 +401,9 @@ export class HooksService implements IHooksService {
 		});
 
 		try {
-			const returnedValue = await runInInjectionContext(this.$injector, () =>
-				definition.run(context),
+			const returnedValue = await runInInjectionContext(
+				currentInvocationInjector() || this.$injector,
+				() => definition.run(context),
 			);
 
 			if (typeof returnedValue === "function") {
@@ -621,10 +628,13 @@ export class HooksService implements IHooksService {
 		// We need to annotate the hook in order to have the arguments of the constructor.
 		annotate(hookConstructor);
 
+		// Checked where the hook will resolve them: a dependency provided only by
+		// the running invocation is valid there and nowhere else.
+		const hookInjector = currentInvocationInjector() || this.$injector;
 		_.each(hookConstructor.$inject.args, (argument: string) => {
 			try {
 				if (argument !== this.hookArgsName) {
-					this.$injector.resolve(argument);
+					hookInjector.get(argument);
 				}
 			} catch (err) {
 				this.$logger.trace(

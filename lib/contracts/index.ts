@@ -21,6 +21,11 @@ export { forwardRef, resolveForwardRef } from "../common/di/forward-ref";
 export { Injector } from "../common/di/injector";
 export type { InjectOptions } from "../common/di/injector";
 export { provide, provideLazy } from "../common/di/providers";
+export type { ProviderScope } from "../common/di/providers";
+export { ProvidedIn } from "../common/di/contract";
+// The invocation running now, for code that resolves by name outside any
+// injection context.
+export { currentInvocationInjector } from "../common/invocations";
 export type {
 	Provider,
 	ProviderToken,
@@ -67,6 +72,10 @@ export {
 	numberOption,
 	arrayOption,
 	objectOption,
+	defineOptions,
+	OptionsGroup,
+	isOptionsGroup,
+	OPTIONS_GROUP_MARKER,
 } from "../common/define-command";
 export type {
 	ParamSpec,
@@ -89,11 +98,19 @@ export type {
 	CommandFailOptions,
 	CommandOptionSpec,
 	DefaultedCommandOptionSpec,
+	CommandOptionsInput,
 	CommandOptionsSchema,
 	CommandOptionSpecInit,
 	CommandOptionType,
 	CommandOptionValues,
+	OptionsSchemaOf,
+	OptionValuesOf,
+	ResolvedCommandOptions,
 } from "../common/define-command";
+// The process-level option group, and the seam a contribution to a command's
+// or the root's options goes through.
+export { CliOptions } from "../common/contracts/cli-options";
+export { OptionContributions } from "../common/contracts/option-contributions";
 // Promoted from the internal contracts index: the class form reads it in a
 // field initializer, and a per-command provider is written against it.
 export { COMMAND_CONTEXT } from "../common/contracts/command-context";

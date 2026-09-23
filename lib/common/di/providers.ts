@@ -6,10 +6,25 @@ export type AbstractType<T> = abstract new (...args: any[]) => T;
 export type ProviderToken<T = any> =
 	string | Type<T> | AbstractType<T> | InjectionToken<T>;
 
+/**
+ * Where an instance lives. `"root"` is the injector with no parent;
+ * `"invocation"` the injector a command invocation opens. Any other string
+ * names a scope an injector was created with.
+ */
+export type ProviderScope = "root" | "invocation" | (string & {});
+
 interface IBaseProvider<T> {
 	provide: ProviderToken<T>;
 	/** Defaults to true. `false` constructs a fresh instance per resolution. */
 	shared?: boolean;
+	/**
+	 * Instantiates and caches at the nearest injector of that scope in the
+	 * chain the resolution started from, as Angular's `providedIn` does; the
+	 * record itself may live at the root. Resolving from a chain with no such
+	 * scope is an error, `optional` or not. Defaults to the class's own
+	 * `@ProvidedIn` marker, else the token's, else the owning injector.
+	 */
+	providedIn?: ProviderScope;
 	/**
 	 * Contributes to an array under the token instead of replacing it: every
 	 * `multi` provider for one token is resolved, in registration order, and

@@ -1,7 +1,9 @@
 import { EOL } from "os";
-import { OptionType } from "../enums";
 import { getRootInjector } from "../yok";
+import { CliOptions } from "../contracts/cli-options";
+import { OptionContributions } from "../contracts/option-contributions";
 import { getCurrentInjector, runInInjectionContext } from "../di/inject";
+import { openInvocation, runInInvocation } from "../invocations";
 import { Injector } from "../di/injector";
 import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { ICommand } from "../definitions/commands";
@@ -34,22 +36,21 @@ import {
 	CommandName,
 	CommandNamesOf,
 	CommandOptionSpec,
-	CommandOptionType,
+	CommandOptionsInput,
 	CommandOptionsSchema,
+	compileOptionSpec,
 	DefinedCommand,
+	isOptionsGroup,
+	OptionsGroup,
+	optionSpellingsOf,
+	readOptionValues,
 	RegisterableCommand,
+	ResolvedCommandOptions,
+	resolveCommandOptions,
 	defineCommand,
 	toCommandDefinition,
 	isPlainObject,
 } from "../define-command";
-
-const OPTION_TYPES: IDictionary<OptionType> = {
-	boolean: OptionType.Boolean,
-	string: OptionType.String,
-	number: OptionType.Number,
-	array: OptionType.Array,
-	object: OptionType.Object,
-};
 
 const compileOptions = (
 	schema: CommandOptionsSchema,
@@ -59,34 +60,21 @@ const compileOptions = (
 
 	for (const optionName of Object.keys(schema)) {
 		const spec = schema[optionName];
+		const dashedOption = compileOptionSpec(spec);
 		// Declaring an option the CLI already defines replaces its entry
 		// wholesale (see setupOptions), so anything left unspecified here is
 		// carried over rather than silently dropped for this command.
 		const cliOption = cliOptions && cliOptions[optionName];
-		const dashedOption: IDashedOption = {
-			type: OPTION_TYPES[<CommandOptionType>spec.type],
-			hasSensitiveValue:
-				spec.hasSensitiveValue !== undefined
-					? spec.hasSensitiveValue === true
-					: cliOption
-						? cliOption.hasSensitiveValue === true
-						: false,
-		};
-
-		if (spec.default !== undefined) {
-			dashedOption.default = spec.default;
-		} else if (cliOption && cliOption.default !== undefined) {
-			dashedOption.default = cliOption.default;
-		}
-
-		if (spec.alias !== undefined) {
-			dashedOption.alias = spec.alias;
-		} else if (cliOption && cliOption.alias !== undefined) {
-			dashedOption.alias = cliOption.alias;
-		}
-
-		if (spec.description !== undefined) {
-			dashedOption.describe = spec.description;
+		if (cliOption) {
+			if (spec.hasSensitiveValue === undefined) {
+				dashedOption.hasSensitiveValue = cliOption.hasSensitiveValue === true;
+			}
+			if (spec.default === undefined && cliOption.default !== undefined) {
+				dashedOption.default = cliOption.default;
+			}
+			if (spec.alias === undefined && cliOption.alias !== undefined) {
+				dashedOption.alias = cliOption.alias;
+			}
 		}
 
 		dashedOptions[optionName] = dashedOption;
@@ -108,7 +96,7 @@ const aliasList = (alias: string | string[]): string[] =>
 const isRedeclarationOf = (
 	spec: CommandOptionSpec,
 	cliOption: IDashedOption,
-): boolean => OPTION_TYPES[<CommandOptionType>spec.type] === cliOption.type;
+): boolean => compileOptionSpec(spec).type === cliOption.type;
 
 const warnOnCliOptionCollisions = (
 	targetInjector: Injector,
@@ -197,33 +185,112 @@ const warnOnCliOptionCollisions = (
  * lifetime, so that record is replaced per invocation.
  */
 export function createCommandFromDefinition<
-	TSchema extends CommandOptionsSchema,
+	TSchema extends CommandOptionsInput,
 	TResult = any,
 	TSetup = any,
 >(
 	definition: CommandDefinition<TSchema, TResult, TSetup>,
 	targetInjector: Injector = <Injector>(<any>getRootInjector()),
 	providers: Provider[] = [],
+	registeredNames: readonly string[] = [],
 ): ICommand {
-	const schema = definition.options || <TSchema>{};
+	// Its own names first, then the names it was registered under, so a
+	// contribution made under a manifest key reaches it too.
+	const commandNames: readonly string[] = (
+		Array.isArray(definition.name) ? definition.name : [definition.name]
+	).concat(registeredNames.filter((name) => name));
+	const commandName = commandNames[0];
+	const compileError = (problem: string): never => {
+		throw new Error(`Command '${commandName}': ${problem}`);
+	};
+
+	const ownParts: ReadonlyArray<OptionsGroup<any> | CommandOptionsSchema> =
+		definition.options === undefined
+			? []
+			: Array.isArray(definition.options)
+				? definition.options
+				: [<CommandOptionsSchema>definition.options];
+	const own = resolveCommandOptions(ownParts, compileError);
+	const schema = own.schema;
 	const optionNames = Object.keys(schema);
 
 	// Only a definition that declares options may depend on the options service
 	// being registered - a bare command must work without one.
-	const optionsService: IOptions | undefined = optionNames.length
+	let optionsService: IOptions | undefined = optionNames.length
 		? targetInjector.get("options")
 		: null;
+	const optionsServiceFor = (resolved: ResolvedCommandOptions): any => {
+		if (!optionsService && Object.keys(resolved.schema).length) {
+			optionsService = targetInjector.get("options");
+		}
+		return optionsService;
+	};
+	// The CLI-wide table as it stands when the command is compiled: what a
+	// redeclaration carries over from.
+	const cliOptions: IDictionary<IDashedOption> | undefined =
+		optionsService && optionsService.options
+			? { ...optionsService.options }
+			: undefined;
 
-	const dashedOptions = compileOptions(
-		schema,
-		optionsService && optionsService.options,
-	);
+	const contributions = targetInjector.get(OptionContributions, {
+		optional: true,
+	});
 
+	const rootGroups = (): OptionsGroup<any>[] => [
+		CliOptions,
+		...(contributions ? contributions.forRoot() : []),
+	];
+
+	// A process-level spelling is parsed at startup for every command and
+	// provided at the root; a command redeclaring one would give it a second
+	// meaning for the length of its run. Listing the root group itself is not a
+	// redeclaration: that reads the same declaration onto ctx.options.
+	const guardRootSpellings = (resolved: ResolvedCommandOptions): void => {
+		const roots = rootGroups();
+		const rootSpellings = new Set<string>();
+		for (const group of roots) {
+			for (const spelling of optionSpellingsOf(group.schema)) {
+				rootSpellings.add(spelling);
+			}
+		}
+		const declaredHere: CommandOptionsSchema = {};
+		for (const part of ownParts) {
+			if (!isOptionsGroup(part)) {
+				Object.assign(declaredHere, part);
+			}
+		}
+		for (const group of resolved.groups) {
+			if (roots.indexOf(group) === -1) {
+				Object.assign(declaredHere, group.schema);
+			}
+		}
+		for (const spelling of optionSpellingsOf(declaredHere)) {
+			if (rootSpellings.has(spelling)) {
+				compileError(
+					`'${spelling.length === 1 ? "-" : "--"}${spelling}' is a process-level option; list CliOptions under 'options', or inject it, instead of redeclaring it`,
+				);
+			}
+		}
+	};
+
+	// Composed at every read, because a contribution may be registered after
+	// the command was compiled and before it runs.
+	const resolveAllOptions = (): ResolvedCommandOptions => {
+		const contributed = contributions
+			? commandNames.reduce<OptionsGroup<any>[]>(
+					(groups, name) => groups.concat(contributions.forCommand(name)),
+					[],
+				)
+			: [];
+		const all = contributed.length
+			? resolveCommandOptions([...ownParts, ...contributed], compileError)
+			: own;
+		guardRootSpellings(all);
+		return all;
+	};
+
+	guardRootSpellings(own);
 	warnOnCliOptionCollisions(targetInjector, definition, schema, optionsService);
-
-	const commandName = Array.isArray(definition.name)
-		? definition.name[0]
-		: definition.name;
 
 	const fail = (message: string, options?: CommandFailOptions): never => {
 		if (typeof message !== "string" || !message.trim()) {
@@ -273,15 +340,12 @@ export function createCommandFromDefinition<
 	// service only holds this command's parsed values once validateOptions has
 	// run for it.
 	const buildContext = (args: string[]): CommandContext<TSchema> => {
-		const options: any = {};
-		for (const optionName of optionNames) {
-			options[optionName] = (<any>optionsService)[optionName];
-		}
-
 		return {
 			args,
 			params: mapParams(args),
-			options,
+			options: <any>(
+				(optionNames.length ? readOptionValues(schema, optionsService) : {})
+			),
 			// The invocation's child injector provides this very object under
 			// COMMAND_CONTEXT, so it can only be created - and assigned here -
 			// once the context exists.
@@ -389,6 +453,12 @@ export function createCommandFromDefinition<
 		setup: Promise<Awaited<TSetup>>;
 		hasRun: boolean;
 		runResult?: Awaited<TResult>;
+		/**
+		 * Takes the invocation off the process's record of open ones and disposes
+		 * its injector. Runs after the last stage - `postRun` when there is one,
+		 * else `run` - or when `canExecute` ends the invocation early.
+		 */
+		end: () => void;
 	}
 
 	// An entry may be one precondition or a list of them: a factory that
@@ -449,20 +519,49 @@ export function createCommandFromDefinition<
 
 	const beginInvocation = (args: string[]): Invocation => {
 		const context = buildContext(args);
+		// Every group the invocation parsed - the command's own and the
+		// contributed ones - is provided here with its slice of the values, so
+		// a service in reach of this injector injects the group, never the
+		// options service.
+		const all = resolveAllOptions();
+		const source = optionsServiceFor(all);
+		const roots = rootGroups();
+		const groupProviders: Provider[] = all.groups
+			.filter((group) => roots.indexOf(group) === -1)
+			.map((group) => ({
+				provide: group,
+				useValue: readOptionValues(group.schema, source),
+			}));
 		// Per-command providers live here rather than in a registration-time
 		// scope so that a factory or class among them can inject the
 		// invocation; the price is one instance per invocation.
-		const injector = targetInjector.createChild([
-			{ provide: COMMAND_CONTEXT, useValue: context },
-			...(definition.providers || []),
-			...providers,
-		]);
+		const injector = targetInjector.createChild(
+			[
+				{ provide: COMMAND_CONTEXT, useValue: context },
+				...groupProviders,
+				...(definition.providers || []),
+				...providers,
+			],
+			{ scope: "invocation" },
+		);
 		context.injector = injector;
+		const close = openInvocation(injector);
+		let ended = false;
 		const invocation: Invocation = {
 			context,
 			injector,
 			setup: undefined,
 			hasRun: false,
+			end: (): void => {
+				if (ended) {
+					return;
+				}
+				ended = true;
+				close();
+				// What the invocation built for itself - scoped services above
+				// all - goes with it; root singletons it reached are the root's.
+				injector.dispose();
+			},
 		};
 		// Preconditions judge the environment and run ahead of setup and of the
 		// arguments policy, so being outside a project is what a bad invocation
@@ -521,7 +620,9 @@ export function createCommandFromDefinition<
 
 	return {
 		allowedParameters: [],
-		dashedOptions,
+		get dashedOptions(): IDictionary<IDashedOption> {
+			return compileOptions(resolveAllOptions().schema, cliOptions);
+		},
 		...(definition.disableAnalytics === undefined
 			? {}
 			: { disableAnalytics: definition.disableAnalytics }),
@@ -537,15 +638,21 @@ export function createCommandFromDefinition<
 					postCommandAction: async (args: string[]): Promise<void> => {
 						const invocation = currentInvocation || beginInvocation(args);
 						const context = invocation.context;
-						const setupResult = await invocation.setup;
-						await runInInjectionContext(invocation.injector, () =>
-							definition.postRun.call(
-								definition,
-								context,
-								invocation.runResult,
-								setupResult,
-							),
-						);
+						try {
+							await runInInvocation(invocation.injector, async () => {
+								const setupResult = await invocation.setup;
+								await runInInjectionContext(invocation.injector, () =>
+									definition.postRun.call(
+										definition,
+										context,
+										invocation.runResult,
+										setupResult,
+									),
+								);
+							});
+						} finally {
+							invocation.end();
+						}
 					},
 				}),
 		canExecute: async (args: string[]): Promise<boolean> => {
@@ -556,21 +663,33 @@ export function createCommandFromDefinition<
 			// reports that before an arity complaint.
 			const invocation = beginInvocation(args);
 			const context = invocation.context;
-			const setupResult = await invocation.setup;
+			// A verdict of false, or a throw, is the end of this invocation:
+			// execute never follows it.
+			let verdict = false;
+			try {
+				verdict = await runInInvocation(invocation.injector, async () => {
+					const setupResult = await invocation.setup;
 
-			await enforceParams(context);
-			enforceRequiredOptions(context);
+					await enforceParams(context);
+					enforceRequiredOptions(context);
 
-			const refine = definition.canExecute;
-			if (!refine) {
-				return true;
+					const refine = definition.canExecute;
+					if (!refine) {
+						return true;
+					}
+
+					// Same first-await rule as execute: runInInjectionContext is
+					// synchronous, so inject() is available up to the first await.
+					return await runInInjectionContext(invocation.injector, () =>
+						refine.call(definition, context, setupResult),
+					);
+				});
+			} finally {
+				if (!verdict) {
+					invocation.end();
+				}
 			}
-
-			// Same first-await rule as execute: runInInjectionContext is
-			// synchronous, so inject() is available up to the first await.
-			return await runInInjectionContext(invocation.injector, () =>
-				refine.call(definition, context, setupResult),
-			);
+			return verdict;
 		},
 		execute: async (args: string[]): Promise<void> => {
 			const invocation =
@@ -580,14 +699,28 @@ export function createCommandFromDefinition<
 			const context = invocation.context;
 			invocation.hasRun = true;
 
-			const setupResult = await invocation.setup;
-			invocation.runResult = await runInInjectionContext(
-				invocation.injector,
-				() => definition.run.call(definition, context, setupResult),
-			);
+			// With a postRun, the invocation ends after it; a failed run ends it
+			// here, since the dispatcher will not reach postRun.
+			let failed = false;
+			try {
+				await runInInvocation(invocation.injector, async () => {
+					const setupResult = await invocation.setup;
+					invocation.runResult = await runInInjectionContext(
+						invocation.injector,
+						() => definition.run.call(definition, context, setupResult),
+					);
 
-			if (definition.shortcuts) {
-				attachShortcuts(invocation, context, setupResult);
+					if (definition.shortcuts) {
+						attachShortcuts(invocation, context, setupResult);
+					}
+				});
+			} catch (error) {
+				failed = true;
+				throw error;
+			} finally {
+				if (failed || !definition.postRun) {
+					invocation.end();
+				}
 			}
 		},
 	};
@@ -599,7 +732,7 @@ export function createCommandFromDefinition<
  * name, so the name is a parameter rather than read off the definition.
  */
 export function registerDefinitionAs<
-	TSchema extends CommandOptionsSchema,
+	TSchema extends CommandOptionsInput,
 	TResult = any,
 	TSetup = any,
 >(
@@ -614,7 +747,7 @@ export function registerDefinitionAs<
 	// A prototype-less zero-parameter function registers as a useFactory
 	// provider, so the command is built on first resolution and cached.
 	registry.registerCommand(name, () =>
-		createCommandFromDefinition(definition, targetInjector, providers),
+		createCommandFromDefinition(definition, targetInjector, providers, [name]),
 	);
 }
 
@@ -650,7 +783,7 @@ const contextInjector = (): Injector =>
  * CLI itself outside one.
  */
 export function registerCommand<
-	TSchema extends CommandOptionsSchema,
+	TSchema extends CommandOptionsInput,
 	TResult = any,
 	TSetup = any,
 >(

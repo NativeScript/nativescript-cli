@@ -23,6 +23,7 @@ injector.require("stringParameter", "./command-params");
 injector.require("stringParameterBuilder", "./command-params");
 
 injector.require("commandsService", "./services/commands-service");
+injector.require("optionContributions", "./services/option-contributions");
 
 injector.require("messagesService", "./services/messages-service");
 

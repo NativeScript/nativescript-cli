@@ -1,15 +1,14 @@
 import * as _ from "lodash";
 import { CommandRegistry } from "../contracts/command-registry";
 import { IHelpService } from "../declarations";
-import { booleanOption, defineCommand } from "../define-command";
+import { CliOptions } from "../contracts/cli-options";
+import { defineCommand } from "../define-command";
 import { inject } from "../di";
 
 export const helpCommandDefinition = defineCommand({
 	name: ["help", "/?"],
 	description: "Shows the help for a command.",
-	options: {
-		help: booleanOption(),
-	},
+	options: [CliOptions],
 	// The command names whatever command it explains, so every argument after
 	// the first is that command's own.
 	params: "any",

@@ -11,6 +11,7 @@ import {
 	booleanOption,
 	Command,
 	defineCommand,
+	defineOptions,
 	numberOption,
 	stringOption,
 } from "../../lib/common/define-command";
@@ -20,6 +21,7 @@ import {
 	registerLazyCommand,
 } from "../../lib/common/services/command-definition-adapter";
 import type { Injector } from "../../lib/common/di/injector";
+import { inject } from "../../lib/common/di/inject";
 
 type IsExact<A, B> =
 	(<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2
@@ -363,3 +365,49 @@ registerLazyCommand<typeof TypefixtureAliased>(
 	"typefixture|class-vision2",
 	() => require("./commands/clean").TypefixtureAliased,
 );
+
+// An option group types its values off the same declaration at both ends: the
+// command's ctx.options and whatever injects the group.
+const TypefixtureRunOptions = defineOptions("typefixture-run", {
+	watch: booleanOption({ default: true }),
+	device: stringOption(),
+});
+
+defineCommand({
+	name: "typefixture|group",
+	options: [
+		TypefixtureRunOptions,
+		{ extra: booleanOption({ default: false }) },
+	],
+	run(ctx) {
+		expectExactType<IsExact<typeof ctx.options.watch, boolean>>();
+		expectExactType<IsExact<typeof ctx.options.device, string | undefined>>();
+		expectExactType<IsExact<typeof ctx.options.extra, boolean>>();
+
+		const injected = inject(TypefixtureRunOptions);
+		expectExactType<IsExact<typeof injected.watch, boolean>>();
+		expectExactType<IsExact<typeof injected.device, string | undefined>>();
+		// @ts-expect-error - the group's values hold the group's own keys only
+		injected.extra;
+
+		// @ts-expect-error - neither the group nor the inline specs declare it
+		ctx.options.undeclared;
+	},
+});
+
+class TypefixtureGroupClass extends Command({
+	name: "typefixture|class-group",
+	options: [
+		TypefixtureRunOptions,
+		{ extra: booleanOption({ default: false }) },
+	],
+}) {
+	run(): void {
+		expectExactType<IsExact<typeof this.options.watch, boolean>>();
+		expectExactType<IsExact<typeof this.options.device, string | undefined>>();
+		expectExactType<IsExact<typeof this.options.extra, boolean>>();
+
+		// @ts-expect-error - neither the group nor the inline specs declare it
+		this.options.undeclared;
+	}
+}

@@ -9,6 +9,7 @@ import {
 	runInInjectionContext,
 } from "../lib/common/di";
 import { COMMAND_CONTEXT } from "../lib/common/contracts/command-context";
+import { CliOptions } from "../lib/common/contracts/cli-options";
 import { COMMAND_PRECONDITIONS } from "../lib/common/contracts/command-preconditions";
 import {
 	COMMAND_OWNER,
@@ -26,9 +27,12 @@ import {
 	booleanOption,
 	Command,
 	defineCommand,
+	defineOptions,
 	isCommandClass,
 	isCommandDefinition,
+	isOptionsGroup,
 	numberOption,
+	OPTIONS_GROUP_MARKER,
 	stringOption,
 } from "../lib/common/define-command";
 import {
@@ -453,7 +457,7 @@ describe("defineCommand", () => {
 	describe("execute", () => {
 		it("passes args and the declared options through, inside an injection context", async () => {
 			const testInjector = createTestInjector({
-				verbose: true,
+				quiet: true,
 				output: "dist",
 				undeclared: "ignored",
 			});
@@ -467,7 +471,7 @@ describe("defineCommand", () => {
 				defineCommand({
 					name: "dctestexec",
 					options: {
-						verbose: booleanOption(),
+						quiet: booleanOption(),
 						output: stringOption(),
 					},
 					run(context) {
@@ -482,27 +486,27 @@ describe("defineCommand", () => {
 			await command.execute(["one", "two"]);
 
 			assert.deepEqual(capturedArgs, ["one", "two"]);
-			assert.deepEqual(capturedOptions, { verbose: true, output: "dist" });
+			assert.deepEqual(capturedOptions, { quiet: true, output: "dist" });
 			assert.strictEqual(greeting, "hello");
 		});
 
 		it("reads option values at execution time", async () => {
-			const optionsService: any = { verbose: false };
+			const optionsService: any = { quiet: false };
 			const testInjector = createTestInjector(optionsService);
 
 			let seen: boolean;
 			const command = createCommandFromDefinition(
 				defineCommand({
 					name: "dctestlate",
-					options: { verbose: booleanOption() },
+					options: { quiet: booleanOption() },
 					run: (context) => {
-						seen = context.options.verbose;
+						seen = context.options.quiet;
 					},
 				}),
 				testInjector,
 			);
 
-			optionsService.verbose = true;
+			optionsService.quiet = true;
 			await command.execute([]);
 
 			assert.isTrue(seen);
@@ -530,7 +534,7 @@ describe("defineCommand", () => {
 
 		it("carries the declared option values onto the run context", async () => {
 			const testInjector = createTestInjector({
-				verbose: true,
+				quiet: true,
 				output: "dist",
 				retries: 3,
 				files: ["a.ts"],
@@ -541,7 +545,7 @@ describe("defineCommand", () => {
 				defineCommand({
 					name: "dctesttypes",
 					options: {
-						verbose: booleanOption(),
+						quiet: booleanOption(),
 						output: stringOption(),
 						retries: numberOption(),
 						files: arrayOption(),
@@ -556,7 +560,7 @@ describe("defineCommand", () => {
 			await command.execute([]);
 
 			assert.deepEqual(seen, {
-				verbose: true,
+				quiet: true,
 				output: "dist",
 				retries: 3,
 				files: ["a.ts"],
@@ -729,7 +733,7 @@ describe("defineCommand", () => {
 				defineCommand({
 					name: "dctestdashed",
 					options: {
-						verbose: booleanOption({ default: false }),
+						quiet: booleanOption({ default: false }),
 						output: stringOption({ alias: "o" }),
 						retries: numberOption({ default: 3 }),
 						files: arrayOption(),
@@ -744,7 +748,7 @@ describe("defineCommand", () => {
 			);
 
 			assert.deepEqual(command.dashedOptions, {
-				verbose: { type: "boolean", hasSensitiveValue: false, default: false },
+				quiet: { type: "boolean", hasSensitiveValue: false, default: false },
 				output: { type: "string", hasSensitiveValue: false, alias: "o" },
 				retries: { type: "number", hasSensitiveValue: false, default: 3 },
 				files: { type: "array", hasSensitiveValue: false },
@@ -762,25 +766,25 @@ describe("defineCommand", () => {
 					name: "dctestredeclare",
 					options: {
 						// Redeclared only to give this command its own default.
-						path: stringOption({ default: "./here" }),
+						output: stringOption({ default: "./here" }),
 						watch: booleanOption({ default: false }),
 					},
 					run: (): void => undefined,
 				}),
 				createTestInjector({
 					options: {
-						path: { type: "string", alias: "p", hasSensitiveValue: true },
+						output: { type: "string", alias: "o", hasSensitiveValue: true },
 						watch: { type: "boolean", hasSensitiveValue: false },
 					},
 				}),
 			);
 
 			assert.deepEqual(command.dashedOptions, {
-				path: {
+				output: {
 					type: "string",
 					hasSensitiveValue: true,
 					default: "./here",
-					alias: "p",
+					alias: "o",
 				},
 				watch: { type: "boolean", hasSensitiveValue: false, default: false },
 			});
@@ -791,19 +795,19 @@ describe("defineCommand", () => {
 				defineCommand({
 					name: "dctestoverride",
 					options: {
-						path: stringOption({ alias: "q", hasSensitiveValue: false }),
+						output: stringOption({ alias: "q", hasSensitiveValue: false }),
 					},
 					run: (): void => undefined,
 				}),
 				createTestInjector({
 					options: {
-						path: { type: "string", alias: "p", hasSensitiveValue: true },
+						output: { type: "string", alias: "o", hasSensitiveValue: true },
 					},
 				}),
 			);
 
 			assert.deepEqual(command.dashedOptions, {
-				path: { type: "string", hasSensitiveValue: false, alias: "q" },
+				output: { type: "string", hasSensitiveValue: false, alias: "q" },
 			});
 		});
 
@@ -819,8 +823,8 @@ describe("defineCommand", () => {
 		it("warns when a declared option or alias shadows a CLI-wide one", () => {
 			const testInjector = createTestInjector({
 				options: {
-					verbose: { type: "boolean" },
-					path: { type: "string", alias: "p" },
+					quiet: { type: "boolean" },
+					output: { type: "string", alias: "o" },
 				},
 			});
 
@@ -828,8 +832,8 @@ describe("defineCommand", () => {
 				defineCommand({
 					name: "dctestshadow",
 					options: {
-						verbose: stringOption(),
-						output: stringOption({ alias: ["p", "o"] }),
+						quiet: stringOption(),
+						target: stringOption({ alias: ["o", "t"] }),
 						fresh: booleanOption({ alias: "f" }),
 					},
 					run: (): void => undefined,
@@ -840,21 +844,21 @@ describe("defineCommand", () => {
 			const logger: LoggerStub = testInjector.resolve("logger");
 			assert.include(
 				logger.warnOutput,
-				"'--verbose' with the CLI option '--verbose'",
+				"'--quiet' with the CLI option '--quiet'",
 			);
 			assert.include(
 				logger.warnOutput,
-				"alias '-p' of '--output' with the CLI option '--path'",
+				"alias '-o' of '--target' with the CLI option '--output'",
 			);
 			assert.notInclude(logger.warnOutput, "--fresh");
-			assert.notInclude(logger.warnOutput, "'-o'");
+			assert.notInclude(logger.warnOutput, "'-t'");
 		});
 
 		it("stays quiet when a command only redefines a CLI-wide option's default", () => {
 			const testInjector = createTestInjector({
 				options: {
 					watch: { type: "boolean" },
-					path: { type: "string", alias: "p" },
+					output: { type: "string", alias: "o" },
 				},
 			});
 
@@ -863,7 +867,7 @@ describe("defineCommand", () => {
 					name: "dctestredeclare",
 					options: {
 						watch: booleanOption({ default: true }),
-						path: stringOption({ alias: "p" }),
+						output: stringOption({ alias: "o" }),
 					},
 					run: (): void => undefined,
 				}),
@@ -1359,14 +1363,14 @@ describe("defineCommand", () => {
 		});
 
 		it("validates the declared options and runs the command", async () => {
-			const testInjector = createCommandsServiceInjector({ verbose: true });
+			const testInjector = createCommandsServiceInjector({ quiet: true });
 			let ran: any;
 
 			runInInjectionContext(testInjector, () =>
 				registerCommand(
 					defineCommand({
 						name: "dctest-e2e",
-						options: { verbose: booleanOption({ default: false }) },
+						options: { quiet: booleanOption({ default: false }) },
 						params: "any",
 						run: (context) => {
 							ran = context;
@@ -1380,10 +1384,10 @@ describe("defineCommand", () => {
 			await commandsService.tryExecuteCommand("dctest-e2e", ["alpha"]);
 
 			assert.deepEqual(validatedOptions, {
-				verbose: { type: "boolean", hasSensitiveValue: false, default: false },
+				quiet: { type: "boolean", hasSensitiveValue: false, default: false },
 			});
 			assert.deepEqual(ran.args, ["alpha"]);
-			assert.deepEqual(ran.options, { verbose: true });
+			assert.deepEqual(ran.options, { quiet: true });
 		});
 
 		it("rejects parameters when arguments are 'none'", async () => {
@@ -3477,6 +3481,458 @@ describe("defineCommand", () => {
 			const verdict = command.canExecute([]);
 			assert.isTrue(setupRan);
 			assert.isTrue(await verdict);
+		});
+	});
+
+	describe("option groups", () => {
+		describe("defineOptions", () => {
+			it("returns a token named after the group that carries its schema", () => {
+				const schema = { watch: booleanOption() };
+				const group = defineOptions("dctest-grp-basic", schema);
+
+				assert.isTrue(isOptionsGroup(group));
+				assert.instanceOf(group, InjectionToken);
+				assert.strictEqual(group.groupName, "dctest-grp-basic");
+				assert.strictEqual(group.schema, schema);
+				assert.strictEqual(group.description, "options:dctest-grp-basic");
+				assert.isTrue(group[OPTIONS_GROUP_MARKER]);
+				assert.isFalse(isOptionsGroup(schema));
+				assert.isFalse(isOptionsGroup(null));
+				assert.isFalse(isOptionsGroup(new InjectionToken("dctest-grp-plain")));
+			});
+
+			it("keys the same injector record as its registry name", () => {
+				const group = defineOptions("dctest-grp-byname", {
+					watch: booleanOption(),
+				});
+				const testInjector = createTestInjector();
+				testInjector.register({ provide: group, useValue: { watch: true } });
+
+				assert.deepEqual(testInjector.resolve("options:dctest-grp-byname"), {
+					watch: true,
+				});
+				assert.deepEqual(testInjector.get(group), { watch: true });
+			});
+
+			it("rejects an unusable name, schema or spec, naming the group", () => {
+				assert.throws(
+					() => defineOptions("", {}),
+					/^Invalid option group \(unnamed\): the name must be a non-empty string\. Accepted form: defineOptions/,
+				);
+				assert.throws(
+					() => defineOptions("dctest-grp-noschema", <any>null),
+					/^Invalid option group 'dctest-grp-noschema': the schema must be an object keyed by the long option name/,
+				);
+				assert.throws(
+					() =>
+						defineOptions("dctest-grp-badspec", <any>{
+							watch: { type: "bool" },
+						}),
+					/^Invalid option group 'dctest-grp-badspec': option 'watch' has type 'bool'/,
+				);
+			});
+
+			it("rejects a spelling two of its options would share", () => {
+				assert.throws(
+					() =>
+						defineOptions("dctest-grp-aliasclash", {
+							watch: booleanOption(),
+							wait: booleanOption({ alias: "watch" }),
+						}),
+					/^Invalid option group 'dctest-grp-aliasclash': alias '-watch' of '--wait' \(option group 'dctest-grp-aliasclash'\) is already the spelling of '--watch' \(option group 'dctest-grp-aliasclash'\)/,
+				);
+				assert.throws(
+					() =>
+						defineOptions("dctest-grp-nameclash", {
+							watch: booleanOption({ alias: "w" }),
+							w: booleanOption(),
+						}),
+					/^Invalid option group 'dctest-grp-nameclash': option '--w' \(option group 'dctest-grp-nameclash'\) is already an alias of '--watch' \(option group 'dctest-grp-nameclash'\)/,
+				);
+			});
+
+			it("refuses a second group under a name already in use", () => {
+				defineOptions("dctest-grp-dup", {});
+
+				assert.throws(
+					() => defineOptions("dctest-grp-dup", {}),
+					/Token name 'options:dctest-grp-dup' is already used/,
+				);
+			});
+		});
+
+		describe("options as a list", () => {
+			const runOptionsFor = (name: string) =>
+				defineOptions(name, {
+					watch: booleanOption({ default: true }),
+					device: stringOption({ alias: "d" }),
+				});
+
+			it("merges the groups and the inline specs onto ctx.options", async () => {
+				const RunOptions = runOptionsFor("dctest-grp-merge");
+				const testInjector = createTestInjector({
+					watch: false,
+					device: "emulator-5554",
+					extra: true,
+					undeclared: "ignored",
+				});
+
+				let seen: any;
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-merge",
+						options: [RunOptions, { extra: booleanOption() }],
+						run: (ctx) => {
+							seen = ctx.options;
+						},
+					}),
+					testInjector,
+				);
+				await command.execute([]);
+
+				assert.deepEqual(seen, {
+					watch: false,
+					device: "emulator-5554",
+					extra: true,
+				});
+			});
+
+			it("compiles every part into dashedOptions", () => {
+				const RunOptions = runOptionsFor("dctest-grp-dashed");
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-dashed",
+						options: [RunOptions, { extra: booleanOption() }],
+						run: (): void => undefined,
+					}),
+					createTestInjector(),
+				);
+
+				assert.deepEqual(command.dashedOptions, {
+					watch: { type: "boolean", hasSensitiveValue: false, default: true },
+					device: { type: "string", hasSensitiveValue: false, alias: "d" },
+					extra: { type: "boolean", hasSensitiveValue: false },
+				});
+			});
+
+			it("provides each group's slice to the invocation, not to the target injector", async () => {
+				const RunOptions = runOptionsFor("dctest-grp-provide");
+				const testInjector = createTestInjector({
+					watch: false,
+					device: "emulator-5554",
+					extra: true,
+				});
+				const DEVICE = new InjectionToken<string>("dctest-grp-provide-device");
+				const seen: any[] = [];
+
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-provide",
+						options: [RunOptions, { extra: booleanOption() }],
+						providers: [
+							{ provide: DEVICE, useFactory: () => inject(RunOptions).device },
+						],
+						setup: () => {
+							seen.push(["setup", inject(RunOptions)]);
+						},
+						canExecute: (ctx) => {
+							seen.push(["canExecute", ctx.injector.get(RunOptions)]);
+							return true;
+						},
+						run: (ctx) => {
+							seen.push(["run", inject(RunOptions)]);
+							seen.push(["service", ctx.injector.get(DEVICE)]);
+						},
+					}),
+					testInjector,
+				);
+
+				assert.isTrue(await command.canExecute([]));
+				await command.execute([]);
+
+				const slice = { watch: false, device: "emulator-5554" };
+				assert.deepEqual(seen, [
+					["setup", slice],
+					["canExecute", slice],
+					["run", slice],
+					["service", "emulator-5554"],
+				]);
+				assert.isNull(testInjector.get(RunOptions, { optional: true }));
+			});
+
+			it("reads the group's values again for every invocation", async () => {
+				const RunOptions = runOptionsFor("dctest-grp-fresh");
+				const optionsService: any = { watch: false, device: "a" };
+				const testInjector = createTestInjector(optionsService);
+				const seen: any[] = [];
+
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-fresh",
+						options: [RunOptions],
+						run: () => {
+							seen.push(inject(RunOptions));
+						},
+					}),
+					testInjector,
+				);
+
+				await command.execute([]);
+				optionsService.watch = true;
+				optionsService.device = "b";
+				await command.execute([]);
+
+				assert.deepEqual(seen, [
+					{ watch: false, device: "a" },
+					{ watch: true, device: "b" },
+				]);
+			});
+		});
+
+		describe("collisions", () => {
+			it("rejects one long name declared by two parts with different specs", () => {
+				const Shared = defineOptions("dctest-grp-clash", {
+					watch: booleanOption({ default: true }),
+				});
+				const Other = defineOptions("dctest-grp-clash-other", {
+					watch: booleanOption(),
+				});
+
+				assert.throws(
+					() =>
+						defineCommand({
+							name: "dctest-grp-clash-inline",
+							options: [Shared, { watch: booleanOption() }],
+							run: (): void => undefined,
+						}),
+					/^Invalid command definition for 'dctest-grp-clash-inline': option '--watch' is declared by option group 'dctest-grp-clash' and by the command's own options with different specs/,
+				);
+				assert.throws(
+					() =>
+						defineCommand({
+							name: "dctest-grp-clash-groups",
+							options: [Shared, Other],
+							run: (): void => undefined,
+						}),
+					/option '--watch' is declared by option group 'dctest-grp-clash' and by option group 'dctest-grp-clash-other' with different specs/,
+				);
+			});
+
+			it("treats a different alias, default or sensitivity as a different spec", () => {
+				const Output = defineOptions("dctest-grp-clash-spec", {
+					output: stringOption({ alias: "o" }),
+				});
+
+				for (const redeclared of [
+					stringOption({ alias: "O" }),
+					stringOption({ alias: "o", hasSensitiveValue: true }),
+					stringOption({ alias: "o", default: "dist" }),
+				]) {
+					assert.throws(
+						() =>
+							defineCommand({
+								name: "dctest-grp-clash-spec",
+								options: [Output, { output: redeclared }],
+								run: (): void => undefined,
+							}),
+						/option '--output' is declared by option group 'dctest-grp-clash-spec' and by the command's own options with different specs/,
+					);
+				}
+			});
+
+			it("accepts the same spec declared by two parts", () => {
+				const Output = defineOptions("dctest-grp-same", {
+					output: stringOption({ alias: "o" }),
+				});
+
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-same",
+						options: [Output, { output: stringOption({ alias: "o" }) }],
+						run: (): void => undefined,
+					}),
+					createTestInjector(),
+				);
+
+				assert.deepEqual(command.dashedOptions, {
+					output: { type: "string", hasSensitiveValue: false, alias: "o" },
+				});
+			});
+
+			it("rejects an alias of one part that is a spelling of another", () => {
+				const Output = defineOptions("dctest-grp-alias", {
+					output: stringOption({ alias: "o" }),
+				});
+
+				assert.throws(
+					() =>
+						defineCommand({
+							name: "dctest-grp-alias",
+							options: [Output, { target: stringOption({ alias: "output" }) }],
+							run: (): void => undefined,
+						}),
+					/alias '-output' of '--target' \(the command's own options\) is already the spelling of '--output' \(option group 'dctest-grp-alias'\)/,
+				);
+				assert.throws(
+					() =>
+						defineCommand({
+							name: "dctest-grp-alias",
+							options: [Output, { o: booleanOption() }],
+							run: (): void => undefined,
+						}),
+					/option '--o' \(the command's own options\) is already an alias of '--output' \(option group 'dctest-grp-alias'\)/,
+				);
+			});
+
+			it("applies the same rules to the Command() meta", () => {
+				const Watch = defineOptions("dctest-grp-clash-class", {
+					watch: booleanOption({ default: true }),
+				});
+
+				assert.throws(
+					() =>
+						Command({
+							name: "dctest-grp-clash-class",
+							options: [Watch, { watch: booleanOption() }],
+						}),
+					/^Invalid command definition for 'dctest-grp-clash-class': option '--watch' is declared by option group 'dctest-grp-clash-class'/,
+				);
+			});
+		});
+
+		describe("process-level options", () => {
+			const compile = (options: any) =>
+				createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-root",
+						options,
+						run: (): void => undefined,
+					}),
+					createTestInjector(),
+				);
+
+			it("refuses an inline option that redeclares a CliOptions name", () => {
+				assert.throws(
+					() => compile({ path: stringOption() }),
+					"Command 'dctest-grp-root': '--path' is a process-level option; list CliOptions under 'options', or inject it, instead of redeclaring it",
+				);
+			});
+
+			it("refuses an alias that is a CliOptions shorthand", () => {
+				assert.throws(
+					() => compile({ project: stringOption({ alias: "p" }) }),
+					"Command 'dctest-grp-root': '-p' is a process-level option",
+				);
+			});
+
+			it("refuses a group of the command's own that redeclares one", () => {
+				const Logging = defineOptions("dctest-grp-root-group", {
+					verbose: booleanOption(),
+				});
+
+				assert.throws(
+					() => compile([Logging]),
+					"Command 'dctest-grp-root': '--verbose' is a process-level option",
+				);
+			});
+
+			it("lets CliOptions itself be listed, reading its values onto ctx.options", async () => {
+				const testInjector = createTestInjector({
+					verbose: true,
+					path: "/app",
+					output: "dist",
+				});
+
+				let seen: any;
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-root-listed",
+						options: [CliOptions, { output: stringOption() }],
+						run: (ctx) => {
+							seen = ctx.options;
+						},
+					}),
+					testInjector,
+				);
+				await command.execute([]);
+
+				assert.sameMembers(Object.keys(seen), [
+					...Object.keys(CliOptions.schema),
+					"output",
+				]);
+				assert.isTrue(seen.verbose);
+				assert.strictEqual(seen.path, "/app");
+				assert.strictEqual(seen.output, "dist");
+				assert.deepEqual(command.dashedOptions.path, {
+					type: "string",
+					hasSensitiveValue: true,
+					alias: "p",
+				});
+			});
+
+			it("does not provide CliOptions per invocation", async () => {
+				const Extra = defineOptions("dctest-grp-root-extra", {
+					extra: booleanOption(),
+				});
+				const testInjector = createTestInjector({ verbose: true, extra: true });
+
+				let provided: any[];
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctest-grp-root-unprovided",
+						options: [CliOptions, Extra],
+						run: (ctx) => {
+							provided = [
+								ctx.injector.get(CliOptions, { optional: true }),
+								ctx.injector.get(Extra, { optional: true }),
+							];
+						},
+					}),
+					testInjector,
+				);
+				await command.execute([]);
+
+				assert.deepEqual(provided, [null, { extra: true }]);
+			});
+		});
+
+		describe("class form", () => {
+			it("types and merges this.options from a list of groups and specs", async () => {
+				const RunOptions = defineOptions("dctest-grp-class", {
+					watch: booleanOption({ default: true }),
+					device: stringOption(),
+				});
+				const testInjector = createTestInjector({
+					watch: false,
+					device: "emulator-5554",
+					extra: true,
+				});
+				const seen: any[] = [];
+
+				class GroupedWidget extends Command({
+					name: "dctest-grp-class",
+					options: [RunOptions, { extra: booleanOption({ default: false }) }],
+				}) {
+					private runOptions = inject(RunOptions);
+
+					public run(): void {
+						const watch: boolean = this.options.watch;
+						const extra: boolean = this.options.extra;
+						seen.push([watch, this.options.device, extra], this.runOptions);
+					}
+				}
+
+				const command = createCommandFromDefinition(
+					GroupedWidget.definition,
+					testInjector,
+				);
+				await command.execute([]);
+
+				assert.deepEqual(seen, [
+					[false, "emulator-5554", true],
+					{ watch: false, device: "emulator-5554" },
+				]);
+			});
 		});
 	});
 });

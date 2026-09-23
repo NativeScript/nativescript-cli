@@ -8,9 +8,12 @@
 
 import { COMMAND_CONTEXT } from "./contracts/command-context";
 import type { KeyShortcut } from "./contracts/key-shortcuts";
+import type { IDashedOption, IDictionary } from "./declarations";
 import { inject } from "./di/inject";
+import { InjectionToken } from "./di/injection-token";
 import type { Injector } from "./di/injector";
 import type { Provider } from "./di/providers";
+import { OptionType } from "./enums";
 
 /**
  * Symbol.for so that a definition produced by one copy of the CLI is still
@@ -85,6 +88,257 @@ export type CommandOptionValues<TSchema extends CommandOptionsSchema> = {
 };
 
 /**
+ * Symbol.for, as COMMAND_DEFINITION_MARKER: an extension's copy of this module
+ * must recognise a group minted by the running copy.
+ */
+export const OPTIONS_GROUP_MARKER: unique symbol = Symbol.for(
+	"nativescript:cli:optionsGroup",
+);
+
+/**
+ * A named set of options declared once and used at both ends: a command lists
+ * the group under `options` and the parser fills it; a service injects the
+ * group and reads the parsed values, typed from the same declaration. The
+ * values are provided per invocation, so nothing outside one resolves them.
+ * The group's registry name is `options:<name>`.
+ */
+export class OptionsGroup<
+	TSchema extends CommandOptionsSchema = CommandOptionsSchema,
+> extends InjectionToken<CommandOptionValues<TSchema>> {
+	readonly [OPTIONS_GROUP_MARKER] = true;
+
+	constructor(
+		public readonly groupName: string,
+		public readonly schema: TSchema,
+	) {
+		super(`options:${groupName}`);
+	}
+}
+
+export function isOptionsGroup(value: any): value is OptionsGroup<any> {
+	return (
+		!!value &&
+		typeof value === "object" &&
+		(<any>value)[OPTIONS_GROUP_MARKER] === true
+	);
+}
+
+/** What `options` takes: one schema, or a list of groups and inline schemas. */
+export type CommandOptionsInput =
+	| CommandOptionsSchema
+	| ReadonlyArray<OptionsGroup<any> | CommandOptionsSchema>;
+
+type UnionToIntersection<U> = (
+	U extends any ? (member: U) => void : never
+) extends (member: infer I) => void
+	? I
+	: never;
+
+type OptionsSchemaPart<T> =
+	T extends OptionsGroup<infer TSchema>
+		? TSchema
+		: T extends CommandOptionsSchema
+			? T
+			: never;
+
+/** The one schema an `options` input declares: its groups and inline specs merged. */
+export type OptionsSchemaOf<TOptions> = (
+	TOptions extends ReadonlyArray<infer TPart>
+		? UnionToIntersection<OptionsSchemaPart<TPart>>
+		: OptionsSchemaPart<TOptions>
+) extends infer TSchema
+	? TSchema extends CommandOptionsSchema
+		? TSchema
+		: {}
+	: never;
+
+export type OptionValuesOf<TOptions> = CommandOptionValues<
+	OptionsSchemaOf<TOptions>
+>;
+
+export interface ResolvedCommandOptions {
+	/** Every declared option, groups and inline specs merged, keyed by the long name. */
+	schema: CommandOptionsSchema;
+	/** The groups in declaration order; each is provided per invocation. */
+	groups: OptionsGroup<any>[];
+}
+
+const aliasesOf = (alias: string | string[] | undefined): string[] =>
+	alias === undefined ? [] : Array.isArray(alias) ? alias : [alias];
+
+const sameOptionSpec = (a: CommandOptionSpec, b: CommandOptionSpec): boolean =>
+	a.type === b.type &&
+	JSON.stringify(a.default) === JSON.stringify(b.default) &&
+	JSON.stringify(aliasesOf(a.alias)) === JSON.stringify(aliasesOf(b.alias)) &&
+	a.hasSensitiveValue === b.hasSensitiveValue &&
+	a.required === b.required;
+
+/**
+ * Merges what `options` declares into one schema. A spelling — a name or an
+ * alias — may be declared once, or again with the same spec; two specs for one
+ * spelling would leave the parser with one meaning and the other declaration
+ * silently wrong, so that is reported instead.
+ */
+export function resolveCommandOptions(
+	options: CommandOptionsInput | undefined,
+	report: (problem: string) => never,
+	inlineSource: string = "the command's own options",
+): ResolvedCommandOptions {
+	const parts: { source: string; schema: CommandOptionsSchema }[] = [];
+	const groups: OptionsGroup<any>[] = [];
+	const list: ReadonlyArray<OptionsGroup<any> | CommandOptionsSchema> =
+		options === undefined
+			? []
+			: Array.isArray(options)
+				? options
+				: [<CommandOptionsSchema>options];
+
+	for (const part of list) {
+		if (isOptionsGroup(part)) {
+			if (groups.indexOf(part) === -1) {
+				groups.push(part);
+				parts.push({
+					source: `option group '${part.groupName}'`,
+					schema: part.schema,
+				});
+			}
+		} else {
+			parts.push({ source: inlineSource, schema: part });
+		}
+	}
+
+	const schema: CommandOptionsSchema = {};
+	const owners: IDictionary<{ optionName: string; source: string }> = {};
+	for (const { source, schema: partSchema } of parts) {
+		for (const optionName of Object.keys(partSchema)) {
+			const spec = partSchema[optionName];
+			const existing = schema[optionName];
+			if (existing && !sameOptionSpec(existing, spec)) {
+				report(
+					`option '--${optionName}' is declared by ${owners[optionName].source} and by ${source} with different specs`,
+				);
+			}
+			if (!existing) {
+				const owner = owners[optionName];
+				if (owner) {
+					report(
+						`option '--${optionName}' (${source}) is already an alias of '--${owner.optionName}' (${owner.source})`,
+					);
+				}
+				schema[optionName] = spec;
+				owners[optionName] = { optionName, source };
+			}
+			for (const alias of aliasesOf(spec.alias)) {
+				const owner = owners[alias];
+				if (owner && owner.optionName !== optionName) {
+					report(
+						`alias '-${alias}' of '--${optionName}' (${source}) is already the spelling of '--${owner.optionName}' (${owner.source})`,
+					);
+				}
+				if (!owner) {
+					owners[alias] = { optionName, source };
+				}
+			}
+		}
+	}
+
+	return { schema, groups };
+}
+
+/** Every spelling a schema answers to: the long names and their aliases. */
+export function optionSpellingsOf(schema: CommandOptionsSchema): string[] {
+	const spellings: string[] = [];
+	for (const optionName of Object.keys(schema)) {
+		spellings.push(optionName, ...aliasesOf(schema[optionName].alias));
+	}
+	return spellings;
+}
+
+const DASHED_OPTION_TYPES: IDictionary<OptionType> = {
+	boolean: OptionType.Boolean,
+	string: OptionType.String,
+	number: OptionType.Number,
+	array: OptionType.Array,
+	object: OptionType.Object,
+};
+
+/** The parser's shape of one spec, as `dashedOptions` and the CLI-wide table hold it. */
+export function compileOptionSpec(spec: CommandOptionSpec): IDashedOption {
+	const dashedOption: IDashedOption = {
+		type: DASHED_OPTION_TYPES[spec.type],
+		hasSensitiveValue: spec.hasSensitiveValue === true,
+	};
+	if (spec.default !== undefined) {
+		dashedOption.default = spec.default;
+	}
+	if (spec.alias !== undefined) {
+		dashedOption.alias = spec.alias;
+	}
+	if (spec.description !== undefined) {
+		dashedOption.describe = spec.description;
+	}
+	return dashedOption;
+}
+
+export function compileOptionsSchema(
+	schema: CommandOptionsSchema,
+): IDictionary<IDashedOption> {
+	const dashedOptions: IDictionary<IDashedOption> = {};
+	for (const optionName of Object.keys(schema)) {
+		dashedOptions[optionName] = compileOptionSpec(schema[optionName]);
+	}
+	return dashedOptions;
+}
+
+/**
+ * The parsed value of every option in `schema`, read off the option service's
+ * per-name accessors, and nothing else.
+ */
+export function readOptionValues<TSchema extends CommandOptionsSchema>(
+	schema: TSchema,
+	source: any,
+): CommandOptionValues<TSchema> {
+	const values: any = {};
+	for (const optionName of Object.keys(schema)) {
+		values[optionName] = source[optionName];
+	}
+	return values;
+}
+
+const OPTIONS_GROUP_FORM = 'defineOptions("run", { watch: booleanOption() })';
+
+/**
+ * Declares an option group: a named schema that is also the token its parsed
+ * values are injected by. Validated here, like a command definition, so a bad
+ * spec is reported where it was written.
+ */
+export function defineOptions<TSchema extends CommandOptionsSchema>(
+	name: string,
+	schema: TSchema,
+): OptionsGroup<TSchema> {
+	const report = (problem: string): never => {
+		throw new Error(
+			`Invalid option group ${
+				typeof name === "string" && name.trim() ? `'${name}'` : "(unnamed)"
+			}: ${problem}. Accepted form: ${OPTIONS_GROUP_FORM}`,
+		);
+	};
+
+	if (typeof name !== "string" || !name.trim()) {
+		report("the name must be a non-empty string");
+	}
+	if (!isPlainObject(schema)) {
+		report("the schema must be an object keyed by the long option name");
+	}
+	for (const optionName of Object.keys(schema)) {
+		validateOptionSpec(report, optionName, schema[optionName]);
+	}
+	resolveCommandOptions(schema, report, `option group '${name}'`);
+
+	return new OptionsGroup(name, schema);
+}
+
+/**
  * Positional parameters keyed by the declaring spec's `name`. A variadic spec
  * always yields an array; a non-variadic optional one is absent when the
  * command line did not reach it.
@@ -100,7 +354,7 @@ export type CommandArgumentValues = CommandParamValues;
  * One positional parameter. Specs are matched strictly by position: the first
  * spec takes the first argument, and so on.
  */
-export interface ParamSpec<TSchema extends CommandOptionsSchema = {}> {
+export interface ParamSpec<TSchema extends CommandOptionsInput = {}> {
 	/** Key under which the value appears on `ctx.params`. */
 	name: string;
 	/** Defaults to false. A required spec may not follow an optional one. */
@@ -119,18 +373,18 @@ export interface ParamSpec<TSchema extends CommandOptionsSchema = {}> {
 }
 
 /** @deprecated Use ParamSpec. */
-export type ArgumentSpec<TSchema extends CommandOptionsSchema = {}> =
+export type ArgumentSpec<TSchema extends CommandOptionsInput = {}> =
 	ParamSpec<TSchema>;
 
 /**
  * `"none"` rejects positional arguments; `"any"` accepts any number of them;
  * an array declares them one by one.
  */
-export type ParamsPolicy<TSchema extends CommandOptionsSchema = {}> =
+export type ParamsPolicy<TSchema extends CommandOptionsInput = {}> =
 	"none" | "any" | ParamSpec<TSchema>[];
 
 /** @deprecated Use ParamsPolicy. */
-export type ArgumentsPolicy<TSchema extends CommandOptionsSchema = {}> =
+export type ArgumentsPolicy<TSchema extends CommandOptionsInput = {}> =
 	ParamsPolicy<TSchema>;
 
 export interface CommandFailOptions {
@@ -141,13 +395,17 @@ export interface CommandFailOptions {
 	help?: boolean;
 }
 
-export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
+export interface CommandContext<TSchema extends CommandOptionsInput = {}> {
 	/** Positional arguments, after the command name has been consumed. */
 	args: string[];
 	/** The same arguments keyed by the names the `params` specs declare. */
 	params: CommandParamValues;
-	/** Current value of every option declared in the schema, and nothing else. */
-	options: CommandOptionValues<TSchema>;
+	/**
+	 * Current value of every option the command declares, its groups and inline
+	 * specs merged, and nothing else. A group contributed from outside the
+	 * command is read by injecting the group.
+	 */
+	options: OptionValuesOf<TSchema>;
 	/**
 	 * This invocation's injector, the one `inject()` resolves against before the
 	 * first `await`; after it, `inject()` stops working and this is the lookup.
@@ -161,13 +419,18 @@ export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
 }
 
 export interface CommandDefinition<
-	TSchema extends CommandOptionsSchema = {},
+	TSchema extends CommandOptionsInput = {},
 	TResult = void,
 	TSetup = void,
 > {
 	/** `"widget|add"`; `|` separates hierarchy levels. Several names alias one command. */
 	name: CommandName;
 	description?: string;
+	/**
+	 * A schema keyed by the long option name, or a list of option groups and
+	 * such schemas. One spelling may appear in several parts only with the same
+	 * spec; a process-level spelling may not be redeclared at all.
+	 */
 	options?: TSchema;
 	/**
 	 * `"none"` (the default) rejects positional arguments; `"any"` accepts any
@@ -230,7 +493,7 @@ export interface CommandDefinition<
  * define-time validation rather than any object of the right shape.
  */
 export type DefinedCommand<
-	TSchema extends CommandOptionsSchema = {},
+	TSchema extends CommandOptionsInput = {},
 	TResult = void,
 	TSetup = void,
 > = CommandDefinition<TSchema, TResult, TSetup> & {
@@ -359,24 +622,25 @@ const validateName = (definition: any): void => {
 	);
 };
 
+const OPTION_HELPERS =
+	"booleanOption(), stringOption(), numberOption(), arrayOption() or objectOption()";
+
 const validateOptionSpec = (
-	definition: any,
+	report: (problem: string) => never,
 	optionName: string,
 	spec: any,
 ): void => {
 	if (!isPlainObject(spec)) {
-		invalid(
-			definition,
-			`option '${optionName}' must be declared with one of booleanOption(), stringOption(), numberOption(), arrayOption() or objectOption()`,
+		report(
+			`option '${optionName}' must be declared with one of ${OPTION_HELPERS}`,
 		);
 	}
 
 	if (OPTION_TYPES.indexOf(spec.type) === -1) {
-		invalid(
-			definition,
+		report(
 			`option '${optionName}' has type '${spec.type}'; the supported types are ${OPTION_TYPES.join(
 				", ",
-			)} — declare it with one of booleanOption(), stringOption(), numberOption(), arrayOption() or objectOption()`,
+			)} — declare it with one of ${OPTION_HELPERS}`,
 		);
 	}
 
@@ -384,8 +648,7 @@ const validateOptionSpec = (
 		(field) => OPTION_SPEC_FIELDS.indexOf(field) === -1,
 	);
 	if (unknownFields.length) {
-		invalid(
-			definition,
+		report(
 			`option '${optionName}' has unknown field(s) ${unknownFields
 				.map((field) => `'${field}'`)
 				.join(", ")}; an option spec accepts ${OPTION_SPEC_FIELDS.join(", ")}`,
@@ -393,11 +656,10 @@ const validateOptionSpec = (
 	}
 
 	if (spec.required !== undefined && typeof spec.required !== "boolean") {
-		invalid(definition, `option '${optionName}': 'required' must be a boolean`);
+		report(`option '${optionName}': 'required' must be a boolean`);
 	}
 	if (spec.required === true && spec.default !== undefined) {
-		invalid(
-			definition,
+		report(
 			`option '${optionName}' is required and has a default; one of the two`,
 		);
 	}
@@ -409,8 +671,7 @@ const validateOptionSpec = (
 			spec.alias.length > 0 &&
 			spec.alias.every((entry: any) => typeof entry === "string"));
 	if (!aliasIsUsable) {
-		invalid(
-			definition,
+		report(
 			`option '${optionName}' declares an 'alias' that is neither a string nor a non-empty array of strings`,
 		);
 	}
@@ -419,17 +680,11 @@ const validateOptionSpec = (
 		spec.hasSensitiveValue !== undefined &&
 		typeof spec.hasSensitiveValue !== "boolean"
 	) {
-		invalid(
-			definition,
-			`option '${optionName}' declares a non-boolean 'hasSensitiveValue'`,
-		);
+		report(`option '${optionName}' declares a non-boolean 'hasSensitiveValue'`);
 	}
 
 	if (spec.description !== undefined && typeof spec.description !== "string") {
-		invalid(
-			definition,
-			`option '${optionName}' declares a non-string 'description'`,
-		);
+		report(`option '${optionName}' declares a non-string 'description'`);
 	}
 };
 
@@ -608,20 +863,24 @@ const validateDefinition = (definition: any): void => {
 	}
 
 	if (definition.options !== undefined) {
-		if (!isPlainObject(definition.options)) {
-			invalid(
-				definition,
-				"'options' must be an object keyed by the long option name",
-			);
+		const report = (problem: string): never => invalid(definition, problem);
+		const parts: any[] = Array.isArray(definition.options)
+			? definition.options
+			: [definition.options];
+		for (const part of parts) {
+			if (isOptionsGroup(part)) {
+				continue;
+			}
+			if (!isPlainObject(part)) {
+				report(
+					"'options' must be an object keyed by the long option name, or an array of option groups and such objects",
+				);
+			}
+			for (const optionName of Object.keys(part)) {
+				validateOptionSpec(report, optionName, part[optionName]);
+			}
 		}
-
-		for (const optionName of Object.keys(definition.options)) {
-			validateOptionSpec(
-				definition,
-				optionName,
-				definition.options[optionName],
-			);
-		}
+		resolveCommandOptions(definition.options, report);
 	}
 };
 
@@ -674,7 +933,7 @@ const validateMeta = (meta: any): void => {
  * `CommandDefinition` widens it straight back to `string`.
  */
 export type NamedCommand<
-	TSchema extends CommandOptionsSchema,
+	TSchema extends CommandOptionsInput,
 	TResult,
 	TSetup,
 	TName extends CommandName,
@@ -704,7 +963,7 @@ export type CommandNamesOf<TDefinition> = TDefinition extends {
 		: never;
 
 export function defineCommand<
-	TSchema extends CommandOptionsSchema = {},
+	TSchema extends CommandOptionsInput = {},
 	TResult = void,
 	TSetup = void,
 	const TName extends CommandName = CommandName,
@@ -747,7 +1006,7 @@ const COMMAND_CLASS_DEFINITION = Symbol.for(
  */
 export type CommandMeta<
 	TName extends CommandName = CommandName,
-	TSchema extends CommandOptionsSchema = {},
+	TSchema extends CommandOptionsInput = {},
 > = Omit<
 	CommandDefinition<TSchema, any, any>,
 	"name" | "setup" | "canExecute" | "run" | "postRun" | "shortcuts"
@@ -758,14 +1017,14 @@ export type CommandMeta<
  * every `Command()` class — a subclass's declaration emit refers to it — not
  * because anything should extend it directly.
  */
-export abstract class CommandBase<TSchema extends CommandOptionsSchema = {}> {
+export abstract class CommandBase<TSchema extends CommandOptionsInput = {}> {
 	/**
 	 * The instance is built once per invocation, as that invocation's `setup`,
 	 * so the context captured here is the one its own run was handed.
 	 */
 	protected readonly context: CommandContext<TSchema> = inject(COMMAND_CONTEXT);
 
-	protected get options(): CommandOptionValues<TSchema> {
+	protected get options(): OptionValuesOf<TSchema> {
 		return this.context.options;
 	}
 
@@ -787,7 +1046,7 @@ export abstract class CommandBase<TSchema extends CommandOptionsSchema = {}> {
  */
 export type CommandClass<
 	TName extends CommandName = CommandName,
-	TSchema extends CommandOptionsSchema = {},
+	TSchema extends CommandOptionsInput = {},
 > = (abstract new () => CommandBase<TSchema>) & {
 	readonly definition: NamedCommand<TSchema, any, CommandBase<TSchema>, TName>;
 	readonly [COMMAND_CLASS_MARKER]: true;
@@ -911,7 +1170,7 @@ export type CommandReference = string | RegisterableCommand;
  */
 export function Command<
 	const TName extends CommandName,
-	TSchema extends CommandOptionsSchema = {},
+	TSchema extends CommandOptionsInput = {},
 >(meta: CommandMeta<TName, TSchema>): CommandClass<TName, TSchema> {
 	validateMeta(meta);
 
