@@ -10,6 +10,7 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { IExtensibilityService } from "../common/definitions/extensibility";
+import { SystemWarningsSeverity } from "../definitions/system-warnings";
 
 export class InitializeService implements IInitializeService {
 	// NOTE: Do not inject anything here, use $injector.resolve in the code
@@ -30,17 +31,15 @@ export class InitializeService implements IInitializeService {
 		}
 
 		if (initOpts.settingsServiceOptions) {
-			const $settingsService = this.$injector.resolve<ISettingsService>(
-				"settingsService"
-			);
+			const $settingsService =
+				this.$injector.resolve<ISettingsService>("settingsService");
 			$settingsService.setSettings(initOpts.settingsServiceOptions);
 		}
 
 		if (initOpts.extensibilityOptions) {
 			if (initOpts.extensibilityOptions.pathToExtensions) {
-				const $extensibilityService = this.$injector.resolve<
-					IExtensibilityService
-				>("extensibilityService");
+				const $extensibilityService =
+					this.$injector.resolve<IExtensibilityService>("extensibilityService");
 				$extensibilityService.pathToExtensions =
 					initOpts.extensibilityOptions.pathToExtensions;
 			}

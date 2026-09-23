@@ -37,7 +37,9 @@ let lastTagVersion = (
     .stdout.toString()
 )
   .trim()
-  .substring(1);
+  // git describe emits the tag verbatim (v9.1.0); LAST_TAGGED_VERSION callers
+  // pass a bare version, which for scoped packages has no "v" to strip
+  .replace(/^v/, "");
 if (!semver.parse(lastTagVersion)) {
   throw new Error("Invalid last tag version");
 }

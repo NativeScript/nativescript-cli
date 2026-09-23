@@ -9,12 +9,12 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		private device: Mobile.IDevice,
 		private $logger: ILogger,
 		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $fs: IFileSystem
+		private $fs: IFileSystem,
 	) {}
 
 	public async listFiles(
 		devicePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		if (!devicePath) {
 			devicePath = ".";
@@ -31,10 +31,33 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		this.$logger.info(children.join(EOL));
 	}
 
+	public async getDirectoryEntries(
+		devicePath: string,
+		appIdentifier: string,
+	): Promise<string[] | null> {
+		try {
+			const result = await this.$iosDeviceOperations.listDirectory([
+				{
+					deviceId: this.device.deviceInfo.identifier,
+					path: devicePath,
+					appId: appIdentifier,
+				},
+			]);
+			const entries =
+				result?.[this.device.deviceInfo.identifier]?.[0]?.response;
+			return Array.isArray(entries) ? entries : null;
+		} catch (err) {
+			this.$logger.trace(
+				`Unable to list directory '${devicePath}' for application ${appIdentifier}: ${err.message}`,
+			);
+			return null;
+		}
+	}
+
 	public async getFile(
 		deviceFilePath: string,
 		appIdentifier: string,
-		outputFilePath?: string
+		outputFilePath?: string,
 	): Promise<void> {
 		if (outputFilePath) {
 			await this.$iosDeviceOperations.downloadFiles([
@@ -50,14 +73,14 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 		const fileContent = await this.getFileContent(
 			deviceFilePath,
-			appIdentifier
+			appIdentifier,
 		);
 		this.$logger.info(fileContent);
 	}
 
 	public async getFileContent(
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<string> {
 		const result = await this.$iosDeviceOperations.readFiles([
 			{
@@ -73,7 +96,7 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	public async putFile(
 		localFilePath: string,
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		await this.uploadFilesCore([
 			{
@@ -86,7 +109,7 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async deleteFile(
 		deviceFilePath: string,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		await this.$iosDeviceOperations.deleteFiles(
 			[
@@ -98,25 +121,25 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 			],
 			(err: IOSDeviceLib.IDeviceError) => {
 				this.$logger.trace(
-					`Error while deleting file: ${deviceFilePath}: ${err.message} with code: ${err.code}`
+					`Error while deleting file: ${deviceFilePath}: ${err.message} with code: ${err.code}`,
 				);
 
 				if (err.code !== IOSDeviceFileSystem.AFC_DELETE_FILE_NOT_FOUND_ERROR) {
 					this.$logger.warn(
-						`Cannot delete file: ${deviceFilePath}. Reason: ${err.message}`
+						`Cannot delete file: ${deviceFilePath}. Reason: ${err.message}`,
 					);
 				}
-			}
+			},
 		);
 	}
 
 	public async transferFiles(
 		deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		const filesToUpload: Mobile.ILocalToDevicePathData[] = _.filter(
 			localToDevicePaths,
-			(l) => this.$fs.getFsStats(l.getLocalPath()).isFile()
+			(l) => this.$fs.getFsStats(l.getLocalPath()).isFile(),
 		);
 		const files: IOSDeviceLib.IFileData[] = filesToUpload.map((l) => ({
 			source: l.getLocalPath(),
@@ -137,7 +160,7 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 	public async transferDirectory(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		projectFilesPath: string
+		projectFilesPath: string,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		await this.transferFiles(deviceAppData, localToDevicePaths);
 		return localToDevicePaths;
@@ -145,21 +168,35 @@ export class IOSDeviceFileSystem implements Mobile.IDeviceFileSystem {
 
 	public async updateHashesOnDevice(
 		hashes: IStringDictionary,
-		appIdentifier: string
+		appIdentifier: string,
 	): Promise<void> {
 		return;
 	}
 
 	private async uploadFilesCore(
-		filesToUpload: IOSDeviceLib.IUploadFilesData[]
+		filesToUpload: IOSDeviceLib.IUploadFilesData[],
 	): Promise<void> {
 		await this.$iosDeviceOperations.uploadFiles(
 			filesToUpload,
 			(err: IOSDeviceLib.IDeviceError) => {
-				if (err.deviceId === this.device.deviceInfo.identifier) {
+				// Previously an error whose deviceId did not exactly match was
+				// dropped on the floor — including errors with NO deviceId at
+				// all (some ios-device-lib error paths don't attribute one).
+				// That left "Successfully synced" printed over a failed
+				// transfer and the app silently running stale JavaScript.
+				// Rethrow unless the error is positively attributed to a
+				// DIFFERENT device; surface even those at warn level so a
+				// failed upload is never invisible.
+				if (
+					!err.deviceId ||
+					err.deviceId === this.device.deviceInfo.identifier
+				) {
 					throw err;
 				}
-			}
+				this.$logger.warn(
+					`File upload error reported for another device (${err.deviceId}): ${err.message}`,
+				);
+			},
 		);
 	}
 }

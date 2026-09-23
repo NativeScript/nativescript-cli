@@ -25,7 +25,7 @@ describe("helpers", () => {
 		assert.deepStrictEqual(
 			actualResult,
 			testData.expectedResult,
-			`For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`
+			`For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`,
 		);
 	};
 
@@ -82,9 +82,9 @@ describe("helpers", () => {
 				assert.deepStrictEqual(
 					helpers.appendZeroesToVersion(
 						testCase.input,
-						testCase.requiredVersionLength
+						testCase.requiredVersionLength,
 					),
-					testCase.expectedResult
+					testCase.expectedResult,
 				);
 			});
 		});
@@ -97,13 +97,13 @@ describe("helpers", () => {
 			initialDataValues: any[],
 			handledElements: any[],
 			element: any,
-			passedChunkSize: number
+			passedChunkSize: number,
 		) => {
 			return new Promise<void>((resolve) =>
 				setImmediate(() => {
 					const remainingElements = _.difference(
 						initialDataValues,
-						handledElements
+						handledElements,
 					);
 					const isFromLastChunk =
 						element + passedChunkSize > initialDataValues.length;
@@ -117,17 +117,17 @@ describe("helpers", () => {
 							Math.floor(indexOfElement / passedChunkSize) + 1;
 						const expectedRemainingElements = _.drop(
 							initialDataValues,
-							chunkNumber * passedChunkSize
+							chunkNumber * passedChunkSize,
 						);
 
 						assert.deepStrictEqual(
 							remainingElements,
-							expectedRemainingElements
+							expectedRemainingElements,
 						);
 					}
 
 					resolve();
-				})
+				}),
 			);
 		};
 
@@ -146,9 +146,9 @@ describe("helpers", () => {
 						initialData,
 						handledElements,
 						element,
-						chunkSize
+						chunkSize,
 					);
-				}
+				},
 			);
 		});
 
@@ -174,9 +174,9 @@ describe("helpers", () => {
 						initialDataValues,
 						handledElements,
 						element,
-						chunkSize
+						chunkSize,
 					);
-				}
+				},
 			);
 		});
 	});
@@ -312,13 +312,13 @@ describe("helpers", () => {
 		// The tests will use strings in order to skip transpilation of lambdas to functions.
 		it("returns correct property name for ES5 functions", () => {
 			_.each(ES5Functions, (testData) =>
-				assertTestData(testData, helpers.getPropertyName)
+				assertTestData(testData, helpers.getPropertyName),
 			);
 		});
 
 		it("returns correct property name for ES6 functions", () => {
 			_.each(ES6Functions, (testData) =>
-				assertTestData(testData, helpers.getPropertyName)
+				assertTestData(testData, helpers.getPropertyName),
 			);
 		});
 	});
@@ -389,7 +389,7 @@ describe("helpers", () => {
 
 		it("returns expected result", () => {
 			_.each(toBooleanTestData, (testData) =>
-				assertTestData(testData, helpers.toBoolean)
+				assertTestData(testData, helpers.toBoolean),
 			);
 		});
 
@@ -461,7 +461,7 @@ describe("helpers", () => {
 
 		it("returns expected result", () => {
 			_.each(isNullOrWhitespaceTestData, (t) =>
-				assertTestData(t, helpers.isNullOrWhitespace)
+				assertTestData(t, helpers.isNullOrWhitespace),
 			);
 		});
 
@@ -539,21 +539,19 @@ describe("helpers", () => {
 		];
 
 		_.each(settlePromisesTestData, (testData, inputNumber) => {
-			it(`returns correct data, test case ${inputNumber}`, (done: any) => {
-				helpers
+			it(`returns correct data, test case ${inputNumber}`, async () => {
+				await helpers
 					.settlePromises<any>(testData.input)
 					.then((res) => {
 						assert.deepStrictEqual(res, testData.expectedResult);
 					})
 					.catch((err) => {
 						assert.deepStrictEqual(err.message, testData.expectedError);
-					})
-					.then(done)
-					.catch(done);
+					});
 			});
 		});
 
-		it("executes all promises even when some of them are rejected", (done: mocha.Done) => {
+		it("executes all promises even when some of them are rejected", async () => {
 			let isPromiseSettled = false;
 
 			const testData: ITestData = {
@@ -565,24 +563,19 @@ describe("helpers", () => {
 				expectedError: getErrorMessage([1]),
 			};
 
-			helpers
-				.settlePromises<any>(testData.input)
-				.then(
-					(res) => {
-						assert.deepStrictEqual(res, testData.expectedResult);
-					},
-					(err) => {
-						assert.deepStrictEqual(err.message, testData.expectedError);
-					}
-				)
-				.then(() => {
-					assert.isTrue(
-						isPromiseSettled,
-						"When the first promise is rejected, the second one should still be executed."
-					);
-					done();
-				})
-				.catch(done);
+			await helpers.settlePromises<any>(testData.input).then(
+				(res) => {
+					assert.deepStrictEqual(res, testData.expectedResult);
+				},
+				(err) => {
+					assert.deepStrictEqual(err.message, testData.expectedError);
+				},
+			);
+
+			assert.isTrue(
+				isPromiseSettled,
+				"When the first promise is rejected, the second one should still be executed.",
+			);
 		});
 	});
 
@@ -598,12 +591,12 @@ describe("helpers", () => {
 		const assertPidTestData = (testData: IiOSSimulatorPidTestData) => {
 			const actualResult = helpers.getPidFromiOSSimulatorLogs(
 				testData.appId || appId,
-				testData.input
+				testData.input,
 			);
 			assert.deepStrictEqual(
 				actualResult,
 				testData.expectedResult,
-				`For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`
+				`For input ${testData.input}, the expected result is: ${testData.expectedResult}, but actual result is: ${actualResult}.`,
 			);
 		};
 
@@ -670,7 +663,7 @@ describe("helpers", () => {
 
 		it("returns expected result", () => {
 			_.each(getPidFromiOSSimulatorLogsTestData, (testData) =>
-				assertPidTestData(testData)
+				assertPidTestData(testData),
 			);
 		});
 	});
@@ -750,28 +743,28 @@ describe("helpers", () => {
 		];
 
 		const assertValueFromNestedObjectTestData = (
-			testData: IValueFromNestedObjectTestData
+			testData: IValueFromNestedObjectTestData,
 		) => {
 			const actualResult = helpers.getValueFromNestedObject(
 				testData.input,
-				testData.key
+				testData.key,
 			);
 			assert.deepStrictEqual(
 				actualResult,
 				testData.expectedResult,
 				`For input ${JSON.stringify(
-					testData.input
+					testData.input,
 				)}, the expected result is: ${JSON.stringify(
-					testData.expectedResult || "undefined"
+					testData.expectedResult || "undefined",
 				)}, but actual result is: ${JSON.stringify(
-					actualResult || "undefined"
-				)}.`
+					actualResult || "undefined",
+				)}.`,
 			);
 		};
 
 		it("returns expected result", () => {
 			_.each(getValueFromNestedObjectTestData, (testData) =>
-				assertValueFromNestedObjectTestData(testData)
+				assertValueFromNestedObjectTestData(testData),
 			);
 		});
 	});
@@ -816,7 +809,7 @@ describe("helpers", () => {
 			_.each(testData, (testCase) => {
 				assert.deepStrictEqual(
 					helpers.isNumberWithoutExponent(testCase.input),
-					testCase.expectedResult
+					testCase.expectedResult,
 				);
 			});
 		});
@@ -845,14 +838,12 @@ describe("helpers", () => {
 					expectedOutput: false,
 				},
 				{
-					name:
-						"returns false when neither -g/--global are passed on terminal, but similar flag is passed",
+					name: "returns false when neither -g/--global are passed on terminal, but similar flag is passed",
 					input: ["install", "nativescript", "--globalEnv"],
 					expectedOutput: false,
 				},
 				{
-					name:
-						"returns false when neither -g/--global are passed on terminal, but trying to install global package",
+					name: "returns false when neither -g/--global are passed on terminal, but trying to install global package",
 					input: ["install", "global"],
 					expectedOutput: false,
 				},
@@ -1041,6 +1032,83 @@ const test = require("./test");`,
 			(<any>process.stdin).isTTY = true;
 
 			assert.isTrue(helpers.isInteractive());
+		});
+	});
+
+	describe("decorateMethod", () => {
+		const decorate = (middlewares: Function[], sink: Function): Function => {
+			const descriptor: TypedPropertyDescriptor<Function> = { value: sink };
+			helpers.decorateMethod(
+				async () => middlewares,
+				async (method, self, result) => result,
+			)(null, "method", descriptor);
+			return descriptor.value;
+		};
+
+		it("passes the original args and the sink to a single middleware", async () => {
+			let received: any[];
+			const middleware = async (args: any[], next: Function) => {
+				received = args;
+				return next.apply(null, ["replaced"]);
+			};
+			const decorated = decorate([middleware], async function (...args: any[]) {
+				return args;
+			});
+
+			const result = await decorated.call({}, "original");
+
+			assert.deepStrictEqual(received, ["original"]);
+			assert.deepStrictEqual(result, ["replaced"]);
+		});
+
+		it("forwards args changed by every middleware, not only the innermost", async () => {
+			const seen: { [key: string]: any[] } = {};
+			// The last middleware in the array is the outermost link, so it runs
+			// first.
+			const runsSecond = async (args: any[], next: Function) => {
+				seen.second = args.slice();
+				return next.apply(null, args.concat("second"));
+			};
+			const runsFirst = async (args: any[], next: Function) => {
+				seen.first = args.slice();
+				return next.apply(null, args.concat("first"));
+			};
+			const decorated = decorate(
+				[runsSecond, runsFirst],
+				async function (...args: any[]) {
+					seen.sink = args;
+					return "done";
+				},
+			);
+
+			const result = await decorated.call({}, "start");
+
+			assert.deepStrictEqual(seen.first, ["start"]);
+			assert.deepStrictEqual(seen.second, ["start", "first"]);
+			assert.deepStrictEqual(seen.sink, ["start", "first", "second"]);
+			assert.strictEqual(result, "done");
+		});
+
+		it("keeps the current args when a middleware calls next() without arguments", async () => {
+			const seen: { [key: string]: any[] } = {};
+			const inner = async (args: any[], next: Function) => {
+				seen.inner = args.slice();
+				return next.apply(null, args);
+			};
+			const outer = async (args: any[], next: Function) => {
+				return next();
+			};
+			const decorated = decorate(
+				[inner, outer],
+				async function (...args: any[]) {
+					seen.sink = args;
+				},
+			);
+
+			await decorated.call({}, "kept");
+
+			assert.deepStrictEqual(seen.inner, ["kept"]);
+			assert.deepStrictEqual(seen.sink, ["kept"]);
 		});
 	});
 });

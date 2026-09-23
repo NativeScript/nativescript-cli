@@ -169,14 +169,18 @@ export class ProjectData implements IProjectData {
 				nsConfig && nsConfig.projectName
 					? nsConfig.projectName
 					: this.$projectHelper.sanitizeName(path.basename(projectDir));
-			this.platformsDir = path.join(projectDir, constants.PLATFORMS_DIR_NAME);
+			// read before `platformsDir`, which is derived from it
+			this.nsConfig = nsConfig;
+			this.platformsDir = path.join(
+				projectDir,
+				this.getBuildRelativeDirectoryPath(),
+			);
 			this.projectFilePath = projectFilePath;
 			this.projectIdentifiers = this.initializeProjectIdentifiers(nsConfig);
 			this.packageJsonData = packageJsonData;
 			this.dependencies = packageJsonData.dependencies;
 			this.devDependencies = packageJsonData.devDependencies;
 			this.projectType = this.getProjectType();
-			this.nsConfig = nsConfig;
 			this.ignoredDependencies = nsConfig?.ignoredNativeDependencies;
 			this.appDirectoryPath = this.getAppDirectoryPath();
 			this.appResourcesDirectoryPath = this.getAppResourcesDirectoryPath();
@@ -274,6 +278,18 @@ export class ProjectData implements IProjectData {
 		// 	this.getAppDirectoryRelativePath(),
 		// 	constants.APP_RESOURCES_FOLDER_NAME
 		// );
+	}
+
+	/**
+	 * Where the native projects are generated, relative to the project root.
+	 * `buildPath` in the project config overrides the default `platforms`.
+	 */
+	public getBuildRelativeDirectoryPath(): string {
+		if (this.nsConfig && this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY]) {
+			return this.nsConfig[constants.CONFIG_NS_BUILD_ENTRY];
+		}
+
+		return constants.PLATFORMS_DIR_NAME;
 	}
 
 	public getAppDirectoryPath(projectDir?: string): string {

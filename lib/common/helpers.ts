@@ -362,6 +362,18 @@ export function toBoolean(str: any): boolean {
 	return !!(str && str.toString && str.toString().toLowerCase() === "true");
 }
 
+/**
+ * Reads an opt-in environment flag: any value other than empty / `0` /
+ * `false` / `off` / `no` turns it on.
+ */
+export function isTruthyEnvFlag(value: string | undefined): boolean {
+	if (typeof value !== "string") {
+		return false;
+	}
+	const v = value.trim().toLowerCase();
+	return !!v && v !== "0" && v !== "false" && v !== "off" && v !== "no";
+}
+
 export function block(operation: () => void): void {
 	if (isInteractive()) {
 		(<ReadStream>process.stdin).setRawMode(false);
@@ -536,9 +548,19 @@ export function decorateMethod(
 				const replacementMethods = _.filter(newMethods, (f) => _.isFunction(f));
 				if (replacementMethods.length > 0) {
 					hasBeenReplaced = true;
+					// Each link passes the args it was invoked with down the chain, so
+					// any middleware's next(...newArgs) — not just the innermost one's —
+					// is seen by the rest of the chain; next() with no arguments keeps
+					// the current args.
 					const chainedReplacementMethod = _.reduce(
 						replacementMethods,
-						(prev, next) => next.bind(next, args, prev),
+						(prev: Function, next: Function) =>
+							(...forwardedArgs: any[]) =>
+								next.call(
+									next,
+									forwardedArgs.length ? forwardedArgs : args,
+									prev,
+								),
 						sink.bind(this),
 					);
 					result = chainedReplacementMethod();
@@ -558,11 +580,20 @@ export function decorateMethod(
 	};
 }
 
+/**
+ * @deprecated Emits the param-name hook payload contract (keyed off the
+ * decorated method's parameter names); slated for replacement by a typed
+ * hook API.
+ */
 export function hook(commandName: string) {
 	function getHooksService(self: any): IHooksService {
 		let hooksService: IHooksService = self.$hooksService;
 		if (!hooksService) {
-			const injector = self.$injector;
+			// The process-wide injector must stay the LAST resort: tests stub
+			// self.$hooksService / self.$injector, and a class migrated off
+			// property injection has neither — only then may it be used. It is
+			// required at call time because yok imports this module (cycle).
+			const injector = self.$injector || require("./yok").getInjector();
 			if (!injector) {
 				throw Error(
 					"Type with hooks needs to have either $hooksService or $injector injected.",
@@ -596,6 +627,7 @@ export function hook(commandName: string) {
 			return hooksService.executeBeforeHooks(
 				commandName,
 				prepareArguments(method, args, hooksService),
+				{ consumesMiddlewares: true },
 			);
 		},
 		async (method: any, self: any, resultPromise: any, args: any[]) => {
@@ -850,6 +882,12 @@ const FN_NAME_AND_ARGS =
 const FN_ARG_SPLIT = /,/;
 const FN_ARG = /^\s*(_?)(\S+?)\1\s*$/;
 
+/**
+ * @deprecated Discovers dependencies by regex-parsing constructor source text —
+ * the reason tests must run against tsc output and the CLI can never be
+ * bundled. Kept only for the legacy provider kind and param-name hook
+ * injection; never add new callers.
+ */
 export function annotate(fn: any) {
 	let $inject: any, fnText: string, argDecl: string[];
 

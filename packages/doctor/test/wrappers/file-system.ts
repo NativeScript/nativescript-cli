@@ -1,6 +1,6 @@
 import { tmpdir } from "os";
 import { assert } from "chai";
-import { rimraf, rimrafSync } from "rimraf";
+import { rimrafSync } from "rimraf";
 
 import { FileSystem } from "../../src/wrappers/file-system";
 
@@ -26,25 +26,20 @@ describe("FileSystem", () => {
 			`${tmpDir}/test/wrappers/file-system.ts`,
 		];
 
-		it("should extract in example zip archive in tmp folder", (done) => {
+		it("should extract in example zip archive in tmp folder", async () => {
 			const fs = new FileSystem();
 
-			fs.extractZip(testFilePath, tmpDir)
-				.then(() => {
-					const allExists = filesThatNeedToExist
-						.map(fs.exists)
-						.reduce((acc, r) => acc && r, true);
+			await fs.extractZip(testFilePath, tmpDir);
 
-					assert.isTrue(allExists);
+			const allExists = filesThatNeedToExist
+				.map(fs.exists)
+				.reduce((acc, r) => acc && r, true);
 
-					done();
-				})
-				.catch((e) => done(e));
+			assert.isTrue(allExists);
 		});
 
-		afterEach((done) => {
+		afterEach(() => {
 			rimrafSync(tmpDir);
-			done();
 		});
 	});
 });

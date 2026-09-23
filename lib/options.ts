@@ -5,25 +5,17 @@ import * as _ from "lodash";
 import {
 	IDictionary,
 	IDashedOption,
-	OptionType,
 	IErrors,
 	ISettingsService,
 } from "./common/declarations";
+import { OptionType } from "./common/enums";
 import { injector } from "./common/yok";
 import { APP_FOLDER_NAME } from "./constants";
 export class Options {
 	private static DASHED_OPTION_REGEX = /(.+?)([A-Z])(.*)/;
 	private static NONDASHED_OPTION_REGEX = /(.+?)[-]([a-zA-Z])(.*)/;
 
-	private optionsWhiteList = [
-		"ui",
-		"recursive",
-		"reporter",
-		"require",
-		"timeout",
-		"_",
-		"$0",
-	]; // These options shouldn't be validated
+	private optionsWhiteList = ["_", "$0"]; // yargs artifacts, not options
 	private globalOptions: IDictionary<IDashedOption> = {
 		log: { type: OptionType.String, hasSensitiveValue: false },
 		verbose: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -42,7 +34,7 @@ export class Options {
 	public options: IDictionary<IDashedOption>;
 
 	public setupOptions(
-		commandSpecificDashedOptions?: IDictionary<IDashedOption>
+		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
 	): void {
 		if (commandSpecificDashedOptions) {
 			_.extend(this.options, commandSpecificDashedOptions);
@@ -54,7 +46,7 @@ export class Options {
 		// Check if the user has explicitly provide --hmr and --release options from command line
 		if (this.initialArgv.release && this.initialArgv.hmr) {
 			this.$errors.fail(
-				"The options --release and --hmr cannot be used simultaneously."
+				"The options --release and --hmr cannot be used simultaneously.",
 			);
 		}
 
@@ -75,7 +67,8 @@ export class Options {
 
 	constructor(
 		private $errors: IErrors,
-		private $settingsService: ISettingsService
+		private $settingsService: ISettingsService,
+		private $logger: ILogger,
 	) {
 		this.options = _.extend({}, this.commonOptions, this.globalOptions);
 		this.setArgv();
@@ -84,8 +77,9 @@ export class Options {
 	public get shorthands(): string[] {
 		const result: string[] = [];
 		_.each(_.keys(this.options), (optionName) => {
-			if (this.options[optionName].alias) {
-				result.push(this.options[optionName].alias);
+			const alias = this.options[optionName].alias;
+			if (alias) {
+				result.push(...(_.isArray(alias) ? alias : [alias]));
 			}
 		});
 		return result;
@@ -133,6 +127,7 @@ export class Options {
 			vue: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vuejs: { type: OptionType.Boolean, hasSensitiveValue: false },
 			svelte: { type: OptionType.Boolean, hasSensitiveValue: false },
+			solid: { type: OptionType.Boolean, hasSensitiveValue: false },
 			vision: { type: OptionType.Boolean, hasSensitiveValue: false },
 			"vision-ng": { type: OptionType.Boolean, hasSensitiveValue: false },
 			"vision-react": { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -177,8 +172,6 @@ export class Options {
 			},
 			json: { type: OptionType.Boolean, hasSensitiveValue: false },
 			avd: { type: OptionType.String, hasSensitiveValue: true },
-			// check not used
-			config: { type: OptionType.Array, hasSensitiveValue: false },
 			insecure: {
 				type: OptionType.Boolean,
 				alias: "k",
@@ -235,6 +228,7 @@ export class Options {
 				default: false,
 				hasSensitiveValue: false,
 			},
+			gradleFlavor: { type: OptionType.String, hasSensitiveValue: false },
 			gradlePath: { type: OptionType.String, hasSensitiveValue: false },
 			gradleArgs: { type: OptionType.String, hasSensitiveValue: false },
 			hostProjectPath: { type: OptionType.String, hasSensitiveValue: false },
@@ -269,6 +263,7 @@ export class Options {
 				default: true,
 			},
 			dryRun: { type: OptionType.Boolean, hasSensitiveValue: false },
+			skipNative: { type: OptionType.Boolean, hasSensitiveValue: false },
 			uniqueBundle: { type: OptionType.Boolean, hasSensitiveValue: false },
 		};
 	}
@@ -283,63 +278,112 @@ export class Options {
 	}
 
 	public validateOptions(
-		commandSpecificDashedOptions?: IDictionary<IDashedOption>
+		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
 	): void {
 		this.setupOptions(commandSpecificDashedOptions);
-		const parsed: any = {};
-		for (const key of Object.keys(this.argv)) {
-			const optionName = `${this.argv[key]}`;
-			parsed[optionName] = this.getOptionValue(optionName);
-		}
 
-		_.each(parsed, (value: any, originalOptionName: string) => {
-			// when this.options are passed to yargs, it returns all of them and the ones that are not part of process.argv are set to undefined.
-			if (value === undefined) {
-				return;
+		const validated: string[] = [];
+		for (const originalOptionName of Object.keys(this.argv)) {
+			const optionValue = this.getOptionValue(originalOptionName);
+			// yargs reports every declared option; the ones that are not part of
+			// process.argv come back undefined.
+			if (optionValue === undefined) {
+				continue;
 			}
 
 			const optionName = this.getCorrectOptionName(originalOptionName);
 
-			if (!_.includes(this.optionsWhiteList, optionName)) {
-				if (!this.isOptionSupported(optionName)) {
-					this.$errors.failWithHelp(
-						`The option '${originalOptionName}' is not supported.`
-					);
-				}
-
-				const optionType = this.getOptionType(optionName),
-					optionValue = parsed[optionName];
-
-				if (_.isArray(optionValue) && optionType !== OptionType.Array) {
-					this.$errors.failWithHelp(
-						"The '%s' option requires a single value.",
-						originalOptionName
-					);
-				} else if (
-					optionType === OptionType.String &&
-					helpers.isNullOrWhitespace(optionValue)
-				) {
-					this.$errors.failWithHelp(
-						"The option '%s' requires non-empty value.",
-						originalOptionName
-					);
-				} else if (
-					optionType === OptionType.Array &&
-					optionValue.length === 0
-				) {
-					this.$errors.failWithHelp(
-						`The option '${originalOptionName}' requires one or more values, separated by a space.`
-					);
-				}
+			if (_.includes(this.optionsWhiteList, optionName)) {
+				continue;
 			}
-		});
+
+			// yargs emits every spelling of a flag: dashed, camelCase and, for an
+			// aliased option, the alias. Collapse them so one flag is reported once.
+			const dedupeKey = this.getCanonicalOptionName(optionName);
+			if (_.includes(validated, dedupeKey)) {
+				continue;
+			}
+			validated.push(dedupeKey);
+
+			if (!this.isOptionSupported(optionName)) {
+				this.reportInvalidOption(
+					`The option '${this.getReportedOptionName(
+						originalOptionName,
+					)}' is not supported.`,
+				);
+				continue;
+			}
+
+			const optionType = this.getOptionType(optionName);
+
+			if (_.isArray(optionValue) && optionType !== OptionType.Array) {
+				this.reportInvalidOption(
+					`The '${originalOptionName}' option requires a single value.`,
+				);
+			} else if (
+				optionType === OptionType.String &&
+				helpers.isNullOrWhitespace(optionValue)
+			) {
+				this.reportInvalidOption(
+					`The option '${originalOptionName}' requires non-empty value.`,
+				);
+			} else if (optionType === OptionType.Array && optionValue.length === 0) {
+				this.reportInvalidOption(
+					`The option '${originalOptionName}' requires one or more values, separated by a space.`,
+				);
+			}
+		}
+	}
+
+	// The name every spelling of an option collapses to. Unknown options keep
+	// their own name; there is no declaration to resolve them against.
+	private getCanonicalOptionName(optionName: string): string {
+		const correctName = this.getCorrectOptionName(optionName);
+		if (this.options[correctName]) {
+			return this.getNonDashedOptionName(correctName);
+		}
+
+		const aliasedName = _.findKey(this.options, (opt) =>
+			this.hasAlias(opt, correctName),
+		);
+		return this.getNonDashedOptionName(aliasedName || correctName);
+	}
+
+	// yargs strips the `no-` prefix off a negated flag, so an undeclared
+	// `--no-foo` surfaces as `foo` and would otherwise be reported under a name
+	// the user never typed.
+	private getReportedOptionName(optionName: string): string {
+		return process.argv.indexOf(`--no-${optionName}`) !== -1
+			? `no-${optionName}`
+			: optionName;
+	}
+
+	private reportInvalidOption(message: string): void {
+		if (process.env.NS_STRICT_OPTIONS === "error") {
+			this.$errors.failWithHelp(message);
+			return;
+		}
+
+		this.$logger.warn(
+			`${message} This will become an error in a future release. Set NS_STRICT_OPTIONS=error to preview that behavior.`,
+		);
 	}
 
 	private getCorrectOptionName(optionName: string): string {
-		const secondaryOptionName = this.getNonDashedOptionName(optionName);
-		return _.includes(this.optionNames, secondaryOptionName)
-			? secondaryOptionName
-			: optionName;
+		const nonDashedName = this.getNonDashedOptionName(optionName);
+		if (_.includes(this.optionNames, nonDashedName)) {
+			return nonDashedName;
+		}
+
+		// A few options are declared with a literal dashed key (vision-ng and
+		// friends). yargs still reports both spellings, so the camelCase one has
+		// to resolve back to the dashed declaration.
+		const dashedName = this.getDashedOptionName(optionName);
+		if (_.includes(this.optionNames, dashedName)) {
+			return dashedName;
+		}
+
+		return optionName;
 	}
 
 	private getOptionType(optionName: string): string {
@@ -349,8 +393,16 @@ export class Options {
 	}
 
 	private tryGetOptionByAliasName(aliasName: string) {
-		const option = _.find(this.options, (opt) => opt.alias === aliasName);
+		const option = _.find(this.options, (opt) => this.hasAlias(opt, aliasName));
 		return option;
+	}
+
+	// yargs accepts an option's `alias` as a single string or an array of them,
+	// so every alias lookup has to cope with both.
+	private hasAlias(option: IDashedOption, aliasName: string): boolean {
+		return _.isArray(option.alias)
+			? _.includes(option.alias, aliasName)
+			: option.alias === aliasName;
 	}
 
 	private isOptionSupported(option: string): boolean {
@@ -369,7 +421,7 @@ export class Options {
 	// This way your code will work in case "$ <cli name> emulate android --profile-dir" or "$ <cli name> emulate android --profileDir" is used by user.
 	private getNonDashedOptionName(optionName: string): string {
 		const matchUpperCaseLetters = optionName.match(
-			Options.NONDASHED_OPTION_REGEX
+			Options.NONDASHED_OPTION_REGEX,
 		);
 		if (matchUpperCaseLetters) {
 			// get here if option with upperCase letter is specified, for example profileDir
@@ -429,7 +481,7 @@ export class Options {
 							.map((match) => {
 								return match[currentDepth];
 							})
-							.filter(Boolean)
+							.filter(Boolean),
 					),
 				];
 

@@ -1,16 +1,16 @@
 import * as path from "path";
 import { TrackActionNames } from "../constants";
-import { IOptions } from "../declarations";
+import { IOptions, IOptionsTracker } from "../declarations";
 import {
 	IAnalyticsService,
 	IDictionary,
 	IDashedOption,
-	OptionType,
 } from "../common/declarations";
+import { OptionType } from "../common/enums";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 
-export class OptionsTracker {
+export class OptionsTracker implements IOptionsTracker {
 	public static PASSWORD_DETECTION_STRING = "password";
 	public static PRIVATE_REPLACE_VALUE = "private";
 	public static PATH_REPLACE_VALUE = "_localpath";
@@ -35,7 +35,7 @@ export class OptionsTracker {
 
 	private sanitizeTrackObject(
 		data: IDictionary<any>,
-		options?: IOptions
+		options?: IOptions,
 	): IDictionary<any> {
 		const shorthands = options ? options.shorthands : [];
 		const optionsDefinitions = options ? options.options : {};
@@ -72,7 +72,7 @@ export class OptionsTracker {
 		key: string,
 		value: any,
 		shorthands: string[] = [],
-		options: IDictionary<IDashedOption> = {}
+		options: IDictionary<IDashedOption> = {},
 	): Boolean {
 		if (shorthands.indexOf(key) >= 0) {
 			return true;

@@ -17,6 +17,12 @@ export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
 export const WEBPACK_PLUGIN_NAME = "@nativescript/webpack";
 export const RSPACK_PLUGIN_NAME = "@nativescript/rspack";
+// Root of the project-relative directory the Vite bundler writes its build
+// output to before the CLI copies it into the platforms app folder. The CLI
+// stages each platform in its own subdirectory (`.ns-vite-build/<platform>`)
+// and tells `@nativescript/vite` where via `NS_VITE_DIST_DIR`; the package's
+// own fallback (`.ns-vite-build`) only applies to standalone `vite` runs.
+export const VITE_DIST_FOLDER_NAME = ".ns-vite-build";
 export const TNS_CORE_MODULES_WIDGETS_NAME = "tns-core-modules-widgets";
 export const UI_MOBILE_BASE_NAME = "@nativescript/ui-mobile-base";
 export const TNS_ANDROID_RUNTIME_NAME = "tns-android";
@@ -35,7 +41,7 @@ export const ANDROID_DEVICE_APP_ROOT_TEMPLATE = `/data/data/%s/files`;
 export const NODE_MODULE_CACHE_PATH_KEY_NAME = "node-modules-cache-path";
 export const DEFAULT_APP_IDENTIFIER_PREFIX = "org.nativescript";
 export const LIVESYNC_EXCLUDED_DIRECTORIES = ["app_resources"];
-export const TESTING_FRAMEWORKS = ["jasmine", "mocha", "qunit"];
+export const TESTING_FRAMEWORKS = ["vitest", "jasmine", "mocha", "qunit"];
 export const TEST_RUNNER_NAME = "@nativescript/unit-test-runner";
 export const LIVESYNC_EXCLUDED_FILE_PATTERNS = ["**/*.js.map", "**/*.ts"];
 export const XML_FILE_EXTENSION = ".xml";
@@ -66,6 +72,7 @@ export const BUNDLE_DIR = "bundle";
 export const RESOURCES_DIR = "res";
 export const CONFIG_NS_FILE_NAME = "nsconfig.json";
 export const CONFIG_NS_APP_RESOURCES_ENTRY = "appResourcesPath";
+export const CONFIG_NS_BUILD_ENTRY = "buildPath";
 export const CONFIG_NS_APP_ENTRY = "appPath";
 export const CONFIG_FILE_NAME_DISPLAY = "nativescript.config.(js|ts)";
 export const CONFIG_FILE_NAME_JS = "nativescript.config.js";
@@ -217,6 +224,15 @@ export const DEBUGGER_ATTACHED_EVENT_NAME = "debuggerAttached";
 export const DEBUGGER_DETACHED_EVENT_NAME = "debuggerDetached";
 export const VERSION_STRING = "version";
 export const INSPECTOR_CACHE_DIRNAME = "ios-inspector";
+export const BUNDLETOOL_CACHE_DIRNAME = "bundletool";
+export const BUNDLETOOL_VERSION = "1.18.2";
+// sha256 of bundletool-all-<BUNDLETOOL_VERSION>.jar as published on GitHub;
+// must be updated together with BUNDLETOOL_VERSION or the download is rejected
+export const BUNDLETOOL_SHA256 =
+	"378b5434cd1378bef6b2bc527b8c7f0ff2584b273830335bce54d6d0813c8584";
+export const BUNDLETOOL_RELEASES_URL =
+	"https://github.com/google/bundletool/releases/download";
+export const BUNDLETOOL_PATH_ENV_VAR = "NS_BUNDLETOOL_PATH";
 export const POST_INSTALL_COMMAND_NAME = "post-install-cli";
 const ANDROID_SIGNING_REQUIRED_MESSAGE =
 	"you need to specify all --key-store-* options.";
@@ -420,6 +436,7 @@ export enum IOSNativeTargetTypes {
 	watchApp = "watch_app",
 	watchExtension = "watch_extension",
 	appExtension = "app_extension",
+	application = "application",
 }
 
 const pathToLoggerAppendersDir = join(
@@ -512,4 +529,9 @@ export enum PackageManagers {
 	yarn = "yarn",
 	yarn2 = "yarn2",
 	bun = "bun",
+}
+
+export enum BuildNames {
+	debug = "Debug",
+	release = "Release",
 }

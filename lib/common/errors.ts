@@ -4,7 +4,8 @@ import * as _ from "lodash";
 import { SourceMapConsumer } from "source-map";
 import { isInteractive } from "./helpers";
 import { deprecated } from "./decorators";
-import { ErrorCodes, IErrors, IFailOptions } from "./declarations";
+import { IErrors, IFailOptions } from "./declarations";
+import { ErrorCodes } from "./enums";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 
@@ -64,7 +65,7 @@ async function resolveCallStack(error: Error): Promise<string> {
 						functionName,
 						source,
 						sourcePos.line,
-						sourcePos.column
+						sourcePos.column,
 					);
 				}
 
@@ -73,10 +74,10 @@ async function resolveCallStack(error: Error): Promise<string> {
 					functionName,
 					fileName,
 					line,
-					column
+					column,
 				);
 			});
-		})
+		}),
 	);
 
 	let outputMessage = remapped.join("\n");
@@ -90,7 +91,7 @@ async function resolveCallStack(error: Error): Promise<string> {
 }
 
 export function installUncaughtExceptionListener(
-	actionOnException?: () => void
+	actionOnException?: () => void,
 ): void {
 	const handler = async (err: Error) => {
 		try {
@@ -123,7 +124,7 @@ export function installUncaughtExceptionListener(
 
 async function tryTrackException(
 	error: Error,
-	localInjector: IInjector
+	localInjector: IInjector,
 ): Promise<void> {
 	let disableAnalytics: boolean;
 	try {
@@ -190,13 +191,13 @@ export class Errors implements IErrors {
 		exception.name = opts.name || "Exception";
 		exception.message = util.format.apply(
 			null,
-			[opts.formatStr].concat(argsArray)
+			[opts.formatStr].concat(argsArray),
 		);
 		try {
 			const $messagesService = this.$injector.resolve("messagesService");
 			exception.message = $messagesService.getMessage.apply(
 				$messagesService,
-				[opts.formatStr].concat(argsArray)
+				[opts.formatStr].concat(argsArray),
 			);
 		} catch (err) {
 			// Ignore
@@ -214,7 +215,7 @@ export class Errors implements IErrors {
 
 	public async beginCommand(
 		action: () => Promise<boolean>,
-		printCommandHelpSuggestion: () => Promise<void>
+		printCommandHelpSuggestion: () => Promise<void>,
 	): Promise<boolean> {
 		try {
 			return await action();
@@ -228,8 +229,8 @@ export class Errors implements IErrors {
 			const message = printCallStack
 				? await resolveCallStack(ex)
 				: isInteractive()
-				? `\x1B[31;1m${ex.message}\x1B[0m`
-				: ex.message;
+					? `\x1B[31;1m${ex.message}\x1B[0m`
+					: ex.message;
 
 			if (ex.printOnStdout) {
 				logger.info(message);
@@ -243,7 +244,7 @@ export class Errors implements IErrors {
 
 			await tryTrackException(ex, this.$injector);
 			process.exit(
-				_.isNumber(ex.errorCode) ? ex.errorCode : ErrorCodes.UNKNOWN
+				_.isNumber(ex.errorCode) ? ex.errorCode : ErrorCodes.UNKNOWN,
 			);
 		}
 	}

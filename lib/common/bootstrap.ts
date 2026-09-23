@@ -9,7 +9,6 @@ injector.requirePublic("fs", "./file-system");
 injector.require("hostInfo", "./host-info");
 injector.require("osInfo", "./os-info");
 
-injector.require("dispatcher", "./dispatchers");
 injector.require("commandDispatcher", "./dispatchers");
 
 injector.require("resources", "./resource-loader");
@@ -151,7 +150,6 @@ injector.require(
 	"iOSEmulatorServices",
 	"./mobile/ios/simulator/ios-emulator-services",
 );
-injector.require("wp8EmulatorServices", "./mobile/wp8/wp8-emulator-services");
 
 injector.require("autoCompletionService", "./services/auto-completion-service");
 injector.requirePublic("settingsService", "./services/settings-service");
@@ -194,5 +192,4 @@ injector.require("projectFilesManager", "./services/project-files-manager");
 injector.require("xcodeSelectService", "./services/xcode-select-service");
 injector.require("net", "./services/net-service");
 
-injector.require("qr", "./services/qr");
 injector.require(["lockfile", "lockService"], "./services/lock-service");

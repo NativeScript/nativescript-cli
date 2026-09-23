@@ -1,3 +1,5 @@
+import type { TempService } from "../contracts/temp-service";
+
 export type AffixOptions = {
 	prefix?: string;
 	suffix?: string;
@@ -7,7 +9,5 @@ export type AffixOptions = {
 /**
  * Declares wrapped functions of temp module
  */
-export interface ITempService {
-	mkdirSync(affixes: string | AffixOptions): Promise<string>;
-	path(options: string | AffixOptions): Promise<string>;
-}
+/** @deprecated Kept so existing annotations compile; use the {@link TempService} contract. */
+export interface ITempService extends TempService {}

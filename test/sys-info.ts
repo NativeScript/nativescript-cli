@@ -12,6 +12,7 @@ import {
 	ISysInfo,
 	IFileSystem,
 } from "../lib/common/declarations";
+import { SystemWarningsSeverity } from "../lib/definitions/system-warnings";
 const verifyNodeVersion = require("../lib/common/verify-node-version");
 
 describe("sysInfo", () => {
@@ -49,8 +50,8 @@ describe("sysInfo", () => {
 					? {
 							message: opts.nodeJsWarning,
 							severity: SystemWarningsSeverity.medium,
-					  }
-					: null
+						}
+					: null,
 			);
 
 			const testInjector = createTestInjector();
@@ -111,7 +112,7 @@ describe("sysInfo", () => {
 
 	describe("getMacOSWarningMessage", () => {
 		const getMacOSWarning = async (
-			macOSDeprecatedVersion?: string
+			macOSDeprecatedVersion?: string,
 		): Promise<ISystemWarning> => {
 			sandbox.stub(verifyNodeVersion, "getNodeWarning").returns(null);
 

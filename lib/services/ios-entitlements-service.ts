@@ -1,5 +1,5 @@
 import * as path from "path";
-import { PlistSession } from "plist-merge-patch";
+import { PlistSession } from "../tools/plist-merge/plist-session";
 import { IPluginsService, IPluginData } from "../definitions/plugins";
 import { IProjectData } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
@@ -84,7 +84,7 @@ export class IOSEntitlementsService {
 			makePatch(appEntitlementsPath);
 		}
 
-		if ((<any>session).patches && (<any>session).patches.length > 0) {
+		if (session.hasPatches) {
 			const plistContent = session.build();
 			this.$logger.trace(
 				"App.entitlements: Write to: " +

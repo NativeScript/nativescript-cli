@@ -45,4 +45,5 @@ Command | Description
 --------|------------
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.
 [test android](test-android.html) | Runs the tests in your project on Android devices or native emulators.
+[test visionos](test-visionos.html) | Runs the tests in your project in the visionOS Simulator or on Apple Vision Pro devices.
 <% } %>

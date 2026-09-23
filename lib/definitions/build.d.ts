@@ -31,6 +31,7 @@ interface IAndroidBuildData
 	extends IBuildData,
 		IAndroidSigningData,
 		IHasAndroidBundle {
+	gradleFlavor?: string;
 	gradlePath?: string;
 	gradleArgs?: string;
 }

@@ -11,6 +11,7 @@ function createTestInjector(data: {
 	logLevel: string;
 	hasProjectWorkspace: boolean;
 	connectedDevices?: any[];
+	buildXcconfigContent?: string;
 }): IInjector {
 	const injector = new Yok();
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
@@ -19,8 +20,11 @@ function createTestInjector(data: {
 		getDevicesForPlatform: () => data.connectedDevices || [],
 	});
 	injector.register("fs", {
-		exists: () => data.hasProjectWorkspace,
-		readText: () => "",
+		exists: (filePath: string) =>
+			filePath.endsWith("build.xcconfig")
+				? data.buildXcconfigContent !== undefined
+				: data.hasProjectWorkspace,
+		readText: () => data.buildXcconfigContent || "",
 	});
 	injector.register("logger", {
 		getLevel: () => data.logLevel,
@@ -49,7 +53,13 @@ function getCommonArgs() {
 }
 
 function getXcodeProjectArgs(data?: { hasProjectWorkspace: boolean }) {
-	const extraArgs = ["-scheme", projectName, "-skipPackagePluginValidation"];
+	const extraArgs = [
+		"-scheme",
+		projectName,
+		"-skipPackagePluginValidation",
+		"-skipMacroValidation",
+		"SWIFT_ENABLE_EXPLICIT_MODULES=NO",
+	];
 	return data && data.hasProjectWorkspace
 		? [
 				"-workspace",
@@ -72,6 +82,115 @@ function getBuildLoggingArgs(logLevel: string): string[] {
 }
 
 describe("xcodebuildArgsService", () => {
+	describe("getXcodeProjectArgs", () => {
+		const originalAuthProvider = process.env.NS_PACKAGE_AUTHORIZATION_PROVIDER;
+
+		afterEach(() => {
+			if (originalAuthProvider === undefined) {
+				delete process.env.NS_PACKAGE_AUTHORIZATION_PROVIDER;
+			} else {
+				process.env.NS_PACKAGE_AUTHORIZATION_PROVIDER = originalAuthProvider;
+			}
+		});
+
+		it("should allow SWIFT_ENABLE_EXPLICIT_MODULES to be overridden from build.xcconfig", () => {
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+				buildXcconfigContent: "SWIFT_ENABLE_EXPLICIT_MODULES = YES",
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = xcodebuildArgsService.getXcodeProjectArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+			);
+
+			assert.include(actualArgs, "SWIFT_ENABLE_EXPLICIT_MODULES=YES");
+			assert.notInclude(actualArgs, "SWIFT_ENABLE_EXPLICIT_MODULES=NO");
+		});
+
+		it("should include DEVELOPMENT_TEAM from build.xcconfig", () => {
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+				buildXcconfigContent: "DEVELOPMENT_TEAM = TEAM123",
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = xcodebuildArgsService.getXcodeProjectArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+			);
+
+			assert.include(actualArgs, "DEVELOPMENT_TEAM=TEAM123");
+		});
+
+		it("passes the package authorization provider from the environment", () => {
+			process.env.NS_PACKAGE_AUTHORIZATION_PROVIDER = "netrc";
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = xcodebuildArgsService.getXcodeProjectArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+			);
+
+			const index = actualArgs.indexOf("-packageAuthorizationProvider");
+			assert.notStrictEqual(index, -1);
+			assert.strictEqual(actualArgs[index + 1], "netrc");
+		});
+
+		it("omits the package authorization provider when unset", () => {
+			delete process.env.NS_PACKAGE_AUTHORIZATION_PROVIDER;
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = xcodebuildArgsService.getXcodeProjectArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+			);
+
+			assert.notInclude(actualArgs, "-packageAuthorizationProvider");
+		});
+
+		it("keeps the project path as the second argument", () => {
+			process.env.NS_PACKAGE_AUTHORIZATION_PROVIDER = "keychain";
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = xcodebuildArgsService.getXcodeProjectArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+			);
+
+			assert.strictEqual(actualArgs[0], "-project");
+			assert.strictEqual(
+				actualArgs[1],
+				path.join(projectRoot, `${projectName}.xcodeproj`),
+			);
+		});
+	});
+
 	describe("getBuildForSimulatorArgs", () => {
 		_.each([true, false], (hasProjectWorkspace) => {
 			_.each(["INFO", "TRACE"], (logLevel) => {

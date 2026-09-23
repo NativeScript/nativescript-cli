@@ -13,38 +13,48 @@ import { injector } from "../common/yok";
 export class TestInitializationService implements ITestInitializationService {
 	private configsPath = path.join(__dirname, "..", "..", "config");
 
-	constructor(private $errors: IErrors, private $fs: IFileSystem) {}
+	constructor(
+		private $errors: IErrors,
+		private $fs: IFileSystem,
+	) {}
 
 	@cache()
 	public getDependencies(selectedFramework: string): IDependencyInformation[] {
 		const dependenciesPath = path.join(
 			this.configsPath,
-			"test-dependencies.json"
+			"test-dependencies.json",
 		);
 		const allDependencies: {
 			name: string;
 			framework?: string;
+			frameworks?: string[];
 			excludedPeerDependencies?: string[];
 		}[] = this.$fs.readJson(dependenciesPath);
 
 		const dependenciesVersionsPath = path.join(
 			this.configsPath,
-			"test-deps-versions-generated.json"
+			"test-deps-versions-generated.json",
 		);
 		const dependenciesVersions = this.$fs.readJson(dependenciesVersionsPath);
 
-		const targetFrameworkDependencies: IDependencyInformation[] = allDependencies
-			.filter(
-				(dependency) =>
-					!dependency.framework || dependency.framework === selectedFramework
-			)
-			.map((dependency) => {
-				const dependencyVersion = dependenciesVersions[dependency.name];
-				if (!dependencyVersion) {
-					this.$errors.fail(`'${dependency}' is not a registered dependency.`);
-				}
-				return { ...dependency, version: dependencyVersion };
-			});
+		const targetFrameworkDependencies: IDependencyInformation[] =
+			allDependencies
+				.filter(
+					(dependency) =>
+						dependency.framework === selectedFramework ||
+						(dependency.frameworks &&
+							dependency.frameworks.indexOf(selectedFramework) !== -1) ||
+						(!dependency.framework && !dependency.frameworks),
+				)
+				.map((dependency) => {
+					const dependencyVersion = dependenciesVersions[dependency.name];
+					if (!dependencyVersion) {
+						this.$errors.fail(
+							`'${dependency}' is not a registered dependency.`,
+						);
+					}
+					return { ...dependency, version: dependencyVersion };
+				});
 
 		return targetFrameworkDependencies;
 	}
@@ -56,12 +66,18 @@ export class TestInitializationService implements ITestInitializationService {
 	public getFrameworkNames(): string[] {
 		const configsPath = path.join(__dirname, "..", "..", "config");
 		const dependenciesPath = path.join(configsPath, "test-dependencies.json");
-		const allDependencies: { name: string; framework?: string }[] = JSON.parse(
-			fs.readFileSync(dependenciesPath, { encoding: "utf-8" })
+		const allDependencies: {
+			name: string;
+			framework?: string;
+			frameworks?: string[];
+		}[] = JSON.parse(fs.readFileSync(dependenciesPath, { encoding: "utf-8" }));
+		const frameworks = _.uniq(
+			_.flatten(
+				allDependencies.map(
+					(item) => item.frameworks || (item.framework ? [item.framework] : []),
+				),
+			),
 		);
-		const frameworks = _.uniqBy(allDependencies, "framework")
-			.map((item) => item && item.framework)
-			.filter((item) => item);
 
 		return frameworks;
 	}

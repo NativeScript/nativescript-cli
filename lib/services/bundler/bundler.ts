@@ -78,9 +78,11 @@ declare global {
 		buildType?: string;
 	}
 
-	interface IPlatformProjectService
-		extends NodeJS.EventEmitter,
-			IPlatformProjectServiceBase {
+	interface IPlatformProjectService<
+		TBuildData extends BuildData = BuildData,
+		TPrepareData extends PrepareData = PrepareData,
+	>
+		extends NodeJS.EventEmitter, IPlatformProjectServiceBase {
 		getPlatformData(projectData: IProjectData): IPlatformData;
 		validate(
 			projectData: IProjectData,
@@ -115,10 +117,10 @@ declare global {
 			teamId?: true | string,
 		): Promise<boolean>;
 
-		buildProject<T extends BuildData>(
+		buildProject(
 			projectRoot: string,
 			projectData: IProjectData,
-			buildConfig: T,
+			buildConfig: TBuildData,
 		): Promise<void>;
 
 		/**
@@ -127,9 +129,9 @@ declare global {
 		 * @param {any} platformSpecificData Platform specific data required for project preparation.
 		 * @returns {void}
 		 */
-		prepareProject<T extends PrepareData>(
+		prepareProject(
 			projectData: IProjectData,
-			prepareData: T,
+			prepareData: TPrepareData,
 		): Promise<void>;
 
 		/**
@@ -152,6 +154,11 @@ declare global {
 			pluginData: IPluginData,
 			options?: any,
 		): Promise<void>;
+
+		shouldRepreparePlugin?(
+			pluginData: IPluginData,
+			projectData: IProjectData,
+		): boolean;
 
 		/**
 		 * Removes native code of a plugin (CocoaPods, jars, libs, src).
@@ -215,9 +222,9 @@ declare global {
 		 * Check the current state of the project, and validate against the options.
 		 * If there are parts in the project that are inconsistent with the desired options, marks them in the changeset flags.
 		 */
-		checkForChanges<T extends PrepareData>(
+		checkForChanges(
 			changeset: IProjectChangesInfo,
-			prepareData: T,
+			prepareData: TPrepareData,
 			projectData: IProjectData,
 		): Promise<void>;
 

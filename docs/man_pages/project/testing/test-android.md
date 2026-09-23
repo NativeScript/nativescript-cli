@@ -43,4 +43,5 @@ Command | Description
 --------|------------
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.
 [test ios](test-ios.html) | Runs the tests in your project on iOS devices or the iOS Simulator.
+[test visionos](test-visionos.html) | Runs the tests in your project in the visionOS Simulator or on Apple Vision Pro devices.
 <% } %>

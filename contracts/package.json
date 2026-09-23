@@ -1,0 +1,4 @@
+{
+	"main": "../lib/contracts/index.js",
+	"types": "../lib/contracts/index.d.ts"
+}

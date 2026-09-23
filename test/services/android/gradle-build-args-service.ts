@@ -163,6 +163,56 @@ describe("GradleBuildArgsService", () => {
 		);
 	});
 
+	describe("gradleFlavor", async () => {
+		const testCases = [
+			{
+				name: "should build the flavor of a debug build",
+				buildConfig: { release: false, gradleFlavor: "foo" },
+				logLevel: "INFO",
+				expectedTask: "assembleFooDebug",
+			},
+			{
+				name: "should build the flavor of a release build",
+				buildConfig: { ...releaseBuildConfig, gradleFlavor: "foo" },
+				logLevel: "INFO",
+				expectedTask: "assembleFooRelease",
+			},
+			{
+				name: "should build the flavor of an android bundle",
+				buildConfig: {
+					release: false,
+					androidBundle: true,
+					gradleFlavor: "foo",
+				},
+				logLevel: "INFO",
+				expectedTask: "bundleFooDebug",
+			},
+			{
+				name: "should keep an already capitalized flavor",
+				buildConfig: { release: false, gradleFlavor: "Foo" },
+				logLevel: "INFO",
+				expectedTask: "assembleFooDebug",
+			},
+		];
+
+		for (const testCase of testCases) {
+			it(testCase.name, async () => {
+				const injector = createTestInjector();
+				const logger = injector.resolve("logger");
+				logger.getLevel = () => testCase.logLevel;
+
+				const gradleBuildArgsService = injector.resolve(
+					"gradleBuildArgsService"
+				);
+				const args = await gradleBuildArgsService.getBuildTaskArgs(
+					<any>testCase.buildConfig
+				);
+
+				assert.deepStrictEqual(args[0], testCase.expectedTask);
+			});
+		}
+	});
+
 	describe("getCleanTaskArgs", async () => {
 		const testCases = [
 			{

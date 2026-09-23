@@ -7,12 +7,11 @@ import {
 } from "./analytics";
 import { IAnalyticsSettingsService } from "../../common/declarations";
 import { IInjector } from "../../common/definitions/yok";
+import { FileLogMessageType } from "../../detached-processes/detached-process-enums";
 
 export class AnalyticsBroker implements IAnalyticsBroker {
 	@cache()
-	private async getGoogleAnalyticsProvider(): Promise<
-		IGoogleAnalyticsProvider
-	> {
+	private async getGoogleAnalyticsProvider(): Promise<IGoogleAnalyticsProvider> {
 		const clientId = await this.$analyticsSettingsService.getClientId();
 		return this.$injector.resolve("googleAnalyticsProvider", {
 			clientId,
@@ -23,16 +22,16 @@ export class AnalyticsBroker implements IAnalyticsBroker {
 	constructor(
 		private $analyticsSettingsService: IAnalyticsSettingsService,
 		private $injector: IInjector,
-		private analyticsLoggingService: IFileLogService
+		private analyticsLoggingService: IFileLogService,
 	) {}
 
 	public async sendDataForTracking(
-		trackInfo: ITrackingInformation
+		trackInfo: ITrackingInformation,
 	): Promise<void> {
 		try {
 			const googleProvider = await this.getGoogleAnalyticsProvider();
 			await googleProvider.trackHit(
-				<IGoogleAnalyticsTrackingInformation>trackInfo
+				<IGoogleAnalyticsTrackingInformation>trackInfo,
 			);
 		} catch (err) {
 			this.analyticsLoggingService.logData({

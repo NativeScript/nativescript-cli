@@ -23,10 +23,13 @@ describe("androidToolsInfo", () => {
 		EOL +
 		" described in " +
 		Constants.SYSTEM_REQUIREMENTS_LINKS;
-	before(() => {
+	beforeAll(() => {
 		process.env["ANDROID_HOME"] = "test";
 	});
-	const getAndroidToolsInfo = (runtimeVersion?: string): AndroidToolsInfo => {
+	const getAndroidToolsInfo = (
+		runtimeVersion?: string,
+		installedTargets?: string[],
+	): AndroidToolsInfo => {
 		const childProcess: ChildProcess = <any>{};
 		const fs: FileSystem = <any>{
 			exists: () => true,
@@ -59,19 +62,22 @@ describe("androidToolsInfo", () => {
 						"34.0.0",
 					];
 				} else {
-					return [
-						"android-16",
-						"android-27",
-						"android-28",
-						"android-29",
-						"android-30",
-						"android-31",
-						"android-32",
-						"android-33",
-						"android-34",
-						"android-35",
-						"android-36",
-					];
+					return (
+						installedTargets || [
+							"android-16",
+							"android-27",
+							"android-28",
+							"android-29",
+							"android-30",
+							"android-31",
+							"android-32",
+							"android-33",
+							"android-34",
+							"android-35",
+							"android-36",
+							"android-36.1",
+						]
+					);
 				}
 			},
 		};
@@ -108,41 +114,76 @@ describe("androidToolsInfo", () => {
 
 			assert.equal(toolsInfo.compileSdkVersion, 36);
 		});
+
+		it("resolves android-37 from minor-versioned SDK directories", () => {
+			const androidToolsInfo = getAndroidToolsInfo("8.2.0", [
+				"android-36",
+				"android-37.0",
+				"android-37.1",
+			]);
+			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
+
+			assert.equal(toolsInfo.compileSdkVersion, 37);
+		});
+
+		it("resolves android-36 when only android-36.1 is installed", () => {
+			const androidToolsInfo = getAndroidToolsInfo("8.2.0", ["android-36.1"]);
+			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
+
+			assert.equal(toolsInfo.compileSdkVersion, 36);
+		});
+
+		it("does not treat extension directories as the base platform", () => {
+			const androidToolsInfo = getAndroidToolsInfo("8.2.0", [
+				"android-33",
+				"android-35-ext15",
+			]);
+			const toolsInfo = androidToolsInfo.getToolsInfo({ projectDir: "test" });
+
+			assert.equal(toolsInfo.compileSdkVersion, 33);
+		});
 	});
 
 	describe("supportedAndroidSdks", () => {
-		const assertSupportedRange = (
+		const assertSupportedTargets = (
 			runtimeVersion: string,
-			min: number,
-			max: number,
+			expectedTargets: string[],
 		) => {
-			let cnt = 0;
 			const androidToolsInfo = getAndroidToolsInfo(runtimeVersion);
 			const supportedTargets = androidToolsInfo.getSupportedTargets("test");
-			for (let i = 0; i < supportedTargets.length; i++) {
-				assert.equal(supportedTargets[i], `android-${min + i}`);
-				cnt = min + i;
-			}
-			assert.equal(cnt, max);
+			assert.deepEqual(supportedTargets, expectedTargets);
 		};
 
 		it("runtime 6.0.0 should support android-17 - android-28", () => {
-			const min = 17;
-			const max = 28;
-			assertSupportedRange("6.0.0", min, max);
+			assertSupportedTargets(
+				"6.0.0",
+				Array.from({ length: 12 }, (_, index) => `android-${17 + index}`),
+			);
 		});
 
 		it("runtime 8.1.0 should support android-17 - android-30", () => {
-			const min = 17;
-			const max = 30;
-			assertSupportedRange("8.1.0", min, max);
+			assertSupportedTargets(
+				"8.1.0",
+				Array.from({ length: 14 }, (_, index) => `android-${17 + index}`),
+			);
 		});
 
-		it("runtime 8.2.0 should support android-17 - android-34", () => {
-			const min = 17;
-			const max = 36;
-			assertSupportedRange("8.2.0", min, max);
-			assertSupportedRange("8.3.0", min, max);
+		it("runtime 8.2.0 should support android-17 through android-37 including android-36.1", () => {
+			const expectedTargets = [
+				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
+				"android-36.1",
+				"android-37",
+			];
+			assertSupportedTargets("8.2.0", expectedTargets);
+		});
+
+		it("runtime 8.3.0 should support android-17 through android-37 including android-36.1", () => {
+			const expectedTargets = [
+				...Array.from({ length: 20 }, (_, index) => `android-${17 + index}`),
+				"android-36.1",
+				"android-37",
+			];
+			assertSupportedTargets("8.3.0", expectedTargets);
 		});
 	});
 
@@ -374,6 +415,16 @@ describe("androidToolsInfo", () => {
 				targetSdk: 32,
 				expectWarning: false,
 			},
+			{
+				runtimeVersion: "8.2.0",
+				targetSdk: 37,
+				expectWarning: false,
+			},
+			{
+				runtimeVersion: "8.2.0",
+				targetSdk: 38,
+				expectWarning: true,
+			},
 		];
 
 		testCases.forEach(({ runtimeVersion, targetSdk, expectWarning }) => {
@@ -398,7 +449,7 @@ describe("androidToolsInfo", () => {
 		});
 	});
 
-	after(() => {
+	afterAll(() => {
 		process.env["ANDROID_HOME"] = originalAndroidHome;
 	});
 });

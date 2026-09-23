@@ -19,6 +19,8 @@ import {
 } from "./common/declarations";
 import { IExtensionData } from "./common/definitions/extensibility";
 import { IApplePortalUserDetail } from "./services/apple-portal/definitions";
+import type { ProjectNameService } from "./contracts/project-name-service";
+import type { PackageManager } from "./contracts/package-manager";
 
 interface INodePackageManager {
 	/**
@@ -31,7 +33,7 @@ interface INodePackageManager {
 	install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		config: INodePackageManagerInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 
 	/**
@@ -44,7 +46,7 @@ interface INodePackageManager {
 	uninstall(
 		packageName: string,
 		config?: IDictionary<string | boolean>,
-		path?: string
+		path?: string,
 	): Promise<string>;
 
 	/**
@@ -84,7 +86,7 @@ interface INodePackageManager {
 	 */
 	search(
 		filter: string[],
-		config: IDictionary<string | boolean>
+		config: IDictionary<string | boolean>,
 	): Promise<string>;
 
 	/**
@@ -108,21 +110,8 @@ interface INodePackageManager {
 	getCachePath(): Promise<string>;
 }
 
-interface IPackageManager extends INodePackageManager {
-	/**
-	 * Gets the name of the package manager used for the current process.
-	 * It can be read from the user settings or by passing -- option.
-	 */
-	getPackageManagerName(): Promise<string>;
-
-	/**
-	 * Gets the version corresponding to the tag for the package
-	 * @param {string} packageName The name of the package.
-	 * @param {string} tag The tag which we need the version of.
-	 * @returns {string} The version corresponding to the tag
-	 */
-	getTagVersion(packageName: string, tag: string): Promise<string>;
-}
+/** @deprecated Kept so existing annotations compile; use the {@link PackageManager} contract. */
+interface IPackageManager extends PackageManager {}
 
 interface IPerformanceService {
 	// Will process the data based on the command options (--performance flag and user-reporting setting)
@@ -130,7 +119,7 @@ interface IPerformanceService {
 		methodInfo: string,
 		startTime: number,
 		endTime: number,
-		args: any[]
+		args: any[],
 	): void;
 
 	// Will return a reference time in milliseconds
@@ -141,39 +130,39 @@ interface IPackageInstallationManager {
 	install(
 		packageName: string,
 		packageDir: string,
-		options?: INpmInstallOptions
+		options?: INpmInstallOptions,
 	): Promise<any>;
 	uninstall(
 		packageName: string,
 		packageDir: string,
-		options?: IDictionary<string | boolean>
+		options?: IDictionary<string | boolean>,
 	): Promise<any>;
 	getLatestVersion(packageName: string): Promise<string>;
 	getNextVersion(packageName: string): Promise<string>;
 	getLatestCompatibleVersion(
 		packageName: string,
-		referenceVersion?: string
+		referenceVersion?: string,
 	): Promise<string>;
 	getMaxSatisfyingVersion(
 		packageName: string,
-		versionRange: string
+		versionRange: string,
 	): Promise<string>;
 	getLatestCompatibleVersionSafe(
 		packageName: string,
-		referenceVersion?: string
+		referenceVersion?: string,
 	): Promise<string>;
 	getInspectorFromCache(
 		inspectorNpmPackageName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<string>;
 	clearInspectorCache(): void;
 	getInstalledDependencyVersion(
 		packageName: string,
-		projectDir?: string
+		projectDir?: string,
 	): Promise<string>;
 	getMaxSatisfyingVersionSafe(
 		packageName: string,
-		versionIdentifier: string
+		versionIdentifier: string,
 	): Promise<string>;
 }
 
@@ -181,8 +170,7 @@ interface IPackageInstallationManager {
  * Describes options that can be passed to manipulate package installation.
  */
 interface INodePackageManagerInstallOptions
-	extends INpmInstallConfigurationOptions,
-		IDictionary<string | boolean> {
+	extends INpmInstallConfigurationOptions, IDictionary<string | boolean> {
 	/**
 	 * Destination of the installation.
 	 * @type {string}
@@ -266,7 +254,7 @@ interface INpmPeerDependencyInfo {
 				 * @type {string}
 				 */
 				requires: string;
-			}
+			},
 		];
 		/**
 		 * Dependencies of the dependency.
@@ -506,7 +494,8 @@ interface IStaticConfig extends Config.IStaticConfig {}
 interface IConfiguration extends Config.IConfig {
 	ANDROID_DEBUG_UI: string;
 	USE_POD_SANDBOX: boolean;
-	GA_TRACKING_ID: string;
+	GA_MEASUREMENT_ID: string;
+	GA_API_SECRET: string;
 }
 
 interface IApplicationPackage {
@@ -550,8 +539,7 @@ interface INpmInstallConfigurationOptionsBase {
 	ignoreScripts: boolean; //npm flag
 }
 
-interface INpmInstallConfigurationOptions
-	extends INpmInstallConfigurationOptionsBase {
+interface INpmInstallConfigurationOptions extends INpmInstallConfigurationOptionsBase {
 	disableNpmInstall: boolean;
 }
 
@@ -584,6 +572,11 @@ interface IEmbedOptions {
 }
 
 interface IAndroidOptions extends IEmbedOptions {
+	/**
+	 * The product flavor to build, when the app declares any. `--gradleFlavor foo`
+	 * runs `assembleFooDebug` instead of `assembleDebug`.
+	 */
+	gradleFlavor: string;
 	gradlePath: string;
 	gradleArgs: string;
 }
@@ -602,7 +595,8 @@ interface ITypingsOptions {
 }
 
 interface IOptions
-	extends IRelease,
+	extends
+		IRelease,
 		IDeviceIdentifier,
 		IJustLaunch,
 		IAvd,
@@ -627,7 +621,7 @@ interface IOptions
 	argv: IYargArgv;
 	validateOptions(
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
-		projectData?: IProjectData
+		projectData?: IProjectData,
 	): void;
 	options: IDictionary<IDashedOption>;
 	shorthands: string[];
@@ -718,6 +712,7 @@ interface IOptions
 	dryRun: boolean;
 
 	platformOverride: string;
+	skipNative: boolean;
 	uniqueBundle: boolean;
 	// allow arbitrary options
 	[optionName: string]: any;
@@ -728,26 +723,22 @@ interface IEnvOptions {
 }
 
 interface IAndroidBuildOptionsSettings
-	extends IAndroidReleaseOptions,
-		IRelease,
-		Partial<IHasAndroidBundle> {}
+	extends IAndroidReleaseOptions, IRelease, Partial<IHasAndroidBundle> {}
 
 interface IHasAndroidBundle {
 	androidBundle: boolean;
 }
 
 interface IPlatformBuildData
-	extends IRelease,
-		IHasUseHotModuleReloadOption,
-		IBuildConfig,
-		IEnvOptions {}
+	extends IRelease, IHasUseHotModuleReloadOption, IBuildConfig, IEnvOptions {}
 
 interface IDeviceEmulator extends IHasEmulatorOption, IDeviceIdentifier {}
 
 interface IRunPlatformOptions extends IJustLaunch, IDeviceEmulator {}
 
 interface IDeployPlatformOptions
-	extends IAndroidReleaseOptions,
+	extends
+		IAndroidReleaseOptions,
 		IRelease,
 		IClean,
 		IDeviceEmulator,
@@ -843,7 +834,7 @@ interface IAndroidToolsInfo {
 	 */
 	validateJavacVersion(
 		installedJavaVersion: string,
-		options?: IAndroidToolsInfoOptions
+		options?: IAndroidToolsInfoOptions,
 	): boolean;
 
 	/**
@@ -922,14 +913,14 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 		device: Mobile.IiOSDevice,
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<any>;
 
 	ensureWebSocketProxy(
 		device: Mobile.IiOSDevice,
 		appId: string,
 		projectName: string,
-		projectDir: string
+		projectDir: string,
 	): Promise<any>;
 
 	removeAllProxies(): void;
@@ -948,12 +939,12 @@ interface IiOSSocketRequestExecutor {
 	executeAttachRequest(
 		device: Mobile.IiOSDevice,
 		timeout: number,
-		projectId: string
+		projectId: string,
 	): Promise<void>;
 	executeRefreshRequest(
 		device: Mobile.IiOSDevice,
 		timeout: number,
-		appId: string
+		appId: string,
 	): Promise<boolean>;
 }
 
@@ -995,18 +986,8 @@ interface IVersionsService {
 /**
  * Describes methods for project name.
  */
-interface IProjectNameService {
-	/**
-	 * Ensures the passed project name is valid. If the project name is not valid prompts for actions.
-	 * @param {string} projectName project name to be checked.
-	 * @param {IOptions} validateOptions current command options.
-	 * @return {Promise<string>} returns the selected name of the project.
-	 */
-	ensureValidName(
-		projectName: string,
-		validateOptions?: { force: boolean }
-	): Promise<string>;
-}
+/** @deprecated Kept so existing annotations compile; use the {@link ProjectNameService} contract. */
+interface IProjectNameService extends ProjectNameService {}
 
 /**
  * Describes options that can be passed to xcprojService.verifyXcproj method.
@@ -1098,7 +1079,7 @@ interface IBundleValidatorHelper {
 	 */
 	getBundlerDependencyVersion(
 		projectData: IProjectData,
-		bundlerName?: string
+		bundlerName?: string,
 	): string;
 }
 
@@ -1180,7 +1161,7 @@ interface IAssetsGenerationService {
 	 * @returns {Promise<void>}
 	 */
 	generateSplashScreens(
-		splashesGenerationData: IResourceGenerationData
+		splashesGenerationData: IResourceGenerationData,
 	): Promise<void>;
 }
 
@@ -1190,10 +1171,6 @@ interface IAssetsGenerationService {
 interface IRuntimeGradleVersions {
 	gradleVersion?: string;
 	gradleAndroidPluginVersion?: string;
-}
-
-interface INetworkConnectivityValidator {
-	validate(): Promise<void>;
 }
 
 interface IPlatformValidationService {
@@ -1216,7 +1193,7 @@ interface IPlatformValidationService {
 		provision: true | string,
 		teamId: true | string,
 		projectData: IProjectData,
-		platform?: string
+		platform?: string,
 	): Promise<boolean>;
 
 	validatePlatformInstalled(platform: string, projectData: IProjectData): void;
@@ -1229,7 +1206,7 @@ interface IPlatformValidationService {
 	 */
 	isPlatformSupportedForOS(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean;
 }
 
@@ -1237,27 +1214,27 @@ interface IPlatformCommandHelper {
 	addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath?: string
+		frameworkPath?: string,
 	): Promise<void>;
 	cleanPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath: string
+		frameworkPath: string,
 	): Promise<void>;
 	removePlatforms(
 		platforms: string[],
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void>;
 	updatePlatforms(
 		platforms: string[],
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void>;
 	getInstalledPlatforms(projectData: IProjectData): string[];
 	getAvailablePlatforms(projectData: IProjectData): string[];
 	getPreparedPlatforms(projectData: IProjectData): string[];
 	getCurrentPlatformVersion(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string;
 }
 

@@ -8,6 +8,17 @@ export class FileSystem {
 		return fs.existsSync(path.resolve(filePath));
 	}
 
+	public appendFile(filePath: string, text: string): boolean {
+		let success = false;
+		try {
+			fs.appendFileSync(path.resolve(filePath), text);
+			success = true;
+		} catch (err) {
+			console.error(`appendFile failed with ${err}`);
+		}
+		return success;
+	}
+
 	public extractZip(pathToZip: string, outputDir: string): Promise<void> {
 		return new Promise((resolve, reject) => {
 			yauzl.open(
@@ -46,7 +57,7 @@ export class FileSystem {
 					zipFile.once("end", () => resolve());
 
 					zipFile.readEntry();
-				}
+				},
 			);
 		});
 	}
@@ -57,7 +68,7 @@ export class FileSystem {
 
 	public readJson<T>(
 		filePath: string,
-		options?: { encoding?: null; flag?: string }
+		options?: { encoding?: null; flag?: string },
 	): T {
 		const content = fs.readFileSync(filePath, options);
 		return JSON.parse(content.toString());

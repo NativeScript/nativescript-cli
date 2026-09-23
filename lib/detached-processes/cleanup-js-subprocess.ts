@@ -6,6 +6,7 @@ import * as fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import { FileLogService } from "./file-log-service";
 import { injector } from "../common/yok";
+import { FileLogMessageType } from "./detached-process-enums";
 
 const pathToBootstrap = process.argv[2];
 if (!pathToBootstrap || !fs.existsSync(pathToBootstrap)) {
@@ -51,28 +52,28 @@ const logMessage = (msg: string, type?: FileLogMessageType): void => {
 			try {
 				logMessage(
 					`Passing data: ${JSON.stringify(
-						data
-					)} to the default function exported by currently required file ${jsFilePath}`
+						data,
+					)} to the default function exported by currently required file ${jsFilePath}`,
 				);
 				await func(data);
 				logMessage(
 					`Finished execution with data: ${JSON.stringify(
-						data
-					)} to the default function exported by currently required file ${jsFilePath}`
+						data,
+					)} to the default function exported by currently required file ${jsFilePath}`,
 				);
 			} catch (err) {
 				logMessage(
 					`Unable to execute action of file ${jsFilePath} when passed data is ${JSON.stringify(
-						data
+						data,
 					)}. Error is: ${err}.`,
-					FileLogMessageType.Error
+					FileLogMessageType.Error,
 				);
 			}
 		}
 	} catch (err) {
 		logMessage(
 			`Unable to require file: ${jsFilePath}. Error is: ${err}.`,
-			FileLogMessageType.Error
+			FileLogMessageType.Error,
 		);
 	}
 })();

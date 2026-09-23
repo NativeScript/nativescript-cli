@@ -6,7 +6,7 @@ import { IOptions, IPlatformValidationService } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IMigrateController } from "../definitions/migrate";
 import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { OptionType } from "../common/declarations";
+import { OptionType } from "../common/enums";
 import { injector } from "../common/yok";
 
 export class PrepareCommand
@@ -22,8 +22,7 @@ export class PrepareCommand
 			hasSensitiveValue: false,
 		},
 		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
-
-		whatever: {
+		skipNative: {
 			type: OptionType.Boolean,
 			default: false,
 			hasSensitiveValue: false,
@@ -38,13 +37,13 @@ export class PrepareCommand
 		public $platformCommandParameter: ICommandParameter,
 		public $platformsDataService: IPlatformsDataService,
 		public $prepareDataService: PrepareDataService,
-		public $migrateController: IMigrateController
+		public $migrateController: IMigrateController,
 	) {
 		super(
 			$options,
 			$platformsDataService,
 			$platformValidationService,
-			$projectData
+			$projectData,
 		);
 		this.$projectData.initializeProjectData();
 	}
@@ -55,7 +54,7 @@ export class PrepareCommand
 		const prepareData = this.$prepareDataService.getPrepareData(
 			this.$projectData.projectDir,
 			platform,
-			this.$options
+			this.$options,
 		);
 		await this.$prepareController.prepare(prepareData);
 	}
@@ -68,7 +67,7 @@ export class PrepareCommand
 				this.$options.provision,
 				this.$options.teamId,
 				this.$projectData,
-				platform
+				platform,
 			));
 
 		if (!this.$options.force) {

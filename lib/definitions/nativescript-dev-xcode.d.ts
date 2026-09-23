@@ -8,15 +8,26 @@ declare module "nativescript-dev-xcode" {
 	}
 
 	class project {
+		hash: any;
+		filepath: string;
 		constructor(filename: string);
 
 		parse(callback: () => void): void;
 		parseSync(): void;
 
+		generateUuid(): string;
+
 		writeSync(options: any): string;
 
 		addFramework(filepath: string, options?: Options): void;
 		removeFramework(filePath: string, options?: Options): void;
+
+
+		getProductFile(watchApptarget: target): any;
+		addToPbxFrameworksBuildPhase(file);
+		addToPbxCopyfilesBuildPhase(file, comment: string, targetid: string);
+		pbxFrameworksBuildPhaseObj(targetid: string): any;
+		pbxBuildFileSection(): {[k: string] : any};
 
 		addPbxGroup(
 			filePathsArray: any[],
@@ -27,17 +38,30 @@ declare module "nativescript-dev-xcode" {
 
 		removePbxGroup(groupName: string, path: string): void;
 
+		addTargetDependency(target: string, dependencyTargets: string[]);
+
+		findTargetKey(name: string);
+		pbxTargetByName(name: string): target;
+		pbxNativeTargetSection(): {[key: string]: any};
+
 		addToHeaderSearchPaths(options?: Options): void;
 		removeFromHeaderSearchPaths(options?: Options): void;
 		updateBuildProperty(key: string, value: any): void;
 
 		pbxXCBuildConfigurationSection(): any;
 
+		buildPhaseObject(
+			buildPhaseType: string,
+			comment: string,
+			target: tstring
+		)
+
 		addTarget(
 			targetName: string,
 			targetType: string,
 			targetPath?: string,
-			parentTarget?: string
+			parentTarget?: string,
+			productTargetType?: string
 		): target;
 		addBuildPhase(
 			filePathsArray: string[],

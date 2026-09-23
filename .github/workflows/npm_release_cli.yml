@@ -11,15 +11,16 @@ on:
   workflow_dispatch:
     inputs:
       release_type:
-        description: 'Release type. "dev" publishes a -next prerelease without bumping package.json. patch/minor/major/prerelease bump package.json, commit + tag to main, then publish as a stable release.'
-        type: choice
-        options:
-          - dev
-          - patch
-          - minor
-          - major
-          - prerelease
-        default: patch
+        description: >-
+          Release to cut. Leave empty for a rolling "next" prerelease (no version
+          bump). "dev" publishes a -dev prerelease (no bump). A semver keyword
+          (patch/minor/major) or an explicit version (e.g. 9.1.0, 9.1.0-alpha.1)
+          bumps package.json, commits + tags v<version>, then publishes a stable
+          release. A prerelease version publishes under the dist-tag matching its
+          prerelease id (alpha/beta/rc); a plain version publishes under "latest".
+        type: string
+        required: false
+        default: ''
 
 permissions: read-all
 
@@ -39,16 +40,16 @@ jobs:
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.14.0
           registry-url: "https://registry.npmjs.org"
@@ -62,17 +63,22 @@ jobs:
           echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
 
       - name: Bump, commit and tag stable release (manual dispatch)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != 'dev' }}
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != '' && inputs.release_type != 'dev' }}
+        env:
+          # env indirection keeps the free-text dispatch input out of shell interpolation
+          RELEASE_INPUT: ${{ inputs.release_type }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          npm version ${{ inputs.release_type }} -m "chore: release v%s"
+          # npm version accepts a semver keyword (patch/minor/major) or an explicit
+          # version; strip an optional leading "v" so v9.1.0 and 9.1.0 both work.
+          npm version "${RELEASE_INPUT#v}" -m "chore: release v%s"
           NPM_VERSION=$(node -e "console.log(require('./package.json').version);")
           echo NPM_VERSION=$NPM_VERSION >> $GITHUB_ENV
           git push origin HEAD:${GITHUB_REF_NAME} --follow-tags
 
       - name: Bump version for dev release
-        if: ${{ !contains(github.ref, 'refs/tags/') && (github.event_name != 'workflow_dispatch' || inputs.release_type == 'dev') }}
+        if: ${{ !contains(github.ref, 'refs/tags/') && (github.event_name != 'workflow_dispatch' || inputs.release_type == '' || inputs.release_type == 'dev') }}
         env:
           NPM_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type == 'dev' && 'dev' || 'next' }}
         run: |
@@ -82,9 +88,14 @@ jobs:
 
       - name: Output NPM Version and tag
         id: npm_version_output
+        env:
+          # true only for a manual dispatch that cut a real (bumped) release — not
+          # the empty "next" build or the "dev" channel. Computed in the GitHub
+          # expression context so the free-text input never reaches the shell.
+          IS_DISPATCH_RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.release_type != '' && inputs.release_type != 'dev' }}
         run: |
           NPM_TAG=$(node ./scripts/get-npm-tag.js)
-          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.release_type }}" != "dev" ]]; then
+          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "$IS_DISPATCH_RELEASE" == "true" ]]; then
             IS_RELEASE=true
           else
             IS_RELEASE=false
@@ -93,8 +104,18 @@ jobs:
           echo NPM_TAG=$NPM_TAG >> $GITHUB_OUTPUT
           echo IS_RELEASE=$IS_RELEASE >> $GITHUB_OUTPUT
 
+      - name: Check analytics is configured
+        env:
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
+        run: |
+          if [ -z "$GA_API_SECRET" ]; then
+            echo "::warning::GA_API_SECRET is not set, so this release reports no analytics."
+          fi
+
       - name: Build nativescript
-        run: npm pack
+        env:
+          GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
+        run: npm run pack.release
 
       - name: Upload npm package artifact
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -115,11 +136,11 @@ jobs:
       NPM_TAG: ${{needs.build.outputs.npm_tag}}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.14.0
           registry-url: "https://registry.npmjs.org"
@@ -166,16 +187,16 @@ jobs:
       NPM_VERSION: ${{needs.build.outputs.npm_version}}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           ref: v${{needs.build.outputs.npm_version}}
 
-      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22.14.0
 

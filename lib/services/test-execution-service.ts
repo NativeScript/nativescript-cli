@@ -9,12 +9,8 @@ import {
 } from "../definitions/project";
 import { IConfiguration, IOptions } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
-import {
-	Server,
-	IFileSystem,
-	IChildProcess,
-	ErrorCodes,
-} from "../common/declarations";
+import { Server, IFileSystem, IChildProcess } from "../common/declarations";
+import { ErrorCodes } from "../common/enums";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 import { ICommandParameter } from "../common/definitions/commands";
@@ -39,7 +35,7 @@ export class TestExecutionService implements ITestExecutionService {
 		private $options: IOptions,
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
-		private $childProcess: IChildProcess
+		private $childProcess: IChildProcess,
 	) {}
 
 	public platform: string;
@@ -47,13 +43,13 @@ export class TestExecutionService implements ITestExecutionService {
 	public async startKarmaServer(
 		platform: string,
 		liveSyncInfo: ILiveSyncInfo,
-		deviceDescriptors: ILiveSyncDeviceDescriptor[]
+		deviceDescriptors: ILiveSyncDeviceDescriptor[],
 	): Promise<void> {
 		platform = platform.toLowerCase();
 		this.platform = platform;
 
 		const projectData = this.$projectDataService.getProjectData(
-			liveSyncInfo.projectDir
+			liveSyncInfo.projectDir,
 		);
 
 		// We need the dependencies installed here, so we can start the Karma server.
@@ -64,12 +60,12 @@ export class TestExecutionService implements ITestExecutionService {
 		const karmaRunner = this.$childProcess.spawn(
 			process.execPath,
 			[path.join(__dirname, "karma-execution.js")],
-			{ stdio: ["inherit", "inherit", "inherit", "ipc"] }
+			{ stdio: ["inherit", "inherit", "inherit", "ipc"] },
 		);
 		const launchKarmaTests = async (karmaData: any) => {
 			this.$logger.trace(
 				"## Unit-testing: Parent process received message",
-				karmaData
+				karmaData,
 			);
 			let port: string;
 			if (karmaData.url) {
@@ -80,23 +76,23 @@ export class TestExecutionService implements ITestExecutionService {
 				this.$fs.writeFile(
 					path.join(
 						liveSyncInfo.projectDir,
-						TestExecutionService.SOCKETIO_JS_FILE_NAME
+						TestExecutionService.SOCKETIO_JS_FILE_NAME,
 					),
-					JSON.parse(socketIoJs)
+					JSON.parse(socketIoJs),
 				);
 			}
 
 			if (karmaData.launcherConfig) {
 				const configOptions: IKarmaConfigOptions = JSON.parse(
-					karmaData.launcherConfig
+					karmaData.launcherConfig,
 				);
 				const configJs = this.generateConfig(port, configOptions);
 				this.$fs.writeFile(
 					path.join(
 						liveSyncInfo.projectDir,
-						TestExecutionService.CONFIG_FILE_NAME
+						TestExecutionService.CONFIG_FILE_NAME,
 					),
-					configJs
+					configJs,
 				);
 			}
 
@@ -137,7 +133,7 @@ export class TestExecutionService implements ITestExecutionService {
 	}
 
 	public async canStartKarmaServer(
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<boolean> {
 		let canStartKarmaServer = true;
 		const requiredDependencies = ["@nativescript/unit-test-runner"]; // we need @nativescript/unit-test-runner at the local level because of hooks!
@@ -165,8 +161,8 @@ export class TestExecutionService implements ITestExecutionService {
 			.map(
 				(nicName) =>
 					nics[nicName].filter(
-						(binding: any) => binding.family === "IPv4" || binding.family === 4
-					)[0]
+						(binding: any) => binding.family === "IPv4" || binding.family === 4,
+					)[0],
 			)
 			.filter((binding) => !!binding)
 			.map((binding) => binding.address);
@@ -182,7 +178,7 @@ export class TestExecutionService implements ITestExecutionService {
 
 	private getKarmaConfiguration(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): any {
 		const karmaConfig: any = {
 			browsers: [platform],

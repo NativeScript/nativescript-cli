@@ -2,6 +2,7 @@
 
 import { color } from "../color";
 import { ISystemWarning } from "./declarations";
+import { SystemWarningsSeverity } from "../definitions/system-warnings";
 
 // Use only ES5 code here - pure JavaScript can be executed with any Node.js version (even 0.10, 0.12).
 /* tslint:disable:no-var-keyword no-var-requires prefer-const*/

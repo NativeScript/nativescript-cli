@@ -16,14 +16,18 @@ import {
 	ISystemWarning,
 } from "./common/declarations";
 import { injector } from "./common/yok";
+import { SystemWarningsSeverity } from "./definitions/system-warnings";
 
 export class SysInfo implements ISysInfo {
 	private sysInfo: ISysInfoData = null;
 
-	constructor(private $fs: IFileSystem, private $hostInfo: IHostInfo) {}
+	constructor(
+		private $fs: IFileSystem,
+		private $hostInfo: IHostInfo,
+	) {}
 
 	public async getSysInfo(
-		config?: NativeScriptDoctor.ISysInfoConfig
+		config?: NativeScriptDoctor.ISysInfoConfig,
 	): Promise<NativeScriptDoctor.ISysInfoData> {
 		if (!this.sysInfo) {
 			const pathToNativeScriptCliPackageJson =

@@ -6,7 +6,7 @@ import { Configurations } from "../common/constants";
 import * as helpers from "../common/helpers";
 import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
-import { PlistSession, Reporter } from "plist-merge-patch";
+import { PlistSession, Reporter } from "../tools/plist-merge/plist-session";
 import { EOL } from "os";
 import * as plist from "plist";
 import * as fastGlob from "fast-glob";
@@ -92,9 +92,15 @@ const getConfigurationName = (release: boolean): string => {
 	return release ? Configurations.Release : Configurations.Debug;
 };
 
-export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServiceBase {
+export class IOSProjectService
+	extends projectServiceBaseLib.PlatformProjectServiceBase
+	implements IPlatformProjectService<IOSBuildData, IOSPrepareData>
+{
 	private static IOS_PROJECT_NAME_PLACEHOLDER = "__PROJECT_NAME__";
 	private static IOS_PLATFORM_NAME = "ios";
+	// CLI-managed folder under the platform root where we write generated
+	// artifacts (e.g. plugin modulemaps) so we never write into node_modules
+	private static GENERATED_PLUGINS_DIR_NAME = ".plugins";
 
 	constructor(
 		$fs: IFileSystem,
@@ -410,10 +416,7 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		return undefined;
 	}
 
-	public async cleanProject(
-		projectRoot: string,
-		projectData: IProjectData,
-	): Promise<void> {
+	public async cleanProject(projectRoot: string): Promise<void> {
 		return null;
 	}
 
@@ -434,6 +437,14 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		buildData: IOSBuildData,
 	): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
+
+		// On a first build, the runtime (and any other Swift packages) download
+		// here. Pre-resolve under a clear spinner so the subsequent
+		// "Xcode build..." step doesn't appear to hang while that happens.
+		await this.$spmService.ensureSPMDependenciesResolved(
+			platformData,
+			projectData,
+		);
 
 		const handler = (data: any) => {
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
@@ -528,7 +539,10 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						singlePlatformFramework,
 						path.extname(singlePlatformFramework),
 					);
-					let frameworkBinaryPath = path.join(singlePlatformFramework, frameworkName)
+					let frameworkBinaryPath = path.join(
+						singlePlatformFramework,
+						frameworkName,
+					);
 					if (library.BinaryPath) {
 						frameworkBinaryPath = path.join(
 							frameworkPath,
@@ -546,7 +560,9 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				frameworkPath,
 				path.extname(frameworkPath),
 			);
-			return await isDynamicFrameworkBundle(path.join(frameworkPath, frameworkName));
+			return await isDynamicFrameworkBundle(
+				path.join(frameworkPath, frameworkName),
+			);
 		}
 	}
 
@@ -656,7 +672,29 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		);
 		project.addToHeaderSearchPaths({ relativePath: relativeHeaderSearchPath });
 
-		this.generateModulemap(headersSubpath, libraryName);
+		// Write the generated modulemap into a CLI-managed folder under the
+		// platform root (never into node_modules). The modulemap references the
+		// plugin's headers in-place via relative paths, so nothing is copied.
+		const modulemapDir = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			IOSProjectService.GENERATED_PLUGINS_DIR_NAME,
+			libraryName,
+		);
+		const hasModulemap = this.generateModulemap(
+			headersSubpath,
+			libraryName,
+			modulemapDir,
+		);
+		if (hasModulemap) {
+			// Put the modulemap dir on the header search path so clang discovers
+			// the module there instead of inside node_modules.
+			project.addToHeaderSearchPaths({
+				relativePath: this.getLibSubpathRelativeToProjectPath(
+					modulemapDir,
+					projectData,
+				),
+			});
+		}
 		this.savePbxProj(project, projectData);
 	}
 
@@ -875,7 +913,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 			}
 		}
 
-		this.$iOSWatchAppService.removeWatchApp({ pbxProjPath });
 		const addedWatchApp = await this.$iOSWatchAppService.addWatchAppFromPath({
 			watchAppFolderPath: path.join(
 				resourcesDirectoryPath,
@@ -1164,6 +1201,52 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		);
 	}
 
+	public shouldRepreparePlugin(
+		pluginData: IPluginData,
+		projectData: IProjectData,
+	): boolean {
+		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
+			IOSProjectService.IOS_PLATFORM_NAME,
+		);
+
+		for (const fileName of this.getAllLibsForPluginWithFileExtension(
+			pluginData,
+			".a",
+		)) {
+			const staticLibPath = path.join(pluginPlatformsFolderPath, fileName);
+			const libraryName = path.basename(staticLibPath, ".a");
+			const headersSubpath = path.join(
+				path.dirname(staticLibPath),
+				"include",
+				libraryName,
+			);
+
+			if (!this.$fs.exists(headersSubpath)) {
+				continue;
+			}
+
+			const headerFiles = this.$fs
+				.readDirectory(headersSubpath)
+				.filter(
+					(f) =>
+						path.extname(f) === ".h" &&
+						this.$fs.getFsStats(path.join(headersSubpath, f)).isFile(),
+				);
+
+			if (
+				headerFiles.length > 0 &&
+				!this.$fs.exists(path.join(headersSubpath, "module.modulemap"))
+			) {
+				this.$logger.trace(
+					`Plugin ${pluginData.name}: modulemap missing at ${headersSubpath}, will re-prepare`,
+				);
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public async removePluginNativeCode(
 		pluginData: IPluginData,
 		projectData: IProjectData,
@@ -1244,13 +1327,43 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 					constants.CONFIG_FILE_NAME_TS,
 				);
 				if (this.$fs.exists(pluginConfigPath)) {
-					const config = this.$projectConfigService.readConfig(plugin.fullPath);
+					// Plugin packages may ship compiled .js artifacts next to their
+					// .ts config; the dual-config warning is guidance for the user's
+					// own project and would be misleading here.
+					const config = this.$projectConfigService.readConfig(
+						plugin.fullPath,
+						{ suppressWarnings: true },
+					);
 					const packages = _.get(
 						config,
 						`${platformData.platformNameLowerCase}.SPMPackages`,
 						[],
 					);
 					if (packages.length) {
+						for (const pkg of packages) {
+							// a plugin's local package path is naturally authored relative
+							// to the plugin itself, but the SPM service resolves relative
+							// paths against the app project dir. When the app-relative
+							// path doesn't exist (e.g. non-hoisted node_modules layouts),
+							// fall back to resolving against the plugin's own directory.
+							if (
+								"path" in pkg &&
+								pkg.path &&
+								!path.isAbsolute(pkg.path) &&
+								!this.$fs.exists(path.resolve(projectData.projectDir, pkg.path))
+							) {
+								const pluginRelativePath = path.resolve(
+									plugin.fullPath,
+									pkg.path,
+								);
+								if (this.$fs.exists(pluginRelativePath)) {
+									this.$logger.trace(
+										`SPM: resolved plugin-relative package path for ${pkg.name}: ${pluginRelativePath}`,
+									);
+									pkg.path = pluginRelativePath;
+								}
+							}
+						}
 						pluginSpmPackages.push(...packages);
 					}
 				}
@@ -1420,9 +1533,15 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	): Promise<void> {
 		const project = this.createPbxProj(projectData);
 		const group = await this.getRootGroup(groupName, sourceFolderPath);
+		// pin the sources to the main app target: without an explicit target the
+		// underlying xcode lib picks whichever "Sources" build phase it finds
+		// first, which can be an extension target (e.g. a widget) once one
+		// exists — compiling plugin native code into extensions breaks their
+		// builds (and bloats them) since they lack the app's search paths.
 		project.addPbxGroup(group.files, group.name, group.path, null, {
 			isMain: true,
 			filesRelativeToProject: true,
+			target: project.getFirstTarget()?.uuid,
 		});
 		project.addToHeaderSearchPaths(group.path);
 		const headerFiles = this.$fs.exists(sourceFolderPath)
@@ -1453,14 +1572,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 		);
 		const platformData = this.getPlatformData(projectData);
 		const pbxProjPath = this.getPbxProjPath(projectData);
-		const addedExtensionsFromResources =
-			await this.$iOSExtensionsService.addExtensionsFromPath({
-				extensionsFolderPath: resorcesExtensionsPath,
-				projectData,
-				platformData,
-				pbxProjPath,
-			});
-		let addedExtensionsFromPlugins = false;
+		await this.$iOSExtensionsService.addExtensionsFromPath({
+			extensionsFolderPath: resorcesExtensionsPath,
+			projectData,
+			platformData,
+			pbxProjPath,
+		});
 		for (const pluginIndex in pluginsData) {
 			const pluginData = pluginsData[pluginIndex];
 			const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
@@ -1471,21 +1588,12 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				pluginPlatformsFolderPath,
 				constants.NATIVE_EXTENSION_FOLDER,
 			);
-			const addedExtensionFromPlugin =
-				await this.$iOSExtensionsService.addExtensionsFromPath({
-					extensionsFolderPath: extensionPath,
-					projectData,
-					platformData,
-					pbxProjPath,
-				});
-			addedExtensionsFromPlugins =
-				addedExtensionsFromPlugins || addedExtensionFromPlugin;
-		}
-
-		if (addedExtensionsFromResources || addedExtensionsFromPlugins) {
-			this.$logger.warn(
-				"Let us know if there are other Extension features you'd like! https://github.com/NativeScript/NativeScript/issues",
-			);
+			await this.$iOSExtensionsService.addExtensionsFromPath({
+				extensionsFolderPath: extensionPath,
+				projectData,
+				platformData,
+				pbxProjPath,
+			});
 		}
 	}
 
@@ -1635,6 +1743,19 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 				project.removeFromHeaderSearchPaths({
 					relativePath: relativeHeaderSearchPath,
 				});
+
+				// Remove the generated modulemap dir search path (see addStaticLibrary)
+				const modulemapDir = path.join(
+					this.getPlatformData(projectData).projectRoot,
+					IOSProjectService.GENERATED_PLUGINS_DIR_NAME,
+					path.basename(staticLibPath, ".a"),
+				);
+				project.removeFromHeaderSearchPaths({
+					relativePath: this.getLibSubpathRelativeToProjectPath(
+						modulemapDir,
+						projectData,
+					),
+				});
 			},
 		);
 
@@ -1644,29 +1765,52 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 	private generateModulemap(
 		headersFolderPath: string,
 		libraryName: string,
-	): void {
+		modulemapDir: string,
+	): boolean {
+		const modulemapPath = path.join(modulemapDir, "module.modulemap");
+
+		// A plugin may ship a `.a` without an `include/{lib}` headers folder. In
+		// that case there's nothing to expose as a module - clean up any stale
+		// modulemap and bail out instead of letting readDirectory throw.
+		if (!this.$fs.exists(headersFolderPath)) {
+			if (this.$fs.exists(modulemapPath)) {
+				this.$fs.deleteFile(modulemapPath);
+			}
+			return false;
+		}
+
 		const headersFilter = (fileName: string, containingFolderPath: string) =>
 			path.extname(fileName) === ".h" &&
 			this.$fs.getFsStats(path.join(containingFolderPath, fileName)).isFile();
 		const headersFolderContents = this.$fs.readDirectory(headersFolderPath);
-		let headers = _(headersFolderContents)
-			.filter((item) => headersFilter(item, headersFolderPath))
-			.value();
+		const headerFiles = headersFolderContents.filter((item) =>
+			headersFilter(item, headersFolderPath),
+		);
 
-		if (!headers.length) {
-			this.$fs.deleteFile(path.join(headersFolderPath, "module.modulemap"));
-			return;
+		if (!headerFiles.length) {
+			if (this.$fs.exists(modulemapPath)) {
+				this.$fs.deleteFile(modulemapPath);
+			}
+			return false;
 		}
 
-		headers = _.map(headers, (value) => `header "${value}"`);
+		// Reference the plugin's headers (still in node_modules) relative to the
+		// generated modulemap's location, so we don't copy headers or write into
+		// node_modules.
+		const headers = _.map(headerFiles, (value) => {
+			const relativeHeaderPath = path.relative(
+				modulemapDir,
+				path.join(headersFolderPath, value),
+			);
+			return `header "${relativeHeaderPath}"`;
+		});
 
 		const modulemap = `module ${libraryName} { explicit module ${libraryName} { ${headers.join(
 			" ",
 		)} } }`;
-		this.$fs.writeFile(
-			path.join(headersFolderPath, "module.modulemap"),
-			modulemap,
-		);
+		this.$fs.ensureDirectoryExists(modulemapDir);
+		this.$fs.writeFile(modulemapPath, modulemap);
+		return true;
 	}
 
 	private async mergeProjectXcconfigFiles(
@@ -1681,6 +1825,23 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 
 		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
 			this.$fs.deleteFile(pluginsXcconfigFilePath);
+		}
+
+		// mergeFiles keeps whichever value is already present, so the app's
+		// xcconfig is merged before any plugin's to make it authoritative: a
+		// plugin must not be able to dictate a setting the app has chosen.
+		const appResourcesXcconfigPath = path.join(
+			projectData.appResourcesDirectoryPath,
+			this.getPlatformData(projectData).normalizedPlatformName,
+			BUILD_XCCONFIG_FILE_NAME,
+		);
+		if (this.$fs.exists(appResourcesXcconfigPath)) {
+			for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+				await this.$xcconfigService.mergeFiles(
+					appResourcesXcconfigPath,
+					pluginsXcconfigFilePath,
+				);
+			}
 		}
 
 		const allPlugins: IPluginData[] = this.getAllProductionPlugins(projectData);
@@ -1699,20 +1860,6 @@ export class IOSProjectService extends projectServiceBaseLib.PlatformProjectServ
 						pluginsXcconfigFilePath,
 					);
 				}
-			}
-		}
-
-		const appResourcesXcconfigPath = path.join(
-			projectData.appResourcesDirectoryPath,
-			this.getPlatformData(projectData).normalizedPlatformName,
-			BUILD_XCCONFIG_FILE_NAME,
-		);
-		if (this.$fs.exists(appResourcesXcconfigPath)) {
-			for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
-				await this.$xcconfigService.mergeFiles(
-					appResourcesXcconfigPath,
-					pluginsXcconfigFilePath,
-				);
 			}
 		}
 

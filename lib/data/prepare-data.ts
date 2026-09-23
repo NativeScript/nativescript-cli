@@ -45,6 +45,11 @@ export class PrepareData extends ControllerDataBase {
 		}
 		this.hostProjectPath = data.hostProjectPath;
 
+		if (data.skipNative) {
+			this.nativePrepare = { skipNativePrepare: true };
+			this.watchNative = false;
+		}
+
 		this.uniqueBundle = !this.watch && data.uniqueBundle ? Date.now() : 0;
 	}
 }

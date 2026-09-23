@@ -87,5 +87,47 @@ lib/common/test-reports.xml
 !lib/common/test-scripts/**
 !lib/common/scripts/**
 config/test-deps-versions-generated.json
-!scripts/get-next-version.js
-!scripts/get-npm-tag.js
+!scripts/*.js
+!dev/*.js
+
+# build output
+/dist
+
+# ============================================
+# AI agents: local / personal / ephemeral state
+# ============================================
+# Keep committable: CLAUDE.md, AGENTS.md, GEMINI.md,
+# .github/copilot-instructions.md, .claude/settings.json,
+# .claude/commands/, .claude/agents/, .claude/skills/,
+# .cursor/rules/, .cursorignore, .aiderignore, .aider.conf.yml,
+# .mcp.json and .cursor/mcp.json (both expand env vars; keep tokens in env)
+
+# Claude Code
+.claude/settings.local.json
+.claude/worktrees/
+CLAUDE.local.md
+
+# Aider (listed individually so .aider.conf.yml can still be committed)
+.aider.chat.history.md
+.aider.input.history
+.aider.llm.history
+.aider.tags.cache*/
+
+# SpecStory (writes full chat transcripts into the repo)
+.specstory/
+
+# Manually created worktrees
+.worktrees/
+
+# Agent scratch space (tell agents in CLAUDE.md/AGENTS.md to write temp files here)
+.scratch/
+*.agent.log
+
+# ============================================
+# Secrets
+# ============================================
+# local secrets, filled in from .env.example
+.env
+.env.*
+!.env.example
+.envrc

@@ -128,7 +128,7 @@ describe("analytics-service", () => {
 		service = null;
 	});
 
-	after(() => {
+	afterAll(() => {
 		setIsInteractive(null);
 	});
 
@@ -147,8 +147,8 @@ describe("analytics-service", () => {
 		});
 
 		it("returns false when analytics status is disabled", async () => {
-			baseTestScenario.exceptionsTracking = baseTestScenario.featureTracking =
-				false;
+			baseTestScenario.exceptionsTracking =
+				baseTestScenario.featureTracking = false;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			const staticConfig: Config.IStaticConfig =
@@ -377,8 +377,8 @@ describe("analytics-service", () => {
 		});
 
 		it("does nothing when exception and feature tracking are already set", async () => {
-			baseTestScenario.featureTracking = baseTestScenario.exceptionsTracking =
-				true;
+			baseTestScenario.featureTracking =
+				baseTestScenario.exceptionsTracking = true;
 			const testInjector = createTestInjector(baseTestScenario);
 			service = testInjector.resolve<IAnalyticsService>("analyticsService");
 			await service.checkConsent();

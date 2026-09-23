@@ -109,7 +109,7 @@ export class UpdateController
 		// clean up project files
 		this.spinner.info("Cleaning up project files before update");
 
-		await this.cleanUpProject();
+		await this.cleanUpProject(projectData);
 
 		this.spinner.succeed("Project files have been cleaned up");
 
@@ -293,10 +293,10 @@ export class UpdateController
 		}
 	}
 
-	private async cleanUpProject(): Promise<void> {
+	private async cleanUpProject(projectData: IProjectData): Promise<void> {
 		await this.$projectCleanupService.clean([
 			constants.HOOKS_DIR_NAME,
-			constants.PLATFORMS_DIR_NAME,
+			projectData.getBuildRelativeDirectoryPath(),
 			constants.NODE_MODULES_FOLDER_NAME,
 			constants.PACKAGE_LOCK_JSON_FILE_NAME,
 		]);

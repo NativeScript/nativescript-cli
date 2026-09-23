@@ -28,7 +28,8 @@ Usage | Synopsis
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments
 `<Platform>` is the target mobile platform on which you want to run the tests. You can set the following target platforms.
 * `android` - Runs the tests in your project on connected Android devices or Android emulators. 
-* `ios` - Runs the tests in your project on connected iOS devices.<% } %>
+* `ios` - Runs the tests in your project on connected iOS devices.
+* `visionos` - Runs the tests in your project in the visionOS Simulator or on connected Apple Vision Pro devices. Requires the Vitest testing framework.<% } %>
 
 <% if(isHtml) { %>
 
@@ -45,4 +46,5 @@ Command | Description
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.
 [test android](test-android.html) | Runs the tests in your project on Android devices or native emulators. 
 [test ios](test-ios.html) | Runs the tests in your project on iOS devices or the iOS Simulator.
+[test visionos](test-visionos.html) | Runs the tests in your project in the visionOS Simulator or on Apple Vision Pro devices.
 <% } %>

@@ -71,7 +71,7 @@ const createTestInjector = (): IInjector => {
 					"..",
 					"resources",
 					"device-log-provider-integration-tests",
-					pl.toLowerCase()
+					pl.toLowerCase(),
 				),
 				frameworkPackageName: `tns-${platform.toLowerCase()}`,
 			};
@@ -112,7 +112,7 @@ describe("deviceLogProvider", () => {
 		assert.equal(actualFixed, expectedFixed);
 	};
 
-	before(async () => {
+	beforeAll(async () => {
 		testInjector = createTestInjector();
 		const fs = testInjector.resolve<IFileSystem>("fs");
 		const logSourceMapService = testInjector.resolve("logSourceMapService");
@@ -121,7 +121,7 @@ describe("deviceLogProvider", () => {
 			"..",
 			"..",
 			"resources",
-			"device-log-provider-integration-tests"
+			"device-log-provider-integration-tests",
 		);
 		const files = fs.enumerateFilesInDirectorySync(originalFilesLocation);
 		for (const file of files) {
@@ -133,7 +133,7 @@ describe("deviceLogProvider", () => {
 			testInjector.resolve<Mobile.IDeviceLogProvider>("deviceLogProvider");
 		deviceLogProvider.setProjectDirForDevice(
 			"deviceIdentifier",
-			"dir_with_runtime_6.1.0"
+			"dir_with_runtime_6.1.0",
 		);
 	});
 
@@ -151,28 +151,28 @@ describe("deviceLogProvider", () => {
 				}
 			};
 
-			before(() => {
+			beforeAll(() => {
 				platform = "android";
 				deviceLogProvider.setApplicationPidForDevice(deviceIdentifier, "25038");
 			});
 
 			describe("runtime version is below 6.1.0", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.0.0";
 					deviceLogProvider.setProjectDirForDevice(
 						"deviceIdentifier",
-						"dir_with_runtime_6.0.0"
+						"dir_with_runtime_6.0.0",
 					);
 				});
 
 				describe("SDK 28", () => {
 					it("console.log", () => {
 						logDataForAndroid(
-							"08-22 15:31:53.189 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal."
+							"08-22 15:31:53.189 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal.",
 						);
 						assertData(
 							logger.output,
-							"HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							"HMR: Hot Module Replacement Enabled. Waiting for signal.\n",
 						);
 					});
 
@@ -204,7 +204,7 @@ level0_0: {
 level0_1: {
   "level1_0": "value3"
 }
-==== object dump end ====\n`
+==== object dump end ====\n`,
 						);
 					});
 
@@ -218,7 +218,7 @@ level0_1: {
 							`multiline
         message
         from
-        console.log\n`
+        console.log\n`,
 						);
 					});
 
@@ -234,13 +234,13 @@ level0_1: {
 at viewModel.onTap file: app/main-view-model.js:39:0
 at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify file: node_modules/tns-core-modules/data/observable/observable.js:107:0
 at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit file: node_modules/tns-core-modules/data/observable/observable.js:127:0
-at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/button.js:29:0\n`
+at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/button.js:29:0\n`,
 						);
 					});
 
 					it("console.time(timeEnd) statement", () => {
 						logDataForAndroid(
-							"08-22 15:32:03.145 25038 25038 I JS      : console.time: 9603.00ms"
+							"08-22 15:32:03.145 25038 25038 I JS      : console.time: 9603.00ms",
 						);
 						assertData(logger.output, "console.time: 9603.00ms\n");
 					});
@@ -298,7 +298,7 @@ at ClickListenerImpl.onClick file: node_modules/tns-core-modules/ui/button/butto
 08-22 15:32:03.211 25038 25038 W System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 08-22 15:32:03.211 25038 25038 W System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 08-22 15:32:03.211 25038 25038 W System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-22 15:32:03.211 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+08-22 15:32:03.211 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`,
 						);
 
 						assertData(
@@ -330,29 +330,29 @@ System.err: 	at android.os.Looper.loop(Looper.java:193)
 System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
+System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`,
 						);
 					});
 				});
 			});
 
 			describe("runtime version is 6.1.0 or later", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.1.0";
 					deviceLogProvider.setProjectDirForDevice(
 						"deviceIdentifier",
-						"dir_with_runtime_6.1.0"
+						"dir_with_runtime_6.1.0",
 					);
 				});
 
 				describe("SDK 28", () => {
 					it("console.log", () => {
 						logDataForAndroid(
-							"08-23 16:15:55.254 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal."
+							"08-23 16:15:55.254 25038 25038 I JS      : HMR: Hot Module Replacement Enabled. Waiting for signal.",
 						);
 						assertData(
 							logger.output,
-							"HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+							"HMR: Hot Module Replacement Enabled. Waiting for signal.\n",
 						);
 					});
 
@@ -384,7 +384,7 @@ level0_0: {
 level0_1: {
   "level1_0": "value3"
 }
-==== object dump end ====\n`
+==== object dump end ====\n`,
 						);
 					});
 
@@ -398,7 +398,7 @@ level0_1: {
 							`multiline
         message
         from
-        console.log\n`
+        console.log\n`,
 						);
 					});
 
@@ -414,13 +414,13 @@ level0_1: {
 at viewModel.onTap (file: app/main-view-model.js:39:0)
 at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable.notify (file: node_modules/tns-core-modules/data/observable/observable.js:107:0)
 at push.../node_modules/tns-core-modules/data/observable/observable.js.Observable._emit (file: node_modules/tns-core-modules/data/observable/observable.js:127:0)
-at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/button.js:29:0)\n`
+at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/button.js:29:0)\n`,
 						);
 					});
 
 					it("console.time(timeEnd) statement", () => {
 						logDataForAndroid(
-							"08-23 16:16:06.571 25038 25038 I JS      : console.time: 9510.00ms"
+							"08-23 16:16:06.571 25038 25038 I JS      : console.time: 9510.00ms",
 						);
 						assertData(logger.output, "console.time: 9510.00ms\n");
 					});
@@ -478,7 +478,7 @@ at ClickListenerImpl.onClick (file: node_modules/tns-core-modules/ui/button/butt
 08-23 16:16:06.799 25038 25038 W System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 08-23 16:16:06.799 25038 25038 W System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 08-23 16:16:06.799 25038 25038 W System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-08-23 16:16:06.799 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`
+08-23 16:16:06.799 25038 25038 W System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)`,
 						);
 
 						assertData(
@@ -510,7 +510,7 @@ System.err: 	at android.os.Looper.loop(Looper.java:193)
 System.err: 	at android.app.ActivityThread.main(ActivityThread.java:6669)
 System.err: 	at java.lang.reflect.Method.invoke(Native Method)
 System.err: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
-System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
+System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`,
 						);
 					});
 				});
@@ -518,11 +518,11 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
 		});
 
 		describe("iOS", () => {
-			before(() => {
+			beforeAll(() => {
 				platform = "ios";
 				deviceLogProvider.setProjectNameForDevice(
 					deviceIdentifier,
-					"appTestLogs"
+					"appTestLogs",
 				);
 			});
 
@@ -531,11 +531,11 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
 			};
 
 			describe("runtime version is below 6.1.0", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.0.0";
 					deviceLogProvider.setProjectDirForDevice(
 						"deviceIdentifier",
-						"dir_with_runtime_6.0.0"
+						"dir_with_runtime_6.0.0",
 					);
 				});
 
@@ -543,12 +543,12 @@ System.err: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)\n`
 					describe("simulator output", () => {
 						it("console.log", () => {
 							logDataForiOS(
-								"Aug 23 14:38:54 mcsofvladimirov appTestLogs[8455]: CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+								"Aug 23 14:38:54 mcsofvladimirov appTestLogs[8455]: CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.",
 							);
 
 							assertData(
 								logger.output,
-								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n",
 							);
 						});
 
@@ -567,11 +567,11 @@ level0_1: {
 }
 ==== object dump end ====`;
 							logDataForiOS(
-								`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+								`Aug 23 14:38:58 mcsofvladimirov appTestLogs[8455]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`,
 							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0\n${dump}\n`
+								`CONSOLE LOG file: app/main-view-model.js:20:0\n${dump}\n`,
 							);
 						});
 
@@ -582,7 +582,7 @@ level0_1: {
 									`\tmessage`,
 									`\sfrom`,
 									`\t\sconsole.log`,
-								].join("\n")
+								].join("\n"),
 							);
 							assertData(
 								logger.output,
@@ -591,7 +591,7 @@ level0_1: {
 									`\tmessage`,
 									`\sfrom`,
 									`\t\sconsole.log\n`,
-								].join("\n")
+								].join("\n"),
 							);
 						});
 
@@ -631,17 +631,17 @@ level0_1: {
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
-16  promiseReactionJob@:1:11\n`
+16  promiseReactionJob@:1:11\n`,
 							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
 							logDataForiOS(
-								`file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms`
+								`file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms`,
 							);
 							assertData(
 								logger.output,
-								"file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms\n"
+								"file:///app/main-view-model.js:41:0 CONSOLE INFO console.time: 3152.344ms\n",
 							);
 						});
 
@@ -810,7 +810,7 @@ JS Stack:
 	9   anonymous@file:///app/bundle.js:2:61
 	10  evaluate@[native code]
 	11  moduleEvaluation@:1:11
-	12  promiseReactionJob@:1:11\n`
+	12  promiseReactionJob@:1:11\n`,
 							);
 						});
 					});
@@ -820,12 +820,12 @@ JS Stack:
 					describe("simulator output", () => {
 						it("console.log", () => {
 							logDataForiOS(
-								"2019-08-22 18:21:24.066975+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+								"2019-08-22 18:21:24.066975+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.",
 							);
 
 							assertData(
 								logger.output,
-								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0 HMR: Hot Module Replacement Enabled. Waiting for signal.\n",
 							);
 						});
 
@@ -844,11 +844,11 @@ level0_1: {
 }
 ==== object dump end ====`;
 							logDataForiOS(
-								`2019-08-22 18:21:26.133151+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+								`2019-08-22 18:21:26.133151+0300  localhost appTestLogs[55619]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`,
 							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0\n${dump}\n`
+								`CONSOLE LOG file: app/main-view-model.js:20:0\n${dump}\n`,
 							);
 						});
 
@@ -859,7 +859,7 @@ level0_1: {
 									`message`,
 									`  from`,
 									`console.log`,
-								].join("\n")
+								].join("\n"),
 							);
 							assertData(
 								logger.output,
@@ -868,7 +868,7 @@ level0_1: {
 									`message`,
 									`  from`,
 									`console.log\n`,
-								].join("\n")
+								].join("\n"),
 							);
 						});
 
@@ -908,17 +908,17 @@ level0_1: {
 13  anonymous@file:///app/bundle.js:2:61
 14  evaluate@[native code]
 15  moduleEvaluation@:1:11
-16  promiseReactionJob@:1:11\n`
+16  promiseReactionJob@:1:11\n`,
 							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
 							logDataForiOS(
-								`2019-08-22 18:21:26.133972+0300  localhost appTestLogs[55619]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 1988.737ms`
+								`2019-08-22 18:21:26.133972+0300  localhost appTestLogs[55619]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 1988.737ms`,
 							);
 							assertData(
 								logger.output,
-								"file: app/main-view-model.js:41:0 CONSOLE INFO console.time: 1988.737ms\n"
+								"file: app/main-view-model.js:41:0 CONSOLE INFO console.time: 1988.737ms\n",
 							);
 						});
 
@@ -1093,7 +1093,7 @@ JS Stack:
 9   anonymous@file:///app/bundle.js:2:61
 10  evaluate@[native code]
 11  moduleEvaluation@:1:11
-12  promiseReactionJob@:1:11\n`
+12  promiseReactionJob@:1:11\n`,
 							);
 						});
 					});
@@ -1101,12 +1101,12 @@ JS Stack:
 			});
 
 			describe("runtime version is 6.1.0 or later", () => {
-				before(() => {
+				beforeAll(() => {
 					runtimeVersion = "6.1.0";
 					// set this, so the caching in logSourceMapService will detect correct runtime
 					deviceLogProvider.setProjectDirForDevice(
 						"deviceIdentifier",
-						"dir_with_runtime_6.1.0"
+						"dir_with_runtime_6.1.0",
 					);
 				});
 
@@ -1114,12 +1114,12 @@ JS Stack:
 					describe("simulator output", () => {
 						it("console.log", () => {
 							logDataForiOS(
-								"Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+								"Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.",
 							);
 
 							assertData(
 								logger.output,
-								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n",
 							);
 						});
 
@@ -1138,11 +1138,11 @@ level0_1: {
 }
 ==== object dump end ====`;
 							logDataForiOS(
-								`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+								`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`,
 							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0:\n${dump}\n`
+								`CONSOLE LOG file: app/main-view-model.js:20:0:\n${dump}\n`,
 							);
 						});
 
@@ -1153,7 +1153,7 @@ level0_1: {
 									`message`,
 									`  from`,
 									`console.log`,
-								].join("\n")
+								].join("\n"),
 							);
 							assertData(
 								logger.output,
@@ -1162,7 +1162,7 @@ level0_1: {
 									`message`,
 									`  from`,
 									`console.log\n`,
-								].join("\n")
+								].join("\n"),
 							);
 						});
 
@@ -1202,17 +1202,17 @@ at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
-at promiseReactionJob\n`
+at promiseReactionJob\n`,
 							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
 							logDataForiOS(
-								`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: file:///app/bundle.js:291:24: CONSOLE INFO console.time: 27523.877ms`
+								`Aug 23 18:12:39 mcsofvladimirov appTestLogs[29554]: file:///app/bundle.js:291:24: CONSOLE INFO console.time: 27523.877ms`,
 							);
 							assertData(
 								logger.output,
-								"file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 27523.877ms\n"
+								"file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 27523.877ms\n",
 							);
 						});
 
@@ -1381,7 +1381,7 @@ UIApplicationMain([native code])
 	at anonymous(file:///app/bundle.js:2:61)
 	at evaluate([native code])
 	at moduleEvaluation
-	at promiseReactionJob\n`
+	at promiseReactionJob\n`,
 							);
 						});
 					});
@@ -1391,12 +1391,12 @@ UIApplicationMain([native code])
 					describe("simulator output", () => {
 						it("console.log", () => {
 							logDataForiOS(
-								"2019-08-23 17:08:38.860441+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
+								"2019-08-23 17:08:38.860441+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE INFO file:///app/vendor.js:168:36: HMR: Hot Module Replacement Enabled. Waiting for signal.",
 							);
 
 							assertData(
 								logger.output,
-								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n"
+								"CONSOLE INFO file: node_modules/nativescript-dev-webpack/hot.js:3:0: HMR: Hot Module Replacement Enabled. Waiting for signal.\n",
 							);
 						});
 
@@ -1415,11 +1415,11 @@ level0_1: {
 }
 ==== object dump end ====`;
 							logDataForiOS(
-								`2019-08-23 17:08:45.217971+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`
+								`2019-08-23 17:08:45.217971+0300  localhost appTestLogs[21053]: (NativeScript) CONSOLE LOG file:///app/bundle.js:270:20:\n${dump}`,
 							);
 							assertData(
 								logger.output,
-								`CONSOLE LOG file: app/main-view-model.js:20:0:\n${dump}\n`
+								`CONSOLE LOG file: app/main-view-model.js:20:0:\n${dump}\n`,
 							);
 						});
 
@@ -1430,7 +1430,7 @@ level0_1: {
 									`message`,
 									`  from`,
 									`console.log`,
-								].join("\n")
+								].join("\n"),
 							);
 							assertData(
 								logger.output,
@@ -1439,7 +1439,7 @@ level0_1: {
 									`message`,
 									`  from`,
 									`console.log\n`,
-								].join("\n")
+								].join("\n"),
 							);
 						});
 
@@ -1479,17 +1479,17 @@ at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
-at promiseReactionJob\n`
+at promiseReactionJob\n`,
 							);
 						});
 
 						it("console.time(timeEnd) statement", () => {
 							logDataForiOS(
-								`2019-08-23 17:08:45.219341+0300  localhost appTestLogs[21053]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 6285.199ms`
+								`2019-08-23 17:08:45.219341+0300  localhost appTestLogs[21053]: (NativeScript) file:///app/bundle.js:291:24: CONSOLE INFO console.time: 6285.199ms`,
 							);
 							assertData(
 								logger.output,
-								"file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 6285.199ms\n"
+								"file: app/main-view-model.js:41:0: CONSOLE INFO console.time: 6285.199ms\n",
 							);
 						});
 
@@ -1663,7 +1663,7 @@ at webpackJsonpCallback(file: app/webpack/bootstrap:30:0)
 at anonymous(file:///app/bundle.js:2:61)
 at evaluate([native code])
 at moduleEvaluation
-at promiseReactionJob\n`
+at promiseReactionJob\n`,
 							);
 						});
 					});

@@ -1,4 +1,4 @@
-/// <reference path="./interfaces.ts" />
+/// <reference path="./interfaces.d.ts" />
 
 declare module "@nativescript/doctor" {
 	export const doctor: NativeScriptDoctor.IDoctor;

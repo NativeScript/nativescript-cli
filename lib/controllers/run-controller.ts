@@ -7,6 +7,7 @@ import {
 	USER_INTERACTION_NEEDED_EVENT_NAME,
 } from "../constants";
 import { cache, performanceLog } from "../common/decorators";
+import { isTruthyEnvFlag } from "../common/helpers";
 import { EventEmitter } from "events";
 import * as util from "util";
 import * as _ from "lodash";
@@ -22,10 +23,20 @@ import {
 	IDictionary,
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
+import { ViteHmrPortService } from "../contracts/vite-hmr-port-service";
 import { injector } from "../common/yok";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
+	private _syncInProgress = false;
+	private _pendingSyncs: Map<
+		string,
+		{
+			data: IFilesChangeEventData;
+			projectData: IProjectData;
+			liveSyncInfo: ILiveSyncInfo;
+		}
+	> = new Map();
 
 	constructor(
 		protected $analyticsService: IAnalyticsService,
@@ -48,6 +59,8 @@ export class RunController extends EventEmitter implements IRunController {
 		private $prepareNativePlatformService: IPrepareNativePlatformService,
 		private $projectChangesService: IProjectChangesService,
 		protected $projectDataService: IProjectDataService,
+		private $staticConfig: Config.IStaticConfig,
+		private $viteHmrPortService: ViteHmrPortService,
 	) {
 		super();
 	}
@@ -97,16 +110,11 @@ export class RunController extends EventEmitter implements IRunController {
 						projectData,
 						prepareData,
 					);
-					if (changesInfo.hasChanges) {
-						await this.syncChangedDataOnDevices(
-							data,
-							projectData,
-							liveSyncInfo,
-						);
+					if (!changesInfo.hasChanges) {
+						return;
 					}
-				} else {
-					await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
 				}
+				this.scheduleSyncOnDevices(data, projectData, liveSyncInfo);
 			};
 
 			this.prepareReadyEventHandler = handler.bind(this);
@@ -497,6 +505,20 @@ export class RunController extends EventEmitter implements IRunController {
 				},
 			);
 
+			// For Android + Vite HMR, own the `adb reverse` ourselves —
+			// with our SDK-resolved adb, scoped to this exact serial, and
+			// only after the device is up — then hand the bundler the
+			// result via env vars. This MUST run before `prepare` (which
+			// spawns the Vite bundler that inherits `process.env`) so the
+			// bundler trusts the tunnel instead of racing us to spawn its
+			// own adb during config-load. See packages/vite hardening.
+			await this.setupAndroidViteHmrReverse(
+				device,
+				projectData,
+				liveSyncInfo,
+				"pre-build",
+			);
+
 			const prepareResultData =
 				await this.$prepareController.prepare(prepareData);
 
@@ -571,6 +593,17 @@ export class RunController extends EventEmitter implements IRunController {
 					liveSyncDeviceData: deviceDescriptor,
 				});
 
+				// Re-establish the adb reverse on the CURRENT transport right
+				// before launch — the transport can change during build/install
+				// and drop the mapping set in `pre-build`, which would leave the
+				// app unable to reach the Vite dev server at 127.0.0.1.
+				await this.setupAndroidViteHmrReverse(
+					device,
+					projectData,
+					liveSyncInfo,
+					"pre-launch",
+				);
+
 				await this.refreshApplication(
 					projectData,
 					liveSyncResultInfo,
@@ -623,6 +656,150 @@ export class RunController extends EventEmitter implements IRunController {
 				),
 			),
 		);
+	}
+
+	/**
+	 * Set up `adb reverse tcp:<port> tcp:<port>` for an Android device
+	 * when the project bundles with Vite in HMR/watch mode, then export
+	 * the result to the bundler subprocess via environment variables.
+	 *
+	 * The Vite dev-host helper prefers an ADB tunnel (device-side
+	 * `127.0.0.1:<port>` → host) over the emulator's flaky slirp NAT
+	 * (`10.0.2.2`). Historically the bundler tried to wire that tunnel
+	 * itself at config-load time, racing this CLI's device discovery
+	 * over the single global adb daemon and intermittently freezing the
+	 * run at "Searching for devices…". The CLI is the right owner: it
+	 * knows the exact target serial and when the device is ready, and it
+	 * already drives a single, version-matched adb. We do the reverse
+	 * here and signal the bundler with `NS_ADB_REVERSE_READY=1` so it
+	 * never spawns adb on its own.
+	 *
+	 * Best-effort: any failure is logged at trace level and swallowed.
+	 * The bundler then falls back to its own (now hardened) adb path, or
+	 * ultimately to `10.0.2.2`, so a reverse hiccup never fails the run.
+	 */
+	private async setupAndroidViteHmrReverse(
+		device: Mobile.IDevice,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncInfo,
+		phase: "pre-build" | "pre-launch",
+	): Promise<void> {
+		try {
+			if (!this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
+				return;
+			}
+			if (projectData.bundler !== "vite") {
+				return;
+			}
+			// HMR over the tunnel only matters for a live watch session.
+			if (liveSyncInfo.skipWatcher || !liveSyncInfo.useHotModuleReload) {
+				return;
+			}
+			// Respect the user's explicit opt-out — they want the
+			// `10.0.2.2` / LAN path, so don't create a tunnel or claim one
+			// exists.
+			if (isTruthyEnvFlag(process.env.NS_HMR_NO_ADB_REVERSE)) {
+				return;
+			}
+			// `NS_HMR_PREFER_LAN_HOST` means the dev wants LAN routing
+			// (physical device over Wi-Fi); the dev-host resolver suppresses
+			// the adb-reverse path for it, so don't bother wiring one.
+			if (isTruthyEnvFlag(process.env.NS_HMR_PREFER_LAN_HOST)) {
+				return;
+			}
+
+			const serial = device.deviceInfo.identifier;
+			const port = await this.$viteHmrPortService.getPort(
+				device.deviceInfo.platform,
+			);
+
+			if (phase === "pre-build") {
+				// Decide the origin baked into bundle.mjs. Hand the bundler our
+				// exact adb (so any self-managed fallback can't version-mismatch
+				// the daemon) and, if the tunnel comes up, tell it to emit
+				// `127.0.0.1` and skip adb entirely.
+				process.env.NS_ADB_PATH = await this.$staticConfig.getAdbFilePath();
+				process.env.NS_DEVICE_SERIAL = serial;
+
+				const ok = await this.ensureAndroidReverse(device, serial, port);
+				if (ok) {
+					process.env.NS_ADB_REVERSE_READY = "1";
+					this.$logger.info(
+						`Set up adb reverse tcp:${port} tcp:${port} for ${serial} (Vite HMR routes device-side 127.0.0.1:${port} through ADB).`,
+					);
+				} else {
+					this.$logger.warn(
+						`Could not confirm 'adb reverse tcp:${port}' on ${serial} (device adbd slow/unresponsive). Vite HMR will fall back to 10.0.2.2. If this persists, cold-boot/wipe the emulator, or set NS_HMR_NO_ADB_REVERSE=1.`,
+					);
+				}
+				return;
+			}
+
+			// phase === "pre-launch": re-establish the mapping right before the
+			// app boots. `adb reverse` mappings are bound to the device's adb
+			// transport, and that transport can change during the (long) build
+			// + install (fresh emulators reconnect as they settle), silently
+			// dropping the early mapping. We only bother when we actually told
+			// the bundle to use `127.0.0.1` (READY set during pre-build).
+			if (!isTruthyEnvFlag(process.env.NS_ADB_REVERSE_READY)) {
+				return;
+			}
+			const ok = await this.ensureAndroidReverse(device, serial, port);
+			if (!ok) {
+				this.$logger.warn(
+					`adb reverse tcp:${port} was not active before launch on ${serial}; the app may fail to reach the Vite dev server at 127.0.0.1:${port}.`,
+				);
+			}
+		} catch (err) {
+			this.$logger.trace(
+				`Setting up adb reverse for Vite HMR (${phase}) failed; leaving it to the bundler fallback. Error: ${err}`,
+			);
+		}
+	}
+
+	/**
+	 * Apply `adb reverse tcp:<port> tcp:<port>` to the device and confirm
+	 * via `adb reverse --list` that it actually landed, retrying a few
+	 * times. Every device-side call is bounded with a Node `spawn` timeout
+	 * + `SIGKILL` so a wedged/slow adbd (observed blocking 90s+ on some
+	 * fresh-boot / API-36 arm64 emulators) can never hang the run — the
+	 * hung adb child is reaped, not orphaned. Returns whether the mapping
+	 * is confirmed present.
+	 */
+	private async ensureAndroidReverse(
+		device: Mobile.IDevice,
+		serial: string,
+		port: number,
+	): Promise<boolean> {
+		const adb = (device as Mobile.IAndroidDevice).adb;
+		const ADB_WAIT_MS = 15000;
+		const ADB_REVERSE_MS = 20000;
+		const bounded = (timeout: number) => ({
+			deviceIdentifier: serial,
+			treatErrorsAsWarnings: true,
+			childProcessOptions: { timeout, killSignal: "SIGKILL" },
+		});
+
+		// `wait-for-device` only blocks until the transport is up; bounded so a
+		// never-ready device can't stall us.
+		await adb.executeCommand(["wait-for-device"], bounded(ADB_WAIT_MS));
+
+		for (let attempt = 1; attempt <= 3; attempt++) {
+			await adb.executeCommand(
+				["reverse", `tcp:${port}`, `tcp:${port}`],
+				bounded(ADB_REVERSE_MS),
+			);
+			// Verify it landed (a SIGKILL'd-on-timeout reverse resolves rather
+			// than throws, so success of the call isn't proof).
+			const list =
+				(
+					await adb.executeCommand(["reverse", "--list"], bounded(ADB_WAIT_MS))
+				)?.toString?.() ?? "";
+			if (list.includes(`tcp:${port}`)) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private async syncChangedDataOnDevices(
@@ -843,11 +1020,11 @@ export class RunController extends EventEmitter implements IRunController {
 					watchInfo.connectTimeout = null;
 					await watchAction();
 				}
-			} catch (err) {
+			} catch (err: any) {
 				this.$logger.warn(
 					`Unable to apply changes for device: ${
 						device.deviceInfo.identifier
-					}. Error is: ${err && err.message}.`,
+					}. Error is: ${err && err.message}. Will retry on next change.`,
 				);
 
 				this.emitCore(RunOnDeviceEvents.runOnDeviceError, {
@@ -858,12 +1035,6 @@ export class RunController extends EventEmitter implements IRunController {
 							device.deviceInfo.platform.toLowerCase()
 						],
 					error: err,
-				});
-
-				await this.stop({
-					projectDir: projectData.projectDir,
-					deviceIdentifiers: [device.deviceInfo.identifier],
-					stopOptions: { shouldAwaitAllActions: false },
 				});
 			}
 		};
@@ -888,6 +1059,67 @@ export class RunController extends EventEmitter implements IRunController {
 		);
 	}
 
+	private scheduleSyncOnDevices(
+		data: IFilesChangeEventData,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncInfo,
+	): void {
+		if (this._syncInProgress) {
+			const platform = data.platform;
+			const existing = this._pendingSyncs.get(platform);
+			if (existing) {
+				existing.data = this.mergeFilesChangeEvents(existing.data, data);
+			} else {
+				this._pendingSyncs.set(platform, { data, projectData, liveSyncInfo });
+			}
+			return;
+		}
+
+		this.executeSyncOnDevices(data, projectData, liveSyncInfo);
+	}
+
+	private async executeSyncOnDevices(
+		data: IFilesChangeEventData,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncInfo,
+	): Promise<void> {
+		this._syncInProgress = true;
+		try {
+			await this.syncChangedDataOnDevices(data, projectData, liveSyncInfo);
+		} catch (err: any) {
+			this.$logger.trace(`Error during sync on devices: ${err.message || err}`);
+		} finally {
+			const nextEntry = this._pendingSyncs.entries().next();
+			if (!nextEntry.done) {
+				const [platform, pending] = nextEntry.value;
+				this._pendingSyncs.delete(platform);
+				this.executeSyncOnDevices(
+					pending.data,
+					pending.projectData,
+					pending.liveSyncInfo,
+				);
+			} else {
+				this._syncInProgress = false;
+			}
+		}
+	}
+
+	private mergeFilesChangeEvents(
+		a: IFilesChangeEventData,
+		b: IFilesChangeEventData,
+	): IFilesChangeEventData {
+		return {
+			files: [...new Set([...a.files, ...b.files])],
+			staleFiles: [
+				...new Set([...(a.staleFiles || []), ...(b.staleFiles || [])]),
+			],
+			hasOnlyHotUpdateFiles: a.hasOnlyHotUpdateFiles && b.hasOnlyHotUpdateFiles,
+			hasNativeChanges: a.hasNativeChanges || b.hasNativeChanges,
+			hmrData: b.hmrData,
+			platform: b.platform,
+		};
+	}
+
 	private async addActionToChain<T>(
 		projectDir: string,
 		action: () => Promise<T>,
@@ -895,13 +1127,17 @@ export class RunController extends EventEmitter implements IRunController {
 		const liveSyncInfo =
 			this.$liveSyncProcessDataService.getPersistedData(projectDir);
 		if (liveSyncInfo) {
-			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain.then(async () => {
-				if (!liveSyncInfo.isStopped) {
-					liveSyncInfo.currentSyncAction = action();
-					const res = await liveSyncInfo.currentSyncAction;
-					return res;
-				}
-			});
+			liveSyncInfo.actionsChain = liveSyncInfo.actionsChain
+				.then(async () => {
+					if (!liveSyncInfo.isStopped) {
+						liveSyncInfo.currentSyncAction = action();
+						const res = await liveSyncInfo.currentSyncAction;
+						return res;
+					}
+				})
+				.catch((err: any) => {
+					this.$logger.warn(`Error in action chain: ${err.message || err}`);
+				});
 
 			const result = await liveSyncInfo.actionsChain;
 			return result;

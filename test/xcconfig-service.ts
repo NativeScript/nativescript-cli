@@ -5,6 +5,7 @@ import * as yok from "../lib/common/yok";
 import { IXcconfigService } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IReadFileOptions } from "../lib/common/declarations";
+import { LoggerStub } from "./stubs";
 
 // start tracking temporary folders/files
 
@@ -18,6 +19,7 @@ describe("XCConfig Service Tests", () => {
 		});
 		testInjector.register("childProcess", {});
 		testInjector.register("xcprojService", {});
+		testInjector.register("logger", LoggerStub);
 
 		testInjector.register("xcconfigService", XcconfigService);
 

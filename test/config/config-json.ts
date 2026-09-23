@@ -6,7 +6,9 @@ describe("config.json", () => {
 		ANDROID_DEBUG_UI_MAC: "Google Chrome",
 		USE_POD_SANDBOX: false,
 		DISABLE_HOOKS: false,
-		GA_TRACKING_ID: "UA-111455-51",
+		// a checkout reports nothing; scripts/set-ga-id.js fills these in dist/
+		GA_MEASUREMENT_ID: "",
+		GA_API_SECRET: "",
 	};
 
 	it("validates content is correct", () => {
@@ -14,7 +16,7 @@ describe("config.json", () => {
 		assert.deepStrictEqual(
 			data,
 			expectedData,
-			"Data in config.json is not correct. Is this expected?"
+			"Data in config.json is not correct. Is this expected?",
 		);
 	});
 });

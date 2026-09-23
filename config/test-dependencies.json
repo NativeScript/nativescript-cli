@@ -1,15 +1,40 @@
 [
     {
-        "name": "@jsdevtools/coverage-istanbul-loader"
+        "name": "vitest",
+        "framework": "vitest",
+        "version": "~4.1.10"
     },
     {
-        "name": "karma"
+        "name": "@vitest/runner",
+        "framework": "vitest",
+        "version": "~4.1.10"
     },
     {
-        "name": "karma-coverage"
+        "name": "@nativescript/unit-test-runner",
+        "framework": "vitest",
+        "version": "^5.0.0-alpha.0"
     },
     {
-        "name": "karma-nativescript-launcher"
+        "name": "@valor/nativescript-websockets",
+        "framework": "vitest",
+        "version": "^2.0.3",
+        "saveInDependencies": true
+    },
+    {
+        "name": "@jsdevtools/coverage-istanbul-loader",
+        "frameworks": ["jasmine", "mocha", "qunit"]
+    },
+    {
+        "name": "karma",
+        "frameworks": ["jasmine", "mocha", "qunit"]
+    },
+    {
+        "name": "karma-coverage",
+        "frameworks": ["jasmine", "mocha", "qunit"]
+    },
+    {
+        "name": "karma-nativescript-launcher",
+        "frameworks": ["jasmine", "mocha", "qunit"]
     },
     {
         "name": "mocha",
@@ -53,6 +78,7 @@
         "projectType": ".ts"
     },
     {
-        "name": "nyc"
+        "name": "nyc",
+        "frameworks": ["jasmine", "mocha", "qunit"]
     }
 ]
