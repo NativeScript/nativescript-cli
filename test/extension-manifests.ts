@@ -1,4 +1,5 @@
 import { assert } from "chai";
+import { resolvePackagePath } from "../lib/helpers/package-path-helper";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -184,6 +185,8 @@ describe("extension manifests", () => {
 			install: async (): Promise<any> => {
 				throw new Error("Extensions are expected to be installed already.");
 			},
+			getInstalledPackagePath: (packageName: string, fromDir: string): string =>
+				resolvePackagePath(packageName, { paths: [fromDir] }) || null,
 			uninstall: async (): Promise<any> => undefined,
 			searchNpms: async (): Promise<any> => ({ results: [] }),
 			getRegistryPackageData: async (): Promise<any> => ({}),

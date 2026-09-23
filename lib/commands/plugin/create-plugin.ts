@@ -180,8 +180,7 @@ export class CreatePluginCommand extends Command({
 		const cwd = path.join(projectDir, "src");
 		try {
 			spinner.start();
-			const npmOptions: any = { silent: true };
-			await this.$packageManager.install(cwd, cwd, npmOptions);
+			await this.$packageManager.install(cwd, cwd, { silent: true });
 		} finally {
 			spinner.stop();
 		}
