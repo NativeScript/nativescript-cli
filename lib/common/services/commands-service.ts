@@ -14,7 +14,12 @@ import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 import { IGoogleAnalyticsPageviewData } from "../definitions/google-analytics";
-import { CommandsService as CommandsServiceContract } from "../contracts/commands-service";
+import {
+	CommandDispatchOptions,
+	CommandsService as CommandsServiceContract,
+} from "../contracts/commands-service";
+import { getCurrentInjector } from "../di/inject";
+import type { Injector } from "../di/injector";
 import { CommandReference, toCommandDefinition } from "../define-command";
 import { createCommandFromDefinition } from "./command-definition-adapter";
 import {
@@ -309,44 +314,53 @@ export class CommandsService
 	public async runCommand(
 		reference: CommandReference,
 		commandArguments: string[] = [],
+		options: CommandDispatchOptions = {},
 	): Promise<void> {
+		const scope = this.dispatchScope(reference, options);
 		// Known before the lookup, so a failure to resolve reports under the name
 		// the caller used.
 		let commandName = typeof reference === "string" ? reference : undefined;
 		try {
 			await this.dispatchInProcess(reference, async (dispatch) => {
-				const resolved = this.resolveReference(reference, commandArguments);
+				const resolved = this.resolveReference(
+					reference,
+					commandArguments,
+					scope,
+				);
 				const command = resolved.command;
 				commandName = dispatch.commandName = resolved.commandName;
 				commandArguments = resolved.commandArguments;
 
 				this.commands.push({ commandName, commandArguments });
-				const restoreOptions = this.primeOptions(command);
 				try {
-					if (
-						!(await this.canExecuteResolvedCommand(
+					const restoreOptions = this.primeOptions(command);
+					try {
+						if (
+							!(await this.canExecuteResolvedCommand(
+								commandName,
+								commandArguments,
+								undefined,
+								command,
+							))
+						) {
+							let commandWithArgs = commandName;
+							if (commandArguments && commandArguments.length) {
+								commandWithArgs += ` ${commandArguments.join(" ")}`;
+							}
+							this.$errors.failWithHelp(
+								`Command '${commandWithArgs}' cannot be executed.`,
+							);
+						}
+
+						await this.runResolvedCommandInProcess(
+							command,
 							commandName,
 							commandArguments,
-							undefined,
-							command,
-						))
-					) {
-						let commandWithArgs = commandName;
-						if (commandArguments && commandArguments.length) {
-							commandWithArgs += ` ${commandArguments.join(" ")}`;
-						}
-						this.$errors.failWithHelp(
-							`Command '${commandWithArgs}' cannot be executed.`,
 						);
+					} finally {
+						restoreOptions();
 					}
-
-					await this.runResolvedCommandInProcess(
-						command,
-						commandName,
-						commandArguments,
-					);
 				} finally {
-					restoreOptions();
 					this.commands.pop();
 				}
 			});
@@ -369,24 +383,33 @@ export class CommandsService
 	public async canExecuteCommand(
 		reference: CommandReference,
 		commandArguments: string[] = [],
+		options: CommandDispatchOptions = {},
 	): Promise<boolean> {
+		const scope = this.dispatchScope(reference, options);
 		return this.dispatchInProcess(reference, async (dispatch) => {
-			const resolved = this.resolveReference(reference, commandArguments);
+			const resolved = this.resolveReference(
+				reference,
+				commandArguments,
+				scope,
+			);
 			const { commandName, command } = resolved;
 			dispatch.commandName = commandName;
 			commandArguments = resolved.commandArguments;
 
 			this.commands.push({ commandName, commandArguments });
-			const restoreOptions = this.primeOptions(command);
 			try {
-				return await this.canExecuteResolvedCommand(
-					commandName,
-					commandArguments,
-					undefined,
-					command,
-				);
+				const restoreOptions = this.primeOptions(command);
+				try {
+					return await this.canExecuteResolvedCommand(
+						commandName,
+						commandArguments,
+						undefined,
+						command,
+					);
+				} finally {
+					restoreOptions();
+				}
 			} finally {
-				restoreOptions();
 				this.commands.pop();
 			}
 		});
@@ -455,9 +478,28 @@ export class CommandsService
 	 * parent's synthesized dispatcher re-enters through `tryExecuteCommand`,
 	 * which exits the process on failure and tracks analytics.
 	 */
+	// Read in the synchronous prefix of the call, where the caller's injection
+	// context is still current.
+	private dispatchScope(
+		reference: CommandReference,
+		options: CommandDispatchOptions,
+	): Injector {
+		if (options.injector && typeof reference === "string") {
+			throw new Error(
+				`An injector applies to a definition run as given; the registered command '${reference}' keeps the scope it was registered under.`,
+			);
+		}
+		return (
+			options.injector ||
+			getCurrentInjector() ||
+			<Injector>(<any>this.$injector)
+		);
+	}
+
 	private resolveReference(
 		reference: CommandReference,
 		commandArguments: string[],
+		scope: Injector,
 	): {
 		commandName: string;
 		command: ICommand;
@@ -507,7 +549,7 @@ export class CommandsService
 			commandName: Array.isArray(definition.name)
 				? definition.name[0]
 				: definition.name,
-			command: createCommandFromDefinition(definition, <any>this.$injector),
+			command: createCommandFromDefinition(definition, scope),
 			commandArguments,
 		};
 	}

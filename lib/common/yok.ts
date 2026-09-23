@@ -750,6 +750,11 @@ export function getRootInjector(): IInjector {
 	return injector;
 }
 
+/** @deprecated Use getRootInjector(). */
+export function getInjector(): IInjector {
+	return getRootInjector();
+}
+
 /**
  * @deprecated Global-singleton wiring for the legacy facade; new code receives
  * the container via inject(Injector) instead of a process-wide global.

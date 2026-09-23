@@ -2,7 +2,8 @@ import { assert } from "chai";
 import * as util from "util";
 import { Yok } from "../../lib/common/yok";
 import { IInjector } from "../../lib/common/definitions/yok";
-import { runInInjectionContext } from "../../lib/common/di";
+import { inject, runInInjectionContext } from "../../lib/common/di";
+import { COMMAND_OWNER } from "../../lib/common/contracts/command-registry";
 import { CommandsService } from "../../lib/common/services/commands-service";
 import { HooksService } from "../../lib/common/services/hooks-service";
 import { defineCommand, stringOption } from "../../lib/common/define-command";
@@ -101,6 +102,93 @@ const deferred = (): { promise: Promise<void>; resolve: () => void } => {
 };
 
 describe("CommandsService in-process dispatch", () => {
+	it("leaves no command entry behind when option priming throws", async () => {
+		const harness = createHarness();
+		const options = harness.injector.resolve("options");
+		options.validateOptions = (): void => {
+			throw new Error("bad options");
+		};
+		register(harness.injector, {
+			name: "dctest-bad-priming",
+			arguments: "none",
+			run: (): void => undefined,
+		});
+
+		await assert.isRejected(
+			harness.commandsService.runCommand("dctest-bad-priming"),
+			/bad options/,
+		);
+		await assert.isRejected(
+			harness.commandsService.canExecuteCommand("dctest-bad-priming"),
+			/bad options/,
+		);
+
+		assert.isUndefined(harness.commandsService.currentCommandData);
+	});
+
+	describe("the scope of a definition run as given", () => {
+		const ownerScope = (harness: IDispatchHarness, owner: string) =>
+			(<any>harness.injector).createChild([
+				{ provide: COMMAND_OWNER, useValue: owner },
+			]);
+		const ownerReader = (seen: string[]) =>
+			defineCommand({
+				name: "dctest-owner-reader",
+				arguments: "none",
+				run: () => {
+					seen.push(inject(COMMAND_OWNER, { optional: true }) || "cli");
+				},
+			});
+
+		it("is the caller's injection context, else the root", async () => {
+			const harness = createHarness();
+			const seen: string[] = [];
+			const definition = ownerReader(seen);
+
+			await runInInjectionContext(ownerScope(harness, "ext"), () =>
+				harness.commandsService.runCommand(definition),
+			);
+			await harness.commandsService.runCommand(definition);
+
+			assert.deepEqual(seen, ["ext", "cli"]);
+		});
+
+		it("is the injector passed in, ahead of the ambient one", async () => {
+			const harness = createHarness();
+			const seen: string[] = [];
+			const definition = ownerReader(seen);
+
+			await runInInjectionContext(ownerScope(harness, "ambient"), () =>
+				harness.commandsService.runCommand(definition, [], {
+					injector: ownerScope(harness, "explicit"),
+				}),
+			);
+			assert.isTrue(
+				await harness.commandsService.canExecuteCommand(definition, [], {
+					injector: ownerScope(harness, "checked"),
+				}),
+			);
+
+			assert.deepEqual(seen, ["explicit"]);
+		});
+
+		it("cannot be given for a registered name", async () => {
+			const harness = createHarness();
+			register(harness.injector, {
+				name: "dctest-registered-scope",
+				arguments: "none",
+				run: (): void => undefined,
+			});
+
+			await assert.isRejected(
+				harness.commandsService.runCommand("dctest-registered-scope", [], {
+					injector: ownerScope(harness, "ext"),
+				}),
+				/registered command 'dctest-registered-scope' keeps the scope/,
+			);
+		});
+	});
+
 	describe("a parent name", () => {
 		const registerFamily = (
 			harness: IDispatchHarness,

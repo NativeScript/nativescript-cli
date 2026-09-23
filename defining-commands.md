@@ -57,7 +57,7 @@ Validation happens where you can see it
 
 A definition is checked at the moment `defineCommand` is called, not when the
 command eventually runs. A misspelled field, a missing `run`, an option
-declared with something other than the four helpers, an `arguments` value
+declared with something other than the five helpers, an `arguments` value
 outside `"none" | "any"` — each throws immediately, naming the command and the
 accepted form. The class form's meta is checked the same way at the
 `Command({ ... })` call, which also rejects handlers passed there; only a
@@ -66,10 +66,14 @@ missing `run` method waits until the definition is first read:
 ```
 Invalid command definition for 'widget|add': unknown field(s) 'handler'; a
 definition accepts name, description, options, arguments, allowUnknownOptions,
-canExecute, disableAnalytics, enableHooks, setup, run, postRun. Accepted form:
-defineCommand({ name: "widget|add", run(ctx) { ... } }) — with the optional
-fields description, options, arguments, allowUnknownOptions, setup, canExecute,
-postRun, disableAnalytics and enableHooks.
+canExecute, disableAnalytics, enableHooks, providers, setup, run, shortcuts,
+postRun. Accepted form: defineCommand({ name: "widget|add", run(ctx) { ... } })
+— with the optional fields description, options, arguments,
+allowUnknownOptions, providers, setup, canExecute, shortcuts, postRun,
+disableAnalytics and enableHooks. Or the class form, class WidgetAdd extends
+Command({ name: "widget|add" }) { run() { ... } }, which declares the same
+fields except the handlers and implements run, and optionally canExecute,
+postRun and shortcuts, as methods.
 ```
 
 Names and the command hierarchy
@@ -98,7 +102,7 @@ Options
 -------
 
 `options` is a schema keyed by the long option name — `output` is passed as
-`--output`. Declare each entry with one of the four helpers, which fix the
+`--output`. Declare each entry with one of the five helpers, which fix the
 value type:
 
 | Helper          | Declared with `default` | Declared without        |
@@ -107,6 +111,10 @@ value type:
 | `stringOption`  | `string`                | `string \| undefined`   |
 | `numberOption`  | `number`                | `number \| undefined`   |
 | `arrayOption`   | `string[]`              | `string[] \| undefined` |
+| `objectOption`  | `any`                   | `any`                   |
+
+`objectOption` is for flags the parser nests, such as `--env.production`, and
+its value is untyped.
 
 The two columns are the whole story of the option types: a flag the user did
 not pass is absent at runtime, so only a `default` makes the value on
@@ -211,8 +219,8 @@ one that users pass is a warning today and a failure later, never a silent
 
 A command that forwards its command line to a separately installed CLI cannot
 know which flags are legitimate, so validating them here would reject the other
-CLI's own options. `allowUnknownOptions: true` turns the check off for that
-command:
+CLI's own options. `allowUnknownOptions: true` lets unknown flags through for
+that command:
 
 ```ts
 defineCommand({
@@ -225,10 +233,11 @@ defineCommand({
 });
 ```
 
-It maps onto `skipOptionsValidation` on the compiled command, which means the
-CLI never re-primes its parser for this command at all. A command-specific
-option therefore never reaches `ctx.options` under this flag — only options the
-CLI already knows globally carry values. Reach for it only when forwarding.
+An unknown flag is neither warned about nor rejected. Everything else about
+validation still applies: the parser is re-primed with the command's declared
+options, so `ctx.options.disableNpmInstall` above carries its value, and a
+known option passed with the wrong shape is still reported. Reach for it only
+when forwarding.
 
 Positional arguments
 --------------------
@@ -278,12 +287,13 @@ A spec accepts:
 - `errorMessage` — replaces `Missing required argument '<name>'.` when the
   argument is required and absent.
 - `validate(value, ctx)` — run per value, `ctx` being the same context `run`
-  receives. Return `true` to accept; return `false` for a default message, or
-  return the message itself as a string. It may be `async`.
+  receives, inside the invocation's injection context. Return `true` to
+  accept; return `false` for a default message, or return the message itself
+  as a string. It may be `async`.
 
-Enforcement happens before `canExecute`, in this order: missing required
-arguments (every missing one is named at once), then too many arguments, then
-each `validate`.
+Enforcement happens after `setup` and before `canExecute`, in this order:
+missing required arguments (every missing one is named at once), then too many
+arguments, then each `validate`.
 
 ### Matching is strictly positional
 
@@ -324,9 +334,9 @@ definition that leaves `arguments` at `"none"` still rejects stray positional
 arguments even when it supplies a `canExecute`, and a `canExecute` that only
 inspects options cannot accidentally widen what the command accepts.
 
-`canExecute` receives a context of the same shape as `run`'s — the same
-`args`, the same declared options and the same `fail` — built freshly for the
-call, and returns a boolean (or a promise of one). Returning `false` aborts the
+`canExecute` receives the same context object `run` does: one context is built
+when the invocation opens and every stage of it shares that object. It
+returns a boolean (or a promise of one). Returning `false` aborts the
 command and prints a bare help suggestion; `ctx.fail(message)` aborts it with
 your own message, which is usually the friendlier choice.
 
@@ -397,12 +407,12 @@ unchanged. Throw when you already have an `Error` to propagate; call
 Injection, and the first `await`
 --------------------------------
 
-`setup`, `canExecute`, `run` and `postRun` each start inside a
-dependency-injection context, so `inject()` works directly:
+`setup`, `canExecute`, `run`, `postRun` and `shortcuts`, an argument's
+`validate` and each precondition start inside a dependency-injection context,
+so `inject()` works directly:
 
 ```ts
-import { defineCommand, inject } from "nativescript/contracts";
-import { DoctorService } from "nativescript/contracts";
+import { defineCommand, inject, DoctorService } from "nativescript/contracts";
 
 export default defineCommand({
 	name: "widget|check",
@@ -460,7 +470,10 @@ export default defineCommand({
 
 A definition may carry `providers`, added to each invocation's own injector
 next to the context, so a factory or class among them can inject the
-invocation and is built once per invocation. One token in that list is
+invocation and is built once per invocation. An entry is an object with a
+`provide` token or a bare class, which stands for
+`{ provide: Cls, useClass: Cls }` as in Angular; anything else is rejected
+when the definition is defined. One token in that list is
 special: `COMMAND_PRECONDITIONS` is a multi token, and every
 `{ provide: COMMAND_PRECONDITIONS, multi: true, useValue: check }` contributes
 a **precondition** — a check on the environment the command runs in, as
@@ -470,7 +483,35 @@ arguments policy, inside the injection context, and a throw fails the
 invocation. That fixed order is the point: being outside a project is what a
 bad invocation reports first.
 
-The precondition every project command declares comes from a helper:
+Each entry is a function, or a list of functions. Anything else fails the
+first invocation with `Command '<name>': COMMAND_PRECONDITIONS entry #n is not
+a function or a list of functions.`
+
+Multi providers are per injector level, as in Angular. A command that declares
+any precondition of its own, `provideProject()` included, replaces the
+preconditions provided by the scope it was registered in; the two lists do not
+merge. To keep the scope's preconditions, contribute the parent's list as one
+more entry:
+
+```ts
+import { COMMAND_PRECONDITIONS, inject } from "nativescript/contracts";
+
+providers: [
+	{
+		provide: COMMAND_PRECONDITIONS,
+		multi: true,
+		useFactory: () =>
+			inject(COMMAND_PRECONDITIONS, { skipSelf: true, optional: true }) || [],
+	},
+	provideProject(),
+],
+```
+
+A built-in imports `inject` from `"../common/di"` instead.
+
+The precondition every project command declares comes from a helper. The
+built-in sample below imports it relatively; a plugin imports `provideProject`
+from `"nativescript/contracts"`.
 
 ```ts
 import { provideProject } from "../command-base";
@@ -487,11 +528,13 @@ export default defineCommand({
 `provideProject()` resolves the project from `--path` or the working
 directory and fails the invocation with the usual "no project found" error
 when there is none. A command that does not declare it — `doctor`, `create`,
-the `device` family — pays nothing, and a command that needs the project only
-when it is there, like `clean`, resolves it itself behind its own check. Never
-call `initializeProjectData()` from a command; declare the provider. A plugin
-adds its own preconditions the same way, with its own helper returning a
-multi provider for the token.
+the `device` family — pays nothing. In such a command `inject(ProjectData)`
+returns the process-wide object uninitialised, without any error. A command
+that wants the project only when there is one, like `clean` or
+`device put-file`, resolves `ProjectData` behind its own check and calls
+`initializeProjectData()` there. A command that always needs the project
+declares the provider. A plugin adds its own preconditions the same way, with
+its own helper returning a multi provider for the token.
 
 The injection context is synchronous, so the `inject()` calls belong **above
 the first `await`** — see [Injection, and the first
@@ -525,8 +568,8 @@ Sharing is either of two things, and neither of them is a bag:
 
 ### `setup`, when a command has one
 
-`setup(ctx)` runs once per invocation, before `canExecute`, and its return
-value is handed to `canExecute`, `run` and `postRun` as their second argument.
+`setup(ctx)` runs once per invocation, after the preconditions and before the
+arguments policy and `canExecute`, and its return value is handed to `canExecute`, `run` and `postRun` as their second argument.
 "Once per invocation" means once across the three together — whichever the CLI
 reaches first triggers it, and the rest reuse the value.
 
@@ -582,7 +625,13 @@ by `defineCommand`, and that definition is the only thing the CLI ever
 executes.
 
 ```ts
-import { Command, inject, stringOption } from "nativescript/contracts";
+import {
+	Command,
+	inject,
+	ProjectData,
+	provideProject,
+	stringOption,
+} from "nativescript/contracts";
 
 export class PlatformCleanCommand extends Command({
 	name: "platform|clean",
@@ -607,7 +656,8 @@ export class PlatformCleanCommand extends Command({
 ```
 
 `meta` is the definition minus its handlers: `name`, `description`, `options`,
-`arguments`, `allowUnknownOptions`, `disableAnalytics` and `enableHooks`. The
+`arguments`, `allowUnknownOptions`, `disableAnalytics`, `enableHooks` and
+`providers`. The
 handlers are methods instead — `run` is required, and `canExecute`, `postRun`
 and `shortcuts` are optional, each with the same meaning and the same ordering
 as the fields of the same name. The result type is inferred from `run`, and
@@ -899,8 +949,9 @@ action: (ctx) => ctx.injector.get(CommandsService).runCommand("open|ios"),
 The command gets what a typed command line gives it, in the same order: its
 declared options are primed into the parser — so `ctx.options` holds this
 command's values and its declared defaults rather than the outer command
-line's — then the `arguments` policy, then `canExecute`, then `run`,
-`postRun`, and the command's hooks.
+line's — then its preconditions, as the invocation opens, then `setup`, then
+the `arguments` policy, then `canExecute`, then `run`, `postRun`, and the
+command's hooks.
 
 Two things differ, both because the caller is a process that has to keep
 running afterwards:
@@ -945,6 +996,20 @@ runs `device|log`; a definition runs as
 given, whether or not it is registered, so `runCommand(prepareCommandDefinition)`
 runs exactly what you hold and cannot go stale the way a string can. Its first
 name still identifies it for hooks and reporting.
+
+A definition run as given is compiled against an injector chosen at the call,
+the way Angular's `createComponent` takes one: the `injector` in the options
+bag when one is passed, otherwise the injection context the call is made from,
+otherwise the CLI's root. So a definition dispatched from inside an
+extension's command lands under the extension's scope, where `registerCommand`
+would have placed it, and a caller holding a scope of its own names it:
+
+```ts
+await commandsService.runCommand(definition, args, { injector });
+```
+
+A registered command keeps the scope it was registered under, and passing
+`injector` together with a name throws.
 
 `CommandsService.canExecuteCommand(command, args)` asks a registered command
 whether it *could* run, without running it:
@@ -1023,7 +1088,7 @@ mapping is:
 | `arguments`, `canExecute`         | `canExecute`: policy enforced, then the refinement |
 | `setup`                           | — run inside `canExecute`/`execute`, memoised      |
 | `postRun`                         | `postCommandAction`, with `run`'s return value     |
-| `allowUnknownOptions`             | `skipOptionsValidation`                            |
+| `allowUnknownOptions`             | `allowUnknownOptions`                              |
 | —                                 | `allowedParameters`, always `[]`                   |
 | `disableAnalytics`, `enableHooks` | passed through unchanged                           |
 
@@ -1034,7 +1099,7 @@ empty, which is why declared `arguments` are matched positionally rather than
 by the `ICommandParameter` scan.
 
 Existing command classes need no migration. Reach for a definition when a
-command is mostly "parse these flags and do this"; a class still makes sense
-when a command needs constructor-injected collaborators shared across several
+command is mostly "parse these flags and do this"; a legacy `ICommand` class
+still makes sense when a command needs constructor-injected collaborators shared across several
 methods, or `ICommandParameter` validators whose claim-any-argument matching it
 actually depends on.

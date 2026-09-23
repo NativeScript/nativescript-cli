@@ -1862,6 +1862,31 @@ describe("defineCommand", () => {
 			);
 		});
 
+		it("runs validate in the invocation's injection context", async () => {
+			const testInjector = createTestInjector();
+			let seen: unknown;
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-validate-inject",
+					arguments: [
+						{
+							name: "platform",
+							validate: (value, ctx) => {
+								seen = inject(COMMAND_CONTEXT) === ctx;
+								return true;
+							},
+						},
+					],
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			await command.canExecute(["ios"]);
+
+			assert.strictEqual(seen, true);
+		});
+
 		it("hands validate the command context", async () => {
 			const testInjector = createTestInjector({ force: true });
 			let capturedContext: any;
@@ -3194,6 +3219,35 @@ describe("defineCommand", () => {
 			assert.strictEqual(seen, "from-meta");
 		});
 
+		it("takes a bare class as a provider of itself, built per invocation", async () => {
+			class PerInvocation {
+				public context = inject(COMMAND_CONTEXT);
+			}
+			const testInjector = createTestInjector();
+			const seen: PerInvocation[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-class-provider",
+					arguments: "any",
+					providers: [PerInvocation],
+					run: (ctx) => {
+						seen.push(inject(PerInvocation));
+						assert.strictEqual(ctx.injector.get(PerInvocation), seen.at(-1));
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute(["a"]);
+			await command.execute(["b"]);
+
+			assert.lengthOf(seen, 2);
+			assert.notStrictEqual(seen[0], seen[1]);
+			assert.deepEqual(seen[0].context.args, ["a"]);
+			assert.deepEqual(seen[1].context.args, ["b"]);
+		});
+
 		it("must be an array of providers", () => {
 			assert.throws(
 				() =>
@@ -3213,10 +3267,89 @@ describe("defineCommand", () => {
 					}),
 				/'providers' must be an array of providers/,
 			);
+			assert.throws(
+				() =>
+					defineCommand(<any>{
+						name: "dctest-bad-provider-string",
+						providers: ["logger"],
+						run: (): void => undefined,
+					}),
+				/'providers' must be an array of providers/,
+			);
 		});
 	});
 
 	describe("COMMAND_PRECONDITIONS", () => {
+		it("names the command when an entry is not a function", async () => {
+			const testInjector = createTestInjector();
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-precondition-shape",
+					arguments: "none",
+					providers: [
+						{
+							provide: COMMAND_PRECONDITIONS,
+							multi: true,
+							useValue: ["not a check"],
+						},
+					],
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			await assert.isRejected(
+				command.execute([]),
+				/Command 'dctest-precondition-shape': COMMAND_PRECONDITIONS entry #1 is not a function/,
+			);
+		});
+
+		it("replaces the scope's preconditions with the command's own, unless the command keeps them", async () => {
+			const order: string[] = [];
+			const scope = (<any>createTestInjector()).createChild([
+				{
+					provide: COMMAND_PRECONDITIONS,
+					multi: true,
+					useValue: () => order.push("scope"),
+				},
+			]);
+			const own = {
+				provide: COMMAND_PRECONDITIONS,
+				multi: true,
+				useValue: () => order.push("own"),
+			};
+			const keepScope = {
+				provide: COMMAND_PRECONDITIONS,
+				multi: true,
+				useFactory: () =>
+					inject(COMMAND_PRECONDITIONS, { skipSelf: true, optional: true }) ||
+					[],
+			};
+
+			await createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-preconditions-shadow",
+					arguments: "none",
+					providers: [own],
+					run: (): void => undefined,
+				}),
+				scope,
+			).execute([]);
+			assert.deepEqual(order, ["own"]);
+
+			order.length = 0;
+			await createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-preconditions-inherit",
+					arguments: "none",
+					providers: [keepScope, own],
+					run: (): void => undefined,
+				}),
+				scope,
+			).execute([]);
+			assert.deepEqual(order, ["scope", "own"]);
+		});
+
 		it("runs the preconditions in order, before setup and before the arguments policy", async () => {
 			const testInjector = createTestInjector();
 			const order: string[] = [];

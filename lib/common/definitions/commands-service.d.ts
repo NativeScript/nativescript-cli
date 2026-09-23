@@ -22,6 +22,7 @@ interface ICommandsService {
 	runCommand(
 		command: import("../define-command").CommandReference,
 		commandArguments?: string[],
+		options?: import("../contracts/commands-service").CommandDispatchOptions,
 	): Promise<void>;
 	/**
 	 * Asks a command whether it could run, without running it. The command
@@ -30,6 +31,7 @@ interface ICommandsService {
 	canExecuteCommand(
 		command: import("../define-command").CommandReference,
 		commandArguments?: string[],
+		options?: import("../contracts/commands-service").CommandDispatchOptions,
 	): Promise<boolean>;
 	/** @deprecated Use `runCommand`. */
 	executeCommandInProcess(

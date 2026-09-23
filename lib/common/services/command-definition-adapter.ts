@@ -350,7 +350,9 @@ export function createCommandFromDefinition<
 				? args.slice(index)
 				: args.slice(index, index + 1);
 			for (const value of values) {
-				const verdict = await spec.validate.call(spec, value, context);
+				const verdict = await runInInjectionContext(context.injector, () =>
+					spec.validate.call(spec, value, context),
+				);
 				if (verdict === true) {
 					continue;
 				}
@@ -374,6 +376,27 @@ export function createCommandFromDefinition<
 		hasRun: boolean;
 		runResult?: Awaited<TResult>;
 	}
+
+	// An entry may be one precondition or a list of them: a factory that
+	// injects the parent scope's array with skipSelf contributes the whole list
+	// as one entry, which is how a command keeps the scope's gates next to its
+	// own. The multi token is typed, but a definition's `providers` is not
+	// checked against it, so anything else surfaces here with the command's
+	// name instead of as a call on a non-function.
+	const resolvePreconditions = (injector: Injector): CommandPrecondition[] => {
+		const entries: unknown[] =
+			injector.get(COMMAND_PRECONDITIONS, { optional: true }) || [];
+		return entries.flatMap((entry, index) => {
+			const preconditions = Array.isArray(entry) ? entry : [entry];
+			if (preconditions.some((item) => typeof item !== "function")) {
+				throw new Error(
+					`Command '${commandName}': COMMAND_PRECONDITIONS entry #${index + 1} is not a function or a list of functions. ` +
+						"Declare each precondition as { provide: COMMAND_PRECONDITIONS, multi: true, useValue: check }.",
+				);
+			}
+			return <CommandPrecondition[]>preconditions;
+		});
+	};
 
 	const runPreconditions = async (
 		preconditions: CommandPrecondition[],
@@ -429,14 +452,13 @@ export function createCommandFromDefinition<
 		};
 		// Preconditions judge the environment and run ahead of setup and of the
 		// arguments policy, so being outside a project is what a bad invocation
-		// reports first. Without any, setup starts synchronously as before.
-		const preconditions =
-			injector.get(COMMAND_PRECONDITIONS, { optional: true }) || [];
+		// reports first. Without any, setup starts synchronously.
+		const preconditions = resolvePreconditions(injector);
 		invocation.setup = preconditions.length
 			? runPreconditions(preconditions, context, injector).then(() =>
 					startSetup(context, injector),
 				)
-			: startSetup(context, invocation.injector);
+			: startSetup(context, injector);
 		currentInvocation = invocation;
 
 		return invocation;
@@ -515,9 +537,9 @@ export function createCommandFromDefinition<
 		canExecute: async (args: string[]): Promise<boolean> => {
 			// Setup first: it stands in for the constructor work legacy commands
 			// did at resolution time, which ran before anything looked at the
-			// arguments - so an argument validator can rely on it, and a command
-			// run in the wrong place still reports that before complaining about
-			// arity.
+			// arguments, so an argument validator can rely on it. The
+			// preconditions ahead of it are why a command run outside a project
+			// reports that before an arity complaint.
 			const invocation = beginInvocation(args);
 			const context = invocation.context;
 			const setupResult = await invocation.setup;

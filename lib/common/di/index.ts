@@ -17,6 +17,8 @@ export {
 export { provide, provideLazy } from "./providers";
 export type {
 	Provider,
+	TypeProvider,
+	ObjectProvider,
 	InternalProvider,
 	ProviderToken,
 	Type,

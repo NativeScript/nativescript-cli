@@ -2,7 +2,7 @@ import { assert } from "chai";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { Yok, getRootInjector, setGlobalInjector } from "../../lib/common/yok";
+import { Yok, getInjector, setGlobalInjector } from "../../lib/common/yok";
 import { HooksService } from "../../lib/common/services/hooks-service";
 import { hook } from "../../lib/common/helpers";
 import { IInjector } from "../../lib/common/definitions/yok";
@@ -301,7 +301,7 @@ describe("legacy hook contract", () => {
 			}
 		}
 
-		const previousInjector = getRootInjector();
+		const previousInjector = getInjector();
 		setGlobalInjector(testInjector);
 		try {
 			const result = await new Subject().doWork();
@@ -328,7 +328,7 @@ describe("legacy hook contract", () => {
 			}
 		}
 
-		const previousInjector = getRootInjector();
+		const previousInjector = getInjector();
 		setGlobalInjector(<any>{
 			resolve: () => {
 				throw new Error("the process-wide injector must be the last resort");

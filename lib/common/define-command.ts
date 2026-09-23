@@ -163,7 +163,8 @@ export interface CommandDefinition<
 	/**
 	 * Providers added to each invocation's own injector, next to the context,
 	 * so a factory or class among them can inject the invocation. They are
-	 * built once per invocation, and `ctx.injector` resolves them.
+	 * built once per invocation, and `ctx.injector` resolves them. A bare
+	 * class provides itself, as in Angular.
 	 */
 	providers?: Provider[];
 	/**

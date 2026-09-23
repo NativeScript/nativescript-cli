@@ -55,7 +55,11 @@ export interface ILazyRequireProvider extends IBaseProvider<any> {
 	useLazyRequire: () => void;
 }
 
+/** A bare class provides itself: shorthand for `{ provide: cls, useClass: cls }`. */
+export type TypeProvider<T = any> = Type<T>;
+
 export type Provider<T = any> =
+	| TypeProvider<T>
 	| IClassProvider<T>
 	| IValueProvider<T>
 	| IFactoryProvider<T>
@@ -64,6 +68,24 @@ export type Provider<T = any> =
 
 /** The provider forms the container accepts, including the unpublished ones. */
 export type InternalProvider<T = any> = Provider<T> | ILazyRequireProvider;
+
+/** The object forms only; what a `TypeProvider` expands to. */
+export type ObjectProvider<T = any> = Exclude<
+	InternalProvider<T>,
+	TypeProvider<T>
+>;
+
+export function isTypeProvider(
+	provider: InternalProvider,
+): provider is TypeProvider {
+	return typeof provider === "function";
+}
+
+export function normalizeProvider(provider: InternalProvider): ObjectProvider {
+	return isTypeProvider(provider)
+		? { provide: provider, useClass: provider }
+		: provider;
+}
 
 /** Enforces at compile time that the implementation satisfies the token. */
 export const provide = <T>(

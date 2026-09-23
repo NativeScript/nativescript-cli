@@ -1,4 +1,4 @@
-import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
+import { IValidatePlatformOutput } from "../definitions/project";
 import { IOptions, IPlatformValidationService } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import {
@@ -11,13 +11,10 @@ import {
 	CommandOptionsSchema,
 	objectOption,
 } from "../common/define-command";
-import { Injector, inject } from "../common/di";
-import type { Provider } from "../common/di/providers";
+import { Injector } from "../common/di";
 import { ProjectData } from "../contracts/project-data";
-import {
-	COMMAND_PRECONDITIONS,
-	CommandPrecondition,
-} from "../common/contracts/command-preconditions";
+
+export { provideProject } from "../contracts/provide-project";
 
 /**
  * The CLI-wide signing options `validatePlatformOptions` checks. A command
@@ -35,27 +32,6 @@ type PlatformSigningContext = Pick<
 	CommandContext<typeof platformSigningOptions>,
 	"injector" | "options"
 >;
-
-/**
- * Declares that a command runs inside a project: the project the command line
- * names, through `--path` or the working directory, is resolved before the
- * command's setup and arguments policy, and its absence fails the invocation
- * with the "no project found" error. `inject(ProjectData)` then reads it.
- */
-export function provideProject(): Provider {
-	return {
-		provide: COMMAND_PRECONDITIONS,
-		multi: true,
-		useValue: requireProject,
-	};
-}
-
-const requireProject: CommandPrecondition = () => {
-	const projectData = inject<IProjectData>("projectData");
-	if (typeof projectData.initializeProjectData === "function") {
-		projectData.initializeProjectData();
-	}
-};
 
 /**
  * The declarative form of `$platformCommandParameter`. The command declares

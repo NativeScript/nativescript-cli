@@ -77,6 +77,7 @@ export type {
 	CommandMeta,
 	CommandName,
 	CommandNamesOf,
+	CommandReference,
 	DefinedCommand,
 	NamedCommand,
 	RegisterableCommand,
@@ -94,9 +95,11 @@ export type {
 export { COMMAND_CONTEXT } from "../common/contracts/command-context";
 export { COMMAND_PRECONDITIONS } from "../common/contracts/command-preconditions";
 export type { CommandPrecondition } from "../common/contracts/command-preconditions";
+export { provideProject } from "./provide-project";
 // The in-process dispatcher a command or plugin runs or consults other
 // commands through.
 export { CommandsService } from "../common/contracts/commands-service";
+export type { CommandDispatchOptions } from "../common/contracts/commands-service";
 export { defineHook, isHookDefinition } from "../common/define-hook";
 export type {
 	HookContext,

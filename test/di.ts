@@ -649,6 +649,22 @@ describe("di: register semantics", () => {
 	});
 });
 
+describe("di: type providers", () => {
+	it("registers a bare class as a provider of itself", () => {
+		class Widget {}
+		const injector = new Injector([Widget]);
+
+		const first = injector.get(Widget);
+		assert.instanceOf(first, Widget);
+		assert.strictEqual(injector.get(Widget), first);
+
+		class Gadget {}
+		injector.register(Gadget);
+		assert.instanceOf(injector.get(Gadget), Gadget);
+		assert.instanceOf(injector.createChild([Widget]).get(Widget), Widget);
+	});
+});
+
 describe("di: multi providers", () => {
 	const HOOKS = new InjectionToken<string[]>("diTestMultiHooks");
 

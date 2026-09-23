@@ -1,5 +1,16 @@
 import { Contract } from "../di/contract";
+import type { Injector } from "../di/injector";
 import type { CommandReference } from "../define-command";
+
+export interface CommandDispatchOptions {
+	/**
+	 * The injector a definition run as given is compiled against, the way
+	 * Angular's `createComponent` takes one. Omitted, the call's own injection
+	 * context is used, and the root when there is none. A registered name keeps
+	 * the scope it was registered under, so passing one with a name throws.
+	 */
+	injector?: Injector;
+}
 
 /**
  * Dispatches commands inside the running process: the surface a command, a
@@ -34,6 +45,7 @@ export abstract class CommandsService {
 	abstract runCommand(
 		command: CommandReference,
 		args?: string[],
+		options?: CommandDispatchOptions,
 	): Promise<void>;
 
 	/**
@@ -48,5 +60,6 @@ export abstract class CommandsService {
 	abstract canExecuteCommand(
 		command: CommandReference,
 		args?: string[],
+		options?: CommandDispatchOptions,
 	): Promise<boolean>;
 }

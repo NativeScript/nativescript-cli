@@ -14,8 +14,18 @@ export type CommandPrecondition = (
 
 /**
  * Multi token: each `{ provide: COMMAND_PRECONDITIONS, multi: true, ... }` in
- * a command's `providers` contributes one precondition, and they run in the
- * order they were declared.
+ * a command's `providers` contributes one precondition, or a list of them,
+ * and they run in the order they were declared. As with Angular's multi
+ * providers, the array is per injector level: a command that declares any
+ * precondition of its own replaces those provided by the scope it was
+ * registered in. To keep them, it contributes the parent's list itself:
+ *
+ *   {
+ *     provide: COMMAND_PRECONDITIONS,
+ *     multi: true,
+ *     useFactory: () =>
+ *       inject(COMMAND_PRECONDITIONS, { skipSelf: true, optional: true }) || [],
+ *   }
  */
 export const COMMAND_PRECONDITIONS = new InjectionToken<CommandPrecondition[]>(
 	"commandPreconditions",

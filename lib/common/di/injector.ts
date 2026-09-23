@@ -3,8 +3,10 @@ import { getContractName } from "./contract";
 import { resolveForwardRef } from "./forward-ref";
 import { runInInjectionContext } from "./inject";
 import { getInjectionTokenName } from "./injection-token";
+import { normalizeProvider } from "./providers";
 import type {
 	InternalProvider,
+	ObjectProvider,
 	Provider,
 	ProviderToken,
 	Type,
@@ -142,7 +144,7 @@ export class Injector {
 	/** Merge-mutate: re-registering a key updates the existing record in place. */
 	public register(providers: InternalProvider | InternalProvider[]): void {
 		const list = Array.isArray(providers) ? providers : [providers];
-		for (const provider of list) {
+		for (const provider of list.map(normalizeProvider)) {
 			const keys = this.keysFor(provider.provide);
 			let record: IProviderRecord | undefined;
 			for (const key of keys) {
@@ -159,7 +161,7 @@ export class Injector {
 					constructing: false,
 				};
 			}
-			if ((<Provider>provider).multi) {
+			if (provider.multi) {
 				if (record.kind !== undefined && record.kind !== "multi") {
 					throw new Error(
 						`${record.displayName} is registered as a single provider; it cannot also take multi providers`,
@@ -278,7 +280,7 @@ export class Injector {
 
 	private applyProvider(
 		record: IProviderRecord,
-		provider: InternalProvider,
+		provider: ObjectProvider,
 	): void {
 		record.shared = provider.shared === undefined ? true : provider.shared;
 
