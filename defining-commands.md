@@ -102,8 +102,9 @@ Options
 -------
 
 `options` is a schema keyed by the long option name — `output` is passed as
-`--output`. Declare each entry with one of the five helpers, which fix the
-value type:
+`--output`. It may also be a list of option groups and such schemas; see
+[Option groups](#option-groups). Declare each entry with one of the five
+helpers, which fix the value type:
 
 | Helper          | Declared with `default` | Declared without        |
 | --------------- | ----------------------- | ----------------------- |
@@ -153,9 +154,12 @@ options: {
 The schema types `ctx.options` and nothing else: `ctx.options` carries exactly
 the declared keys, and a typo is a compile error. There is deliberately no
 "give me everything" escape hatch — a command declares every option it reads,
-CLI-wide ones (`--release`, `--path`, `--bundle`, …) included. Declaring one
+CLI-wide ones (`--release`, `--watch`, `--bundle`, …) included. Declaring one
 that the CLI already knows is supported and carries its value through to
-`ctx.options` exactly as a command-specific one does.
+`ctx.options` exactly as a command-specific one does. The process-level
+options (`--path`, `--log`, `--verbose` and the rest of `CliOptions`) are the
+exception: a command lists their group instead of redeclaring them. See
+[Process-level options](#process-level-options-clioptions).
 
 ### Sharing a schema between commands
 
@@ -170,9 +174,84 @@ const buildOptions = {
 } satisfies CommandOptionsSchema;
 ```
 
+### Option groups
+
+`defineOptions(name, schema)` declares an option group: a named schema that is
+also an injection token. A command lists groups under `options`, next to
+inline schemas:
+
+```ts
+import {
+	booleanOption,
+	defineCommand,
+	defineOptions,
+	stringOption,
+} from "nativescript/contracts";
+
+export const WidgetOptions = defineOptions("widget", {
+	theme: stringOption(),
+	compact: booleanOption({ default: false }),
+});
+
+export default defineCommand({
+	name: "widget|add",
+	options: [WidgetOptions, { output: stringOption({ alias: "o" }) }],
+	run(ctx) {
+		// ctx.options -> { theme: string | undefined; compact: boolean;
+		//                  output: string | undefined }
+	},
+});
+```
+
+`ctx.options` is typed as the merged values of every part. The class form
+takes the same list, and types `this.options` the same way.
+
+Each invocation provides the values of every group it parsed in its own
+injector, under the group. So a per-command provider, or a service scoped to
+the invocation, injects the group and gets the same typed values:
+
+```ts
+const widget = inject(WidgetOptions); // { theme: string | undefined; compact: boolean }
+```
+
+Nothing outside an invocation can resolve a group; the root injector does not
+provide it. A service that needs one is scoped to the invocation; see
+[Services scoped to the invocation](#services-scoped-to-the-invocation-providedin).
+
+`defineOptions` validates the schema where it is written, as `defineCommand`
+does, and reports a problem as `Invalid option group '<name>': <problem>.`
+followed by the accepted form.
+
+The group's registry name is `options:<name>`. Group names share one
+namespace with contract and token names, so minting a second group with a
+name already taken throws an error that starts with `Token name
+'options:widget' is already used by an injection token.` Pick a name that is
+unique to your package.
+
+### Collisions between parts
+
+A spelling is an option's long name or one of its aliases. One spelling may
+appear in several parts of `options` only when every part declares it with an
+identical spec: the same type, `default`, `alias` and `hasSensitiveValue`.
+`description` is not compared. An alias may not equal another option's name
+or alias.
+
+`defineCommand` and `Command()` check this when they are called, and
+`defineOptions` checks it within its own schema. The message names both
+declarations:
+
+```
+Invalid command definition for 'widget|add': option '--compact' is declared
+by option group 'widget' and by the command's own options with different specs.
+```
+
+followed by the accepted form. A group contributed from outside the command
+collides under the same rules; see
+[Option groups contributed from outside the command](#option-groups-contributed-from-outside-the-command).
+
 ### Redeclaring a CLI-wide option, and shadowing one
 
-`--verbose`, `--path`, `--log`, `--release`, `--env` and friends are declared by
+`--release`, `--env`, `--watch`, `--device` and friends are declared by
 the CLI itself. A command's declaration is merged over the CLI-wide dictionary
 for the duration of that command, and that merge is the sanctioned way to give
 a global option a per-command default — `watch`, `hmr` and `skipNative` all
@@ -190,14 +269,96 @@ still warns about at registration is a redeclaration that changes what the
 spelling _means_:
 
 - a declared option whose name matches a CLI-wide one but whose type differs —
-  `verbose: stringOption()` against the CLI's boolean `--verbose`;
+  `release: stringOption()` against the CLI's boolean `--release`;
 - an alias that belongs to a _different_ CLI-wide option — `output:
-stringOption({ alias: "p" })` steals `--path`'s shorthand. Restating an
-  option's own shorthand (`path: stringOption({ alias: "p" })`) is fine.
+stringOption({ alias: "f" })` steals `--force`'s shorthand. Restating an
+  option's own shorthand (`force: booleanOption({ alias: "f" })`) is fine.
 
 A redeclaration that leaves `alias`, `default` or `hasSensitiveValue` unset
-keeps what the CLI-wide declaration carries for them, so `path: stringOption()`
-still answers to `-p` and stays out of the logs; set one only to change it.
+keeps what the CLI-wide declaration carries for them, so `release:
+booleanOption()` still answers to `-r`, and `device: stringOption()` stays out
+of the logs; set one only to change it.
+
+None of this applies to the process-level options. Redeclaring one of those is
+an error, not a warning.
+
+### Process-level options: `CliOptions`
+
+`CliOptions` is the group of options the CLI parses once at startup, before a
+command is chosen: `--log`, `--verbose`, `--version` (`-v`), `--help` (`-h`),
+`--profileDir`, `--analyticsClient`, `--path` (`-p`) and `--config` (`-c`).
+The services that run for every command read them: the logger, analytics,
+project resolution. The group is provided at the root, so any service injects
+it, inside an invocation or not:
+
+```ts
+import { CliOptions, inject } from "nativescript/contracts";
+
+const { path, verbose } = inject(CliOptions);
+```
+
+A command may not redeclare any of these spellings, as a name or as an alias.
+The CLI refuses the command when it compiles it, on the first resolution of a
+registered command or when `runCommand` is given the definition:
+
+```
+Command 'widget|add': '--path' is a process-level option; list CliOptions under 'options', or inject it, instead of redeclaring it
+```
+
+To have the values on `ctx.options`, list the group itself. That is not a
+redeclaration: it reads the same declaration. `install` does this:
+
+```ts
+const installCommandOptions = [
+	CliOptions,
+	{
+		frameworkPath: stringOption(),
+		disableNpmInstall: booleanOption(),
+		ignoreScripts: booleanOption(),
+	} satisfies CommandOptionsSchema,
+] satisfies CommandOptionsInput;
+```
+
+`ctx.options.path` is then `string | undefined`. A listed `CliOptions` is not
+provided again per invocation; injecting it still resolves the root's values.
+
+### Option groups contributed from outside the command
+
+The `OptionContributions` contract adds a group to a command the caller does
+not own, or to the process-level options:
+
+```ts
+import { inject, OptionContributions } from "nativescript/contracts";
+
+const contributions = inject(OptionContributions);
+contributions.contributeToCommand("run|ios", WidgetOptions);
+contributions.contributeToRoot(TelemetryOptions);
+```
+
+`forCommand(name)` and `forRoot()` return what has been contributed so far.
+
+A group contributed to a command is parsed with that command's options and
+provided per invocation, like the command's own groups. It is not on
+`ctx.options`, since the command's type does not know it; a handler or service
+reads it by injecting the group. It collides under the rules above, with the
+command's own parts and with other contributions, and it may not redeclare a
+process-level spelling. A collision is reported when the command's options are
+parsed, as `Command '<name>': <problem>`. The name is one the definition
+declares or one it was registered under, such as an extension's manifest key,
+and only commands defined with `defineCommand` or `Command()` read
+contributions.
+
+A group contributed to the root joins the process-level table. It is parsed
+with `CliOptions` on the next parse after it is registered, its values are
+provided at the root, and its spellings are process-level: no command may
+redeclare them. `contributeToRoot` throws `Option group '<name>': <problem>`
+when the group collides with `CliOptions` or with an earlier root group.
+
+A contribution is read when the parse it targets happens, so it must be
+registered before that parse. One registered later does not change a parse
+that already happened. There is no manifest-level way to declare a
+contribution yet, so only code that has already run can contribute; see
+[extensions.md](extensions.md#options-and-option-groups).
 
 ### How validation behaves
 
@@ -358,8 +519,9 @@ The run context
   declare, `{}` when there are none. It is spelled `params` because
   `params` is a reserved binding name in strict mode, so a destructuring
   `const { args, arguments } = ctx` would not even parse.
-- `ctx.options` — the current value of each declared option, read at the moment
-  the command executes.
+- `ctx.options` — the value of each option the command declares, its groups and
+  inline schemas merged, read when the invocation opens. A group contributed
+  from outside the command is not on it; inject the group instead.
 - `ctx.injector` — this invocation's injector, a child of the one the command
   was registered against; see
   [Injection, and the first `await`](#injection-and-the-first-await).
@@ -444,8 +606,8 @@ async run(ctx) {
 `ctx.inject(...)`: it is a visibly different mechanism because it obeys
 different rules, and mistaking one for the other is exactly the bug this shape
 prevents. It is the **invocation's own injector**: a child of the one the
-command was registered against, holding the context under `COMMAND_CONTEXT`
-and any per-command providers — see
+command was registered against, holding the context under `COMMAND_CONTEXT`,
+the values of the option groups it parsed, and any per-command providers — see
 [Registering a definition](#registering-a-definition). `inject()` before the
 first `await` and `ctx.injector.get()` after it are therefore the same lookup
 against the same injector. The same guidance, and the reasoning behind it, is
@@ -569,6 +731,57 @@ Sharing is either of two things, and neither of them is a bag:
 - **A whole command's precondition** — `CommandsService.canExecuteCommand`,
   which asks that command itself; see [Asking another
   command](#asking-another-command).
+
+### Services scoped to the invocation: `providedIn`
+
+A service that reads the invocation, through its option groups or
+`COMMAND_CONTEXT`, cannot live at the root: the root provides neither. Scope
+it to the invocation instead, in one of three places:
+
+```ts
+import {
+	COMMAND_CONTEXT,
+	Contract,
+	inject,
+	ProvidedIn,
+} from "nativescript/contracts";
+
+// on the implementation class
+@ProvidedIn("invocation")
+export class WidgetRenderer {
+	private widget = inject(WidgetOptions);
+	private context = inject(COMMAND_CONTEXT);
+}
+
+// on a contract token, for every implementation of it
+@Contract({ name: "widgetRenderer", providedIn: "invocation" })
+export abstract class WidgetRendererContract {}
+
+// on one provider
+{ provide: WidgetRenderer, useClass: WidgetRenderer, providedIn: "invocation" }
+```
+
+The provider's `providedIn` wins over the class's marker, and the class's over
+the token's. The registration may stay where it is, the root included; the
+instance is built and cached on the nearest invocation injector above the
+lookup, and its own dependencies resolve there. That is why it can inject
+option groups and `COMMAND_CONTEXT`. Each invocation gets its own instance,
+an in-process dispatch included.
+
+Resolving such a service from outside an invocation is an error, even with
+`optional: true`. That covers the root, and a root singleton that injects it
+in its constructor or a field, because a root singleton resolves against the
+root:
+
+```
+<token> is provided in the 'invocation' scope; it cannot be resolved from outside one
+```
+
+A scoped instance is recorded on the invocation injector that holds it and is
+disposed with that injector when the invocation ends: after `postRun` when
+the command has one, else after `run`, or when `canExecute` refuses. A scoped
+service with a `dispose()` method gets per-invocation cleanup for free; the
+root singletons the invocation reached are the root's and stay.
 
 ### `setup`, when a command has one
 
@@ -1003,9 +1216,11 @@ name still identifies it for hooks and reporting.
 
 A definition run as given is compiled against an injector chosen at the call,
 the way Angular's `createComponent` takes one: the `injector` in the options
-bag when one is passed, otherwise the injection context the call is made from,
-otherwise the CLI's root. So a definition dispatched from inside an
-extension's command lands under the extension's scope, where `registerCommand`
+bag when one is passed, otherwise the invocation running now, which starts with
+the injection context the call is made from (see [The invocation running
+now](#the-invocation-running-now)), otherwise the CLI's root. So a definition
+dispatched from inside an extension's command lands under the extension's
+scope, where `registerCommand`
 would have placed it, and a caller holding a scope of its own names it:
 
 ```ts
@@ -1051,6 +1266,32 @@ argument list to a child that declares fewer is a rejection, not a wider check.
 
 `canExecuteCommand` follows `runCommand` in everything else: the same option
 priming and restoration, the same routing of a parent name to its subcommand.
+
+### The invocation running now
+
+Code that resolves by name outside an injection context, such as a hook or a
+plugin's callback, reaches the running invocation through
+`currentInvocationInjector()`, exported from `"nativescript/contracts"`. It
+tries, in order:
+
+1. the synchronous injection context, when there is one;
+2. the invocation whose asynchronous flow the caller is in;
+3. the most recently opened invocation still open, for a callback that lost
+   its asynchronous context, such as an emitter another invocation registered
+   or a library timer;
+4. `null`.
+
+The CLI uses it in two places. A hook runs against it, so its by-name
+dependencies can come from the invocation's providers and scoped services; it
+falls back to the root when there is no invocation. `runCommand(definition)`
+with no `injector` option compiles the definition against it, with the same
+fallback.
+
+The first invocation of the process, the command line's own, stays open for
+the life of the process, so a long-lived command's callbacks keep resolving
+through it after its `run` has returned. Every later invocation closes when it
+finishes, and an in-process dispatch closes any invocation it opened,
+including one opened only to answer `canExecuteCommand`.
 
 ### Key shortcuts
 

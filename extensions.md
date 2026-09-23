@@ -205,6 +205,23 @@ the command itself, executing that command fails with an error naming the
 extension, the command and the module — the entry points at the wrong file, or
 the file is not doing what the entry promises.
 
+Options and option groups
+-------------------------
+
+An extension's own commands declare options exactly as built-in commands do,
+option groups included. `defineOptions`, `CliOptions` and the option helpers
+are exported from `"nativescript/contracts"`, and a group a command lists under
+`options` is parsed with it and can be injected by services in its invocation
+(see [defining-commands.md](defining-commands.md#option-groups)).
+
+Adding options to a command the extension does not own, or to the
+process-level options, is not supported for a manifest-declared extension yet.
+The `OptionContributions` contract exists as a programmatic seam, and code
+whose module is loaded before the target parse can call it. A command module
+named in the manifest is loaded only when its own command is resolved, so it
+cannot add options to a built-in command the user invoked. A manifest-level
+way to declare a contribution does not exist yet.
+
 Command names
 -------------
 
