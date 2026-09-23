@@ -395,6 +395,34 @@ describe("RunController", () => {
 				"There is no device to restart the application on.",
 			]);
 		});
+
+		it("skips a device stopped while the restart waited its turn", async () => {
+			startSession(
+				[iOSDeviceDescriptor, androidDeviceDescriptor],
+				[iOSDevice, androidDevice],
+			);
+			const persisted = injector
+				.resolve("liveSyncProcessDataService")
+				.getPersistedData(projectDir);
+			let release: () => void;
+			persisted.actionsChain = new Promise<void>((resolve) => {
+				release = resolve;
+			});
+
+			const restarting = runController.restartApplication({ projectDir });
+			await new Promise((resolve) => setImmediate(resolve));
+			_.remove(
+				persisted.deviceDescriptors,
+				(descriptor: ILiveSyncDeviceDescriptor) =>
+					descriptor.identifier === "myAndroidDevice",
+			);
+			release();
+			await restarting;
+
+			assert.deepStrictEqual(restartedApps, [
+				{ device: "myiOSDevice", isFullSync: false },
+			]);
+		});
 	});
 
 	describe("stopRunOnDevices", () => {

@@ -478,10 +478,20 @@ describe("key shortcuts", () => {
 		let savedSetting: string;
 		let registrations: Map<any, any>;
 		let registry: KeyShortcutRegistryService;
+		let restoreSend: () => void;
 
 		beforeEach(() => {
 			savedSetting = process.env.NS_KEY_SHORTCUTS;
 			process.env.NS_KEY_SHORTCUTS = "true";
+
+			// A worker thread has no IPC channel; the IPC tests need one to exist.
+			const originalSend = process.send;
+			if (!originalSend) {
+				process.send = () => true;
+			}
+			restoreSend = () => {
+				process.send = originalSend;
+			};
 
 			stdin = new FakeStdin();
 			restoreStdin = swapStdin(stdin);
@@ -520,6 +530,7 @@ describe("key shortcuts", () => {
 			service.detach();
 			restoreConsole();
 			restoreStdin();
+			restoreSend();
 			if (savedSetting === undefined) {
 				delete process.env.NS_KEY_SHORTCUTS;
 			} else {
@@ -761,6 +772,25 @@ describe("key shortcuts", () => {
 			await flush();
 
 			assert.deepEqual(ran, ["r"]);
+		});
+
+		it("declines to attach without a terminal or an IPC channel", () => {
+			stdin.isTTY = false;
+			const before = new Set(process.listeners("message"));
+			const send = process.send;
+			process.send = undefined;
+			let attached: boolean;
+			try {
+				attached = service.attach({ shortcuts: [] });
+			} finally {
+				process.send = send;
+			}
+
+			assert.isFalse(attached);
+			assert.lengthOf(
+				process.listeners("message").filter((l) => !before.has(l)),
+				0,
+			);
 		});
 
 		it("gives an action the injector and the caller's own context", async () => {

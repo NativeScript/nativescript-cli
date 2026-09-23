@@ -32,6 +32,9 @@ interface IInProcessDispatch {
 	commandName: string;
 }
 
+const allowsUnknownOptions = (command: ICommand): boolean =>
+	command.allowUnknownOptions ?? command.skipOptionsValidation ?? false;
+
 class CommandArgumentsValidationHelper {
 	constructor(
 		public isValid: boolean,
@@ -259,7 +262,7 @@ export class CommandsService
 			const dashedOptions = command ? command.dashedOptions : null;
 			this.$options.validateOptions(
 				dashedOptions,
-				command && command.allowUnknownOptions,
+				command && allowsUnknownOptions(command),
 			);
 		}
 
@@ -547,16 +550,24 @@ export class CommandsService
 	private primeOptions(command: ICommand): () => void {
 		const declaredOptions = { ...this.$options.options };
 		const parsedArgv = this.$options.argv;
-
-		this.$options.validateOptions(
-			command.dashedOptions,
-			command.allowUnknownOptions,
-		);
-
-		return () => {
+		const restore = (): void => {
 			this.$options.options = declaredOptions;
 			this.$options.argv = parsedArgv;
 		};
+
+		// validateOptions merges the command's declarations into the live table
+		// before it can throw, so a failed priming has to be undone here.
+		try {
+			this.$options.validateOptions(
+				command.dashedOptions,
+				allowsUnknownOptions(command),
+			);
+		} catch (error) {
+			restore();
+			throw error;
+		}
+
+		return restore;
 	}
 
 	private async canExecuteResolvedCommand(

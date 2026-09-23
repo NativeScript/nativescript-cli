@@ -28,6 +28,8 @@ type FakeChildProcess = EventEmitter & {
 	stdout: EventEmitter;
 	stderr: EventEmitter;
 	pid: number;
+	exitCode: number | null;
+	signalCode: string | null;
 	killSignals: string[];
 	kill(signal?: string): boolean;
 };
@@ -37,6 +39,8 @@ function fakeChildProcess(pid: number): FakeChildProcess {
 	childProcess.stdout = new EventEmitter();
 	childProcess.stderr = new EventEmitter();
 	childProcess.pid = pid;
+	childProcess.exitCode = null;
+	childProcess.signalCode = null;
 	childProcess.killSignals = [];
 	childProcess.kill = (signal?: string) => {
 		childProcess.killSignals.push(signal);
@@ -588,6 +592,15 @@ describe("BundlerCompilerService", () => {
 			await (<any>bundlerCompilerService).terminate(childProcess, 1);
 
 			assert.deepStrictEqual(childProcess.killSignals, ["SIGINT", "SIGKILL"]);
+		});
+
+		it("does not wait for an exit that already happened", async () => {
+			const childProcess = fakeChildProcess(223);
+			childProcess.exitCode = 1;
+
+			await (<any>bundlerCompilerService).terminate(childProcess, 60_000);
+
+			assert.deepStrictEqual(childProcess.killSignals, ["SIGINT"]);
 		});
 
 		it("does nothing when no bundler is running for the platform", async () => {

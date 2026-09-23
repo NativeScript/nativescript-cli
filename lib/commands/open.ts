@@ -89,15 +89,14 @@ async function openAndroidStudioProject(
 
 	const os = currentPlatform();
 	if (os === "darwin") {
-		$childProcess.exec(`open -a "${studioPath}" ${androidDir}`);
-	} else if (os === "win32") {
+		$childProcess.execFile("open", ["-a", studioPath, androidDir]);
+	} else if (os === "win32" || os === "linux") {
 		const child = $childProcess.spawn(studioPath, [androidDir], {
 			detached: true,
 			stdio: "ignore",
 		});
+		child.on("error", (error: Error) => $logger.error(error.message));
 		child.unref();
-	} else if (os === "linux") {
-		$childProcess.exec(`${studioPath} ${androidDir}`);
 	}
 }
 
@@ -142,7 +141,7 @@ async function openXcodeProject(
 	if (fs.existsSync(xcprojectFile)) {
 		$xcodeSelectService
 			.getDeveloperDirectoryPath()
-			.then(() => $childProcess.exec(`open ${xcprojectFile}`, {}))
+			.then(() => $childProcess.execFile("open", [xcprojectFile]))
 			.catch((e) => {
 				$logger.error(e.message);
 			});
@@ -157,8 +156,11 @@ async function openVisionOSProject(
 	isInteractive: boolean,
 ): Promise<void> {
 	$options.platformOverride = "visionOS";
-	await openXcodeProject(context, "visionos", isInteractive);
-	$options.platformOverride = null;
+	try {
+		await openXcodeProject(context, "visionos", isInteractive);
+	} finally {
+		$options.platformOverride = null;
+	}
 }
 
 const openCommandOptions = {

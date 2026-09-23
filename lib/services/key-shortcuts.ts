@@ -17,6 +17,7 @@ import { CommandsService } from "../common/contracts/commands-service";
 import { injector } from "../common/yok";
 import { IProjectDataService } from "../definitions/project";
 import { IStartService } from "../definitions/start-service";
+import { IStaticConfig } from "../declarations";
 
 /** A terminal in raw mode delivers this byte instead of raising SIGINT. */
 const CTRL_C = "\u0003";
@@ -232,9 +233,16 @@ const cleanProject = async (ctx: NsKeyContext): Promise<void> => {
 		"liveSyncCommandHelper",
 	);
 
+	const $staticConfig = ctx.injector.get<IStaticConfig>("staticConfig");
+	const $logger = ctx.injector.get<ILogger>("logger");
+
 	await $liveSyncCommandHelper.stop();
 
-	const clean = $childProcess.spawn("ns", ["clean"]);
+	const clean = $childProcess.spawn(process.execPath, [
+		$staticConfig.cliBinPath,
+		"clean",
+	]);
+	clean.on("error", (error: Error) => $logger.error(error.message));
 	clean.stdout.on("data", (data: Buffer) => {
 		process.stdout.write(data);
 		if (
@@ -403,6 +411,11 @@ export class KeyShortcutService implements IKeyShortcutService {
 
 		const stdin = process.stdin;
 		if (!stdin.isTTY || typeof stdin.setRawMode !== "function") {
+			if (typeof process.send !== "function") {
+				this.releaseShortcuts();
+				return false;
+			}
+
 			// Keys reach a spawned `ns run` over IPC; its stdin is not a terminal.
 			process.on("message", this.onMessage);
 			this.attached = true;

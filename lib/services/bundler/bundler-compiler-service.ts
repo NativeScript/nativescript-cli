@@ -1080,6 +1080,10 @@ export class BundlerCompilerService
 		childProcess: child_process.ChildProcess,
 		timeoutMs: number,
 	): Promise<boolean> {
+		if (childProcess.exitCode !== null || childProcess.signalCode !== null) {
+			return Promise.resolve(true);
+		}
+
 		return new Promise<boolean>((resolve) => {
 			const settle = (exited: boolean) => {
 				clearTimeout(timer);

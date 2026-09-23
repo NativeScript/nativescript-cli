@@ -272,11 +272,20 @@ export class RunController extends EventEmitter implements IRunController {
 		const useHotModuleReload =
 			!!liveSyncProcessInfo.liveSyncInfo?.useHotModuleReload;
 
-		const deviceAction = async (device: Mobile.IDevice) => {
-			const deviceDescriptor = _.find(
-				deviceDescriptors,
-				(dd) => dd.identifier === device.deviceInfo.identifier,
+		// A device stopped while this action waited in the chain must not be restarted.
+		const findCurrentDescriptor = (device: Mobile.IDevice) =>
+			_.find(
+				this.$liveSyncProcessDataService.getDeviceDescriptors(projectDir),
+				(dd) =>
+					dd.identifier === device.deviceInfo.identifier &&
+					_.some(deviceDescriptors, (d) => d.identifier === dd.identifier),
 			);
+
+		const deviceAction = async (device: Mobile.IDevice) => {
+			const deviceDescriptor = findCurrentDescriptor(device);
+			if (!deviceDescriptor) {
+				return;
+			}
 
 			try {
 				const platformLiveSyncService =
@@ -330,12 +339,9 @@ export class RunController extends EventEmitter implements IRunController {
 		};
 
 		await this.addActionToChain(projectDir, () =>
-			this.$devicesService.execute(deviceAction, (device: Mobile.IDevice) =>
-				_.some(
-					deviceDescriptors,
-					(deviceDescriptor) =>
-						deviceDescriptor.identifier === device.deviceInfo.identifier,
-				),
+			this.$devicesService.execute(
+				deviceAction,
+				(device: Mobile.IDevice) => !!findCurrentDescriptor(device),
 			),
 		);
 	}

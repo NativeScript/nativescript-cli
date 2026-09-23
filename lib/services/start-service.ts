@@ -139,6 +139,7 @@ export default class StartService implements IStartService {
 			action: () => {
 				this.ios?.send(key);
 				this.android?.send(key);
+				this.visionos?.send(key);
 			},
 		});
 
@@ -153,11 +154,15 @@ export default class StartService implements IStartService {
 				action: async () => {
 					await this.stopIOS();
 					await this.stopAndroid();
+					await this.stopVisionOS();
 
-					const clean = this.$childProcess.spawn("node", [
+					const clean = this.$childProcess.spawn(process.execPath, [
 						this.$staticConfig.cliBinPath,
 						"clean",
 					]);
+					clean.on("error", (error: Error) =>
+						this.$logger.error(error.message),
+					);
 					clean.stdout.on("data", (data: Buffer) => {
 						process.stdout.write(data);
 						if (

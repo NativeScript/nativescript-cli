@@ -126,16 +126,19 @@ export class PrepareController
 			this.watchersData[projectDir][platformLowerCase] &&
 			this.watchersData[projectDir][platformLowerCase].hasWebpackCompilerProcess
 		) {
-			const watcherData = this.watchersData[projectDir][platformLowerCase];
 			await this.$bundlerCompilerService.stopBundlerCompiler(platformLowerCase);
-			if (watcherData.bundlerCompilerHandler) {
-				this.$bundlerCompilerService.removeListener(
-					BUNDLER_COMPILATION_COMPLETE,
-					watcherData.bundlerCompilerHandler,
-				);
-				watcherData.bundlerCompilerHandler = null;
-			}
-			watcherData.hasWebpackCompilerProcess = false;
+			this.watchersData[projectDir][
+				platformLowerCase
+			].hasWebpackCompilerProcess = false;
+		}
+
+		const watcherData = this.watchersData?.[projectDir]?.[platformLowerCase];
+		if (watcherData?.bundlerCompilerHandler) {
+			this.$bundlerCompilerService.removeListener(
+				BUNDLER_COMPILATION_COMPLETE,
+				watcherData.bundlerCompilerHandler,
+			);
+			watcherData.bundlerCompilerHandler = null;
 		}
 	}
 

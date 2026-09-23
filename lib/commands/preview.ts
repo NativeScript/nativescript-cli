@@ -81,6 +81,7 @@ export class PreviewCommand extends Command({
 				break;
 			case PackageManagers.bun:
 				installCommand = "bun add --dev @nativescript/preview-cli";
+				break;
 			case PackageManagers.npm:
 			default:
 				installCommand = "npm install --save-dev @nativescript/preview-cli";

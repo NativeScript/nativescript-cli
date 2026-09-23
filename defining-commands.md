@@ -57,9 +57,9 @@ Validation happens where you can see it
 
 A definition is checked at the moment `defineCommand` is called, not when the
 command eventually runs. A misspelled field, a missing `run`, an option
-declared with something other than the five helpers, an `arguments` value
-outside `"none" | "any"` — each throws immediately, naming the command and the
-accepted form. The class form's meta is checked the same way at the
+declared with something other than the five helpers, an `arguments` value that
+is neither `"none"`, `"any"` nor a list of argument specs — each throws
+immediately, naming the command and the accepted form. The class form's meta is checked the same way at the
 `Command({ ... })` call, which also rejects handlers passed there; only a
 missing `run` method waits until the definition is first read:
 
@@ -1047,8 +1047,6 @@ argument list to a child that declares fewer is a rejection, not a wider check.
 
 `canExecuteCommand` follows `runCommand` in everything else: the same option
 priming and restoration, the same routing of a parent name to its subcommand.
-The deprecated `canExecuteCommandInProcess` and `executeCommandInProcess`
-call the two methods with a name.
 
 ### Key shortcuts
 

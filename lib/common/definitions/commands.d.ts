@@ -25,6 +25,8 @@ interface ICommand extends ICommandOptions {
 	 * own declared options are still merged and checked.
 	 */
 	allowUnknownOptions?: boolean;
+	/** @deprecated Use allowUnknownOptions. */
+	skipOptionsValidation?: boolean;
 
 	/**
 	 * Describes the action that will be executed after the command succeeds.

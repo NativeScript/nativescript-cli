@@ -102,10 +102,16 @@ const deferred = (): { promise: Promise<void>; resolve: () => void } => {
 };
 
 describe("CommandsService in-process dispatch", () => {
-	it("leaves no command entry behind when option priming throws", async () => {
+	it("puts the parser back and leaves no command entry behind when option priming throws", async () => {
 		const harness = createHarness();
 		const options = harness.injector.resolve("options");
+		const hostOptions = { watch: { type: "boolean" } };
+		const hostArgv = { watch: true };
+		options.options = hostOptions;
+		options.argv = hostArgv;
 		options.validateOptions = (): void => {
+			options.options = { ...options.options, clean: { type: "boolean" } };
+			options.argv = { ...options.argv, clean: true };
 			throw new Error("bad options");
 		};
 		register(harness.injector, {
@@ -124,6 +130,8 @@ describe("CommandsService in-process dispatch", () => {
 		);
 
 		assert.isUndefined(harness.commandsService.currentCommandData);
+		assert.deepEqual(options.options, hostOptions);
+		assert.strictEqual(options.argv, hostArgv);
 	});
 
 	describe("the scope of a definition run as given", () => {

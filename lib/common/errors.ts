@@ -9,6 +9,10 @@ import { ErrorCodes } from "./enums";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 
+const COMMAND_ERROR_REPORTED = Symbol.for(
+	"nativescript:cli:commandErrorReported",
+);
+
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {
 	/* intentionally left blank */
@@ -217,6 +221,16 @@ export class Errors implements IErrors {
 		error: any,
 		printCommandHelpSuggestion: () => Promise<void>,
 	): Promise<void> {
+		// A nested in-process dispatch reports and rethrows, and so does each
+		// level above it up to the command line, so the same error reaches here
+		// once per level.
+		if (error && typeof error === "object") {
+			if (error[COMMAND_ERROR_REPORTED]) {
+				return;
+			}
+			error[COMMAND_ERROR_REPORTED] = true;
+		}
+
 		const logger = this.$injector.resolve("logger");
 		const loggerLevel: string = logger.getLevel().toUpperCase();
 		const printCallStack =

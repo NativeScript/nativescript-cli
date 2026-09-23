@@ -151,6 +151,30 @@ describe("prepareController", () => {
 		});
 	});
 
+	describe("stopWatchers", () => {
+		it("detaches the bundler handler of a paused watcher", async () => {
+			const injector = createTestInjector({ hasNativeChanges: false });
+			const bundlerCompilerService = injector.resolve("bundlerCompilerService");
+			const attached: any[] = [];
+			bundlerCompilerService.on = (_event: string, handler: any) =>
+				attached.push(handler);
+			bundlerCompilerService.removeListener = (_event: string, handler: any) =>
+				_.pull(attached, handler);
+			bundlerCompilerService.stopBundlerCompiler =
+				async (): Promise<void> => {};
+
+			const prepareController: PrepareController =
+				injector.resolve("prepareController");
+			await prepareController.prepare({ ...prepareData, platform: "ios" });
+			assert.lengthOf(attached, 1);
+
+			await prepareController.toggleFileWatcher();
+			await prepareController.stopWatchers(projectDir, "ios");
+
+			assert.lengthOf(attached, 0);
+		});
+	});
+
 	describe("preparePlatform without watch", () => {
 		_.each(["ios", "android"], (platform) => {
 			it("shouldn't start the watcher when watch is false", async () => {
