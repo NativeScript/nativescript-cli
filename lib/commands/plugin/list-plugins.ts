@@ -1,5 +1,4 @@
 import { createTable } from "../../common/helpers";
-import { IProjectData } from "../../definitions/project";
 import {
 	IPluginsService,
 	IPackageJsonDepedenciesResult,
@@ -8,6 +7,8 @@ import {
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import { color } from "../../color";
+import { ProjectData } from "../../contracts/project-data";
+import { provideProject } from "../command-base";
 
 function createTableCells(items: IBasePluginData[]): string[][] {
 	return items.map((item) => [item.name, item.version]);
@@ -17,14 +18,10 @@ export const listPluginsCommandDefinition = defineCommand({
 	name: "plugin|*list",
 	description: "Lists all installed plugins.",
 	arguments: "none",
-	// In setup, not run: it lands ahead of the arguments policy, so being
-	// outside a project is what a bad invocation reports first.
-	setup(): void {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	async run(): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 		const $logger = inject<ILogger>("logger");
 		const installedPlugins: IPackageJsonDepedenciesResult =
 			$pluginsService.getDependenciesFromPackageJson($projectData.projectDir);

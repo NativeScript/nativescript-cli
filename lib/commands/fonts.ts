@@ -1,4 +1,4 @@
-import { IProjectConfigService, IProjectData } from "../definitions/project";
+import { IProjectConfigService } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
@@ -6,18 +6,16 @@ import * as constants from "../constants";
 import * as fontFinder from "font-finder";
 import { createTable } from "../common/helpers";
 import * as path from "path";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 export const fontsCommandDefinition = defineCommand({
 	name: "fonts",
 	description: "Lists the custom fonts the project bundles.",
 	arguments: "none",
-	// In setup, not run: it lands ahead of the arguments policy, so being
-	// outside a project is what a bad invocation reports first.
-	setup(): void {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	async run(): Promise<void> {
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 		const $fs = inject<IFileSystem>("fs");
 		const $logger = inject<ILogger>("logger");
 		const $projectConfigService = inject<IProjectConfigService>(

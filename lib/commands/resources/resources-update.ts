@@ -1,20 +1,21 @@
-import { IProjectData } from "../../definitions/project";
 import { IAndroidResourcesMigrationService } from "../../declarations";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
+import { ProjectData } from "../../contracts/project-data";
+import { provideProject } from "../command-base";
 
 export const resourcesUpdateCommandDefinition = defineCommand({
 	name: "resources|update",
 	description:
 		"Updates the App_Resources directory to the structure the current Android runtime expects.",
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $androidResourcesMigrationService =
 			inject<IAndroidResourcesMigrationService>(
 				"androidResourcesMigrationService",
 			);
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		let args = context.args;
 		if (!args || args.length === 0) {
@@ -50,8 +51,7 @@ export const resourcesUpdateCommandDefinition = defineCommand({
 			inject<IAndroidResourcesMigrationService>(
 				"androidResourcesMigrationService",
 			);
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		await $androidResourcesMigrationService.migrate(
 			$projectData.getAppResourcesDirectoryPath(),

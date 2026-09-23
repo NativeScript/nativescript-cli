@@ -6,8 +6,9 @@ import {
 	CommandName,
 	defineCommand,
 } from "../common/define-command";
-import { inject } from "../common/di";
 import { capitalizeFirstLetter } from "../common/utils";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 import { IProjectData } from "../definitions/project";
 
 /**
@@ -85,7 +86,7 @@ class ${classSimpleName} {
 }
 
 function checkAndUpdateGradleProperties(ctx: CommandContext): boolean {
-	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const $projectData = ctx.injector.get(ProjectData);
 	const $logger = ctx.injector.get<ILogger>("logger");
 	const resources = $projectData.getAppResourcesDirectoryPath();
 
@@ -125,7 +126,7 @@ function generateJavaKotlin(
 	className: string,
 	extension: string,
 ): void {
-	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const $projectData = ctx.injector.get(ProjectData);
 	const $logger = ctx.injector.get<ILogger>("logger");
 	const fileExt = extension == "java" ? extension : "kt";
 	const packageName = getPackageName(className);
@@ -255,7 +256,7 @@ function generateObjectiveCFiles(
 }
 
 function generateObjectiveC(ctx: CommandContext, className: string): void {
-	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const $projectData = ctx.injector.get(ProjectData);
 	const $logger = ctx.injector.get<ILogger>("logger");
 	const iosSourceBase = getIosSourcePathBase($projectData);
 
@@ -304,7 +305,7 @@ import os;
 }
 
 function generateSwift(ctx: CommandContext, className: string): void {
-	const $projectData = ctx.injector.get<IProjectData>("projectData");
+	const $projectData = ctx.injector.get(ProjectData);
 	const iosSourceBase = getIosSourcePathBase($projectData);
 	const swiftFilePath = path.join(iosSourceBase, `${className}.swift`);
 	generateSwiftFile(ctx, className, swiftFilePath);
@@ -325,9 +326,7 @@ export const nativeAddCommandDefinition = defineCommand({
 	description:
 		"Commands to add native files to the application placing them in the correct directory.",
 	arguments: "any",
-	setup() {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	canExecute(context): boolean {
 		failWithUsage(context);
 		return false;
@@ -347,9 +346,7 @@ const defineNativeAddLanguageCommand = <const TName extends CommandName>(
 		// The one usage message answers both too few and too many arguments; a
 		// declared argument spec would report them with two different ones.
 		arguments: "any",
-		setup() {
-			inject<IProjectData>("projectData").initializeProjectData();
-		},
+		providers: [provideProject()],
 		canExecute(context): boolean {
 			if (context.args.length !== 1) {
 				failWithUsage(context);

@@ -92,6 +92,8 @@ export type {
 // Promoted from the internal contracts index: the class form reads it in a
 // field initializer, and a per-command provider is written against it.
 export { COMMAND_CONTEXT } from "../common/contracts/command-context";
+export { COMMAND_PRECONDITIONS } from "../common/contracts/command-preconditions";
+export type { CommandPrecondition } from "../common/contracts/command-preconditions";
 // The in-process dispatcher a command or plugin runs or consults other
 // commands through.
 export { CommandsService } from "../common/contracts/commands-service";

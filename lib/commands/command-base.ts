@@ -11,7 +11,13 @@ import {
 	CommandOptionsSchema,
 	objectOption,
 } from "../common/define-command";
-import { Injector } from "../common/di";
+import { Injector, inject } from "../common/di";
+import type { Provider } from "../common/di/providers";
+import { ProjectData } from "../contracts/project-data";
+import {
+	COMMAND_PRECONDITIONS,
+	CommandPrecondition,
+} from "../common/contracts/command-preconditions";
 
 /**
  * The CLI-wide signing options `validatePlatformOptions` checks. A command
@@ -31,17 +37,36 @@ type PlatformSigningContext = Pick<
 >;
 
 /**
- * The declarative form of `$platformCommandParameter`. Initializing the
- * project data is what makes the platform check possible, so it stays part of
- * validating the argument instead of moving to the command's own handlers,
- * which the adapter runs only after argument enforcement.
+ * Declares that a command runs inside a project: the project the command line
+ * names, through `--path` or the working directory, is resolved before the
+ * command's setup and arguments policy, and its absence fails the invocation
+ * with the "no project found" error. `inject(ProjectData)` then reads it.
+ */
+export function provideProject(): Provider {
+	return {
+		provide: COMMAND_PRECONDITIONS,
+		multi: true,
+		useValue: requireProject,
+	};
+}
+
+const requireProject: CommandPrecondition = () => {
+	const projectData = inject<IProjectData>("projectData");
+	if (typeof projectData.initializeProjectData === "function") {
+		projectData.initializeProjectData();
+	}
+};
+
+/**
+ * The declarative form of `$platformCommandParameter`. The command declares
+ * `provideProject()`, so resolving the project here is what makes the
+ * platform check possible before the command's own handlers run.
  */
 export function validatePlatformArgument(
 	targetInjector: Injector,
 	platform: string,
 ): void {
-	const projectData = targetInjector.get<IProjectData>("projectData");
-	projectData.initializeProjectData();
+	const projectData = targetInjector.get(ProjectData);
 	targetInjector
 		.get<IPlatformValidationService>("platformValidationService")
 		.validatePlatform(platform, projectData);
@@ -60,7 +85,7 @@ export function validatePlatformOptions(
 	context: PlatformSigningContext,
 	platform: string,
 ): Promise<boolean> {
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 
 	return context.injector
 		.get<IPlatformValidationService>("platformValidationService")
@@ -78,7 +103,7 @@ async function validatePlatformBase(
 	notConfiguredEnvOptions: INotConfiguredEnvOptions,
 ): Promise<IValidatePlatformOutput> {
 	const $options = context.injector.get<IOptions>("options");
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	const platformData = context.injector
 		.get<IPlatformsDataService>("platformsDataService")
 		.getPlatformData(platform, $projectData);

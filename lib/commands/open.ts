@@ -12,8 +12,9 @@ import { ICommand } from "../common/definitions/commands";
 import { inject } from "../common/di";
 import { injector } from "../common/yok";
 import { IOptions } from "../declarations";
-import { IProjectData } from "../definitions/project";
 import type { IOSProjectService } from "../services/ios-project-service";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 function getAndroidStudioPath(): string | null {
 	const os = currentPlatform();
@@ -58,10 +59,9 @@ async function openAndroidStudioProject(
 		"liveSyncCommandHelper",
 	);
 	const $logger = context.injector.get<ILogger>("logger");
-	const $projectData = context.injector.get<IProjectData>("projectData");
 
 	$liveSyncCommandHelper.validatePlatform(platform);
-	$projectData.initializeProjectData();
+	const $projectData = context.injector.get(ProjectData);
 	const androidDir = `${$projectData.platformsDir}/android`;
 
 	if (!fs.existsSync(androidDir)) {
@@ -110,7 +110,6 @@ async function openXcodeProject(
 	const $iOSProjectService =
 		context.injector.get<IOSProjectService>("iOSProjectService");
 	const $logger = context.injector.get<ILogger>("logger");
-	const $projectData = context.injector.get<IProjectData>("projectData");
 	const $xcodeSelectService =
 		context.injector.get<IXcodeSelectService>("xcodeSelectService");
 	const $xcodebuildArgsService = context.injector.get<IXcodebuildArgsService>(
@@ -123,7 +122,7 @@ async function openXcodeProject(
 		return;
 	}
 
-	$projectData.initializeProjectData();
+	const $projectData = context.injector.get(ProjectData);
 	const platformDir = path.resolve($projectData.platformsDir, platformDirName);
 
 	if (!fs.existsSync(platformDir)) {
@@ -190,6 +189,7 @@ export const iosOpenCommand = defineCommand({
 	description: "Opens the project in Xcode.",
 	options: openCommandOptions,
 	arguments: "none",
+	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $options = inject<IOptions>("options");
 		await withoutWatch($options, () => openXcodeProject(context, "ios", false));
@@ -201,6 +201,7 @@ export const visionOpenCommand = defineCommand({
 	description: "Opens the visionOS project in Xcode.",
 	options: openCommandOptions,
 	arguments: "none",
+	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $options = inject<IOptions>("options");
 		await withoutWatch($options, () =>
@@ -214,6 +215,7 @@ export const androidOpenCommand = defineCommand({
 	description: "Opens the project in Android Studio.",
 	options: openCommandOptions,
 	arguments: "none",
+	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $options = inject<IOptions>("options");
 		await withoutWatch($options, () =>

@@ -10,6 +10,13 @@ interface IBaseProvider<T> {
 	provide: ProviderToken<T>;
 	/** Defaults to true. `false` constructs a fresh instance per resolution. */
 	shared?: boolean;
+	/**
+	 * Contributes to an array under the token instead of replacing it: every
+	 * `multi` provider for one token is resolved, in registration order, and
+	 * `get(token)` returns the array. A token is either multi or single; the
+	 * entries of a child injector shadow the parent's whole array.
+	 */
+	multi?: boolean;
 }
 
 export interface IClassProvider<T> extends IBaseProvider<T> {

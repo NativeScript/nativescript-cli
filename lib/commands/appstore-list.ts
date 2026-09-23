@@ -6,11 +6,12 @@ import {
 import { inject } from "../common/di";
 import { createTable } from "../common/helpers";
 import { IPlatformValidationService } from "../declarations";
-import { IProjectData } from "../definitions/project";
 import {
 	IApplePortalApplicationService,
 	IApplePortalSessionService,
 } from "../services/apple-portal/definitions";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 const listiOSAppsCommandOptions = {
 	appleSessionBase64: stringOption(),
@@ -21,6 +22,7 @@ export class ListiOSAppsCommand extends Command({
 	description: "Lists the applications in App Store Connect.",
 	options: listiOSAppsCommandOptions,
 	arguments: [{ name: "appleId" }, { name: "password" }],
+	providers: [provideProject()],
 }) {
 	private $applePortalApplicationService =
 		inject<IApplePortalApplicationService>("applePortalApplicationService");
@@ -34,13 +36,8 @@ export class ListiOSAppsCommand extends Command({
 	private $platformValidationService = inject<IPlatformValidationService>(
 		"platformValidationService",
 	);
-	private $projectData = inject<IProjectData>("projectData");
+	private $projectData = inject(ProjectData);
 	private $prompter = inject<IPrompter>("prompter");
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
 
 	public async run(): Promise<void> {
 		if (

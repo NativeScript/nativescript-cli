@@ -11,7 +11,8 @@ import {
 } from "../common/define-command";
 import { inject } from "../common/di";
 import { IOptions, IStaticConfig } from "../declarations";
-import { IProjectData } from "../definitions/project";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 const typingsCommandOptions = {
 	aar: stringOption(),
@@ -27,6 +28,7 @@ export class TypingsCommand extends Command({
 	// Only the first argument is read; the rest are gradle targets this command
 	// takes off the raw argv, so the policy must not reject them.
 	arguments: "any",
+	providers: [provideProject()],
 }) {
 	private $childProcess = inject<IChildProcess>("childProcess");
 	private $fs = inject<IFileSystem>("fs");
@@ -34,7 +36,7 @@ export class TypingsCommand extends Command({
 	private $logger = inject<ILogger>("logger");
 	private $mobileHelper = inject<Mobile.IMobileHelper>("mobileHelper");
 	private $options = inject<IOptions>("options");
-	private $projectData = inject<IProjectData>("projectData");
+	private $projectData = inject(ProjectData);
 	private $prompter = inject<IPrompter>("prompter");
 	private $staticConfig = inject<IStaticConfig>("staticConfig");
 

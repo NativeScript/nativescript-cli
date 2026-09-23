@@ -7,7 +7,6 @@ import {
 	defineCommand,
 	stringOption,
 } from "../common/define-command";
-import { inject } from "../common/di";
 import { PlatformTypes } from "../constants";
 import {
 	INodePackageManager,
@@ -16,7 +15,9 @@ import {
 } from "../declarations";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IPluginsService } from "../definitions/plugins";
-import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IProjectDataService } from "../definitions/project";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 const installCommandOptions = {
 	frameworkPath: stringOption(),
@@ -37,7 +38,7 @@ async function installProjectDependencies(
 	const $platformCommandHelper = context.injector.get<IPlatformCommandHelper>(
 		"platformCommandHelper",
 	);
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	const $projectDataService =
 		context.injector.get<IProjectDataService>("projectDataService");
 	const $pluginsService =
@@ -82,7 +83,7 @@ async function installModule(
 	context: CommandContext<typeof installCommandOptions>,
 	moduleName: string,
 ): Promise<void> {
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	const $fs = context.injector.get<IFileSystem>("fs");
 	const $packageManager =
 		context.injector.get<INodePackageManager>("packageManager");
@@ -109,12 +110,8 @@ export const installCommandDefinition = defineCommand({
 		"Installs all platforms and dependencies described in the project, or a single plugin.",
 	options: installCommandOptions,
 	arguments: [{ name: "moduleName" }],
+	providers: [provideProject()],
 	enableHooks: false,
-	// In setup, not run: it lands ahead of the arguments policy, so being
-	// outside a project is what a bad invocation reports first.
-	setup(): void {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
 	run(context): Promise<void> {
 		return context.args[0]
 			? installModule(context, context.args[0])

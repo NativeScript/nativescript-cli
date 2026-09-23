@@ -24,7 +24,8 @@ export interface InjectOptions {
 	skipSelf?: boolean;
 }
 
-type ProviderKind = "value" | "class" | "factory" | "lazyClass" | "legacyClass";
+type ProviderKind =
+	"value" | "class" | "factory" | "lazyClass" | "legacyClass" | "multi";
 
 interface IProviderRecord {
 	displayName: string;
@@ -43,6 +44,8 @@ interface IProviderRecord {
 	/** Every produced instance is retained, transients included — dispose() walks them. */
 	instances: any[];
 	constructing: boolean;
+	/** One record per `multi` provider, in registration order. */
+	multiRecords?: IProviderRecord[];
 }
 
 // Shared across the whole injector tree so cycle reports show the full path
@@ -156,7 +159,29 @@ export class Injector {
 					constructing: false,
 				};
 			}
-			this.applyProvider(record, provider);
+			if ((<Provider>provider).multi) {
+				if (record.kind !== undefined && record.kind !== "multi") {
+					throw new Error(
+						`${record.displayName} is registered as a single provider; it cannot also take multi providers`,
+					);
+				}
+				const entry: IProviderRecord = {
+					displayName: record.displayName,
+					shared: true,
+					instances: [],
+					constructing: false,
+				};
+				this.applyProvider(entry, provider);
+				record.kind = "multi";
+				record.multiRecords = (record.multiRecords || []).concat(entry);
+			} else {
+				if (record.kind === "multi") {
+					throw new Error(
+						`${record.displayName} takes multi providers; a single provider cannot replace them`,
+					);
+				}
+				this.applyProvider(record, provider);
+			}
 			for (const key of keys) {
 				this.providers.set(key, record);
 			}
@@ -231,6 +256,11 @@ export class Injector {
 			disposeOne(this.instantiationOrder[i]);
 		}
 		for (const record of new Set(this.providers.values())) {
+			for (const entry of record.multiRecords || []) {
+				for (const instance of entry.instances) {
+					disposeOne(instance);
+				}
+			}
 			for (const instance of record.instances) {
 				disposeOne(instance);
 			}
@@ -327,6 +357,12 @@ export class Injector {
 			// module, broken require) is retried on the next resolution.
 			loader();
 			record.pendingLoader = undefined;
+		}
+
+		if (record.kind === "multi") {
+			return record.multiRecords.map((entry) =>
+				this.instantiate(entry, ctorArguments),
+			);
 		}
 
 		if (record.shared && record.instances.length) {

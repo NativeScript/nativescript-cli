@@ -18,13 +18,13 @@ import {
 	IProjectCleanupResult,
 	IProjectCleanupService,
 	IProjectConfigService,
-	IProjectData,
 	IProjectService,
 } from "../definitions/project";
 import {
 	ITerminalSpinner,
 	ITerminalSpinnerService,
 } from "../definitions/terminal-spinner-service";
+import { ProjectData } from "../contracts/project-data";
 
 function bytesToHumanReadable(bytes: number): string {
 	const units = ["B", "KB", "MB", "GB", "TB"];
@@ -323,7 +323,6 @@ export const cleanCommandDefinition = defineCommand({
 		const $projectConfigService = inject<IProjectConfigService>(
 			"projectConfigService",
 		);
-		const $projectData = inject<IProjectData>("projectData");
 		const $projectService = inject<IProjectService>("projectService");
 		const $terminalSpinnerService = inject<ITerminalSpinnerService>(
 			"terminalSpinnerService",
@@ -339,6 +338,11 @@ export const cleanCommandDefinition = defineCommand({
 		if (!$projectService.isValidNativeScriptProject()) {
 			return cleanMultipleProjects(context, spinner);
 		}
+
+		// The project is optional: outside one the command cleans the projects
+		// below, so it is resolved behind the check rather than declared.
+		const $projectData = inject(ProjectData);
+		$projectData.initializeProjectData();
 
 		spinner.start("Cleaning project...\n");
 

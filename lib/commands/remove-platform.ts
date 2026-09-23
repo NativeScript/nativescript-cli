@@ -1,23 +1,24 @@
 import * as _ from "lodash";
-import { IProjectData } from "../definitions/project";
 import {
 	IPlatformCommandHelper,
 	IPlatformValidationService,
 } from "../declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 export const removePlatformCommandDefinition = defineCommand({
 	name: "platform|remove",
 	description:
 		"Removes the selected platform from the platforms that the project currently targets.",
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $platformValidationService = inject<IPlatformValidationService>(
 			"platformValidationService",
 		);
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		const args = context.args;
 		if (!args || args.length === 0) {
@@ -36,8 +37,7 @@ export const removePlatformCommandDefinition = defineCommand({
 		const $platformCommandHelper = inject<IPlatformCommandHelper>(
 			"platformCommandHelper",
 		);
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		return $platformCommandHelper.removePlatforms(context.args, $projectData);
 	},

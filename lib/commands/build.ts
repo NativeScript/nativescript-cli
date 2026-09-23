@@ -5,6 +5,7 @@ import {
 import {
 	canExecuteCommandBase,
 	platformSigningOptions,
+	provideProject,
 	validatePlatformOptions,
 } from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
@@ -15,7 +16,6 @@ import {
 } from "../declarations";
 import { IBuildController, IBuildDataService } from "../definitions/build";
 import { IMigrateController } from "../definitions/migrate";
-import { IProjectData } from "../definitions/project";
 import {
 	booleanOption,
 	CommandName,
@@ -24,6 +24,7 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
 
 /**
  * Which `$devicePlatformsConstants` entry a command builds for. The constants
@@ -53,6 +54,7 @@ const defineBuildCommand = <const TName extends CommandName>(
 		description: "Builds the project for the selected target platform.",
 		options: buildCommandOptions,
 		arguments: "none",
+		providers: [provideProject()],
 		async canExecute(context): Promise<boolean> {
 			const $devicePlatformsConstants =
 				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
@@ -61,14 +63,13 @@ const defineBuildCommand = <const TName extends CommandName>(
 			const $platformValidationService = inject<IPlatformValidationService>(
 				"platformValidationService",
 			);
-			const $projectData = inject<IProjectData>("projectData");
+			const $projectData = inject(ProjectData);
 			const platform = $devicePlatformsConstants[buildPlatform];
 			const isAndroid = $devicePlatformsConstants.isAndroid(platform);
 			// Only the android build checks the runtime version.
 			const $androidBundleValidatorHelper = isAndroid
 				? inject<IAndroidBundleValidatorHelper>("androidBundleValidatorHelper")
 				: null;
-			$projectData.initializeProjectData();
 
 			if (!context.options.force) {
 				await $migrateController.validate({
@@ -112,10 +113,9 @@ const defineBuildCommand = <const TName extends CommandName>(
 				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
 			const $logger = inject<ILogger>("logger");
 			const $options = inject<IOptions>("options");
-			const $projectData = inject<IProjectData>("projectData");
+			const $projectData = inject(ProjectData);
 			const platform = $devicePlatformsConstants[buildPlatform];
 			const isAndroid = $devicePlatformsConstants.isAndroid(platform);
-			$projectData.initializeProjectData();
 
 			const buildData = $buildDataService.getBuildData(
 				$projectData.projectDir,

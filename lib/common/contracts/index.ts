@@ -15,6 +15,8 @@ export type {
 	DeferredCommandResult,
 } from "./command-registry";
 export { COMMAND_CONTEXT } from "./command-context";
+export { COMMAND_PRECONDITIONS } from "./command-preconditions";
+export type { CommandPrecondition } from "./command-preconditions";
 export { CommandsService } from "./commands-service";
 export { ModuleRegistry } from "./module-registry";
 export { PublicApiBuilder } from "./public-api-builder";

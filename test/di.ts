@@ -648,3 +648,68 @@ describe("di: register semantics", () => {
 		]);
 	});
 });
+
+describe("di: multi providers", () => {
+	const HOOKS = new InjectionToken<string[]>("diTestMultiHooks");
+
+	it("collects every multi provider for a token into an array, in order", () => {
+		const injector = new Injector([
+			{ provide: HOOKS, multi: true, useValue: "first" },
+			{ provide: HOOKS, multi: true, useFactory: () => "second" },
+		]);
+		injector.register({ provide: HOOKS, multi: true, useValue: "third" });
+
+		assert.deepEqual(injector.get(HOOKS), ["first", "second", "third"]);
+	});
+
+	it("resolves each entry once and answers optional lookups", () => {
+		let built = 0;
+		const injector = new Injector([
+			{
+				provide: HOOKS,
+				multi: true,
+				useFactory: () => {
+					built++;
+					return "built";
+				},
+			},
+		]);
+
+		injector.get(HOOKS);
+		injector.get(HOOKS);
+
+		assert.equal(built, 1);
+		assert.isNull(new Injector([]).get(HOOKS, { optional: true }));
+	});
+
+	it("lets a child's entries shadow the parent's array", () => {
+		const parent = new Injector([
+			{ provide: HOOKS, multi: true, useValue: "parent" },
+		]);
+		const child = parent.createChild([
+			{ provide: HOOKS, multi: true, useValue: "child" },
+		]);
+
+		assert.deepEqual(child.get(HOOKS), ["child"]);
+		assert.deepEqual(parent.createChild([]).get(HOOKS), ["parent"]);
+	});
+
+	it("refuses to mix multi and single providers on one token", () => {
+		assert.throws(
+			() =>
+				new Injector([
+					{ provide: HOOKS, multi: true, useValue: "a" },
+					{ provide: HOOKS, useValue: "b" },
+				]),
+			/takes multi providers/,
+		);
+		assert.throws(
+			() =>
+				new Injector([
+					{ provide: HOOKS, useValue: "b" },
+					{ provide: HOOKS, multi: true, useValue: "a" },
+				]),
+			/registered as a single provider/,
+		);
+	});
+});

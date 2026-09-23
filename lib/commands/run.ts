@@ -16,7 +16,7 @@ import {
 } from "../constants";
 import { IPlatformValidationService } from "../declarations";
 import { IMigrateController } from "../definitions/migrate";
-import { IProjectData, IProjectDataService } from "../definitions/project";
+import { IProjectDataService } from "../definitions/project";
 import {
 	DevicePlatformName,
 	IKeyShortcutService,
@@ -25,7 +25,8 @@ import {
 	restartShortcut,
 	watcherShortcut,
 } from "../services/key-shortcuts";
-import { platformSigningOptions } from "./command-base";
+import { platformSigningOptions, provideProject } from "./command-base";
+import { ProjectData } from "../contracts/project-data";
 
 const runCommandOptions = {
 	...platformSigningOptions,
@@ -68,13 +69,12 @@ async function canExecuteRunCommand(
 	);
 	const $migrateController =
 		context.injector.get<IMigrateController>("migrateController");
-	const $projectData = context.injector.get<IProjectData>("projectData");
 
 	if (context.args.length) {
 		$errors.failWithHelp(ERROR_NO_VALID_SUBCOMMAND_FORMAT, "run");
 	}
 
-	$projectData.initializeProjectData();
+	const $projectData = context.injector.get(ProjectData);
 	const platforms = platform
 		? [platform]
 		: [$devicePlatformsConstants.Android, $devicePlatformsConstants.iOS];
@@ -149,6 +149,7 @@ export const runCommandDefinition = defineCommand({
 	options: runCommandOptions,
 	// The base rejects arguments itself, with the sub-command message.
 	arguments: "any",
+	providers: [provideProject()],
 	/**
 	 * Undefined for `run|*all`, which targets every platform, except off macOS
 	 * where only Android can be built. It is settled here, once per invocation,
@@ -206,6 +207,7 @@ const defineApplePlatformRunCommand = <const TName extends CommandName>(
 		description: "Runs your project on a connected Apple device or simulator.",
 		options: runCommandOptions,
 		arguments: "any",
+		providers: [provideProject()],
 		canExecute: (context: RunCommandContext) =>
 			canExecuteApplePlatformRunCommand(
 				context,
@@ -229,11 +231,12 @@ export const androidRunCommand = defineCommand({
 	description: "Runs your project on a connected Android device or emulator.",
 	options: runCommandOptions,
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context: RunCommandContext): Promise<boolean> {
 		const $platformValidationService = inject<IPlatformValidationService>(
 			"platformValidationService",
 		);
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 		const platform = runPlatformName(context, "Android");
 
 		// The base verdict is dropped rather than combined with the checks below;

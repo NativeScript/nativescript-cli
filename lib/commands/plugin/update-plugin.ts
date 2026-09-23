@@ -1,17 +1,18 @@
 import * as _ from "lodash";
-import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
+import { ProjectData } from "../../contracts/project-data";
+import { provideProject } from "../command-base";
 
 export const updatePluginCommandDefinition = defineCommand({
 	name: "plugin|update",
 	description: "Uninstalls and installs the specified plugin(s).",
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		const args = context.args;
 		if (!args || args.length === 0) {
@@ -35,8 +36,7 @@ export const updatePluginCommandDefinition = defineCommand({
 	},
 	async run(context): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		let pluginNames = context.args;
 

@@ -6,11 +6,11 @@ import {
 	canExecuteCommandBase,
 	platformArgument,
 	platformSigningOptions,
+	provideProject,
 } from "./command-base";
 import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 import { hasValidAndroidSigning } from "../common/helpers";
 import { IMigrateController } from "../definitions/migrate";
-import { IProjectData } from "../definitions/project";
 import {
 	booleanOption,
 	CommandOptionsSchema,
@@ -18,6 +18,7 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
 
 const deployCommandOptions = {
 	...platformSigningOptions,
@@ -37,11 +38,11 @@ export const deployCommandDefinition = defineCommand({
 	description: "Builds and deploys the project to a connected device.",
 	options: deployCommandOptions,
 	arguments: [platformArgument],
+	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $migrateController = inject<IMigrateController>("migrateController");
 		const $mobileHelper = inject<Mobile.IMobileHelper>("mobileHelper");
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		const platform = context.args[0];
 
@@ -76,9 +77,6 @@ export const deployCommandDefinition = defineCommand({
 		const $deployCommandHelper = inject<DeployCommandHelper>(
 			"deployCommandHelper",
 		);
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
-
 		await $deployCommandHelper.deploy(context.args[0]);
 	},
 });

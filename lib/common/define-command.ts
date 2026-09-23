@@ -10,6 +10,7 @@ import { COMMAND_CONTEXT } from "./contracts/command-context";
 import type { KeyShortcut } from "./contracts/key-shortcuts";
 import { inject } from "./di/inject";
 import type { Injector } from "./di/injector";
+import type { Provider } from "./di/providers";
 
 /**
  * Symbol.for so that a definition produced by one copy of the CLI is still
@@ -160,6 +161,12 @@ export interface CommandDefinition<
 	disableAnalytics?: boolean;
 	enableHooks?: boolean;
 	/**
+	 * Providers added to each invocation's own injector, next to the context,
+	 * so a factory or class among them can inject the invocation. They are
+	 * built once per invocation, and `ctx.injector` resolves them.
+	 */
+	providers?: Provider[];
+	/**
 	 * Runs once per invocation, before `canExecute`, and its result is handed to
 	 * `canExecute`, `run` and `postRun`. Sugar: a command may ignore it and call
 	 * `inject()` at the top of `run` instead.
@@ -234,6 +241,7 @@ const DEFINITION_FIELDS = [
 	"canExecute",
 	"disableAnalytics",
 	"enableHooks",
+	"providers",
 	"setup",
 	"run",
 	"shortcuts",
@@ -268,7 +276,8 @@ const OPTION_TYPES: CommandOptionType[] = [
 const ACCEPTED_FORM =
 	'defineCommand({ name: "widget|add", run(ctx) { ... } }) — with the ' +
 	"optional fields description, options, arguments, allowUnknownOptions, " +
-	"setup, canExecute, shortcuts, postRun, disableAnalytics and enableHooks. " +
+	"providers, setup, canExecute, shortcuts, postRun, disableAnalytics and " +
+	"enableHooks. " +
 	'Or the class form, class WidgetAdd extends Command({ name: "widget|add" }) ' +
 	"{ run() { ... } }, which declares the same fields except the handlers and " +
 	"implements run, and optionally canExecute, postRun and shortcuts, as methods.";
@@ -523,6 +532,23 @@ const validateDefinition = (definition: any): void => {
 			typeof definition[flag] !== "boolean"
 		) {
 			invalid(definition, `'${flag}' must be a boolean`);
+		}
+	}
+
+	if (definition.providers !== undefined) {
+		const providers = definition.providers;
+		const wellFormed =
+			Array.isArray(providers) &&
+			providers.every(
+				(provider: any) =>
+					typeof provider === "function" ||
+					(isPlainObject(provider) && provider.provide !== undefined),
+			);
+		if (!wellFormed) {
+			invalid(
+				definition,
+				"'providers' must be an array of providers - classes, or objects with a 'provide' token",
+			);
 		}
 	}
 

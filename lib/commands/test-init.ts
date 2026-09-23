@@ -2,10 +2,7 @@ import * as path from "path";
 import * as _ from "lodash";
 import { TESTING_FRAMEWORKS, ProjectTypes } from "../constants";
 import { fromWindowsRelativePathToUnix } from "../common/helpers";
-import {
-	IProjectData,
-	ITestInitializationService,
-} from "../definitions/project";
+import { ITestInitializationService } from "../definitions/project";
 import { INodePackageManager } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
 import {
@@ -22,6 +19,8 @@ import {
 	IDependencyInformation,
 } from "../common/declarations";
 import { color } from "../color";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 const karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
 	mocha: ["chai"],
@@ -40,22 +39,18 @@ export class TestInitCommand extends Command({
 	description: "Configures your project for unit testing.",
 	options: testInitCommandOptions,
 	arguments: "none",
+	providers: [provideProject()],
 }) {
 	private $fs = inject<IFileSystem>("fs");
 	private $logger = inject<ILogger>("logger");
 	private $packageManager = inject<INodePackageManager>("packageManager");
 	private $pluginsService = inject<IPluginsService>("pluginsService");
-	private $projectData = inject<IProjectData>("projectData");
+	private $projectData = inject(ProjectData);
 	private $prompter = inject<IPrompter>("prompter");
 	private $resources = inject<IResourceLoader>("resources");
 	private $testInitializationService = inject<ITestInitializationService>(
 		"testInitializationService",
 	);
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
 
 	/**
 	 * Android blocks cleartext traffic by default (API 28+), which would

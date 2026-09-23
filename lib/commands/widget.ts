@@ -8,6 +8,8 @@ import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { capitalizeFirstLetter } from "../common/utils";
 import { EOL } from "os";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 class IOSWidgetGenerator {
 	constructor(
@@ -900,13 +902,9 @@ export const widgetIOSCommandDefinition = defineCommand({
 	name: "widget|ios",
 	description: "Generates an iOS widget extension for the project.",
 	arguments: "any",
-	// In setup, not run: it lands ahead of the arguments policy, so being
-	// outside a project is what a bad invocation reports first.
-	setup(): void {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	run(ctx): void {
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 
 		const generator = new IOSWidgetGenerator(
 			$projectData,

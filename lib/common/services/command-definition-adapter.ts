@@ -6,6 +6,10 @@ import { Injector } from "../di/injector";
 import { IDictionary, IDashedOption, IErrors } from "../declarations";
 import { ICommand } from "../definitions/commands";
 import { COMMAND_CONTEXT } from "../contracts/command-context";
+import {
+	COMMAND_PRECONDITIONS,
+	CommandPrecondition,
+} from "../contracts/command-preconditions";
 import { CommandsService } from "../contracts/commands-service";
 import {
 	COMMAND_OWNER,
@@ -371,6 +375,16 @@ export function createCommandFromDefinition<
 		runResult?: Awaited<TResult>;
 	}
 
+	const runPreconditions = async (
+		preconditions: CommandPrecondition[],
+		context: CommandContext<TSchema>,
+		injector: Injector,
+	): Promise<void> => {
+		for (const precondition of preconditions) {
+			await runInInjectionContext(injector, () => precondition(context));
+		}
+	};
+
 	const startSetup = (
 		context: CommandContext<TSchema>,
 		injector: Injector,
@@ -403,6 +417,7 @@ export function createCommandFromDefinition<
 		// invocation; the price is one instance per invocation.
 		const injector = targetInjector.createChild([
 			{ provide: COMMAND_CONTEXT, useValue: context },
+			...(definition.providers || []),
 			...providers,
 		]);
 		context.injector = injector;
@@ -412,7 +427,16 @@ export function createCommandFromDefinition<
 			setup: undefined,
 			hasRun: false,
 		};
-		invocation.setup = startSetup(context, invocation.injector);
+		// Preconditions judge the environment and run ahead of setup and of the
+		// arguments policy, so being outside a project is what a bad invocation
+		// reports first. Without any, setup starts synchronously as before.
+		const preconditions =
+			injector.get(COMMAND_PRECONDITIONS, { optional: true }) || [];
+		invocation.setup = preconditions.length
+			? runPreconditions(preconditions, context, injector).then(() =>
+					startSetup(context, injector),
+				)
+			: startSetup(context, invocation.injector);
 		currentInvocation = invocation;
 
 		return invocation;

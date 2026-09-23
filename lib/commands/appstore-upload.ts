@@ -15,8 +15,9 @@ import {
 	IOptions,
 	IPlatformValidationService,
 } from "../declarations";
-import { IProjectData } from "../definitions/project";
 import { IApplePortalSessionService } from "../services/apple-portal/definitions";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 const publishIOSCommandOptions = {
 	appleApplicationSpecificPassword: stringOption(),
@@ -33,6 +34,7 @@ export class PublishIOSCommand extends Command({
 	options: publishIOSCommandOptions,
 	// Arguments have never been rejected here, only ignored past the third.
 	arguments: "any",
+	providers: [provideProject()],
 }) {
 	private $applePortalSessionService = inject<IApplePortalSessionService>(
 		"applePortalSessionService",
@@ -50,13 +52,8 @@ export class PublishIOSCommand extends Command({
 	private $platformValidationService = inject<IPlatformValidationService>(
 		"platformValidationService",
 	);
-	private $projectData = inject<IProjectData>("projectData");
+	private $projectData = inject(ProjectData);
 	private $prompter = inject<IPrompter>("prompter");
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
 
 	public canExecute(): boolean {
 		if (!this.$hostInfo.isDarwin) {

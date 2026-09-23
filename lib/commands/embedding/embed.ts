@@ -1,17 +1,18 @@
 import { resolve } from "path";
 import { color } from "../../color";
 import { IOptions } from "../../declarations";
-import { IProjectConfigService, IProjectData } from "../../definitions/project";
+import { IProjectConfigService } from "../../definitions/project";
 import { Command } from "../../common/define-command";
 import { IFileSystem } from "../../common/declarations";
 import { inject } from "../../common/di";
 import { CommandsService } from "../../common/contracts/commands-service";
-import { platformArgument } from "../command-base";
+import { platformArgument, provideProject } from "../command-base";
 import {
 	prepareCommandDefinition,
 	prepareCommandOptions,
 	runPrepareCommand,
 } from "../prepare";
+import { ProjectData } from "../../contracts/project-data";
 
 function resolveHostProjectPath(
 	projectDir: string,
@@ -34,6 +35,7 @@ export class EmbedCommand extends Command({
 		{ name: "hostProjectPath" },
 		{ name: "hostProjectModuleName" },
 	],
+	providers: [provideProject()],
 }) {
 	private $commandsService = inject(CommandsService);
 	private $fs = inject<IFileSystem>("fs");
@@ -42,17 +44,12 @@ export class EmbedCommand extends Command({
 	private $projectConfigService = inject<IProjectConfigService>(
 		"projectConfigService",
 	);
-	private $projectData = inject<IProjectData>("projectData");
+	private $projectData = inject(ProjectData);
 
 	private platform = (this.args[0] || "").toLowerCase();
 	private hostProjectPath = this.args[1] || this.configValue("hostProjectPath");
 	private hostProjectModuleName =
 		this.args[2] || this.configValue("hostProjectModuleName");
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
 
 	public async canExecute(): Promise<boolean> {
 		// `prepare` takes the platform alone; the host project arguments are this

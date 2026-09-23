@@ -1,25 +1,22 @@
-import { IProjectData } from "../definitions/project";
 import { IMigrateController, IMigrationData } from "../definitions/migrate";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 export const migrateCommandDefinition = defineCommand({
 	name: "migrate",
 	description:
 		"Migrates the project's dependencies to the ones the current CLI supports.",
 	arguments: "none",
-	// In setup, not run: it lands ahead of the arguments policy, so being
-	// outside a project is what a bad invocation reports first.
-	setup(): void {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	async run(): Promise<void> {
 		const $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
 			"devicePlatformsConstants",
 		);
 		const $migrateController = inject<IMigrateController>("migrateController");
 		const $staticConfig = inject<Config.IStaticConfig>("staticConfig");
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 		const $logger = inject<ILogger>("logger");
 		const migrationData: IMigrationData = {
 			projectDir: $projectData.projectDir,

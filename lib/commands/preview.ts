@@ -10,7 +10,8 @@ import {
 import { inject } from "../common/di";
 import { PackageManagers } from "../constants";
 import { IPackageManager } from "../declarations";
-import { IProjectData } from "../definitions/project";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 const PREVIEW_CLI_PACKAGE = "@nativescript/preview-cli";
 
@@ -25,12 +26,13 @@ export class PreviewCommand extends Command({
 	// Arguments have never been rejected here, only ignored: they reach the
 	// preview CLI through the raw argv instead.
 	arguments: "any",
+	providers: [provideProject()],
 	allowUnknownOptions: true,
 }) {
 	private $childProcess = inject<IChildProcess>("childProcess");
 	private $logger = inject<ILogger>("logger");
 	private $packageManager = inject<IPackageManager>("packageManager");
-	private $projectData = inject<IProjectData>("projectData");
+	private $projectData = inject(ProjectData);
 
 	public async run(): Promise<void> {
 		if (!this.options.disableNpmInstall) {

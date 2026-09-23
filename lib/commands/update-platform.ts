@@ -1,5 +1,4 @@
 import * as _ from "lodash";
-import { IProjectData } from "../definitions/project";
 import {
 	IOptions,
 	IPlatformCommandHelper,
@@ -11,11 +10,14 @@ import {
 } from "../definitions/platform";
 import { Command } from "../common/define-command";
 import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 export class UpdatePlatformCommand extends Command({
 	name: "platform|update",
 	description: "Updates the NativeScript runtime for the specified platform.",
 	arguments: "any",
+	providers: [provideProject()],
 }) {
 	private $options = inject<IOptions>("options");
 	private $platformEnvironmentRequirements =
@@ -26,12 +28,7 @@ export class UpdatePlatformCommand extends Command({
 	private $platformValidationService = inject<IPlatformValidationService>(
 		"platformValidationService",
 	);
-	private $projectData = inject<IProjectData>("projectData");
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
+	private $projectData = inject(ProjectData);
 
 	public async canExecute(): Promise<boolean> {
 		const args = this.args;

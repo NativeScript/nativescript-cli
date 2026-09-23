@@ -1,4 +1,3 @@
-import { IProjectData } from "../definitions/project";
 import { IMigrateController } from "../definitions/migrate";
 import {
 	booleanOption,
@@ -7,6 +6,8 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 export const SHOULD_MIGRATE_PROJECT_MESSAGE =
 	'This project is not compatible with the current NativeScript version and cannot be updated. Use "ns migrate" to make your project compatible.';
@@ -23,6 +24,7 @@ export class UpdateCommand extends Command({
 		"Updates the project with the latest versions of its NativeScript dependencies.",
 	options: updateCommandOptions,
 	arguments: "any",
+	providers: [provideProject()],
 }) {
 	private $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
 		"devicePlatformsConstants",
@@ -30,14 +32,9 @@ export class UpdateCommand extends Command({
 	private $updateController = inject<IUpdateController>("updateController");
 	private $migrateController = inject<IMigrateController>("migrateController");
 	private $logger = inject<ILogger>("logger");
-	private $projectData = inject<IProjectData>("projectData");
+	private $projectData = inject(ProjectData);
 	private $markingModeService =
 		inject<IMarkingModeService>("markingModeService");
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
 
 	public async canExecute(): Promise<boolean> {
 		const shouldMigrate = await this.$migrateController.shouldMigrate({

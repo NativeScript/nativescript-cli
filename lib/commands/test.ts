@@ -22,10 +22,11 @@ import { ICleanupService } from "../definitions/cleanup-service";
 import { IMigrateController } from "../definitions/migrate";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
 import {
-	IProjectData,
 	ITestExecutionService,
 	IVitestExecutionService,
 } from "../definitions/project";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 /** The platform spelling the test services receive, verbatim. */
 type TestPlatform = "android" | "iOS" | "visionOS";
@@ -67,7 +68,7 @@ async function canExecuteTestCommand(
 		context.injector.get<IPlatformEnvironmentRequirements>(
 			"platformEnvironmentRequirements",
 		);
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	const $testExecutionService = context.injector.get<ITestExecutionService>(
 		"testExecutionService",
 	);
@@ -91,7 +92,6 @@ async function canExecuteTestCommand(
 		});
 	}
 
-	$projectData.initializeProjectData();
 	$analyticsService.setShouldDispose(
 		context.options.justlaunch || !context.options.watch,
 	);
@@ -143,7 +143,7 @@ async function runTestCommand(
 	);
 	const $logger = context.injector.get<ILogger>("logger");
 	const $options = context.injector.get<IOptions>("options");
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	const $testExecutionService = context.injector.get<ITestExecutionService>(
 		"testExecutionService",
 	);
@@ -220,6 +220,7 @@ export const testCommandDefinition = defineCommand({
 	options: testCommandOptions,
 	// Arguments have never been rejected here, only ignored.
 	arguments: "any",
+	providers: [provideProject()],
 	canExecute: (context: TestCommandContext) =>
 		canExecuteTestCommand(context, "iOS"),
 	run: (context: TestCommandContext) => runTestCommand(context, "iOS"),
@@ -231,6 +232,7 @@ export const testAndroidCommandDefinition = defineCommand({
 		"Runs the tests in your project on connected Android devices or Android emulators.",
 	options: testCommandOptions,
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context: TestCommandContext): Promise<boolean> {
 		const canExecuteBase = await canExecuteTestCommand(context, "android");
 		if (canExecuteBase) {
@@ -257,13 +259,13 @@ export const testVisionOSCommandDefinition = defineCommand({
 		"Runs the tests in your project in the visionOS Simulator or on connected Apple Vision Pro devices.",
 	options: testCommandOptions,
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context: TestCommandContext): Promise<boolean> {
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 		const $vitestExecutionService = inject<IVitestExecutionService>(
 			"vitestExecutionService",
 		);
 
-		$projectData.initializeProjectData();
 		// The Karma runner (v4 line) never supported visionOS — only the Vitest
 		// path can drive it.
 		if (!$vitestExecutionService.isVitestProject($projectData)) {

@@ -1,4 +1,3 @@
-import { IProjectData } from "../../definitions/project";
 import { IPluginData, IPluginsService } from "../../definitions/plugins";
 import { IFileSystem } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
@@ -12,6 +11,8 @@ import {
 	OutputPlugin,
 	verifyHooksLock,
 } from "./common";
+import { ProjectData } from "../../contracts/project-data";
+import { provideProject } from "../command-base";
 
 async function writeHooksLockFile(
 	context: CommandContext,
@@ -67,14 +68,10 @@ export const hooksLockCommandDefinition = defineCommand({
 	description:
 		"Records a hash of every plugin hook in the project's lock file.",
 	arguments: "any",
-	// In setup, not run: it lands ahead of the arguments policy, so being
-	// outside a project is what a bad invocation reports first.
-	setup(): void {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 		const $logger = inject<ILogger>("logger");
 
 		const plugins: IPluginData[] =
@@ -96,14 +93,10 @@ export const hooksVerifyCommandDefinition = defineCommand({
 	description:
 		"Checks every plugin hook against the hashes in the project's lock file.",
 	arguments: "any",
-	// In setup, not run: it lands ahead of the arguments policy, so being
-	// outside a project is what a bad invocation reports first.
-	setup(): void {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	async run(context): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
-		const $projectData = inject<IProjectData>("projectData");
+		const $projectData = inject(ProjectData);
 		const $logger = inject<ILogger>("logger");
 
 		const plugins: IPluginData[] =

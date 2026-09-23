@@ -446,15 +446,52 @@ A handler resolves what it needs itself, at the top of its own body:
 export default defineCommand({
 	name: "widget|add",
 	arguments: "any",
+	providers: [provideProject()],
 	async run(ctx) {
 		const widgets = inject(WidgetService);
 		const projectData = inject(ProjectData);
 
-		projectData.initializeProjectData();
-		await widgets.add(ctx.args);
+		await widgets.add(ctx.args, projectData);
 	},
 });
 ```
+
+### Declaring what the command needs: `providers` and preconditions
+
+A definition may carry `providers`, added to each invocation's own injector
+next to the context, so a factory or class among them can inject the
+invocation and is built once per invocation. One token in that list is
+special: `COMMAND_PRECONDITIONS` is a multi token, and every
+`{ provide: COMMAND_PRECONDITIONS, multi: true, useValue: check }` contributes
+a **precondition** — a check on the environment the command runs in, as
+opposed to `canExecute`, which judges the arguments. Preconditions run when
+the invocation opens, in declaration order, before `setup` and before the
+arguments policy, inside the injection context, and a throw fails the
+invocation. That fixed order is the point: being outside a project is what a
+bad invocation reports first.
+
+The precondition every project command declares comes from a helper:
+
+```ts
+import { provideProject } from "../command-base";
+
+export default defineCommand({
+	name: "platform|clean",
+	providers: [provideProject()],
+	run(ctx) {
+		const projectData = inject(ProjectData); // the project the command line names
+	},
+});
+```
+
+`provideProject()` resolves the project from `--path` or the working
+directory and fails the invocation with the usual "no project found" error
+when there is none. A command that does not declare it — `doctor`, `create`,
+the `device` family — pays nothing, and a command that needs the project only
+when it is there, like `clean`, resolves it itself behind its own check. Never
+call `initializeProjectData()` from a command; declare the provider. A plugin
+adds its own preconditions the same way, with its own helper returning a
+multi provider for the token.
 
 The injection context is synchronous, so the `inject()` calls belong **above
 the first `await`** — see [Injection, and the first
@@ -552,16 +589,12 @@ export class PlatformCleanCommand extends Command({
 	description: "Removes and adds again the selected platform.",
 	options: { frameworkPath: stringOption() },
 	arguments: "any",
+	providers: [provideProject()],
 }) {
 	private $platformCommandHelper = inject<IPlatformCommandHelper>(
 		"platformCommandHelper",
 	);
-	private $projectData = inject<IProjectData>("projectData");
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
+	private $projectData = inject(ProjectData);
 
 	public async run(): Promise<void> {
 		await this.$platformCommandHelper.cleanPlatforms(
@@ -625,16 +658,14 @@ across invocations, and resolves nothing outside a running one.
 read as `this.$x`:
 
 ```ts
-export class PlatformAddCommand extends Command({ name: "platform|add" }) {
-	private $projectData = inject<IProjectData>("projectData");
+export class PlatformAddCommand extends Command({
+	name: "platform|add",
+	providers: [provideProject()],
+}) {
+	private $projectData = inject(ProjectData);
 	private $platformHelper = inject<IPlatformCommandHelper>(
 		"platformCommandHelper",
 	);
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
 	// ...
 }
 ```
@@ -700,8 +731,8 @@ the registry. It claims every name the definition declares, through the
 is built by a factory on first resolution and cached.
 
 Pass providers as the second argument to add them to each invocation's child
-injector, the one `ctx.injector` names — how a definition is parameterized per
-registration:
+injector, the one `ctx.injector` names, next to the definition's own
+`providers` — how a definition is parameterized per registration:
 
 ```ts
 for (const [name, platform] of buildCommandPlatforms) {

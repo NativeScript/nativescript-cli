@@ -19,7 +19,6 @@ import {
 	IDebugOptions,
 } from "../definitions/debug";
 import { IMigrateController } from "../definitions/migrate";
-import { IProjectData } from "../definitions/project";
 import { SystemWarningsSeverity } from "../definitions/system-warnings";
 import {
 	IKeyShortcutService,
@@ -27,8 +26,13 @@ import {
 	restartShortcut,
 	watcherShortcut,
 } from "../services/key-shortcuts";
-import { canExecuteCommandBase, platformSigningOptions } from "./command-base";
+import {
+	canExecuteCommandBase,
+	platformSigningOptions,
+	provideProject,
+} from "./command-base";
 import * as _ from "lodash";
+import { ProjectData } from "../contracts/project-data";
 
 /** Which `$devicePlatformsConstants` entry a command debugs. */
 type DebugPlatform = "iOS" | "Android" | "visionOS";
@@ -68,7 +72,7 @@ async function canExecuteDebugCommand(
 		context.injector.get<IPlatformValidationService>(
 			"platformValidationService",
 		);
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	const platform = $devicePlatformsConstants[debugPlatform];
 
 	// Keeping the cleanup process alive is what makes a debugger able to stay
@@ -119,9 +123,8 @@ async function runDebugCommand(
 		"liveSyncCommandHelper",
 	);
 	const $options = context.injector.get<IOptions>("options");
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	const platform = $devicePlatformsConstants[debugPlatform];
-	$projectData.initializeProjectData();
 
 	await $devicesService.initialize({
 		platform,
@@ -233,16 +236,16 @@ const defineApplePlatformDebugCommand = <const TName extends CommandName>(
 		options: debugCommandOptions,
 		// Arguments have never been rejected here, only ignored.
 		arguments: "any",
+		providers: [provideProject()],
 		async canExecute(context): Promise<boolean> {
 			const $devicePlatformsConstants =
 				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
 			const $platformValidationService = inject<IPlatformValidationService>(
 				"platformValidationService",
 			);
-			const $projectData = inject<IProjectData>("projectData");
+			const $projectData = inject(ProjectData);
 			const $sysInfo = inject<ISysInfo>("sysInfo");
 			const platform = $devicePlatformsConstants[debugPlatform];
-			$projectData.initializeProjectData();
 
 			// Do not dispose ios-device-lib, so the process will remain alive and the debug application (NativeScript Inspector or Chrome DevTools) will be able to connect to the socket.
 			// In case we dispose ios-device-lib, the socket will be closed and the code will fail when the debug application tries to read/send data to device socket.
@@ -307,10 +310,8 @@ export const androidDebugCommand = defineCommand({
 	description: "Debugs your project on a connected Android device or emulator.",
 	options: debugCommandOptions,
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
-
 		const canExecuteBase = await canExecuteDebugCommand(context, "Android");
 		if (canExecuteBase) {
 			if (context.options.aab && !hasValidAndroidSigning(context.options)) {

@@ -1,18 +1,19 @@
 import * as _ from "lodash";
-import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
+import { ProjectData } from "../../contracts/project-data";
+import { provideProject } from "../command-base";
 
 export const removePluginCommandDefinition = defineCommand({
 	name: "plugin|remove",
 	description: "Uninstalls the specified plugin and its dependencies.",
 	arguments: "any",
+	providers: [provideProject()],
 	async canExecute(context): Promise<boolean> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
 		const $logger = inject<ILogger>("logger");
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		if (!context.args[0]) {
 			context.fail("You must specify plugin name.");
@@ -38,8 +39,7 @@ export const removePluginCommandDefinition = defineCommand({
 	},
 	run(context): Promise<void> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
-		const $projectData = inject<IProjectData>("projectData");
-		$projectData.initializeProjectData();
+		const $projectData = inject(ProjectData);
 
 		return $pluginsService.remove(context.args[0], $projectData);
 	},

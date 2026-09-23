@@ -2,6 +2,7 @@ import {
 	canExecuteCommandBase,
 	platformArgument,
 	platformSigningOptions,
+	provideProject,
 	validatePlatformArgument,
 	validatePlatformOptions,
 } from "./command-base";
@@ -14,9 +15,8 @@ import {
 	CommandOptionsSchema,
 	defineCommand,
 } from "../common/define-command";
-import { inject } from "../common/di";
 import { IOptions } from "../declarations";
-import { IProjectData } from "../definitions/project";
+import { ProjectData } from "../contracts/project-data";
 
 export const prepareCommandOptions = {
 	...platformSigningOptions,
@@ -33,7 +33,7 @@ async function canExecutePrepareCommand(
 ): Promise<boolean> {
 	const $migrateController =
 		context.injector.get<IMigrateController>("migrateController");
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 
 	const platform = context.args[0];
 	if (!platform) {
@@ -66,7 +66,7 @@ export async function runPrepareCommand(
 		context.injector.get<PrepareController>("prepareController");
 	const $prepareDataService =
 		context.injector.get<PrepareDataService>("prepareDataService");
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 
 	const prepareData = $prepareDataService.getPrepareData(
 		$projectData.projectDir,
@@ -81,9 +81,7 @@ export const prepareCommandDefinition = defineCommand({
 	description: "Copies common and platform-specific content to the platform.",
 	options: prepareCommandOptions,
 	arguments: [platformArgument],
-	setup() {
-		inject<IProjectData>("projectData").initializeProjectData();
-	},
+	providers: [provideProject()],
 	canExecute: canExecutePrepareCommand,
 	run: runPrepareCommand,
 });

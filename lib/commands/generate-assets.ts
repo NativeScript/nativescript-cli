@@ -9,8 +9,8 @@ import {
 	IAssetsGenerationService,
 	IResourceGenerationData,
 } from "../declarations";
-import { IProjectData } from "../definitions/project";
-import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
 /** Which set of assets a command generates from the source image. */
 type GeneratedAssets = "icons" | "splashes";
@@ -36,7 +36,7 @@ function runGenerateAssetsCommand(
 ): Promise<void> {
 	const $assetsGenerationService =
 		context.injector.get<IAssetsGenerationService>("assetsGenerationService");
-	const $projectData = context.injector.get<IProjectData>("projectData");
+	const $projectData = context.injector.get(ProjectData);
 	return generators[assets]($assetsGenerationService, {
 		imagePath: context.args[0],
 		background: context.options.background,
@@ -61,11 +61,7 @@ const defineGenerateAssetsCommand = <const TName extends CommandName>(
 					"You have to provide path to image to generate other images based on it.",
 			},
 		],
-		// In setup, not run: it lands ahead of the arguments policy, so being
-		// outside a project is what a missing image path reports first.
-		setup(): void {
-			inject<IProjectData>("projectData").initializeProjectData();
-		},
+		providers: [provideProject()],
 		run: (context) => runGenerateAssetsCommand(context, assets),
 	});
 

@@ -1,15 +1,15 @@
-import { canExecuteCommandBase } from "./command-base";
+import { canExecuteCommandBase, provideProject } from "./command-base";
 import {
 	IPlatformCommandHelper,
 	IPlatformValidationService,
 } from "../declarations";
-import { IProjectData } from "../definitions/project";
 import {
 	Command,
 	CommandOptionsSchema,
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
 
 const addPlatformCommandOptions = {
 	frameworkPath: stringOption(),
@@ -21,6 +21,7 @@ export class AddPlatformCommand extends Command({
 		"Configures the current project to target the selected platform.",
 	options: addPlatformCommandOptions,
 	arguments: "any",
+	providers: [provideProject()],
 }) {
 	private $platformCommandHelper = inject<IPlatformCommandHelper>(
 		"platformCommandHelper",
@@ -28,12 +29,7 @@ export class AddPlatformCommand extends Command({
 	private $platformValidationService = inject<IPlatformValidationService>(
 		"platformValidationService",
 	);
-	private $projectData = inject<IProjectData>("projectData");
-
-	constructor() {
-		super();
-		this.$projectData.initializeProjectData();
-	}
+	private $projectData = inject(ProjectData);
 
 	public async canExecute(): Promise<boolean> {
 		const args = this.args;

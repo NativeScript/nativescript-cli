@@ -9,6 +9,7 @@ import {
 	runInInjectionContext,
 } from "../lib/common/di";
 import { COMMAND_CONTEXT } from "../lib/common/contracts/command-context";
+import { COMMAND_PRECONDITIONS } from "../lib/common/contracts/command-preconditions";
 import {
 	COMMAND_OWNER,
 	CommandRegistry,
@@ -20,6 +21,7 @@ import { Options } from "../lib/options";
 import { Errors } from "../lib/common/errors";
 import { LoggerStub, HooksServiceStub } from "./stubs";
 import {
+	CommandContext,
 	arrayOption,
 	booleanOption,
 	Command,
@@ -3105,6 +3107,178 @@ describe("defineCommand", () => {
 				seen.map((entry) => entry.label),
 				["a+b", "a+b", "c", "c"],
 			);
+		});
+	});
+
+	describe("providers on the definition", () => {
+		it("lands in the invocation's injector, with the invocation in reach", async () => {
+			const LABEL = new InjectionToken<string>("dcTestDefinitionLabel");
+			const testInjector = createTestInjector();
+			const seen: string[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-definition-providers",
+					arguments: "any",
+					providers: [
+						{
+							provide: LABEL,
+							useFactory: () => inject(COMMAND_CONTEXT).args.join("+"),
+						},
+					],
+					run: (ctx) => {
+						seen.push(inject(LABEL), ctx.injector.get(LABEL));
+					},
+				}),
+				testInjector,
+			);
+
+			await command.execute(["a", "b"]);
+			await command.execute(["c"]);
+
+			assert.deepEqual(seen, ["a+b", "a+b", "c", "c"]);
+			assert.isNotOk(testInjector.get(LABEL, { optional: true }));
+		});
+
+		it("is merged with the providers of the registration", async () => {
+			const FROM_DEFINITION = new InjectionToken<string>(
+				"dcTestFromDefinition",
+			);
+			const FROM_REGISTRATION = new InjectionToken<string>(
+				"dcTestFromRegistration",
+			);
+			const testInjector = createTestInjector();
+			let seen: string;
+
+			runInInjectionContext(testInjector, () =>
+				registerCommand(
+					defineCommand({
+						name: "dctest-merged-providers",
+						providers: [{ provide: FROM_DEFINITION, useValue: "definition" }],
+						run: (ctx) => {
+							seen = `${ctx.injector.get(FROM_DEFINITION)}:${ctx.injector.get(
+								FROM_REGISTRATION,
+							)}`;
+						},
+					}),
+					[{ provide: FROM_REGISTRATION, useValue: "registration" }],
+				),
+			);
+
+			await testInjector.resolveCommand("dctest-merged-providers").execute([]);
+
+			assert.strictEqual(seen, "definition:registration");
+		});
+
+		it("is accepted by the class form's meta", async () => {
+			const LABEL = new InjectionToken<string>("dcTestClassLabel");
+			const testInjector = createTestInjector();
+			let seen: string;
+
+			class Labelled extends Command({
+				name: "dctest-class-providers",
+				providers: [{ provide: LABEL, useValue: "from-meta" }],
+			}) {
+				private $label = inject(LABEL);
+
+				run(): void {
+					seen = this.$label;
+				}
+			}
+
+			await createCommandFromDefinition(
+				Labelled.definition,
+				testInjector,
+			).execute([]);
+
+			assert.strictEqual(seen, "from-meta");
+		});
+
+		it("must be an array of providers", () => {
+			assert.throws(
+				() =>
+					defineCommand(<any>{
+						name: "dctest-bad-providers",
+						providers: { provide: "x", useValue: 1 },
+						run: (): void => undefined,
+					}),
+				/'providers' must be an array of providers/,
+			);
+			assert.throws(
+				() =>
+					defineCommand(<any>{
+						name: "dctest-bad-provider-entry",
+						providers: [{ useValue: 1 }],
+						run: (): void => undefined,
+					}),
+				/'providers' must be an array of providers/,
+			);
+		});
+	});
+
+	describe("COMMAND_PRECONDITIONS", () => {
+		it("runs the preconditions in order, before setup and before the arguments policy", async () => {
+			const testInjector = createTestInjector();
+			const order: string[] = [];
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-preconditions",
+					arguments: "none",
+					providers: [
+						{
+							provide: COMMAND_PRECONDITIONS,
+							multi: true,
+							useValue: (ctx: CommandContext) => {
+								order.push(`first:${inject(COMMAND_CONTEXT) === ctx}`);
+							},
+						},
+						{
+							provide: COMMAND_PRECONDITIONS,
+							multi: true,
+							useValue: async () => {
+								await Promise.resolve();
+								order.push("second");
+								throw new Error("not in a project");
+							},
+						},
+					],
+					setup: () => {
+						order.push("setup");
+					},
+					run: () => {
+						order.push("run");
+					},
+				}),
+				testInjector,
+			);
+
+			await assert.isRejected(
+				command.canExecute(["stray"]),
+				/not in a project/,
+			);
+
+			assert.deepEqual(order, ["first:true", "second"]);
+		});
+
+		it("lets setup start synchronously when there are none", async () => {
+			const testInjector = createTestInjector();
+			let setupRan = false;
+
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctest-no-preconditions",
+					setup: () => {
+						setupRan = true;
+					},
+					run: (): void => undefined,
+				}),
+				testInjector,
+			);
+
+			const verdict = command.canExecute([]);
+			assert.isTrue(setupRan);
+			assert.isTrue(await verdict);
 		});
 	});
 });
