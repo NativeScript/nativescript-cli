@@ -1,6 +1,5 @@
 import { color } from "../../../color";
 import { DeviceConnectionType } from "../../../constants";
-import { IErrors } from "../../declarations";
 import {
 	booleanOption,
 	Command,
@@ -58,7 +57,6 @@ async function listDevices(
 		context.injector.get<Mobile.IDevicesService>("devicesService");
 	const $emulatorHelper =
 		context.injector.get<Mobile.IEmulatorHelper>("emulatorHelper");
-	const $errors = context.injector.get<IErrors>("errors");
 	const $logger = context.injector.get<ILogger>("logger");
 	const $mobileHelper =
 		context.injector.get<Mobile.IMobileHelper>("mobileHelper");
@@ -73,10 +71,11 @@ async function listDevices(
 	if (context.options.availableDevices) {
 		const platform = $mobileHelper.normalizePlatformName(platformFilter);
 		if (!platform && platformFilter) {
-			$errors.fail(
+			context.fail(
 				`${platformFilter} is not a valid device platform. The valid platforms are ${formatListOfNames(
 					$mobileHelper.platformNames,
 				)}`,
+				{ help: false },
 			);
 		}
 

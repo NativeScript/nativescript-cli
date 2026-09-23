@@ -49,7 +49,7 @@ export class CreatePluginCommand extends Command({
 
 	public canExecute(): boolean {
 		if (!this.args[0]) {
-			this.$errors.failWithHelp("You must specify the plugin repository name.");
+			this.context.fail("You must specify the plugin repository name.");
 		}
 
 		return true;

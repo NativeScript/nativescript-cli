@@ -1,7 +1,6 @@
 import * as _ from "lodash";
 import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
-import { IErrors } from "../../common/declarations";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 
@@ -11,13 +10,12 @@ export const removePluginCommandDefinition = defineCommand({
 	arguments: "any",
 	async canExecute(context): Promise<boolean> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
-		const $errors = inject<IErrors>("errors");
 		const $logger = inject<ILogger>("logger");
 		const $projectData = inject<IProjectData>("projectData");
 		$projectData.initializeProjectData();
 
 		if (!context.args[0]) {
-			$errors.failWithHelp("You must specify plugin name.");
+			context.fail("You must specify plugin name.");
 		}
 
 		let pluginNames: string[] = [];
@@ -33,7 +31,7 @@ export const removePluginCommandDefinition = defineCommand({
 
 		const pluginName = context.args[0].toLowerCase();
 		if (!_.some(pluginNames, (name) => name.toLowerCase() === pluginName)) {
-			$errors.fail(`Plugin "${pluginName}" is not installed.`);
+			context.fail(`Plugin "${pluginName}" is not installed.`, { help: false });
 		}
 
 		return true;

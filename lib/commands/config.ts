@@ -1,6 +1,5 @@
 import { IProjectConfigService } from "../definitions/project";
 import { SupportedConfigValues } from "../tools/config-manipulation/config-transformer";
-import { IErrors } from "../common/declarations";
 import { CommandContext, defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { color } from "../color";
@@ -38,9 +37,7 @@ function getConvertedValue(v: any): any {
 
 function requireConfigKey(context: CommandContext): void {
 	if (!context.args[0]) {
-		context.injector
-			.get<IErrors>("errors")
-			.failWithHelp("You must specify a key. Eg: ios.id");
+		context.fail("You must specify a key. Eg: ios.id");
 	}
 }
 
@@ -93,12 +90,10 @@ export const configSetCommandDefinition = defineCommand({
 	description: "Sets a value in the project configuration.",
 	arguments: "any",
 	async canExecute(context): Promise<boolean> {
-		const $errors = inject<IErrors>("errors");
-
 		requireConfigKey(context);
 
 		if (!context.args[1]) {
-			$errors.failWithHelp("You must specify a value.");
+			context.fail("You must specify a value.");
 		}
 
 		return true;
@@ -108,13 +103,13 @@ export const configSetCommandDefinition = defineCommand({
 			"projectConfigService",
 		);
 		const $logger = inject<ILogger>("logger");
-		const $errors = inject<IErrors>("errors");
 
 		const [key, value] = context.args;
 		const current = $projectConfigService.getValue(key);
 		if (current && typeof current === "object") {
-			$errors.fail(
+			context.fail(
 				`Unable to change object values. Please update individual values instead.\nEg: ns config set android.codeCache true`,
+				{ help: false },
 			);
 		}
 		const convertedValue = getConvertedValue(value);

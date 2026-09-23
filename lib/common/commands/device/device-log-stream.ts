@@ -1,6 +1,5 @@
 import { ICleanupService } from "../../../definitions/cleanup-service";
 import { CommandsService } from "../../contracts/commands-service";
-import { IErrors } from "../../declarations";
 import {
 	CommandOptionsSchema,
 	defineCommand,
@@ -34,7 +33,6 @@ export const openDeviceLogStreamCommandDefinition = defineCommand({
 		const $deviceLogProvider =
 			inject<Mobile.IDeviceLogProvider>("deviceLogProvider");
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
-		const $errors = inject<IErrors>("errors");
 		const $loggingLevels = inject<Mobile.ILoggingLevels>("loggingLevels");
 
 		$deviceLogProvider.setLogLevel($loggingLevels.full);
@@ -46,7 +44,7 @@ export const openDeviceLogStreamCommandDefinition = defineCommand({
 
 		if ($devicesService.deviceCount > 1) {
 			await $commandsService.runCommand("device");
-			$errors.failWithHelp(NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
+			context.fail(NOT_SPECIFIED_DEVICE_ERROR_MESSAGE);
 		}
 
 		const action = (device: Mobile.IiOSDevice) => device.openDeviceLogStream();

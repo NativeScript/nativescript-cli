@@ -81,6 +81,7 @@ export type {
 	NamedCommand,
 	RegisterableCommand,
 	CommandContext,
+	CommandFailOptions,
 	CommandOptionSpec,
 	DefaultedCommandOptionSpec,
 	CommandOptionsSchema,

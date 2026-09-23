@@ -1,6 +1,5 @@
 import { IProjectData } from "../../definitions/project";
 import { IAndroidResourcesMigrationService } from "../../declarations";
-import { IErrors } from "../../common/declarations";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 
@@ -14,7 +13,6 @@ export const resourcesUpdateCommandDefinition = defineCommand({
 			inject<IAndroidResourcesMigrationService>(
 				"androidResourcesMigrationService",
 			);
-		const $errors = inject<IErrors>("errors");
 		const $projectData = inject<IProjectData>("projectData");
 		$projectData.initializeProjectData();
 
@@ -27,8 +25,9 @@ export const resourcesUpdateCommandDefinition = defineCommand({
 
 		for (const platform of args) {
 			if (!$androidResourcesMigrationService.canMigrate(platform)) {
-				$errors.fail(
+				context.fail(
 					`The ${platform} does not need to have its resources updated.`,
+					{ help: false },
 				);
 			}
 
@@ -37,8 +36,9 @@ export const resourcesUpdateCommandDefinition = defineCommand({
 					$projectData.getAppResourcesDirectoryPath(),
 				)
 			) {
-				$errors.fail(
+				context.fail(
 					"The App_Resources have already been updated for the Android platform.",
+					{ help: false },
 				);
 			}
 		}

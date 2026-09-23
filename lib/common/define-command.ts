@@ -109,6 +109,14 @@ export interface ArgumentSpec<TSchema extends CommandOptionsSchema = {}> {
 export type ArgumentsPolicy<TSchema extends CommandOptionsSchema = {}> =
 	"none" | "any" | ArgumentSpec<TSchema>[];
 
+export interface CommandFailOptions {
+	/**
+	 * Print the usage help suggestion after the message. Defaults to true; pass
+	 * false when the command line was fine and the environment or project is not.
+	 */
+	help?: boolean;
+}
+
 export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
 	/** Positional arguments, after the command name has been consumed. */
 	args: string[];
@@ -121,8 +129,11 @@ export interface CommandContext<TSchema extends CommandOptionsSchema = {}> {
 	 * first `await`; after it, `inject()` stops working and this is the lookup.
 	 */
 	injector: Injector;
-	/** Fails the command with `message` and the usage help suggestion. */
-	fail(message: string): never;
+	/**
+	 * Fails the command with `message`, followed by the usage help suggestion
+	 * unless `options.help` is false.
+	 */
+	fail(message: string, options?: CommandFailOptions): never;
 }
 
 export interface CommandDefinition<

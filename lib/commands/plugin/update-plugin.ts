@@ -1,7 +1,6 @@
 import * as _ from "lodash";
 import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
-import { IErrors } from "../../common/declarations";
 import { defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 
@@ -12,7 +11,6 @@ export const updatePluginCommandDefinition = defineCommand({
 	async canExecute(context): Promise<boolean> {
 		const $pluginsService = inject<IPluginsService>("pluginsService");
 		const $projectData = inject<IProjectData>("projectData");
-		const $errors = inject<IErrors>("errors");
 		$projectData.initializeProjectData();
 
 		const args = context.args;
@@ -30,7 +28,7 @@ export const updatePluginCommandDefinition = defineCommand({
 		if (
 			!_.some(installedPluginNames, (name) => name.toLowerCase() === pluginName)
 		) {
-			$errors.fail(`Plugin "${pluginName}" is not installed.`);
+			context.fail(`Plugin "${pluginName}" is not installed.`, { help: false });
 		}
 
 		return true;

@@ -4,7 +4,6 @@ import {
 	IPlatformValidationService,
 } from "../declarations";
 import { IProjectData } from "../definitions/project";
-import { IErrors } from "../common/declarations";
 import {
 	Command,
 	CommandOptionsSchema,
@@ -23,7 +22,6 @@ export class AddPlatformCommand extends Command({
 	options: addPlatformCommandOptions,
 	arguments: "any",
 }) {
-	private $errors = inject<IErrors>("errors");
 	private $platformCommandHelper = inject<IPlatformCommandHelper>(
 		"platformCommandHelper",
 	);
@@ -40,7 +38,7 @@ export class AddPlatformCommand extends Command({
 	public async canExecute(): Promise<boolean> {
 		const args = this.args;
 		if (!args || args.length === 0) {
-			this.$errors.failWithHelp(
+			this.context.fail(
 				"No platform specified. Please specify a platform to add.",
 			);
 		}
@@ -55,8 +53,9 @@ export class AddPlatformCommand extends Command({
 					this.$projectData,
 				)
 			) {
-				this.$errors.fail(
+				this.context.fail(
 					`Applications for platform ${arg} cannot be built on this OS`,
+					{ help: false },
 				);
 			}
 

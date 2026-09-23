@@ -975,6 +975,9 @@ describe("defineCommand", () => {
 		const createFailInjector = (): IInjector => {
 			const testInjector = createTestInjector();
 			testInjector.register("errors", {
+				fail: (message: string) => {
+					throw new Error(`without help: ${message}`);
+				},
 				failWithHelp: (message: string) => {
 					throw new Error(`with help: ${message}`);
 				},
@@ -1013,6 +1016,120 @@ describe("defineCommand", () => {
 			await assert.isRejected(
 				command.canExecute([]),
 				/with help: expected one argument/,
+			);
+		});
+
+		it("fails the command from setup, through failWithHelp", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailsetup",
+					setup: (ctx) => ctx.fail("no project found"),
+					run: (): void => undefined,
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(
+				command.canExecute([]),
+				/with help: no project found/,
+			);
+		});
+
+		it("fails the command from run without help, through fail", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailrunplain",
+					run: (ctx) => ctx.fail("no project found", { help: false }),
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(
+				command.execute([]),
+				/without help: no project found/,
+			);
+		});
+
+		it("fails the command from canExecute without help, through fail", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailcanplain",
+					arguments: "any",
+					canExecute: (ctx) =>
+						ctx.args.length === 1 ||
+						ctx.fail("expected one argument", { help: false }),
+					run: (): void => undefined,
+				}),
+				createFailInjector(),
+			);
+
+			assert.isTrue(await command.canExecute(["one"]));
+			await assert.isRejected(
+				command.canExecute([]),
+				/without help: expected one argument/,
+			);
+		});
+
+		it("fails the command from setup without help, through fail", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailsetupplain",
+					setup: (ctx) => ctx.fail("no project found", { help: false }),
+					run: (): void => undefined,
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(
+				command.canExecute([]),
+				/without help: no project found/,
+			);
+		});
+
+		it("prints the help suggestion when the options leave help unset", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailhelpunset",
+					run: (ctx) => ctx.fail("no project found", {}),
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(
+				command.execute([]),
+				/with help: no project found/,
+			);
+		});
+
+		it("rejects options that are not a plain object", async () => {
+			for (const options of [null, "no help", ["help"], new Date()]) {
+				const command = createCommandFromDefinition(
+					defineCommand({
+						name: "dctestfailbadoptions",
+						run: (ctx) => ctx.fail("no project found", <any>options),
+					}),
+					createFailInjector(),
+				);
+
+				await assert.isRejected(
+					command.execute([]),
+					/ctx.fail\(\) for command 'dctestfailbadoptions' takes its options as a plain object/,
+				);
+			}
+		});
+
+		it("rejects an empty message when help is turned off", async () => {
+			const command = createCommandFromDefinition(
+				defineCommand({
+					name: "dctestfailemptyplain",
+					run: (ctx) => ctx.fail("", { help: false }),
+				}),
+				createFailInjector(),
+			);
+
+			await assert.isRejected(
+				command.execute([]),
+				/ctx.fail\(\) for command 'dctestfailemptyplain' requires a non-empty message/,
 			);
 		});
 

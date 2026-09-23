@@ -80,7 +80,9 @@ async function canExecuteTestCommand(
 			// With HMR we are not restarting after LiveSync which is causing a 30 seconds app start on Android
 			// because the Runtime does not watch for the `/data/local/tmp<appId>-livesync-in-progress` file deletion.
 			// The App is closing itself after each test execution and the bug will be reproducible on each LiveSync.
-			$errors.fail("The `--hmr` option is not supported for this command.");
+			context.fail("The `--hmr` option is not supported for this command.", {
+				help: false,
+			});
 		}
 
 		await $migrateController.validate({
@@ -230,8 +232,6 @@ export const testAndroidCommandDefinition = defineCommand({
 	options: testCommandOptions,
 	arguments: "any",
 	async canExecute(context: TestCommandContext): Promise<boolean> {
-		const $errors = inject<IErrors>("errors");
-
 		const canExecuteBase = await canExecuteTestCommand(context, "android");
 		if (canExecuteBase) {
 			if (
@@ -239,9 +239,9 @@ export const testAndroidCommandDefinition = defineCommand({
 				!hasValidAndroidSigning(context.options)
 			) {
 				if (context.options.release) {
-					$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+					context.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 				} else {
-					$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+					context.fail(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 				}
 			}
 		}
@@ -258,7 +258,6 @@ export const testVisionOSCommandDefinition = defineCommand({
 	options: testCommandOptions,
 	arguments: "any",
 	async canExecute(context: TestCommandContext): Promise<boolean> {
-		const $errors = inject<IErrors>("errors");
 		const $projectData = inject<IProjectData>("projectData");
 		const $vitestExecutionService = inject<IVitestExecutionService>(
 			"vitestExecutionService",
@@ -268,8 +267,9 @@ export const testVisionOSCommandDefinition = defineCommand({
 		// The Karma runner (v4 line) never supported visionOS — only the Vitest
 		// path can drive it.
 		if (!$vitestExecutionService.isVitestProject($projectData)) {
-			$errors.fail(
+			context.fail(
 				"visionOS unit testing requires the Vitest runner. Run '$ ns test init --framework vitest' to configure your project.",
+				{ help: false },
 			);
 		}
 

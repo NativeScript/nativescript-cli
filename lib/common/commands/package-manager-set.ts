@@ -1,5 +1,5 @@
 import { PackageManagers } from "../../constants";
-import { IErrors, IUserSettingsService } from "../declarations";
+import { IUserSettingsService } from "../declarations";
 import { defineCommand } from "../define-command";
 import { inject } from "../di";
 
@@ -11,16 +11,16 @@ export const packageManagerSetCommandDefinition = defineCommand({
 		const $userSettingsService = inject<IUserSettingsService>(
 			"userSettingsService",
 		);
-		const $errors = inject<IErrors>("errors");
 		const $logger = inject<ILogger>("logger");
 
 		const packageManagerName = context.args[0];
 		const supportedPackageManagers = Object.keys(PackageManagers);
 		if (supportedPackageManagers.indexOf(packageManagerName) === -1) {
-			$errors.fail(
+			context.fail(
 				`${packageManagerName} is not a valid package manager. Supported values are: ${supportedPackageManagers.join(
 					", ",
 				)}.`,
+				{ help: false },
 			);
 		}
 

@@ -1,5 +1,4 @@
 // import { run, ExecutionOptions } from "@nativescript/schematics-executor";
-import { IErrors } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 
@@ -7,9 +6,8 @@ export const generateCommandDefinition = defineCommand({
 	name: "generate",
 	description: "Executes a schematic in the project.",
 	arguments: "any",
-	async run(): Promise<void> {
+	async run(context): Promise<void> {
 		const $logger = inject<ILogger>("logger");
-		const $errors = inject<IErrors>("errors");
 
 		try {
 			$logger.info(
@@ -17,7 +15,7 @@ export const generateCommandDefinition = defineCommand({
 			);
 			// await run(this.executionOptions);
 		} catch (error) {
-			$errors.fail(error.message);
+			context.fail(error.message, { help: false });
 		}
 	},
 });

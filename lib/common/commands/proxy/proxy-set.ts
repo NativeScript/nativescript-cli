@@ -2,7 +2,6 @@ import { EOL, platform } from "os";
 import { parse, UrlWithStringQuery } from "url";
 import { HttpProtocolToPort } from "../../constants";
 import {
-	IErrors,
 	IHostInfo,
 	IProxyLibSettings,
 	IProxyService,
@@ -45,7 +44,6 @@ export class ProxySetCommand extends Command({
 }) {
 	private $logger = inject<ILogger>("logger");
 	private $proxyService = inject<IProxyService>("proxyService");
-	private $errors = inject<IErrors>("errors");
 	private $hostInfo = inject<IHostInfo>("hostInfo");
 	private $prompter = inject<IPrompter>("prompter");
 	private $staticConfig = inject<Config.IStaticConfig>("staticConfig");
@@ -70,11 +68,12 @@ export class ProxySetCommand extends Command({
 
 		if (!isInteractive()) {
 			if (noPort) {
-				this.$errors.fail(
+				this.context.fail(
 					`The port you have specified (${port || "none"}) is not valid.`,
+					{ help: false },
 				);
 			} else if (isPasswordRequired(username, password)) {
-				this.$errors.failWithHelp(
+				this.context.fail(
 					"Console is not interactive - you need to supply all command parameters.",
 				);
 			}
@@ -115,7 +114,7 @@ export class ProxySetCommand extends Command({
 		const noUrl = !urlString;
 		if (noUrl) {
 			if (!isInteractive()) {
-				this.$errors.failWithHelp(
+				this.context.fail(
 					"Console is not interactive - you need to supply all command parameters.",
 				);
 			} else {
@@ -127,8 +126,9 @@ export class ProxySetCommand extends Command({
 
 		let urlObj = parse(urlString);
 		if ((!urlObj.protocol || !urlObj.hostname) && !isInteractive()) {
-			this.$errors.fail(
+			this.context.fail(
 				"The url you have entered is invalid please enter a valid url containing a valid protocol and hostname.",
+				{ help: false },
 			);
 		}
 
@@ -159,8 +159,9 @@ export class ProxySetCommand extends Command({
 				authCredentials.password &&
 				password !== authCredentials.password)
 		) {
-			this.$errors.fail(
+			this.context.fail(
 				"The credentials you have provided in the url address mismatch those passed as command line arguments.",
+				{ help: false },
 			);
 		}
 

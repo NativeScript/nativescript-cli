@@ -14,7 +14,7 @@ import {
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 } from "../constants";
-import { IOptions, IPlatformValidationService } from "../declarations";
+import { IPlatformValidationService } from "../declarations";
 import { IMigrateController } from "../definitions/migrate";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import {
@@ -25,8 +25,10 @@ import {
 	restartShortcut,
 	watcherShortcut,
 } from "../services/key-shortcuts";
+import { platformSigningOptions } from "./command-base";
 
 const runCommandOptions = {
+	...platformSigningOptions,
 	force: booleanOption(),
 	release: booleanOption(),
 	aab: booleanOption(),
@@ -166,8 +168,6 @@ async function canExecuteApplePlatformRunCommand(
 	context: RunCommandContext,
 	platform: string,
 ): Promise<boolean> {
-	const $errors = context.injector.get<IErrors>("errors");
-	const $options = context.injector.get<IOptions>("options");
 	const $platformValidationService =
 		context.injector.get<IPlatformValidationService>(
 			"platformValidationService",
@@ -180,16 +180,17 @@ async function canExecuteApplePlatformRunCommand(
 	if (
 		!$platformValidationService.isPlatformSupportedForOS(platform, projectData)
 	) {
-		$errors.fail(
+		context.fail(
 			`Applications for platform ${platform} can not be built on this OS`,
+			{ help: false },
 		);
 	}
 
 	const result =
 		(await canExecuteRunCommand(context, platform)) &&
 		(await $platformValidationService.validateOptions(
-			$options.provision,
-			$options.teamId,
+			context.options.provision,
+			context.options.teamId,
 			projectData,
 			platform.toLowerCase(),
 		));
@@ -229,8 +230,6 @@ export const androidRunCommand = defineCommand({
 	options: runCommandOptions,
 	arguments: "any",
 	async canExecute(context: RunCommandContext): Promise<boolean> {
-		const $errors = inject<IErrors>("errors");
-		const $options = inject<IOptions>("options");
 		const $platformValidationService = inject<IPlatformValidationService>(
 			"platformValidationService",
 		);
@@ -248,8 +247,9 @@ export const androidRunCommand = defineCommand({
 				$projectData,
 			)
 		) {
-			$errors.fail(
+			context.fail(
 				`Applications for platform ${platform} can not be built on this OS`,
+				{ help: false },
 			);
 		}
 
@@ -258,15 +258,15 @@ export const androidRunCommand = defineCommand({
 			!hasValidAndroidSigning(context.options)
 		) {
 			if (context.options.release) {
-				$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				context.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			} else {
-				$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+				context.fail(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 			}
 		}
 
 		return $platformValidationService.validateOptions(
-			$options.provision,
-			$options.teamId,
+			context.options.provision,
+			context.options.teamId,
 			$projectData,
 			platform.toLowerCase(),
 		);

@@ -1,6 +1,7 @@
 import {
 	canExecuteCommandBase,
 	platformArgument,
+	platformSigningOptions,
 	validatePlatformArgument,
 	validatePlatformOptions,
 } from "./command-base";
@@ -18,6 +19,7 @@ import { IOptions } from "../declarations";
 import { IProjectData } from "../definitions/project";
 
 export const prepareCommandOptions = {
+	...platformSigningOptions,
 	watch: booleanOption({ default: false }),
 	hmr: booleanOption({ default: false }),
 	skipNative: booleanOption({ default: false }),

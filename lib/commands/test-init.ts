@@ -6,17 +6,17 @@ import {
 	IProjectData,
 	ITestInitializationService,
 } from "../definitions/project";
-import { INodePackageManager, IOptions } from "../declarations";
+import { INodePackageManager } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
 import {
 	Command,
 	CommandOptionsSchema,
+	booleanOption,
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
 import {
 	IDictionary,
-	IErrors,
 	IFileSystem,
 	IResourceLoader,
 	IDependencyInformation,
@@ -29,6 +29,10 @@ const karmaConfigAdditionalFrameworks: IDictionary<string[]> = {
 
 const testInitCommandOptions = {
 	framework: stringOption(),
+	disableNpmInstall: booleanOption(),
+	frameworkPath: stringOption(),
+	ignoreScripts: booleanOption(),
+	path: stringOption(),
 } satisfies CommandOptionsSchema;
 
 export class TestInitCommand extends Command({
@@ -37,10 +41,8 @@ export class TestInitCommand extends Command({
 	options: testInitCommandOptions,
 	arguments: "none",
 }) {
-	private $errors = inject<IErrors>("errors");
 	private $fs = inject<IFileSystem>("fs");
 	private $logger = inject<ILogger>("logger");
-	private $options = inject<IOptions>("options");
 	private $packageManager = inject<INodePackageManager>("packageManager");
 	private $pluginsService = inject<IPluginsService>("pluginsService");
 	private $projectData = inject<IProjectData>("projectData");
@@ -132,10 +134,10 @@ export class TestInitCommand extends Command({
 				...(mod.saveInDependencies ? { save: true } : { "save-dev": true }),
 				"save-exact": true,
 				optional: false,
-				disableNpmInstall: this.$options.disableNpmInstall,
-				frameworkPath: this.$options.frameworkPath,
-				ignoreScripts: this.$options.ignoreScripts,
-				path: this.$options.path,
+				disableNpmInstall: this.options.disableNpmInstall,
+				frameworkPath: this.options.frameworkPath,
+				ignoreScripts: this.options.ignoreScripts,
+				path: this.options.path,
 			});
 
 			const modulePath = path.join(projectDir, "node_modules", mod.name);
@@ -189,9 +191,9 @@ export class TestInitCommand extends Command({
 							"save-dev": true,
 							"save-exact": true,
 							disableNpmInstall: false,
-							frameworkPath: this.$options.frameworkPath,
-							ignoreScripts: this.$options.ignoreScripts,
-							path: this.$options.path,
+							frameworkPath: this.options.frameworkPath,
+							ignoreScripts: this.options.ignoreScripts,
+							path: this.options.path,
 						},
 					);
 				} catch (e) {
@@ -211,7 +213,7 @@ export class TestInitCommand extends Command({
 				TESTING_FRAMEWORKS,
 			));
 		if (TESTING_FRAMEWORKS.indexOf(frameworkToInstall) === -1) {
-			this.$errors.failWithHelp(
+			this.context.fail(
 				`Unknown or unsupported unit testing framework: ${frameworkToInstall}.`,
 			);
 		}
@@ -227,8 +229,9 @@ export class TestInitCommand extends Command({
 			modulesToInstall =
 				this.$testInitializationService.getDependencies(frameworkToInstall);
 		} catch (err) {
-			this.$errors.fail(
+			this.context.fail(
 				`Unable to install the unit testing dependencies. Error: '${err.message}'`,
+				{ help: false },
 			);
 		}
 

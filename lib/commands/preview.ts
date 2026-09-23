@@ -1,7 +1,7 @@
 import { resolvePackagePath } from "@rigor789/resolve-package-path";
 import * as path from "path";
 import { color } from "../color";
-import { IChildProcess, IErrors } from "../common/declarations";
+import { IChildProcess } from "../common/declarations";
 import {
 	booleanOption,
 	Command,
@@ -28,7 +28,6 @@ export class PreviewCommand extends Command({
 	allowUnknownOptions: true,
 }) {
 	private $childProcess = inject<IChildProcess>("childProcess");
-	private $errors = inject<IErrors>("errors");
 	private $logger = inject<ILogger>("logger");
 	private $packageManager = inject<IPackageManager>("packageManager");
 	private $projectData = inject<IProjectData>("projectData");
@@ -103,7 +102,7 @@ export class PreviewCommand extends Command({
 			].join("\n"),
 		);
 
-		this.$errors.fail("Running preview failed.");
+		this.context.fail("Running preview failed.", { help: false });
 	}
 
 	private spawnPreviewCLI(previewCLIBinPath: string): void {

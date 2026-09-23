@@ -183,9 +183,9 @@ spelling _means_:
 stringOption({ alias: "p" })` steals `--path`'s shorthand. Restating an
   option's own shorthand (`path: stringOption({ alias: "p" })`) is fine.
 
-The merge replaces the CLI-wide entry rather than patching it, so a
-redeclaration inherits nothing: restate the `alias` and `hasSensitiveValue` the
-global declaration carries if the command still wants them.
+A redeclaration that leaves `alias`, `default` or `hasSensitiveValue` unset
+keeps what the CLI-wide declaration carries for them, so `path: stringOption()`
+still answers to `-p` and stays out of the logs; set one only to change it.
 
 ### How validation behaves
 
@@ -349,15 +349,22 @@ The run context
 - `ctx.injector` — this invocation's injector, a child of the one the command
   was registered against; see
   [Injection, and the first `await`](#injection-and-the-first-await).
-- `ctx.fail(message)` — fails the command with `message` and a usage help
-  suggestion.
+- `ctx.fail(message, options?)` — fails the command with `message`, followed
+  by a usage help suggestion unless `options.help` is `false`.
 
 `run` may be synchronous or `async`; the CLI awaits the result and treats a
 rejection as a command failure.
 
 ### Failing a command
 
-`ctx.fail(message)` is the idiomatic way to stop a command:
+`ctx.fail(message)` is the idiomatic way to stop a command. By default it
+follows the message with the usage help suggestion — the "Run `ns widget add
+--help`" line — which is what the user needs when they got the command line
+wrong: a missing argument, an unknown value, an invalid combination of options.
+
+When the command line was fine and something else is not — the environment,
+the project, a file on disk — the help suggestion only gets in the way. Pass
+`{ help: false }` to print the message alone:
 
 ```ts
 defineCommand({
@@ -369,17 +376,22 @@ defineCommand({
 			ctx.fail("--output is required.");
 		}
 
+		if (fs.existsSync(ctx.options.output)) {
+			ctx.fail(`${ctx.options.output} already exists.`, { help: false });
+		}
+
 		/* ... */
 	},
 });
 ```
 
-It is available on the `canExecute` context as well, and it returns `never`, so
-it can end a branch without a `return`. The message must be a non-empty string.
+It is available on the `setup` and `canExecute` contexts as well, and it
+returns `never`, so it can end a branch without a `return`. The message must be
+a non-empty string, and `options`, when given, a plain object. The two forms
+map onto the `errors` service's `failWithHelp` and `fail`.
 
-Throwing is equivalent and keeps working — `ctx.fail` is sugar over the
-`errors` service's `failWithHelp`, which is what adds the "Run `ns widget add
---help`" line. Throw when you already have an `Error` to propagate; call
+Throwing keeps working too: an error thrown from a handler propagates
+unchanged. Throw when you already have an `Error` to propagate; call
 `ctx.fail` when you are writing the message.
 
 Injection, and the first `await`

@@ -1,4 +1,4 @@
-import { IErrors, ISysInfo } from "../common/declarations";
+import { ISysInfo } from "../common/declarations";
 import { commandShortcutsEnabled } from "../common/contracts/key-shortcuts";
 import {
 	booleanOption,
@@ -27,13 +27,14 @@ import {
 	restartShortcut,
 	watcherShortcut,
 } from "../services/key-shortcuts";
-import { canExecuteCommandBase } from "./command-base";
+import { canExecuteCommandBase, platformSigningOptions } from "./command-base";
 import * as _ from "lodash";
 
 /** Which `$devicePlatformsConstants` entry a command debugs. */
 type DebugPlatform = "iOS" | "Android" | "visionOS";
 
 const debugCommandOptions = {
+	...platformSigningOptions,
 	force: booleanOption(),
 	release: booleanOption(),
 	aab: booleanOption(),
@@ -61,7 +62,6 @@ async function canExecuteDebugCommand(
 		context.injector.get<Mobile.IDevicePlatformsConstants>(
 			"devicePlatformsConstants",
 		);
-	const $errors = context.injector.get<IErrors>("errors");
 	const $migrateController =
 		context.injector.get<IMigrateController>("migrateController");
 	const $platformValidationService =
@@ -86,13 +86,14 @@ async function canExecuteDebugCommand(
 	if (
 		!$platformValidationService.isPlatformSupportedForOS(platform, $projectData)
 	) {
-		$errors.fail(
+		context.fail(
 			`Applications for platform ${platform} can not be built on this OS`,
+			{ help: false },
 		);
 	}
 
 	if (context.options.release) {
-		$errors.failWithHelp("--release flag is not applicable to this command.");
+		context.fail("--release flag is not applicable to this command.");
 	}
 
 	return canExecuteCommandBase(context, platform, {
@@ -235,7 +236,6 @@ const defineApplePlatformDebugCommand = <const TName extends CommandName>(
 		async canExecute(context): Promise<boolean> {
 			const $devicePlatformsConstants =
 				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
-			const $errors = inject<IErrors>("errors");
 			const $platformValidationService = inject<IPlatformValidationService>(
 				"platformValidationService",
 			);
@@ -261,14 +261,16 @@ const defineApplePlatformDebugCommand = <const TName extends CommandName>(
 					$projectData,
 				)
 			) {
-				$errors.fail(
+				context.fail(
 					`Applications for platform ${platform} can not be built on this OS`,
+					{ help: false },
 				);
 			}
 
 			if (!isValidTimeoutOption(context.options.timeout)) {
-				$errors.fail(
+				context.fail(
 					`Timeout option specifies the seconds NativeScript CLI will wait to find the inspector socket port from device's logs. Must be a number.`,
+					{ help: false },
 				);
 			}
 
@@ -278,8 +280,9 @@ const defineApplePlatformDebugCommand = <const TName extends CommandName>(
 					macOSWarning &&
 					macOSWarning.severity === SystemWarningsSeverity.high
 				) {
-					$errors.fail(
+					context.fail(
 						`You cannot use NativeScript Inspector on this OS. To use it, please update your OS.`,
+						{ help: false },
 					);
 				}
 			}
@@ -305,14 +308,13 @@ export const androidDebugCommand = defineCommand({
 	options: debugCommandOptions,
 	arguments: "any",
 	async canExecute(context): Promise<boolean> {
-		const $errors = inject<IErrors>("errors");
 		const $projectData = inject<IProjectData>("projectData");
 		$projectData.initializeProjectData();
 
 		const canExecuteBase = await canExecuteDebugCommand(context, "Android");
 		if (canExecuteBase) {
 			if (context.options.aab && !hasValidAndroidSigning(context.options)) {
-				$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+				context.fail(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 			}
 		}
 

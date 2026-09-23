@@ -1,6 +1,6 @@
 import { IProjectData } from "../../definitions/project";
 import { IPluginData, IPluginsService } from "../../definitions/plugins";
-import { IErrors, IFileSystem } from "../../common/declarations";
+import { IFileSystem } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import path = require("path");
@@ -72,7 +72,7 @@ function canExecuteHooksCommand(context: CommandContext): boolean {
 	inject<IProjectData>("projectData").initializeProjectData();
 
 	if (context.args.length > 0 && context.args[0] !== "list") {
-		inject<IErrors>("errors").failWithHelp(
+		context.fail(
 			`Invalid argument ${context.args[0]}. Supported argument is "list".`,
 		);
 	}

@@ -1,4 +1,3 @@
-import { IErrors } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 import { IApplePortalSessionService } from "../services/apple-portal/definitions";
@@ -11,7 +10,6 @@ export const appleLoginCommandDefinition = defineCommand({
 		const $applePortalSessionService = inject<IApplePortalSessionService>(
 			"applePortalSessionService",
 		);
-		const $errors = inject<IErrors>("errors");
 		const $logger = inject<ILogger>("logger");
 		const $prompter = inject<IPrompter>("prompter");
 
@@ -32,8 +30,9 @@ export const appleLoginCommandDefinition = defineCommand({
 			password,
 		});
 		if (!user.areCredentialsValid) {
-			$errors.fail(
+			context.fail(
 				`Invalid username and password combination. Used '${username}' as the username.`,
+				{ help: false },
 			);
 		}
 

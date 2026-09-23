@@ -9,7 +9,6 @@ import {
 	IPlatformEnvironmentRequirements,
 	ICheckEnvironmentRequirementsInput,
 } from "../definitions/platform";
-import { IErrors } from "../common/declarations";
 import { Command } from "../common/define-command";
 import { inject } from "../common/di";
 
@@ -18,7 +17,6 @@ export class UpdatePlatformCommand extends Command({
 	description: "Updates the NativeScript runtime for the specified platform.",
 	arguments: "any",
 }) {
-	private $errors = inject<IErrors>("errors");
 	private $options = inject<IOptions>("options");
 	private $platformEnvironmentRequirements =
 		inject<IPlatformEnvironmentRequirements>("platformEnvironmentRequirements");
@@ -38,7 +36,7 @@ export class UpdatePlatformCommand extends Command({
 	public async canExecute(): Promise<boolean> {
 		const args = this.args;
 		if (!args || args.length === 0) {
-			this.$errors.failWithHelp(
+			this.context.fail(
 				"No platform specified. Please specify platforms to update.",
 			);
 		}

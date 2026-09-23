@@ -6,7 +6,6 @@ import {
 	IPlatformValidationService,
 } from "../declarations";
 import { IPlatformEnvironmentRequirements } from "../definitions/platform";
-import { IErrors } from "../common/declarations";
 import {
 	Command,
 	CommandOptionsSchema,
@@ -24,7 +23,6 @@ export class PlatformCleanCommand extends Command({
 	options: platformCleanCommandOptions,
 	arguments: "any",
 }) {
-	private $errors = inject<IErrors>("errors");
 	private $options = inject<IOptions>("options");
 	private $platformCommandHelper = inject<IPlatformCommandHelper>(
 		"platformCommandHelper",
@@ -44,7 +42,7 @@ export class PlatformCleanCommand extends Command({
 	public async canExecute(): Promise<boolean> {
 		const args = this.args;
 		if (!args || args.length === 0) {
-			this.$errors.failWithHelp(
+			this.context.fail(
 				"No platform specified. Please specify a platform to clean.",
 			);
 		}

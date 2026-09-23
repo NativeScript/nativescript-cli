@@ -1,5 +1,4 @@
 import { IProjectData } from "../../../definitions/project";
-import { IErrors } from "../../declarations";
 import {
 	CommandOptionsSchema,
 	defineCommand,
@@ -18,7 +17,6 @@ export const putFileCommandDefinition = defineCommand({
 	arguments: [{ name: "localPath" }, { name: "devicePath" }, { name: "appId" }],
 	async run(context): Promise<void> {
 		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
-		const $errors = inject<IErrors>("errors");
 		const $projectData = inject<IProjectData>("projectData");
 
 		await $devicesService.initialize({
@@ -34,8 +32,9 @@ export const putFileCommandDefinition = defineCommand({
 				// ignore the error
 			}
 			if (!$projectData.projectIdentifiers) {
-				$errors.fail(
+				context.fail(
 					"Please enter application identifier or execute this command in project.",
+					{ help: false },
 				);
 			}
 		}

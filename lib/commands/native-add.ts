@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import { EOL } from "os";
 import * as path from "path";
-import { IErrors } from "../common/declarations";
 import {
 	CommandContext,
 	CommandName,
@@ -18,10 +17,8 @@ import { IProjectData } from "../definitions/project";
  */
 type NativeAddLanguage = "java" | "kotlin" | "swift" | "objective-c";
 
-function failWithUsage($errors: IErrors): void {
-	$errors.failWithHelp(
-		"Usage: ns native add [swift|objective-c|java|kotlin] [class name]",
-	);
+function failWithUsage(ctx: CommandContext): void {
+	ctx.fail("Usage: ns native add [swift|objective-c|java|kotlin] [class name]");
 }
 
 function getIosSourcePathBase($projectData: IProjectData): string {
@@ -90,7 +87,6 @@ class ${classSimpleName} {
 function checkAndUpdateGradleProperties(ctx: CommandContext): boolean {
 	const $projectData = ctx.injector.get<IProjectData>("projectData");
 	const $logger = ctx.injector.get<ILogger>("logger");
-	const $errors = ctx.injector.get<IErrors>("errors");
 	const resources = $projectData.getAppResourcesDirectoryPath();
 
 	const filePath = path.join(resources, "Android", "gradle.properties");
@@ -104,7 +100,7 @@ function checkAndUpdateGradleProperties(ctx: CommandContext): boolean {
 			const useKotlin = match[1];
 
 			if (useKotlin === "false") {
-				$errors.failWithHelp(
+				ctx.fail(
 					"The useKotlin property is set to false. Stopping processing. Kotlin must be enabled in gradle.properties to use.",
 				);
 				return false;
@@ -131,7 +127,6 @@ function generateJavaKotlin(
 ): void {
 	const $projectData = ctx.injector.get<IProjectData>("projectData");
 	const $logger = ctx.injector.get<ILogger>("logger");
-	const $errors = ctx.injector.get<IErrors>("errors");
 	const fileExt = extension == "java" ? extension : "kt";
 	const packageName = getPackageName(className);
 	const classSimpleName = getClassSimpleName(className);
@@ -142,7 +137,7 @@ function generateJavaKotlin(
 	const filePath = path.join(packagePath, `${classSimpleName}.${fileExt}`);
 
 	if (fs.existsSync(filePath)) {
-		$errors.failWithHelp(`${extension} file '${filePath}' already exists.`);
+		ctx.fail(`${extension} file '${filePath}' already exists.`);
 		return;
 	}
 
@@ -216,15 +211,14 @@ function generateObjectiveCFiles(
 	interfaceFilePath: string,
 ): boolean {
 	const $logger = ctx.injector.get<ILogger>("logger");
-	const $errors = ctx.injector.get<IErrors>("errors");
 
 	if (fs.existsSync(classFilePath)) {
-		$errors.failWithHelp(`Error: File '${classFilePath}' already exists.`);
+		ctx.fail(`Error: File '${classFilePath}' already exists.`);
 		return false;
 	}
 
 	if (fs.existsSync(interfaceFilePath)) {
-		$errors.failWithHelp(`Error: File '${interfaceFilePath}' already exists.`);
+		ctx.fail(`Error: File '${interfaceFilePath}' already exists.`);
 		return false;
 	}
 
@@ -284,7 +278,6 @@ function generateSwiftFile(
 	filePath: string,
 ): void {
 	const $logger = ctx.injector.get<ILogger>("logger");
-	const $errors = ctx.injector.get<IErrors>("errors");
 	const directory = path.dirname(filePath);
 
 	if (!fs.existsSync(directory)) {
@@ -293,7 +286,7 @@ function generateSwiftFile(
 	}
 
 	if (fs.existsSync(filePath)) {
-		$errors.failWithHelp(`Error: File '${filePath}' already exists.`);
+		ctx.fail(`Error: File '${filePath}' already exists.`);
 		return;
 	}
 
@@ -335,12 +328,12 @@ export const nativeAddCommandDefinition = defineCommand({
 	setup() {
 		inject<IProjectData>("projectData").initializeProjectData();
 	},
-	canExecute(): boolean {
-		failWithUsage(inject<IErrors>("errors"));
+	canExecute(context): boolean {
+		failWithUsage(context);
 		return false;
 	},
-	run(): void {
-		failWithUsage(inject<IErrors>("errors"));
+	run(context): void {
+		failWithUsage(context);
 	},
 });
 
@@ -358,10 +351,8 @@ const defineNativeAddLanguageCommand = <const TName extends CommandName>(
 			inject<IProjectData>("projectData").initializeProjectData();
 		},
 		canExecute(context): boolean {
-			const $errors = inject<IErrors>("errors");
-
 			if (context.args.length !== 1) {
-				failWithUsage($errors);
+				failWithUsage(context);
 			}
 
 			return true;

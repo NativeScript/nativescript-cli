@@ -2,12 +2,15 @@ import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 } from "../constants";
-import { canExecuteCommandBase, platformArgument } from "./command-base";
+import {
+	canExecuteCommandBase,
+	platformArgument,
+	platformSigningOptions,
+} from "./command-base";
 import { DeployCommandHelper } from "../helpers/deploy-command-helper";
 import { hasValidAndroidSigning } from "../common/helpers";
 import { IMigrateController } from "../definitions/migrate";
 import { IProjectData } from "../definitions/project";
-import { IErrors } from "../common/declarations";
 import {
 	booleanOption,
 	CommandOptionsSchema,
@@ -17,6 +20,7 @@ import {
 import { inject } from "../common/di";
 
 const deployCommandOptions = {
+	...platformSigningOptions,
 	watch: booleanOption({ default: false }),
 	hmr: booleanOption({ default: false }),
 	force: booleanOption(),
@@ -34,7 +38,6 @@ export const deployCommandDefinition = defineCommand({
 	options: deployCommandOptions,
 	arguments: [platformArgument],
 	async canExecute(context): Promise<boolean> {
-		const $errors = inject<IErrors>("errors");
 		const $migrateController = inject<IMigrateController>("migrateController");
 		const $mobileHelper = inject<Mobile.IMobileHelper>("mobileHelper");
 		const $projectData = inject<IProjectData>("projectData");
@@ -59,9 +62,9 @@ export const deployCommandDefinition = defineCommand({
 			!hasValidAndroidSigning(context.options)
 		) {
 			if (context.options.release) {
-				$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				context.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			} else {
-				$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
+				context.fail(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 			}
 		}
 

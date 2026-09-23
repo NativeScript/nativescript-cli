@@ -1,6 +1,6 @@
 import { IProjectData } from "../../definitions/project";
 import { IPluginData, IPluginsService } from "../../definitions/plugins";
-import { IErrors, IFileSystem } from "../../common/declarations";
+import { IFileSystem } from "../../common/declarations";
 import { CommandContext, defineCommand } from "../../common/define-command";
 import { inject } from "../../common/di";
 import path = require("path");
@@ -18,7 +18,6 @@ async function writeHooksLockFile(
 	plugins: IPluginData[],
 	outputDir: string,
 ): Promise<void> {
-	const $errors = context.injector.get<IErrors>("errors");
 	const $fs = context.injector.get<IFileSystem>("fs");
 	const $logger = context.injector.get<ILogger>("logger");
 	const output: OutputPlugin[] = [];
@@ -57,7 +56,9 @@ async function writeHooksLockFile(
 		$fs.writeFile(filePath, JSON.stringify(output, null, 2), "utf8");
 		$logger.info(`✅ ${LOCK_FILE_NAME} written to: ${filePath}`);
 	} catch (err) {
-		$errors.fail(`❌ Failed to write ${LOCK_FILE_NAME}: ${err}`);
+		context.fail(`❌ Failed to write ${LOCK_FILE_NAME}: ${err}`, {
+			help: false,
+		});
 	}
 }
 

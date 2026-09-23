@@ -24,6 +24,7 @@ import {
 	CommandArgumentValues,
 	CommandContext,
 	CommandDefinition,
+	CommandFailOptions,
 	CommandClass,
 	CommandName,
 	CommandNamesOf,
@@ -35,6 +36,15 @@ import {
 	defineCommand,
 	toCommandDefinition,
 } from "../define-command";
+
+function isPlainObject(value: unknown): boolean {
+	if (value === null || typeof value !== "object") {
+		return false;
+	}
+
+	const prototype = Object.getPrototypeOf(value);
+	return prototype === Object.prototype || prototype === null;
+}
 
 const OPTION_TYPES: IDictionary<OptionType> = {
 	boolean: OptionType.Boolean,
@@ -218,15 +228,23 @@ export function createCommandFromDefinition<
 		? definition.name[0]
 		: definition.name;
 
-	const fail = (message: string): never => {
+	const fail = (message: string, options?: CommandFailOptions): never => {
 		if (typeof message !== "string" || !message.trim()) {
 			throw new Error(
 				`ctx.fail() for command '${commandName}' requires a non-empty message.`,
 			);
 		}
 
+		if (options !== undefined && !isPlainObject(options)) {
+			throw new Error(
+				`ctx.fail() for command '${commandName}' takes its options as a plain object.`,
+			);
+		}
+
 		const errors: IErrors = targetInjector.get("errors");
-		return errors.failWithHelp(message);
+		return options?.help === false
+			? errors.fail(message)
+			: errors.failWithHelp(message);
 	};
 
 	const argumentSpecs: ArgumentSpec<TSchema>[] = Array.isArray(

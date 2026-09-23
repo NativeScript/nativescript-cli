@@ -1,4 +1,3 @@
-import { IErrors } from "../common/declarations";
 import {
 	Command,
 	CommandOptionsSchema,
@@ -31,7 +30,6 @@ export class ListiOSAppsCommand extends Command({
 	private $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
 		"devicePlatformsConstants",
 	);
-	private $errors = inject<IErrors>("errors");
 	private $logger = inject<ILogger>("logger");
 	private $platformValidationService = inject<IPlatformValidationService>(
 		"platformValidationService",
@@ -51,8 +49,9 @@ export class ListiOSAppsCommand extends Command({
 				this.$projectData,
 			)
 		) {
-			this.$errors.fail(
+			this.context.fail(
 				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`,
+				{ help: false },
 			);
 		}
 
@@ -76,8 +75,9 @@ export class ListiOSAppsCommand extends Command({
 			},
 		);
 		if (!user.areCredentialsValid) {
-			this.$errors.fail(
+			this.context.fail(
 				`Invalid username and password combination. Used '${username}' as the username.`,
+				{ help: false },
 			);
 		}
 

@@ -4,7 +4,6 @@ import {
 	IPlatformCommandHelper,
 	IPlatformValidationService,
 } from "../declarations";
-import { IErrors } from "../common/declarations";
 import { defineCommand } from "../common/define-command";
 import { inject } from "../common/di";
 
@@ -14,7 +13,6 @@ export const removePlatformCommandDefinition = defineCommand({
 		"Removes the selected platform from the platforms that the project currently targets.",
 	arguments: "any",
 	async canExecute(context): Promise<boolean> {
-		const $errors = inject<IErrors>("errors");
 		const $platformValidationService = inject<IPlatformValidationService>(
 			"platformValidationService",
 		);
@@ -23,7 +21,7 @@ export const removePlatformCommandDefinition = defineCommand({
 
 		const args = context.args;
 		if (!args || args.length === 0) {
-			$errors.failWithHelp(
+			context.fail(
 				"No platform specified. Please specify a platform to remove.",
 			);
 		}

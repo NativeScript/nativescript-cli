@@ -5,7 +5,7 @@ import {
 	IAndroidPluginBuildService,
 	IPluginBuildOptions,
 } from "../../definitions/android-plugin-migrator";
-import { IErrors, IFileSystem } from "../../common/declarations";
+import { IFileSystem } from "../../common/declarations";
 import {
 	Command,
 	CommandOptionsSchema,
@@ -30,7 +30,6 @@ export class BuildPluginCommand extends Command({
 	private $androidPluginBuildService = inject<IAndroidPluginBuildService>(
 		"androidPluginBuildService",
 	);
-	private $errors = inject<IErrors>("errors");
 	private $logger = inject<ILogger>("logger");
 	private $fs = inject<IFileSystem>("fs");
 	private $tempService = inject<ITempService>("tempService");
@@ -47,8 +46,9 @@ export class BuildPluginCommand extends Command({
 				),
 			)
 		) {
-			this.$errors.fail(
+			this.context.fail(
 				"No plugin found at the current directory, or the plugin does not need to have its platforms/android components built into an `.aar`.",
+				{ help: false },
 			);
 		}
 

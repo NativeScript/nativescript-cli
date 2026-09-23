@@ -1,6 +1,5 @@
 import { IProjectData } from "../definitions/project";
 import { IMigrateController } from "../definitions/migrate";
-import { IErrors } from "../common/declarations";
 import {
 	booleanOption,
 	Command,
@@ -30,7 +29,6 @@ export class UpdateCommand extends Command({
 	);
 	private $updateController = inject<IUpdateController>("updateController");
 	private $migrateController = inject<IMigrateController>("migrateController");
-	private $errors = inject<IErrors>("errors");
 	private $logger = inject<ILogger>("logger");
 	private $projectData = inject<IProjectData>("projectData");
 	private $markingModeService =
@@ -52,7 +50,7 @@ export class UpdateCommand extends Command({
 		});
 
 		if (shouldMigrate) {
-			this.$errors.fail(SHOULD_MIGRATE_PROJECT_MESSAGE);
+			this.context.fail(SHOULD_MIGRATE_PROJECT_MESSAGE, { help: false });
 		}
 
 		return this.args.length < 2 && this.$projectData.projectDir !== "";

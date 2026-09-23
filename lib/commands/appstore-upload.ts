@@ -1,5 +1,5 @@
 import * as path from "path";
-import { IErrors, IHostInfo } from "../common/declarations";
+import { IHostInfo } from "../common/declarations";
 import {
 	booleanOption,
 	Command,
@@ -41,7 +41,6 @@ export class PublishIOSCommand extends Command({
 	private $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
 		"devicePlatformsConstants",
 	);
-	private $errors = inject<IErrors>("errors");
 	private $hostInfo = inject<IHostInfo>("hostInfo");
 	private $itmsTransporterService = inject<IITMSTransporterService>(
 		"itmsTransporterService",
@@ -61,7 +60,9 @@ export class PublishIOSCommand extends Command({
 
 	public canExecute(): boolean {
 		if (!this.$hostInfo.isDarwin) {
-			this.$errors.fail("iOS publishing is only available on macOS.");
+			this.context.fail("iOS publishing is only available on macOS.", {
+				help: false,
+			});
 		}
 
 		if (
@@ -70,8 +71,9 @@ export class PublishIOSCommand extends Command({
 				this.$projectData,
 			)
 		) {
-			this.$errors.fail(
+			this.context.fail(
 				`Applications for platform ${this.$devicePlatformsConstants.iOS} can not be built on this OS`,
+				{ help: false },
 			);
 		}
 
@@ -135,8 +137,9 @@ export class PublishIOSCommand extends Command({
 			},
 		);
 		if (!user.areCredentialsValid) {
-			this.$errors.fail(
+			this.context.fail(
 				`Invalid username and password combination. Used '${username}' as the username.`,
+				{ help: false },
 			);
 		}
 

@@ -2,7 +2,11 @@ import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	AndroidAppBundleMessages,
 } from "../constants";
-import { canExecuteCommandBase, validatePlatformOptions } from "./command-base";
+import {
+	canExecuteCommandBase,
+	platformSigningOptions,
+	validatePlatformOptions,
+} from "./command-base";
 import { hasValidAndroidSigning } from "../common/helpers";
 import {
 	IAndroidBundleValidatorHelper,
@@ -12,7 +16,6 @@ import {
 import { IBuildController, IBuildDataService } from "../definitions/build";
 import { IMigrateController } from "../definitions/migrate";
 import { IProjectData } from "../definitions/project";
-import { IErrors } from "../common/declarations";
 import {
 	booleanOption,
 	CommandName,
@@ -29,6 +32,7 @@ import { inject } from "../common/di";
 type BuildPlatform = "iOS" | "Android" | "visionOS";
 
 const buildCommandOptions = {
+	...platformSigningOptions,
 	watch: booleanOption({ default: false }),
 	hmr: booleanOption({ default: false }),
 	force: booleanOption(),
@@ -52,7 +56,6 @@ const defineBuildCommand = <const TName extends CommandName>(
 		async canExecute(context): Promise<boolean> {
 			const $devicePlatformsConstants =
 				inject<Mobile.IDevicePlatformsConstants>("devicePlatformsConstants");
-			const $errors = inject<IErrors>("errors");
 			const $migrateController =
 				inject<IMigrateController>("migrateController");
 			const $platformValidationService = inject<IPlatformValidationService>(
@@ -82,8 +85,9 @@ const defineBuildCommand = <const TName extends CommandName>(
 					$projectData,
 				)
 			) {
-				$errors.fail(
+				context.fail(
 					`Applications for platform ${platform} can not be built on this OS`,
+					{ help: false },
 				);
 			}
 
@@ -96,7 +100,7 @@ const defineBuildCommand = <const TName extends CommandName>(
 				context.options.release &&
 				!hasValidAndroidSigning(context.options)
 			) {
-				$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
+				context.fail(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
 			}
 
 			return validatePlatformOptions(context, platform);

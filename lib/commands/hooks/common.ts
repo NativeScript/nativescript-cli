@@ -1,5 +1,5 @@
 import { IPluginData } from "../../definitions/plugins";
-import { IErrors, IFileSystem } from "../../common/declarations";
+import { IFileSystem } from "../../common/declarations";
 import { CommandContext } from "../../common/define-command";
 import path = require("path");
 import * as crypto from "crypto";
@@ -31,7 +31,6 @@ export async function verifyHooksLock(
 	plugins: IPluginData[],
 	hooksLockPath: string,
 ): Promise<void> {
-	const $errors = context.injector.get<IErrors>("errors");
 	const $fs = context.injector.get<IFileSystem>("fs");
 	const $logger = context.injector.get<ILogger>("logger");
 
@@ -42,8 +41,9 @@ export async function verifyHooksLock(
 		lockFileContent = $fs.readText(hooksLockPath, "utf8");
 		hooksLock = JSON.parse(lockFileContent);
 	} catch (err) {
-		$errors.fail(
+		context.fail(
 			`❌ Failed to read or parse ${LOCK_FILE_NAME} at ${hooksLockPath}`,
+			{ help: false },
 		);
 	}
 
@@ -112,6 +112,8 @@ export async function verifyHooksLock(
 	if (isValid) {
 		$logger.info("✅ All hooks verified successfully. No issues found.");
 	} else {
-		$errors.fail("❌ One or more hooks failed verification.");
+		context.fail("❌ One or more hooks failed verification.", {
+			help: false,
+		});
 	}
 }
