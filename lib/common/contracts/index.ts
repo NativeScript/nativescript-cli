@@ -19,5 +19,7 @@ export { COMMAND_PRECONDITIONS } from "./command-preconditions";
 export type { CommandPrecondition } from "./command-preconditions";
 export { CommandsService } from "./commands-service";
 export type { CommandDispatchOptions } from "./commands-service";
+export { CliOptions } from "./cli-options";
+export { OptionContributions } from "./option-contributions";
 export { ModuleRegistry } from "./module-registry";
 export { PublicApiBuilder } from "./public-api-builder";

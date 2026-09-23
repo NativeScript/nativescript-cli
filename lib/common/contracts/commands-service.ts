@@ -5,9 +5,11 @@ import type { CommandReference } from "../define-command";
 export interface CommandDispatchOptions {
 	/**
 	 * The injector a definition run as given is compiled against, the way
-	 * Angular's `createComponent` takes one. Omitted, the call's own injection
-	 * context is used, and the root when there is none. A registered name keeps
-	 * the scope it was registered under, so passing one with a name throws.
+	 * Angular's `createComponent` takes one. Omitted, the invocation running
+	 * now is used - the call's own injection context, else the invocation its
+	 * asynchronous flow belongs to, else the most recently opened one - and
+	 * the root when there is none. A registered name keeps the scope it was
+	 * registered under, so passing one with a name throws.
 	 */
 	injector?: Injector;
 }

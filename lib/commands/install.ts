@@ -3,10 +3,12 @@ import { IFileSystem } from "../common/declarations";
 import {
 	booleanOption,
 	CommandContext,
+	CommandOptionsInput,
 	CommandOptionsSchema,
 	defineCommand,
 	stringOption,
 } from "../common/define-command";
+import { CliOptions } from "../common/contracts/cli-options";
 import { PlatformTypes } from "../constants";
 import {
 	INodePackageManager,
@@ -19,12 +21,14 @@ import { IProjectDataService } from "../definitions/project";
 import { ProjectData } from "../contracts/project-data";
 import { provideProject } from "./command-base";
 
-const installCommandOptions = {
-	frameworkPath: stringOption(),
-	disableNpmInstall: booleanOption(),
-	ignoreScripts: booleanOption(),
-	path: stringOption(),
-} satisfies CommandOptionsSchema;
+const installCommandOptions = [
+	CliOptions,
+	{
+		frameworkPath: stringOption(),
+		disableNpmInstall: booleanOption(),
+		ignoreScripts: booleanOption(),
+	} satisfies CommandOptionsSchema,
+] satisfies CommandOptionsInput;
 
 async function installProjectDependencies(
 	context: CommandContext<typeof installCommandOptions>,

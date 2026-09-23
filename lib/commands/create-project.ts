@@ -3,10 +3,12 @@ import { color } from "../color";
 import {
 	booleanOption,
 	Command,
+	CommandOptionsInput,
 	CommandOptionsSchema,
-	CommandOptionValues,
+	OptionValuesOf,
 	stringOption,
 } from "../common/define-command";
+import { CliOptions } from "../common/contracts/cli-options";
 import { inject } from "../common/di";
 import { isInteractive } from "../common/helpers";
 import * as constants from "../constants";
@@ -27,27 +29,29 @@ const TABS_TEMPLATE_KEY = "Tabs";
 const TABS_TEMPLATE_DESCRIPTION =
 	"An app with pre-built pages that uses tabs for navigation";
 
-const createProjectCommandOptions = {
-	js: booleanOption(),
-	ng: booleanOption(),
-	react: booleanOption(),
-	solid: booleanOption(),
-	svelte: booleanOption(),
-	tsc: booleanOption(),
-	vue: booleanOption(),
-	vuejs: booleanOption(),
-	vision: booleanOption(),
-	"vision-ng": booleanOption(),
-	"vision-react": booleanOption(),
-	"vision-solid": booleanOption(),
-	"vision-svelte": booleanOption(),
-	"vision-vue": booleanOption(),
-	template: stringOption(),
-	appid: stringOption(),
-	path: stringOption(),
-	force: booleanOption(),
-	ignoreScripts: booleanOption(),
-} satisfies CommandOptionsSchema;
+const createProjectCommandOptions = [
+	CliOptions,
+	{
+		js: booleanOption(),
+		ng: booleanOption(),
+		react: booleanOption(),
+		solid: booleanOption(),
+		svelte: booleanOption(),
+		tsc: booleanOption(),
+		vue: booleanOption(),
+		vuejs: booleanOption(),
+		vision: booleanOption(),
+		"vision-ng": booleanOption(),
+		"vision-react": booleanOption(),
+		"vision-solid": booleanOption(),
+		"vision-svelte": booleanOption(),
+		"vision-vue": booleanOption(),
+		template: stringOption(),
+		appid: stringOption(),
+		force: booleanOption(),
+		ignoreScripts: booleanOption(),
+	} satisfies CommandOptionsSchema,
+] satisfies CommandOptionsInput;
 
 interface ITemplateChoice {
 	key?: string;
@@ -217,7 +221,7 @@ const flavorTemplates: { [flavorName: string]: () => ITemplateChoice[] } = {
 
 /** The template a flavor flag selects, without asking anything. */
 function selectTemplateFromOptions(
-	options: CommandOptionValues<typeof createProjectCommandOptions>,
+	options: OptionValuesOf<typeof createProjectCommandOptions>,
 ): string {
 	if (options["vision-ng"] || (options.vision && options.ng)) {
 		return constants.RESERVED_TEMPLATE_NAMES["vision-ng"];

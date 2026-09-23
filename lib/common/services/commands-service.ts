@@ -18,8 +18,12 @@ import {
 	CommandDispatchOptions,
 	CommandsService as CommandsServiceContract,
 } from "../contracts/commands-service";
-import { getCurrentInjector } from "../di/inject";
 import type { Injector } from "../di/injector";
+import {
+	closeInvocationsAbove,
+	currentInvocationInjector,
+	openInvocationCount,
+} from "../invocations";
 import { CommandReference, toCommandDefinition } from "../define-command";
 import { createCommandFromDefinition } from "./command-definition-adapter";
 import {
@@ -440,9 +444,11 @@ export class CommandsService
 			commandName: this.describeReference(reference),
 		};
 		this.inProcessDispatches.push(dispatch);
+		const openBefore = openInvocationCount();
 		try {
 			return await this.dispatchContext.run(dispatch, () => body(dispatch));
 		} finally {
+			closeInvocationsAbove(openBefore);
 			this.inProcessDispatches.pop();
 		}
 	}
@@ -478,7 +484,7 @@ export class CommandsService
 		}
 		return (
 			options.injector ||
-			getCurrentInjector() ||
+			currentInvocationInjector() ||
 			<Injector>(<any>this.$injector)
 		);
 	}

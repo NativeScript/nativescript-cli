@@ -8,17 +8,21 @@ import {
 import { IFileSystem } from "../../common/declarations";
 import {
 	Command,
+	CommandOptionsInput,
 	CommandOptionsSchema,
 	stringOption,
 } from "../../common/define-command";
+import { CliOptions } from "../../common/contracts/cli-options";
 import { inject } from "../../common/di";
 import { ITempService } from "../../definitions/temp-service";
 
-const buildPluginCommandOptions = {
-	path: stringOption(),
-	gradlePath: stringOption(),
-	gradleArgs: stringOption(),
-} satisfies CommandOptionsSchema;
+const buildPluginCommandOptions = [
+	CliOptions,
+	{
+		gradlePath: stringOption(),
+		gradleArgs: stringOption(),
+	} satisfies CommandOptionsSchema,
+] satisfies CommandOptionsInput;
 
 export class BuildPluginCommand extends Command({
 	name: "plugin|build",
