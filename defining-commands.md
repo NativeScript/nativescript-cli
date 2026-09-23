@@ -356,7 +356,7 @@ The run context
   (including any subcommand segments) has been consumed.
 - `ctx.params` — the same arguments keyed by the names the `params` specs
   declare, `{}` when there are none. It is spelled `params` because
-  `params` is a reserved binding name in strict mode, so a destructuring
+  `arguments` is a reserved binding name in strict mode, so a destructuring
   `const { args, arguments } = ctx` would not even parse.
 - `ctx.options` — the current value of each declared option, read at the moment
   the command executes.
