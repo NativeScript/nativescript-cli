@@ -32,6 +32,27 @@ describe("errors", () => {
 		return testInjector;
 	};
 
+	describe("reportCommandError", () => {
+		it("reports one error once, whichever dispatch level asks", async () => {
+			const testInjector = getTestInjector();
+			const errors: IErrors = testInjector.resolve("errors");
+			const logger: CommonLoggerStub = testInjector.resolve("logger");
+			const error = Object.assign(new Error("Unable to open the project."), {
+				suggestCommandHelp: true,
+			});
+			let suggestions = 0;
+			const suggest = async (): Promise<void> => {
+				suggestions++;
+			};
+
+			await errors.reportCommandError(error, suggest);
+			await errors.reportCommandError(error, suggest);
+
+			assert.equal(logger.errorOutput, "Unable to open the project.\n");
+			assert.equal(suggestions, 1);
+		});
+	});
+
 	describe("beginCommand", () => {
 		let testInjector: IInjector;
 		let errors: IErrors;

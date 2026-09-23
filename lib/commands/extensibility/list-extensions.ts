@@ -1,30 +1,29 @@
 import * as _ from "lodash";
-import * as helpers from "../../common/helpers";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
 import { IExtensibilityService } from "../../common/definitions/extensibility";
+import * as helpers from "../../common/helpers";
 
-export class ListExtensionsCommand implements ICommand {
-	constructor(
-		private $extensibilityService: IExtensibilityService,
-		private $logger: ILogger
-	) {}
+export const listExtensionsCommandDefinition = defineCommand({
+	name: "extension|*list",
+	description: "Lists all installed extensions.",
+	run(): void {
+		const $extensibilityService = inject<IExtensibilityService>(
+			"extensibilityService",
+		);
+		const $logger = inject<ILogger>("logger");
 
-	public async execute(args: string[]): Promise<void> {
-		const installedExtensions = this.$extensibilityService.getInstalledExtensions();
+		const installedExtensions = $extensibilityService.getInstalledExtensions();
 		if (_.keys(installedExtensions).length) {
-			this.$logger.info("Installed extensions:");
+			$logger.info("Installed extensions:");
 			const data = _.map(installedExtensions, (version, name) => {
 				return [name, version];
 			});
 
 			const table = helpers.createTable(["Name", "Version"], data);
-			this.$logger.info(table.toString());
+			$logger.info(table.toString());
 		} else {
-			this.$logger.info("No extensions installed.");
+			$logger.info("No extensions installed.");
 		}
-	}
-
-	allowedParameters: ICommandParameter[] = [];
-}
-injector.registerCommand("extension|*list", ListExtensionsCommand);
+	},
+});

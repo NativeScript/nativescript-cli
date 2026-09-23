@@ -1,7 +1,11 @@
 const jaroWinklerDistance = require("../vendor/jaro-winkler_distance");
 import * as helpers from "../helpers";
-import { CommandsDelimiters } from "../constants";
+import {
+	CommandsDelimiters,
+	ERROR_NO_VALID_SUBCOMMAND_FORMAT,
+} from "../constants";
 import { EOL } from "os";
+import { AsyncLocalStorage } from "node:async_hooks";
 import * as _ from "lodash";
 import { IOptions, IOptionsTracker } from "../../declarations";
 import { IErrors, IHooksService, IAnalyticsService } from "../declarations";
@@ -11,10 +15,25 @@ import { injector } from "../yok";
 import { IExtensibilityService } from "../definitions/extensibility";
 import { IGoogleAnalyticsPageviewData } from "../definitions/google-analytics";
 import {
+	CommandDispatchOptions,
+	CommandsService as CommandsServiceContract,
+} from "../contracts/commands-service";
+import { getCurrentInjector } from "../di/inject";
+import type { Injector } from "../di/injector";
+import { CommandReference, toCommandDefinition } from "../define-command";
+import { createCommandFromDefinition } from "./command-definition-adapter";
+import {
 	ICommandParameter,
 	ICommand,
 	ISimilarCommand,
 } from "../definitions/commands";
+
+interface IInProcessDispatch {
+	commandName: string;
+}
+
+const allowsUnknownOptions = (command: ICommand): boolean =>
+	command.allowUnknownOptions ?? command.skipOptionsValidation ?? false;
 
 class CommandArgumentsValidationHelper {
 	constructor(
@@ -27,12 +46,29 @@ class CommandArgumentsValidationHelper {
 	public remainingArguments: string[];
 }
 
-export class CommandsService implements ICommandsService {
+export class CommandsService
+	extends CommandsServiceContract
+	implements ICommandsService
+{
 	public get currentCommandData(): ICommandData {
 		return _.last(this.commands);
 	}
 
 	private commands: ICommandData[] = [];
+
+	/**
+	 * The in-process dispatches in flight, innermost last, and the one whose
+	 * async context the running code belongs to. Each dispatch primes the
+	 * options service and puts it back when it ends, which only restores the
+	 * right table when dispatches nest; a dispatch may therefore start only from
+	 * inside the innermost one in flight.
+	 */
+	private inProcessDispatches: IInProcessDispatch[] = [];
+	private dispatchContext = new AsyncLocalStorage<IInProcessDispatch>();
+
+	public get isExecutingInProcess(): boolean {
+		return this.inProcessDispatches.length > 0;
+	}
 
 	constructor(
 		private $errors: IErrors,
@@ -43,7 +79,9 @@ export class CommandsService implements ICommandsService {
 		private $staticConfig: Config.IStaticConfig,
 		private $extensibilityService: IExtensibilityService,
 		private $optionsTracker: IOptionsTracker,
-	) {}
+	) {
+		super();
+	}
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
 		const commands = this.$injector.getRegisteredCommandsNames(
@@ -57,71 +95,133 @@ export class CommandsService implements ICommandsService {
 		commandArguments: string[],
 	): Promise<boolean> {
 		this.commands.push({ commandName, commandArguments });
-		const command = this.$injector.resolveCommand(commandName);
-		if (command) {
-			if (
-				!this.$staticConfig.disableAnalytics &&
-				!command.disableAnalytics &&
-				!this.$options.disableAnalytics
-			) {
-				const analyticsService =
-					this.$injector.resolve<IAnalyticsService>("analyticsService"); // This should be resolved here due to cyclic dependency
-				await analyticsService.checkConsent();
-
-				const beautifiedCommandName = this.beautifyCommandName(
-					commandName,
-				).replace(/\|/g, " ");
-
-				const googleAnalyticsPageData: IGoogleAnalyticsPageviewData = {
-					googleAnalyticsDataType: GoogleAnalyticsDataType.Page,
-					path: beautifiedCommandName,
-					title: beautifiedCommandName,
-				};
-
-				await analyticsService.trackInGoogleAnalytics(googleAnalyticsPageData);
-				await this.$optionsTracker.trackOptions(this.$options);
+		try {
+			const command = this.$injector.resolveCommand(commandName);
+			if (!command) {
+				return false;
 			}
 
-			const shouldExecuteHooks =
-				!this.$staticConfig.disableCommandHooks &&
-				(command.enableHooks === undefined || command.enableHooks === true);
-			if (shouldExecuteHooks) {
-				// Handle correctly hierarchical commands
-				const hierarchicalCommandName = this.$injector.buildHierarchicalCommand(
-					commandName,
-					commandArguments,
-				);
-				if (hierarchicalCommandName) {
-					commandName = helpers.stringReplaceAll(
-						hierarchicalCommandName.commandName,
-						CommandsDelimiters.DefaultHierarchicalCommand,
-						CommandsDelimiters.HooksCommand,
-					);
-					commandName = helpers.stringReplaceAll(
-						commandName,
-						CommandsDelimiters.HierarchicalCommand,
-						CommandsDelimiters.HooksCommand,
-					);
-				}
+			await this.runResolvedCommand(command, commandName, commandArguments, {
+				trackAnalytics: true,
+			});
 
-				await this.$hooksService.executeBeforeHooks(commandName);
-			}
-
-			await command.execute(commandArguments);
-			if (command.postCommandAction) {
-				await command.postCommandAction(commandArguments);
-			}
-
-			if (shouldExecuteHooks) {
-				await this.$hooksService.executeAfterHooks(commandName);
-			}
-
-			this.commands.pop();
 			return true;
+		} finally {
+			this.commands.pop();
+		}
+	}
+
+	/**
+	 * Runs a command the caller has already resolved and cleared to run. The
+	 * caller owns the entry on `this.commands`, because it also owns whatever
+	 * ran before this — option priming, the arguments policy — under that name.
+	 */
+	private async runResolvedCommand(
+		command: ICommand,
+		commandName: string,
+		commandArguments: string[],
+		opts: { trackAnalytics: boolean },
+	): Promise<void> {
+		if (
+			opts.trackAnalytics &&
+			!this.$staticConfig.disableAnalytics &&
+			!command.disableAnalytics &&
+			!this.$options.disableAnalytics
+		) {
+			const analyticsService =
+				this.$injector.resolve<IAnalyticsService>("analyticsService"); // This should be resolved here due to cyclic dependency
+			await analyticsService.checkConsent();
+
+			const beautifiedCommandName = this.beautifyCommandName(
+				commandName,
+			).replace(/\|/g, " ");
+
+			const googleAnalyticsPageData: IGoogleAnalyticsPageviewData = {
+				googleAnalyticsDataType: GoogleAnalyticsDataType.Page,
+				path: beautifiedCommandName,
+				title: beautifiedCommandName,
+			};
+
+			await analyticsService.trackInGoogleAnalytics(googleAnalyticsPageData);
+			await this.$optionsTracker.trackOptions(this.$options);
 		}
 
-		this.commands.pop();
-		return false;
+		const shouldExecuteHooks = this.shouldExecuteHooks(command);
+		let hookCommandName = commandName;
+		if (shouldExecuteHooks) {
+			// Handle correctly hierarchical commands
+			const hierarchicalCommandName = this.$injector.buildHierarchicalCommand(
+				commandName,
+				commandArguments,
+			);
+			if (hierarchicalCommandName) {
+				hookCommandName = this.toHookCommandName(
+					hierarchicalCommandName.commandName,
+				);
+			}
+
+			await this.$hooksService.executeBeforeHooks(hookCommandName);
+		}
+
+		await command.execute(commandArguments);
+		if (command.postCommandAction) {
+			await command.postCommandAction(commandArguments);
+		}
+
+		if (shouldExecuteHooks) {
+			await this.$hooksService.executeAfterHooks(hookCommandName);
+		}
+	}
+
+	private toHookCommandName(commandName: string): string {
+		const hookCommandName = helpers.stringReplaceAll(
+			commandName,
+			CommandsDelimiters.DefaultHierarchicalCommand,
+			CommandsDelimiters.HooksCommand,
+		);
+		return helpers.stringReplaceAll(
+			hookCommandName,
+			CommandsDelimiters.HierarchicalCommand,
+			CommandsDelimiters.HooksCommand,
+		);
+	}
+
+	/**
+	 * The command line reaches a subcommand through its parent's dispatcher,
+	 * which fires the subcommand's full hook name (`before-open-ios`) around
+	 * the subcommand's own dispatch, whose name the hooks service truncates at
+	 * the `|` (`before-open`). An in-process dispatch goes straight to the
+	 * subcommand, so it fires the outer pair itself.
+	 */
+	private async runResolvedCommandInProcess(
+		command: ICommand,
+		commandName: string,
+		commandArguments: string[],
+	): Promise<void> {
+		const subcommandHookName =
+			commandName.includes(CommandsDelimiters.HierarchicalCommand) &&
+			this.shouldExecuteHooks(command)
+				? this.toHookCommandName(commandName)
+				: undefined;
+
+		if (subcommandHookName) {
+			await this.$hooksService.executeBeforeHooks(subcommandHookName);
+		}
+
+		await this.runResolvedCommand(command, commandName, commandArguments, {
+			trackAnalytics: false,
+		});
+
+		if (subcommandHookName) {
+			await this.$hooksService.executeAfterHooks(subcommandHookName);
+		}
+	}
+
+	private shouldExecuteHooks(command: ICommand): boolean {
+		return (
+			!this.$staticConfig.disableCommandHooks &&
+			(command.enableHooks === undefined || command.enableHooks === true)
+		);
 	}
 
 	private printHelpSuggestion(commandName?: string): Promise<void> {
@@ -158,15 +258,15 @@ export class CommandsService implements ICommandsService {
 		commandArguments: string[],
 	): Promise<boolean> {
 		const command = this.$injector.resolveCommand(commandName);
-		if (
-			!command ||
-			(!command.isHierarchicalCommand && !command.skipOptionsValidation)
-		) {
+		if (!command || !command.isHierarchicalCommand) {
 			const dashedOptions = command ? command.dashedOptions : null;
-			this.$options.validateOptions(dashedOptions);
+			this.$options.validateOptions(
+				dashedOptions,
+				command && allowsUnknownOptions(command),
+			);
 		}
 
-		return this.canExecuteCommand(commandName, commandArguments);
+		return this.canExecuteResolvedCommand(commandName, commandArguments);
 	}
 
 	public async tryExecuteCommand(
@@ -203,12 +303,280 @@ export class CommandsService implements ICommandsService {
 		}
 	}
 
-	private async canExecuteCommand(
+	/**
+	 * Runs a command inside a process that has to outlive its failure — a key
+	 * shortcut pressed while `ns start` holds the terminal, where the exit
+	 * `tryExecuteCommand` ends in would take the session with it. The command
+	 * gets the same option priming, arguments policy, `canExecute` and hooks a
+	 * typed command line gives it, and a failure is reported the same way and
+	 * then thrown.
+	 *
+	 * Analytics stay out of it: this is not a new CLI invocation, and
+	 * `checkConsent` may prompt on a terminal the caller has put in raw mode.
+	 */
+	public async runCommand(
+		reference: CommandReference,
+		commandArguments: string[] = [],
+		options: CommandDispatchOptions = {},
+	): Promise<void> {
+		const scope = this.dispatchScope(reference, options);
+		// Known before the lookup, so a failure to resolve reports under the name
+		// the caller used.
+		let commandName = typeof reference === "string" ? reference : undefined;
+		try {
+			await this.dispatchInProcess(reference, async (dispatch) => {
+				const resolved = this.resolveReference(
+					reference,
+					commandArguments,
+					scope,
+				);
+				const command = resolved.command;
+				commandName = dispatch.commandName = resolved.commandName;
+				commandArguments = resolved.commandArguments;
+
+				this.commands.push({ commandName, commandArguments });
+				try {
+					const restoreOptions = this.primeOptions(command);
+					try {
+						if (
+							!(await this.canExecuteResolvedCommand(
+								commandName,
+								commandArguments,
+								undefined,
+								command,
+							))
+						) {
+							let commandWithArgs = commandName;
+							if (commandArguments && commandArguments.length) {
+								commandWithArgs += ` ${commandArguments.join(" ")}`;
+							}
+							this.$errors.failWithHelp(
+								`Command '${commandWithArgs}' cannot be executed.`,
+							);
+						}
+
+						await this.runResolvedCommandInProcess(
+							command,
+							commandName,
+							commandArguments,
+						);
+					} finally {
+						restoreOptions();
+					}
+				} finally {
+					this.commands.pop();
+				}
+			});
+		} catch (ex) {
+			await this.$errors.reportCommandError(ex, () =>
+				this.printHelpSuggestion(commandName),
+			);
+
+			throw ex;
+		}
+	}
+
+	/**
+	 * The `canExecute` half of {@link runCommand}: the named command is resolved
+	 * and its options are primed the same way, and its own `canExecute` returns
+	 * its verdict or throws. The child builds its own setup from its own services —
+	 * nothing is threaded in from the caller — which is what lets one command
+	 * reuse another's precondition without importing its handlers.
+	 */
+	public async canExecuteCommand(
+		reference: CommandReference,
+		commandArguments: string[] = [],
+		options: CommandDispatchOptions = {},
+	): Promise<boolean> {
+		const scope = this.dispatchScope(reference, options);
+		return this.dispatchInProcess(reference, async (dispatch) => {
+			const resolved = this.resolveReference(
+				reference,
+				commandArguments,
+				scope,
+			);
+			const { commandName, command } = resolved;
+			dispatch.commandName = commandName;
+			commandArguments = resolved.commandArguments;
+
+			this.commands.push({ commandName, commandArguments });
+			try {
+				const restoreOptions = this.primeOptions(command);
+				try {
+					return await this.canExecuteResolvedCommand(
+						commandName,
+						commandArguments,
+						undefined,
+						command,
+					);
+				} finally {
+					restoreOptions();
+				}
+			} finally {
+				this.commands.pop();
+			}
+		});
+	}
+
+	/**
+	 * Runs `body` as an in-process dispatch, rejecting it when another dispatch
+	 * is in flight and this one was not started from inside it.
+	 */
+	private async dispatchInProcess<T>(
+		reference: CommandReference,
+		body: (dispatch: IInProcessDispatch) => Promise<T>,
+	): Promise<T> {
+		const running = _.last(this.inProcessDispatches);
+		if (running && this.dispatchContext.getStore() !== running) {
+			throw new Error(
+				`Cannot dispatch '${this.describeReference(reference)}' in process ` +
+					`while '${helpers.stringReplaceAll(running.commandName, "|", " ")}' ` +
+					"is still running: in-process dispatches must nest, not overlap; " +
+					"await the running one first.",
+			);
+		}
+
+		const dispatch: IInProcessDispatch = {
+			commandName: this.describeReference(reference),
+		};
+		this.inProcessDispatches.push(dispatch);
+		try {
+			return await this.dispatchContext.run(dispatch, () => body(dispatch));
+		} finally {
+			this.inProcessDispatches.pop();
+		}
+	}
+
+	private describeReference(reference: CommandReference): string {
+		const definition =
+			typeof reference === "string" ? null : toCommandDefinition(reference);
+		const name = definition
+			? _.castArray(definition.name)[0]
+			: String(reference);
+		return helpers.stringReplaceAll(name, "|", " ");
+	}
+
+	/**
+	 * A name is looked up in the registry; a definition or class is run as the
+	 * caller holds it, registered or not, so what runs is what was referenced.
+	 * Its first name still identifies it for hooks and reporting.
+	 *
+	 * A parent name is routed to its subcommand here rather than run: the
+	 * parent's synthesized dispatcher re-enters through `tryExecuteCommand`,
+	 * which exits the process on failure and tracks analytics.
+	 */
+	// Read in the synchronous prefix of the call, where the caller's injection
+	// context is still current.
+	private dispatchScope(
+		reference: CommandReference,
+		options: CommandDispatchOptions,
+	): Injector {
+		if (options.injector && typeof reference === "string") {
+			throw new Error(
+				`An injector applies to a definition run as given; the registered command '${reference}' keeps the scope it was registered under.`,
+			);
+		}
+		return (
+			options.injector ||
+			getCurrentInjector() ||
+			<Injector>(<any>this.$injector)
+		);
+	}
+
+	private resolveReference(
+		reference: CommandReference,
+		commandArguments: string[],
+		scope: Injector,
+	): {
+		commandName: string;
+		command: ICommand;
+		commandArguments: string[];
+	} {
+		if (typeof reference === "string") {
+			const command = this.$injector.resolveCommand(reference);
+			if (!command) {
+				this.$errors.failWithHelp(
+					`Unknown command '${helpers.stringReplaceAll(reference, "|", " ")}'.`,
+				);
+			}
+
+			if (command.isHierarchicalCommand) {
+				const subcommand = this.$injector.buildHierarchicalCommand(
+					reference,
+					commandArguments,
+				);
+				const subcommandInstance =
+					subcommand && this.$injector.resolveCommand(subcommand.commandName);
+				if (!subcommandInstance) {
+					this.$errors.failWithHelp(
+						ERROR_NO_VALID_SUBCOMMAND_FORMAT,
+						reference,
+					);
+				}
+
+				return {
+					commandName: subcommand.commandName,
+					command: subcommandInstance,
+					commandArguments: subcommand.remainingArguments,
+				};
+			}
+
+			return { commandName: reference, command, commandArguments };
+		}
+
+		const definition = toCommandDefinition(reference);
+		if (!definition) {
+			throw new Error(
+				"Expected a command name, a defineCommand() definition or a " +
+					"Command() class to run.",
+			);
+		}
+
+		return {
+			commandName: Array.isArray(definition.name)
+				? definition.name[0]
+				: definition.name,
+			command: createCommandFromDefinition(definition, scope),
+			commandArguments,
+		};
+	}
+
+	/**
+	 * Merging a command's options into the parser rewrites the values the host
+	 * process is still running on: a declared default replaces the CLI-wide one
+	 * and the host keeps reading the replacement long after the command is
+	 * done. An in-process dispatch has to put the parser back where it found it.
+	 */
+	private primeOptions(command: ICommand): () => void {
+		const declaredOptions = { ...this.$options.options };
+		const parsedArgv = this.$options.argv;
+		const restore = (): void => {
+			this.$options.options = declaredOptions;
+			this.$options.argv = parsedArgv;
+		};
+
+		// validateOptions merges the command's declarations into the live table
+		// before it can throw, so a failed priming has to be undone here.
+		try {
+			this.$options.validateOptions(
+				command.dashedOptions,
+				allowsUnknownOptions(command),
+			);
+		} catch (error) {
+			restore();
+			throw error;
+		}
+
+		return restore;
+	}
+
+	private async canExecuteResolvedCommand(
 		commandName: string,
 		commandArguments: string[],
 		isDynamicCommand?: boolean,
+		resolved?: ICommand,
 	): Promise<boolean> {
-		const command = this.$injector.resolveCommand(commandName);
+		const command = resolved || this.$injector.resolveCommand(commandName);
 		const beautifiedName = helpers.stringReplaceAll(commandName, "|", " ");
 		if (command) {
 			// Verify command is enabled

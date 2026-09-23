@@ -1,46 +1,47 @@
-import { IProjectConfigService, IProjectData } from "../definitions/project";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { injector } from "../common/yok";
+import { IProjectConfigService } from "../definitions/project";
 import { IFileSystem } from "../common/declarations";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
 import * as constants from "../constants";
 import * as fontFinder from "font-finder";
 import { createTable } from "../common/helpers";
 import * as path from "path";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
-export class FontsCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-
-	constructor(
-		private $projectData: IProjectData,
-		private $fs: IFileSystem,
-		private $logger: ILogger,
-		private $projectConfigService: IProjectConfigService
-	) {
-		this.$projectData.initializeProjectData();
-	}
-
-	public async execute(args: string[]): Promise<void> {
+export const fontsCommandDefinition = defineCommand({
+	name: "fonts",
+	description: "Lists the custom fonts the project bundles.",
+	params: "none",
+	providers: [provideProject()],
+	async run(): Promise<void> {
+		const $projectData = inject(ProjectData);
+		const $fs = inject<IFileSystem>("fs");
+		const $logger = inject<ILogger>("logger");
+		const $projectConfigService = inject<IProjectConfigService>(
+			"projectConfigService",
+		);
 		const supportedExtensions = [".ttf", ".otf"];
 
 		const defaultFontsFolderPaths = [
 			path.join(
-				this.$projectConfigService.getValue("appPath") ?? "",
-				constants.FONTS_DIR
+				$projectConfigService.getValue("appPath") ?? "",
+				constants.FONTS_DIR,
 			),
 			path.join(constants.APP_FOLDER_NAME, constants.FONTS_DIR),
 			path.join(constants.SRC_DIR, constants.FONTS_DIR),
-		].map((entry) => path.resolve(this.$projectData.projectDir, entry));
+		].map((entry) => path.resolve($projectData.projectDir, entry));
 
 		const fontsFolderPath = defaultFontsFolderPaths.find((entry) =>
-			this.$fs.exists(entry)
+			$fs.exists(entry),
 		);
 
 		if (!fontsFolderPath) {
-			this.$logger.warn("No fonts folder found.");
+			$logger.warn("No fonts folder found.");
 			return;
 		}
 
-		const files = this.$fs
+		const files = $fs
 			.readDirectory(fontsFolderPath)
 			.map((entry) => path.parse(entry))
 			.filter((entry) => {
@@ -48,7 +49,7 @@ export class FontsCommand implements ICommand {
 			});
 
 		if (!files.length) {
-			this.$logger.warn("No custom fonts found.");
+			$logger.warn("No custom fonts found.");
 			return;
 		}
 
@@ -62,8 +63,6 @@ export class FontsCommand implements ICommand {
 			]);
 		}
 
-		this.$logger.info(table.toString());
-	}
-}
-
-injector.registerCommand("fonts", FontsCommand);
+		$logger.info(table.toString());
+	},
+});

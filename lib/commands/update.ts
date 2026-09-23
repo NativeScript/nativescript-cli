@@ -1,32 +1,60 @@
-import { IProjectData } from "../definitions/project";
 import { IMigrateController } from "../definitions/migrate";
-import { IOptions } from "../declarations";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { IErrors } from "../common/declarations";
-import { injector } from "../common/yok";
+import {
+	booleanOption,
+	Command,
+	CommandOptionsSchema,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
-export class UpdateCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-	public static readonly SHOULD_MIGRATE_PROJECT_MESSAGE =
-		'This project is not compatible with the current NativeScript version and cannot be updated. Use "ns migrate" to make your project compatible.';
-	public static readonly PROJECT_UP_TO_DATE_MESSAGE =
-		"This project is up to date.";
+export const SHOULD_MIGRATE_PROJECT_MESSAGE =
+	'This project is not compatible with the current NativeScript version and cannot be updated. Use "ns migrate" to make your project compatible.';
+export const PROJECT_UP_TO_DATE_MESSAGE = "This project is up to date.";
 
-	constructor(
-		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $updateController: IUpdateController,
-		private $migrateController: IMigrateController,
-		private $options: IOptions,
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $projectData: IProjectData,
-		private $markingModeService: IMarkingModeService
-	) {
-		this.$projectData.initializeProjectData();
+const updateCommandOptions = {
+	markingMode: booleanOption(),
+	frameworkPath: stringOption(),
+} satisfies CommandOptionsSchema;
+
+export class UpdateCommand extends Command({
+	name: "update",
+	description:
+		"Updates the project with the latest versions of its NativeScript dependencies.",
+	options: updateCommandOptions,
+	params: "any",
+	providers: [provideProject()],
+}) {
+	private $devicePlatformsConstants = inject<Mobile.IDevicePlatformsConstants>(
+		"devicePlatformsConstants",
+	);
+	private $updateController = inject<IUpdateController>("updateController");
+	private $migrateController = inject<IMigrateController>("migrateController");
+	private $logger = inject<ILogger>("logger");
+	private $projectData = inject(ProjectData);
+	private $markingModeService =
+		inject<IMarkingModeService>("markingModeService");
+
+	public async canExecute(): Promise<boolean> {
+		const shouldMigrate = await this.$migrateController.shouldMigrate({
+			projectDir: this.$projectData.projectDir,
+			platforms: [
+				this.$devicePlatformsConstants.Android,
+				this.$devicePlatformsConstants.iOS,
+			],
+			loose: true,
+		});
+
+		if (shouldMigrate) {
+			this.context.fail(SHOULD_MIGRATE_PROJECT_MESSAGE, { help: false });
+		}
+
+		return this.args.length < 2 && this.$projectData.projectDir !== "";
 	}
 
-	public async execute(args: string[]): Promise<void> {
-		if (this.$options.markingMode) {
+	public async run(): Promise<void> {
+		if (this.options.markingMode) {
 			// ns update --markingMode
 			await this.$markingModeService.handleMarkingModeFullDeprecation({
 				projectDir: this.$projectData.projectDir,
@@ -38,38 +66,17 @@ export class UpdateCommand implements ICommand {
 		if (
 			!(await this.$updateController.shouldUpdate({
 				projectDir: this.$projectData.projectDir,
-				version: args[0],
+				version: this.args[0],
 			}))
 		) {
-			this.$logger.printMarkdown(
-				`__${UpdateCommand.PROJECT_UP_TO_DATE_MESSAGE}__`
-			);
+			this.$logger.printMarkdown(`__${PROJECT_UP_TO_DATE_MESSAGE}__`);
 			return;
 		}
 
 		await this.$updateController.update({
 			projectDir: this.$projectData.projectDir,
-			version: args[0],
-			frameworkPath: this.$options.frameworkPath,
+			version: this.args[0],
+			frameworkPath: this.options.frameworkPath,
 		});
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
-		const shouldMigrate = await this.$migrateController.shouldMigrate({
-			projectDir: this.$projectData.projectDir,
-			platforms: [
-				this.$devicePlatformsConstants.Android,
-				this.$devicePlatformsConstants.iOS,
-			],
-			loose: true,
-		});
-
-		if (shouldMigrate) {
-			this.$errors.fail(UpdateCommand.SHOULD_MIGRATE_PROJECT_MESSAGE);
-		}
-
-		return args.length < 2 && this.$projectData.projectDir !== "";
 	}
 }
-
-injector.registerCommand("update", UpdateCommand);

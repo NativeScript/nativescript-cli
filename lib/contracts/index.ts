@@ -28,6 +28,13 @@ export type {
 	AbstractType,
 } from "../common/di/providers";
 
+export { KeyShortcutRegistry } from "../common/contracts/key-shortcuts";
+export type {
+	KeyContextBase,
+	KeyShortcut,
+	KeyShortcutRegistration,
+} from "../common/contracts/key-shortcuts";
+
 export { ChildProcess } from "./child-process";
 export { DevicesService } from "./devices-service";
 export { DoctorService } from "./doctor-service";
@@ -48,17 +55,38 @@ export { PBXPROJ_DOM_XCODE } from "./pbxproj-dom-xcode";
 export { XCODE } from "./xcode";
 
 export {
+	Command,
+	CommandBase,
+	COMMAND_CLASS_MARKER,
 	defineCommand,
+	isCommandClass,
 	isCommandDefinition,
+	toCommandDefinition,
 	booleanOption,
 	stringOption,
 	numberOption,
 	arrayOption,
+	objectOption,
 } from "../common/define-command";
 export type {
+	ParamSpec,
+	ParamsPolicy,
+	CommandParamValues,
+	RequiredCommandOptionSpec,
+	ArgumentSpec,
+	ArgumentsPolicy,
+	CommandArgumentValues,
+	CommandClass,
 	CommandDefinition,
+	CommandMeta,
+	CommandName,
+	CommandNamesOf,
+	CommandReference,
 	DefinedCommand,
+	NamedCommand,
+	RegisterableCommand,
 	CommandContext,
+	CommandFailOptions,
 	CommandOptionSpec,
 	DefaultedCommandOptionSpec,
 	CommandOptionsSchema,
@@ -66,6 +94,16 @@ export type {
 	CommandOptionType,
 	CommandOptionValues,
 } from "../common/define-command";
+// Promoted from the internal contracts index: the class form reads it in a
+// field initializer, and a per-command provider is written against it.
+export { COMMAND_CONTEXT } from "../common/contracts/command-context";
+export { COMMAND_PRECONDITIONS } from "../common/contracts/command-preconditions";
+export type { CommandPrecondition } from "../common/contracts/command-preconditions";
+export { provideProject } from "./provide-project";
+// The in-process dispatcher a command or plugin runs or consults other
+// commands through.
+export { CommandsService } from "../common/contracts/commands-service";
+export type { CommandDispatchOptions } from "../common/contracts/commands-service";
 export { defineHook, isHookDefinition } from "../common/define-hook";
 export type {
 	HookContext,

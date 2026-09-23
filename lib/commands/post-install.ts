@@ -1,30 +1,30 @@
-import { doesCurrentNpmCommandMatch } from "../common/helpers";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
+import { color } from "../color";
 import {
+	IAnalyticsService,
 	IFileSystem,
 	IHelpService,
-	ISettingsService,
-	IAnalyticsService,
 	IHostInfo,
+	ISettingsService,
 } from "../common/declarations";
-import { injector } from "../common/yok";
-import { color } from "../color";
+import { CommandsService } from "../common/contracts/commands-service";
+import { Command } from "../common/define-command";
+import { inject } from "../common/di";
+import { doesCurrentNpmCommandMatch } from "../common/helpers";
 
-export class PostInstallCliCommand implements ICommand {
-	constructor(
-		private $fs: IFileSystem,
-		private $commandsService: ICommandsService,
-		private $helpService: IHelpService,
-		private $settingsService: ISettingsService,
-		private $analyticsService: IAnalyticsService,
-		private $logger: ILogger,
-		private $hostInfo: IHostInfo,
-	) {}
+export class PostInstallCliCommand extends Command({
+	name: "post-install-cli",
+	description: "Completes the CLI installation.",
+	disableAnalytics: true,
+}) {
+	private $fs = inject<IFileSystem>("fs");
+	private $commandsService = inject(CommandsService);
+	private $helpService = inject<IHelpService>("helpService");
+	private $settingsService = inject<ISettingsService>("settingsService");
+	private $analyticsService = inject<IAnalyticsService>("analyticsService");
+	private $logger = inject<ILogger>("logger");
+	private $hostInfo = inject<IHostInfo>("hostInfo");
 
-	public disableAnalytics = true;
-	public allowedParameters: ICommandParameter[] = [];
-
-	public async execute(args: string[]): Promise<void> {
+	public async run(): Promise<void> {
 		const isRunningWithSudoUser = !!process.env.SUDO_USER;
 
 		if (!this.$hostInfo.isWindows) {
@@ -48,11 +48,15 @@ export class PostInstallCliCommand implements ICommand {
 
 			// Explicitly ask for confirmation of usage-reporting:
 			await this.$analyticsService.checkConsent();
-			await this.$commandsService.tryExecuteCommand("autocomplete", []);
+			await this.$commandsService.runCommand("autocomplete");
 		}
 	}
 
-	public async postCommandAction(args: string[]): Promise<void> {
+	public postRun(): void {
+		this.reportSuccessfulInstallation();
+	}
+
+	private reportSuccessfulInstallation(): void {
 		this.$logger.info("");
 		this.$logger.info(
 			color.styleText(
@@ -70,5 +74,3 @@ export class PostInstallCliCommand implements ICommand {
 		);
 	}
 }
-
-injector.registerCommand("post-install-cli", PostInstallCliCommand);
