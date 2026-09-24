@@ -98,14 +98,14 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		}
 		// Two distinct artifact shapes reach here (see WindowsProjectService's
 		// getValidBuildOutputData): a debug build resolves to the loose bin/ output's
-		// AppxManifest.xml, meant for `-Register` (in-place dev registration — no signature
+		// AppxManifest.xml, meant for `-Register` (in-place dev registration; no signature
 		// validation, matches "AppxManifest.xml triggers Add-AppxPackage -Register (dev flow)");
 		// a release build resolves to the packaged .msix/.msixupload under AppPackages/, which
 		// `-Register` rejects outright ("An invalid manifest file name was passed to this
-		// function") and which instead needs a plain package install via `-Path` — exactly what
+		// function") and which instead needs a plain package install via `-Path`. Exactly what
 		// the generated Install.ps1/Add-AppDevPackage.ps1 next to it do. A `-Path` install of an
 		// unsigned release package still fails signature validation (0x800B0100); that's expected
-		// — pass `--certificate`/`--certificate-thumbprint` at build time for a sideloadable
+		// pass `--certificate`/`--certificate-thumbprint` at build time for a sideloadable
 		// release package, this isn't something the install step can paper over.
 		const isLooseManifest = packageFilePath.toLowerCase().endsWith("appxmanifest.xml");
 		let addAppxCommand: string;
@@ -113,8 +113,8 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 			addAppxCommand = `Add-AppxPackage -ForceApplicationShutdown -Register -Path "${packageFilePath}"`;
 		} else {
 			// Thread through any Dependencies\<arch>\*.msix (e.g. the Windows App SDK runtime
-			// framework package) the same way Add-AppDevPackage.ps1 does via `-DependencyPath` —
-			// needed on a machine that doesn't already have that framework package installed.
+			// framework package) the same way Add-AppDevPackage.ps1 does via `-DependencyPath`.
+			// Needed on a machine that doesn't already have that framework package installed.
 			const arch = process.arch === "arm64" ? "arm64" : "x64";
 			const dependencyDir = path.join(path.dirname(packageFilePath), "Dependencies", arch);
 			const dependencyGlob = path.join(dependencyDir, "*.msix");
@@ -176,7 +176,7 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 	 * The runtime writes console.log to ApplicationData.LocalFolder (LocalState), alongside the
 	 * crash/panic/lastcalls logs. NOTE: earlier builds assumed a UWP app's GetTempPathW() virtualises
 	 * to AC\Temp, but the app is `runFullTrust` (not an app container), so GetTempPathW() resolves to
-	 * the *system* temp — which is neither AC\Temp nor a path the CLI could reliably find. The runtime
+	 * the *system* temp, which is neither AC\Temp nor a path the CLI could reliably find. The runtime
 	 * now targets LocalState explicitly (runtime_set_local_folder → set_log_dir), so pin that here.
 	 * Falls back to the system temp path when no PFN is known (unpackaged EXE).
 	 */
@@ -230,7 +230,7 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		// Truncate the trace log so the streamer starts from a clean state each run.
 		try {
 			fs.writeFileSync(this.getLogFilePath(), "", "utf8");
-		} catch { /* ignore — log dir may not exist yet */ }
+		} catch { /* ignore: log dir may not exist yet */ }
 
 		if (isExe) {
 			if (appData.waitForDebugger) {

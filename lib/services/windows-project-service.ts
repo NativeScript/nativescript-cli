@@ -438,7 +438,7 @@ export class WindowsProjectService
 					);
 				}
 			} else {
-				// No signing material provided — emit an unsigned package.
+				// No signing material provided. Emit an unsigned package.
 				dotnetArgs.push("-p:AppxPackageSigningEnabled=false");
 			}
 		} else {
@@ -565,7 +565,7 @@ export class WindowsProjectService
 
 		// Source protection: seal the just-written webpack output (app/) into an encrypted
 		// app.nsbundle via nsbundle_pack.
-		// Release builds only — HMR/LiveSync dev builds patch app/ incrementally, which a sealed
+		// Release builds only: HMR/LiveSync dev builds patch app/ incrementally, which a sealed
 		// container can't do, and --release/--hmr are already mutually exclusive CLI flags.
 		// Never fatal: a missing tool or failed pack just leaves the plaintext app/ folder, which
 		// the .csproj already falls back to via Condition="Exists('app.nsbundle')".
@@ -575,6 +575,13 @@ export class WindowsProjectService
 				(this.$options as any).sourceProtect ??
 				projectData?.nsConfig?.windows?.sourceProtect ??
 				false;
+			const bundlePath = path.join(appProjectDir, "app.nsbundle");
+			if (!(isRelease && wantsSourceProtect) && fs.existsSync(bundlePath)) {
+				// A sealed bundle from an earlier release build takes priority over app/ (the
+				// .csproj condition), so it would shadow this build's fresh output.
+				fs.unlinkSync(bundlePath);
+				this.$logger.info("Removed stale app.nsbundle from a previous source-protected build.");
+			}
 			if (isRelease && wantsSourceProtect) {
 				const arch = process.arch === "arm64" ? "arm64" : "x64";
 				const packCandidates = [
@@ -605,7 +612,7 @@ export class WindowsProjectService
 					}
 				}
 				else {
-					this.$logger.info("Source protection requested but nsbundle_pack.exe was not found under tools/ — skipping (plaintext app/ will be packaged).");
+					this.$logger.info("Source protection requested but nsbundle_pack.exe was not found under tools/, skipping (plaintext app/ will be packaged).");
 				}
 			}
 		}
@@ -1104,7 +1111,7 @@ export class WindowsProjectService
 			);
 		}
 
-		// generate plugin.targets if not provided — uses an explicit Copy task so
+		// generate plugin.targets if not provided. Uses an explicit Copy task so
 		// that DLLs reach bin/ even when EnableMsixTooling=true intercepts Content items.
 		if (!this.$fs.exists(path.join(pluginStageDir, "plugin.targets"))) {
 			const stagedFiles = collectStagedFiles(pluginStageDir);

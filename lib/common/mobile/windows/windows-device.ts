@@ -56,7 +56,7 @@ export class WindowsDevice implements Mobile.IDevice {
 		}
 
 		// For packaged UWP apps, GetTempPath() inside the app container resolves to
-		// %LOCALAPPDATA%\Packages\<PFN>\TempState — not the system temp dir.
+		// %LOCALAPPDATA%\Packages\<PFN>\TempState: not the system temp dir.
 		// Ask the application manager for the correct path based on the known PFN.
 		const manager = this.applicationManager as WindowsApplicationManager;
 		const logPath = manager.getLogFilePath();
@@ -73,7 +73,7 @@ export class WindowsDevice implements Mobile.IDevice {
 		// Rotate the log if it exceeds 10 MB to prevent unbounded disk growth.
 		const MAX_LOG_BYTES = 10 * 1024 * 1024;
 
-		// Internal Rust runtime diagnostics written via debug_output() — useful in
+		// Internal Rust runtime diagnostics written via debug_output(). Useful in
 		// VS Output / DebugView but noisy in the CLI. Suppress them; errors/exceptions
 		// are kept because their prefix contains "error", "exception", or "PANIC".
 		const INTERNAL_PREFIXES = [
@@ -106,11 +106,11 @@ export class WindowsDevice implements Mobile.IDevice {
 				if (stat.size > MAX_LOG_BYTES) {
 					try { fs.writeFileSync(logPath, "", "utf8"); offset = 0; } catch { /* ignore */ }
 				}
-			} catch { /* ignore — file may not exist between app restarts */ }
+			} catch { /* ignore: file may not exist between app restarts */ }
 		}, 50);
 
 		// Also tail nativescript-crash.log from LocalState so C# exception reports
-		// and JS errors caught by the host surface in the CLI — same as Android/iOS
+		// and JS errors caught by the host surface in the CLI. Same as Android/iOS
 		// crash log streaming. Truncate on each run so only errors from this session appear.
 		if (crashLogPath) {
 			try { fs.writeFileSync(crashLogPath, "", "utf8"); } catch { /* may not exist yet */ }
@@ -134,7 +134,7 @@ export class WindowsDevice implements Mobile.IDevice {
 							this.$deviceLogProvider.logData(`[crash] ${line}`, "Windows", deviceId);
 						}
 					}
-				} catch { /* ignore — file may not exist until first crash */ }
+				} catch { /* ignore: file may not exist until first crash */ }
 			}, 50);
 		}
 	}

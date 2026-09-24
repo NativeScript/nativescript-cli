@@ -7,7 +7,7 @@ position: 7
 
 ### Description
 
-Initiates a debugging session for your project on the local Windows machine. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. The NativeScript runtime starts a Chrome DevTools Protocol server on port 9229 — attach Chrome DevTools or any CDP-compatible debugger to `ws://localhost:9229`.
+Initiates a debugging session for your project on the local Windows machine. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. The NativeScript runtime starts a Chrome DevTools Protocol server on port 9229. Attach Chrome DevTools or any CDP-compatible debugger to `ws://localhost:9229`.
 
 <% if(isConsole && (isLinux || isMacOS)) { %>WARNING: You can run this command only on Windows systems. To view the complete help for this command, run `$ ns help debug windows`<% } %>
 <% if((isConsole && isWindows) || isHtml) { %>
@@ -45,7 +45,7 @@ Attach the debug tools to a running app | `$ ns debug windows --start [--timeout
 1. Run `ns debug windows`
 2. Open Chrome and navigate to `chrome://inspect`
 3. Under **Devices**, click **Configure** and add `localhost:9229`
-4. The NativeScript runtime will appear under **Remote Target** — click **inspect**
+4. The NativeScript runtime will appear under **Remote Target**. Click **inspect**
 
 ### Command Limitations
 

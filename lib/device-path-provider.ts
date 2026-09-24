@@ -62,7 +62,7 @@ export class DevicePathProvider implements IDevicePathProvider {
 				if (options.getDirname) {
 					return buildOutputPath;
 				}
-				// Sync into bin\app — the registered package root — so the running app
+				// Sync into bin\app (the registered package root) so the running app
 				// picks up changes without a rebuild.
 				return path.join(buildOutputPath, APP_FOLDER_NAME);
 			}

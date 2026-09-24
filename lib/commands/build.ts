@@ -331,7 +331,7 @@ export class BuildWindowsCommand extends BuildCommandBase implements ICommand {
 		let canExecute = await super.canExecuteCommandBase(platform);
 		if (canExecute) {
 			// A sideload release package without signing material can be produced,
-			// but it won't be installable until signed — warn rather than fail.
+			// but it won't be installable until signed. Warn rather than fail.
 			if (
 				this.$options.release &&
 				!this.$options.storeUpload &&

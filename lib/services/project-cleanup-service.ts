@@ -172,7 +172,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			try {
 				execSync(`taskkill /F /IM "${name}.exe" /T`, { stdio: "ignore" });
 				this.$logger.trace(`[clean] Killed process: ${name}.exe`);
-			} catch { /* process not running — ignore */ }
+			} catch { /* process not running: ignore */ }
 		}
 	}
 }

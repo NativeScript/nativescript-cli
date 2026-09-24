@@ -102,7 +102,7 @@ export class WindowsDeviceFileSystem implements Mobile.IDeviceFileSystem {
 		_hashes: IStringDictionary,
 		_appIdentifier: string,
 	): Promise<void> {
-		// no-op — Windows LiveSync does not use hash-based diffing yet
+		// no-op: Windows LiveSync does not use hash-based diffing yet
 	}
 
 	public getDeviceHashService(_appIdentifier: string): any {

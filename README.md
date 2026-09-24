@@ -99,7 +99,7 @@ With the NativeScript CLI, you can target the following platforms.
 
 * Android 4.2 or a later stable official release
 * iOS 9.0 or later stable official release
-* Windows 10 version 1809 (build 17763) or later — via `@nativescript/windows`
+* Windows 10 version 1809 (build 17763) or later. Via `@nativescript/windows`
 
 [Back to Top][1]
 
@@ -314,7 +314,7 @@ After you have listed the available devices, you can quickly run your app by exe
 ```Shell
 ns run android
 ns run ios
-ns run windows   # Windows only — runs on the local machine
+ns run windows   # Windows only. Runs on the local machine
 ```
 
 [Back to Top][1]

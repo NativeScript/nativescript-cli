@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import { spawnSync } from "child_process";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { IPlatformsDataService } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
@@ -39,15 +40,31 @@ export class WindowsDeviceLiveSyncService
 		_projectData: IProjectData,
 		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
-		return !liveSyncInfo.useHotModuleReload;
+		return !liveSyncInfo.useHotModuleReload || !!liveSyncInfo.waitForDebugger;
 	}
 
 	public async tryRefreshApplication(
-		_projectData: IProjectData,
-		_liveSyncInfo: ILiveSyncResultInfo,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
-		// HMR not yet implemented for Windows — signal full restart
-		return false;
+		// Vite HMR: a running app pulls every change from the dev server over its WebSocket
+		// (HTTP ES modules), so a synced file never needs a restart. But an app that isn't
+		// running yet (first sync after install) must still be launched. Webpack HMR isn't
+		// implemented for Windows: signal a restart.
+		return (
+			projectData.bundler === "vite" &&
+			!!liveSyncInfo.useHotModuleReload &&
+			this.isAppRunning(projectData.projectName)
+		);
+	}
+
+	private isAppRunning(processName: string): boolean {
+		const result = spawnSync(
+			"tasklist",
+			["/FI", `IMAGENAME eq ${processName}.exe`, "/NH", "/FO", "CSV"],
+			{ encoding: "utf8", windowsHide: true },
+		);
+		return (result.stdout || "").toLowerCase().includes(`"${processName.toLowerCase()}.exe"`);
 	}
 
 	public async removeFiles(
