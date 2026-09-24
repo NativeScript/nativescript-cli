@@ -367,10 +367,24 @@ declare module NativeScriptDoctor {
 		dotNetVer?: string;
 	}
 
+	interface IWindowsSysInfoData {
+		/**
+		 * .NET SDK version as returned by `dotnet --version`. Valid only on Windows.
+		 * @type {string}
+		 */
+		dotNetSdkVer?: string;
+		/**
+		 * Whether the Windows App SDK dotnet workload is installed (`dotnet workload install windows`).
+		 * @type {boolean}
+		 */
+		windowsAppSdkWorkloadInstalled?: boolean;
+	}
+
 	interface ISysInfoData
 		extends ICommonSysInfoData,
 			IiOSSysInfoData,
-			IAndroidSysInfoData {}
+			IAndroidSysInfoData,
+			IWindowsSysInfoData {}
 
 	/**
 	 * Describes warning returned from @nativescript/doctor check.

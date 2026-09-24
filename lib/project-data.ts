@@ -342,6 +342,7 @@ export class ProjectData implements IProjectData {
 				ios: "",
 				android: "",
 				visionos: "",
+				windows: "",
 			};
 		}
 
@@ -349,6 +350,7 @@ export class ProjectData implements IProjectData {
 			ios: config.id,
 			android: config.id,
 			visionos: config.id,
+			windows: config.id,
 		};
 
 		if (config.ios && config.ios.id) {
@@ -359,6 +361,9 @@ export class ProjectData implements IProjectData {
 		}
 		if (config.visionos && config.visionos.id) {
 			identifier.visionos = config.visionos.id;
+		}
+		if (config.windows && config.windows.id) {
+			identifier.windows = config.windows.id;
 		}
 
 		return identifier;

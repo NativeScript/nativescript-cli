@@ -30,6 +30,11 @@ export const TNS_IOS_RUNTIME_NAME = "tns-ios";
 export const SCOPED_ANDROID_RUNTIME_NAME = "@nativescript/android";
 export const SCOPED_IOS_RUNTIME_NAME = "@nativescript/ios";
 export const SCOPED_VISIONOS_RUNTIME_NAME = "@nativescript/visionos";
+export const SCOPED_WINDOWS_RUNTIME_NAME = "@nativescript/windows";
+export const SCOPED_WINDOWS_HERMES_RUNTIME_NAME = "@nativescript/windows-hermes";
+export const SCOPED_WINDOWS_V8_RUNTIME_NAME = "@nativescript/windows-v8";
+export const SCOPED_WINDOWS_QUICKJS_RUNTIME_NAME = "@nativescript/windows-quickjs";
+export const SCOPED_WINDOWS_JSC_RUNTIME_NAME = "@nativescript/windows-jsc";
 export const PACKAGE_JSON_FILE_NAME = "package.json";
 export const PACKAGE_LOCK_JSON_FILE_NAME = "package-lock.json";
 export const ANDROID_DEVICE_APP_ROOT_TEMPLATE = `/data/data/%s/files`;
@@ -233,6 +238,12 @@ const ANDROID_SIGNING_REQUIRED_MESSAGE =
 	"you need to specify all --key-store-* options.";
 export const ANDROID_RELEASE_BUILD_ERROR_MESSAGE = `When producing a release build, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
 export const ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE = `When producing Android App Bundle, ${ANDROID_SIGNING_REQUIRED_MESSAGE}`;
+export const WINDOWS_RELEASE_UNSIGNED_MESSAGE =
+	"Producing an unsigned Windows release package. The resulting .msix cannot be installed directly until it is signed. Pass --certificate (and --certificate-password) or --certificate-thumbprint to produce a signed, sideloadable package, or use --store-upload to produce a package for submission to the Microsoft Store.";
+export class WindowsAppPackageMessages {
+	public static STORE_UPLOAD_DOCS_MESSAGE =
+		"Built a Microsoft Store upload package (.msixupload). Submit it to your app via Partner Center: https://partner.microsoft.com/dashboard";
+}
 export const CACACHE_DIRECTORY_NAME = "_cacache";
 
 export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";
@@ -362,10 +373,14 @@ export const enum PlatformTypes {
 	ios = "ios",
 	android = "android",
 	visionos = "visionos",
+	windows = "windows",
 }
 
 export type SupportedPlatform =
-	PlatformTypes.ios | PlatformTypes.android | PlatformTypes.visionos;
+	| PlatformTypes.ios
+	| PlatformTypes.android
+	| PlatformTypes.visionos
+	| PlatformTypes.windows;
 
 export const PODFILE_NAME = "Podfile";
 

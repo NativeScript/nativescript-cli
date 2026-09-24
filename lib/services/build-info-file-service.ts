@@ -101,6 +101,7 @@ export class BuildInfoFileService implements IBuildInfoFileService {
 			{
 				appIdentifier: projectData.projectIdentifiers[platform],
 				getDirname: true,
+				projectData,
 			}
 		);
 		const result = helpers.fromWindowsRelativePathToUnix(

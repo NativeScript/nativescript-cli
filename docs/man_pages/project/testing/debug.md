@@ -38,15 +38,17 @@ Usage | Synopsis
 <% if((isConsole && isMacOS) || isHtml) { %>General | `$ ns debug <Platform>`<% } %><% if(isConsole && (isLinux || isWindows)) { %>General | `$ ns debug android`<% } %>
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments
-`<Platform>` is the target mobile platform for which you want to debug your project. You can set the following target platforms:
+`<Platform>` is the target platform for which you want to debug your project. You can set the following target platforms:
 * `android` - Start a debugging session for your project on a connected Android device or Android emulator.
-* `ios` - Start a debugging session for your project on a connected iOS device or in the native iOS simulator.<% } %>
+* `ios` - Start a debugging session for your project on a connected iOS device or in the native iOS simulator.
+* `windows` - Start a debugging session on the local Windows machine via Chrome DevTools Protocol on port 9229 (Windows only).<% } %>
 
 <% if(isHtml) { %>
 
 ### Command Limitations
 
 * You can run `$ ns debug ios` only on macOS systems.
+* You can run `$ ns debug windows` only on Windows systems.
 
 ### Related Commands
 
@@ -57,6 +59,7 @@ Command | Description
 [build](build.html) | Builds the project for the selected target platform and produces an application package that you can manually deploy on device or in the native emulator.
 [debug android](debug-android.html) | Debugs your project on a connected Android device or in a native emulator.
 [debug ios](debug-ios.html) | Debugs your project on a connected iOS device or in a native emulator.
+[debug windows](debug-windows.html) | Debugs your project on the local Windows machine.
 [deploy](deploy.html) | Builds and deploys the project to a connected physical or virtual device.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.

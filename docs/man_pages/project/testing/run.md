@@ -58,9 +58,10 @@ Run on a selected connected device or running emulator. Will start emulator with
 
 
 <% if((isConsole && isMacOS) || isHtml) { %>### Arguments
-`<Platform>` is the target mobile platform for which you want to run your project. You can set the following target platforms:
+`<Platform>` is the target platform for which you want to run your project. You can set the following target platforms:
  * `android` - Run your project on all Android devices and emulators.
  * `ios` - Run your project on all iOS devices and simulators.
+ * `windows` - Run your project on the local Windows machine (Windows only).
 
 <% } %>
 
@@ -68,7 +69,8 @@ Run on a selected connected device or running emulator. Will start emulator with
 
 ### Command Limitations
 
-* The command will work with all connected devices and running emulators on macOS. On Windows and Linux the command will work with Android devices only.
+* The command will work with all connected devices and running emulators on macOS. On Linux the command will work with Android devices only.
+* On Windows the command works with Android devices, emulators, and the local Windows machine (via `ns run windows`).
 * In case a platform is not specified and there's no running devices and emulators, the command will fail.
 
 ### Related Commands
@@ -86,6 +88,7 @@ Command | Description
 [deploy](deploy.html) | Builds and deploys the project to a connected physical or virtual device.
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
+[run windows](run-windows.html) | Runs your project on the local Windows machine.
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.
 [test android](test-android.html) | Runs the tests in your project on Android devices or native emulators.
 [test ios](test-ios.html) | Runs the tests in your project on iOS devices or the iOS Simulator.

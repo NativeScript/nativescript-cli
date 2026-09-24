@@ -612,6 +612,11 @@ export class ProjectDataService implements IProjectDataService {
 			return projectDir + ":" + platform;
 		},
 		shouldCache(result: IBasePluginData) {
+			// don't cache when there's no result
+			if (!result) {
+				return false;
+			}
+
 			// don't cache coerced versions
 			if ((result as any)._coerced) {
 				return false;
@@ -642,6 +647,14 @@ export class ProjectDataService implements IProjectDataService {
 					);
 				} else if (platform === constants.PlatformTypes.visionos) {
 					return d.name === constants.SCOPED_VISIONOS_RUNTIME_NAME;
+				} else if (platform === constants.PlatformTypes.windows) {
+					return [
+						constants.SCOPED_WINDOWS_RUNTIME_NAME,
+						constants.SCOPED_WINDOWS_HERMES_RUNTIME_NAME,
+						constants.SCOPED_WINDOWS_V8_RUNTIME_NAME,
+						constants.SCOPED_WINDOWS_QUICKJS_RUNTIME_NAME,
+						constants.SCOPED_WINDOWS_JSC_RUNTIME_NAME,
+					].includes(d.name);
 				}
 			});
 
@@ -705,6 +718,11 @@ export class ProjectDataService implements IProjectDataService {
 		} else if (platform === constants.PlatformTypes.visionos) {
 			return {
 				name: constants.SCOPED_VISIONOS_RUNTIME_NAME,
+				version: null,
+			};
+		} else if (platform === constants.PlatformTypes.windows) {
+			return {
+				name: constants.SCOPED_WINDOWS_RUNTIME_NAME,
 				version: null,
 			};
 		}
