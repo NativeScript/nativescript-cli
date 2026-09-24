@@ -39,6 +39,11 @@ declare global {
 			projectData: IProjectData,
 			buildConfig: IBuildConfig,
 		): Promise<string>;
+		buildForCatalyst(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig,
+		): Promise<void>;
 	}
 
 	interface IosSPMPackageBase {
@@ -110,6 +115,11 @@ declare global {
 			projectData: IProjectData,
 			buildConfig: IBuildConfig,
 		): Promise<string[]>;
+		getBuildForCatalystArgs(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig,
+		): string[];
 		getXcodeProjectArgs(
 			platformData: IPlatformData,
 			projectData: IProjectData,

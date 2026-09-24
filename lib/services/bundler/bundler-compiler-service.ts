@@ -11,6 +11,7 @@ import {
 	PackageManagers,
 	CONFIG_FILE_NAME_DISPLAY,
 	VITE_DIST_FOLDER_NAME,
+	PlatformTypes,
 } from "../../constants";
 import {
 	IPackageManager,
@@ -124,7 +125,7 @@ export class BundlerCompilerService
 		prepareData: IPrepareData,
 	): Promise<any> {
 		return new Promise(async (resolve, reject) => {
-			if (this.bundlerProcesses[platformData.platformNameLowerCase]) {
+			if (this.bundlerProcesses[prepareData.platform.toLowerCase()]) {
 				resolve(void 0);
 				return;
 			}
@@ -251,7 +252,8 @@ export class BundlerCompilerService
 								hash: (message as IBundlerEmitMessage).hash || "",
 								fallbackFiles: [] as string[],
 							},
-							platform: platformData.platformNameLowerCase,
+							// Requested platform; Catalyst reports iOS in platform data.
+							platform: prepareData.platform.toLowerCase(),
 						};
 
 						this.$logger.info(
@@ -359,7 +361,8 @@ export class BundlerCompilerService
 								hash: result.hash,
 								fallbackFiles,
 							},
-							platform: platformData.platformNameLowerCase,
+							// Requested platform; Catalyst reports iOS in platform data.
+							platform: prepareData.platform.toLowerCase(),
 						};
 
 						this.$logger.trace(
@@ -382,7 +385,7 @@ export class BundlerCompilerService
 					this.$logger.trace(
 						`Unable to start ${projectData.bundler} process in watch mode. Error is: ${err}`,
 					);
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[prepareData.platform.toLowerCase()];
 					reject(err);
 				});
 
@@ -399,7 +402,7 @@ export class BundlerCompilerService
 						`Executing ${projectData.bundler} failed with exit code ${exitCode}.`,
 					);
 					error.code = exitCode;
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[prepareData.platform.toLowerCase()];
 					reject(error);
 				});
 			} catch (err) {
@@ -414,7 +417,7 @@ export class BundlerCompilerService
 		prepareData: IPrepareData,
 	): Promise<void> {
 		return new Promise(async (resolve, reject) => {
-			if (this.bundlerProcesses[platformData.platformNameLowerCase]) {
+			if (this.bundlerProcesses[prepareData.platform.toLowerCase()]) {
 				resolve();
 				return;
 			}
@@ -430,7 +433,7 @@ export class BundlerCompilerService
 					this.$logger.trace(
 						`Unable to start ${projectData.bundler} process in non-watch mode. Error is: ${err}`,
 					);
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[prepareData.platform.toLowerCase()];
 					reject(err);
 				});
 
@@ -441,7 +444,7 @@ export class BundlerCompilerService
 						childProcess.pid.toString(),
 					);
 
-					delete this.bundlerProcesses[platformData.platformNameLowerCase];
+					delete this.bundlerProcesses[prepareData.platform.toLowerCase()];
 					const exitCode = typeof arg === "number" ? arg : arg && arg.code;
 					if (exitCode === 0) {
 						// Non-watch Vite builds spawn the child with stdio:"inherit"
@@ -598,6 +601,11 @@ export class BundlerCompilerService
 					this.$options.hostProjectModuleName,
 				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
 			});
+		} else if (this.$mobileHelper.isCatalystPlatform(prepareData.platform)) {
+			// Bundler hardcodes platforms/ios; Catalyst prepares into platforms/catalyst.
+			Object.assign(options.env, {
+				USER_PROJECT_PLATFORMS_IOS: platformData.projectRoot,
+			});
 		}
 
 		if (debugLog) {
@@ -610,7 +618,7 @@ export class BundlerCompilerService
 			options,
 		);
 
-		this.bundlerProcesses[platformData.platformNameLowerCase] = childProcess;
+		this.bundlerProcesses[prepareData.platform.toLowerCase()] = childProcess;
 		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
 
 		return childProcess;
@@ -817,7 +825,13 @@ export class BundlerCompilerService
 		prepareData: IPrepareData,
 	) {
 		const { env } = prepareData;
-		const envData = Object.assign({}, env, { [platform.toLowerCase()]: true });
+		const platformKey = platform.toLowerCase();
+		const envData = Object.assign({}, env, { [platformKey]: true });
+
+		// Platform data reports iOS, so the flag comes from the request.
+		if (this.$mobileHelper.isCatalystPlatform(prepareData.platform)) {
+			envData[PlatformTypes.catalyst] = true;
+		}
 
 		const appId = projectData.projectIdentifiers[platform];
 		const appPath = projectData.getAppDirectoryRelativePath();
@@ -1083,7 +1097,7 @@ export class BundlerCompilerService
 				hash: lastHash || message.hash,
 				fallbackFiles: [],
 			},
-			platform: platformData.platformNameLowerCase,
+			platform: prepareData.platform.toLowerCase(),
 		});
 	}
 

@@ -92,8 +92,10 @@ export class ProjectChangesService implements IProjectChangesService {
 
 			if (
 				!this.$fs.exists(platformResourcesDir) &&
-				platformData.platformNameLowerCase ===
-					this.$devicePlatformsConstants.visionOS.toLowerCase()
+				(platformData.platformNameLowerCase ===
+					this.$devicePlatformsConstants.visionOS.toLowerCase() ||
+					platformData.platformNameLowerCase ===
+						this.$devicePlatformsConstants.Catalyst.toLowerCase())
 			) {
 				platformResourcesDir = path.join(
 					projectData.appResourcesDirectoryPath,

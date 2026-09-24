@@ -16,6 +16,8 @@ export class PlatformsDataService implements IPlatformsDataService {
 			ios: $iOSProjectService,
 			android: $androidProjectService,
 			visionos: $iOSProjectService,
+			// Mac Catalyst reuses the iOS project service.
+			catalyst: $iOSProjectService,
 		};
 	}
 
