@@ -47,6 +47,7 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
+import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 
 interface NativeDependency {
 	name: string;
@@ -363,8 +364,55 @@ export class AndroidProjectService
 			"-R",
 		);
 
+		this.overrideRuntimeGradleFiles(projectData);
+
 		// TODO: Check if we actually need this and if it should be targetSdk or compileSdk
 		this.cleanResValues(targetSdkVersion, projectData);
+	}
+
+	/**
+	 * Copies the gradle files shipped with the CLI over the ones the android
+	 * runtime just laid down, so the build scripts can be fixed without waiting
+	 * for a runtime release. Opt out with `--no-override-runtime-gradle-files`.
+	 */
+	private overrideRuntimeGradleFiles(projectData: IProjectData): void {
+		if (!this.$options.overrideRuntimeGradleFiles) {
+			this.$logger.trace(
+				"Skipping the gradle files bundled with the CLI - the ones from the android runtime are kept."
+			);
+			return;
+		}
+
+		const gradleFilesPath = this.getGradleFilesPath(projectData);
+		this.$logger.trace(`Applying gradle files from '${gradleFilesPath}'.`);
+		this.$fs.copyFile(
+			path.join(gradleFilesPath, "*"),
+			this.getPlatformData(projectData).projectRoot
+		);
+	}
+
+	/**
+	 * Resolves the directory holding the gradle files copied over the runtime
+	 * ones. Defaults to the copy bundled with the CLI, but a project may point
+	 * `android.gradleFilesPackageName` at an npm package shipping its own.
+	 */
+	private getGradleFilesPath(projectData: IProjectData): string {
+		const packageName = projectData.nsConfig?.android?.gradleFilesPackageName;
+		if (!packageName) {
+			return path.resolve(path.join(__dirname, "../../vendor/gradle-app"));
+		}
+
+		const packageJsonPath = resolvePackageJSONPath(packageName, {
+			paths: [projectData.projectDir],
+		});
+
+		if (!packageJsonPath) {
+			this.$errors.fail(
+				`Unable to resolve '${packageName}', configured as 'android.gradleFilesPackageName'. Make sure it is installed in the project.`
+			);
+		}
+
+		return path.dirname(packageJsonPath);
 	}
 
 	private getResDestinationDir(projectData: IProjectData): string {
@@ -468,6 +516,28 @@ export class AndroidProjectService
 			this.getProjectNameFromId(projectData),
 			gradleSettingsFilePath,
 		);
+		this.sedFile(
+			gradleSettingsFilePath,
+			/def USER_PROJECT_ROOT = "\$rootDir\/\.\.\/\.\.\/"/,
+			`def USER_PROJECT_ROOT = "$rootDir/${this.getProjectRootRelativePath(
+				projectData
+			)}"`
+		);
+
+		const gradleVersion = projectData.nsConfig?.android?.gradleVersion;
+		if (gradleVersion) {
+			// the project pinned a gradle version - point the wrapper at it
+			this.sedFile(
+				path.join(
+					this.getPlatformData(projectData).projectRoot,
+					"gradle",
+					"wrapper",
+					"gradle-wrapper.properties"
+				),
+				/gradle-([0-9.]+)-bin.zip/,
+				`gradle-${gradleVersion}-bin.zip`
+			);
+		}
 
 		try {
 			// will replace applicationId in app/App_Resources/Android/app.gradle if it has not been edited by the user
@@ -497,6 +567,47 @@ export class AndroidProjectService
 			projectData.projectIdentifiers.android,
 			manifestPath,
 		);
+
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		// the gradle files bundled with the CLI declare the android namespace and
+		// resolve the project root themselves - both are placeholders until now
+		this.sedFile(
+			path.join(projectRoot, "app", "build.gradle"),
+			/__PACKAGE__/,
+			projectData.projectIdentifiers.android
+		);
+		this.sedFile(
+			path.join(projectRoot, "build.gradle"),
+			/project\.ext\.USER_PROJECT_ROOT = "\$rootDir\/\.\.\/\.\."/,
+			`project.ext.USER_PROJECT_ROOT = "$rootDir/${this.getProjectRootRelativePath(
+				projectData
+			)}"`
+		);
+	}
+
+	private sedFile(
+		filePath: string,
+		pattern: RegExp,
+		replacement: string
+	): void {
+		if (!this.$fs.exists(filePath)) {
+			return;
+		}
+
+		shell.sed("-i", pattern, replacement, filePath);
+	}
+
+	/**
+	 * Path from the generated android project back to the project root. Not
+	 * always `../..` - the platforms directory can live outside the project.
+	 */
+	private getProjectRootRelativePath(projectData: IProjectData): string {
+		return path
+			.relative(
+				this.getPlatformData(projectData).projectRoot,
+				projectData.projectDir
+			)
+			.replace(/\\/g, "/");
 	}
 
 	private getProjectNameFromId(projectData: IProjectData): string {

@@ -33,7 +33,7 @@ interface IAndroidBuildData
 		IHasAndroidBundle {
 	gradleFlavor?: string;
 	gradlePath?: string;
-	gradleArgs?: string;
+	gradleArgs?: string[];
 }
 
 interface IAndroidSigningData {

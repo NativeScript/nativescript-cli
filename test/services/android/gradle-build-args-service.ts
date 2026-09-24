@@ -62,7 +62,16 @@ const ksDir = mkdtempSync(path.join(tmpdir(), "ksPath-"));
 const ksPath = path.join(ksDir, "keystore.jks");
 const expectedInfoLoggingArgs = ["--quiet"];
 const expectedTraceLoggingArgs = ["--stacktrace", "--debug"];
+const projectDir = "/path/to/projectDir".replace(/\//g, path.sep);
 const expectedDebugBuildArgs = [
+	"-PcompileSdk=28",
+	"-PtargetSdk=26",
+	"-PbuildToolsVersion=my-build-tools-version",
+	"-PgenerateTypings=true",
+	`-PprojectRoot=${projectDir}`,
+	`-DprojectRoot=${projectDir}`,
+	"-PappBuildPath=platforms",
+	"-DappBuildPath=platforms",
 	"-PappPath=/path/to/projectDir/app".replace(/\//g, path.sep),
 	"-PappResourcesPath=/path/to/projectDir/app/App_Resources".replace(
 		/\//g,
@@ -211,6 +220,43 @@ describe("GradleBuildArgsService", () => {
 				assert.deepStrictEqual(args[0], testCase.expectedTask);
 			});
 		}
+	});
+
+	describe("gradle args", () => {
+		it("appends the ones passed through --gradleArgs", async () => {
+			const injector = createTestInjector();
+			injector.resolve("logger").getLevel = () => "WARN";
+			const gradleBuildArgsService = injector.resolve("gradleBuildArgsService");
+
+			const args = await gradleBuildArgsService.getBuildTaskArgs(<any>{
+				release: false,
+				gradleArgs: ["-PsomeArg=1", "-PotherArg=2 -PthirdArg=3"],
+			});
+
+			assert.deepStrictEqual(args.slice(-3), [
+				"-PsomeArg=1",
+				"-PotherArg=2",
+				"-PthirdArg=3",
+			]);
+		});
+
+		it("appends the ones from the project config before the command line ones", async () => {
+			const injector = createTestInjector();
+			injector.resolve("logger").getLevel = () => "WARN";
+			const projectData = injector.resolve("projectData");
+			projectData.nsConfig = { android: { gradleArgs: ["-PfromConfig=1"] } };
+			const gradleBuildArgsService = injector.resolve("gradleBuildArgsService");
+
+			const args = await gradleBuildArgsService.getBuildTaskArgs(<any>{
+				release: false,
+				gradleArgs: ["-PfromCommandLine=1"],
+			});
+
+			assert.deepStrictEqual(args.slice(-2), [
+				"-PfromConfig=1",
+				"-PfromCommandLine=1",
+			]);
+		});
 	});
 
 	describe("getCleanTaskArgs", async () => {
