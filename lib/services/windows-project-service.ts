@@ -497,70 +497,27 @@ export class WindowsProjectService
 			projectData.projectName,
 		);
 
-		// Attempt to run dotnet-tool to publish/copy DotNetBridge and app projects if available
+		// Run dotnet-tool to publish DotNetBridge. It (and the bridge csproj) write
+		// dotnet-bridge/publish/.dotnet_tool_done, which the app csproj waits on.
 		try {
-			const marker = path.join(appProjectDir, "dotnet-bridge", "publish", ".dotnet_tool_done");
-			if (fs.existsSync(marker)) {
-				this.$logger.info("DotNetBridge publish marker found; skipping dotnet-tool");
+			const arch = process.arch === "arm64" ? "arm64" : "x64";
+			const exeCandidates = [
+				process.env.DOTNET_TOOL_PATH,
+				path.join(platformData.projectRoot, "tools", `dotnet-tool-${arch}.exe`),
+				path.join(platformData.projectRoot, "tools", "dotnet-tool.exe"),
+			].filter(Boolean as any);
+			let exePath: string | null = null;
+			for (const p of exeCandidates) {
+				if (p && fs.existsSync(p)) { exePath = p as string; break; }
 			}
-			else {
-				const arch = process.arch === "arm64" ? "arm64" : "x64";
-				const exeCandidates = [
-					process.env.DOTNET_TOOL_PATH,
-					path.join(platformData.projectRoot, "tools", `dotnet-tool-${arch}.exe`),
-					path.join(platformData.projectRoot, "tools", "dotnet-tool.exe"),
-				].filter(Boolean as any);
-				let exePath: string | null = null;
-				for (const p of exeCandidates) {
-					if (p && fs.existsSync(p)) { exePath = p as string; break; }
-				}
-				if (exePath) {
-					this.$logger.info(`Running dotnet-tool: ${exePath}`);
-					try {
-
-						const result = await this.$childProcess.spawnFromEvent(exePath, ["--app-root", platformData.projectRoot, "--dir", "app", "--force"], "close", { cwd: platformData.projectRoot }, { throwError: false });
-						if (result && result.stdout) { this.$logger.info(result.stdout); }
-					}
-					catch (err) {
-						this.$logger.warn(`dotnet-tool execution failed: ${err}`);
-					}
-
-					// Ensure sentinel exists: if publish/ contains DotNetBridge.dll, write marker so MSBuild waits succeed
-					try {
-						const markerPath = path.join(appProjectDir, "dotnet-bridge", "publish", ".dotnet_tool_done");
-						if (!fs.existsSync(markerPath)) {
-							const publishDir = path.join(appProjectDir, "dotnet-bridge", "publish");
-							if (fs.existsSync(publishDir)) {
-								const files = fs.readdirSync(publishDir);
-								if (files && files.length > 0) {
-									const bridgeDll = path.join(publishDir, "DotNetBridge.dll");
-									if (fs.existsSync(bridgeDll)) {
-										try {
-											fs.writeFileSync(markerPath, "done", "utf8");
-											this.$logger.info(`Created dotnet-tool marker at ${markerPath}`);
-										}
-										catch (werr) {
-											this.$logger.warn(`Failed creating dotnet-tool marker: ${werr}`);
-										}
-									}
-									else {
-										this.$logger.info(`[NativeScript] publish directory exists but DotNetBridge.dll missing; files=${files.join(',')}`);
-									}
-								}
-							}
-							else {
-								this.$logger.info(`[NativeScript] publish directory not found at ${publishDir}`);
-							}
-						}
-					}
-					catch (e) {
-						this.$logger.warn(`dotnet-tool sentinel check failed: ${e}`);
-					}
-				}
+			if (exePath) {
+				this.$logger.info(`Running dotnet-tool: ${exePath}`);
+				const result = await this.$childProcess.spawnFromEvent(exePath, ["--app-root", platformData.projectRoot, "--dir", "app", "--force"], "close", { cwd: platformData.projectRoot }, { throwError: false });
+				if (result && result.stdout) { this.$logger.info(result.stdout); }
 			}
 		}
 		catch (err) {
-			this.$logger.warn(`dotnet-tool check failed: ${err}`);
+			this.$logger.warn(`dotnet-tool execution failed: ${err}`);
 		}
 
 		// Source protection: seal the just-written webpack output (app/) into an encrypted
