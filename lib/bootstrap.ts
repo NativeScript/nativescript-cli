@@ -153,6 +153,10 @@ injector.require(
 	"androidDeviceDebugService",
 	"./services/android-device-debug-service",
 );
+injector.require(
+	"windowsDeviceDebugService",
+	"./services/windows-device-debug-service",
+);
 
 injector.require(
 	"timelineProfilerService",
