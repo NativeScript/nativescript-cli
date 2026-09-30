@@ -742,7 +742,7 @@ export class WindowsProjectService
 			const phoneProductIdArg = (this.$options && (this.$options as any).phoneProductId) || (windowsCfg && (windowsCfg.PhoneProductId || windowsCfg.phoneProductId)) || null;
 			const phonePublisherIdArg = (this.$options && (this.$options as any).phonePublisherId) || (windowsCfg && (windowsCfg.PhonePublisherId || windowsCfg.phonePublisherId)) || null;
 			const regenGuid = !!(this.$options && (this.$options as any).regenGuid);
-			const noAutoGuid = !!(this.$options && (this.$options as any).noAutoGuid);
+			const noAutoGuid = !!this.$options && (this.$options as any).autoGuid === false;
 			const allowZeroGuid = !!(this.$options && (this.$options as any).allowZeroGuid);
 			const zeroGuid = "00000000-0000-0000-0000-000000000000";
 
