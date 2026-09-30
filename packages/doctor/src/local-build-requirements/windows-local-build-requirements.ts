@@ -1,3 +1,4 @@
+import * as semver from "semver";
 import { Constants } from "../constants";
 import { HostInfo } from "../host-info";
 
@@ -14,6 +15,11 @@ export class WindowsLocalBuildRequirements {
 		const sysInfoData = await this.sysInfo.getSysInfo({
 			platform: Constants.WINDOWS_PLATFORM_NAME,
 		});
-		return !!(sysInfoData.dotNetSdkVer && sysInfoData.windowsAppSdkWorkloadInstalled);
+		// Developer Mode is only needed to run, not to build.
+		return (
+			!!sysInfoData.dotNetSdkVer &&
+			semver.major(sysInfoData.dotNetSdkVer) >=
+				Constants.DOTNET_SDK_MIN_REQUIRED_VERSION
+		);
 	}
 }

@@ -97,7 +97,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		if (!this.hostInfo.isWindows) {
 			result.push({
 				message:
-					"Local builds for Windows can be executed only on a Windows system. To build for Windows on a different operating system, you can use the NativeScript cloud infrastructure.",
+					"Local builds for Windows can be executed only on a Windows system.",
 				additionalInformation: "",
 				platforms: [Constants.WINDOWS_PLATFORM_NAME],
 				type: Constants.INFO_TYPE_NAME,
@@ -308,25 +308,30 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 	): NativeScriptDoctor.IInfo[] {
 		let result: NativeScriptDoctor.IInfo[] = [];
 		if (this.hostInfo.isWindows) {
+			const dotNetSdkVer = sysInfoData.dotNetSdkVer;
+			const minDotNetSdkVer = Constants.DOTNET_SDK_MIN_REQUIRED_VERSION;
 			result = result.concat(
 				this.processSysInfoItem({
-					item: sysInfoData.dotNetSdkVer,
-					infoMessage: `The .NET SDK ${sysInfoData.dotNetSdkVer} is installed.`,
-					warningMessage: "The .NET SDK is not installed.",
+					item:
+						!!dotNetSdkVer && semver.major(dotNetSdkVer) >= minDotNetSdkVer,
+					infoMessage: `The .NET SDK ${dotNetSdkVer} is installed.`,
+					warningMessage: dotNetSdkVer
+						? `The .NET SDK ${dotNetSdkVer} is older than the required version ${minDotNetSdkVer}.`
+						: "The .NET SDK is not installed.",
 					additionalInformation:
 						`You will not be able to build your projects for Windows.${EOL}` +
-						`Download and install the .NET SDK from https://dotnet.microsoft.com/download${EOL}` +
-						`For more information visit: ${Constants.SYSTEM_REQUIREMENTS_LINKS}`,
+						`Install the .NET SDK ${minDotNetSdkVer} or later from https://dotnet.microsoft.com/download${EOL}` +
+						`For more information visit: ${Constants.WINDOWS_SYSTEM_REQUIREMENTS_LINK}`,
 					platforms: [Constants.WINDOWS_PLATFORM_NAME],
 				}),
 				this.processSysInfoItem({
-					item: sysInfoData.windowsAppSdkWorkloadInstalled,
-					infoMessage: "The Windows App SDK dotnet workload is installed.",
-					warningMessage: "The Windows App SDK dotnet workload is not installed.",
+					item: sysInfoData.isWindowsDeveloperModeEnabled,
+					infoMessage: "Windows Developer Mode is enabled.",
+					warningMessage: "Windows Developer Mode is not enabled.",
 					additionalInformation:
-						`You will not be able to build your projects for Windows.${EOL}` +
-						`Run: dotnet workload install windows${EOL}` +
-						`For more information visit: ${Constants.SYSTEM_REQUIREMENTS_LINKS}`,
+						`You will not be able to run your projects on this machine.${EOL}` +
+						`Turn on Developer Mode in Settings > System > For developers.${EOL}` +
+						`For more information visit: ${Constants.WINDOWS_SYSTEM_REQUIREMENTS_LINK}`,
 					platforms: [Constants.WINDOWS_PLATFORM_NAME],
 				}),
 			);

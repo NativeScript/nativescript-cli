@@ -45,7 +45,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private iOSSysInfoCache: NativeScriptDoctor.IiOSSysInfoData;
 	private windowsSysInfoCache: NativeScriptDoctor.IWindowsSysInfoData;
 	private dotNetSdkVerCache: string;
-	private windowsAppSdkWorkloadInstalledCache: boolean;
+	private isWindowsDeveloperModeEnabledCache: boolean;
 
 	private isCocoaPodsWorkingCorrectlyCache: boolean;
 	private nativeScriptCliVersionCache: string;
@@ -62,10 +62,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		private hostInfo: HostInfo,
 		private winReg: WinReg,
 		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
-	) {
-		// keep reference to preserve constructor signature compatibility
-		void this.winReg;
-	}
+	) {}
 
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(
@@ -799,8 +796,8 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				const result: NativeScriptDoctor.IWindowsSysInfoData =
 					Object.create(null);
 				result.dotNetSdkVer = await this.getDotNetSdkVersion();
-				result.windowsAppSdkWorkloadInstalled =
-					await this.isWindowsAppSdkWorkloadInstalled();
+				result.isWindowsDeveloperModeEnabled =
+					await this.isWindowsDeveloperModeEnabled();
 				return result;
 			},
 		);
@@ -813,21 +810,37 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				if (!this.hostInfo.isWindows) {
 					return null;
 				}
-				const output = await this.execCommand("dotnet --version");
-				return output ? output.trim().split(/\r?\n/)[0] : null;
+				// `dotnet --version` honors global.json; take the newest installed SDK.
+				const output = await this.execCommand("dotnet --list-sdks");
+				return this.getLatestDotNetSdkVersion(output);
 			},
 		);
 	}
 
-	private isWindowsAppSdkWorkloadInstalled(): Promise<boolean> {
+	// One `<version> [<install dir>]` per line.
+	private getLatestDotNetSdkVersion(output: string): string {
+		const versions = (output || "")
+			.split(/\r?\n/)
+			.map((line) => line.trim().split(/\s+/)[0])
+			.filter((version) => !!semver.valid(version));
+		return versions.sort(semver.rcompare)[0] || null;
+	}
+
+	// `ns run windows` registers debug builds, which requires Developer Mode.
+	private isWindowsDeveloperModeEnabled(): Promise<boolean> {
 		return this.getValueForProperty(
-			() => this.windowsAppSdkWorkloadInstalledCache,
+			() => this.isWindowsDeveloperModeEnabledCache,
 			async (): Promise<boolean> => {
 				if (!this.hostInfo.isWindows) {
 					return false;
 				}
-				const output = await this.execCommand("dotnet workload list");
-				return output ? output.includes("windows") : false;
+				const value = await this.winReg.getRegistryValue(
+					"AllowDevelopmentWithoutDevLicense",
+					this.winReg.registryKeys.HKLM,
+					"\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock",
+				);
+				// REG_DWORD values are hex strings, e.g. "0x1".
+				return Number(value) === 1;
 			},
 		);
 	}

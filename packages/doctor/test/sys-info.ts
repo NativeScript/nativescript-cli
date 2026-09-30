@@ -45,12 +45,14 @@ interface IChildProcessResults {
 	nativeScriptCliVersion: IChildProcessResultDescription;
 	git: IChildProcessResultDescription;
 	pythonInfo?: IChildProcessResultDescription;
+	dotnetListSdks?: IChildProcessResultDescription;
 }
 
 interface IHostInfoMockOptions {
 	isWindows?: boolean;
 	dotNetVersion?: string;
 	isDarwin?: boolean;
+	developerModeRegistryValue?: string;
 }
 
 interface IFileSystemMockOptions {
@@ -115,6 +117,7 @@ function createChildProcessResults(
 		emulator: { shouldThrowError: false },
 		"which git": childProcessResult.git,
 		"python3 --version": childProcessResult.pythonInfo,
+		"dotnet --list-sdks": childProcessResult.dotnetListSdks,
 	};
 }
 
@@ -152,6 +155,9 @@ function mockSysInfo(
 			key?: string,
 			host?: string,
 		) => {
+			if (valueName === "AllowDevelopmentWithoutDevLicense") {
+				return Promise.resolve(hostInfoOptions.developerModeRegistryValue);
+			}
 			return { value: "registryKey" };
 		},
 		registryKeys: {
@@ -468,6 +474,49 @@ Java HotSpot(TM) 64-Bit Server VM (build 25.202-b08, mixed mode)`),
 				assertCommonValues(result);
 				assert.deepEqual(result.xcodeVer, null);
 				assert.deepEqual(result.cocoaPodsVer, null);
+			});
+		});
+
+		describe("Windows", () => {
+			const listWindowsSysInfo = async (): Promise<NativeScriptDoctor.ISysInfoData> => {
+				const originalProgramFiles = process.env[PROGRAM_FILES];
+				process.env[PROGRAM_FILES] = PROGRAM_FILES_ENV_PATH;
+				try {
+					return await sysInfo.getSysInfo({ platform: "Windows" });
+				} finally {
+					process.env[PROGRAM_FILES] = originalProgramFiles;
+				}
+			};
+
+			it("reports the latest installed .NET SDK and Developer Mode", async () => {
+				childProcessResult.dotnetListSdks = {
+					result: setStdOut(
+						[
+							"8.0.404 [C:\\Program Files\\dotnet\\sdk]",
+							"10.0.203 [C:\\Program Files\\dotnet\\sdk]",
+							"9.0.100 [C:\\Program Files\\dotnet\\sdk]",
+							"",
+						].join("\r\n"),
+					),
+				};
+				sysInfo = mockSysInfo(childProcessResult, {
+					isWindows: true,
+					developerModeRegistryValue: "0x1",
+				});
+				const result = await listWindowsSysInfo();
+				assert.equal(result.dotNetSdkVer, "10.0.203");
+				assert.strictEqual(result.isWindowsDeveloperModeEnabled, true);
+			});
+
+			it("reports a missing .NET SDK and disabled Developer Mode", async () => {
+				childProcessResult.dotnetListSdks = { shouldThrowError: true };
+				sysInfo = mockSysInfo(childProcessResult, {
+					isWindows: true,
+					developerModeRegistryValue: "0x0",
+				});
+				const result = await listWindowsSysInfo();
+				assert.strictEqual(result.dotNetSdkVer, null);
+				assert.strictEqual(result.isWindowsDeveloperModeEnabled, false);
 			});
 		});
 

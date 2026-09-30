@@ -369,15 +369,15 @@ declare module NativeScriptDoctor {
 
 	interface IWindowsSysInfoData {
 		/**
-		 * .NET SDK version as returned by `dotnet --version`. Valid only on Windows.
+		 * Latest installed .NET SDK version, from `dotnet --list-sdks`. Valid only on Windows.
 		 * @type {string}
 		 */
 		dotNetSdkVer?: string;
 		/**
-		 * Whether the Windows App SDK dotnet workload is installed (`dotnet workload install windows`).
+		 * Whether Windows Developer Mode is enabled. Valid only on Windows.
 		 * @type {boolean}
 		 */
-		windowsAppSdkWorkloadInstalled?: boolean;
+		isWindowsDeveloperModeEnabled?: boolean;
 	}
 
 	interface ISysInfoData
