@@ -60,3 +60,23 @@ export class DoctorAndroidCommand implements ICommand {
 }
 
 injector.registerCommand("doctor|android", DoctorAndroidCommand);
+
+export class DoctorWindowsCommand implements ICommand {
+	constructor(
+		private $doctorService: IDoctorService,
+		private $projectHelper: IProjectHelper
+	) {}
+
+	public allowedParameters: ICommandParameter[] = [];
+
+	public execute(args: string[]): Promise<void> {
+		return this.$doctorService.printWarnings({
+			trackResult: false,
+			projectDir: this.$projectHelper.projectDir,
+			forceCheck: true,
+			platform: PlatformTypes.windows,
+		});
+	}
+}
+
+injector.registerCommand("doctor|windows", DoctorWindowsCommand);

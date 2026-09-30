@@ -69,3 +69,12 @@ export class IOSPrepareData extends PrepareData {
 }
 
 export class AndroidPrepareData extends PrepareData {}
+
+export class WindowsPrepareData extends PrepareData {
+	public packageFamilyName?: string;
+
+	constructor(projectDir: string, platform: string, data: IOptions) {
+		super(projectDir, platform, data);
+		this.packageFamilyName = (data as any).packageFamilyName;
+	}
+}

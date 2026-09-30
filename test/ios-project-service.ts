@@ -128,6 +128,10 @@ function createTestInjector(
 	testInjector.register("iOSSimulatorDiscovery", IOSSimulatorDiscoveryMock);
 	testInjector.register("iOSSimResolver", {});
 	testInjector.register("androidDeviceDiscovery", AndroidDeviceDiscovery);
+	class WindowsDeviceDiscoveryStub extends DeviceDiscovery {
+		public async startLookingForDevices(): Promise<void> {}
+	}
+	testInjector.register("windowsDeviceDiscovery", WindowsDeviceDiscoveryStub);
 	testInjector.register("messages", Messages);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("deviceLogProvider", DeviceLogProvider);

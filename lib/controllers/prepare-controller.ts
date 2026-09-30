@@ -15,6 +15,7 @@ import {
 	AnalyticsEventLabelDelimiter,
 	BUNDLER_COMPILATION_COMPLETE,
 	CONFIG_FILE_NAME_JS,
+	APP_FOLDER_NAME,
 	CONFIG_FILE_NAME_TS,
 	PACKAGE_JSON_FILE_NAME,
 	PLATFORMS_DIR_NAME,
@@ -541,6 +542,14 @@ export class PrepareController
 				platformData.projectRoot,
 				projectData.projectName,
 				"app",
+				"package.json",
+			);
+		} else if (
+			this.$mobileHelper.isWindowsPlatform(platformData.platformNameLowerCase)
+		) {
+			packagePath = path.join(
+				platformData.appDestinationDirectoryPath,
+				APP_FOLDER_NAME,
 				"package.json",
 			);
 		} else {

@@ -45,6 +45,32 @@ export class IOSBuildData extends BuildData implements IiOSBuildData {
 	}
 }
 
+export class WindowsBuildData extends BuildData {
+	public certificate: string;
+	public certificatePassword: string;
+	public certificateThumbprint: string;
+	public storeUpload: boolean;
+	public msixBundle: boolean;
+	public architectures: string[];
+	public sourceProtect: boolean;
+	public sourceProtectKeyHex: string;
+
+	constructor(projectDir: string, platform: string, data: any) {
+		super(projectDir, platform, data);
+
+		this.certificate = data.certificate;
+		this.certificatePassword = data.certificatePassword;
+		this.certificateThumbprint = data.certificateThumbprint;
+		this.storeUpload = data.storeUpload;
+		this.msixBundle = data.msixBundle || data.msixbundle;
+		this.architectures = data.arch
+			? [data.arch]
+			: data.architectures ?? ["x64"];
+		this.sourceProtect = data.sourceProtect;
+		this.sourceProtectKeyHex = data.sourceProtectKeyHex;
+	}
+}
+
 export class AndroidBuildData extends BuildData {
 	public keyStoreAlias: string;
 	public keyStorePath: string;

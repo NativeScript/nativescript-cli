@@ -92,7 +92,7 @@ export class DebugController extends EventEmitter implements IDebugController {
 		const debugService = this.getDeviceDebugService(device);
 		if (!debugService) {
 			this.$errors.fail(
-				`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS or Android.`
+				`Unsupported device OS: ${device.deviceInfo.platform}. You can debug your applications only on iOS, Android or Windows.`
 			);
 		}
 
@@ -301,6 +301,10 @@ export class DebugController extends EventEmitter implements IDebugController {
 				this._platformDebugServices[
 					device.deviceInfo.identifier
 				] = this.$injector.resolve("androidDeviceDebugService", { device });
+			} else if (this.$mobileHelper.isWindowsPlatform(devicePlatform)) {
+				this._platformDebugServices[
+					device.deviceInfo.identifier
+				] = this.$injector.resolve("windowsDeviceDebugService", { device });
 			} else {
 				this.$errors.fail(
 					DebugCommandErrors.UNSUPPORTED_DEVICE_OS_FOR_DEBUGGING

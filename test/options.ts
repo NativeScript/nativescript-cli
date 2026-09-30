@@ -101,6 +101,15 @@ describe("options", () => {
 			assert.isTrue(isExecutionStopped);
 		});
 
+		it("maps --no-auto-guid to autoGuid: false", () => {
+			process.argv.push("--no-auto-guid");
+			const options = createOptions(testInjector);
+			options.validateOptions();
+			process.argv.pop();
+			assert.isFalse(isExecutionStopped);
+			assert.isFalse((<any>options).autoGuid);
+		});
+
 		it("does not break execution when valid option has correct value", () => {
 			process.argv.push("--path");
 			process.argv.push("SomeDir");

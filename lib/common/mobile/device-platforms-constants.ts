@@ -6,6 +6,7 @@ export class DevicePlatformsConstants
 	public iOS = "iOS";
 	public Android = "Android";
 	public visionOS = "visionOS";
+	public Windows = "Windows";
 
 	public isiOS(value: string) {
 		return value.toLowerCase() === this.iOS.toLowerCase();
@@ -17,6 +18,10 @@ export class DevicePlatformsConstants
 
 	public isvisionOS(value: string) {
 		return value.toLowerCase() === this.visionOS.toLowerCase();
+	}
+
+	public isWindows(value: string) {
+		return value.toLowerCase() === this.Windows.toLowerCase();
 	}
 }
 injector.register("devicePlatformsConstants", DevicePlatformsConstants);

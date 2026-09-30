@@ -43,6 +43,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private commonSysInfoCache: NativeScriptDoctor.ICommonSysInfoData;
 	private androidSysInfoCache: NativeScriptDoctor.IAndroidSysInfoData;
 	private iOSSysInfoCache: NativeScriptDoctor.IiOSSysInfoData;
+	private windowsSysInfoCache: NativeScriptDoctor.IWindowsSysInfoData;
+	private dotNetSdkVerCache: string;
+	private isWindowsDeveloperModeEnabledCache: boolean;
 
 	private isCocoaPodsWorkingCorrectlyCache: boolean;
 	private nativeScriptCliVersionCache: string;
@@ -59,10 +62,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		private hostInfo: HostInfo,
 		private winReg: WinReg,
 		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
-	) {
-		// keep reference to preserve constructor signature compatibility
-		void this.winReg;
-	}
+	) {}
 
 	public getJavaCompilerVersion(): Promise<string> {
 		return this.getValueForProperty(
@@ -389,11 +389,29 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			);
 		}
 
-		return Object.assign(
+		if (
+			config &&
+			config.platform &&
+			config.platform.toLowerCase() ===
+				Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
+		) {
+			return <NativeScriptDoctor.ISysInfoData>(
+				Object.assign(
+					await this.getCommonSysInfo(),
+					await this.getWindowsSysInfo(),
+				)
+			);
+		}
+
+		const sysInfoParts: object[] = [
 			await this.getCommonSysInfo(),
 			await this.getAndroidSysInfo(),
 			await this.getiOSSysInfo(),
-		);
+		];
+		if (this.hostInfo.isWindows) {
+			sysInfoParts.push(await this.getWindowsSysInfo());
+		}
+		return Object.assign({}, ...sysInfoParts);
 	}
 
 	public isCocoaPodsWorkingCorrectly(): Promise<boolean> {
@@ -767,6 +785,62 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 					await this.isAndroidSdkConfiguredCorrectly();
 
 				return result;
+			},
+		);
+	}
+
+	private getWindowsSysInfo(): Promise<NativeScriptDoctor.IWindowsSysInfoData> {
+		return this.getValueForProperty(
+			() => this.windowsSysInfoCache,
+			async (): Promise<NativeScriptDoctor.IWindowsSysInfoData> => {
+				const result: NativeScriptDoctor.IWindowsSysInfoData =
+					Object.create(null);
+				result.dotNetSdkVer = await this.getDotNetSdkVersion();
+				result.isWindowsDeveloperModeEnabled =
+					await this.isWindowsDeveloperModeEnabled();
+				return result;
+			},
+		);
+	}
+
+	private getDotNetSdkVersion(): Promise<string> {
+		return this.getValueForProperty(
+			() => this.dotNetSdkVerCache,
+			async (): Promise<string> => {
+				if (!this.hostInfo.isWindows) {
+					return null;
+				}
+				// `dotnet --version` honors global.json; take the newest installed SDK.
+				const output = await this.execCommand("dotnet --list-sdks");
+				return this.getLatestDotNetSdkVersion(output);
+			},
+		);
+	}
+
+	// One `<version> [<install dir>]` per line.
+	private getLatestDotNetSdkVersion(output: string): string {
+		const versions = (output || "")
+			.split(/\r?\n/)
+			.map((line) => line.trim().split(/\s+/)[0])
+			.filter((version) => !!semver.valid(version));
+		return versions.sort(semver.rcompare)[0] || null;
+	}
+
+	// `ns run windows` registers debug builds, which requires Developer Mode.
+	private isWindowsDeveloperModeEnabled(): Promise<boolean> {
+		return this.getValueForProperty(
+			() => this.isWindowsDeveloperModeEnabledCache,
+			async (): Promise<boolean> => {
+				if (!this.hostInfo.isWindows) {
+					return false;
+				}
+				const value = await this.winReg.getRegistryValue(
+					"AllowDevelopmentWithoutDevLicense",
+					this.winReg.registryKeys.HKLM,
+					"\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\AppModelUnlock",
+				);
+				// REG_DWORD values are hex strings, e.g. "0x1".
+				return Number(value) === 1;
 			},
 		);
 	}

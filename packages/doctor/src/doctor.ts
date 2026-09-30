@@ -3,6 +3,7 @@ import { EOL } from "os";
 import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
+import { WindowsLocalBuildRequirements } from "./local-build-requirements/windows-local-build-requirements";
 import * as semver from "semver";
 
 export class Doctor implements NativeScriptDoctor.IDoctor {
@@ -14,6 +15,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		private iOSLocalBuildRequirements: IosLocalBuildRequirements,
 		private sysInfo: NativeScriptDoctor.ISysInfo,
 		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
+		private windowsLocalBuildRequirements: WindowsLocalBuildRequirements,
 	) {}
 
 	public async canExecuteLocalBuild(
@@ -34,6 +36,10 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			platform.toLowerCase() === Constants.IOS_PLATFORM_NAME.toLowerCase()
 		) {
 			return await this.iOSLocalBuildRequirements.checkRequirements();
+		} else if (
+			platform.toLowerCase() === Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
+		) {
+			return await this.windowsLocalBuildRequirements.checkRequirements();
 		}
 
 		return false;
@@ -69,12 +75,31 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			result = result.concat(await this.getiOSInfos(sysInfoData));
 		}
 
+		if (
+			!config ||
+			!config.platform ||
+			config.platform.toLowerCase() ===
+				Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
+		) {
+			result = result.concat(this.getWindowsInfos(sysInfoData));
+		}
+
 		if (!this.hostInfo.isDarwin) {
 			result.push({
 				message:
 					"Local builds for iOS can be executed only on a macOS system. To build for iOS on a different operating system, you can use the NativeScript cloud infrastructure.",
 				additionalInformation: "",
 				platforms: [Constants.IOS_PLATFORM_NAME],
+				type: Constants.INFO_TYPE_NAME,
+			});
+		}
+
+		if (!this.hostInfo.isWindows) {
+			result.push({
+				message:
+					"Local builds for Windows can be executed only on a Windows system.",
+				additionalInformation: "",
+				platforms: [Constants.WINDOWS_PLATFORM_NAME],
 				type: Constants.INFO_TYPE_NAME,
 			});
 		}
@@ -275,6 +300,42 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			}
 		}
 
+		return result;
+	}
+
+	private getWindowsInfos(
+		sysInfoData: NativeScriptDoctor.ISysInfoData,
+	): NativeScriptDoctor.IInfo[] {
+		let result: NativeScriptDoctor.IInfo[] = [];
+		if (this.hostInfo.isWindows) {
+			const dotNetSdkVer = sysInfoData.dotNetSdkVer;
+			const minDotNetSdkVer = Constants.DOTNET_SDK_MIN_REQUIRED_VERSION;
+			result = result.concat(
+				this.processSysInfoItem({
+					item:
+						!!dotNetSdkVer && semver.major(dotNetSdkVer) >= minDotNetSdkVer,
+					infoMessage: `The .NET SDK ${dotNetSdkVer} is installed.`,
+					warningMessage: dotNetSdkVer
+						? `The .NET SDK ${dotNetSdkVer} is older than the required version ${minDotNetSdkVer}.`
+						: "The .NET SDK is not installed.",
+					additionalInformation:
+						`You will not be able to build your projects for Windows.${EOL}` +
+						`Install the .NET SDK ${minDotNetSdkVer} or later from https://dotnet.microsoft.com/download${EOL}` +
+						`For more information visit: ${Constants.WINDOWS_SYSTEM_REQUIREMENTS_LINK}`,
+					platforms: [Constants.WINDOWS_PLATFORM_NAME],
+				}),
+				this.processSysInfoItem({
+					item: sysInfoData.isWindowsDeveloperModeEnabled,
+					infoMessage: "Windows Developer Mode is enabled.",
+					warningMessage: "Windows Developer Mode is not enabled.",
+					additionalInformation:
+						`You will not be able to run your projects on this machine.${EOL}` +
+						`Turn on Developer Mode in Settings > System > For developers.${EOL}` +
+						`For more information visit: ${Constants.WINDOWS_SYSTEM_REQUIREMENTS_LINK}`,
+					platforms: [Constants.WINDOWS_PLATFORM_NAME],
+				}),
+			);
+		}
 		return result;
 	}
 

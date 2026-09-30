@@ -30,20 +30,20 @@ export class RunCommandBase implements ICommand {
 		private $migrateController: IMigrateController,
 		private $options: IOptions,
 		private $projectData: IProjectData,
-		private $keyCommandHelper: IKeyCommandHelper
+		private $keyCommandHelper: IKeyCommandHelper,
 	) {}
 
 	public allowedParameters: ICommandParameter[] = [];
 	public async execute(args: string[]): Promise<void> {
 		await this.$liveSyncCommandHelper.executeCommandLiveSync(
 			this.platform,
-			this.liveSyncCommandHelperAdditionalOptions
+			this.liveSyncCommandHelperAdditionalOptions,
 		);
 
 		if (process.env.NS_IS_INTERACTIVE) {
 			this.$keyCommandHelper.attachKeyCommands(
 				this.platform as IKeyCommandPlatform,
-				"run"
+				"run",
 			);
 		}
 	}
@@ -64,7 +64,7 @@ export class RunCommandBase implements ICommand {
 			: [
 					this.$devicePlatformsConstants.Android,
 					this.$devicePlatformsConstants.iOS,
-			  ];
+				];
 
 		if (!this.$options.force) {
 			await this.$migrateController.validate({
@@ -100,7 +100,7 @@ export class RunIosCommand implements ICommand {
 		protected $injector: IInjector,
 		protected $options: IOptions,
 		protected $platformValidationService: IPlatformValidationService,
-		protected $projectDataService: IProjectDataService
+		protected $projectDataService: IProjectDataService,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -113,11 +113,11 @@ export class RunIosCommand implements ICommand {
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				this.platform,
-				projectData
+				projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.platform} can not be built on this OS`
+				`Applications for platform ${this.platform} can not be built on this OS`,
 			);
 		}
 
@@ -127,7 +127,7 @@ export class RunIosCommand implements ICommand {
 				this.$options.provision,
 				this.$options.teamId,
 				projectData,
-				this.platform.toLowerCase()
+				this.platform.toLowerCase(),
 			));
 		return result;
 	}
@@ -154,7 +154,7 @@ export class RunAndroidCommand implements ICommand {
 		private $injector: IInjector,
 		private $options: IOptions,
 		private $platformValidationService: IPlatformValidationService,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {}
 
 	public async execute(args: string[]): Promise<void> {
@@ -167,11 +167,11 @@ export class RunAndroidCommand implements ICommand {
 		if (
 			!this.$platformValidationService.isPlatformSupportedForOS(
 				this.$devicePlatformsConstants.Android,
-				this.$projectData
+				this.$projectData,
 			)
 		) {
 			this.$errors.fail(
-				`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`
+				`Applications for platform ${this.$devicePlatformsConstants.Android} can not be built on this OS`,
 			);
 		}
 
@@ -190,7 +190,7 @@ export class RunAndroidCommand implements ICommand {
 			this.$options.provision,
 			this.$options.teamId,
 			this.$projectData,
-			this.$devicePlatformsConstants.Android.toLowerCase()
+			this.$devicePlatformsConstants.Android.toLowerCase(),
 		);
 	}
 }
@@ -208,7 +208,7 @@ export class RunVisionOSCommand extends RunIosCommand {
 		protected $injector: IInjector,
 		protected $options: IOptions,
 		protected $platformValidationService: IPlatformValidationService,
-		protected $projectDataService: IProjectDataService
+		protected $projectDataService: IProjectDataService,
 	) {
 		super(
 			$devicePlatformsConstants,
@@ -216,10 +216,61 @@ export class RunVisionOSCommand extends RunIosCommand {
 			$injector,
 			$options,
 			$platformValidationService,
-			$projectDataService
+			$projectDataService,
 		);
 	}
 }
 
 injector.registerCommand("run|vision", RunVisionOSCommand);
 injector.registerCommand("run|visionos", RunVisionOSCommand);
+
+export class RunWindowsCommand implements ICommand {
+	@cache()
+	private get runCommand(): RunCommandBase {
+		const runCommand = this.$injector.resolve<RunCommandBase>(RunCommandBase);
+		runCommand.platform = this.platform;
+		return runCommand;
+	}
+
+	public allowedParameters: ICommandParameter[] = [];
+	public get platform(): string {
+		return this.$devicePlatformsConstants.Windows;
+	}
+
+	constructor(
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
+		private $injector: IInjector,
+		private $options: IOptions,
+		private $platformValidationService: IPlatformValidationService,
+		private $projectData: IProjectData,
+	) {}
+
+	public async execute(args: string[]): Promise<void> {
+		return this.runCommand.execute(args);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		await this.runCommand.canExecute(args);
+
+		if (
+			!this.$platformValidationService.isPlatformSupportedForOS(
+				this.$devicePlatformsConstants.Windows,
+				this.$projectData,
+			)
+		) {
+			this.$errors.fail(
+				`Applications for platform ${this.$devicePlatformsConstants.Windows} can not be built on this OS`,
+			);
+		}
+
+		return this.$platformValidationService.validateOptions(
+			this.$options.provision,
+			this.$options.teamId,
+			this.$projectData,
+			this.$devicePlatformsConstants.Windows.toLowerCase(),
+		);
+	}
+}
+
+injector.registerCommand("run|windows", RunWindowsCommand);

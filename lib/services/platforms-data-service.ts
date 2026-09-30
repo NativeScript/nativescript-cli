@@ -10,18 +10,20 @@ export class PlatformsDataService implements IPlatformsDataService {
 	constructor(
 		private $options: IOptions,
 		$androidProjectService: IPlatformProjectService,
-		$iOSProjectService: IPlatformProjectService
+		$iOSProjectService: IPlatformProjectService,
+		$windowsProjectService: IPlatformProjectService,
 	) {
 		this.platformsDataService = {
 			ios: $iOSProjectService,
 			android: $androidProjectService,
 			visionos: $iOSProjectService,
+			windows: $windowsProjectService,
 		};
 	}
 
 	public getPlatformData(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): IPlatformData {
 		const platformKey = platform && _.first(platform.toLowerCase().split("@"));
 		let platformData: IPlatformData;

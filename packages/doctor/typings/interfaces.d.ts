@@ -367,10 +367,24 @@ declare module NativeScriptDoctor {
 		dotNetVer?: string;
 	}
 
+	interface IWindowsSysInfoData {
+		/**
+		 * Latest installed .NET SDK version, from `dotnet --list-sdks`. Valid only on Windows.
+		 * @type {string}
+		 */
+		dotNetSdkVer?: string;
+		/**
+		 * Whether Windows Developer Mode is enabled. Valid only on Windows.
+		 * @type {boolean}
+		 */
+		isWindowsDeveloperModeEnabled?: boolean;
+	}
+
 	interface ISysInfoData
 		extends ICommonSysInfoData,
 			IiOSSysInfoData,
-			IAndroidSysInfoData {}
+			IAndroidSysInfoData,
+			IWindowsSysInfoData {}
 
 	/**
 	 * Describes warning returned from @nativescript/doctor check.

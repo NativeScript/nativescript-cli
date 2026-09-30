@@ -42,6 +42,7 @@ export class DevicesService
 		private $iOSSimulatorDiscovery: Mobile.IiOSSimulatorDiscovery,
 		private $iOSDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
+		private $windowsDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $staticConfig: Config.IStaticConfig,
 		private $messages: IMessages,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -64,6 +65,7 @@ export class DevicesService
 			this.$iOSDeviceDiscovery,
 			this.$androidDeviceDiscovery,
 			this.$iOSSimulatorDiscovery,
+			this.$windowsDeviceDiscovery,
 		];
 	}
 
@@ -324,6 +326,7 @@ export class DevicesService
 			this.$iOSSimulatorDiscovery,
 			this.$iOSDeviceDiscovery,
 			this.$androidDeviceDiscovery,
+			this.$windowsDeviceDiscovery,
 		].forEach(this.attachToDeviceDiscoveryEvents.bind(this));
 	}
 
@@ -1145,6 +1148,10 @@ export class DevicesService
 			this.$hostInfo.isDarwin
 		) {
 			await this.$iOSSimulatorDiscovery.startLookingForDevices(
+				deviceLookingOptions,
+			);
+		} else if (this.$mobileHelper.isWindowsPlatform(platform)) {
+			await this.$windowsDeviceDiscovery.startLookingForDevices(
 				deviceLookingOptions,
 			);
 		}

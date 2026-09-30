@@ -135,12 +135,18 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public deleteDirectory(directory: string): void {
-		shelljs.rm("-rf", directory);
-
-		const err = shelljs.error();
-
-		if (err !== null) {
-			throw new Error(err);
+		// fs.rmSync handles Windows edge cases (read-only attributes, long paths)
+		// more reliably than shelljs.rm on Node.js 20+.
+		try {
+			fs.rmSync(directory, { recursive: true, force: true });
+		} catch (e: any) {
+			// If rmSync itself fails (e.g., files locked by another process on Windows),
+			// fall back to shelljs so behaviour on other platforms is unchanged.
+			shelljs.rm("-rf", directory);
+			const err = shelljs.error();
+			if (err !== null) {
+				throw new Error(e?.message ?? err);
+			}
 		}
 	}
 
@@ -321,7 +327,12 @@ export class FileSystem implements IFileSystem {
 
 		// MobileApplication.app is resolved as a directory on Mac,
 		// therefore we need to copy it recursively as it's not a single file.
-		shelljs.cp("-rf", sourceFileName, destinationFileName);
+		// On Windows, shelljs glob expansion requires forward slashes.
+		const normalizedSource =
+			process.platform === "win32"
+				? sourceFileName.replace(/\\/g, "/")
+				: sourceFileName;
+		shelljs.cp("-rf", normalizedSource, destinationFileName);
 
 		const err = shelljs.error();
 
@@ -408,7 +419,31 @@ export class FileSystem implements IFileSystem {
 	}
 
 	public rename(oldPath: string, newPath: string): void {
-		fs.renameSync(oldPath, newPath);
+		// On Windows, AV scanners can briefly lock a newly-created
+		// directory, causing a transient EPERM on rename.  Retry with backoff.
+		const maxAttempts = 5;
+		const delayMs = 200;
+		for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+			try {
+				fs.renameSync(oldPath, newPath);
+				return;
+			} catch (e) {
+				if (e.code === "EPERM" && attempt < maxAttempts) {
+					Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delayMs * attempt);
+					continue;
+				}
+				
+				// Use fs.cpSync rather than this.copyFile: shelljs cp places src as a
+				// child of dest when dest already exists, whereas cpSync always writes
+				// to the dest path itself regardless of whether it pre-exists.
+				if (e.code === "EPERM" && process.platform === "win32") {
+					fs.cpSync(oldPath, newPath, { recursive: true });
+					this.deleteDirectory(oldPath);
+					return;
+				}
+				throw e;
+			}
+		}
 	}
 
 	public renameIfExists(oldPath: string, newPath: string): boolean {
