@@ -88,7 +88,7 @@ The NativeScript CLI is the command-line interface for interacting with NativeSc
 * **Devices Service** - provides the communication between NativeScript and devices/emulators/simulators used to run/debug the app. Uses iTunes to talk to iOS, adb for Android, and local MSIX deployment for Windows.
 * **LiveSync Service** - redeploys applications when code changes during development
 * **Hooks Service** - executes custom-written hooks in developed application, thus modifying the build process
-* **Platforms Service** - provides app build functionalities, uses Gradle to build Android packages, Xcode for iOS, and MSBuild for Windows.
+* **Platforms Service** - provides app build functionalities, uses Gradle to build Android packages, Xcode for iOS, and the .NET SDK (`dotnet build`) for Windows.
 
 [Back to Top][1]
 
@@ -293,7 +293,7 @@ When you build for iOS, the NativeScript CLI will either build for a device, if 
 
 > **IMPORTANT:** To build your app for an iOS device, you must configure a valid certificate and provisioning profile pair, and have that pair present on your system for code signing your application package. For more information, see [iOS Code Signing - A Complete Walkthrough](https://seventhsoulmountain.blogspot.com/2013/09/ios-code-sign-in-complete-walkthrough.html).
 
-To build for Windows, you need the [.NET 10 SDK](https://dotnet.microsoft.com/download) with the Windows App SDK workload (`dotnet workload install windows`) and Developer Mode enabled. `ns build windows` produces an MSIX package.
+To build for Windows, you need the [.NET 10 SDK](https://dotnet.microsoft.com/download) or later, and Developer Mode enabled to run debug builds on the local machine. `ns build windows --release` produces an MSIX package.
 
 [Back to Top][1]
 

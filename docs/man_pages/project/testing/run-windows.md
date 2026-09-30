@@ -11,7 +11,7 @@ Runs your project on the local Windows machine. This is shorthand for prepare, b
 
 <% if(isConsole && (isLinux || isMacOS)) { %>WARNING: You can run this command only on Windows systems. To view the complete help for this command, run `$ ns help run windows`<% } %>
 <% if((isConsole && isWindows) || isHtml) { %>
-When running this command without passing `--release` flag, the app is built in debug configuration with the DevTools server enabled on port 9229.
+When running this command without passing `--release` flag, the app is built in debug configuration and registered on the local machine. To start it with the Chrome DevTools inspector enabled, use `$ ns debug windows`.
 <% } %>
 
 ### Commands
@@ -38,8 +38,8 @@ Run on the local Windows device | `$ ns run windows [--release] [--justlaunch] [
 
 Before running your app, verify that your system meets the following requirements.
 * Windows 10 version 1809 (build 17763) or later.
-* [.NET 10 SDK](https://dotnet.microsoft.com/download) with the Windows App SDK workload installed.
-* Developer Mode enabled in Windows Settings → Privacy & Security → For Developers.
+* [.NET 10 SDK](https://dotnet.microsoft.com/download) or later.
+* Developer Mode enabled in Windows Settings → System → For developers.
 
 ### Command Limitations
 
@@ -49,7 +49,7 @@ Before running your app, verify that your system meets the following requirement
 
 Command | Description
 ----------|----------
-[build windows](build-windows.html) | Builds the project for Windows and produces an MSIX package.
+[build windows](build-windows.html) | Builds the project for Windows.
 [build android](build-android.html) | Builds the project for Android.
 [build ios](build-ios.html) | Builds the project for iOS.
 [build](build.html) | Builds the project for the selected target platform.

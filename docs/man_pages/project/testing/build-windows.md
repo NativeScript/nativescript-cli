@@ -7,7 +7,7 @@ position: 4
 
 ### Description
 
-Builds the project for Windows and produces an MSIX package that you can deploy on any Windows 10/11 machine with Developer Mode enabled.
+Builds the project for Windows. A debug build produces the app layout in `platforms/windows/<Project Name>/bin`, which `$ ns run windows` registers on the local machine (this requires Developer Mode). A release build produces an MSIX package (`.msix`, `.msixbundle` or `.msixupload`) in `platforms/windows/<Project Name>/AppPackages` that you can sideload on Windows 10/11 machines or submit to the Microsoft Store.
 
 <% if(isConsole && (isLinux || isMacOS)) { %>WARNING: You can run this command only on Windows systems. To view the complete help for this command, run `$ ns help build windows`<% } %>
 <% if((isConsole && isWindows) || isHtml) { %>
@@ -19,7 +19,7 @@ General | `$ ns build windows [--release [--certificate <File Path> --certificat
 
 ### Options
 
-* `--release` - If set, produces a release build and packages it as an MSIX. By default this produces a sideloadable `.msix` (sign it with the `--certificate*` options); pass `--store-upload` to produce a `.msixupload` bundle for the Microsoft Store instead. Without `--release`, produces a debug build with DevTools support enabled.
+* `--release` - If set, produces a release build and packages it as an MSIX. By default this produces a sideloadable `.msix` (sign it with the `--certificate*` options); pass `--store-upload` to produce a `.msixupload` bundle for the Microsoft Store instead. Without `--release`, produces a debug build (not an MSIX package) that includes the Chrome DevTools inspector.
 * `--certificate` - Specifies the file path to the code-signing certificate (`.pfx`) used to sign the release MSIX. Path is resolved relative to the project directory if not absolute. Used together with `--release`.
 * `--certificate-password` - Provides the password for the certificate specified with `--certificate`.
 * `--certificate-thumbprint` - Signs the release MSIX using an already-installed certificate identified by its thumbprint, instead of a `.pfx` file. Used together with `--release`. Takes precedence over `--certificate`.
@@ -41,8 +41,7 @@ General | `$ ns build windows [--release [--certificate <File Path> --certificat
 ### Prerequisites
 
 * Windows 10 version 1809 (build 17763) or later.
-* [.NET 10 SDK](https://dotnet.microsoft.com/download) with the Windows App SDK workload installed (`dotnet workload install windows`).
-* MSBuild available in `PATH` (installed with Visual Studio or the .NET SDK).
+* [.NET 10 SDK](https://dotnet.microsoft.com/download) or later. The CLI builds the project with `dotnet build`, Visual Studio is not required.
 
 ### Command Limitations
 

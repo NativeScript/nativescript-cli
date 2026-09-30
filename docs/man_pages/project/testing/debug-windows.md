@@ -7,7 +7,7 @@ position: 7
 
 ### Description
 
-Initiates a debugging session for your project on the local Windows machine. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. The NativeScript runtime starts a Chrome DevTools Protocol server on port 9229. Attach Chrome DevTools or any CDP-compatible debugger to `ws://localhost:9229`.
+Initiates a debugging session for your project on the local Windows machine. When necessary, the command will prepare, build, deploy and launch the app before starting the debug session. The app starts the Chrome DevTools inspector on `127.0.0.1:43000` (or the next free port), and the command prints the URL to open in Google Chrome.
 
 <% if(isConsole && (isLinux || isMacOS)) { %>WARNING: You can run this command only on Windows systems. To view the complete help for this command, run `$ ns help debug windows`<% } %>
 <% if((isConsole && isWindows) || isHtml) { %>
@@ -21,9 +21,9 @@ Attach the debug tools to a running app | `$ ns debug windows --start [--timeout
 
 ### Options
 
-* `--debug-brk` - Builds, deploys and launches the application and stops at the first JavaScript statement.
-* `--start` - Attaches the debug tools to a deployed and running app without restarting it.
-* `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the app to launch. Default: 90 seconds.
+* `--debug-brk` - Builds, deploys and launches the application and stops at the first JavaScript statement. The app waits up to 30 seconds for the debugger to attach.
+* `--start` - Attaches the debug tools to a deployed app that is already running with the debugger enabled, without restarting it.
+* `--timeout` - Sets the number of seconds that the NativeScript CLI will wait for the debugger to start. Default: 60 seconds.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--no-hmr` - Disables Hot Module Replacement (HMR).
 * `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times.
@@ -36,16 +36,16 @@ Attach the debug tools to a running app | `$ ns debug windows --start [--timeout
 ### Prerequisites
 
 * Windows 10 version 1809 (build 17763) or later.
-* [.NET 10 SDK](https://dotnet.microsoft.com/download) with the Windows App SDK workload installed.
-* Developer Mode enabled in Windows Settings.
+* [.NET 10 SDK](https://dotnet.microsoft.com/download) or later.
+* Developer Mode enabled in Windows Settings → System → For developers.
 * Google Chrome or any debugger supporting the Chrome DevTools Protocol (CDP).
 
 ### How to attach Chrome DevTools
 
 1. Run `ns debug windows`
-2. Open Chrome and navigate to `chrome://inspect`
-3. Under **Devices**, click **Configure** and add `localhost:9229`
-4. The NativeScript runtime will appear under **Remote Target**. Click **inspect**
+2. Open the printed `devtools://devtools/bundled/inspector.html?ws=127.0.0.1:43000` URL in Chrome
+
+Alternatively, open `chrome://inspect` in Chrome, click **Configure** under **Devices** and add `127.0.0.1:43000`. The NativeScript runtime will appear under **Remote Target**. Click **inspect**.
 
 ### Command Limitations
 
@@ -55,7 +55,7 @@ Attach the debug tools to a running app | `$ ns debug windows --start [--timeout
 
 Command | Description
 ----------|----------
-[build windows](build-windows.html) | Builds the project for Windows and produces an MSIX package.
+[build windows](build-windows.html) | Builds the project for Windows.
 [build android](build-android.html) | Builds the project for Android.
 [build ios](build-ios.html) | Builds the project for iOS.
 [build](build.html) | Builds the project for the selected target platform.

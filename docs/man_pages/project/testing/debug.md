@@ -41,7 +41,7 @@ Usage | Synopsis
 `<Platform>` is the target platform for which you want to debug your project. You can set the following target platforms:
 * `android` - Start a debugging session for your project on a connected Android device or Android emulator.
 * `ios` - Start a debugging session for your project on a connected iOS device or in the native iOS simulator.
-* `windows` - Start a debugging session on the local Windows machine via Chrome DevTools Protocol on port 9229 (Windows only).<% } %>
+* `windows` - Start a debugging session on the local Windows machine via the Chrome DevTools Protocol on port 43000 (Windows only).<% } %>
 
 <% if(isHtml) { %>
 
