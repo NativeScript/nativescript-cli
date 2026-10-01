@@ -8,8 +8,7 @@ import * as _ from "lodash";
 import { EventEmitter } from "events";
 import * as fs from "fs";
 import { NpmConfigService } from "../../lib/services/npm-config-service";
-import { INpmConfigService } from "../../lib/declarations";
-import { IProxySettings } from "../../lib/common/declarations";
+import { IDictionary, IProxySettings } from "../../lib/common/declarations";
 import { IInjector } from "../../lib/common/definitions/yok";
 import { Arborist } from "@npmcli/arborist";
 import * as pacote from "pacote";
@@ -20,6 +19,7 @@ use(chaiAsPromised);
 
 let defaultPacoteOpts: IPacoteBaseOptions = null;
 let isNpmConfigSet = false;
+let npmConfig: IDictionary<any> = null;
 const packageName = "testPackage";
 const fullPath = `/Users/username/${packageName}`;
 const destinationDir = "destinationDir";
@@ -49,14 +49,16 @@ interface ITestCase extends ITestSetup {
 const createTestInjector = (opts?: ITestSetup): IInjector => {
 	opts = opts || {};
 	const testInjector = new Yok();
-	testInjector.register("npmConfigService", NpmConfigService);
-
+	// Each `npm config` read recomputes `before` from `min-release-age`, so
+	// read it once and share it, keeping expectations comparable.
 	if (!isNpmConfigSet) {
-		const npmConfigService: INpmConfigService =
-			testInjector.resolve("npmConfigService");
-		defaultPacoteOpts = { ...npmConfigService.getConfig(), Arborist };
+		npmConfig = new NpmConfigService().getConfig();
+		defaultPacoteOpts = { ...npmConfig, Arborist };
 		isNpmConfigSet = true;
 	}
+	testInjector.register("npmConfigService", {
+		getConfig: (): IDictionary<any> => ({ ...npmConfig }),
+	});
 
 	const npmCachePath = defaultPacoteOpts["cache"];
 

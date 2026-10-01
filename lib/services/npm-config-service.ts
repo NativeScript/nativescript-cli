@@ -28,6 +28,13 @@ export class NpmConfigService implements INpmConfigService {
 						? value
 						: value.replace(/\${([^}]+)}/, (_, envVar) => process.env[envVar]);
 			});
+
+			// pacote calls before.toISOString(), but JSON gives an ISO string
+			// (npm derives `before` from `min-release-age`).
+			if (this.config.before) {
+				const before = new Date(this.config.before);
+				this.config.before = isNaN(before.getTime()) ? null : before;
+			}
 		} catch (e) {}
 	}
 }
