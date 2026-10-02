@@ -12,6 +12,13 @@ interface IAndroidBuildOptions {
 	tempPluginDirPath: string;
 	gradlePath?: string;
 	gradleArgs?: string;
+	/**
+	 * Appended to the plugin name before it is shortened into the name of the
+	 * produced `.aar`. The npm scope is dropped when shortening, so two plugins
+	 * from different scopes can end up with the same `.aar` - a suffix tells
+	 * them apart.
+	 */
+	aarSuffix?: string;
 }
 
 interface IAndroidPluginBuildService {
