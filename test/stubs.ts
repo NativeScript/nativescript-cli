@@ -720,6 +720,14 @@ export class ProjectDataStub implements IProjectData {
 		return "";
 	}
 
+	public getBuildRelativeDirectoryPath(): string {
+		return "platforms";
+	}
+
+	public getIgnoredDependencies(platform?: string): string[] {
+		return [];
+	}
+
 	public getAppDirectoryPath(projectDir?: string): string {
 		if (!projectDir) {
 			projectDir = this.projectDir;

@@ -20,11 +20,16 @@ export class IOSEntitlementsService {
 
 	private getDefaultAppEntitlementsPath(projectData: IProjectData): string {
 		const entitlementsName = IOSEntitlementsService.DefaultEntitlementsName;
+		const requestedPlatform = this.$mobileHelper.normalizePlatformName(
+			this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
+		);
+		// Catalyst has no App_Resources folder of its own, it reuses the iOS one.
+		const platform = this.$mobileHelper.isCatalystPlatform(requestedPlatform)
+			? this.$devicePlatformsConstants.iOS
+			: requestedPlatform;
 		const entitlementsPath = path.join(
 			projectData.appResourcesDirectoryPath,
-			this.$mobileHelper.normalizePlatformName(
-				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
-			),
+			platform,
 			entitlementsName,
 		);
 		return entitlementsPath;

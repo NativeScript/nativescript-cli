@@ -1,4 +1,5 @@
 import * as path from "path";
+import * as fs from "fs";
 import * as shell from "shelljs";
 import * as _ from "lodash";
 import * as constants from "../constants";
@@ -69,12 +70,23 @@ export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
 export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
+// Not an SDK name — Xcode names the Mac Catalyst products directory
+// `<Configuration>-maccatalyst`, and the build output path is derived from it.
+export const CatalystPlatformSdkName = "maccatalyst";
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
 const getPlatformSdkName = (buildData: IBuildData): string => {
 	const forDevice =
 		!buildData || buildData.buildForDevice || buildData.buildForAppStore;
+
+	if (
+		buildData &&
+		injector.resolve("devicePlatformsConstants").isCatalyst(buildData.platform)
+	) {
+		return CatalystPlatformSdkName;
+	}
+
 	const isvisionOS = injector
 		.resolve("devicePlatformsConstants")
 		.isvisionOS(buildData.platform);
@@ -153,21 +165,27 @@ export class IOSProjectService
 			(this._platformsDirCache !== projectData.platformsDir ||
 				this._platformOverrideCache !== currentOverride)
 		) {
-			const platform = this.$mobileHelper.normalizePlatformName(
+			const requestedPlatform = this.$mobileHelper.normalizePlatformName(
 				this.$options.platformOverride ?? this.$devicePlatformsConstants.iOS,
 			);
+			// Hooks and plugins switch on the iOS name, Catalyst must keep it.
+			const runtimePlatform = this.$mobileHelper.isCatalystPlatform(
+				requestedPlatform,
+			)
+				? this.$devicePlatformsConstants.iOS
+				: requestedPlatform;
 			const projectRoot = this.$options.hostProjectPath
 				? this.$options.hostProjectPath
-				: path.join(projectData.platformsDir, platform.toLowerCase());
+				: path.join(projectData.platformsDir, requestedPlatform.toLowerCase());
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				platform.toLowerCase() as constants.SupportedPlatform,
+				runtimePlatform.toLowerCase() as constants.SupportedPlatform,
 			);
 
 			this._platformData = {
 				frameworkPackageName: runtimePackage.name,
-				normalizedPlatformName: platform,
-				platformNameLowerCase: platform.toLowerCase(),
+				normalizedPlatformName: runtimePlatform,
+				platformNameLowerCase: runtimePlatform.toLowerCase(),
 				appDestinationDirectoryPath: path.join(
 					projectRoot,
 					projectData.projectName,
@@ -185,10 +203,12 @@ export class IOSProjectService
 				getValidBuildOutputData: (
 					buildOptions: IBuildData,
 				): IValidBuildOutputData => {
+					// Mac Catalyst produces a .app, never an .ipa.
 					const forDevice =
-						!buildOptions ||
-						!!buildOptions.buildForDevice ||
-						!!buildOptions.buildForAppStore;
+						!this.$mobileHelper.isCatalystPlatform(requestedPlatform) &&
+						(!buildOptions ||
+							!!buildOptions.buildForDevice ||
+							!!buildOptions.buildForAppStore);
 					if (forDevice) {
 						const ipaFileName = _.find(
 							this.$fs.readDirectory(
@@ -409,6 +429,57 @@ export class IOSProjectService
 		if (this.$fs.exists(xcframeworksFilePath)) {
 			await this.$fs.unzip(xcframeworksFilePath, internalDirPath);
 			this.$fs.deleteFile(xcframeworksFilePath);
+			this.restoreVersionedFrameworkSymlinks(internalDirPath);
+		}
+	}
+
+	/**
+	 * Recreates the symlink layout of versioned frameworks after extraction.
+	 */
+	private restoreVersionedFrameworkSymlinks(rootPath: string): void {
+		// Runtimes zip macOS style frameworks flattened, which breaks codesign.
+		const frameworks = fastGlob.sync("**/*.framework", {
+			cwd: rootPath,
+			onlyDirectories: true,
+			absolute: true,
+			deep: 4,
+		});
+
+		for (const frameworkPath of frameworks) {
+			const versionsPath = path.join(frameworkPath, "Versions");
+			if (!this.$fs.exists(versionsPath)) {
+				continue;
+			}
+
+			const versions = this.$fs
+				.readDirectory(versionsPath)
+				.filter((name) => name !== "Current");
+			if (!versions.length) {
+				continue;
+			}
+
+			const version = versions.includes("A") ? "A" : versions[0];
+			const currentPath = path.join(versionsPath, "Current");
+			if (!fs.lstatSync(currentPath, { throwIfNoEntry: false })?.isSymbolicLink()) {
+				shell.rm("-rf", currentPath);
+				fs.symlinkSync(version, currentPath);
+			}
+
+			for (const name of this.$fs.readDirectory(
+				path.join(versionsPath, version),
+			)) {
+				const topLevelPath = path.join(frameworkPath, name);
+				if (
+					fs
+						.lstatSync(topLevelPath, { throwIfNoEntry: false })
+						?.isSymbolicLink()
+				) {
+					continue;
+				}
+
+				shell.rm("-rf", topLevelPath);
+				fs.symlinkSync(path.join("Versions", "Current", name), topLevelPath);
+			}
 		}
 	}
 
@@ -450,7 +521,20 @@ export class IOSProjectService
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
-		if (buildData.buildForDevice) {
+		if (this.$devicePlatformsConstants.isCatalyst(buildData.platform)) {
+			// Signing is handled by `-allowProvisioningUpdates`: Mac Catalyst needs a
+			// macOS provisioning profile, which the iOS signing service cannot pick.
+			await attachAwaitDetach(
+				constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.$xcodebuildService.buildForCatalyst(
+					platformData,
+					projectData,
+					<any>buildData,
+				),
+			);
+		} else if (buildData.buildForDevice) {
 			await this.$iOSSigningService.setupSigningForDevice(
 				projectRoot,
 				projectData,

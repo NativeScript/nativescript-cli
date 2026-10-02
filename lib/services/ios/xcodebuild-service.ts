@@ -48,6 +48,22 @@ export class XcodebuildService implements IXcodebuildService {
 		});
 	}
 
+	public async buildForCatalyst(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		buildConfig: IBuildConfig
+	): Promise<void> {
+		const args = this.$xcodebuildArgsService.getBuildForCatalystArgs(
+			platformData,
+			projectData,
+			buildConfig
+		);
+		await this.$xcodebuildCommandService.executeCommand(args, {
+			cwd: platformData.projectRoot,
+			stdio: buildConfig.buildOutputStdio,
+		});
+	}
+
 	public async buildForAppStore(
 		platformData: IPlatformData,
 		projectData: IProjectData,

@@ -23,6 +23,8 @@ export class IOSDeviceDiscovery extends DeviceDiscovery {
 			options &&
 			options.platform &&
 			(!this.$mobileHelper.isApplePlatform(options.platform) ||
+				// Catalyst runs on this machine, not over usbmux.
+				this.$mobileHelper.isCatalystPlatform(options.platform) ||
 				options.emulator)
 		) {
 			return;

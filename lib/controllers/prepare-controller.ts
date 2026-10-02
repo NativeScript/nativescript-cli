@@ -100,6 +100,11 @@ export class PrepareController
 		return this.prepareCore(prepareData, projectData);
 	}
 
+	// Catalyst reports iOS in platform data, but events must say catalyst.
+	private getRequestedPlatform(prepareData: IPrepareData): string {
+		return prepareData.platform.toLowerCase();
+	}
+
 	public async stopWatchers(
 		projectDir: string,
 		platform: string,
@@ -223,18 +228,14 @@ export class PrepareController
 		projectData: IProjectData,
 		prepareData: IPrepareData,
 	): Promise<IPrepareResultData> {
+		const requestedPlatform = this.getRequestedPlatform(prepareData);
+
 		if (!this.watchersData[projectData.projectDir]) {
 			this.watchersData[projectData.projectDir] = {};
 		}
 
-		if (
-			!this.watchersData[projectData.projectDir][
-				platformData.platformNameLowerCase
-			]
-		) {
-			this.watchersData[projectData.projectDir][
-				platformData.platformNameLowerCase
-			] = {
+		if (!this.watchersData[projectData.projectDir][requestedPlatform]) {
+			this.watchersData[projectData.projectDir][requestedPlatform] = {
 				nativeFilesWatcher: null,
 				hasWebpackCompilerProcess: false,
 				prepareArguments: {
@@ -256,7 +257,7 @@ export class PrepareController
 			prepareData,
 		); // -> start watcher + initial prepare
 		const result = {
-			platform: platformData.platformNameLowerCase,
+			platform: requestedPlatform,
 			hasNativeChanges,
 		};
 
@@ -277,7 +278,7 @@ export class PrepareController
 				hasOnlyHotUpdateFiles: false,
 				hasNativeChanges: result.hasNativeChanges,
 				hmrData: null,
-				platform: platformData.platformNameLowerCase,
+				platform: requestedPlatform,
 			});
 		}
 
@@ -289,15 +290,14 @@ export class PrepareController
 		projectData: IProjectData,
 		prepareData: IPrepareData,
 	): Promise<void> {
+		const requestedPlatform = this.getRequestedPlatform(prepareData);
+
 		if (
-			!this.watchersData[projectData.projectDir][
-				platformData.platformNameLowerCase
-			].hasWebpackCompilerProcess
+			!this.watchersData[projectData.projectDir][requestedPlatform]
+				.hasWebpackCompilerProcess
 		) {
 			const handler = (data: any) => {
-				if (
-					data.platform.toLowerCase() === platformData.platformNameLowerCase
-				) {
+				if (data.platform.toLowerCase() === requestedPlatform) {
 					if (this.isFileWatcherPaused()) return;
 					this.emitPrepareEvent({ ...data, hasNativeChanges: false });
 				}
@@ -310,7 +310,7 @@ export class PrepareController
 			);
 
 			this.watchersData[projectData.projectDir][
-				platformData.platformNameLowerCase
+				requestedPlatform
 			].hasWebpackCompilerProcess = true;
 			await this.$bundlerCompilerService.compileWithWatch(
 				platformData,
@@ -332,6 +332,7 @@ export class PrepareController
 			newNativeWatchStarted = await this.startNativeWatcher(
 				platformData,
 				projectData,
+				prepareData,
 			);
 		}
 
@@ -350,11 +351,13 @@ export class PrepareController
 	private async startNativeWatcher(
 		platformData: IPlatformData,
 		projectData: IProjectData,
+		prepareData: IPrepareData,
 	): Promise<boolean> {
+		const requestedPlatform = this.getRequestedPlatform(prepareData);
+
 		if (
-			this.watchersData[projectData.projectDir][
-				platformData.platformNameLowerCase
-			].nativeFilesWatcher
+			this.watchersData[projectData.projectDir][requestedPlatform]
+				.nativeFilesWatcher
 		) {
 			return false;
 		}
@@ -386,14 +389,14 @@ export class PrepareController
 						hasOnlyHotUpdateFiles: false,
 						hmrData: null,
 						hasNativeChanges: true,
-						platform: platformData.platformNameLowerCase,
+						platform: requestedPlatform,
 					});
 				}
 			},
 		);
 
 		this.watchersData[projectData.projectDir][
-			platformData.platformNameLowerCase
+			requestedPlatform
 		].nativeFilesWatcher = watcher;
 
 		return true;
