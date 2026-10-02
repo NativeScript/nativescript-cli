@@ -38,6 +38,8 @@ import { injector } from "../common/yok";
 import * as _ from "lodash";
 import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 import { cwd } from "process";
+import { IAndroidToolsInfo } from "../declarations";
+import { IGradleBuildArgsService } from "../definitions/gradle";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -46,7 +48,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	constructor(
 		private $fs: IFileSystem,
+		private $androidToolsInfo: IAndroidToolsInfo,
 		private $childProcess: IChildProcess,
+		private $gradleBuildArgsService: IGradleBuildArgsService,
 		private $hostInfo: IHostInfo,
 		private $options: IOptions,
 		private $logger: ILogger,
@@ -263,7 +267,9 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
-				gradleArgs: options.gradleArgs,
+				gradleArgs: (
+					this.$projectData.nsConfig?.android?.gradleArgs ?? []
+				).concat(options.gradleArgs ?? []),
 				pluginDir: pluginTempDir,
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
@@ -413,10 +419,11 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		this.addCompileDependencies(platformsAndroidDirPath, buildGradlePath);
 		const runtimeGradleVersions =
 			await this.getRuntimeGradleVersions(projectDir);
-		this.replaceGradleVersion(
-			pluginTempDir,
-			runtimeGradleVersions.gradleVersion,
-		);
+		// a gradle version pinned in the project config wins over the runtime one
+		const gradleVersion =
+			this.$projectData.nsConfig?.android?.gradleVersion ??
+			runtimeGradleVersions.gradleVersion;
+		this.replaceGradleVersion(pluginTempDir, gradleVersion);
 		this.replaceGradleAndroidPluginVersion(
 			buildGradlePath,
 			runtimeGradleVersions.gradleAndroidPluginVersion,
@@ -808,22 +815,38 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			pluginBuildSettings.gradlePath ??
 			(this.$hostInfo.isWindows ? "gradlew.bat" : "./gradlew");
 
+		const toolsInfo = this.$androidToolsInfo.getToolsInfo({
+			projectDir: this.$projectData.projectDir,
+		});
+
 		const localArgs = [
 			"-p",
 			pluginBuildSettings.pluginDir,
 			"assembleRelease",
 			`-PtempBuild=true`,
+			`-PcompileSdk=${toolsInfo.compileSdkVersion}`,
+			`-PtargetSdk=${toolsInfo.targetSdkVersion}`,
+			`-PbuildToolsVersion=${toolsInfo.buildToolsVersion}`,
+			`-PprojectRoot=${this.$projectData.projectDir}`,
+			// settings.gradle runs before the project properties are available,
+			// so the same values have to be passed as system properties too
+			`-DprojectRoot=${this.$projectData.projectDir}`,
+			`-PappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
+			`-DappBuildPath=${this.$projectData.getBuildRelativeDirectoryPath()}`,
 			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`,
 		];
 
-		if (pluginBuildSettings.gradleArgs) {
-			localArgs.push(pluginBuildSettings.gradleArgs);
+		for (const gradleArg of pluginBuildSettings.gradleArgs ?? []) {
+			localArgs.push(
+				...gradleArg
+					.split(" ")
+					.map((arg) => arg.trim())
+					.filter((arg) => !!arg),
+			);
 		}
 
-		if (this.$logger.getLevel() === "INFO") {
-			localArgs.push("--quiet");
-		}
+		localArgs.push(...this.$gradleBuildArgsService.getBuildLoggingArgs());
 
 		const opts: any = {
 			cwd: pluginBuildSettings.pluginDir,

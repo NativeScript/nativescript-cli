@@ -53,7 +53,7 @@ export class AndroidBuildData extends BuildData {
 	public androidBundle: boolean;
 	public gradleFlavor: string;
 	public gradlePath: string;
-	public gradleArgs: string;
+	public gradleArgs: string[];
 	public hostProjectPath: string;
 
 	constructor(projectDir: string, platform: string, data: any) {

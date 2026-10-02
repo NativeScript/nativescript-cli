@@ -578,7 +578,13 @@ interface IAndroidOptions extends IEmbedOptions {
 	 */
 	gradleFlavor: string;
 	gradlePath: string;
-	gradleArgs: string;
+	gradleArgs: string[];
+	/**
+	 * When true (the default) the gradle files bundled with the CLI are copied
+	 * over the ones shipped by the android runtime. Pass `--no-override-runtime-gradle-files`
+	 * to keep the runtime files untouched.
+	 */
+	overrideRuntimeGradleFiles: boolean;
 }
 
 interface IIOSOptions extends IEmbedOptions {}

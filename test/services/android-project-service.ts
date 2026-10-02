@@ -4,6 +4,7 @@ import * as stubs from "../stubs";
 import { assert } from "chai";
 import * as sinon from "sinon";
 import * as path from "path";
+import { existsSync, readFileSync } from "fs";
 import { GradleCommandService } from "../../lib/services/android/gradle-command-service";
 import { GradleBuildService } from "../../lib/services/android/gradle-build-service";
 import { GradleBuildArgsService } from "../../lib/services/android/gradle-build-args-service";
@@ -77,6 +78,45 @@ const getDefautlBuildConfig = (): IBuildConfig => {
 		keyStorePath: "",
 	};
 };
+
+describe("bundled gradle files", () => {
+	// the gradle files shipped with the CLI are copied over the ones coming from
+	// the android runtime - they have to be part of the published package
+	const gradleAppDir = path.join(
+		__dirname,
+		"..",
+		"..",
+		"vendor",
+		"gradle-app",
+	);
+
+	const expectedFiles = [
+		"build.gradle",
+		"settings.gradle",
+		path.join("app", "build.gradle"),
+		path.join("app", "gradle.properties"),
+	];
+
+	for (const expectedFile of expectedFiles) {
+		it(`ships vendor/gradle-app/${expectedFile}`, () => {
+			assert.isTrue(
+				existsSync(path.join(gradleAppDir, expectedFile)),
+				`${expectedFile} is missing from vendor/gradle-app`,
+			);
+		});
+	}
+
+	it("keeps the placeholders the CLI interpolates", () => {
+		assert.include(
+			readFileSync(path.join(gradleAppDir, "settings.gradle"), "utf8"),
+			"__PROJECT_NAME__",
+		);
+		assert.include(
+			readFileSync(path.join(gradleAppDir, "app", "build.gradle"), "utf8"),
+			"__PACKAGE__",
+		);
+	});
+});
 
 describe("androidProjectService", () => {
 	let injector: IInjector;

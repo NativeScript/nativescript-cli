@@ -44,6 +44,8 @@ Start a default emulator if none are running, or run application on all connecte
     *   `--env.hiddenSourceMap` - creates sources maps in the root folder (useful for Crashlytics usage with bundled app in release).
 * `--aab` - Specifies that the command will produce and deploy an Android App Bundle.
 * `--gradleFlavor` - Builds the given product flavor, when the app declares any. `--gradleFlavor foo` runs the `assembleFooDebug`/`assembleFooRelease` gradle task instead of `assembleDebug`/`assembleRelease`.
+* `--gradleArgs` - Passes additional arguments to gradle. Can be passed multiple times, and a single value may hold several space separated arguments. Use the `=` form so the value is not mistaken for another flag, for example `--gradleArgs="-PsomeProperty=value"`. Arguments listed under `android.gradleArgs` in `nativescript.config` are passed too, before these ones.
+* `--no-override-runtime-gradle-files` - If set, keeps the gradle files coming from the android runtime instead of the ones shipped with the CLI.
 * `--force` - If set, skips the application compatibility checks and forces `npm i` to ensure all dependencies are installed. Otherwise, the command will check the application compatibility with the current CLI version and could fail requiring `ns migrate`.
 
 <% if(isHtml) { %>
