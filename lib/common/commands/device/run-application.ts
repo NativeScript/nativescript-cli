@@ -1,47 +1,44 @@
-import { IOptions } from "../../../declarations";
-import { ICommand, ICommandParameter } from "../../definitions/commands";
 import { IErrors } from "../../declarations";
-import { injector } from "../../yok";
+import {
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
 
-export class RunApplicationOnDeviceCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $errors: IErrors,
-		private $stringParameter: ICommandParameter,
-		private $staticConfig: Config.IStaticConfig,
-		private $options: IOptions
-	) {}
+const runApplicationOnDeviceCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	public allowedParameters: ICommandParameter[] = [
-		this.$stringParameter,
-		this.$stringParameter,
-	];
+export const runApplicationOnDeviceCommandDefinition = defineCommand({
+	name: ["device|run", "devices|run"],
+	description: "Runs the selected application on a connected device.",
+	options: runApplicationOnDeviceCommandOptions,
+	params: [{ name: "appId" }, { name: "projectName" }],
+	async run(context): Promise<void> {
+		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
+		const $errors = inject<IErrors>("errors");
+		const $staticConfig = inject<Config.IStaticConfig>("staticConfig");
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
+		await $devicesService.initialize({
+			deviceId: context.options.device,
 			skipInferPlatform: true,
 		});
 
-		if (this.$devicesService.deviceCount > 1) {
-			this.$errors.failWithHelp(
+		if ($devicesService.deviceCount > 1) {
+			$errors.failWithHelp(
 				"More than one device found. Specify device explicitly with --device option. To discover device ID, use $%s device command.",
-				this.$staticConfig.CLIENT_NAME.toLowerCase()
+				$staticConfig.CLIENT_NAME.toLowerCase(),
 			);
 		}
 
-		await this.$devicesService.execute(
+		await $devicesService.execute(
 			async (device: Mobile.IDevice) =>
 				await device.applicationManager.startApplication({
-					appId: args[0],
-					projectName: args[1],
+					appId: context.args[0],
+					projectName: context.args[1],
 					projectDir: null,
-				})
+				}),
 		);
-	}
-}
-
-injector.registerCommand(
-	["device|run", "devices|run"],
-	RunApplicationOnDeviceCommand
-);
+	},
+});

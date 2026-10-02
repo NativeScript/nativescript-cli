@@ -10,6 +10,7 @@ import {
 } from "../declarations";
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
+import { isOpeningExternallyDisabled } from "../opener";
 import { IExtensibilityService } from "../definitions/extensibility";
 import { IOpener } from "../../declarations";
 import * as _ from "lodash";
@@ -83,6 +84,12 @@ export class HelpService implements IHelpService {
 	public async openHelpForCommandInBrowser(
 		commandData: ICommandData,
 	): Promise<void> {
+		if (isOpeningExternallyDisabled()) {
+			// Nothing is watching a desktop, so the terminal is the only place
+			// this help can land.
+			return this.showCommandLineHelp(commandData);
+		}
+
 		const { commandName } = commandData;
 		const htmlPage =
 			(await this.convertCommandNameToFileName(commandData)) +

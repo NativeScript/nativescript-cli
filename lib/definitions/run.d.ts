@@ -20,9 +20,16 @@ declare global {
 		};
 	}
 
+	interface IRestartApplicationData {
+		projectDir: string;
+		/** Every device of the session when omitted or empty. */
+		deviceIdentifiers?: string[];
+	}
+
 	interface IRunController extends EventEmitter {
 		run(runData: IRunData): Promise<void>;
 		stop(data: IStopRunData): Promise<void>;
+		restartApplication(data: IRestartApplicationData): Promise<void>;
 		getDeviceDescriptors(data: {
 			projectDir: string;
 		}): ILiveSyncDeviceDescriptor[];
@@ -32,16 +39,16 @@ declare global {
 		installOnDevice(
 			device: Mobile.IDevice,
 			buildData: IBuildData,
-			packageFile?: string
+			packageFile?: string,
 		): Promise<void>;
 		installOnDeviceIfNeeded(
 			device: Mobile.IDevice,
 			buildData: IBuildData,
-			packageFile?: string
+			packageFile?: string,
 		): Promise<void>;
 		shouldInstall(
 			device: Mobile.IDevice,
-			buildData: IBuildData
+			buildData: IBuildData,
 		): Promise<boolean>;
 	}
 }

@@ -1,62 +1,38 @@
-import { injector } from "../yok";
-import { ICommand, ICommandParameter } from "../definitions/commands";
 import { IDoctorService, IProjectHelper } from "../declarations";
+import { CommandName, defineCommand } from "../define-command";
+import { inject } from "../di";
 import { PlatformTypes } from "../../constants";
 
-export class DoctorCommand implements ICommand {
-	constructor(
-		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
-	) {}
+const defineDoctorCommand = <const TName extends CommandName>(
+	name: TName,
+	platform?: PlatformTypes,
+) =>
+	defineCommand({
+		name,
+		description:
+			"Checks the local environment for configuration issues, and prints what it finds.",
+		params: "none",
+		run(): Promise<void> {
+			const $doctorService = inject<IDoctorService>("doctorService");
+			const $projectHelper = inject<IProjectHelper>("projectHelper");
 
-	public allowedParameters: ICommandParameter[] = [];
+			return $doctorService.printWarnings({
+				trackResult: false,
+				projectDir: $projectHelper.projectDir,
+				forceCheck: true,
+				...(platform ? { platform } : {}),
+			});
+		},
+	});
 
-	public execute(args: string[]): Promise<void> {
-		return this.$doctorService.printWarnings({
-			trackResult: false,
-			projectDir: this.$projectHelper.projectDir,
-			forceCheck: true,
-		});
-	}
-}
-injector.registerCommand("doctor|*all", DoctorCommand);
+export const doctorCommandDefinition = defineDoctorCommand("doctor|*all");
 
-export class DoctorIosCommand implements ICommand {
-	constructor(
-		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
-	) {}
+export const iosDoctorCommand = defineDoctorCommand(
+	"doctor|ios",
+	PlatformTypes.ios,
+);
 
-	public allowedParameters: ICommandParameter[] = [];
-
-	public execute(args: string[]): Promise<void> {
-		return this.$doctorService.printWarnings({
-			trackResult: false,
-			projectDir: this.$projectHelper.projectDir,
-			forceCheck: true,
-			platform: PlatformTypes.ios,
-		});
-	}
-}
-
-injector.registerCommand("doctor|ios", DoctorIosCommand);
-
-export class DoctorAndroidCommand implements ICommand {
-	constructor(
-		private $doctorService: IDoctorService,
-		private $projectHelper: IProjectHelper
-	) {}
-
-	public allowedParameters: ICommandParameter[] = [];
-
-	public execute(args: string[]): Promise<void> {
-		return this.$doctorService.printWarnings({
-			trackResult: false,
-			projectDir: this.$projectHelper.projectDir,
-			forceCheck: true,
-			platform: PlatformTypes.android,
-		});
-	}
-}
-
-injector.registerCommand("doctor|android", DoctorAndroidCommand);
+export const androidDoctorCommand = defineDoctorCommand(
+	"doctor|android",
+	PlatformTypes.android,
+);

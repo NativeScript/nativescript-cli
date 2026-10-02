@@ -23,6 +23,9 @@ function createTestInjector(): IInjector {
 	const projectData = new stubs.ProjectDataStub();
 	projectData.projectDir = "/path/to/projectDir";
 	injector.register("projectData", projectData);
+	injector.register("projectDataService", {
+		getProjectData: () => projectData,
+	});
 	injector.register("hooksService", stubs.HooksServiceStub);
 	injector.register("gradleBuildArgsService", GradleBuildArgsService);
 	injector.register("analyticsService", stubs.AnalyticsService);
@@ -202,10 +205,10 @@ describe("GradleBuildArgsService", () => {
 				logger.getLevel = () => testCase.logLevel;
 
 				const gradleBuildArgsService = injector.resolve(
-					"gradleBuildArgsService"
+					"gradleBuildArgsService",
 				);
 				const args = await gradleBuildArgsService.getBuildTaskArgs(
-					<any>testCase.buildConfig
+					<any>testCase.buildConfig,
 				);
 
 				assert.deepStrictEqual(args[0], testCase.expectedTask);

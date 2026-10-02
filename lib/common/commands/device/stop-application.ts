@@ -1,38 +1,34 @@
-import { IOptions } from "../../../declarations";
-import { injector } from "../../yok";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
+import {
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
 
-export class StopApplicationOnDeviceCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $stringParameter: ICommandParameter,
-		private $options: IOptions
-	) {}
+const stopApplicationOnDeviceCommandOptions = {
+	device: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	allowedParameters: ICommandParameter[] = [
-		this.$stringParameter,
-		this.$stringParameter,
-		this.$stringParameter,
-	];
+export const stopApplicationOnDeviceCommandDefinition = defineCommand({
+	name: ["device|stop", "devices|stop"],
+	description: "Stops the selected application on a connected device.",
+	options: stopApplicationOnDeviceCommandOptions,
+	params: [{ name: "appId" }, { name: "platform" }, { name: "projectName" }],
+	async run(context): Promise<void> {
+		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
+		await $devicesService.initialize({
+			deviceId: context.options.device,
 			skipInferPlatform: true,
-			platform: args[1],
+			platform: context.args[1],
 		});
 
 		const action = (device: Mobile.IDevice) =>
 			device.applicationManager.stopApplication({
-				appId: args[0],
-				projectName: args[2],
+				appId: context.args[0],
+				projectName: context.args[2],
 				projectDir: null,
 			});
-		await this.$devicesService.execute(action);
-	}
-}
-
-injector.registerCommand(
-	["device|stop", "devices|stop"],
-	StopApplicationOnDeviceCommand
-);
+		await $devicesService.execute(action);
+	},
+});

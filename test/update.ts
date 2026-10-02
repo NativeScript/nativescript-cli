@@ -1,12 +1,15 @@
 import * as stubs from "./stubs";
 import * as yok from "../lib/common/yok";
 import { UpdateCommand } from "../lib/commands/update";
+import { registerCommand } from "../lib/common/services/command-definition-adapter";
+import { ICommand } from "../lib/common/definitions/commands";
 import { assert } from "chai";
 import { Options } from "../lib/options";
 import { StaticConfig } from "../lib/config";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
 import { DevicePlatformsConstants } from "../lib/common/mobile/device-platforms-constants";
 import { IInjector } from "../lib/common/definitions/yok";
+import { runInInjectionContext } from "../lib/common/di";
 const projectFolder = "test";
 
 function createTestInjector(projectDir: string = projectFolder): IInjector {
@@ -42,6 +45,8 @@ function createTestInjector(projectDir: string = projectFolder): IInjector {
 		},
 	});
 
+	runInInjectionContext(testInjector, () => registerCommand(UpdateCommand));
+
 	return testInjector;
 }
 
@@ -49,7 +54,7 @@ describe("update command method tests", () => {
 	describe("canExecute", () => {
 		it("returns false if too many arguments", async () => {
 			const testInjector = createTestInjector();
-			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
+			const updateCommand: ICommand = testInjector.resolveCommand("update");
 			const canExecuteOutput = await updateCommand.canExecute([
 				"333",
 				"111",
@@ -61,7 +66,7 @@ describe("update command method tests", () => {
 
 		it("returns false when projectDir is an empty string", async () => {
 			const testInjector = createTestInjector("");
-			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
+			const updateCommand: ICommand = testInjector.resolveCommand("update");
 			const canExecuteOutput = await updateCommand.canExecute([]);
 
 			return assert.equal(canExecuteOutput, false);
@@ -69,7 +74,7 @@ describe("update command method tests", () => {
 
 		it("returns true when the setup is correct", async () => {
 			const testInjector = createTestInjector();
-			const updateCommand = testInjector.resolve<UpdateCommand>(UpdateCommand);
+			const updateCommand: ICommand = testInjector.resolveCommand("update");
 			const canExecuteOutput = await updateCommand.canExecute(["3.3.0"]);
 
 			return assert.equal(canExecuteOutput, true);

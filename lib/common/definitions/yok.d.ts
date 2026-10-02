@@ -2,7 +2,6 @@ import { IDictionary } from "../declarations";
 import { Injector } from "../di/injector";
 import { Provider } from "../di/providers";
 import { CommandRegistry } from "../contracts/command-registry";
-import { KeyCommandRegistry } from "../contracts/key-command-registry";
 import { ModuleRegistry } from "../contracts/module-registry";
 import { PublicApiBuilder } from "../contracts/public-api-builder";
 
@@ -13,12 +12,7 @@ import { PublicApiBuilder } from "../contracts/public-api-builder";
  * this; the interface survives until the hook/extension deprecation completes.
  */
 interface IInjector
-	extends
-		Injector,
-		CommandRegistry,
-		KeyCommandRegistry,
-		ModuleRegistry,
-		PublicApiBuilder {
+	extends Injector, CommandRegistry, ModuleRegistry, PublicApiBuilder {
 	/**
 	 * Resolves an implementation by constructor function.
 	 * The injector will create new instances for every call.

@@ -1,9 +1,15 @@
 import { injector } from "./yok";
+import { registerBuiltInCommand } from "./services/command-definition-adapter";
 import { ICliGlobal } from "./definitions/cli-global";
 import * as _ from "lodash";
 (<ICliGlobal>(<unknown>global))._ = _;
 (<ICliGlobal>(<unknown>global)).$injector = injector;
 
+/**
+ * The CLI owns every name it registers here, so a refusal is a mistake in this
+ * file rather than a condition to report and carry on from, the way a
+ * conflicting extension is.
+ */
 injector.require("errors", "./errors");
 injector.requirePublic("fs", "./file-system");
 injector.require("hostInfo", "./host-info");
@@ -29,43 +35,156 @@ injector.require("prompter", "./prompter");
 injector.require("projectHelper", "./project-helper");
 injector.require("pluginVariablesHelper", "./plugin-variables-helper");
 
-injector.requireCommand(["help", "/?"], "./commands/help");
-injector.requireCommand("usage-reporting", "./commands/analytics");
-injector.requireCommand("error-reporting", "./commands/analytics");
-
-injector.requireCommand("dev-post-install", "./commands/post-install");
-injector.requireCommand("autocomplete|*default", "./commands/autocompletion");
-injector.requireCommand("autocomplete|enable", "./commands/autocompletion");
-injector.requireCommand("autocomplete|disable", "./commands/autocompletion");
-injector.requireCommand("autocomplete|status", "./commands/autocompletion");
-
-injector.requireCommand(
-	["device|*list", "devices|*list"],
-	"./commands/device/list-devices",
+registerBuiltInCommand<typeof import("./commands/help").helpCommandDefinition>(
+	"help",
+	() => require("./commands/help").helpCommandDefinition,
 );
-injector.requireCommand(
-	["device|android", "devices|android"],
-	"./commands/device/list-devices",
+registerBuiltInCommand<typeof import("./commands/help").helpCommandDefinition>(
+	"/?",
+	() => require("./commands/help").helpCommandDefinition,
 );
-injector.requireCommand(
-	["device|ios", "devices|ios"],
-	"./commands/device/list-devices",
+registerBuiltInCommand<
+	typeof import("./commands/analytics").usageReportingCommand
+>(
+	"usage-reporting",
+	() => require("./commands/analytics").usageReportingCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/analytics").errorReportingCommand
+>(
+	"error-reporting",
+	() => require("./commands/analytics").errorReportingCommand,
 );
 
-injector.requireCommand("device|log", "./commands/device/device-log-stream");
-injector.requireCommand("device|run", "./commands/device/run-application");
-injector.requireCommand("device|stop", "./commands/device/stop-application");
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/post-install").postInstallCommandDefinition
+>(
+	"dev-post-install",
+	() => require("./commands/post-install").postInstallCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/autocompletion").autoCompleteCommandDefinition
+>(
+	"autocomplete|*default",
+	() => require("./commands/autocompletion").autoCompleteCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/autocompletion").enableAutoCompleteCommandDefinition
+>(
+	"autocomplete|enable",
+	() =>
+		require("./commands/autocompletion").enableAutoCompleteCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/autocompletion").disableAutoCompleteCommandDefinition
+>(
+	"autocomplete|disable",
+	() =>
+		require("./commands/autocompletion").disableAutoCompleteCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/autocompletion").autoCompleteStatusCommandDefinition
+>(
+	"autocomplete|status",
+	() =>
+		require("./commands/autocompletion").autoCompleteStatusCommandDefinition,
+);
+
+registerBuiltInCommand<
+	typeof import("./commands/device/list-devices").ListDevicesCommand
+>(
+	"device|*list",
+	() => require("./commands/device/list-devices").ListDevicesCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/list-devices").ListDevicesCommand
+>(
+	"devices|*list",
+	() => require("./commands/device/list-devices").ListDevicesCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/list-devices").androidListDevicesCommand
+>(
+	"device|android",
+	() => require("./commands/device/list-devices").androidListDevicesCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/list-devices").androidListDevicesCommand
+>(
+	"devices|android",
+	() => require("./commands/device/list-devices").androidListDevicesCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/list-devices").iosListDevicesCommand
+>(
+	"device|ios",
+	() => require("./commands/device/list-devices").iosListDevicesCommand,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/list-devices").iosListDevicesCommand
+>(
+	"devices|ios",
+	() => require("./commands/device/list-devices").iosListDevicesCommand,
+);
+
+registerBuiltInCommand<
+	typeof import("./commands/device/device-log-stream").openDeviceLogStreamCommandDefinition
+>(
+	"device|log",
+	() =>
+		require("./commands/device/device-log-stream")
+			.openDeviceLogStreamCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/run-application").runApplicationOnDeviceCommandDefinition
+>(
+	"device|run",
+	() =>
+		require("./commands/device/run-application")
+			.runApplicationOnDeviceCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/stop-application").stopApplicationOnDeviceCommandDefinition
+>(
+	"device|stop",
+	() =>
+		require("./commands/device/stop-application")
+			.stopApplicationOnDeviceCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/list-applications").listApplicationsCommandDefinition
+>(
 	"device|list-applications",
-	"./commands/device/list-applications",
+	() =>
+		require("./commands/device/list-applications")
+			.listApplicationsCommandDefinition,
 );
-injector.requireCommand(
+registerBuiltInCommand<
+	typeof import("./commands/device/uninstall-application").uninstallApplicationCommandDefinition
+>(
 	"device|uninstall",
-	"./commands/device/uninstall-application",
+	() =>
+		require("./commands/device/uninstall-application")
+			.uninstallApplicationCommandDefinition,
 );
-injector.requireCommand("device|list-files", "./commands/device/list-files");
-injector.requireCommand("device|get-file", "./commands/device/get-file");
-injector.requireCommand("device|put-file", "./commands/device/put-file");
+registerBuiltInCommand<
+	typeof import("./commands/device/list-files").listFilesCommandDefinition
+>(
+	"device|list-files",
+	() => require("./commands/device/list-files").listFilesCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/get-file").getFileCommandDefinition
+>(
+	"device|get-file",
+	() => require("./commands/device/get-file").getFileCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/device/put-file").putFileCommandDefinition
+>(
+	"device|put-file",
+	() => require("./commands/device/put-file").putFileCommandDefinition,
+);
 
 injector.require(
 	"iosDeviceOperations",
@@ -163,18 +282,46 @@ injector.require(
 	"./services/message-contract-generator",
 );
 injector.require("proxyService", "./services/proxy-service");
-injector.requireCommand("dev-preuninstall", "./commands/preuninstall");
-injector.requireCommand(
-	"dev-generate-messages",
-	"./commands/generate-messages",
+registerBuiltInCommand<
+	typeof import("./commands/preuninstall").preUninstallCommandDefinition
+>(
+	"dev-preuninstall",
+	() => require("./commands/preuninstall").preUninstallCommandDefinition,
 );
-injector.requireCommand("doctor|*all", "./commands/doctor");
-injector.requireCommand("doctor|ios", "./commands/doctor");
-injector.requireCommand("doctor|android", "./commands/doctor");
+registerBuiltInCommand<
+	typeof import("./commands/generate-messages").generateMessagesCommandDefinition
+>(
+	"dev-generate-messages",
+	() =>
+		require("./commands/generate-messages").generateMessagesCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/doctor").doctorCommandDefinition
+>("doctor|*all", () => require("./commands/doctor").doctorCommandDefinition);
+registerBuiltInCommand<typeof import("./commands/doctor").iosDoctorCommand>(
+	"doctor|ios",
+	() => require("./commands/doctor").iosDoctorCommand,
+);
+registerBuiltInCommand<typeof import("./commands/doctor").androidDoctorCommand>(
+	"doctor|android",
+	() => require("./commands/doctor").androidDoctorCommand,
+);
 
-injector.requireCommand("proxy|*get", "./commands/proxy/proxy-get");
-injector.requireCommand("proxy|set", "./commands/proxy/proxy-set");
-injector.requireCommand("proxy|clear", "./commands/proxy/proxy-clear");
+registerBuiltInCommand<
+	typeof import("./commands/proxy/proxy-get").proxyGetCommandDefinition
+>(
+	"proxy|*get",
+	() => require("./commands/proxy/proxy-get").proxyGetCommandDefinition,
+);
+registerBuiltInCommand<
+	typeof import("./commands/proxy/proxy-set").ProxySetCommand
+>("proxy|set", () => require("./commands/proxy/proxy-set").ProxySetCommand);
+registerBuiltInCommand<
+	typeof import("./commands/proxy/proxy-clear").proxyClearCommandDefinition
+>(
+	"proxy|clear",
+	() => require("./commands/proxy/proxy-clear").proxyClearCommandDefinition,
+);
 
 injector.require("utils", "./utils");
 injector.require("plistParser", "./plist-parser");

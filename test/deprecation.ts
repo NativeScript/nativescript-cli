@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Yok, getInjector, setGlobalInjector } from "../lib/common/yok";
+import { Yok, getRootInjector, setGlobalInjector } from "../lib/common/yok";
 import {
 	reportDeprecation,
 	clearReportedDeprecations,
@@ -60,7 +60,7 @@ describe("deprecation tracer", () => {
 	});
 
 	it("falls back to the process-wide injector's logger when none is passed", () => {
-		const previousInjector = getInjector();
+		const previousInjector = getRootInjector();
 		const freshInjector = new Yok();
 		const freshLogger = new LoggerStub();
 		freshInjector.register("logger", freshLogger);
@@ -75,7 +75,7 @@ describe("deprecation tracer", () => {
 	});
 
 	it("drops the report silently when no logger is resolvable", () => {
-		const previousInjector = getInjector();
+		const previousInjector = getRootInjector();
 		setGlobalInjector(new Yok());
 
 		try {
@@ -86,7 +86,7 @@ describe("deprecation tracer", () => {
 	});
 
 	it("still delivers a report that was previously dropped for lack of a logger", () => {
-		const previousInjector = getInjector();
+		const previousInjector = getRootInjector();
 		setGlobalInjector(new Yok());
 		try {
 			reportDeprecation({ api: "test.redeliver" });

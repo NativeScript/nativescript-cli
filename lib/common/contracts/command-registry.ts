@@ -1,5 +1,14 @@
 import { Contract } from "../di/contract";
+import { InjectionToken } from "../di/injection-token";
 import type { ICommand } from "../definitions/commands";
+
+/**
+ * Who a command registered during the current injection context belongs to.
+ * An extension's module is loaded under a child injector providing it, so a
+ * command the module registers on its own is attributed to the extension
+ * without the registration site naming anyone.
+ */
+export const COMMAND_OWNER = new InjectionToken<string>("commandOwner");
 
 export interface DeferredCommandOptions {
 	/**
@@ -7,8 +16,12 @@ export interface DeferredCommandOptions {
 	 * same command under the same owner is a no-op rather than a conflict.
 	 */
 	owner: string;
-	/** Where the implementation comes from; named when loading it fails. */
-	source: string;
+	/**
+	 * Where the implementation comes from, named when loading it fails. Omitted
+	 * when `load` is a closure over the path, which names itself in its own
+	 * failure.
+	 */
+	source?: string;
 	/**
 	 * Runs on first resolution of the command. It must leave a real resolver on
 	 * the command name — by exporting a definition the caller registers, or by
@@ -34,14 +47,36 @@ export type DeferredCommandRejection =
 	| { reason: "parent-is-command"; parent: string };
 
 /**
- * Outcome of a deferred registration. Callers branch on `rejection.reason`
- * rather than on message text, so the wording of the report stays theirs.
+ * The one rendering of a rejection: the registry reports structurally so that
+ * the wording lives here rather than in each consumer, and a name the CLI owns
+ * and a name an extension owns are refused in the same words.
  */
-export interface DeferredCommandResult {
-	registered: boolean;
-	/** Set exactly when `registered` is false. */
-	rejection?: DeferredCommandRejection;
+export function describeRejection(rejection: DeferredCommandRejection): string {
+	switch (rejection.reason) {
+		case "invalid-name":
+			return rejection.detail;
+		case "claimed":
+			return `it is already registered by ${rejection.owner}`;
+		case "built-in":
+			return "it is already provided by the CLI";
+		case "subcommand-parent":
+			return "it is already in use as the parent of its subcommands";
+		case "parent-is-command":
+			return `'${rejection.parent}' is already registered as a command of its own, so the subcommand could never be reached`;
+	}
 }
+
+/**
+ * Outcome of a deferred registration. Checking `registered` narrows the result,
+ * so a rejected one carries its rejection without an assertion — inside the CLI
+ * that check has to read `registered === false`, because the build leaves
+ * strictNullChecks off and truthiness alone does not narrow a literal
+ * discriminant there. Callers branch on `rejection.reason` rather than on
+ * message text; describeRejection renders it when the report is for a human.
+ */
+export type DeferredCommandResult =
+	| { registered: true }
+	| { registered: false; rejection: DeferredCommandRejection };
 
 /**
  * The command-registry face of the injector facade. Transitional contract: it

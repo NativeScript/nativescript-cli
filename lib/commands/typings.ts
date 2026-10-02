@@ -4,27 +4,49 @@ import * as path from "path";
 import { PromptObject } from "prompts";
 import { color } from "../color";
 import { IChildProcess, IFileSystem, IHostInfo } from "../common/declarations";
-import { ICommand, ICommandParameter } from "../common/definitions/commands";
-import { injector } from "../common/yok";
+import {
+	Command,
+	CommandOptionsSchema,
+	stringOption,
+} from "../common/define-command";
+import { inject } from "../common/di";
 import { IOptions, IStaticConfig } from "../declarations";
-import { IProjectData } from "../definitions/project";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
-export class TypingsCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-	constructor(
-		private $logger: ILogger,
-		private $options: IOptions,
-		private $fs: IFileSystem,
-		private $projectData: IProjectData,
-		private $mobileHelper: Mobile.IMobileHelper,
-		private $childProcess: IChildProcess,
-		private $hostInfo: IHostInfo,
-		private $staticConfig: IStaticConfig,
-		private $prompter: IPrompter,
-	) {}
+const typingsCommandOptions = {
+	aar: stringOption(),
+	copyTo: stringOption(),
+	filter: stringOption(),
+	jar: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	public async execute(args: string[]): Promise<void> {
-		const platform = args[0];
+export class TypingsCommand extends Command({
+	name: "typings",
+	description: "Generates typings for the native platform APIs.",
+	options: typingsCommandOptions,
+	// Only the first argument is read; the rest are gradle targets this command
+	// takes off the raw argv, so the policy must not reject them.
+	params: "any",
+	providers: [provideProject()],
+}) {
+	private $childProcess = inject<IChildProcess>("childProcess");
+	private $fs = inject<IFileSystem>("fs");
+	private $hostInfo = inject<IHostInfo>("hostInfo");
+	private $logger = inject<ILogger>("logger");
+	private $mobileHelper = inject<Mobile.IMobileHelper>("mobileHelper");
+	private $options = inject<IOptions>("options");
+	private $projectData = inject(ProjectData);
+	private $prompter = inject<IPrompter>("prompter");
+	private $staticConfig = inject<IStaticConfig>("staticConfig");
+
+	public canExecute(): boolean {
+		this.$mobileHelper.validatePlatformName(this.args[0]);
+		return true;
+	}
+
+	public async run(): Promise<void> {
+		const platform = this.args[0];
 		let result;
 		if (this.$mobileHelper.isAndroidPlatform(platform)) {
 			result = await this.handleAndroidTypings();
@@ -32,12 +54,12 @@ export class TypingsCommand implements ICommand {
 			result = await this.handleiOSTypings();
 		}
 		let typingsFolder = "./typings";
-		if (this.$options.copyTo) {
+		if (this.options.copyTo) {
 			this.$fs.copyFile(
 				path.resolve(this.$projectData.projectDir, "typings"),
-				this.$options.copyTo,
+				this.options.copyTo,
 			);
-			typingsFolder = this.$options.copyTo;
+			typingsFolder = this.options.copyTo;
 		}
 
 		if (result !== false) {
@@ -46,12 +68,6 @@ export class TypingsCommand implements ICommand {
 				typingsFolder,
 			);
 		}
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
-		const platform = args[0];
-		this.$mobileHelper.validatePlatformName(platform);
-		return true;
 	}
 
 	private async resolveGradleDependencies(target: string) {
@@ -129,6 +145,9 @@ export class TypingsCommand implements ICommand {
 	}
 
 	private async handleAndroidTypings() {
+		// The gradle targets are positional arguments this command reads off the
+		// raw argv rather than declaring, so that they keep working alongside the
+		// --jar and --aar flags.
 		const targets = this.$options.argv._.slice(2) ?? [];
 		const paths: string[] = [];
 
@@ -145,7 +164,7 @@ export class TypingsCommand implements ICommand {
 			}
 		}
 
-		if (!paths.length && !(this.$options.jar || this.$options.aar)) {
+		if (!paths.length && !(this.options.jar || this.options.aar)) {
 			this.$logger.warn(
 				[
 					"No .jar or .aar file specified. Please specify at least one of the following:",
@@ -189,8 +208,8 @@ export class TypingsCommand implements ICommand {
 		};
 
 		const inputs: string[] = [
-			...asArray(this.$options.jar),
-			...asArray(this.$options.aar),
+			...asArray(this.options.jar),
+			...asArray(this.options.aar),
 			...paths,
 		];
 
@@ -210,7 +229,7 @@ export class TypingsCommand implements ICommand {
 	}
 
 	private async handleiOSTypings() {
-		if (this.$options.filter !== undefined) {
+		if (this.options.filter !== undefined) {
 			this.$logger.warn("--filter flag is not supported yet.");
 		}
 
@@ -236,5 +255,3 @@ export class TypingsCommand implements ICommand {
 		);
 	}
 }
-
-injector.registerCommand("typings", TypingsCommand);

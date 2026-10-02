@@ -3,8 +3,10 @@ import { getContractName } from "./contract";
 import { resolveForwardRef } from "./forward-ref";
 import { runInInjectionContext } from "./inject";
 import { getInjectionTokenName } from "./injection-token";
+import { normalizeProvider } from "./providers";
 import type {
 	InternalProvider,
+	ObjectProvider,
 	Provider,
 	ProviderToken,
 	Type,
@@ -24,7 +26,8 @@ export interface InjectOptions {
 	skipSelf?: boolean;
 }
 
-type ProviderKind = "value" | "class" | "factory" | "lazyClass" | "legacyClass";
+type ProviderKind =
+	"value" | "class" | "factory" | "lazyClass" | "legacyClass" | "multi";
 
 interface IProviderRecord {
 	displayName: string;
@@ -43,6 +46,8 @@ interface IProviderRecord {
 	/** Every produced instance is retained, transients included — dispose() walks them. */
 	instances: any[];
 	constructing: boolean;
+	/** One record per `multi` provider, in registration order. */
+	multiRecords?: IProviderRecord[];
 }
 
 // Shared across the whole injector tree so cycle reports show the full path
@@ -139,7 +144,7 @@ export class Injector {
 	/** Merge-mutate: re-registering a key updates the existing record in place. */
 	public register(providers: InternalProvider | InternalProvider[]): void {
 		const list = Array.isArray(providers) ? providers : [providers];
-		for (const provider of list) {
+		for (const provider of list.map(normalizeProvider)) {
 			const keys = this.keysFor(provider.provide);
 			let record: IProviderRecord | undefined;
 			for (const key of keys) {
@@ -156,7 +161,29 @@ export class Injector {
 					constructing: false,
 				};
 			}
-			this.applyProvider(record, provider);
+			if (provider.multi) {
+				if (record.kind !== undefined && record.kind !== "multi") {
+					throw new Error(
+						`${record.displayName} is registered as a single provider; it cannot also take multi providers`,
+					);
+				}
+				const entry: IProviderRecord = {
+					displayName: record.displayName,
+					shared: true,
+					instances: [],
+					constructing: false,
+				};
+				this.applyProvider(entry, provider);
+				record.kind = "multi";
+				record.multiRecords = (record.multiRecords || []).concat(entry);
+			} else {
+				if (record.kind === "multi") {
+					throw new Error(
+						`${record.displayName} takes multi providers; a single provider cannot replace them`,
+					);
+				}
+				this.applyProvider(record, provider);
+			}
 			for (const key of keys) {
 				this.providers.set(key, record);
 			}
@@ -231,6 +258,11 @@ export class Injector {
 			disposeOne(this.instantiationOrder[i]);
 		}
 		for (const record of new Set(this.providers.values())) {
+			for (const entry of record.multiRecords || []) {
+				for (const instance of entry.instances) {
+					disposeOne(instance);
+				}
+			}
 			for (const instance of record.instances) {
 				disposeOne(instance);
 			}
@@ -248,7 +280,7 @@ export class Injector {
 
 	private applyProvider(
 		record: IProviderRecord,
-		provider: InternalProvider,
+		provider: ObjectProvider,
 	): void {
 		record.shared = provider.shared === undefined ? true : provider.shared;
 
@@ -327,6 +359,12 @@ export class Injector {
 			// module, broken require) is retried on the next resolution.
 			loader();
 			record.pendingLoader = undefined;
+		}
+
+		if (record.kind === "multi") {
+			return record.multiRecords.map((entry) =>
+				this.instantiate(entry, ctorArguments),
+			);
 		}
 
 		if (record.shared && record.instances.length) {
