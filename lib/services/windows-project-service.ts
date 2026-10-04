@@ -621,6 +621,24 @@ export class WindowsProjectService
 			}
 		}
 
+		// Drop the staged files of plugins that are no longer installed (their C# sources would
+		// otherwise still be compiled into the app). Scoped plugins stage under plugins/@scope/name.
+		const installedNames = new Set(installedPlugins.map((p: IPluginData) => p.name));
+		for (const entry of fs.readdirSync(pluginsDir, { withFileTypes: true })) {
+			if (!entry.isDirectory()) continue;
+			const names = entry.name.startsWith("@")
+				? fs
+						.readdirSync(path.join(pluginsDir, entry.name), { withFileTypes: true })
+						.filter((e) => e.isDirectory())
+						.map((e) => `${entry.name}/${e.name}`)
+				: [entry.name];
+			for (const name of names) {
+				if (!installedNames.has(name)) {
+					this.$fs.deleteDirectory(path.join(pluginsDir, ...name.split("/")));
+				}
+			}
+		}
+
 		// Write aggregate imports that the project csproj imports via "plugins\Plugins.props"
 		const aggregatePropsPath = path.join(pluginsDir, "Plugins.props");
 		const aggregateTargetsPath = path.join(pluginsDir, "Plugins.targets");
@@ -700,12 +718,17 @@ export class WindowsProjectService
 			projectData.projectName,
 		);
 
-		// Copy App_Resources/Windows -> platforms/windows/<Project>/App_Resources/Windows
+		// Copy App_Resources/Windows -> platforms/windows/<Project>/App_Resources/Windows. The copy is
+		// an exact mirror: C# sources under it are compiled into the app, so a file deleted from
+		// App_Resources must not linger here.
 		const destAppResourcesWindows = path.join(
 			platformAppDir,
 			"App_Resources",
 			"Windows",
 		);
+		if (this.$fs.exists(destAppResourcesWindows)) {
+			this.$fs.deleteDirectory(destAppResourcesWindows);
+		}
 		this.$fs.ensureDirectoryExists(destAppResourcesWindows);
 
 		const copyRecursive = (srcDir: string, destDir: string) => {
@@ -982,6 +1005,11 @@ export class WindowsProjectService
 			projectData.projectName,
 		);
 		const pluginStageDir = path.join(appProjectDir, "plugins", pluginData.name);
+		// Restage from scratch: the plugin's C# sources are compiled into the app, so files a newer
+		// plugin version dropped must not linger.
+		if (this.$fs.exists(pluginStageDir)) {
+			this.$fs.deleteDirectory(pluginStageDir);
+		}
 		this.$fs.ensureDirectoryExists(pluginStageDir);
 
 		// recursively copy native files (exclude JS/TS/JSON)
@@ -1028,6 +1056,10 @@ export class WindowsProjectService
 			);
 		}
 
+		// Build inputs rather than files the app ships: the plugin's C# sources (staged here,
+		// under the app project, so the SDK's default Compile glob builds them into the app the way
+		// a plugin's Java/Kotlin or Objective-C/Swift sources are on Android/iOS) and MSBuild files.
+		const buildInputExtensions = [".cs", ".csproj", ".props", ".targets"];
 		const collectStagedFiles = (root: string): string[] => {
 			const out: string[] = [];
 			if (!this.$fs.exists(root)) return out;
@@ -1035,7 +1067,8 @@ export class WindowsProjectService
 				for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
 					const full = path.join(dir, e.name);
 					if (e.isDirectory()) walk(full);
-					else out.push(path.relative(root, full).split(path.sep).join("\\"));
+					else if (!buildInputExtensions.includes(path.extname(e.name).toLowerCase()))
+						out.push(path.relative(root, full).split(path.sep).join("\\"));
 				}
 			};
 			walk(root);
