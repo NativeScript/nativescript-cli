@@ -168,24 +168,33 @@ export class NativeReleaseService {
 		const projectRoot = this.getProjectRoot(projectData, "ios");
 		const name = projectData.projectName;
 
-		try {
-			await this.$childProcess.spawnFromEvent(
-				"xcodegen",
-				["generate", "--quiet"],
-				"close",
-				{ cwd: projectRoot, stdio: "inherit" },
-			);
-		} catch (err) {
-			this.$errors.fail(
-				err.code === "ENOENT"
-					? "The native iOS build generates its Xcode project with XcodeGen. Install it with 'brew install xcodegen'."
-					: err.message,
-			);
+		// A project with CocoaPods or Swift packages is generated and integrated by
+		// the compiler, which names the workspace to build.
+		const integrated = path.join(projectRoot, "ns-native-project.json");
+		const workspace = this.$fs.exists(integrated)
+			? this.$fs.readJson(integrated).workspace
+			: null;
+		if (!workspace) {
+			try {
+				await this.$childProcess.spawnFromEvent(
+					"xcodegen",
+					["generate", "--quiet"],
+					"close",
+					{ cwd: projectRoot, stdio: "inherit" },
+				);
+			} catch (err) {
+				this.$errors.fail(
+					err.code === "ENOENT"
+						? "The native iOS build generates its Xcode project with XcodeGen. Install it with 'brew install xcodegen'."
+						: err.message,
+				);
+			}
 		}
 
 		const projectArgs = [
-			"-project",
-			`${name}.xcodeproj`,
+			...(workspace
+				? ["-workspace", workspace]
+				: ["-project", `${name}.xcodeproj`]),
 			"-scheme",
 			name,
 			"-configuration",
