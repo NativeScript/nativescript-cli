@@ -14,6 +14,8 @@ import { IAnalyticsService, IFileSystem } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { performance } from "perf_hooks";
+import * as path from "path";
+import { NativeReleaseService } from "../services/native-release-service";
 
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
@@ -26,7 +28,8 @@ export class BuildController extends EventEmitter implements IBuildController {
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $projectDataService: IProjectDataService,
 		private $projectChangesService: IProjectChangesService,
-		private $prepareController: IPrepareController
+		private $prepareController: IPrepareController,
+		private $nativeReleaseService: NativeReleaseService
 	) {
 		super();
 	}
@@ -74,6 +77,24 @@ export class BuildController extends EventEmitter implements IBuildController {
 			}`,
 		});
 
+		if (this.$nativeReleaseService.isNativeRelease(buildData)) {
+			const packageFile = await this.$nativeReleaseService.build(
+				platformData,
+				projectData,
+				buildData
+			);
+			this.logBuildTime(startTime);
+			if (buildData.copyTo) {
+				const target = path.resolve(buildData.copyTo);
+				this.$fs.copyFile(packageFile, target);
+				this.$logger.info(`Copied file '${packageFile}' to '${target}'.`);
+			} else {
+				this.$logger.info(`The build result is located at: ${packageFile}`);
+			}
+
+			return packageFile;
+		}
+
 		if (buildData.clean) {
 			await platformData.platformProjectService.cleanProject(
 				platformData.projectRoot
@@ -104,11 +125,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 			buildInfoFileDir
 		);
 
-		const endTime = performance.now();
-		const buildTime = (endTime - startTime) / 1000;
-
-		this.$logger.info("Project successfully built.");
-		this.$logger.info(`Build time: ${buildTime.toFixed(3)} s.`);
+		this.logBuildTime(startTime);
 
 		const result = await this.$buildArtifactsService.getLatestAppPackagePath(
 			platformData,
@@ -128,6 +145,13 @@ export class BuildController extends EventEmitter implements IBuildController {
 		return result;
 	}
 
+	private logBuildTime(startTime: number): void {
+		const buildTime = (performance.now() - startTime) / 1000;
+
+		this.$logger.info("Project successfully built.");
+		this.$logger.info(`Build time: ${buildTime.toFixed(3)} s.`);
+	}
+
 	public async buildIfNeeded(buildData: IBuildData): Promise<string> {
 		let result = null;
 
@@ -140,6 +164,11 @@ export class BuildController extends EventEmitter implements IBuildController {
 	}
 
 	public async shouldBuild(buildData: IBuildData): Promise<boolean> {
+		// xcodebuild and Gradle decide what is stale in the native project.
+		if (this.$nativeReleaseService.isNativeRelease(buildData)) {
+			return true;
+		}
+
 		const projectData = this.$projectDataService.getProjectData(
 			buildData.projectDir
 		);

@@ -16,6 +16,7 @@ export const SCOPED_TNS_CORE_MODULES = "@nativescript/core";
 export const TNS_CORE_THEME_NAME = "nativescript-theme-core";
 export const SCOPED_TNS_CORE_THEME_NAME = "@nativescript/theme";
 export const WEBPACK_PLUGIN_NAME = "@nativescript/webpack";
+export const NATIVE_RELEASE_PACKAGE_NAME = "@nativescript/native-release";
 export const RSPACK_PLUGIN_NAME = "@nativescript/rspack";
 // Root of the project-relative directory the Vite bundler writes its build
 // output to before the CLI copies it into the platforms app folder. The CLI

@@ -486,6 +486,11 @@ describe("options", () => {
 					args: ["--debugBrk"],
 					expectedHmrValue: false,
 				},
+				{
+					name: "should set hmr to false by default when --native option is provided",
+					args: ["--native"],
+					expectedHmrValue: false,
+				},
 			];
 
 			_.each(testCases, (testCase) => {
@@ -499,6 +504,48 @@ describe("options", () => {
 					assert.isFalse(isExecutionStopped);
 
 					(testCase.args || []).forEach((arg) => process.argv.pop());
+				});
+			});
+		});
+
+		describe("native option", () => {
+			const testCases = [
+				{
+					name: "is a release build",
+					args: ["--native"],
+					expected: { native: true, release: true },
+				},
+				{
+					name: "stays a release build with --release",
+					args: ["--release", "--native"],
+					expected: { native: true, release: true },
+				},
+				{
+					name: "is left unset without the flag, so the config decides",
+					args: ["--release"],
+					expected: { native: undefined, release: true },
+				},
+				{
+					name: "can be turned off with --no-native",
+					args: ["--release", "--no-native"],
+					expected: { native: false, release: true },
+				},
+			];
+
+			_.each(testCases, (testCase) => {
+				it(testCase.name, () => {
+					testCase.args.forEach((arg) => process.argv.push(arg));
+
+					const options: any = createOptions(testInjector);
+					options.setupOptions(null);
+
+					testCase.args.forEach(() => process.argv.pop());
+
+					assert.deepStrictEqual(
+						{ native: options.native, release: options.release },
+						testCase.expected,
+					);
+					assert.isFalse(isExecutionStopped);
 				});
 			});
 		});

@@ -151,6 +151,41 @@ describe("prepareController", () => {
 		});
 	});
 
+	describe("preparePlatform for a native release", () => {
+		_.each(["ios", "android"], (platform) => {
+			it(`compiles to native code instead of bundling or adding the ${platform} runtime`, async () => {
+				const injector = createTestInjector({ hasNativeChanges: false });
+				let isAddPlatformCalled = false;
+				injector.resolve("platformController").addPlatformIfNeeded = () => {
+					isAddPlatformCalled = true;
+				};
+				const nativePrepareCalls: any[] = [];
+				Object.assign(injector.resolve("nativeReleaseService"), {
+					isNativeRelease: (data: IPrepareData) => data.release,
+					prepare: async (platformData: any, projectData: any) => {
+						nativePrepareCalls.push({ platformData, projectData });
+					},
+				});
+
+				const prepareController: PrepareController =
+					injector.resolve("prepareController");
+				const result = await prepareController.prepare({
+					...prepareData,
+					release: true,
+					watch: false,
+					platform,
+				});
+
+				assert.lengthOf(nativePrepareCalls, 1);
+				assert.isFalse(isCompileWithoutWatchCalled);
+				assert.isFalse(isNativePrepareCalled);
+				assert.isFalse(isAddPlatformCalled);
+				assert.isTrue(isEnsuringAppResourcesExist);
+				assert.deepStrictEqual(result, { hasNativeChanges: true, platform });
+			});
+		});
+	});
+
 	describe("preparePlatform without watch", () => {
 		_.each(["ios", "android"], (platform) => {
 			it("shouldn't start the watcher when watch is false", async () => {

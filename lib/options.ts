@@ -202,6 +202,7 @@ export class Options {
 				alias: "r",
 				hasSensitiveValue: false,
 			},
+			native: { type: OptionType.Boolean, hasSensitiveValue: false },
 			markingMode: { type: OptionType.Boolean, hasSensitiveValue: false },
 			var: { type: OptionType.Object, hasSensitiveValue: true },
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -515,6 +516,11 @@ export class Options {
 		// alias --simulator to --emulator
 		if (this.argv.simulator) {
 			this.argv.emulator = this.argv.simulator;
+		}
+
+		// a native build has no debug variant: it is the release build
+		if (this.argv.native) {
+			this.argv.release = true;
 		}
 
 		this.argv.bundle = "webpack";

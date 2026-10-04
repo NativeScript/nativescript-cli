@@ -6,6 +6,11 @@ import { IProjectData } from "./project";
 declare global {
 	interface IPrepareData extends IControllerDataBase {
 		release: boolean;
+		/**
+		 * Compile a release build to native code with no JavaScript runtime.
+		 * Unset defers to `nativeRelease` in nativescript.config.
+		 */
+		native?: boolean;
 		hmr: boolean;
 		env: any;
 		watch?: boolean;

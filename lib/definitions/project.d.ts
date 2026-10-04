@@ -101,6 +101,10 @@ interface IProjectService {
 
 interface INsConfigPlaform {
 	id?: string;
+	/**
+	 * Overrides the top-level `nativeRelease` for this platform.
+	 */
+	nativeRelease?: boolean;
 }
 
 interface IOSSPMPackageBase {
@@ -201,6 +205,12 @@ interface INsConfig {
 	webpackConfigPath?: string;
 	bundlerConfigPath?: string;
 	bundler?: BundlerType;
+	/**
+	 * Release builds compile the app to native code with
+	 * `@nativescript/native-release` instead of bundling it for the
+	 * JavaScript runtime. `--native` / `--no-native` override it per command.
+	 */
+	nativeRelease?: boolean;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
 	visionos?: INSConfigVisionOS;

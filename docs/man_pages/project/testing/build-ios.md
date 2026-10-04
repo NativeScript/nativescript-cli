@@ -17,11 +17,12 @@ Builds the project for iOS and produces an `APP` or `IPA` that you can manually 
 
 Usage | Synopsis
 ---|---
-General | `$ ns build ios [--for-device] [--release] [--copy-to <File Path>] [--provision [<UUID/name>]] [--env.*]]`
+General | `$ ns build ios [--for-device] [--release [--native]] [--copy-to <File Path>] [--provision [<UUID/name>]] [--env.*]]`
 
 ### Options
 
 * `--release` - If set, produces a release build. Otherwise, produces a debug build.
+* `--native` - Compiles the release build to native code with `@nativescript/native-release` (a devDependency of the project): no JavaScript runtime in the app. Implies `--release`. Set `nativeRelease: true` in `nativescript.config.ts` to make it the default for release builds, and `--no-native` to opt out for one build.
 * `--for-device` - If set, produces an application package that you can deploy on device. Otherwise, produces a build that you can run only in the native iOS Simulator.
 * `--i-cloud-container-environment` - If set, adds the passed `iCloudContainerEnvironment` when exporting an application package with the `--for-device` option.
 * `--copy-to` - Specifies the file path where the built `.ipa` will be copied. If it points to a non-existent directory path, it will be created. If the specified value is existing directory, the original file name will be used.

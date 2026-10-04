@@ -423,6 +423,7 @@ injector.require(
 	"viteHmrPortService",
 	"./services/bundler/vite-hmr-port-service",
 );
+injector.require("nativeReleaseService", "./services/native-release-service");
 
 injector.require(
 	"applePortalSessionService",

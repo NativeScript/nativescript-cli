@@ -693,6 +693,7 @@ interface IOptions
 	inspector: boolean; // the counterpart to --chrome
 	background: string;
 	hmr: boolean;
+	native: boolean;
 	link: boolean;
 	performance: Object;
 	cleanupLogFile: string;
