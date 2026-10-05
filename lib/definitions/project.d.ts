@@ -99,12 +99,39 @@ interface IProjectService {
 	ensureAppResourcesExist(projectDir: string): Promise<void>;
 }
 
+/**
+ * Release builds compiled to native code by `@nativescript/compiler`, and the
+ * compiler's options.
+ */
+interface INsConfigRelease {
+	/**
+	 * Release builds compile the app to native code instead of bundling it for
+	 * the JavaScript runtime. `--compiled` / `--no-compiled` override it per command.
+	 */
+	compiled?: boolean;
+	/**
+	 * Packages the compiled build replaces with a module of the app's, as
+	 * `'package': 'path'`.
+	 */
+	pluginReplacements?: Record<string, string>;
+	/**
+	 * Checkouts of plugins' TypeScript source, as `'package': 'path'`, used
+	 * instead of fetching the published revision.
+	 */
+	pluginSources?: Record<string, string>;
+	/**
+	 * Build despite properties core declares that the compiled build does not
+	 * apply, with a warning for each.
+	 */
+	allowUnimplementedProperties?: boolean;
+}
+
 interface INsConfigPlaform {
 	id?: string;
 	/**
-	 * Overrides the top-level `nativeRelease` for this platform.
+	 * Merged over the top-level `release` for this platform; object options merge by key.
 	 */
-	nativeRelease?: boolean;
+	release?: INsConfigRelease;
 }
 
 interface IOSSPMPackageBase {
@@ -205,12 +232,7 @@ interface INsConfig {
 	webpackConfigPath?: string;
 	bundlerConfigPath?: string;
 	bundler?: BundlerType;
-	/**
-	 * Release builds compile the app to native code with
-	 * `@nativescript/compiler` instead of bundling it for the
-	 * JavaScript runtime. `--compiled` / `--no-compiled` override it per command.
-	 */
-	nativeRelease?: boolean;
+	release?: INsConfigRelease;
 	ios?: INsConfigIOS;
 	android?: INsConfigAndroid;
 	visionos?: INSConfigVisionOS;

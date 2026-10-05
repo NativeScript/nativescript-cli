@@ -142,7 +142,7 @@ describe("compiledReleaseService", () => {
 			{
 				name: "a debug build, even with --compiled",
 				options: { release: false, compiled: true },
-				nsConfig: { nativeRelease: true },
+				nsConfig: { release: { compiled: true } },
 				expected: false,
 			},
 			{
@@ -158,27 +158,36 @@ describe("compiledReleaseService", () => {
 				expected: true,
 			},
 			{
-				name: "a release build with nativeRelease in the config",
+				name: "a release build with release.compiled in the config",
 				options: { release: true },
-				nsConfig: { nativeRelease: true },
+				nsConfig: { release: { compiled: true } },
 				expected: true,
 			},
 			{
 				name: "a release build with --no-compiled over the config",
 				options: { release: true, compiled: false },
-				nsConfig: { nativeRelease: true },
+				nsConfig: { release: { compiled: true } },
 				expected: false,
 			},
 			{
 				name: "a release build whose platform opts out in the config",
 				options: { release: true },
-				nsConfig: { nativeRelease: true, android: { nativeRelease: false } },
+				nsConfig: {
+					release: { compiled: true },
+					android: { release: { compiled: false } },
+				},
 				expected: false,
+			},
+			{
+				name: "a release build with --compiled over the platform's opt-out",
+				options: { release: true, compiled: true },
+				nsConfig: { android: { release: { compiled: false } } },
+				expected: true,
 			},
 			{
 				name: "a release build whose platform alone opts in",
 				options: { release: true },
-				nsConfig: { android: { nativeRelease: true } },
+				nsConfig: { android: { release: { compiled: true } } },
 				expected: true,
 			},
 		];

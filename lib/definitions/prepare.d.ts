@@ -8,7 +8,7 @@ declare global {
 		release: boolean;
 		/**
 		 * Compile a release build to native code with no JavaScript runtime.
-		 * Unset defers to `nativeRelease` in nativescript.config.
+		 * Unset defers to `release.compiled` in nativescript.config.
 		 */
 		compiled?: boolean;
 		hmr: boolean;

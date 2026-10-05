@@ -42,10 +42,10 @@ export class CompiledReleaseService {
 	) {}
 
 	/**
-	 * `--compiled` (or `--no-compiled`) wins; otherwise `nativeRelease` in
-	 * nativescript.config, where `ios.nativeRelease` and `android.nativeRelease`
-	 * override the top-level value. Debug builds always run on the JavaScript
-	 * runtime.
+	 * `--compiled` (or `--no-compiled`) wins; otherwise `release.compiled` in
+	 * nativescript.config, where `ios.release.compiled` and
+	 * `android.release.compiled` override the top-level value. Debug builds
+	 * always run on the JavaScript runtime.
 	 */
 	public isCompiledRelease(options: ICompiledReleaseOptions): boolean {
 		if (!options.release) {
@@ -59,10 +59,12 @@ export class CompiledReleaseService {
 		const nsConfig = this.$projectDataService.getProjectData(
 			options.projectDir,
 		).nsConfig;
-		const platformConfig: { nativeRelease?: boolean } =
+		const platformConfig: { release?: { compiled?: boolean } } =
 			nsConfig?.[options.platform.toLowerCase() as "ios" | "android"];
 
-		return !!(platformConfig?.nativeRelease ?? nsConfig?.nativeRelease);
+		return !!(
+			platformConfig?.release?.compiled ?? nsConfig?.release?.compiled
+		);
 	}
 
 	private getProjectRoot(projectData: IProjectData, platform: string): string {

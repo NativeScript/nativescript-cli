@@ -36,7 +36,7 @@ Start an emulator with specified device identifier and sdk | `$ ns run ios [--de
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--release` - If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build.
-* `--compiled` - Compiles the release build to native code with `@nativescript/compiler` (a devDependency of the project): no JavaScript runtime in the app. Implies `--release`. Set `nativeRelease: true` in `nativescript.config.ts` to make it the default for release builds, and `--no-compiled` to opt out for one build.
+* `--compiled` - Compiles the release build to native code with `@nativescript/compiler` (a devDependency of the project): no JavaScript runtime in the app. Implies `--release`. Set `release: { compiled: true }` in `nativescript.config.ts` to make it the default for release builds, and `--no-compiled` to opt out for one build.
 * `--no-hmr` - Disables Hot Module Replacement (HMR). In this case, when a change in the code is applied, CLI will transfer the modified files and restart the application.
 * `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times. 
     *   `--env.aot` - creates Ahead-Of-Time build (Angular only).
