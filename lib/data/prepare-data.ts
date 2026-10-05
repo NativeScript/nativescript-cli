@@ -4,7 +4,7 @@ import * as _ from "lodash";
 
 export class PrepareData extends ControllerDataBase {
 	public release: boolean;
-	public native?: boolean;
+	public compiled?: boolean;
 	public hmr: boolean;
 	public env: any;
 	public watch?: boolean;
@@ -35,7 +35,7 @@ export class PrepareData extends ControllerDataBase {
 		}
 
 		this.release = data.release;
-		this.native = data.native;
+		this.compiled = data.compiled;
 		this.hmr = data.hmr || data.useHotModuleReload;
 		this.env = {
 			...env,

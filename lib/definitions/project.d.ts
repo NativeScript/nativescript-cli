@@ -207,8 +207,8 @@ interface INsConfig {
 	bundler?: BundlerType;
 	/**
 	 * Release builds compile the app to native code with
-	 * `@nativescript/native-release` instead of bundling it for the
-	 * JavaScript runtime. `--native` / `--no-native` override it per command.
+	 * `@nativescript/compiler` instead of bundling it for the
+	 * JavaScript runtime. `--compiled` / `--no-compiled` override it per command.
 	 */
 	nativeRelease?: boolean;
 	ios?: INsConfigIOS;

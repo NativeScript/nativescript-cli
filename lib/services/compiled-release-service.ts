@@ -1,6 +1,6 @@
 import * as path from "path";
 import { resolvePackagePath } from "@rigor789/resolve-package-path";
-import { NATIVE_RELEASE_PACKAGE_NAME } from "../constants";
+import { COMPILER_PACKAGE_NAME } from "../constants";
 import { IChildProcess, IErrors, IFileSystem } from "../common/declarations";
 import { IPlatformData } from "../definitions/platform";
 import { IProjectData, IProjectDataService } from "../definitions/project";
@@ -13,21 +13,21 @@ import { IGradleCommandService } from "../definitions/gradle";
 import { IOSProvisionService } from "./ios-provision-service";
 import { injector } from "../common/yok";
 
-export interface INativeReleaseOptions {
+export interface ICompiledReleaseOptions {
 	projectDir: string;
 	platform: string;
 	release?: boolean;
-	native?: boolean;
+	compiled?: boolean;
 }
 
 /**
- * A release build compiled by `@nativescript/native-release` into Swift or
+ * A release build compiled by `@nativescript/compiler` into Swift or
  * Kotlin: no JavaScript runtime, no webpack bundle and no `platforms/<platform>`
  * runtime project. Prepare writes the native project to
- * `platforms/native/<platform>`; build compiles it there and returns the
+ * `platforms/compiled/<platform>`; build compiles it there and returns the
  * .app, .ipa, .apk or .aab for the deploy services to install.
  */
-export class NativeReleaseService {
+export class CompiledReleaseService {
 	constructor(
 		private $childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -42,18 +42,18 @@ export class NativeReleaseService {
 	) {}
 
 	/**
-	 * `--native` (or `--no-native`) wins; otherwise `nativeRelease` in
+	 * `--compiled` (or `--no-compiled`) wins; otherwise `nativeRelease` in
 	 * nativescript.config, where `ios.nativeRelease` and `android.nativeRelease`
 	 * override the top-level value. Debug builds always run on the JavaScript
 	 * runtime.
 	 */
-	public isNativeRelease(options: INativeReleaseOptions): boolean {
+	public isCompiledRelease(options: ICompiledReleaseOptions): boolean {
 		if (!options.release) {
 			return false;
 		}
 
-		if (typeof options.native === "boolean") {
-			return options.native;
+		if (typeof options.compiled === "boolean") {
+			return options.compiled;
 		}
 
 		const nsConfig = this.$projectDataService.getProjectData(
@@ -68,7 +68,7 @@ export class NativeReleaseService {
 	private getProjectRoot(projectData: IProjectData, platform: string): string {
 		return path.join(
 			projectData.platformsDir,
-			"native",
+			"compiled",
 			platform.toLowerCase(),
 		);
 	}
@@ -83,7 +83,7 @@ export class NativeReleaseService {
 			!this.$mobileHelper.isAndroidPlatform(platform)
 		) {
 			this.$errors.fail(
-				`A native release build is available for iOS and Android, not ${platformData.normalizedPlatformName}.`,
+				`A compiled release build is available for iOS and Android, not ${platformData.normalizedPlatformName}.`,
 			);
 		}
 
@@ -107,7 +107,7 @@ export class NativeReleaseService {
 				stdio: "inherit",
 			});
 		} catch (err) {
-			this.$errors.fail(`The native release compile failed. ${err.message}`);
+			this.$errors.fail(`The compile to native code failed. ${err.message}`);
 		}
 	}
 
@@ -132,7 +132,7 @@ export class NativeReleaseService {
 			: await this.buildIOS(projectData, <IiOSBuildData>buildData);
 		if (!this.$fs.exists(packageFile)) {
 			this.$errors.fail(
-				`The native release build finished without producing ${packageFile}.`,
+				`The compiled release build finished without producing ${packageFile}.`,
 			);
 		}
 
@@ -147,14 +147,14 @@ export class NativeReleaseService {
 	}
 
 	private getPackageDir(projectData: IProjectData): string {
-		const packageDir = resolvePackagePath(NATIVE_RELEASE_PACKAGE_NAME, {
+		const packageDir = resolvePackagePath(COMPILER_PACKAGE_NAME, {
 			paths: [projectData.projectDir],
 		});
 		if (!packageDir) {
 			this.$errors.fail(
-				`A native release build needs the ${NATIVE_RELEASE_PACKAGE_NAME} compiler in the project. ` +
-					`Install it with 'npm install --save-dev ${NATIVE_RELEASE_PACKAGE_NAME}', ` +
-					`or build on the JavaScript runtime with --no-native.`,
+				`A compiled release build needs ${COMPILER_PACKAGE_NAME} in the project. ` +
+					`Install it with 'npm install --save-dev ${COMPILER_PACKAGE_NAME}', ` +
+					`or build on the JavaScript runtime with --no-compiled.`,
 			);
 		}
 
@@ -212,7 +212,7 @@ export class NativeReleaseService {
 					"generic/platform=iOS Simulator",
 					"build",
 				],
-				{ cwd: projectRoot, message: "Xcode build (native release)..." },
+				{ cwd: projectRoot, message: "Xcode build (compiled release)..." },
 			);
 
 			return path.join(
@@ -250,7 +250,7 @@ export class NativeReleaseService {
 				"archive",
 				...automaticSigning,
 			],
-			{ cwd: projectRoot, message: "Xcode archive (native release)..." },
+			{ cwd: projectRoot, message: "Xcode archive (compiled release)..." },
 		);
 
 		if (!buildData.teamId && !buildData.provision) {
@@ -402,7 +402,7 @@ export class NativeReleaseService {
 
 		await this.$gradleCommandService.executeCommand(args, {
 			cwd: projectRoot,
-			message: "Gradle build (native release)...",
+			message: "Gradle build (compiled release)...",
 			gradlePath:
 				buildData.gradlePath ??
 				path.join(this.getPackageDir(projectData), "kit-android", "gradlew"),
@@ -430,4 +430,4 @@ export class NativeReleaseService {
 				);
 	}
 }
-injector.register("nativeReleaseService", NativeReleaseService);
+injector.register("compiledReleaseService", CompiledReleaseService);

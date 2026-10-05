@@ -17,7 +17,7 @@ When running this command without passing `--release` flag, the HMR (Hot Module 
 
 Usage | Synopsis
 ---|---
-Run on all connected devices and running emulators | `$ ns run android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release [--native]] [--justlaunch] [--env.*]] [--aab]`
+Run on all connected devices and running emulators | `$ ns run android [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release [--compiled]] [--justlaunch] [--env.*]] [--aab]`
 Run on a selected connected device or running emulator. Will start emulator with specified `Device Identifier`, if not already running. | `$ ns run android --device <Device ID> [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
 Start a default emulator if none are running, or run application on all connected emulators. | `$ ns run android --emulator [--key-store-path <File Path> --key-store-password <Password> --key-store-alias <Name> --key-store-alias-password <Password>] [--release] [--justlaunch] [--env.*]] [--aab]`
 
@@ -29,7 +29,7 @@ Start a default emulator if none are running, or run application on all connecte
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--release` - If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build. When set, you must also specify the --key-store-* options.
-* `--native` - Compiles the release build to native code with `@nativescript/native-release` (a devDependency of the project): no JavaScript runtime in the app. Implies `--release`. Set `nativeRelease: true` in `nativescript.config.ts` to make it the default for release builds, and `--no-native` to opt out for one build.
+* `--compiled` - Compiles the release build to native code with `@nativescript/compiler` (a devDependency of the project): no JavaScript runtime in the app. Implies `--release`. Set `nativeRelease: true` in `nativescript.config.ts` to make it the default for release builds, and `--no-compiled` to opt out for one build.
 * `--key-store-path` - Specifies the file path to the keystore file (P12) which you want to use to code sign your APK. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-password` - Provides the password for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.
 * `--key-store-alias` - Provides the alias for the keystore file specified with `--key-store-path`. You can use the `--key-store-*` options along with `--release` to produce a signed release build. You need to specify all `--key-store-*` options.

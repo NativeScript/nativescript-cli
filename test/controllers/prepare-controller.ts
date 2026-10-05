@@ -151,7 +151,7 @@ describe("prepareController", () => {
 		});
 	});
 
-	describe("preparePlatform for a native release", () => {
+	describe("preparePlatform for a compiled release", () => {
 		_.each(["ios", "android"], (platform) => {
 			it(`compiles to native code instead of bundling or adding the ${platform} runtime`, async () => {
 				const injector = createTestInjector({ hasNativeChanges: false });
@@ -160,8 +160,8 @@ describe("prepareController", () => {
 					isAddPlatformCalled = true;
 				};
 				const nativePrepareCalls: any[] = [];
-				Object.assign(injector.resolve("nativeReleaseService"), {
-					isNativeRelease: (data: IPrepareData) => data.release,
+				Object.assign(injector.resolve("compiledReleaseService"), {
+					isCompiledRelease: (data: IPrepareData) => data.release,
 					prepare: async (platformData: any, projectData: any) => {
 						nativePrepareCalls.push({ platformData, projectData });
 					},

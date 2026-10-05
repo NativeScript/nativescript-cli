@@ -202,7 +202,7 @@ export class Options {
 				alias: "r",
 				hasSensitiveValue: false,
 			},
-			native: { type: OptionType.Boolean, hasSensitiveValue: false },
+			compiled: { type: OptionType.Boolean, hasSensitiveValue: false },
 			markingMode: { type: OptionType.Boolean, hasSensitiveValue: false },
 			var: { type: OptionType.Object, hasSensitiveValue: true },
 			default: { type: OptionType.Boolean, hasSensitiveValue: false },
@@ -518,8 +518,8 @@ export class Options {
 			this.argv.emulator = this.argv.simulator;
 		}
 
-		// a native build has no debug variant: it is the release build
-		if (this.argv.native) {
+		// a compiled build has no debug variant: it is the release build
+		if (this.argv.compiled) {
 			this.argv.release = true;
 		}
 

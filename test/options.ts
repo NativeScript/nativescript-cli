@@ -487,8 +487,8 @@ describe("options", () => {
 					expectedHmrValue: false,
 				},
 				{
-					name: "should set hmr to false by default when --native option is provided",
-					args: ["--native"],
+					name: "should set hmr to false by default when --compiled option is provided",
+					args: ["--compiled"],
 					expectedHmrValue: false,
 				},
 			];
@@ -508,27 +508,27 @@ describe("options", () => {
 			});
 		});
 
-		describe("native option", () => {
+		describe("compiled option", () => {
 			const testCases = [
 				{
 					name: "is a release build",
-					args: ["--native"],
-					expected: { native: true, release: true },
+					args: ["--compiled"],
+					expected: { compiled: true, release: true },
 				},
 				{
 					name: "stays a release build with --release",
-					args: ["--release", "--native"],
-					expected: { native: true, release: true },
+					args: ["--release", "--compiled"],
+					expected: { compiled: true, release: true },
 				},
 				{
 					name: "is left unset without the flag, so the config decides",
 					args: ["--release"],
-					expected: { native: undefined, release: true },
+					expected: { compiled: undefined, release: true },
 				},
 				{
-					name: "can be turned off with --no-native",
-					args: ["--release", "--no-native"],
-					expected: { native: false, release: true },
+					name: "can be turned off with --no-compiled",
+					args: ["--release", "--no-compiled"],
+					expected: { compiled: false, release: true },
 				},
 			];
 
@@ -542,7 +542,7 @@ describe("options", () => {
 					testCase.args.forEach(() => process.argv.pop());
 
 					assert.deepStrictEqual(
-						{ native: options.native, release: options.release },
+						{ compiled: options.compiled, release: options.release },
 						testCase.expected,
 					);
 					assert.isFalse(isExecutionStopped);

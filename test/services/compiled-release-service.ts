@@ -4,7 +4,7 @@ import * as os from "os";
 import * as path from "path";
 import { Yok } from "../../lib/common/yok";
 import { IInjector } from "../../lib/common/definitions/yok";
-import { NativeReleaseService } from "../../lib/services/native-release-service";
+import { CompiledReleaseService } from "../../lib/services/compiled-release-service";
 import { IGradleCommandOptions } from "../../lib/definitions/gradle";
 
 interface ISpawnCall {
@@ -33,7 +33,7 @@ function createProjectData(nsConfig: any = {}): any {
 	};
 }
 
-function createService(nsConfig: any = {}): NativeReleaseService {
+function createService(nsConfig: any = {}): CompiledReleaseService {
 	const injector: IInjector = new Yok();
 	injector.register("childProcess", {
 		spawnFromEvent: async (
@@ -53,7 +53,10 @@ function createService(nsConfig: any = {}): NativeReleaseService {
 	});
 	injector.register("exportOptionsPlistService", {});
 	injector.register("fs", {
-		exists: () => true,
+		exists: (file: string) =>
+			path.basename(file) === "ns-native-project.json"
+				? fs.existsSync(file)
+				: true,
 		readJson: (file: string) => JSON.parse(fs.readFileSync(file, "utf8")),
 		deleteDirectory: (): void => undefined,
 		deleteFile: (): void => undefined,
@@ -90,9 +93,9 @@ function createService(nsConfig: any = {}): NativeReleaseService {
 			xcodebuildCalls.push(args);
 		},
 	});
-	injector.register("nativeReleaseService", NativeReleaseService);
+	injector.register("compiledReleaseService", CompiledReleaseService);
 
-	return injector.resolve("nativeReleaseService");
+	return injector.resolve("compiledReleaseService");
 }
 
 function installCompilerPackage(): string {
@@ -100,13 +103,13 @@ function installCompilerPackage(): string {
 		projectDir,
 		"node_modules",
 		"@nativescript",
-		"native-release",
+		"compiler",
 	);
 	fs.mkdirSync(packageDir, { recursive: true });
 	fs.writeFileSync(
 		path.join(packageDir, "package.json"),
 		JSON.stringify({
-			name: "@nativescript/native-release",
+			name: "@nativescript/compiler",
 			bin: { "ns-native": "bin/ns-native.js" },
 		}),
 	);
@@ -118,10 +121,10 @@ const platformData = (platform: string): any => ({
 	normalizedPlatformName: platform,
 });
 
-describe("nativeReleaseService", () => {
+describe("compiledReleaseService", () => {
 	beforeEach(() => {
 		projectDir = fs.realpathSync(
-			fs.mkdtempSync(path.join(os.tmpdir(), "native-release-")),
+			fs.mkdtempSync(path.join(os.tmpdir(), "compiled-release-")),
 		);
 		spawnCalls = [];
 		gradleCalls = [];
@@ -134,11 +137,11 @@ describe("nativeReleaseService", () => {
 		fs.rmSync(projectDir, { recursive: true, force: true });
 	});
 
-	describe("isNativeRelease", () => {
+	describe("isCompiledRelease", () => {
 		const testCases = [
 			{
-				name: "a debug build, even with --native",
-				options: { release: false, native: true },
+				name: "a debug build, even with --compiled",
+				options: { release: false, compiled: true },
 				nsConfig: { nativeRelease: true },
 				expected: false,
 			},
@@ -149,8 +152,8 @@ describe("nativeReleaseService", () => {
 				expected: false,
 			},
 			{
-				name: "a release build with --native",
-				options: { release: true, native: true },
+				name: "a release build with --compiled",
+				options: { release: true, compiled: true },
 				nsConfig: {},
 				expected: true,
 			},
@@ -161,8 +164,8 @@ describe("nativeReleaseService", () => {
 				expected: true,
 			},
 			{
-				name: "a release build with --no-native over the config",
-				options: { release: true, native: false },
+				name: "a release build with --no-compiled over the config",
+				options: { release: true, compiled: false },
 				nsConfig: { nativeRelease: true },
 				expected: false,
 			},
@@ -184,7 +187,7 @@ describe("nativeReleaseService", () => {
 			it(`is ${testCase.expected} for ${testCase.name}`, () => {
 				const service = createService(testCase.nsConfig);
 				assert.equal(
-					service.isNativeRelease({
+					service.isCompiledRelease({
 						projectDir,
 						platform: "Android",
 						...testCase.options,
@@ -196,7 +199,7 @@ describe("nativeReleaseService", () => {
 	});
 
 	describe("prepare", () => {
-		it("runs the project's compiler with the CLI's node, writing to platforms/native/<platform>", async () => {
+		it("runs the project's compiler with the CLI's node, writing to platforms/compiled/<platform>", async () => {
 			const packageDir = installCompilerPackage();
 			const service = createService();
 
@@ -210,7 +213,7 @@ describe("nativeReleaseService", () => {
 				"--platform",
 				"ios",
 				"--out",
-				path.join(projectDir, "platforms", "native", "ios"),
+				path.join(projectDir, "platforms", "compiled", "ios"),
 				"--name",
 				"demo",
 				"--bundle",
@@ -230,7 +233,7 @@ describe("nativeReleaseService", () => {
 
 			assert.include(
 				error.message,
-				"npm install --save-dev @nativescript/native-release",
+				"npm install --save-dev @nativescript/compiler",
 			);
 			assert.lengthOf(spawnCalls, 0);
 		});
@@ -271,7 +274,7 @@ describe("nativeReleaseService", () => {
 			const projectRoot = path.join(
 				projectDir,
 				"platforms",
-				"native",
+				"compiled",
 				"android",
 			);
 			assert.lengthOf(gradleCalls, 1);

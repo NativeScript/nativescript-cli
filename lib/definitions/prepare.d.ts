@@ -10,7 +10,7 @@ declare global {
 		 * Compile a release build to native code with no JavaScript runtime.
 		 * Unset defers to `nativeRelease` in nativescript.config.
 		 */
-		native?: boolean;
+		compiled?: boolean;
 		hmr: boolean;
 		env: any;
 		watch?: boolean;

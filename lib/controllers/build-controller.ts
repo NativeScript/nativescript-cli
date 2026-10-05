@@ -15,7 +15,7 @@ import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import { performance } from "perf_hooks";
 import * as path from "path";
-import { NativeReleaseService } from "../services/native-release-service";
+import { CompiledReleaseService } from "../services/compiled-release-service";
 
 export class BuildController extends EventEmitter implements IBuildController {
 	constructor(
@@ -29,7 +29,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 		private $projectDataService: IProjectDataService,
 		private $projectChangesService: IProjectChangesService,
 		private $prepareController: IPrepareController,
-		private $nativeReleaseService: NativeReleaseService
+		private $compiledReleaseService: CompiledReleaseService
 	) {
 		super();
 	}
@@ -77,8 +77,8 @@ export class BuildController extends EventEmitter implements IBuildController {
 			}`,
 		});
 
-		if (this.$nativeReleaseService.isNativeRelease(buildData)) {
-			const packageFile = await this.$nativeReleaseService.build(
+		if (this.$compiledReleaseService.isCompiledRelease(buildData)) {
+			const packageFile = await this.$compiledReleaseService.build(
 				platformData,
 				projectData,
 				buildData
@@ -165,7 +165,7 @@ export class BuildController extends EventEmitter implements IBuildController {
 
 	public async shouldBuild(buildData: IBuildData): Promise<boolean> {
 		// xcodebuild and Gradle decide what is stale in the native project.
-		if (this.$nativeReleaseService.isNativeRelease(buildData)) {
+		if (this.$compiledReleaseService.isCompiledRelease(buildData)) {
 			return true;
 		}
 

@@ -41,7 +41,7 @@ import {
 	IProjectService,
 } from "../definitions/project";
 import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
-import { NativeReleaseService } from "../services/native-release-service";
+import { CompiledReleaseService } from "../services/compiled-release-service";
 
 interface IPlatformWatcherData {
 	hasWebpackCompilerProcess: boolean;
@@ -82,7 +82,7 @@ export class PrepareController
 		private $markingModeService: IMarkingModeService,
 		private $projectConfigService: IProjectConfigService,
 		private $projectService: IProjectService,
-		private $nativeReleaseService: NativeReleaseService,
+		private $compiledReleaseService: CompiledReleaseService,
 	) {
 		super();
 	}
@@ -146,9 +146,9 @@ export class PrepareController
 	): Promise<IPrepareResultData> {
 		await this.$projectService.ensureAppResourcesExist(projectData.projectDir);
 
-		// The native build needs neither the bundle nor the runtime's platform project.
-		if (this.$nativeReleaseService.isNativeRelease(prepareData)) {
-			await this.$nativeReleaseService.prepare(
+		// The compiled build needs neither the bundle nor the runtime's platform project.
+		if (this.$compiledReleaseService.isCompiledRelease(prepareData)) {
+			await this.$compiledReleaseService.prepare(
 				this.$platformsDataService.getPlatformData(
 					prepareData.platform,
 					projectData,
@@ -156,7 +156,7 @@ export class PrepareController
 				projectData,
 			);
 			this.$logger.info(
-				`Project successfully prepared (${prepareData.platform.toLowerCase()}, native)`,
+				`Project successfully prepared (${prepareData.platform.toLowerCase()}, compiled)`,
 			);
 			return {
 				hasNativeChanges: true,
