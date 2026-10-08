@@ -820,10 +820,10 @@ end`,
 				options?: any,
 				execOptions?: IExecOptions
 			): Promise<any> => {
-				if (command === "arch -x86_64 pod --version") {
-					// This is the command that is used to check if cocoapods is installed under Rosetta 2
+				if (command.endsWith("pod --version")) {
+					// Native CocoaPods is available.
 					return {
-						stdout: "Bad CPU type in executable",
+						stdout: "1.17.0",
 						stderr: "",
 						exitCode: 0,
 					};
@@ -869,6 +869,69 @@ end`,
 
 				await cocoapodsService.executePodInstall(projectRoot, xcodeProjPath);
 				assert.equal(commandCalled, podExecutable);
+			});
+		});
+
+		describe("on Apple Silicon", () => {
+			let platform: PropertyDescriptor;
+			let arch: PropertyDescriptor;
+			beforeEach(() => {
+				platform = Object.getOwnPropertyDescriptor(process, "platform");
+				arch = Object.getOwnPropertyDescriptor(process, "arch");
+				Object.defineProperty(process, "platform", { value: "darwin" });
+				Object.defineProperty(process, "arch", { value: "arm64" });
+			});
+			afterEach(() => {
+				Object.defineProperty(process, "platform", platform);
+				Object.defineProperty(process, "arch", arch);
+			});
+			["pod", "sandbox-pod"].forEach((podTool) => {
+				[false, true].forEach((needsRosetta) => {
+					it(`uses ${podTool} ${needsRosetta ? "through Rosetta after a native CPU failure" : "natively even when Rosetta is installed"}`, async () => {
+						testInjector.resolve<IConfiguration>("config").USE_POD_SANDBOX =
+							podTool === "sandbox-pod";
+						const childProcess =
+							testInjector.resolve<IChildProcess>("childProcess");
+						const probes: string[] = [];
+						childProcess.exec = async (command: string): Promise<any> => {
+							probes.push(command);
+							if (needsRosetta) {
+								throw new Error("Bad CPU type in executable");
+							}
+							return { stdout: "1.17.0", stderr: "", exitCode: 0 };
+						};
+						childProcess.spawnFromEvent = async (
+							command: string,
+							args: string[],
+						): Promise<ISpawnResult> => {
+							assert.equal(command, needsRosetta ? "arch" : podTool);
+							assert.deepStrictEqual(
+								args,
+								needsRosetta ? ["-x86_64", podTool, "install"] : ["install"],
+							);
+							return { stdout: "", stderr: "", exitCode: 0 };
+						};
+						await cocoapodsService.executePodInstall(
+							projectRoot,
+							xcodeProjPath,
+						);
+						assert.deepStrictEqual(probes, [`${podTool} --version`]);
+					});
+				});
+			});
+			it("preserves unrelated native probe failures", async () => {
+				const childProcess =
+					testInjector.resolve<IChildProcess>("childProcess");
+				childProcess.exec = async (): Promise<any> => {
+					throw new Error("pod: command not found");
+				};
+				childProcess.spawnFromEvent = async (): Promise<ISpawnResult> => {
+					throw new Error("unexpected Rosetta fallback");
+				};
+				await assert.isRejected(
+					cocoapodsService.executePodInstall(projectRoot, xcodeProjPath),
+					"pod: command not found",
+				);
 			});
 		});
 
