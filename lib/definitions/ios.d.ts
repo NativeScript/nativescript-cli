@@ -50,6 +50,13 @@ declare global {
 		 * extensions...) list their names here to link the package with them too.
 		 */
 		targets?: string[];
+		/**
+		 * Products built as dynamic libraries (`.library(type: .dynamic)`) must
+		 * also be copied into the app bundle. Lists the subset of `libs` to
+		 * embed; a dynamic product that is linked but not embedded fails in dyld
+		 * at launch on devices.
+		 */
+		embed?: string[];
 	}
 
 	/** A package resolved from a git remote at a version, range, branch or revision. */
