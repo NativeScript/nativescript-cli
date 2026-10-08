@@ -232,6 +232,8 @@ export class CompiledReleaseService {
 		// Signing settings given to xcodebuild reach every target, and the kit's
 		// Swift package rejects a provisioning profile, so with --provision the
 		// archive stays unsigned and the export signs the app with the profile.
+		// The generated project leaves device builds signable (for Xcode), so an
+		// archive without a team says it is unsigned here.
 		const automaticSigning =
 			buildData.teamId && !buildData.provision
 				? [
@@ -240,7 +242,7 @@ export class CompiledReleaseService {
 						`DEVELOPMENT_TEAM=${buildData.teamId}`,
 						"-allowProvisioningUpdates",
 					]
-				: [];
+				: ["CODE_SIGNING_ALLOWED=NO"];
 		this.$fs.deleteDirectory(archivePath);
 		await this.$xcodebuildCommandService.executeCommand(
 			[

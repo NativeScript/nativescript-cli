@@ -358,6 +358,7 @@ describe("compiledReleaseService", () => {
 			assert.lengthOf(xcodebuildCalls, 1);
 			assert.include(xcodebuildCalls[0], "archive");
 			assert.notInclude(xcodebuildCalls[0], "CODE_SIGNING_ALLOWED=YES");
+			assert.include(xcodebuildCalls[0], "CODE_SIGNING_ALLOWED=NO");
 			assert.lengthOf(warnings, 1);
 			assert.match(result, /build\/demo\.ipa$/);
 		});
@@ -372,6 +373,7 @@ describe("compiledReleaseService", () => {
 			);
 
 			assert.lengthOf(xcodebuildCalls, 2);
+			assert.include(xcodebuildCalls[0], "CODE_SIGNING_ALLOWED=NO");
 			assert.isFalse(
 				xcodebuildCalls[0].some((arg) =>
 					arg.startsWith("PROVISIONING_PROFILE"),
