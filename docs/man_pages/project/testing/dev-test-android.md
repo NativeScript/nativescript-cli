@@ -9,7 +9,7 @@ Run tests on a selected device | `$ ns test android --device <Device ID> [--watc
 Runs the tests in your project on connected Android devices and running native emulators.<% if(isConsole) { %> Your project must already be configured for unit testing by running `$ ns test init`.<% } %>
 
 ### Options
-* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-run.
+* `--watch` - Enabled by default; when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-run. Pass `--no-watch` to run the tests once. In CI environments (when the `CI` environment variable is set), it defaults to disabled.
 * `--device` - Specifies the serial number or the index of the connected device on which to run the tests. To list all connected devices, grouped by platform, run `$ ns device`
 * `--debug-brk` - Runs the tests under the debugger. The debugger will break just before your tests are executed, so you have a chance to place breakpoints.
 

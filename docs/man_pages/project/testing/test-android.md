@@ -18,7 +18,7 @@ Run tests on a selected device | `$ ns test android --device <Device ID> [--watc
 
 ### Options
 
-* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-run.
+* `--watch` - Enabled by default; when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-run. Pass `--no-watch` to run the tests once. In CI environments (when the `CI` environment variable is set), it defaults to disabled.
 * `--device` - Specifies the serial number or the index of the connected device on which to run the tests. To list all connected devices, grouped by platform, run `$ ns device`. `<Device ID>` is the device index or identifier as listed by the `$ ns device` command.
 * `--debug-brk` - Runs the tests under the debugger. The debugger will break just before your tests are executed, so you have a chance to place breakpoints.
 * `--env.*` - Specifies additional flags that the bundler may process. Can be passed multiple times. Supported additional flags:
