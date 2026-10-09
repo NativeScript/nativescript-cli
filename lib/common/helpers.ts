@@ -349,7 +349,7 @@ function isRunningInTTY(): boolean {
 	);
 }
 
-function isCIEnvironment(): boolean {
+export function isCIEnvironment(): boolean {
 	// The following CI environments set their own environment variables that we respect:
 	//  travis: "CI",
 	//  circleCI: "CI",

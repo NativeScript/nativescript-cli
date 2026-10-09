@@ -1,4 +1,4 @@
-import { hasValidAndroidSigning } from "../common/helpers";
+import { hasValidAndroidSigning, isCIEnvironment } from "../common/helpers";
 import {
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
@@ -25,6 +25,13 @@ abstract class TestCommandBase {
 	public allowedParameters: ICommandParameter[] = [];
 	public dashedOptions = {
 		hmr: { type: OptionType.Boolean, default: false, hasSensitiveValue: false },
+		// Watch mode keeps the run alive waiting for changes; CI runs must
+		// execute once and exit, so --watch defaults to off there.
+		watch: {
+			type: OptionType.Boolean,
+			default: !isCIEnvironment(),
+			hasSensitiveValue: false,
+		},
 	};
 
 	protected abstract platform: string;
@@ -214,7 +221,7 @@ class TestAndroidCommand extends TestCommandBase implements ICommand {
 	}
 }
 
-class TestIosCommand extends TestCommandBase implements ICommand {
+export class TestIosCommand extends TestCommandBase implements ICommand {
 	protected platform = "iOS";
 
 	constructor(
