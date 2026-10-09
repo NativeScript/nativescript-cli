@@ -170,13 +170,14 @@ export class CompiledReleaseService {
 		const projectRoot = this.getProjectRoot(projectData, "ios");
 		const name = projectData.projectName;
 
-		// A project with CocoaPods or Swift packages is generated and integrated by
-		// the compiler, which names the workspace to build.
+		// The compiler generates the Xcode project (and integrates CocoaPods) and names
+		// the project or workspace to build; a compiler that does not is run through XcodeGen here.
 		const integrated = path.join(projectRoot, "ns-native-project.json");
-		const workspace = this.$fs.exists(integrated)
-			? this.$fs.readJson(integrated).workspace
+		const generated: { workspace?: string; project?: string } | null = this.$fs.exists(integrated)
+			? this.$fs.readJson(integrated)
 			: null;
-		if (!workspace) {
+		const workspace = generated?.workspace ?? null;
+		if (!generated) {
 			try {
 				await this.$childProcess.spawnFromEvent(
 					"xcodegen",
@@ -196,7 +197,7 @@ export class CompiledReleaseService {
 		const projectArgs = [
 			...(workspace
 				? ["-workspace", workspace]
-				: ["-project", `${name}.xcodeproj`]),
+				: ["-project", generated?.project ?? `${name}.xcodeproj`]),
 			"-scheme",
 			name,
 			"-configuration",
