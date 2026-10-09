@@ -23,7 +23,7 @@ Run tests in the iOS Simulator | `$ ns test ios --emulator [--watch] [--debug-br
 
 ### Options
 
-* `--watch` - If set, when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-ran.
+* `--watch` - Enabled by default; when you save changes to the project, changes are automatically synchronized to the connected device and tests are re-ran. Pass `--no-watch` to run the tests once. In CI environments (when the `CI` environment variable is set), it defaults to disabled.
 * `--device` - Specifies the serial number or the index of the connected device on which you want to run tests. To list all connected devices, grouped by platform, run `$ ns device`. You cannot set `--device` and `--emulator` simultaneously. `<Device ID>` is the device index or identifier as listed by the `$ ns device` command.
 * `--emulator` - Runs tests on the iOS Simulator. You cannot set `--device` and `--emulator` simultaneously.
 * `--debug-brk` - Runs the tests under the debugger. The debugger will break just before your tests are executed, so you have a chance to place breakpoints.
