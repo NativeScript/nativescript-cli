@@ -1,7 +1,7 @@
 import * as path from "path";
 import { resolvePackagePath } from "@rigor789/resolve-package-path";
 import { COMPILER_PACKAGE_NAME } from "../constants";
-import { IChildProcess, IErrors, IFileSystem } from "../common/declarations";
+import { IChildProcess, IErrors, IFileSystem, IHooksService } from "../common/declarations";
 import { IPlatformData } from "../definitions/platform";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import {
@@ -12,6 +12,7 @@ import {
 import { IGradleCommandService } from "../definitions/gradle";
 import { IOSProvisionService } from "./ios-provision-service";
 import { injector } from "../common/yok";
+import { hook } from "../common/helpers";
 
 export interface ICompiledReleaseOptions {
 	projectDir: string;
@@ -34,6 +35,7 @@ export class CompiledReleaseService {
 		private $exportOptionsPlistService: IExportOptionsPlistService,
 		private $fs: IFileSystem,
 		private $gradleCommandService: IGradleCommandService,
+		public $hooksService: IHooksService,
 		private $iOSProvisionService: IOSProvisionService,
 		private $logger: ILogger,
 		private $mobileHelper: Mobile.IMobileHelper,
@@ -127,11 +129,11 @@ export class CompiledReleaseService {
 			this.$fs.deleteDirectory(path.join(projectRoot, "build"));
 		}
 
-		const packageFile = this.$mobileHelper.isAndroidPlatform(
-			platformData.platformNameLowerCase,
-		)
-			? await this.buildAndroid(projectData, <IAndroidBuildData>buildData)
-			: await this.buildIOS(projectData, <IiOSBuildData>buildData);
+		const platform = platformData.platformNameLowerCase;
+		const projectRoot = this.getProjectRoot(projectData, platform);
+		const packageFile = this.$mobileHelper.isAndroidPlatform(platform)
+			? await this.buildAndroidProject(projectRoot, projectData, <IAndroidBuildData>buildData)
+			: await this.buildIOSProject(projectRoot, projectData, <IiOSBuildData>buildData);
 		if (!this.$fs.exists(packageFile)) {
 			this.$errors.fail(
 				`The compiled release build finished without producing ${packageFile}.`,
@@ -139,6 +141,26 @@ export class CompiledReleaseService {
 		}
 
 		return packageFile;
+	}
+
+	// The platform services' build hooks, with the arguments they pass, so a project's
+	// before-/after-build hooks run for a compiled build too; projectRoot is the compiled project.
+	@hook("buildIOS")
+	public async buildIOSProject(
+		projectRoot: string,
+		projectData: IProjectData,
+		buildData: IiOSBuildData,
+	): Promise<string> {
+		return this.buildIOS(projectData, buildData);
+	}
+
+	@hook("buildAndroid")
+	public async buildAndroidProject(
+		projectRoot: string,
+		projectData: IProjectData,
+		buildData: IAndroidBuildData,
+	): Promise<string> {
+		return this.buildAndroid(projectData, buildData);
 	}
 
 	private getCompilerPath(projectData: IProjectData): string {

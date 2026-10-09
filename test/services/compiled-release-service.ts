@@ -19,6 +19,7 @@ let gradleCalls: { args: string[]; options: IGradleCommandOptions }[];
 let xcodebuildCalls: string[][];
 let writtenFiles: { [path: string]: string };
 let warnings: string[];
+let hookCalls: { name: string; args: any }[];
 
 function createProjectData(nsConfig: any = {}): any {
 	return {
@@ -93,6 +94,15 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 			xcodebuildCalls.push(args);
 		},
 	});
+	injector.register("hooksService", {
+		hookArgsName: "hookArgs",
+		executeBeforeHooks: async (name: string, args: any) => {
+			hookCalls.push({ name: `before-${name}`, args });
+		},
+		executeAfterHooks: async (name: string, args: any) => {
+			hookCalls.push({ name: `after-${name}`, args });
+		},
+	});
 	injector.register("compiledReleaseService", CompiledReleaseService);
 
 	return injector.resolve("compiledReleaseService");
@@ -131,6 +141,7 @@ describe("compiledReleaseService", () => {
 		xcodebuildCalls = [];
 		writtenFiles = {};
 		warnings = [];
+		hookCalls = [];
 	});
 
 	afterEach(() => {
@@ -344,6 +355,26 @@ describe("compiledReleaseService", () => {
 				result,
 				/DerivedData\/Build\/Products\/Release-iphonesimulator\/demo\.app$/,
 			);
+		});
+
+		it("runs the project's build hooks around the compiled build, with the compiled project as projectRoot", async () => {
+			const service = createService();
+
+			await service.build(
+				platformData("iOS"),
+				createProjectData(),
+				<any>{ release: true, buildForDevice: false },
+			);
+
+			assert.deepStrictEqual(
+				hookCalls.map((c) => c.name),
+				["before-buildIOS", "after-buildIOS"],
+			);
+			assert.equal(
+				hookCalls[0].args.hookArgs.projectRoot,
+				path.join(projectDir, "platforms", "compiled", "ios"),
+			);
+			assert.equal(hookCalls[0].args.hookArgs.buildData.release, true);
 		});
 
 		it("archives an unsigned device build without --team-id or --provision", async () => {
