@@ -142,10 +142,20 @@ export class CompiledReleaseService {
 	}
 
 	private getCompilerPath(projectData: IProjectData): string {
+		return this.getCompilerBin(projectData, "ns-native");
+	}
+
+	/** A command of the project's `@nativescript/compiler` (`ns-native`, `ns-compiled-verify`), as a script for Node. */
+	public getCompilerBin(projectData: IProjectData, name: string): string {
 		const packageDir = this.getPackageDir(projectData);
 		const { bin } = this.$fs.readJson(path.join(packageDir, "package.json"));
+		if (!bin?.[name]) {
+			this.$errors.fail(
+				`The project's ${COMPILER_PACKAGE_NAME} has no ${name}: update it.`,
+			);
+		}
 
-		return path.join(packageDir, bin["ns-native"]);
+		return path.join(packageDir, bin[name]);
 	}
 
 	private getPackageDir(projectData: IProjectData): string {

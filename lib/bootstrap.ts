@@ -184,6 +184,7 @@ injector.requireCommand("run|android", "./commands/run");
 injector.requireCommand("run|vision", "./commands/run");
 injector.requireCommand("run|visionos", "./commands/run");
 injector.requireCommand("typings", "./commands/typings");
+injector.requireCommand("compiled|verify", "./commands/compiled-verify");
 
 injector.requireCommand("preview", "./commands/preview");
 
