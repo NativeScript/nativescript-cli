@@ -414,6 +414,35 @@ export class CompiledReleaseService {
 		return ipaPath;
 	}
 
+	/** Kotlin's errors in a failed build, at the TypeScript lines the compiled statements came from. */
+	private async printKotlinErrorsInSource(
+		projectData: IProjectData,
+		projectRoot: string,
+		log: string,
+	): Promise<void> {
+		const errors = log.split("\n").filter((line) => /^e: /.test(line));
+		if (!errors.length || !this.$fs.exists(path.join(projectRoot, "source-lines.json"))) {
+			return;
+		}
+		const logFile = path.join(projectRoot, "build", "compile-errors.log");
+		this.$fs.writeFile(logFile, errors.join("\n") + "\n");
+		try {
+			const result = await this.$childProcess.spawnFromEvent(
+				process.execPath,
+				[this.getCompilerBin(projectData, "ns-native-retrace"), "--build-log", projectRoot, logFile],
+				"close",
+				{ cwd: projectData.projectDir },
+				{ throwError: false },
+			);
+			const mapped = result.stdout.split("\n").filter((line, k) => line && line !== errors[k]);
+			if (mapped.length) {
+				this.$logger.error(`Kotlin errors in your source:\n${mapped.join("\n")}`);
+			}
+		} catch (err) {
+			this.$logger.trace(`Mapping Kotlin errors to source lines failed: ${err.message}`);
+		}
+	}
+
 	private async buildAndroid(
 		projectData: IProjectData,
 		buildData: IAndroidBuildData,
@@ -437,13 +466,32 @@ export class CompiledReleaseService {
 			);
 		}
 
-		await this.$gradleCommandService.executeCommand(args, {
-			cwd: projectRoot,
-			message: "Gradle build (compiled release)...",
-			gradlePath:
-				buildData.gradlePath ??
-				path.join(this.getPackageDir(projectData), "kit-android", "gradlew"),
-		});
+		// Gradle's output is shown as it comes and kept: Kotlin's errors point into
+		// the generated files, and the compiler's line table names the TypeScript
+		// line each came from.
+		const output: string[] = [];
+		const eventName = "compiledReleaseGradleOutput";
+		const onOutput = ({ data, pipe }: { data: Buffer | string; pipe: string }) => {
+			output.push(data.toString());
+			(pipe === "stderr" ? process.stderr : process.stdout).write(data);
+		};
+		this.$childProcess.on(eventName, onOutput);
+		try {
+			await this.$gradleCommandService.executeCommand(args, {
+				cwd: projectRoot,
+				message: "Gradle build (compiled release)...",
+				gradlePath:
+					buildData.gradlePath ??
+					path.join(this.getPackageDir(projectData), "kit-android", "gradlew"),
+				stdio: "pipe",
+				spawnOptions: { throwError: true, emitOptions: { eventName } },
+			});
+		} catch (err) {
+			await this.printKotlinErrorsInSource(projectData, projectRoot, output.join(""));
+			throw err;
+		} finally {
+			this.$childProcess.removeListener(eventName, onOutput);
+		}
 
 		// The generated project is the app module itself, so AGP names its
 		// outputs after the root project, which the compiler names --name.

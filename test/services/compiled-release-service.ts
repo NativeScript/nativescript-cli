@@ -1,4 +1,5 @@
 import { assert } from "chai";
+import { EventEmitter } from "events";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -20,6 +21,9 @@ let xcodebuildCalls: string[][];
 let writtenFiles: { [path: string]: string };
 let warnings: string[];
 let hookCalls: { name: string; args: any }[];
+let errorsLogged: string[];
+let gradleOutput: { data: string; pipe: string }[] | null;
+let retraceOutput: string;
 
 function createProjectData(nsConfig: any = {}): any {
 	return {
@@ -36,7 +40,7 @@ function createProjectData(nsConfig: any = {}): any {
 
 function createService(nsConfig: any = {}): CompiledReleaseService {
 	const injector: IInjector = new Yok();
-	injector.register("childProcess", {
+	const childProcess = Object.assign(new EventEmitter(), {
 		spawnFromEvent: async (
 			command: string,
 			args: string[],
@@ -44,9 +48,10 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 			options: any,
 		) => {
 			spawnCalls.push({ command, args, options });
-			return { stdout: "", stderr: "", exitCode: 0 };
+			return { stdout: retraceOutput, stderr: "", exitCode: 0 };
 		},
 	});
+	injector.register("childProcess", childProcess);
 	injector.register("errors", {
 		fail: (message: string) => {
 			throw new Error(message);
@@ -69,6 +74,12 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 	injector.register("gradleCommandService", {
 		executeCommand: async (args: string[], options: IGradleCommandOptions) => {
 			gradleCalls.push({ args, options });
+			if (gradleOutput) {
+				for (const chunk of gradleOutput) {
+					childProcess.emit(options.spawnOptions.emitOptions.eventName, chunk);
+				}
+				throw new Error("Command gradlew failed with exit code 1");
+			}
 		},
 	});
 	injector.register("iOSProvisionService", {
@@ -80,6 +91,8 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 	injector.register("logger", {
 		info: (): void => undefined,
 		warn: (message: string) => warnings.push(message),
+		error: (message: string) => errorsLogged.push(message),
+		trace: (): void => undefined,
 	});
 	injector.register("mobileHelper", {
 		isAndroidPlatform: (platform: string) =>
@@ -120,7 +133,10 @@ function installCompilerPackage(): string {
 		path.join(packageDir, "package.json"),
 		JSON.stringify({
 			name: "@nativescript/compiler",
-			bin: { "ns-native": "bin/ns-native.js" },
+			bin: {
+				"ns-native": "bin/ns-native.js",
+				"ns-native-retrace": "bin/ns-native-retrace.js",
+			},
 		}),
 	);
 	return fs.realpathSync(packageDir);
@@ -138,6 +154,9 @@ describe("compiledReleaseService", () => {
 		);
 		spawnCalls = [];
 		gradleCalls = [];
+		errorsLogged = [];
+		gradleOutput = null;
+		retraceOutput = "";
 		xcodebuildCalls = [];
 		writtenFiles = {};
 		warnings = [];
@@ -323,6 +342,33 @@ describe("compiledReleaseService", () => {
 					"demo-release.apk",
 				),
 			);
+		});
+
+		it("names the TypeScript line of each Kotlin error when the Gradle build fails", async () => {
+			const packageDir = installCompilerPackage();
+			const service = createService();
+			const projectRoot = path.join(projectDir, "platforms", "compiled", "android");
+			const kotlinError = `e: file://${projectRoot}/src/main/kotlin/org/example/demo/Home.kt:14:9 Unresolved reference 'x'.`;
+			gradleOutput = [
+				{ data: "> Task :compileReleaseKotlin FAILED\n", pipe: "stdout" },
+				{ data: `${kotlinError}\n`, pipe: "stderr" },
+			];
+			retraceOutput = "e: app/home.ts:7: Unresolved reference 'x'. (Home.kt:14:9)\n";
+
+			let failure: Error;
+			try {
+				await service.build(platformData("Android"), createProjectData(), <any>{ release: true, ...keyStore });
+			} catch (err) {
+				failure = err;
+			}
+
+			assert.match(failure.message, /gradlew failed/);
+			assert.equal(gradleCalls[0].options.stdio, "pipe");
+			const retrace = spawnCalls.find((c) => c.args[0].endsWith("ns-native-retrace.js"));
+			assert.deepStrictEqual(retrace.args.slice(1, 3), ["--build-log", projectRoot]);
+			assert.equal(retrace.args[0], path.join(packageDir, "bin", "ns-native-retrace.js"));
+			assert.equal(writtenFiles[retrace.args[3]], `${kotlinError}\n`);
+			assert.deepStrictEqual(errorsLogged, ["Kotlin errors in your source:\ne: app/home.ts:7: Unresolved reference 'x'. (Home.kt:14:9)"]);
 		});
 
 		it("builds an App Bundle for --aab", async () => {
