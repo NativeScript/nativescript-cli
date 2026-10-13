@@ -26,7 +26,6 @@ import {
 import { IInjector } from "../definitions/yok";
 import { injector } from "../yok";
 import { color } from "../../color";
-import { memoize } from "../decorators";
 
 class Hook implements IHook {
 	constructor(
@@ -60,26 +59,18 @@ export class HooksService implements IHooksService {
 		return "hookArgs";
 	}
 
-	@memoize({
-		shouldCache() {
-			// only cache if we have hooks directories, the only case to
-			// not have hooks directories is when the project dir is
-			// not set yet, ie. when creating a project.
-			return !!this.hooksDirectories.length;
-		},
-	})
 	private initialize(projectDir: string): void {
-		this.cachedHooks = {};
-
-		this.hooksDirectories = [];
-
 		projectDir = projectDir || this.$projectHelper.projectDir;
-
-		if (projectDir) {
-			this.hooksDirectories.push(
-				path.join(projectDir, HooksService.HOOKS_DIRECTORY_NAME),
-			);
+		const hooksDirectories = projectDir
+			? [path.join(projectDir, HooksService.HOOKS_DIRECTORY_NAME)]
+			: [];
+		// Re-read whenever the project changes: `ns create` run inside another project resolves that one first.
+		if (_.isEqual(hooksDirectories, this.hooksDirectories)) {
+			return;
 		}
+
+		this.cachedHooks = {};
+		this.hooksDirectories = hooksDirectories;
 
 		this.$logger.trace(
 			"Hooks directories: " + util.inspect(this.hooksDirectories),

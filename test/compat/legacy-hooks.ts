@@ -92,6 +92,28 @@ describe("legacy hook contract", () => {
 		assert.include(logger().traceOutput, "hooks.param-name-signature");
 	});
 
+	it("runs a new project's hooks when an earlier hook ran for the enclosing project", async () => {
+		writeHook(
+			projectDir,
+			"after-outer",
+			`module.exports = function () { global.__hookCapture.outer = true; };`,
+		);
+		const created = path.join(projectDir, "created");
+		writeHook(
+			created,
+			"after-createProject",
+			`module.exports = function (hookArgs) { global.__hookCapture.created = hookArgs.projectDir; };`,
+		);
+
+		await hooksService().executeAfterHooks("outer", { hookArgs: {} });
+		await hooksService().executeAfterHooks("createProject", {
+			hookArgs: { projectDir: created },
+		});
+
+		assert.isTrue(capture.outer);
+		assert.strictEqual(capture.created, created);
+	});
+
 	it("derives the hook name from the pre-| part of hierarchical command names", async () => {
 		writeHook(
 			projectDir,
