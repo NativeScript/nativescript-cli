@@ -245,6 +245,9 @@ export class CompiledReleaseService {
 					...projectArgs,
 					"-destination",
 					"generic/platform=iOS Simulator",
+					// A generic destination builds every architecture whatever ONLY_ACTIVE_ARCH says;
+					// a simulator app only ever runs on this Mac.
+					"ARCHS=$(NATIVE_ARCH_ACTUAL)",
 					"build",
 				],
 				{ cwd: projectRoot, message: "Xcode build (compiled release)..." },

@@ -397,6 +397,7 @@ describe("compiledReleaseService", () => {
 			assert.deepStrictEqual(spawnCalls[0].args, ["generate", "--quiet"]);
 			assert.lengthOf(xcodebuildCalls, 1);
 			assert.include(xcodebuildCalls[0], "generic/platform=iOS Simulator");
+			assert.include(xcodebuildCalls[0], "ARCHS=$(NATIVE_ARCH_ACTUAL)");
 			assert.match(
 				result,
 				/DerivedData\/Build\/Products\/Release-iphonesimulator\/demo\.app$/,
@@ -434,6 +435,7 @@ describe("compiledReleaseService", () => {
 
 			assert.lengthOf(xcodebuildCalls, 1);
 			assert.include(xcodebuildCalls[0], "archive");
+			assert.isFalse(xcodebuildCalls[0].some((a: string) => a.startsWith("ARCHS=")));
 			assert.notInclude(xcodebuildCalls[0], "CODE_SIGNING_ALLOWED=YES");
 			assert.include(xcodebuildCalls[0], "CODE_SIGNING_ALLOWED=NO");
 			assert.lengthOf(warnings, 1);
