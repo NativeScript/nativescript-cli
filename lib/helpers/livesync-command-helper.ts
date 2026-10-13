@@ -294,19 +294,25 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 
 		await this.$deployController.deploy({ deviceDescriptors });
 
-		for (const deviceDescriptor of deviceDescriptors) {
-			const device = this.$devicesService.getDeviceByIdentifier(
-				deviceDescriptor.identifier,
-			);
-			await device.applicationManager.startApplication({
-				appId:
-					this.$projectData.projectIdentifiers[
-						device.deviceInfo.platform.toLowerCase()
-					],
-				projectName: this.$projectData.projectName,
-				projectDir: this.$projectData.projectDir,
-			});
-		}
+		// Descriptors cover every attached device; execute narrows them to --device as the deploy did.
+		await this.$devicesService.execute(
+			async (device: Mobile.IDevice) => {
+				await device.applicationManager.startApplication({
+					appId:
+						this.$projectData.projectIdentifiers[
+							device.deviceInfo.platform.toLowerCase()
+						],
+					projectName: this.$projectData.projectName,
+					projectDir: this.$projectData.projectDir,
+				});
+			},
+			(device: Mobile.IDevice) =>
+				_.some(
+					deviceDescriptors,
+					(deviceDescriptor) =>
+						deviceDescriptor.identifier === device.deviceInfo.identifier,
+				),
+		);
 	}
 
 	public async stop() {
