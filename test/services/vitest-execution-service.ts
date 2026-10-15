@@ -62,8 +62,23 @@ describe("vitestExecutionService", () => {
 			assert.include(warnings, WATCH_WARNING);
 		});
 
+		it("is shown when --watch=true is passed", async () => {
+			await startTestRun(["--watch=true"], { watch: true });
+			assert.include(warnings, WATCH_WARNING);
+		});
+
 		it("is not shown when --no-watch is passed", async () => {
 			await startTestRun(["--no-watch"], { watch: false });
+			assert.notInclude(warnings, WATCH_WARNING);
+		});
+
+		it("is not shown when --watch false is passed", async () => {
+			await startTestRun(["--watch", "false"], { watch: false });
+			assert.notInclude(warnings, WATCH_WARNING);
+		});
+
+		it("is not shown when --watch=false is passed", async () => {
+			await startTestRun(["--watch=false"], { watch: false });
 			assert.notInclude(warnings, WATCH_WARNING);
 		});
 	});
