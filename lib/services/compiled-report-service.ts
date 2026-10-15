@@ -923,8 +923,11 @@ export class CompiledReportService {
 				`Resolving ${COMPILER_PACKAGE_NAME} failed: ${err.message}`,
 			);
 		}
+		// Gradle keeps its cache in a `.gradle` folder beside the scripts.
 		const read = (file: string) =>
-			this.$fs.exists(file) ? this.$fs.readText(file) : "";
+			this.$fs.exists(file) && this.$fs.getFsStats(file).isFile()
+				? this.$fs.readText(file)
+				: "";
 		const projectRoot = this.getReportDir(projectData, "android");
 		const generated = this.$fs.exists(projectRoot)
 			? this.$fs
