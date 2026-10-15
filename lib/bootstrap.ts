@@ -185,6 +185,7 @@ injector.requireCommand("run|vision", "./commands/run");
 injector.requireCommand("run|visionos", "./commands/run");
 injector.requireCommand("typings", "./commands/typings");
 injector.requireCommand("compiled|verify", "./commands/compiled-verify");
+injector.requireCommand("compiled|report", "./commands/compiled-report");
 
 injector.requireCommand("preview", "./commands/preview");
 
@@ -425,6 +426,7 @@ injector.require(
 	"./services/bundler/vite-hmr-port-service",
 );
 injector.require("compiledReleaseService", "./services/compiled-release-service");
+injector.require("compiledReportService", "./services/compiled-report-service");
 
 injector.require(
 	"applePortalSessionService",

@@ -11,6 +11,7 @@ import {
 } from "../definitions/build";
 import { IGradleCommandService } from "../definitions/gradle";
 import { IOSProvisionService } from "./ios-provision-service";
+import { CompiledReportService } from "./compiled-report-service";
 import { injector } from "../common/yok";
 import { hook } from "../common/helpers";
 
@@ -31,6 +32,7 @@ export interface ICompiledReleaseOptions {
 export class CompiledReleaseService {
 	constructor(
 		private $childProcess: IChildProcess,
+		private $compiledReportService: CompiledReportService,
 		private $errors: IErrors,
 		private $exportOptionsPlistService: IExportOptionsPlistService,
 		private $fs: IFileSystem,
@@ -104,14 +106,77 @@ export class CompiledReleaseService {
 			projectData.projectIdentifiers[platform],
 		];
 
+		this.$compiledReportService.clearDraft(projectData, platform);
 		this.$logger.info(`Compiling the app to native code (${platform})...`);
+		const eventName = "compiledReleaseCompilerOutput";
+		const capture = this.captureOutput(eventName);
+		let result;
 		try {
-			await this.$childProcess.spawnFromEvent(process.execPath, args, "close", {
-				cwd: projectData.projectDir,
-				stdio: "inherit",
+			result = await this.$childProcess.spawnFromEvent(
+				process.execPath,
+				args,
+				"close",
+				{ cwd: projectData.projectDir, stdio: ["inherit", "inherit", "pipe"] },
+				{ throwError: false, emitOptions: { eventName } },
+			);
+		} finally {
+			capture.stop();
+		}
+		if (result.exitCode !== 0) {
+			const hint = this.$compiledReportService.saveDraft(
+				projectData,
+				platform,
+				"compile-refused",
+				capture.output.join(""),
+			);
+			this.$errors.fail(
+				`The compile to native code failed (exit code ${result.exitCode}).${hint ? `\n${hint}` : ""}`,
+			);
+		}
+	}
+
+	/** The child process's output, shown as it comes and kept for the report a failed build leaves. */
+	private captureOutput(eventName: string): { output: string[]; stop: () => void } {
+		const output: string[] = [];
+		const onOutput = ({ data, pipe }: { data: Buffer | string; pipe: string }) => {
+			output.push(data.toString());
+			(pipe === "stderr" ? process.stderr : process.stdout).write(data);
+		};
+		this.$childProcess.on(eventName, onOutput);
+		return {
+			output,
+			stop: () => this.$childProcess.removeListener(eventName, onOutput),
+		};
+	}
+
+	/** An xcodebuild run that compiles the generated code; its failure leaves a report draft. */
+	private async compileWithXcodebuild(
+		projectData: IProjectData,
+		args: string[],
+		options: { cwd: string; message: string },
+	): Promise<void> {
+		const eventName = "compiledReleaseXcodebuildOutput";
+		const capture = this.captureOutput(eventName);
+		let result;
+		try {
+			result = await this.$xcodebuildCommandService.executeCommand(args, {
+				...options,
+				stdio: "pipe",
+				spawnOptions: { throwError: false, emitOptions: { eventName } },
 			});
-		} catch (err) {
-			this.$errors.fail(`The compile to native code failed. ${err.message}`);
+		} finally {
+			capture.stop();
+		}
+		if (result.exitCode !== 0) {
+			const hint = this.$compiledReportService.saveDraft(
+				projectData,
+				"ios",
+				"native-compile",
+				capture.output.join(""),
+			);
+			this.$errors.fail(
+				`xcodebuild failed with exit code ${result.exitCode}.${hint ? `\n${hint}` : ""}`,
+			);
 		}
 	}
 
@@ -240,7 +305,8 @@ export class CompiledReleaseService {
 		];
 
 		if (!buildData.buildForDevice && !buildData.buildForAppStore) {
-			await this.$xcodebuildCommandService.executeCommand(
+			await this.compileWithXcodebuild(
+				projectData,
 				[
 					...projectArgs,
 					"-destination",
@@ -280,7 +346,8 @@ export class CompiledReleaseService {
 					]
 				: ["CODE_SIGNING_ALLOWED=NO"];
 		this.$fs.deleteDirectory(archivePath);
-		await this.$xcodebuildCommandService.executeCommand(
+		await this.compileWithXcodebuild(
+			projectData,
 			[
 				...projectArgs,
 				"-destination",
@@ -422,10 +489,10 @@ export class CompiledReleaseService {
 		projectData: IProjectData,
 		projectRoot: string,
 		log: string,
-	): Promise<void> {
+	): Promise<string[]> {
 		const errors = log.split("\n").filter((line) => /^e: /.test(line));
 		if (!errors.length || !this.$fs.exists(path.join(projectRoot, "source-lines.json"))) {
-			return;
+			return [];
 		}
 		const logFile = path.join(projectRoot, "build", "compile-errors.log");
 		this.$fs.writeFile(logFile, errors.join("\n") + "\n");
@@ -441,8 +508,10 @@ export class CompiledReleaseService {
 			if (mapped.length) {
 				this.$logger.error(`Kotlin errors in your source:\n${mapped.join("\n")}`);
 			}
+			return mapped;
 		} catch (err) {
 			this.$logger.trace(`Mapping Kotlin errors to source lines failed: ${err.message}`);
+			return [];
 		}
 	}
 
@@ -472,13 +541,8 @@ export class CompiledReleaseService {
 		// Gradle's output is shown as it comes and kept: Kotlin's errors point into
 		// the generated files, and the compiler's line table names the TypeScript
 		// line each came from.
-		const output: string[] = [];
 		const eventName = "compiledReleaseGradleOutput";
-		const onOutput = ({ data, pipe }: { data: Buffer | string; pipe: string }) => {
-			output.push(data.toString());
-			(pipe === "stderr" ? process.stderr : process.stdout).write(data);
-		};
-		this.$childProcess.on(eventName, onOutput);
+		const capture = this.captureOutput(eventName);
 		try {
 			await this.$gradleCommandService.executeCommand(args, {
 				cwd: projectRoot,
@@ -490,10 +554,21 @@ export class CompiledReleaseService {
 				spawnOptions: { throwError: true, emitOptions: { eventName } },
 			});
 		} catch (err) {
-			await this.printKotlinErrorsInSource(projectData, projectRoot, output.join(""));
+			const log = capture.output.join("");
+			const mapped = await this.printKotlinErrorsInSource(projectData, projectRoot, log);
+			// The TypeScript lines first: the report's diagnostic and location come from the first lines that name one.
+			const hint = this.$compiledReportService.saveDraft(
+				projectData,
+				"android",
+				"native-compile",
+				[...mapped, log].join("\n"),
+			);
+			if (hint) {
+				err.message = `${err.message}\n${hint}`;
+			}
 			throw err;
 		} finally {
-			this.$childProcess.removeListener(eventName, onOutput);
+			capture.stop();
 		}
 
 		// The generated project is the app module itself, so AGP names its

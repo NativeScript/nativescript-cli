@@ -24,6 +24,9 @@ let hookCalls: { name: string; args: any }[];
 let errorsLogged: string[];
 let gradleOutput: { data: string; pipe: string }[] | null;
 let retraceOutput: string;
+let drafts: { platform: string; kind: string; output: string }[];
+let compilerFailure: string | null;
+let xcodebuildFailure: string | null;
 
 function createProjectData(nsConfig: any = {}): any {
 	return {
@@ -46,12 +49,24 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 			args: string[],
 			_: string,
 			options: any,
+			spawnOptions?: any,
 		) => {
 			spawnCalls.push({ command, args, options });
+			if (compilerFailure && args[0]?.endsWith("ns-native.js")) {
+				childProcess.emit(spawnOptions.emitOptions.eventName, { data: compilerFailure, pipe: "stderr" });
+				return { stdout: "", stderr: compilerFailure, exitCode: 1 };
+			}
 			return { stdout: retraceOutput, stderr: "", exitCode: 0 };
 		},
 	});
 	injector.register("childProcess", childProcess);
+	injector.register("compiledReportService", {
+		clearDraft: (): void => undefined,
+		saveDraft: (_: any, platform: string, kind: string, output: string) => {
+			drafts.push({ platform, kind, output });
+			return `report it with 'ns compiled report ${platform}'`;
+		},
+	});
 	injector.register("errors", {
 		fail: (message: string) => {
 			throw new Error(message);
@@ -103,8 +118,13 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 		getProjectData: () => createProjectData(nsConfig),
 	});
 	injector.register("xcodebuildCommandService", {
-		executeCommand: async (args: string[]) => {
+		executeCommand: async (args: string[], options: any) => {
 			xcodebuildCalls.push(args);
+			if (xcodebuildFailure) {
+				childProcess.emit(options.spawnOptions.emitOptions.eventName, { data: xcodebuildFailure, pipe: "stdout" });
+				return { stdout: xcodebuildFailure, stderr: "", exitCode: 65 };
+			}
+			return { stdout: "", stderr: "", exitCode: 0 };
 		},
 	});
 	injector.register("hooksService", {
@@ -161,6 +181,9 @@ describe("compiledReleaseService", () => {
 		writtenFiles = {};
 		warnings = [];
 		hookCalls = [];
+		drafts = [];
+		compilerFailure = null;
+		xcodebuildFailure = null;
 	});
 
 	afterEach(() => {
@@ -290,6 +313,24 @@ describe("compiledReleaseService", () => {
 
 			assert.include(error.message, "not visionOS");
 		});
+
+		it("keeps the compiler's errors as a report draft when it refuses the app", async () => {
+			installCompilerPackage();
+			const service = createService();
+			compilerFailure = `${projectDir}/app/main.ts:3:1: Utils.ios is not supported in a release build yet: Utils.ios\n`;
+
+			let error: Error;
+			try {
+				await service.prepare(platformData("iOS"), createProjectData());
+			} catch (err) {
+				error = err;
+			}
+
+			assert.include(error.message, "The compile to native code failed (exit code 1).");
+			assert.include(error.message, "ns compiled report ios");
+			assert.deepStrictEqual(drafts, [{ platform: "ios", kind: "compile-refused", output: compilerFailure }]);
+			assert.deepStrictEqual(spawnCalls[0].options.stdio, ["inherit", "inherit", "pipe"]);
+		});
 	});
 
 	describe("build", () => {
@@ -369,6 +410,11 @@ describe("compiledReleaseService", () => {
 			assert.equal(retrace.args[0], path.join(packageDir, "bin", "ns-native-retrace.js"));
 			assert.equal(writtenFiles[retrace.args[3]], `${kotlinError}\n`);
 			assert.deepStrictEqual(errorsLogged, ["Kotlin errors in your source:\ne: app/home.ts:7: Unresolved reference 'x'. (Home.kt:14:9)"]);
+			assert.include(failure.message, "ns compiled report android");
+			assert.lengthOf(drafts, 1);
+			assert.equal(drafts[0].kind, "native-compile");
+			assert.isTrue(drafts[0].output.startsWith("e: app/home.ts:7: Unresolved reference 'x'."));
+			assert.include(drafts[0].output, kotlinError);
 		});
 
 		it("builds an App Bundle for --aab", async () => {
@@ -402,6 +448,22 @@ describe("compiledReleaseService", () => {
 				result,
 				/DerivedData\/Build\/Products\/Release-iphonesimulator\/demo\.app$/,
 			);
+		});
+
+		it("keeps swiftc's errors as a report draft when the Xcode build fails", async () => {
+			const service = createService();
+			xcodebuildFailure = `${projectDir}/app/main.ts:3:5: error: cannot convert value of type 'Int' to expected argument type 'String'\n** BUILD FAILED **\n`;
+
+			let error: Error;
+			try {
+				await service.build(platformData("iOS"), createProjectData(), <any>{ release: true });
+			} catch (err) {
+				error = err;
+			}
+
+			assert.include(error.message, "xcodebuild failed with exit code 65.");
+			assert.include(error.message, "ns compiled report ios");
+			assert.deepStrictEqual(drafts, [{ platform: "ios", kind: "native-compile", output: xcodebuildFailure }]);
 		});
 
 		it("runs the project's build hooks around the compiled build, with the compiled project as projectRoot", async () => {
