@@ -45,7 +45,12 @@ export class VitestExecutionService implements IVitestExecutionService {
 			);
 		}
 
-		if (this.$options.watch) {
+		// $options.watch is on by default outside CI, so only an explicit flag
+		// tells us the user actually asked for watch mode.
+		const watchPassed = process.argv.some(
+			(arg) => arg === "--watch" || arg.startsWith("--watch="),
+		);
+		if (watchPassed && this.$options.watch) {
 			this.$logger.warn(
 				"'--watch' is not supported for on-device Vitest runs yet; running once.",
 			);
