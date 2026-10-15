@@ -501,6 +501,29 @@ describe("compiledReportService", () => {
 			assert.equal(environment.get("Kotlin"), "2.2.20");
 		});
 
+		it("reads the Gradle scripts beside Gradle's own .gradle folder", async () => {
+			writeFile(
+				"platforms/compiled/android/build.gradle.kts",
+				'plugins {\n    id("com.android.application") version "8.12.1"\n}\n',
+			);
+			writeFile("platforms/compiled/android/.gradle/file-system.probe", "");
+			const service: CompiledReportService = createInjector().resolve(
+				"compiledReportService",
+			);
+
+			const report = await service.createReport(projectData(), {
+				kind: "native-compile",
+				platform: "android",
+				createdAt: "",
+				output: "e: app/main.ts:4: Unresolved reference 'x'.",
+			});
+
+			assert.equal(
+				new Map(report.environment).get("Android Gradle Plugin"),
+				"8.12.1",
+			);
+		});
+
 		it("reads the Android Gradle Plugin and Kotlin from the compiler when the compile stopped before Gradle", async () => {
 			writeFile(
 				"node_modules/@nativescript/compiler/src/android.ts",
