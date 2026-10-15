@@ -16,6 +16,8 @@ export type CompiledReportKind =
 	"compile-refused" | "native-compile" | "runtime";
 
 export const ISSUES_REPO = "NativeScript/NativeScript";
+/** The issue form in ISSUES_REPO's .github/ISSUE_TEMPLATE: it applies `compiled`, and the repository's labeler reads its fields. */
+export const ISSUE_FORM = "compiled.yml";
 // GitHub answers longer issues/new URLs with 414.
 const MAX_URL_LENGTH = 8000;
 const SEARCH_TIMEOUT_MS = 5000;
@@ -39,6 +41,7 @@ export interface ICompiledDiagnostic {
 export interface ICompiledReport {
 	kind: CompiledReportKind;
 	platform: string;
+	framework: string;
 	signature: string;
 	title: string;
 	labels: string[];
@@ -57,11 +60,35 @@ export interface IReportedIssue {
 	url: string;
 }
 
-const KIND_DESCRIPTIONS: Record<CompiledReportKind, string> = {
-	"compile-refused": "The compiler refused a construct in the app",
-	"native-compile": "The generated Swift or Kotlin did not compile",
-	runtime: "A compiled app failed at runtime",
-};
+export type CompiledReportFields = Record<
+	| "platform"
+	| "framework"
+	| "kind"
+	| "signature"
+	| "diagnostic"
+	| "source"
+	| "environment",
+	string
+>;
+
+/**
+ * The issue form's fields, by id and label, in its order. A body made of these
+ * sections reads like one the form produced, so the labeler and the +1 check
+ * read issues filed through the form, through gh, and comments alike.
+ */
+const FORM_FIELDS: {
+	id: keyof CompiledReportFields;
+	label: string;
+	render?: string;
+}[] = [
+	{ id: "platform", label: "Platform" },
+	{ id: "framework", label: "Framework" },
+	{ id: "kind", label: "Kind" },
+	{ id: "signature", label: "Signature" },
+	{ id: "diagnostic", label: "Diagnostic", render: "text" },
+	{ id: "source", label: "Source" },
+	{ id: "environment", label: "Environment" },
+];
 
 const FRAMEWORKS: { name: string; markers: string[]; versionOf: string }[] = [
 	{
@@ -142,8 +169,24 @@ export function redact(
 	return result;
 }
 
-/** The message with what varies between apps abstracted: quoted text, paths, numbers and the app's identifiers. */
-export function abstractMessage(message: string): string {
+/**
+ * The message with what varies between apps abstracted. A Swift or Kotlin
+ * compiler names the types and members at fault in quotes, which tell problems
+ * apart, so for those only paths, file names and numbers go; otherwise quoted
+ * text and the app's identifiers go too.
+ */
+export function abstractMessage(
+	message: string,
+	kind?: CompiledReportKind,
+): string {
+	if (kind === "native-compile") {
+		return message
+			.replace(/(?:[\w.~-]*\/)+[\w.-]+/g, "<path>")
+			.replace(/\b[\w-]+\.(?:kt|swift|java|ts|tsx|js|m|h)\b/g, "<path>")
+			.replace(/\b\d+(?:\.\d+)*\b/g, "<n>")
+			.replace(/\s+/g, " ")
+			.trim();
+	}
 	return message
 		.replace(/(['"`‘“])(?:(?!\1).)*?(['"`’”])/g, "<q>")
 		.replace(/(?:[\w.~-]*\/)+[\w.-]+/g, "<path>")
@@ -168,7 +211,9 @@ export function computeSignature(
 ): string {
 	return crypto
 		.createHash("sha256")
-		.update(`${kind}\n${abstractMessage(message)}\n${constructOf(message)}`)
+		.update(
+			`${kind}\n${abstractMessage(message, kind)}\n${constructOf(message)}`,
+		)
 		.digest("hex")
 		.slice(0, 6);
 }
@@ -243,33 +288,71 @@ export function extractDiagnostics(
 	);
 }
 
+/** A prefilled issue form; the longest fields are cut, a line at a time, until the URL fits. */
 export function newIssueUrl(
 	title: string,
-	body: string,
+	fields: CompiledReportFields,
 	labels: string[],
 ): { url: string; truncated: boolean } {
-	const base =
-		`https://github.com/${ISSUES_REPO}/issues/new?title=${encodeURIComponent(title)}` +
-		`&labels=${encodeURIComponent(labels.join(","))}&body=`;
-	const note = "\n\n_(The report was cut to fit a URL.)_";
-	let text = body;
-	let truncated = false;
-	while ((base + encodeURIComponent(text)).length > MAX_URL_LENGTH) {
+	const note = "\n\n_(Cut to fit a URL.)_";
+	const values: Record<string, string> = { ...fields };
+	const cut: Record<string, string> = {};
+	const build = () =>
+		`https://github.com/${ISSUES_REPO}/issues/new?` +
+		[
+			["template", ISSUE_FORM],
+			["title", title],
+			["labels", labels.join(",")],
+			...Object.entries(values),
+		]
+			.map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+			.join("&");
+	let url = build();
+	while (url.length > MAX_URL_LENGTH) {
+		const key = Object.keys(values).sort(
+			(a, b) => values[b].length - values[a].length,
+		)[0];
+		const text = cut[key] ?? values[key];
 		const lines = text.split("\n");
-		truncated = true;
-		text = lines
-			.slice(0, Math.max(1, Math.floor(lines.length * 0.9)))
-			.join("\n");
-		if (lines.length === 1) {
-			text = text.slice(0, Math.floor(text.length * 0.9));
-		}
-		if ((base + encodeURIComponent(text + note)).length <= MAX_URL_LENGTH) {
-			text += note;
-			break;
-		}
+		cut[key] =
+			lines.length > 1
+				? lines.slice(0, Math.floor(lines.length * 0.9)).join("\n")
+				: text.slice(0, Math.floor(text.length * 0.9));
+		values[key] = cut[key] + note;
+		url = build();
 	}
 
-	return { url: base + encodeURIComponent(text), truncated };
+	return { url, truncated: Object.keys(cut).length > 0 };
+}
+
+/** A form field's value in an issue or comment body: the text under its `### Label` heading. */
+export function readField(body: string, label: string): string | undefined {
+	const match = new RegExp(`^###\\s+${label}\\s*\\n+([^\\n]*)`, "m").exec(
+		body ?? "",
+	);
+	return match?.[1].trim();
+}
+
+const majorMinor = (version: string | undefined) =>
+	/(\d+\.\d+)/.exec(version ?? "")?.[1] ?? "?";
+
+/** What tells one reporter's environment from another's: platform, framework, and the compiler's and core's major.minor. */
+export function environmentKey(body: string): string | undefined {
+	const platform = readField(body, "Platform");
+	if (!platform) {
+		return undefined;
+	}
+	const row = (name: string) =>
+		new RegExp(
+			`^\\|\\s*${name.replace(/[/.]/g, "\\$&")}\\s*\\|\\s*([^|]+)\\|`,
+			"m",
+		).exec(body)?.[1];
+	return [
+		platform.toLowerCase(),
+		(readField(body, "Framework") ?? "").toLowerCase(),
+		majorMinor(row(COMPILER_PACKAGE_NAME)),
+		majorMinor(row("@nativescript/core")),
+	].join("|");
 }
 
 /**
@@ -361,6 +444,7 @@ export class CompiledReportService {
 		return {
 			kind: draft.kind,
 			platform: draft.platform,
+			framework: framework.name,
 			signature,
 			title: `[compiled][${draft.platform}] ${headline} (sig ${signature})`,
 			labels: [
@@ -381,7 +465,11 @@ export class CompiledReportService {
 		};
 	}
 
-	public formatBody(report: ICompiledReport, includeCode: boolean): string {
+	/** The issue form's values; the code around the location only with includeCode. */
+	public formFields(
+		report: ICompiledReport,
+		includeCode: boolean,
+	): CompiledReportFields {
 		const diagnostic = report.diagnostics
 			.map((d) =>
 				[
@@ -393,53 +481,63 @@ export class CompiledReportService {
 					.join(""),
 			)
 			.join("\n");
-		const sections = [
-			`<!-- ns compiled report: sig ${report.signature} -->`,
-			`### What happened`,
-			`${KIND_DESCRIPTIONS[report.kind]} (\`${report.kind}\`, ${report.platform}).`,
-			"",
-			"~~~",
-			diagnostic || "(no diagnostic found in the output)",
-			"~~~",
-		];
-		if (report.location) {
-			sections.push(
-				"",
-				`### Where`,
-				`\`${report.location.file}:${report.location.line}\``,
-			);
-		}
-		if (includeCode && report.code) {
-			sections.push(
-				"",
-				"### Code (shared with the reporter's consent)",
-				"~~~",
-				report.code,
-				"~~~",
-			);
-		}
-		sections.push("", "### Environment", this.formatEnvironment(report));
-		sections.push(
-			"",
-			`Signature \`${report.signature}\`: a hash of the kind, the message with names and numbers abstracted, and the construct; issues with the same signature are the same problem.`,
-			`Labels: ${report.labels.map((label) => `\`${label}\``).join(", ")}`,
-			"",
-			"_Filed with `ns compiled report`._",
-		);
+		const source = report.location
+			? [
+					`\`${report.location.file}:${report.location.line}\``,
+					...(includeCode && report.code
+						? [
+								"",
+								"Shared with the reporter's consent:",
+								"~~~",
+								report.code,
+								"~~~",
+							]
+						: []),
+				].join("\n")
+			: "";
 
-		return sections.join("\n");
+		return {
+			platform: report.platform,
+			framework: report.framework,
+			kind: report.kind,
+			signature: report.signature,
+			diagnostic: diagnostic || "(no diagnostic found in the output)",
+			source,
+			environment: [
+				this.formatEnvironment(report),
+				"",
+				`Labels: ${report.labels.map((label) => `\`${label}\``).join(", ")}`,
+			].join("\n"),
+		};
 	}
 
+	/** The fields as the issue form writes them into an issue's body. */
+	public formatBody(report: ICompiledReport, includeCode: boolean): string {
+		const fields = this.formFields(report, includeCode);
+		return [
+			...FORM_FIELDS.map(({ id, label, render }) => {
+				const value = fields[id] || "_No response_";
+				return `### ${label}\n\n${render && fields[id] ? `\`\`\`${render}\n${value}\n\`\`\`` : value}`;
+			}),
+			"_Filed with `ns compiled report`._",
+		].join("\n\n");
+	}
+
+	/** A +1 in an environment no earlier report has: the same sections, so later reports can tell it apart too. */
 	public formatComment(report: ICompiledReport): string {
 		const primary = report.diagnostics[0];
+		const fields = this.formFields(report, false);
 		return [
-			`+1 from \`ns compiled report\` (sig ${report.signature}, ${report.platform}).`,
-			"",
+			`+1 from \`ns compiled report\` (sig ${report.signature}), in an environment no earlier report has.`,
+			`### Platform\n\n${fields.platform}`,
+			`### Framework\n\n${fields.framework}`,
 			primary
-				? `~~~\n${primary.location ? `${primary.location}: ` : ""}${primary.message}\n~~~\n`
+				? `### Diagnostic\n\n\`\`\`text\n${primary.location ? `${primary.location}: ` : ""}${primary.message}\n\`\`\``
 				: "",
-			this.formatEnvironment(report),
-		].join("\n");
+			`### Environment\n\n${this.formatEnvironment(report)}`,
+		]
+			.filter(Boolean)
+			.join("\n\n");
 	}
 
 	private formatEnvironment(report: ICompiledReport): string {
@@ -574,16 +672,61 @@ export class CompiledReportService {
 		return result.stdout.trim().split("\n").pop();
 	}
 
-	public async commentOnIssue(
+	/**
+	 * A 👍 on the issue, and a comment with this environment only when no earlier
+	 * report (the issue or its comments) has the same platform, framework and
+	 * compiler and core major.minor.
+	 */
+	public async plusOne(
 		projectData: IProjectData,
 		report: ICompiledReport,
 		issue: IReportedIssue,
-	): Promise<boolean> {
+	): Promise<{ reacted: boolean; commented: boolean }> {
+		const reaction = await this.gh([
+			"api",
+			"--method",
+			"POST",
+			`repos/${ISSUES_REPO}/issues/${issue.number}/reactions`,
+			"-f",
+			"content=+1",
+		]);
+		if (reaction.exitCode !== 0) {
+			this.$logger.warn(`Adding the 👍 failed: ${reaction.stderr.trim()}`);
+		}
+
+		const view = await this.gh([
+			"issue",
+			"view",
+			String(issue.number),
+			"--repo",
+			ISSUES_REPO,
+			"--json",
+			"body,comments",
+		]);
+		let known: Set<string>;
+		try {
+			const { body, comments } = JSON.parse(view.stdout);
+			known = new Set(
+				[body, ...(comments ?? []).map((c: { body: string }) => c.body)]
+					.map(environmentKey)
+					.filter(Boolean),
+			);
+		} catch {
+			this.$logger.trace(
+				`Reading #${issue.number}'s reports failed: ${view.stderr}`,
+			);
+			return { reacted: reaction.exitCode === 0, commented: false };
+		}
+		const comment = this.formatComment(report);
+		if (known.has(environmentKey(comment))) {
+			return { reacted: reaction.exitCode === 0, commented: false };
+		}
+
 		const bodyFile = this.writeBodyFile(
 			projectData,
 			report.platform,
 			"report-comment.md",
-			this.formatComment(report),
+			comment,
 		);
 		const result = await this.gh([
 			"issue",
@@ -598,7 +741,10 @@ export class CompiledReportService {
 			this.$logger.warn(`gh issue comment failed: ${result.stderr.trim()}`);
 		}
 
-		return result.exitCode === 0;
+		return {
+			reacted: reaction.exitCode === 0,
+			commented: result.exitCode === 0,
+		};
 	}
 
 	private writeBodyFile(
@@ -761,44 +907,67 @@ export class CompiledReportService {
 		return rows;
 	}
 
+	/**
+	 * Gradle from the compiler's wrapper; the Android Gradle Plugin and Kotlin
+	 * from the generated project when the compile got that far, else from the
+	 * compiler's own sources, which write those versions into it.
+	 */
 	private androidToolVersions(projectData: IProjectData): [string, string][] {
-		let gradle = "unknown";
+		let compilerDir: string | undefined;
 		try {
-			const compilerDir = resolvePackagePath(COMPILER_PACKAGE_NAME, {
+			compilerDir = resolvePackagePath(COMPILER_PACKAGE_NAME, {
 				paths: [projectData.projectDir],
 			});
-			const wrapper =
-				compilerDir &&
-				path.join(
-					compilerDir,
-					"kit-android",
-					"gradle",
-					"wrapper",
-					"gradle-wrapper.properties",
-				);
-			if (wrapper && this.$fs.exists(wrapper)) {
-				gradle =
-					/gradle-([\d.]+)-/.exec(this.$fs.readText(wrapper))?.[1] ?? gradle;
-			}
 		} catch (err) {
-			this.$logger.trace(`Reading Gradle's version failed: ${err.message}`);
+			this.$logger.trace(
+				`Resolving ${COMPILER_PACKAGE_NAME} failed: ${err.message}`,
+			);
 		}
-
+		const read = (file: string) =>
+			this.$fs.exists(file) ? this.$fs.readText(file) : "";
 		const projectRoot = this.getReportDir(projectData, "android");
-		const scripts = this.$fs.exists(projectRoot)
+		const generated = this.$fs.exists(projectRoot)
 			? this.$fs
 					.readDirectory(projectRoot)
 					.filter((file) => /\.gradle(\.kts)?$/.test(file))
-					.map((file) => this.$fs.readText(path.join(projectRoot, file)))
-					.join("\n")
-			: "";
-		const plugin = (id: string) =>
-			new RegExp(
+					.map((file) => read(path.join(projectRoot, file)))
+			: [];
+		const sources = [
+			...generated,
+			...(compilerDir
+				? [
+						path.join("kit-android", "build.gradle.kts"),
+						path.join("dist", "android.js"),
+						path.join("src", "android.ts"),
+					].map((file) => read(path.join(compilerDir, file)))
+				: []),
+		];
+		const plugin = (id: string) => {
+			const pattern = new RegExp(
 				`id\\s*\\(?\\s*["']${id.replace(/\./g, "\\.")}["']\\s*\\)?\\s*version\\s*["']([^"']+)`,
-			).exec(scripts)?.[1] ?? "unknown";
+			);
+			for (const source of sources) {
+				const version = pattern.exec(source)?.[1];
+				if (version) {
+					return version;
+				}
+			}
+			return "unknown";
+		};
+		const wrapper = compilerDir
+			? read(
+					path.join(
+						compilerDir,
+						"kit-android",
+						"gradle",
+						"wrapper",
+						"gradle-wrapper.properties",
+					),
+				)
+			: "";
 
 		return [
-			["Gradle", gradle],
+			["Gradle", /gradle-([\d.]+)-/.exec(wrapper)?.[1] ?? "unknown"],
 			["Android Gradle Plugin", plugin("com.android.application")],
 			["Kotlin", plugin("org.jetbrains.kotlin.android")],
 		];

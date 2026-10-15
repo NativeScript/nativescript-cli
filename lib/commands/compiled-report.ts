@@ -58,7 +58,11 @@ export class CompiledReportCommand implements ICommand {
 			draft,
 		);
 		const body = this.$compiledReportService.formatBody(report, false);
-		const { url, truncated } = newIssueUrl(report.title, body, report.labels);
+		const { url, truncated } = newIssueUrl(
+			report.title,
+			this.$compiledReportService.formFields(report, false),
+			report.labels,
+		);
 
 		this.printReport(report, body);
 		if (report.code) {
@@ -168,22 +172,24 @@ export class CompiledReportCommand implements ICommand {
 		);
 		const issue =
 			found.find((i) => i.state.toLowerCase() === "open") ?? found[0];
-		const comment = `Add a +1 comment to #${issue.number} with this environment (no code)`;
+		const plusOne = `Add a 👍 to #${issue.number}, and your environment (no code) if no earlier report has it`;
 		const open = `Open #${issue.number} in the browser`;
 		const choice = await this.$prompter.promptForChoice("What next?", [
-			...(useGh ? [comment] : []),
+			...(useGh ? [plusOne] : []),
 			open,
 			"Nothing",
 		]);
-		if (
-			choice === comment &&
-			(await this.$compiledReportService.commentOnIssue(
+		if (choice === plusOne) {
+			const { reacted, commented } = await this.$compiledReportService.plusOne(
 				this.$projectData,
 				report,
 				issue,
-			))
-		) {
-			this.$logger.info(`Added a +1 to ${issue.url}. Thank you.`);
+			);
+			if (reacted || commented) {
+				this.$logger.info(
+					`${commented ? "Added your environment" : "Added a 👍"} to ${issue.url}. Thank you.`,
+				);
+			}
 		} else if (choice === open) {
 			this.$opener.open(issue.url);
 		}
@@ -214,11 +220,15 @@ export class CompiledReportCommand implements ICommand {
 			return;
 		}
 
-		const { url, truncated } = newIssueUrl(report.title, body, report.labels);
+		const { url, truncated } = newIssueUrl(
+			report.title,
+			this.$compiledReportService.formFields(report, includeCode),
+			report.labels,
+		);
 		this.$logger.info(`Opening a prefilled issue in the browser:\n${url}`);
 		if (truncated) {
 			this.$logger.warn(
-				`The body was cut to fit the URL; paste the rest from ${this.writeFullBody(report, body)}.`,
+				`Some fields were cut to fit the URL; paste the rest from ${this.writeFullBody(report, body)}.`,
 			);
 		}
 		this.$opener.open(url);

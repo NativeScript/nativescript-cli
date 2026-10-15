@@ -9,6 +9,7 @@ import { setIsInteractive } from "../../lib/common/helpers";
 import {
 	CompiledReportService,
 	computeSignature,
+	environmentKey,
 	extractDiagnostics,
 	newIssueUrl,
 	redact,
@@ -256,11 +257,24 @@ describe("compiledReportService", () => {
 			assert.equal(
 				computeSignature(
 					"native-compile",
-					"cannot convert value of type 'Int' to 'myValue' at line 12",
+					"cannot convert value of type 'Int' to 'String' (Home.swift:12:4)",
 				),
 				computeSignature(
 					"native-compile",
-					"cannot convert value of type 'Double' to 'otherValue' at line 40",
+					"cannot convert value of type 'Int' to 'String' (Settings.swift:40:9)",
+				),
+			);
+		});
+
+		it("keeps the types and members a Swift or Kotlin error quotes", () => {
+			assert.notEqual(
+				computeSignature(
+					"native-compile",
+					"cannot convert value of type 'Int' to expected argument type 'String'",
+				),
+				computeSignature(
+					"native-compile",
+					"cannot convert value of type 'Double' to expected argument type 'String'",
 				),
 			);
 		});
@@ -421,8 +435,13 @@ describe("compiledReportService", () => {
 			const body = service.formatBody(report, false);
 			assert.include(
 				body,
-				"app/main.ts:4:15: Utils.ios is not supported in a release build yet\n",
+				"### Diagnostic\n\n```text\napp/main.ts:4:15: Utils.ios is not supported in a release build yet\n```",
 			);
+			assert.include(
+				body,
+				"### Platform\n\nios\n\n### Framework\n\nxml\n\n### Kind\n\ncompile-refused",
+			);
+			assert.include(body, `### Signature\n\n${report.signature}`);
 			assert.notInclude(body, "UIApplication");
 			assert.notInclude(body, projectDir);
 			assert.include(
@@ -481,24 +500,96 @@ describe("compiledReportService", () => {
 			assert.equal(environment.get("Android Gradle Plugin"), "8.12.1");
 			assert.equal(environment.get("Kotlin"), "2.2.20");
 		});
+
+		it("reads the Android Gradle Plugin and Kotlin from the compiler when the compile stopped before Gradle", async () => {
+			writeFile(
+				"node_modules/@nativescript/compiler/src/android.ts",
+				'const settings = `plugins {\n    id("com.android.application") version "8.13.0"\n    id("org.jetbrains.kotlin.android") version "2.2.21"\n}`;\n',
+			);
+			const service: CompiledReportService = createInjector().resolve(
+				"compiledReportService",
+			);
+
+			const report = await service.createReport(projectData(), {
+				kind: "compile-refused",
+				platform: "android",
+				createdAt: "",
+				output:
+					"error: app/main.ts:4:1: Array.prototype is not supported in a release build yet: Array.prototype",
+			});
+
+			const environment = new Map(report.environment);
+			assert.equal(environment.get("Android Gradle Plugin"), "8.13.0");
+			assert.equal(environment.get("Kotlin"), "2.2.21");
+		});
+	});
+
+	describe("environmentKey", () => {
+		it("reads platform, framework and the compiler's and core's major.minor from a report", () => {
+			const body = [
+				"### Platform",
+				"",
+				"ios",
+				"",
+				"### Framework",
+				"",
+				"angular",
+				"",
+				"### Environment",
+				"",
+				"| @nativescript/compiler | 0.4.2 |",
+				"| @nativescript/core | 9.1.1 |",
+			].join("\n");
+
+			assert.equal(environmentKey(body), "ios|angular|0.4|9.1");
+			assert.isUndefined(environmentKey("+1, same here"));
+		});
 	});
 
 	describe("newIssueUrl", () => {
-		it("cuts a long body to fit GitHub's URL limit and says so", () => {
-			const body = Array.from(
+		const fields = (environment: string) => ({
+			platform: "ios",
+			framework: "vue",
+			kind: "runtime",
+			signature: "abc123",
+			diagnostic: "TypeError: x",
+			source: "",
+			environment,
+		});
+
+		it("fills the issue form's fields", () => {
+			const url = new URL(
+				newIssueUrl("title", fields("| a | b |"), ["compiled"]).url,
+			);
+
+			assert.equal(url.pathname, "/NativeScript/NativeScript/issues/new");
+			assert.equal(url.searchParams.get("template"), "compiled.yml");
+			assert.equal(url.searchParams.get("platform"), "ios");
+			assert.equal(url.searchParams.get("framework"), "vue");
+			assert.equal(url.searchParams.get("signature"), "abc123");
+			assert.equal(url.searchParams.get("environment"), "| a | b |");
+		});
+
+		it("cuts the longest field to fit GitHub's URL limit and says so", () => {
+			const long = Array.from(
 				{ length: 2000 },
-				(_, k) => `line ${k} of a long log`,
+				(_, k) => `- dependency-${k} 1.0.0`,
 			).join("\n");
 
-			const { url, truncated } = newIssueUrl("title", body, ["compiled"]);
+			const { url, truncated } = newIssueUrl("title", fields(long), [
+				"compiled",
+			]);
 
 			assert.isTrue(truncated);
 			assert.isAtMost(url.length, 8000);
 			assert.include(
-				decodeURIComponent(url),
-				"(The report was cut to fit a URL.)",
+				new URL(url).searchParams.get("environment"),
+				"(Cut to fit a URL.)",
 			);
-			assert.isFalse(newIssueUrl("title", "short", ["compiled"]).truncated);
+			assert.equal(new URL(url).searchParams.get("diagnostic"), "TypeError: x");
+			assert.isFalse(
+				newIssueUrl("title", fields("short"), ["compiled"]).truncated,
+			);
 		});
 	});
 
@@ -647,7 +738,7 @@ describe("ns compiled report", () => {
 		);
 		assert.include(
 			output(),
-			"https://github.com/NativeScript/NativeScript/issues/new?title=",
+			"https://github.com/NativeScript/NativeScript/issues/new?template=compiled.yml&title=",
 		);
 		assert.include(output(), "Dry run: nothing was sent.");
 		assert.lengthOf(ghCalls, 0);
@@ -678,21 +769,72 @@ describe("ns compiled report", () => {
 		assert.lengthOf(httpCalls, 0);
 	});
 
-	it("offers a +1 on an issue with the same signature", async () => {
+	const existing = () => [
+		{
+			exitCode: 0,
+			stdout: JSON.stringify([
+				{
+					number: 42,
+					title: "t",
+					state: "OPEN",
+					url: "https://github.com/NativeScript/NativeScript/issues/42",
+				},
+			]),
+		},
+	];
+
+	it("adds a 👍 alone when an earlier report has this environment", async () => {
 		setIsInteractive(() => true);
 		options.yes = true;
 		ghResponses["auth status"] = [{ exitCode: 0 }];
-		ghResponses["issue list"] = [
+		ghResponses["issue list"] = existing();
+		ghResponses["api --method"] = [{ exitCode: 0 }];
+		ghResponses["issue view"] = [
 			{
 				exitCode: 0,
-				stdout: JSON.stringify([
-					{
-						number: 42,
-						title: "t",
-						state: "OPEN",
-						url: "https://github.com/NativeScript/NativeScript/issues/42",
-					},
-				]),
+				stdout: JSON.stringify({
+					body: "### Platform\n\nandroid\n\n### Framework\n\nangular\n",
+					comments: [
+						{
+							body: "### Platform\n\nios\n\n### Framework\n\nangular\n\n| @nativescript/compiler | 0.4.9 |\n| @nativescript/core | 9.1.0 |",
+						},
+					],
+				}),
+			},
+		];
+		choiceAnswer = (choices) => choices[0];
+
+		await run();
+
+		const reaction = ghCalls.find((c) => c.args[0] === "api");
+		assert.deepStrictEqual(reaction.args, [
+			"api",
+			"--method",
+			"POST",
+			"repos/NativeScript/NativeScript/issues/42/reactions",
+			"-f",
+			"content=+1",
+		]);
+		assert.isUndefined(ghCalls.find((c) => c.args[1] === "comment"));
+		assert.include(
+			output(),
+			"Added a 👍 to https://github.com/NativeScript/NativeScript/issues/42",
+		);
+	});
+
+	it("adds a 👍 and the environment when no earlier report has it", async () => {
+		setIsInteractive(() => true);
+		options.yes = true;
+		ghResponses["auth status"] = [{ exitCode: 0 }];
+		ghResponses["issue list"] = existing();
+		ghResponses["api --method"] = [{ exitCode: 0 }];
+		ghResponses["issue view"] = [
+			{
+				exitCode: 0,
+				stdout: JSON.stringify({
+					body: "### Platform\n\nios\n\n### Framework\n\nvue\n",
+					comments: [{ body: "same here" }],
+				}),
 			},
 		];
 		ghResponses["issue comment"] = [{ exitCode: 0 }];
@@ -701,6 +843,7 @@ describe("ns compiled report", () => {
 		await run();
 
 		assert.lengthOf(confirms, 0);
+		assert.isDefined(ghCalls.find((c) => c.args[0] === "api"));
 		const comment = ghCalls.find((c) => c.args[1] === "comment");
 		assert.deepStrictEqual(comment.args.slice(0, 5), [
 			"issue",
@@ -711,7 +854,9 @@ describe("ns compiled report", () => {
 		]);
 		const body = fs.readFileSync(comment.args[comment.args.length - 1], "utf8");
 		assert.include(body, "+1 from `ns compiled report`");
+		assert.equal(environmentKey(body), "ios|angular|0.4|9.1");
 		assert.notInclude(body, "UIApplication");
+		assert.include(output(), "Added your environment to");
 	});
 
 	it("asks again before the code goes in, even with --yes, and files with gh", async () => {
@@ -743,7 +888,7 @@ describe("ns compiled report", () => {
 			create.args[create.args.indexOf("--body-file") + 1],
 			"utf8",
 		);
-		assert.notInclude(body, "### Code");
+		assert.notInclude(body, "reporter's consent");
 		assert.include(
 			output(),
 			"Filed https://github.com/NativeScript/NativeScript/issues/43",
@@ -764,11 +909,13 @@ describe("ns compiled report", () => {
 			url.searchParams.get("labels"),
 			"compiled,platform:ios,framework:angular,kind:compile-refused",
 		);
+		assert.equal(url.searchParams.get("template"), "compiled.yml");
 		assert.include(
-			url.searchParams.get("body"),
-			"### Code (shared with the reporter's consent)",
+			url.searchParams.get("source"),
+			"Shared with the reporter's consent:",
 		);
-		assert.notInclude(url.searchParams.get("body"), projectDir);
+		assert.include(url.searchParams.get("environment"), "Labels: `compiled`");
+		assert.notInclude(url.search, encodeURIComponent(projectDir));
 	});
 
 	it("reports a pasted runtime error with --error", async () => {
