@@ -101,6 +101,7 @@ interface IProjectService {
 
 interface INsConfigPlaform {
 	id?: string;
+	ignoredNativeDependencies?: string[];
 }
 
 interface IOSSPMPackageBase {
