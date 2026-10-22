@@ -1,9 +1,8 @@
 import * as path from "path";
 import { IProjectData, IVitestExecutionService } from "../definitions/project";
-import { IOptions } from "../declarations";
+import { IOptions, IPackageManager } from "../declarations";
 import { IChildProcess, IErrors, IFileSystem } from "../common/declarations";
 import { injector } from "../common/yok";
-import { resolvePackagePath } from "../helpers/package-path-helper";
 
 const VITEST_CONFIG_FILES = [
 	"vitest.config.mts",
@@ -19,6 +18,7 @@ export class VitestExecutionService implements IVitestExecutionService {
 		private $fs: IFileSystem,
 		private $logger: ILogger,
 		private $options: IOptions,
+		private $packageManager: IPackageManager,
 	) {}
 
 	public isVitestProject(projectData: IProjectData): boolean {
@@ -28,7 +28,7 @@ export class VitestExecutionService implements IVitestExecutionService {
 	public canStartTestRun(projectData: IProjectData): boolean {
 		return (
 			this.isVitestProject(projectData) &&
-			!!resolvePackagePath("vitest", { paths: [projectData.projectDir] })
+			!!this.getVitestPackagePath(projectData)
 		);
 	}
 
@@ -36,9 +36,7 @@ export class VitestExecutionService implements IVitestExecutionService {
 		platform: string,
 		projectData: IProjectData,
 	): Promise<void> {
-		const vitestPackagePath = resolvePackagePath("vitest", {
-			paths: [projectData.projectDir],
-		});
+		const vitestPackagePath = this.getVitestPackagePath(projectData);
 		if (!vitestPackagePath) {
 			this.$errors.fail(
 				"Unable to find 'vitest' in the project. Run '$ ns test init --framework vitest' first.",
@@ -90,6 +88,14 @@ export class VitestExecutionService implements IVitestExecutionService {
 		}
 		return null;
 	}
+
+	private getVitestPackagePath(projectData: IProjectData): string {
+		return this.$packageManager.getInstalledPackagePath(
+			"vitest",
+			projectData.projectDir,
+		);
+	}
+
 }
 
 injector.register("vitestExecutionService", VitestExecutionService);

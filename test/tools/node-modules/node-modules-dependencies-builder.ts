@@ -14,6 +14,7 @@ import {
 import * as os from "os";
 import * as fs from "fs";
 import { FileSystem } from "../../../lib/common/file-system";
+import { resolvePackagePath } from "../../../lib/helpers/package-path-helper";
 
 interface IDependencyInfo {
 	name: string;
@@ -39,6 +40,10 @@ describe("nodeModulesDependenciesBuilder", () => {
 	const getTestInjector = (): IInjector => {
 		const testInjector = new Yok();
 		testInjector.register("fs", FileSystem);
+		testInjector.register("packageManager", {
+			getInstalledPackagePath: (packageName: string, fromDir: string): string =>
+				resolvePackagePath(packageName, { paths: [fromDir] }) || null,
+		});
 
 		return testInjector;
 	};

@@ -24,9 +24,9 @@ import { IOSDeviceDiscovery } from "../lib/common/mobile/mobile-core/ios-device-
 import { AndroidDeviceDiscovery } from "../lib/common/mobile/mobile-core/android-device-discovery";
 import { Utils } from "../lib/common/utils";
 import { CocoaPodsService } from "../lib/services/cocoapods-service";
-import { PackageManager } from "../lib/package-manager";
-import { NodePackageManager } from "../lib/node-package-manager";
-import { YarnPackageManager } from "../lib/yarn-package-manager";
+import { PackageManager } from "../lib/package-managers";
+import { NpmPackageManager } from "../lib/package-managers/npm";
+import { YarnPackageManager } from "../lib/package-managers/yarn";
 
 import { assert } from "chai";
 import { SettingsService } from "../lib/common/test/unit-tests/stubs";
@@ -180,10 +180,11 @@ function createTestInjector(
 	);
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
+		getSettingValueSync: (settingName: string): void => undefined,
 	});
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register("projectConfigService", ProjectConfigServiceStub);
-	testInjector.register("npm", NodePackageManager);
+	testInjector.register("npm", NpmPackageManager);
 	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("xcconfigService", XcconfigService);
 	testInjector.register("settingsService", SettingsService);

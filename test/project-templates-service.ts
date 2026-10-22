@@ -6,7 +6,7 @@ import * as path from "path";
 import * as constants from "../lib/constants";
 import {
 	INpmInstallResultInfo,
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
 	INpmPackageNameParts,
 	INpmInstallOptions,
 } from "../lib/declarations";
@@ -38,7 +38,7 @@ function createTestInjector(
 		public async install(
 			packageName: string,
 			pathToSave: string,
-			config: INodePackageManagerInstallOptions
+			config: IPackageInstallOptions
 		): Promise<INpmInstallResultInfo> {
 			if (configuration.shouldNpmInstallThrow) {
 				throw new Error("NPM install throws error.");

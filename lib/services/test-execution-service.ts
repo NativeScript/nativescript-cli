@@ -7,14 +7,13 @@ import {
 	IProjectDataService,
 	IProjectData,
 } from "../definitions/project";
-import { IConfiguration, IOptions } from "../declarations";
+import { IConfiguration, IOptions, IPackageManager } from "../declarations";
 import { IPluginsService } from "../definitions/plugins";
 import { Server, IFileSystem, IChildProcess } from "../common/declarations";
 import { ErrorCodes } from "../common/enums";
 import * as _ from "lodash";
 import { injector } from "../common/yok";
 import { ICommandParameter } from "../common/definitions/commands";
-import { resolvePackagePath } from "../helpers/package-path-helper";
 
 interface IKarmaConfigOptions {
 	debugBrk: boolean;
@@ -36,6 +35,7 @@ export class TestExecutionService implements ITestExecutionService {
 		private $pluginsService: IPluginsService,
 		private $projectDataService: IProjectDataService,
 		private $childProcess: IChildProcess,
+		private $packageManager: IPackageManager,
 	) {}
 
 	public platform: string;
@@ -144,9 +144,10 @@ export class TestExecutionService implements ITestExecutionService {
 			}
 		});
 
-		const pathToKarma = resolvePackagePath("karma", {
-			paths: [projectData.projectDir],
-		});
+		const pathToKarma = this.$packageManager.getInstalledPackagePath(
+			"karma",
+			projectData.projectDir,
+		);
 
 		canStartKarmaServer = canStartKarmaServer && !!pathToKarma;
 
