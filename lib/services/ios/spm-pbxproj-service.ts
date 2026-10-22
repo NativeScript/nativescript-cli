@@ -17,6 +17,11 @@ import { IFileSystem } from "../../common/declarations";
  *   4. an entry in the target's Frameworks build phase, plus the target's
  *      `packageProductDependencies`.
  *
+ * A product listed in `embed` additionally gets a second `PBXBuildFile` in the
+ * target's "Embed Frameworks" copy phase, which is how Xcode itself records a
+ * dynamic package product added through "Frameworks, Libraries, and Embedded
+ * Content" — linking alone leaves the framework out of the app bundle.
+ *
  * Every entry is keyed by its pbxproj comment (e.g. `XCRemoteSwiftPackageReference
  * "Auth0"`), and an existing entry is updated in place rather than duplicated —
  * so applying the same set of packages repeatedly (which the CLI does on every
@@ -200,6 +205,26 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 			comment: packageReferenceComment,
 		});
 
+		const embedLibs = new Set<string>();
+		for (const lib of pkg.embed ?? []) {
+			if (pkg.libs?.includes(lib)) {
+				embedLibs.add(lib);
+			} else {
+				this.$logger.warn(
+					`SPM: package "${pkg.name}" lists "${lib}" in embed but not in libs — only linked products can be embedded; skipping.`,
+				);
+			}
+		}
+		let embedBuildPhaseFiles: any[] | null = null;
+		if (embedLibs.size) {
+			const embedBuildPhaseObj = this.findOrCreateEmbedFrameworksBuildPhase(
+				project,
+				target,
+				targetId,
+			);
+			embedBuildPhaseFiles = embedBuildPhaseObj["files"] ??= [];
+		}
+
 		for (const lib of pkg.libs ?? []) {
 			// The comment is just the product name, which two different packages
 			// can share (e.g. both exposing a "Core" lib) — so entries here are
@@ -245,6 +270,29 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 				value: spmBuildFileUuid,
 				comment: libComment,
 			});
+
+			if (!embedLibs.has(lib)) {
+				continue;
+			}
+
+			const embedComment = `${lib} in Embed Frameworks`;
+			const { uuid: spmEmbedBuildFileUuid } = this.addOrUpdateEntry(
+				project,
+				"PBXBuildFile",
+				embedComment,
+				{
+					isa: "PBXBuildFile",
+					productRef: spmProductDependencyUUID,
+					productRef_comment: lib,
+					settings: { ATTRIBUTES: ["CodeSignOnCopy"] },
+				},
+				(existing) => existing.productRef === spmProductDependencyUUID,
+			);
+
+			this.addOrUpdateArrayEntry(embedBuildPhaseFiles, spmEmbedBuildFileUuid, {
+				value: spmEmbedBuildFileUuid,
+				comment: embedComment,
+			});
 		}
 
 		return true;
@@ -261,6 +309,41 @@ export class SPMPbxprojService implements ISPMPbxprojService {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * Finds the "Embed Frameworks" copy phase listed in this target's own
+	 * buildPhases, creating one when the target has none. Matched on the
+	 * destination (`dstSubfolderSpec` 10 is the bundle's Frameworks folder)
+	 * rather than the name alone, so a copy phase that merely shares the name
+	 * but copies elsewhere is not mistaken for it.
+	 */
+	private findOrCreateEmbedFrameworksBuildPhase(
+		project: any,
+		target: any,
+		targetId: string,
+	): any {
+		const section =
+			project.hash.project.objects["PBXCopyFilesBuildPhase"] ?? {};
+		for (const phase of target.buildPhases ?? []) {
+			const phaseObj = section[phase.value];
+			if (
+				phaseObj &&
+				String(phaseObj.dstSubfolderSpec) === "10" &&
+				(phaseObj.name === "Embed Frameworks" ||
+					phaseObj.name === '"Embed Frameworks"')
+			) {
+				return phaseObj;
+			}
+		}
+
+		return project.addBuildPhase(
+			[],
+			"PBXCopyFilesBuildPhase",
+			"Embed Frameworks",
+			targetId,
+			"frameworks",
+		).buildPhase;
 	}
 
 	/** Replaces a matching array entry in place, or appends it. */
