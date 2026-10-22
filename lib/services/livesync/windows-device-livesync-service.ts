@@ -3,6 +3,7 @@ import { spawnSync } from "child_process";
 import { DeviceLiveSyncServiceBase } from "./device-livesync-service-base";
 import { IPlatformsDataService } from "../../definitions/platform";
 import { IProjectData } from "../../definitions/project";
+import { WindowsApplicationManager } from "../../common/mobile/windows/windows-application-manager";
 
 export class WindowsDeviceLiveSyncService
 	extends DeviceLiveSyncServiceBase
@@ -40,22 +41,36 @@ export class WindowsDeviceLiveSyncService
 		_projectData: IProjectData,
 		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
-		return !liveSyncInfo.useHotModuleReload || !!liveSyncInfo.waitForDebugger;
+		// A full sync (also the CLI's recovery after a failed hot update) needs a fresh start.
+		return (
+			!liveSyncInfo.useHotModuleReload ||
+			!!liveSyncInfo.isFullSync ||
+			!!liveSyncInfo.waitForDebugger
+		);
 	}
 
 	public async tryRefreshApplication(
 		projectData: IProjectData,
 		liveSyncInfo: ILiveSyncResultInfo,
 	): Promise<boolean> {
-		// Vite HMR: a running app pulls every change from the dev server over its WebSocket
-		// (HTTP ES modules), so a synced file never needs a restart. But an app that isn't
-		// running yet (first sync after install) must still be launched. Webpack HMR isn't
-		// implemented for Windows: signal a restart.
+		// An app that isn't running yet (first sync after install) must still be launched.
+		if (
+			!liveSyncInfo.useHotModuleReload ||
+			!this.isAppRunning(projectData.projectName)
+		) {
+			return false;
+		}
+		// Vite HMR: the app pulls every change from the dev server over its WebSocket
+		// (HTTP ES modules), so a synced file never needs a restart.
+		if (projectData.bundler === "vite") {
+			return true;
+		}
+		// Webpack HMR: the hot-update files are already in bin\app; tell the app to apply them.
+		const appId =
+			projectData.projectIdentifiers?.["windows"] ?? projectData.projectId;
 		return (
-			projectData.bundler === "vite" &&
-			!!liveSyncInfo.useHotModuleReload &&
-			this.isAppRunning(projectData.projectName)
-		);
+			this.device.applicationManager as WindowsApplicationManager
+		).signalLiveSync(appId);
 	}
 
 	private isAppRunning(processName: string): boolean {

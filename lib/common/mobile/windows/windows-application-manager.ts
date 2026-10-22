@@ -10,6 +10,9 @@ import { IBuildData } from "../../../definitions/build";
 export const WINDOWS_INSPECTOR_MARKER = "ns-inspector";
 export const WINDOWS_DEBUGBREAK_MARKER = "ns-debugbreak";
 export const WINDOWS_DEBUGGER_STARTED_MARKER = "ns-debugger-started";
+// Written by a running debug host that watches for WINDOWS_LIVESYNC_MARKER.
+export const WINDOWS_LIVESYNC_READY_MARKER = "ns-livesync-ready";
+export const WINDOWS_LIVESYNC_MARKER = "ns-livesync";
 
 export class WindowsApplicationManager extends ApplicationManagerBase {
 	private _runningPid: number | null = null;
@@ -371,6 +374,28 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 	): Promise<string | null> {
 		const pfn = await this._resolvePackageFamilyName(appId);
 		return this._localStatePath(pfn, fileName);
+	}
+
+	/**
+	 * Asks the running app to apply the files just synced into bin\app: the debug host watches
+	 * LocalState for the marker and calls global.__onLiveSync(), which runs webpack's hot update.
+	 * Returns false when the app's host does not watch for it (EXE targets, older runtimes).
+	 */
+	public async signalLiveSync(appId: string): Promise<boolean> {
+		const pfn = await this._resolvePackageFamilyName(appId);
+		const readyPath = this._localStatePath(pfn, WINDOWS_LIVESYNC_READY_MARKER);
+		const markerPath = this._localStatePath(pfn, WINDOWS_LIVESYNC_MARKER);
+		if (!readyPath || !markerPath || !fs.existsSync(readyPath)) {
+			return false;
+		}
+		try {
+			// New content on every sync, so a marker the host has not consumed yet still changes.
+			fs.writeFileSync(markerPath, String(Date.now()), "utf8");
+			return true;
+		} catch (e) {
+			this.$logger.trace(`[Windows] Could not write ${WINDOWS_LIVESYNC_MARKER} marker: ${e}`);
+			return false;
+		}
 	}
 
 	private _localStatePath(pfn: string, fileName: string): string | null {
