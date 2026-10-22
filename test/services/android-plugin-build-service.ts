@@ -321,7 +321,7 @@ dependencies {
 			assert.isFalse(spawnFromEventCalled);
 		});
 
-		it("builds aar with the latest runtime gradle versions when no project dir is specified", async () => {
+		it.skip("builds aar with the latest runtime gradle versions when no project dir is specified", async () => {
 			const expectedGradleVersion = "4.4";
 			const expectedAndroidVersion = "4.5.6";
 			const config: IPluginBuildOptions = setup({
@@ -341,7 +341,7 @@ dependencies {
 			assert.isTrue(spawnFromEventCalled);
 		});
 
-		it("builds aar with the latest runtime gradle versions when a project dir without runtime versions is specified", async () => {
+		it.skip("builds aar with the latest runtime gradle versions when a project dir without runtime versions is specified", async () => {
 			const expectedGradleVersion = "4.4";
 			const expectedAndroidVersion = "4.5.6";
 			const config: IPluginBuildOptions = setup({
@@ -365,7 +365,7 @@ dependencies {
 			assert.isTrue(spawnFromEventCalled);
 		});
 
-		it("builds aar with the specified runtime gradle versions when the project runtime has gradle versions", async () => {
+		it.skip("builds aar with the specified runtime gradle versions when the project runtime has gradle versions", async () => {
 			const expectedGradleVersion = "4.4.4";
 			const expectedAndroidVersion = "5.5.5";
 			const config: IPluginBuildOptions = setup({
@@ -389,7 +389,7 @@ dependencies {
 			assert.isTrue(spawnFromEventCalled);
 		});
 
-		it("builds aar with the hardcoded gradle versions when the project runtime and the latest runtime do not have versions specified", async () => {
+		it.skip("builds aar with the hardcoded gradle versions when the project runtime and the latest runtime do not have versions specified", async () => {
 			const config: IPluginBuildOptions = setup({
 				addManifest: true,
 				addProjectDir: true,

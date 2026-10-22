@@ -694,6 +694,12 @@ export class AndroidProjectService
 			pluginData,
 			AndroidProjectService.ANDROID_PLATFORM_NAME,
 		);
+		const platformDir = this.$options.hostProjectPath
+			? this.$options.hostProjectPath
+			: path.join(
+					projectData.platformsDir,
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
 			const options: IPluginBuildOptions = {
 				gradlePath: this.$options.gradlePath,
@@ -701,7 +707,7 @@ export class AndroidProjectService
 				projectDir: projectData.projectDir,
 				pluginName: pluginData.name,
 				platformsAndroidDirPath: pluginPlatformsFolderPath,
-				aarOutputDir: pluginPlatformsFolderPath,
+				aarOutputDir: path.join(platformDir, ".plugins", pluginData.name),
 				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
 			};
 
@@ -781,6 +787,7 @@ export class AndroidProjectService
 				return {
 					name,
 					directory: path.relative(platformDir, directory),
+					generatedDirectory: path.join(".plugins", name),
 					dependencies: dependencies.filter((dep) => {
 						// filter out transient dependencies that don't have native dependencies
 						return (
