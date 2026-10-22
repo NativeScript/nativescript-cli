@@ -2,9 +2,16 @@ import * as path from "path";
 import { Configurations } from "../../common/constants";
 import { IGradleBuildArgsService } from "../../definitions/gradle";
 import { IAndroidBuildData } from "../../definitions/build";
-import { IHooksService, IAnalyticsService } from "../../common/declarations";
+import {
+	IHooksService,
+	IAnalyticsService,
+	IFileSystem,
+} from "../../common/declarations";
 import { injector } from "../../common/yok";
-import { IProjectDataService } from "../../definitions/project";
+import { IProjectData, IProjectDataService } from "../../definitions/project";
+import { IOptions } from "../../declarations";
+import { PlatformTypes } from "../../constants";
+import { getGradleFactsFilePath } from "./gradle-facts";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(
@@ -13,6 +20,8 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		private $staticConfig: Config.IStaticConfig,
 		private $projectDataService: IProjectDataService,
 		private $logger: ILogger,
+		private $fs: IFileSystem,
+		private $options: IOptions,
 	) {}
 
 	public async getBuildTaskArgs(
@@ -55,6 +64,12 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 			`-PappPath=${projectData.getAppDirectoryPath()}`,
 			`-PappResourcesPath=${projectData.getAppResourcesDirectoryPath()}`,
 		);
+
+		const factsFile = this.getGradleFactsFile(projectData);
+		if (factsFile) {
+			args.push(`-Pnativescript.factsFile=${factsFile}`);
+		}
+
 		if (buildData.gradleArgs) {
 			args.push(buildData.gradleArgs);
 		}
@@ -70,6 +85,19 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 		}
 
 		return args;
+	}
+
+	private getGradleFactsFile(projectData: IProjectData): string | null {
+		const platformDir =
+			this.$options.hostProjectPath ||
+			(projectData.platformsDir &&
+				path.join(projectData.platformsDir, PlatformTypes.android));
+		if (!platformDir) {
+			return null;
+		}
+
+		const factsFile = getGradleFactsFilePath(platformDir);
+		return this.$fs.exists(factsFile) ? factsFile : null;
 	}
 
 	private getBuildLoggingArgs(): string[] {

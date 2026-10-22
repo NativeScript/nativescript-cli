@@ -1,0 +1,12 @@
+{
+	"name": "@nativescript/gradle-api-sample",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Example NativeScript plugin using org.nativescript:gradle-api from its Android Gradle files.",
+	"license": "Apache-2.0",
+	"nativescript": {
+		"platforms": {
+			"android": "8.4.0"
+		}
+	}
+}

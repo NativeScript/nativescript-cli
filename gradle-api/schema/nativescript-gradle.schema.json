@@ -1,0 +1,104 @@
+{
+	"$schema": "https://json-schema.org/draft/2020-12/schema",
+	"$id": "https://nativescript.org/schemas/nativescript-gradle.schema.json",
+	"title": "NativeScript Gradle facts",
+	"description": "Written by the NativeScript CLI at prepare time to platforms/android/nativescript-gradle.json and read by org.nativescript:gradle-api. Fields are only ever added: readers must ignore unknown fields, and a field never changes meaning. Every path is relative to the directory containing this file and uses forward slashes.",
+	"type": "object",
+	"required": ["schemaVersion", "dependenciesJson", "project", "plugins"],
+	"properties": {
+		"schemaVersion": {
+			"description": "Bumped only when a field is added. Readers accept any version and read the fields they know.",
+			"type": "integer",
+			"minimum": 1
+		},
+		"cli": {
+			"type": "object",
+			"properties": {
+				"version": { "type": "string" }
+			}
+		},
+		"runtime": {
+			"type": "object",
+			"properties": {
+				"name": { "type": "string" },
+				"version": { "type": "string" }
+			}
+		},
+		"dependenciesJson": {
+			"description": "The dependencies.json the CLI wrote next to this file, before this file. A CLI that does not write this file still rewrites dependencies.json but leaves this file behind, so readers ignore this file when dependencies.json no longer has this hash.",
+			"type": "object",
+			"required": ["sha256"],
+			"properties": {
+				"sha256": {
+					"description": "Lowercase hex SHA-256 of the exact bytes of dependencies.json.",
+					"type": "string",
+					"pattern": "^[0-9a-f]{64}$"
+				}
+			}
+		},
+		"capabilities": {
+			"description": "Behaviours the CLI that wrote this file guarantees. Lets readers tell 'not set' apart from 'this CLI does not know about it'.",
+			"type": "array",
+			"items": { "type": "string" },
+			"uniqueItems": true
+		},
+		"project": {
+			"type": "object",
+			"required": ["root", "appDir", "appResourcesDir"],
+			"properties": {
+				"root": {
+					"description": "The NativeScript project root (the folder with the app's package.json).",
+					"$ref": "#/$defs/path"
+				},
+				"appDir": { "$ref": "#/$defs/path" },
+				"appResourcesDir": { "$ref": "#/$defs/path" }
+			}
+		},
+		"plugins": {
+			"description": "Every npm package with Android native code, in dependency order (a plugin comes after the plugins it depends on).",
+			"type": "array",
+			"items": { "$ref": "#/$defs/plugin" }
+		}
+	},
+	"$defs": {
+		"path": {
+			"type": "string",
+			"pattern": "^[^\\\\]*$"
+		},
+		"plugin": {
+			"type": "object",
+			"required": ["name", "packageDir", "nativeDir", "aarName", "aar", "dependencies"],
+			"properties": {
+				"name": {
+					"description": "The npm package name.",
+					"type": "string"
+				},
+				"packageDir": {
+					"description": "The installed npm package. Read-only.",
+					"$ref": "#/$defs/path"
+				},
+				"nativeDir": {
+					"description": "The directory Gradle reads the plugin's Android files from: the package's platforms/android, or the CLI's copy of it when node_modules is kept read-only.",
+					"$ref": "#/$defs/path"
+				},
+				"aarName": {
+					"description": "File name, without extension, of the aar the CLI builds from the plugin's sources. Unique across the project.",
+					"type": "string"
+				},
+				"aar": {
+					"description": "Where the CLI puts that aar. The file only exists if the plugin has sources to build.",
+					"$ref": "#/$defs/path"
+				},
+				"dependencies": {
+					"description": "Names of the other entries in plugins that this plugin depends on.",
+					"type": "array",
+					"items": { "type": "string" }
+				},
+				"options": {
+					"description": "Per-plugin options for the plugin's own Gradle code. Reserved; always empty for now.",
+					"type": "object"
+				}
+			}
+		}
+	}
+}

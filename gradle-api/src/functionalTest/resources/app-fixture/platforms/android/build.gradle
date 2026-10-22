@@ -1,0 +1,62 @@
+// Mirrors the parts of the @nativescript/android app template's root build.gradle that the library
+// and plugins' Gradle files rely on.
+import groovy.json.JsonSlurper
+
+import java.nio.file.Paths
+
+buildscript {
+    def initialize = { ->
+        def dependenciesJson = file("$rootDir/dependencies.json")
+        project.ext.nativescriptDependencies = new JsonSlurper().parseText(dependenciesJson.text)
+        project.ext.PLATFORMS_ANDROID = "platforms/android"
+        project.ext.USER_PROJECT_ROOT = "$rootDir/../.."
+
+        project.ext.getAppPath = { ->
+            def relativePathToApp = "app"
+            def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+            def nsConfig
+
+            if (nsConfigFile.exists()) {
+                nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+            }
+
+            if (project.hasProperty("appPath")) {
+                relativePathToApp = appPath
+            } else if (nsConfig != null && nsConfig.appPath != null) {
+                relativePathToApp = nsConfig.appPath
+            }
+
+            project.ext.appPath = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToApp).toAbsolutePath()
+
+            return project.ext.appPath
+        }
+
+        project.ext.getAppResourcesPath = { ->
+            def relativePathToAppResources
+            def absolutePathToAppResources
+            def nsConfigFile = file("$USER_PROJECT_ROOT/nsconfig.json")
+            def nsConfig
+
+            if (nsConfigFile.exists()) {
+                nsConfig = new JsonSlurper().parseText(nsConfigFile.getText("UTF-8"))
+            }
+
+            if (project.hasProperty("appResourcesPath")) {
+                relativePathToAppResources = appResourcesPath
+                absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+            } else if (nsConfig != null && nsConfig.appResourcesPath != null) {
+                relativePathToAppResources = nsConfig.appResourcesPath
+                absolutePathToAppResources = Paths.get(USER_PROJECT_ROOT).resolve(relativePathToAppResources).toAbsolutePath()
+            } else {
+                absolutePathToAppResources = "${getAppPath()}/App_Resources"
+            }
+
+            project.ext.appResourcesPath = absolutePathToAppResources
+
+            return absolutePathToAppResources
+        }
+    }
+
+    initialize()
+    getAppResourcesPath()
+}

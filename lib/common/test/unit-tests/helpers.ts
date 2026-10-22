@@ -1111,4 +1111,129 @@ const test = require("./test");`,
 			assert.deepStrictEqual(seen.sink, ["kept"]);
 		});
 	});
+
+	describe("getUniqueShortPluginNames", () => {
+		const toObject = (names: string[]) =>
+			Object.fromEntries(helpers.getUniqueShortPluginNames(names));
+
+		it("keeps the short name of plugins without a clash", () => {
+			assert.deepStrictEqual(
+				toObject([
+					"@nativescript/core",
+					"nativescript-plugin",
+					"@scope/my-plugin",
+					"9-lives",
+				]),
+				{
+					"@nativescript/core": "core",
+					"nativescript-plugin": "nativescript_plugin",
+					"@scope/my-plugin": "my_plugin",
+					"9-lives": "9_lives",
+				},
+			);
+		});
+
+		it("qualifies clashing scoped plugins with their scope", () => {
+			assert.deepStrictEqual(
+				toObject(["@foo/plugin-x", "@bar/plugin-x", "@nativescript/core"]),
+				{
+					"@foo/plugin-x": "foo_plugin_x",
+					"@bar/plugin-x": "bar_plugin_x",
+					"@nativescript/core": "core",
+				},
+			);
+		});
+
+		it("lets an unscoped plugin keep its name when it clashes with a scoped one", () => {
+			assert.deepStrictEqual(toObject(["plugin-x", "@foo/plugin-x"]), {
+				"plugin-x": "plugin_x",
+				"@foo/plugin-x": "foo_plugin_x",
+			});
+		});
+
+		it("replaces characters a scope may contain but a name may not", () => {
+			assert.deepStrictEqual(toObject(["@my.org~x/plugin", "@a/plugin"]), {
+				"@my.org~x/plugin": "my_org_x_plugin",
+				"@a/plugin": "a_plugin",
+			});
+		});
+
+		it("prefixes clashing names that would start with a digit", () => {
+			assert.deepStrictEqual(toObject(["@1password/plugin", "@a/plugin"]), {
+				"@1password/plugin": "_1password_plugin",
+				"@a/plugin": "a_plugin",
+			});
+			assert.deepStrictEqual(toObject(["9-lives", "@a/9-lives"]), {
+				"9-lives": "_9_lives",
+				"@a/9-lives": "a_9_lives",
+			});
+		});
+
+		it("fails when two plugins still share a name", () => {
+			assert.throws(
+				() =>
+					helpers.getUniqueShortPluginNames(["@foo/plugin-x", "@foo/plugin_x"]),
+				/"@foo\/plugin-x" and "@foo\/plugin_x"/,
+			);
+			assert.throws(
+				() =>
+					helpers.getUniqueShortPluginNames([
+						"foo-plugin-x",
+						"@foo/plugin-x",
+						"@bar/plugin-x",
+					]),
+				/"@foo\/plugin-x" and "foo-plugin-x".*"foo_plugin_x"/,
+			);
+		});
+
+		it("does not depend on the order of the plugins", () => {
+			const names = ["@foo/plugin-x", "plugin-x", "@bar/plugin-x", "other"];
+			const expected = toObject(names);
+			assert.deepStrictEqual(toObject([...names].reverse()), expected);
+			assert.deepStrictEqual(
+				toObject([names[2], names[0], names[3], names[1]]),
+				expected,
+			);
+			assert.throws(
+				() =>
+					helpers.getUniqueShortPluginNames(["@foo/plugin_x", "@foo/plugin-x"]),
+				/"@foo\/plugin-x" and "@foo\/plugin_x"/,
+			);
+		});
+	});
+
+	describe("getCandidateAarNames", () => {
+		it("lists the short and the scope-qualified name of a scoped plugin", () => {
+			assert.deepStrictEqual(helpers.getCandidateAarNames("@foo/plugin-x"), [
+				"plugin_x",
+				"foo_plugin_x",
+			]);
+		});
+
+		it("lists the short name of an unscoped plugin", () => {
+			assert.deepStrictEqual(helpers.getCandidateAarNames("plugin-x"), [
+				"plugin_x",
+			]);
+			assert.deepStrictEqual(helpers.getCandidateAarNames("9-lives"), [
+				"9_lives",
+				"_9_lives",
+			]);
+		});
+
+		it("covers every name getUniqueShortPluginNames gives", () => {
+			const projects = [
+				["@foo/plugin-x"],
+				["@foo/plugin-x", "@bar/plugin-x"],
+				["plugin-x", "@foo/plugin-x"],
+				["@1a/plugin", "@b/plugin", "plugin", "9-lives", "@c/9-lives"],
+			];
+			for (const project of projects) {
+				for (const [name, aarName] of helpers.getUniqueShortPluginNames(
+					project,
+				)) {
+					assert.include(helpers.getCandidateAarNames(name), aarName);
+				}
+			}
+		});
+	});
 });

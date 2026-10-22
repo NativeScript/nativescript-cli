@@ -27,6 +27,8 @@ function createTestInjector(): IInjector {
 		getProjectData: () => projectData,
 	});
 	injector.register("hooksService", stubs.HooksServiceStub);
+	injector.register("fs", { exists: () => false });
+	injector.register("options", {});
 	injector.register("gradleBuildArgsService", GradleBuildArgsService);
 	injector.register("analyticsService", stubs.AnalyticsService);
 	injector.register("staticConfig", {
@@ -214,6 +216,51 @@ describe("GradleBuildArgsService", () => {
 				assert.deepStrictEqual(args[0], testCase.expectedTask);
 			});
 		}
+	});
+
+	describe("Gradle facts", () => {
+		const factsFile = path.resolve(
+			"/path/to/projectDir/platforms/android/nativescript-gradle.json",
+		);
+
+		const getArgs = async (existing: string[], options: object = {}) => {
+			const injector = createTestInjector();
+			injector.resolve("logger").getLevel = (): string => "INFO";
+			injector.register("fs", {
+				exists: (file: string) => existing.includes(file),
+			});
+			injector.register("options", options);
+			const service: IGradleBuildArgsService = injector.resolve(
+				"gradleBuildArgsService",
+			);
+			return service.getBuildTaskArgs(<any>{ release: false });
+		};
+
+		it("passes the facts file when it exists", async () => {
+			const args = await getArgs([factsFile]);
+			assert.deepStrictEqual(
+				args,
+				["assembleDebug"]
+					.concat(expectedInfoLoggingArgs)
+					.concat(expectedDebugBuildArgs)
+					.concat(`-Pnativescript.factsFile=${factsFile}`),
+			);
+		});
+
+		it("does not pass a facts file that does not exist", async () => {
+			const args = await getArgs([]);
+			assert.isFalse(args.some((arg) => arg.includes("factsFile")));
+		});
+
+		it("looks for the facts file in the host project", async () => {
+			const hostProjectPath = path.resolve("/path/to/host");
+			const hostFactsFile = path.join(
+				hostProjectPath,
+				"nativescript-gradle.json",
+			);
+			const args = await getArgs([hostFactsFile], { hostProjectPath });
+			assert.include(args, `-Pnativescript.factsFile=${hostFactsFile}`);
+		});
 	});
 
 	describe("getCleanTaskArgs", async () => {

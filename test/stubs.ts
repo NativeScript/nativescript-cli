@@ -750,6 +750,10 @@ export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService
 	migrateIncludeGradle(options: IPluginBuildOptions): boolean {
 		return true;
 	}
+
+	hasOutdatedAar(options: IPluginBuildOptions): boolean {
+		return false;
+	}
 }
 
 export class PlatformProjectServiceStub

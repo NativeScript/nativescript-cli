@@ -179,6 +179,12 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	 * Custom runtime package name
 	 */
 	runtimePackageName?: string;
+
+	/**
+	 * Never write into node_modules: each plugin's Android files are copied to
+	 * `platforms/android/.ns-plugins/` and its aar is built there.
+	 */
+	readOnlyNodeModules?: boolean;
 }
 
 interface INsConfigHooks {

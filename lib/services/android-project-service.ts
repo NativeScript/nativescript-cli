@@ -6,7 +6,11 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { Configurations, LiveSyncPaths } from "../common/constants";
-import { hook } from "../common/helpers";
+import {
+	getCandidateAarNames,
+	getUniqueShortPluginNames,
+	hook,
+} from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
 import {
 	IProjectData,
@@ -37,8 +41,15 @@ import {
 } from "../common/declarations";
 import {
 	IAndroidPluginBuildService,
+	IAndroidPluginMirrorService,
 	IPluginBuildOptions,
 } from "../definitions/android-plugin-migrator";
+import { INodeModulesDependenciesBuilder } from "../definitions/platform";
+import {
+	createGradleFacts,
+	getGradleFactsFilePath,
+	serializeGradleFacts,
+} from "./android/gradle-facts";
 import { IFilesHashService } from "../definitions/files-hash-service";
 import {
 	IGradleCommandService,
@@ -52,6 +63,30 @@ interface NativeDependency {
 	name: string;
 	directory: string;
 	dependencies: string[];
+}
+
+interface IAndroidPluginLocation {
+	aarName: string;
+	packageDir: string;
+	/**
+	 * Where Gradle reads the plugin's Android files and where its aar is built to.
+	 */
+	nativeDir: string;
+	/**
+	 * Set when node_modules is read-only.
+	 */
+	mirrorDir?: string;
+}
+
+interface IAndroidPluginLayout {
+	key: string;
+	platformDir: string;
+	readOnlyNodeModules: boolean;
+	plugins: Map<string, IAndroidPluginLocation>;
+	/**
+	 * Plugins whose mirror changed since they were last prepared.
+	 */
+	changedMirrors: Set<string>;
 }
 
 //
@@ -155,9 +190,13 @@ export class AndroidProjectService
 		private $gradleCommandService: IGradleCommandService,
 		private $gradleBuildService: IGradleBuildService,
 		private $analyticsService: IAnalyticsService,
+		private $androidPluginMirrorService: IAndroidPluginMirrorService,
+		private $staticConfig: Config.IStaticConfig,
 	) {
 		super($fs, $projectDataService);
 	}
+
+	private pluginLayout: IAndroidPluginLayout = null;
 
 	private _platformData: IPlatformData = null;
 	public getPlatformData(projectData: IProjectData): IPlatformData {
@@ -694,23 +733,210 @@ export class AndroidProjectService
 			pluginData,
 			AndroidProjectService.ANDROID_PLATFORM_NAME,
 		);
-		if (this.$fs.exists(pluginPlatformsFolderPath)) {
-			const options: IPluginBuildOptions = {
-				gradlePath: this.$options.gradlePath,
-				gradleArgs: this.$options.gradleArgs,
-				projectDir: projectData.projectDir,
-				pluginName: pluginData.name,
-				platformsAndroidDirPath: pluginPlatformsFolderPath,
-				aarOutputDir: pluginPlatformsFolderPath,
-				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
-			};
-
-			if (await this.$androidPluginBuildService.buildAar(options)) {
-				this.$logger.info(`Built aar for ${options.pluginName}`);
-			}
-
-			this.$androidPluginBuildService.migrateIncludeGradle(options);
+		if (!this.$fs.exists(pluginPlatformsFolderPath)) {
+			return;
 		}
+
+		const layout = this.getPluginLayout(projectData);
+		const plugin = layout.plugins.get(pluginData.name);
+		if (!plugin && layout.readOnlyNodeModules) {
+			// Gradle only reads the plugins listed in dependencies.json, and with
+			// read-only node_modules there is nowhere else to build this one to.
+			this.$logger.trace(
+				`Skipping ${pluginData.name}: it does not declare Android support in its package.json.`,
+			);
+			return;
+		}
+
+		layout.changedMirrors.delete(pluginData.name);
+		const options = this.getPluginBuildOptions(
+			pluginData,
+			pluginPlatformsFolderPath,
+			projectData,
+			layout,
+		);
+
+		if (await this.$androidPluginBuildService.buildAar(options)) {
+			this.$logger.info(`Built aar for ${options.pluginName}`);
+		}
+
+		this.$androidPluginBuildService.migrateIncludeGradle({
+			...options,
+			platformsAndroidDirPath: options.aarOutputDir,
+		});
+	}
+
+	public shouldRepreparePlugin(
+		pluginData: IPluginData,
+		projectData: IProjectData,
+	): boolean {
+		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(
+			pluginData,
+			AndroidProjectService.ANDROID_PLATFORM_NAME,
+		);
+		const layout = this.getPluginLayout(projectData);
+		if (!layout.plugins.has(pluginData.name)) {
+			return false;
+		}
+
+		return (
+			layout.changedMirrors.has(pluginData.name) ||
+			this.$androidPluginBuildService.hasOutdatedAar(
+				this.getPluginBuildOptions(
+					pluginData,
+					pluginPlatformsFolderPath,
+					projectData,
+					layout,
+				),
+			)
+		);
+	}
+
+	private getPluginBuildOptions(
+		pluginData: IPluginData,
+		pluginPlatformsFolderPath: string,
+		projectData: IProjectData,
+		layout: IAndroidPluginLayout,
+	): IPluginBuildOptions {
+		const plugin = layout.plugins.get(pluginData.name);
+		const options: IPluginBuildOptions = {
+			gradlePath: this.$options.gradlePath,
+			gradleArgs: this.$options.gradleArgs,
+			projectDir: projectData.projectDir,
+			pluginName: pluginData.name,
+			platformsAndroidDirPath: pluginPlatformsFolderPath,
+			aarOutputDir: layout.readOnlyNodeModules
+				? plugin.nativeDir
+				: pluginPlatformsFolderPath,
+			tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+			gradleFactsFile: getGradleFactsFilePath(layout.platformDir),
+		};
+
+		if (plugin) {
+			options.aarName = plugin.aarName;
+		}
+
+		if (layout.readOnlyNodeModules) {
+			options.readOnlyNodeModules = true;
+		}
+
+		return options;
+	}
+
+	private getAndroidPlatformDir(projectData: IProjectData): string {
+		return this.$options.hostProjectPath
+			? this.$options.hostProjectPath
+			: path.join(
+					projectData.platformsDir,
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				);
+	}
+
+	private isReadOnlyNodeModules(projectData: IProjectData): boolean {
+		return projectData.nsConfig?.android?.readOnlyNodeModules === true;
+	}
+
+	private getPluginLayoutKey(projectData: IProjectData): string {
+		return JSON.stringify([
+			projectData.projectDir,
+			this.getAndroidPlatformDir(projectData),
+			this.isReadOnlyNodeModules(projectData),
+		]);
+	}
+
+	/**
+	 * Normally computed by beforePrepareAllPlugins; computed here from the
+	 * project's production dependencies when a plugin is prepared without it.
+	 */
+	private getPluginLayout(projectData: IProjectData): IAndroidPluginLayout {
+		if (
+			!this.pluginLayout ||
+			this.pluginLayout.key !== this.getPluginLayoutKey(projectData)
+		) {
+			const dependencies = this.$injector
+				.resolve<INodeModulesDependenciesBuilder>(
+					"nodeModulesDependenciesBuilder",
+				)
+				.getProductionDependencies(
+					projectData.projectDir,
+					projectData.ignoredDependencies,
+				);
+			this.pluginLayout = this.createPluginLayout(
+				projectData,
+				this.filterUniqueDependencies(dependencies).filter(
+					AndroidProjectService.isNativeAndroidDependency,
+				),
+			);
+		}
+
+		return this.pluginLayout;
+	}
+
+	private createPluginLayout(
+		projectData: IProjectData,
+		nativeDependencyData: IDependencyData[],
+	): IAndroidPluginLayout {
+		const platformDir = this.getAndroidPlatformDir(projectData);
+		const readOnlyNodeModules = this.isReadOnlyNodeModules(projectData);
+		const mirrorsRoot = path.join(
+			platformDir,
+			constants.ANDROID_PLUGIN_MIRRORS_DIR_NAME,
+		);
+
+		let aarNames: Map<string, string>;
+		try {
+			aarNames = getUniqueShortPluginNames(
+				nativeDependencyData.map((dep) => dep.name),
+			);
+		} catch (err) {
+			this.$errors.fail(err.message);
+		}
+
+		const plugins = new Map<string, IAndroidPluginLocation>();
+		for (const dep of nativeDependencyData) {
+			const aarName = aarNames.get(dep.name);
+			const mirrorDir = readOnlyNodeModules
+				? path.join(mirrorsRoot, aarName)
+				: undefined;
+			plugins.set(dep.name, {
+				aarName,
+				packageDir: dep.directory,
+				mirrorDir,
+				nativeDir: path.join(
+					mirrorDir ?? dep.directory,
+					constants.PLATFORMS_DIR_NAME,
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				),
+			});
+		}
+
+		let changedMirrors: string[] = [];
+		if (readOnlyNodeModules) {
+			changedMirrors = this.$androidPluginMirrorService.syncMirrors(
+				mirrorsRoot,
+				nativeDependencyData.map((dep) => {
+					const aarName = aarNames.get(dep.name);
+					return {
+						pluginName: dep.name,
+						packageDir: dep.directory,
+						mirrorDir: plugins.get(dep.name).mirrorDir,
+						excludedNativeFiles: getCandidateAarNames(dep.name)
+							.filter((candidate) => candidate !== aarName)
+							.map((candidate) => `${candidate}.aar`),
+					};
+				}),
+			);
+		} else if (this.$fs.exists(mirrorsRoot)) {
+			this.$fs.deleteDirectory(mirrorsRoot);
+		}
+
+		return {
+			key: this.getPluginLayoutKey(projectData),
+			platformDir,
+			readOnlyNodeModules,
+			plugins,
+			changedMirrors: new Set(changedMirrors),
+		};
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -762,12 +988,7 @@ export class AndroidProjectService
 		projectData: IProjectData,
 		dependencies: IDependencyData[],
 	): IDependencyData[] {
-		const platformDir = this.$options.hostProjectPath
-			? this.$options.hostProjectPath
-			: path.join(
-					projectData.platformsDir,
-					AndroidProjectService.ANDROID_PLATFORM_NAME,
-				);
+		const platformDir = this.getAndroidPlatformDir(projectData);
 		const dependenciesJsonPath = path.join(
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME,
@@ -776,11 +997,17 @@ export class AndroidProjectService
 			AndroidProjectService.isNativeAndroidDependency,
 		);
 
+		const layout = this.createPluginLayout(projectData, nativeDependencyData);
+		this.pluginLayout = layout;
+
 		let nativeDependencies = nativeDependencyData.map(
 			({ name, directory, dependencies }) => {
 				return {
 					name,
-					directory: path.relative(platformDir, directory),
+					directory: path.relative(
+						platformDir,
+						layout.plugins.get(name).mirrorDir ?? directory,
+					),
 					dependencies: dependencies.filter((dep) => {
 						// filter out transient dependencies that don't have native dependencies
 						return (
@@ -795,6 +1022,7 @@ export class AndroidProjectService
 		nativeDependencies = topologicalSortNativeDependencies(nativeDependencies);
 		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
 		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
+		this.writeGradleFacts(projectData, layout, nativeDependencies, jsonContent);
 
 		// we sort all the dependencies to respect the topological sorting of the native dependencies
 		return dependencies.sort(function (a, b) {
@@ -803,6 +1031,47 @@ export class AndroidProjectService
 				nativeDependencies.findIndex((n) => n.name === b.name)
 			);
 		});
+	}
+
+	private writeGradleFacts(
+		projectData: IProjectData,
+		layout: IAndroidPluginLayout,
+		sortedNativeDependencies: NativeDependency[],
+		dependenciesJsonContent: string,
+	): void {
+		const runtimePackage = this.$projectDataService.getRuntimePackage(
+			projectData.projectDir,
+			constants.PlatformTypes.android,
+		);
+		const facts = createGradleFacts({
+			factsDir: path.resolve(layout.platformDir),
+			cliVersion: this.$staticConfig.version,
+			runtime: { name: runtimePackage?.name, version: runtimePackage?.version },
+			projectDir: path.resolve(projectData.projectDir),
+			appDir: path.resolve(projectData.getAppDirectoryPath()),
+			appResourcesDir: path.resolve(projectData.getAppResourcesDirectoryPath()),
+			dependenciesJsonContent,
+			plugins: sortedNativeDependencies.map((dep) => {
+				const plugin = layout.plugins.get(dep.name);
+				return {
+					name: dep.name,
+					packageDir: path.resolve(plugin.packageDir),
+					nativeDir: path.resolve(plugin.nativeDir),
+					aarName: plugin.aarName,
+					dependencies: dep.dependencies,
+				};
+			}),
+		});
+
+		// Rewritten only on change so Gradle tasks that take it as an input stay up to date.
+		const factsPath = getGradleFactsFilePath(layout.platformDir);
+		const content = serializeGradleFacts(facts);
+		if (
+			!this.$fs.exists(factsPath) ||
+			this.$fs.readText(factsPath) !== content
+		) {
+			this.$fs.writeFile(factsPath, content);
+		}
 	}
 
 	private static isNativeAndroidDependency({
