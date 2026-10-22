@@ -1,0 +1,8 @@
+dependencies {
+    def ns = project.extensions.findByName("nativescript")
+    if (ns != null && ns.pluginBuild) {
+        compileOnly ns.plugin("@nativescript/core").artifacts
+    } else if (project.hasProperty("tempBuild")) {
+        compileOnly fileTree(dir: "$USER_PROJECT_ROOT/node_modules/@nativescript/core/platforms/android", include: "*.aar")
+    }
+}

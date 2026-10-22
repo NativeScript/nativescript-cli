@@ -1,0 +1,10 @@
+// Applied to the app's buildscript (and, with newer CLIs, to this plugin's own aar build), so the
+// library is on the classpath before include.gradle runs. When several plugins declare it, Gradle
+// uses the highest version.
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    classpath "org.nativescript:gradle-api:0.1.0"
+}

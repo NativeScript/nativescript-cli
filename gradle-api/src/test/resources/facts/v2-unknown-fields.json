@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 2,
+	"dependenciesJson": { "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570" },
+	"capabilities": ["some.future.capability"],
+	"someFutureSection": { "nested": [1, 2, { "deep": true }], "flag": null },
+	"project": {
+		"root": "../..",
+		"appDir": "../../app",
+		"appResourcesDir": "../../app/App_Resources",
+		"futureField": "ignored"
+	},
+	"plugins": [
+		{
+			"name": "nativescript-plugin",
+			"packageDir": "../../node_modules/nativescript-plugin",
+			"nativeDir": "../../node_modules/nativescript-plugin/platforms/android",
+			"aarName": "nativescript_plugin",
+			"aar": "../../node_modules/nativescript-plugin/platforms/android/nativescript_plugin.aar",
+			"dependencies": [],
+			"options": { "someOption": ["a", "b"] },
+			"futureField": 3.5e2
+		}
+	]
+}
