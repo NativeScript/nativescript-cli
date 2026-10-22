@@ -616,7 +616,7 @@ interface IOptions
 	argv: IYargArgv;
 	validateOptions(
 		commandSpecificDashedOptions?: IDictionary<IDashedOption>,
-		projectData?: IProjectData,
+		allowUnknownOptions?: boolean,
 	): void;
 	options: IDictionary<IDashedOption>;
 	shorthands: string[];

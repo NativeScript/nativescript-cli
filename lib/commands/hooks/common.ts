@@ -1,8 +1,6 @@
-import * as _ from "lodash";
-import { IProjectData } from "../../definitions/project";
 import { IPluginData } from "../../definitions/plugins";
-import { ICommandParameter } from "../../common/definitions/commands";
-import { IErrors, IFileSystem } from "../../common/declarations";
+import { IFileSystem } from "../../common/declarations";
+import { CommandContext } from "../../common/define-command";
 import path = require("path");
 import * as crypto from "crypto";
 
@@ -17,102 +15,105 @@ export interface OutputPlugin {
 	hooks: OutputHook[];
 }
 
-export class HooksVerify {
-	public allowedParameters: ICommandParameter[] = [];
-
-	constructor(
-		protected $projectData: IProjectData,
-		protected $errors: IErrors,
-		protected $fs: IFileSystem,
-		protected $logger: ILogger,
-	) {
-		this.$projectData.initializeProjectData();
+export function getPluginsWithHooks(plugins: IPluginData[]): IPluginData[] {
+	const pluginsWithHooks: IPluginData[] = [];
+	for (const plugin of plugins) {
+		if (plugin.nativescript?.hooks?.length > 0) {
+			pluginsWithHooks.push(plugin);
+		}
 	}
 
-	protected async verifyHooksLock(
-		plugins: IPluginData[],
-		hooksLockPath: string,
-	): Promise<void> {
-		let lockFileContent: string;
-		let hooksLock: OutputPlugin[];
+	return pluginsWithHooks;
+}
 
-		try {
-			lockFileContent = this.$fs.readText(hooksLockPath, "utf8");
-			hooksLock = JSON.parse(lockFileContent);
-		} catch (err) {
-			this.$errors.fail(
-				`❌ Failed to read or parse ${LOCK_FILE_NAME} at ${hooksLockPath}`,
+export async function verifyHooksLock(
+	context: CommandContext,
+	plugins: IPluginData[],
+	hooksLockPath: string,
+): Promise<void> {
+	const $fs = context.injector.get<IFileSystem>("fs");
+	const $logger = context.injector.get<ILogger>("logger");
+
+	let lockFileContent: string;
+	let hooksLock: OutputPlugin[];
+
+	try {
+		lockFileContent = $fs.readText(hooksLockPath, "utf8");
+		hooksLock = JSON.parse(lockFileContent);
+	} catch (err) {
+		context.fail(
+			`❌ Failed to read or parse ${LOCK_FILE_NAME} at ${hooksLockPath}`,
+			{ help: false },
+		);
+	}
+
+	const lockMap = new Map<string, Map<string, string>>(); // pluginName -> hookType -> hash
+
+	for (const plugin of hooksLock) {
+		const hookMap = new Map<string, string>();
+		for (const hook of plugin.hooks) {
+			hookMap.set(hook.type, hook.hash);
+		}
+		lockMap.set(plugin.name, hookMap);
+	}
+
+	let isValid = true;
+
+	for (const plugin of plugins) {
+		const pluginLockHooks = lockMap.get(plugin.name);
+
+		if (!pluginLockHooks) {
+			$logger.error(
+				`❌ Plugin '${plugin.name}' not found in ${LOCK_FILE_NAME}`,
 			);
+			isValid = false;
+			continue;
 		}
 
-		const lockMap = new Map<string, Map<string, string>>(); // pluginName -> hookType -> hash
+		for (const hook of plugin.nativescript?.hooks || []) {
+			const expectedHash = pluginLockHooks.get(hook.type);
 
-		for (const plugin of hooksLock) {
-			const hookMap = new Map<string, string>();
-			for (const hook of plugin.hooks) {
-				hookMap.set(hook.type, hook.hash);
-			}
-			lockMap.set(plugin.name, hookMap);
-		}
-
-		let isValid = true;
-
-		for (const plugin of plugins) {
-			const pluginLockHooks = lockMap.get(plugin.name);
-
-			if (!pluginLockHooks) {
-				this.$logger.error(
-					`❌ Plugin '${plugin.name}' not found in ${LOCK_FILE_NAME}`,
+			if (!expectedHash) {
+				$logger.error(
+					`❌ Missing hook '${hook.type}' for plugin '${plugin.name}' in ${LOCK_FILE_NAME}`,
 				);
 				isValid = false;
 				continue;
 			}
 
-			for (const hook of plugin.nativescript?.hooks || []) {
-				const expectedHash = pluginLockHooks.get(hook.type);
+			let fileContent: string | Buffer<ArrayBufferLike>;
 
-				if (!expectedHash) {
-					this.$logger.error(
-						`❌ Missing hook '${hook.type}' for plugin '${plugin.name}' in ${LOCK_FILE_NAME}`,
-					);
-					isValid = false;
-					continue;
-				}
+			try {
+				fileContent = $fs.readFile(path.join(plugin.fullPath, hook.script));
+			} catch (err) {
+				$logger.error(
+					`❌ Cannot read script file '${hook.script}' for hook '${hook.type}' in plugin '${plugin.name}'`,
+				);
+				isValid = false;
+				continue;
+			}
 
-				let fileContent: string | Buffer<ArrayBufferLike>;
+			const actualHash = crypto
+				.createHash("sha256")
+				.update(fileContent)
+				.digest("hex");
 
-				try {
-					fileContent = this.$fs.readFile(
-						path.join(plugin.fullPath, hook.script),
-					);
-				} catch (err) {
-					this.$logger.error(
-						`❌ Cannot read script file '${hook.script}' for hook '${hook.type}' in plugin '${plugin.name}'`,
-					);
-					isValid = false;
-					continue;
-				}
-
-				const actualHash = crypto
-					.createHash("sha256")
-					.update(fileContent)
-					.digest("hex");
-
-				if (actualHash !== expectedHash) {
-					this.$logger.error(
-						`❌ Hash mismatch for '${hook.script}' (${hook.type} in ${plugin.name}):`,
-					);
-					this.$logger.error(`   Expected: ${expectedHash}`);
-					this.$logger.error(`   Actual:   ${actualHash}`);
-					isValid = false;
-				}
+			if (actualHash !== expectedHash) {
+				$logger.error(
+					`❌ Hash mismatch for '${hook.script}' (${hook.type} in ${plugin.name}):`,
+				);
+				$logger.error(`   Expected: ${expectedHash}`);
+				$logger.error(`   Actual:   ${actualHash}`);
+				isValid = false;
 			}
 		}
+	}
 
-		if (isValid) {
-			this.$logger.info("✅ All hooks verified successfully. No issues found.");
-		} else {
-			this.$errors.fail("❌ One or more hooks failed verification.");
-		}
+	if (isValid) {
+		$logger.info("✅ All hooks verified successfully. No issues found.");
+	} else {
+		context.fail("❌ One or more hooks failed verification.", {
+			help: false,
+		});
 	}
 }

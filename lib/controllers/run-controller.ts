@@ -84,6 +84,7 @@ export class RunController extends EventEmitter implements IRunController {
 			projectDir,
 			deviceDescriptors,
 			platforms,
+			liveSyncInfo,
 		);
 
 		const shouldStartWatcher =
@@ -230,6 +231,118 @@ export class RunController extends EventEmitter implements IRunController {
 	}): ILiveSyncDeviceDescriptor[] {
 		return this.$liveSyncProcessDataService.getDeviceDescriptors(
 			data.projectDir,
+		);
+	}
+
+	/**
+	 * Restarts the application of a running session without preparing,
+	 * building or syncing anything. Queued on the session's action chain so it
+	 * cannot overtake a sync that is already under way, and routed through
+	 * `refreshApplication` so a debug session gets its debugger back.
+	 */
+	public async restartApplication(
+		data: IRestartApplicationData,
+	): Promise<void> {
+		const { projectDir, deviceIdentifiers } = data;
+		const liveSyncProcessInfo =
+			this.$liveSyncProcessDataService.getPersistedData(projectDir);
+
+		if (!liveSyncProcessInfo || liveSyncProcessInfo.isStopped) {
+			this.$logger.info(
+				"There is no running application to restart. Start a run or debug session first.",
+			);
+			return;
+		}
+
+		const deviceDescriptors = (
+			liveSyncProcessInfo.deviceDescriptors || []
+		).filter(
+			(descriptor) =>
+				!deviceIdentifiers ||
+				!deviceIdentifiers.length ||
+				_.includes(deviceIdentifiers, descriptor.identifier),
+		);
+
+		if (!deviceDescriptors.length) {
+			this.$logger.info("There is no device to restart the application on.");
+			return;
+		}
+
+		const projectData = this.$projectDataService.getProjectData(projectDir);
+		const useHotModuleReload =
+			!!liveSyncProcessInfo.liveSyncInfo?.useHotModuleReload;
+
+		// A device stopped while this action waited in the chain must not be restarted.
+		const findCurrentDescriptor = (device: Mobile.IDevice) =>
+			_.find(
+				this.$liveSyncProcessDataService.getDeviceDescriptors(projectDir),
+				(dd) =>
+					dd.identifier === device.deviceInfo.identifier &&
+					_.some(deviceDescriptors, (d) => d.identifier === dd.identifier),
+			);
+
+		const deviceAction = async (device: Mobile.IDevice) => {
+			const deviceDescriptor = findCurrentDescriptor(device);
+			if (!deviceDescriptor) {
+				return;
+			}
+
+			try {
+				const platformLiveSyncService =
+					this.$liveSyncServiceResolver.resolveLiveSyncService(
+						device.deviceInfo.platform,
+					);
+				const deviceAppData = await platformLiveSyncService.getAppData({
+					device,
+					watch: true,
+					projectData,
+					liveSyncDeviceData: deviceDescriptor,
+					useHotModuleReload,
+				});
+
+				await this.refreshApplication(
+					projectData,
+					{
+						deviceAppData,
+						modifiedFilesData: [],
+						isFullSync: false,
+						useHotModuleReload,
+					},
+					// Neither a hot update nor a native change, which is what
+					// `refreshApplicationWithoutDebug` reads as "restart".
+					{
+						files: [],
+						staleFiles: [],
+						hasOnlyHotUpdateFiles: false,
+						hasNativeChanges: false,
+						hmrData: null,
+						platform: device.deviceInfo.platform.toLowerCase(),
+					},
+					deviceDescriptor,
+				);
+			} catch (err) {
+				this.$logger.warn(
+					`Unable to restart the application on device: ${device.deviceInfo.identifier}. Error is: ${err.message || err}.`,
+				);
+				this.$logger.trace(err);
+
+				this.emitCore(RunOnDeviceEvents.runOnDeviceError, {
+					projectDir: projectData.projectDir,
+					deviceIdentifier: device.deviceInfo.identifier,
+					applicationIdentifier:
+						projectData.projectIdentifiers[
+							device.deviceInfo.platform.toLowerCase()
+						],
+					error: err,
+				});
+			}
+		};
+
+		await this.addActionToChain(projectDir, () =>
+			this.$devicesService.execute(
+				deviceAction,
+				(device: Mobile.IDevice) => !!findCurrentDescriptor(device),
+			),
 		);
 	}
 

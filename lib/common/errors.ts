@@ -9,6 +9,10 @@ import { ErrorCodes } from "./enums";
 import { IInjector } from "./definitions/yok";
 import { injector } from "./yok";
 
+const COMMAND_ERROR_REPORTED = Symbol.for(
+	"nativescript:cli:commandErrorReported",
+);
+
 // we need this to overwrite .stack property (read-only in Error)
 function Exception() {
 	/* intentionally left blank */
@@ -213,6 +217,43 @@ export class Errors implements IErrors {
 		throw exception;
 	}
 
+	public async reportCommandError(
+		error: any,
+		printCommandHelpSuggestion: () => Promise<void>,
+	): Promise<void> {
+		// A nested in-process dispatch reports and rethrows, and so does each
+		// level above it up to the command line, so the same error reaches here
+		// once per level.
+		if (error && typeof error === "object") {
+			if (error[COMMAND_ERROR_REPORTED]) {
+				return;
+			}
+			error[COMMAND_ERROR_REPORTED] = true;
+		}
+
+		const logger = this.$injector.resolve("logger");
+		const loggerLevel: string = logger.getLevel().toUpperCase();
+		const printCallStack =
+			this.printCallStack || loggerLevel === "TRACE" || loggerLevel === "DEBUG";
+		const message = printCallStack
+			? await resolveCallStack(error)
+			: isInteractive()
+				? `\x1B[31;1m${error.message}\x1B[0m`
+				: error.message;
+
+		if (error.printOnStdout) {
+			logger.info(message);
+		} else {
+			logger.error(message);
+		}
+
+		if (error.suggestCommandHelp) {
+			await printCommandHelpSuggestion();
+		}
+
+		await tryTrackException(error, this.$injector);
+	}
+
 	public async beginCommand(
 		action: () => Promise<boolean>,
 		printCommandHelpSuggestion: () => Promise<void>,
@@ -220,29 +261,7 @@ export class Errors implements IErrors {
 		try {
 			return await action();
 		} catch (ex) {
-			const logger = this.$injector.resolve("logger");
-			const loggerLevel: string = logger.getLevel().toUpperCase();
-			const printCallStack =
-				this.printCallStack ||
-				loggerLevel === "TRACE" ||
-				loggerLevel === "DEBUG";
-			const message = printCallStack
-				? await resolveCallStack(ex)
-				: isInteractive()
-					? `\x1B[31;1m${ex.message}\x1B[0m`
-					: ex.message;
-
-			if (ex.printOnStdout) {
-				logger.info(message);
-			} else {
-				logger.error(message);
-			}
-
-			if (ex.suggestCommandHelp) {
-				await printCommandHelpSuggestion();
-			}
-
-			await tryTrackException(ex, this.$injector);
+			await this.reportCommandError(ex, printCommandHelpSuggestion);
 			process.exit(
 				_.isNumber(ex.errorCode) ? ex.errorCode : ErrorCodes.UNKNOWN,
 			);

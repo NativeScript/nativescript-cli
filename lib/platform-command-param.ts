@@ -3,10 +3,14 @@ import { IPlatformValidationService } from "./declarations";
 import { injector } from "./common/yok";
 import { ICommandParameter } from "./common/definitions/commands";
 
+/**
+ * @deprecated Use the platformParam spec from lib/commands/command-base. Kept for
+ * commands still implementing ICommand.
+ */
 export class PlatformCommandParameter implements ICommandParameter {
 	constructor(
 		private $platformValidationService: IPlatformValidationService,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {}
 	mandatory = true;
 	async validate(value: string): Promise<boolean> {

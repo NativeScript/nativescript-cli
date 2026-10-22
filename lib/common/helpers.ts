@@ -593,7 +593,7 @@ export function hook(commandName: string) {
 			// self.$hooksService / self.$injector, and a class migrated off
 			// property injection has neither — only then may it be used. It is
 			// required at call time because yok imports this module (cycle).
-			const injector = self.$injector || require("./yok").getInjector();
+			const injector = self.$injector || require("./yok").getRootInjector();
 			if (!injector) {
 				throw Error(
 					"Type with hooks needs to have either $hooksService or $injector injected.",

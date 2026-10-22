@@ -84,7 +84,7 @@ function tryResolveGlobalLogger(): IDeprecationLogger | null {
 	try {
 		// Required at call time: yok imports this module, so a static import
 		// would be a cycle. Every reporting site already runs with yok loaded.
-		const injector = require("./yok").getInjector();
+		const injector = require("./yok").getRootInjector();
 		if (!injector) {
 			return null;
 		}

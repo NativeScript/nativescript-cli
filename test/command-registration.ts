@@ -1,5 +1,6 @@
 import { assert } from "chai";
 import { Yok } from "../lib/common/yok";
+import { LoggerStub } from "./stubs";
 
 const noopCommandFactory = () => ({
 	execute: async (): Promise<void> => undefined,
@@ -48,6 +49,23 @@ describe("yok: command registration", () => {
 				"*test",
 				"lint",
 			]);
+		});
+
+		it("keeps a registered command when a subcommand would shadow it", () => {
+			injector.register("logger", LoggerStub);
+			injector.registerCommand("dev", noopCommandFactory);
+
+			injector.registerCommand("dev|test", noopCommandFactory);
+
+			const parent = injector.resolveCommand("dev");
+			assert.isUndefined((<any>parent).isHierarchicalCommand);
+			assert.isFunction(injector.resolveCommand("dev|test").execute);
+
+			const logger: LoggerStub = injector.resolve("logger");
+			assert.match(
+				logger.warnOutput,
+				/'dev' is already registered as a command of its own.*'dev\|test' cannot be reached/,
+			);
 		});
 
 		it("does not duplicate a subcommand already recorded by requireCommand", () => {

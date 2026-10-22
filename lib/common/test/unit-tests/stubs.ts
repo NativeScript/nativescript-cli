@@ -112,6 +112,11 @@ export class ErrorsStub implements IErrors {
 		return action();
 	}
 
+	async reportCommandError(
+		error: any,
+		printHelpCommand: () => Promise<void>,
+	): Promise<void> {}
+
 	executeAction(action: Function): any {
 		return action();
 	}

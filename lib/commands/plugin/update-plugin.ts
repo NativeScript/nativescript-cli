@@ -1,58 +1,54 @@
 import * as _ from "lodash";
-import { IProjectData } from "../../definitions/project";
 import { IPluginsService } from "../../definitions/plugins";
-import { ICommand, ICommandParameter } from "../../common/definitions/commands";
-import { IErrors } from "../../common/declarations";
-import { injector } from "../../common/yok";
+import { defineCommand } from "../../common/define-command";
+import { inject } from "../../common/di";
+import { ProjectData } from "../../contracts/project-data";
+import { provideProject } from "../command-base";
 
-export class UpdatePluginCommand implements ICommand {
-	constructor(
-		private $pluginsService: IPluginsService,
-		private $projectData: IProjectData,
-		private $errors: IErrors
-	) {
-		this.$projectData.initializeProjectData();
-	}
+export const updatePluginCommandDefinition = defineCommand({
+	name: "plugin|update",
+	description: "Uninstalls and installs the specified plugin(s).",
+	params: "any",
+	providers: [provideProject()],
+	async canExecute(context): Promise<boolean> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject(ProjectData);
 
-	public async execute(args: string[]): Promise<void> {
-		let pluginNames = args;
-
-		if (!pluginNames || args.length === 0) {
-			const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
-				this.$projectData
-			);
-			pluginNames = installedPlugins.map((p) => p.name);
-		}
-
-		for (const pluginName of pluginNames) {
-			await this.$pluginsService.remove(pluginName, this.$projectData);
-			await this.$pluginsService.add(pluginName, this.$projectData);
-		}
-	}
-
-	public async canExecute(args: string[]): Promise<boolean> {
+		const args = context.args;
 		if (!args || args.length === 0) {
 			return true;
 		}
 
-		const installedPlugins = await this.$pluginsService.getAllInstalledPlugins(
-			this.$projectData
-		);
+		const installedPlugins =
+			await $pluginsService.getAllInstalledPlugins($projectData);
 		const installedPluginNames: string[] = installedPlugins.map(
-			(pl) => pl.name
+			(pl) => pl.name,
 		);
 
 		const pluginName = args[0].toLowerCase();
 		if (
 			!_.some(installedPluginNames, (name) => name.toLowerCase() === pluginName)
 		) {
-			this.$errors.fail(`Plugin "${pluginName}" is not installed.`);
+			context.fail(`Plugin "${pluginName}" is not installed.`, { help: false });
 		}
 
 		return true;
-	}
+	},
+	async run(context): Promise<void> {
+		const $pluginsService = inject<IPluginsService>("pluginsService");
+		const $projectData = inject(ProjectData);
 
-	public allowedParameters: ICommandParameter[] = [];
-}
+		let pluginNames = context.args;
 
-injector.registerCommand("plugin|update", UpdatePluginCommand);
+		if (!pluginNames || context.args.length === 0) {
+			const installedPlugins =
+				await $pluginsService.getAllInstalledPlugins($projectData);
+			pluginNames = installedPlugins.map((p) => p.name);
+		}
+
+		for (const pluginName of pluginNames) {
+			await $pluginsService.remove(pluginName, $projectData);
+			await $pluginsService.add(pluginName, $projectData);
+		}
+	},
+});

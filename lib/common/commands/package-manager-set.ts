@@ -1,41 +1,39 @@
 import { PackageManagers } from "../../constants";
-import { ICommand, ICommandParameter } from "../definitions/commands";
-import { IUserSettingsService, IErrors } from "../declarations";
-import { injector } from "../yok";
+import { IUserSettingsService } from "../declarations";
+import { defineCommand } from "../define-command";
+import { inject } from "../di";
 
-export class PackageManagerCommand implements ICommand {
-	constructor(
-		private $userSettingsService: IUserSettingsService,
-		private $errors: IErrors,
-		private $logger: ILogger,
-		private $stringParameter: ICommandParameter
-	) {}
+export const packageManagerSetCommandDefinition = defineCommand({
+	name: "package-manager|set",
+	description: "Sets the package manager the CLI installs dependencies with.",
+	params: [{ name: "packageManager" }],
+	async run(context): Promise<void> {
+		const $userSettingsService = inject<IUserSettingsService>(
+			"userSettingsService",
+		);
+		const $logger = inject<ILogger>("logger");
 
-	public allowedParameters: ICommandParameter[] = [this.$stringParameter];
-
-	public async execute(args: string[]): Promise<void> {
-		const packageManagerName = args[0];
+		const packageManagerName = context.args[0];
 		const supportedPackageManagers = Object.keys(PackageManagers);
 		if (supportedPackageManagers.indexOf(packageManagerName) === -1) {
-			this.$errors.fail(
+			context.fail(
 				`${packageManagerName} is not a valid package manager. Supported values are: ${supportedPackageManagers.join(
-					", "
-				)}.`
+					", ",
+				)}.`,
+				{ help: false },
 			);
 		}
 
-		await this.$userSettingsService.saveSetting(
+		await $userSettingsService.saveSetting(
 			"packageManager",
-			packageManagerName
+			packageManagerName,
 		);
 
-		this.$logger.printMarkdown(
-			`Please ensure you have the directory containing \`${packageManagerName}\` executable available in your PATH.`
+		$logger.printMarkdown(
+			`Please ensure you have the directory containing \`${packageManagerName}\` executable available in your PATH.`,
 		);
-		this.$logger.printMarkdown(
-			`You've successfully set \`${packageManagerName}\` as your package manager.`
+		$logger.printMarkdown(
+			`You've successfully set \`${packageManagerName}\` as your package manager.`,
 		);
-	}
-}
-
-injector.registerCommand("package-manager|set", PackageManagerCommand);
+	},
+});

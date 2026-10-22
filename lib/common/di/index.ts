@@ -1,6 +1,6 @@
 export { Injector } from "./injector";
 export type { InjectOptions } from "./injector";
-export { inject, runInInjectionContext } from "./inject";
+export { inject, getCurrentInjector, runInInjectionContext } from "./inject";
 export { forwardRef, resolveForwardRef } from "./forward-ref";
 export {
 	Contract,
@@ -17,6 +17,8 @@ export {
 export { provide, provideLazy } from "./providers";
 export type {
 	Provider,
+	TypeProvider,
+	ObjectProvider,
 	InternalProvider,
 	ProviderToken,
 	Type,

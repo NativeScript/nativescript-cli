@@ -366,6 +366,11 @@ export class ErrorsStub implements IErrors {
 		throw new Error("not supported");
 	}
 
+	async reportCommandError(
+		error: any,
+		printHelpCommand: () => Promise<void>,
+	): Promise<void> {}
+
 	executeAction(action: Function): any {
 		return action();
 	}
@@ -1303,6 +1308,7 @@ export class ProjectChangesService implements IProjectChangesService {
 
 export class CommandsService implements ICommandsService {
 	public currentCommandData = { commandName: "test", commandArguments: [""] };
+	public isExecutingInProcess = false;
 
 	public allCommands(opts: { includeDevCommands: boolean }): string[] {
 		return [];
@@ -1318,6 +1324,20 @@ export class CommandsService implements ICommandsService {
 	public executeCommandUnchecked(
 		commandName: string,
 		commandArguments: string[],
+	): Promise<boolean> {
+		return Promise.resolve(true);
+	}
+
+	public runCommand(
+		commandName: string,
+		commandArguments?: string[],
+	): Promise<void> {
+		return Promise.resolve();
+	}
+
+	public canExecuteCommand(
+		commandName: string,
+		commandArguments?: string[],
 	): Promise<boolean> {
 		return Promise.resolve(true);
 	}

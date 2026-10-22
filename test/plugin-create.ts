@@ -1,6 +1,15 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
-import { CreatePluginCommand } from "../lib/commands/plugin/create-plugin";
+import {
+	CreatePluginCommand,
+	INCLUDE_ANGULAR_DEMO_MESSAGE,
+	INCLUDE_TYPESCRIPT_DEMO_MESSAGE,
+	NAME_MESSAGE,
+	PATH_ALREADY_EXISTS_MESSAGE_TEMPLATE,
+	USER_MESSAGE,
+} from "../lib/commands/plugin/create-plugin";
+import { registerCommand } from "../lib/common/services/command-definition-adapter";
+import { ICommand } from "../lib/common/definitions/commands";
 import { assert } from "chai";
 import * as helpers from "../lib/common/helpers";
 import * as sinon from "sinon";
@@ -11,6 +20,7 @@ import * as util from "util";
 import { IOptions } from "../lib/declarations";
 import { IInjector } from "../lib/common/definitions/yok";
 import { IDictionary } from "../lib/common/declarations";
+import { runInInjectionContext } from "../lib/common/di";
 
 interface IPacoteOutput {
 	packageName: string;
@@ -63,7 +73,9 @@ function createTestInjector() {
 		},
 	});
 
-	testInjector.register("createCommand", CreatePluginCommand);
+	runInInjectionContext(testInjector, () =>
+		registerCommand(CreatePluginCommand),
+	);
 
 	return testInjector;
 }
@@ -71,14 +83,14 @@ function createTestInjector() {
 describe("Plugin create command tests", () => {
 	let testInjector: IInjector;
 	let options: IOptions;
-	let createPluginCommand: CreatePluginCommand;
+	let createPluginCommand: ICommand;
 
 	beforeEach(() => {
 		// @ts-expect-error
 		helpers.isInteractive = () => true;
 		testInjector = createTestInjector();
 		options = testInjector.resolve("$options");
-		createPluginCommand = testInjector.resolve("$createCommand");
+		createPluginCommand = testInjector.resolveCommand("plugin|create");
 	});
 
 	afterEach(() => {
@@ -121,12 +133,11 @@ describe("Plugin create command tests", () => {
 			const prompter = testInjector.resolve("$prompter");
 			const strings: IDictionary<string> = {};
 			const confirmQuestions: IDictionary<boolean> = {};
-			strings[createPluginCommand.userMessage] = dummyUser;
-			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+			strings[USER_MESSAGE] = dummyUser;
+			strings[NAME_MESSAGE] = dummyName;
+			confirmQuestions[INCLUDE_TYPESCRIPT_DEMO_MESSAGE] =
 				createDemoProjectAnswer;
-			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
-				createDemoProjectAnswer;
+			confirmQuestions[INCLUDE_ANGULAR_DEMO_MESSAGE] = createDemoProjectAnswer;
 
 			prompter.expect({
 				strings: strings,
@@ -141,11 +152,10 @@ describe("Plugin create command tests", () => {
 			const prompter = testInjector.resolve("$prompter");
 			const strings: IDictionary<string> = {};
 			const confirmQuestions: IDictionary<boolean> = {};
-			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+			strings[NAME_MESSAGE] = dummyName;
+			confirmQuestions[INCLUDE_TYPESCRIPT_DEMO_MESSAGE] =
 				createDemoProjectAnswer;
-			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
-				createDemoProjectAnswer;
+			confirmQuestions[INCLUDE_ANGULAR_DEMO_MESSAGE] = createDemoProjectAnswer;
 
 			prompter.expect({
 				strings: strings,
@@ -161,11 +171,10 @@ describe("Plugin create command tests", () => {
 			const strings: IDictionary<string> = {};
 			const confirmQuestions: IDictionary<boolean> = {};
 
-			strings[createPluginCommand.userMessage] = dummyUser;
-			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+			strings[USER_MESSAGE] = dummyUser;
+			confirmQuestions[INCLUDE_TYPESCRIPT_DEMO_MESSAGE] =
 				createDemoProjectAnswer;
-			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
-				createDemoProjectAnswer;
+			confirmQuestions[INCLUDE_ANGULAR_DEMO_MESSAGE] = createDemoProjectAnswer;
 
 			prompter.expect({
 				strings,
@@ -180,10 +189,9 @@ describe("Plugin create command tests", () => {
 			const prompter = testInjector.resolve("$prompter");
 			const strings: IDictionary<string> = {};
 			const confirmQuestions: IDictionary<boolean> = {};
-			strings[createPluginCommand.userMessage] = dummyUser;
-			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[createPluginCommand.includeAngularDemoMessage] =
-				createDemoProjectAnswer;
+			strings[USER_MESSAGE] = dummyUser;
+			strings[NAME_MESSAGE] = dummyName;
+			confirmQuestions[INCLUDE_ANGULAR_DEMO_MESSAGE] = createDemoProjectAnswer;
 
 			prompter.expect({
 				strings: strings,
@@ -199,9 +207,9 @@ describe("Plugin create command tests", () => {
 			const strings: IDictionary<string> = {};
 			const confirmQuestions: IDictionary<boolean> = {};
 
-			strings[createPluginCommand.userMessage] = dummyUser;
-			strings[createPluginCommand.nameMessage] = dummyName;
-			confirmQuestions[createPluginCommand.includeTypeScriptDemoMessage] =
+			strings[USER_MESSAGE] = dummyUser;
+			strings[NAME_MESSAGE] = dummyName;
+			confirmQuestions[INCLUDE_TYPESCRIPT_DEMO_MESSAGE] =
 				createDemoProjectAnswer;
 
 			prompter.expect({
@@ -275,10 +283,7 @@ describe("Plugin create command tests", () => {
 
 				await assert.isRejected(
 					executePromise,
-					util.format(
-						createPluginCommand.pathAlreadyExistsMessageTemplate,
-						projectPath,
-					),
+					util.format(PATH_ALREADY_EXISTS_MESSAGE_TEMPLATE, projectPath),
 				);
 				assert(fsSpy.notCalled);
 			});

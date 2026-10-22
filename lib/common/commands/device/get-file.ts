@@ -1,39 +1,43 @@
-import { IProjectData } from "../../../definitions/project";
-import { IOptions } from "../../../declarations";
-import { ICommandParameter, ICommand } from "../../definitions/commands";
-import { IErrors } from "../../declarations";
-import { injector } from "../../yok";
+import {
+	CommandOptionsSchema,
+	defineCommand,
+	stringOption,
+} from "../../define-command";
+import { inject } from "../../di";
+import { ProjectData } from "../../../contracts/project-data";
 
-export class GetFileCommand implements ICommand {
-	constructor(
-		private $devicesService: Mobile.IDevicesService,
-		private $stringParameter: ICommandParameter,
-		private $projectData: IProjectData,
-		private $errors: IErrors,
-		private $options: IOptions
-	) {}
+const getFileCommandOptions = {
+	device: stringOption(),
+	file: stringOption(),
+} satisfies CommandOptionsSchema;
 
-	public allowedParameters: ICommandParameter[] = [
-		this.$stringParameter,
-		this.$stringParameter,
-	];
+export const getFileCommandDefinition = defineCommand({
+	name: ["device|get-file", "devices|get-file"],
+	description: "Downloads a file from a connected device.",
+	options: getFileCommandOptions,
+	params: [{ name: "path" }, { name: "appId" }],
+	async run(context): Promise<void> {
+		const $devicesService = inject<Mobile.IDevicesService>("devicesService");
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$devicesService.initialize({
-			deviceId: this.$options.device,
+		await $devicesService.initialize({
+			deviceId: context.options.device,
 			skipInferPlatform: true,
 		});
-		let appIdentifier = args[1];
+		let appIdentifier = context.args[1];
+		let $projectData: ProjectData = null;
 
 		if (!appIdentifier) {
 			try {
-				this.$projectData.initializeProjectData();
+				// The project is optional: an app identifier stands in for it.
+				$projectData = context.injector.get(ProjectData);
+				$projectData.initializeProjectData();
 			} catch (err) {
 				// ignore the error
 			}
-			if (!this.$projectData.projectIdentifiers) {
-				this.$errors.fail(
-					"Please enter application identifier or execute this command in project."
+			if (!$projectData?.projectIdentifiers) {
+				context.fail(
+					"Please enter application identifier or execute this command in project.",
+					{ help: false },
 				);
 			}
 		}
@@ -41,20 +45,15 @@ export class GetFileCommand implements ICommand {
 		const action = async (device: Mobile.IDevice) => {
 			appIdentifier =
 				appIdentifier ||
-				this.$projectData.projectIdentifiers[
+				$projectData.projectIdentifiers[
 					device.deviceInfo.platform.toLowerCase()
 				];
 			await device.fileSystem.getFile(
-				args[0],
+				context.args[0],
 				appIdentifier,
-				this.$options.file
+				context.options.file,
 			);
 		};
-		await this.$devicesService.execute(action);
-	}
-}
-
-injector.registerCommand(
-	["device|get-file", "devices|get-file"],
-	GetFileCommand
-);
+		await $devicesService.execute(action);
+	},
+});

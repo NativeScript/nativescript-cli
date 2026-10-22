@@ -27,6 +27,15 @@ export abstract class Errors {
 		printCommandHelp: () => Promise<void>,
 	): Promise<boolean>;
 
+	/**
+	 * Renders a command failure the way `beginCommand` does, and stops there:
+	 * what happens to the process afterwards is the caller's to decide.
+	 */
+	abstract reportCommandError(
+		error: any,
+		printCommandHelp: () => Promise<void>,
+	): Promise<void>;
+
 	abstract verifyHeap(message: string): void;
 
 	abstract printCallStack: boolean;

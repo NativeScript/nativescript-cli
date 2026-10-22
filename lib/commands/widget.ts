@@ -1,63 +1,25 @@
 import { IProjectConfigService, IProjectData } from "../definitions/project";
 import * as fs from "fs";
 import * as prompts from "prompts";
-import { ICommandParameter, ICommand } from "../common/definitions/commands";
 import { IErrors } from "../common/declarations";
 import * as path from "path";
 import * as plist from "plist";
-import { injector } from "../common/yok";
+import { defineCommand } from "../common/define-command";
+import { inject } from "../common/di";
 import { capitalizeFirstLetter } from "../common/utils";
 import { EOL } from "os";
+import { ProjectData } from "../contracts/project-data";
+import { provideProject } from "./command-base";
 
-export class WidgetCommand implements ICommand {
-	public allowedParameters: ICommandParameter[] = [];
-
+class IOSWidgetGenerator {
 	constructor(
 		protected $projectData: IProjectData,
 		protected $projectConfigService: IProjectConfigService,
 		protected $logger: ILogger,
 		protected $errors: IErrors,
-	) {
-		this.$projectData.initializeProjectData();
-	}
+	) {}
 
-	public async execute(args: string[]): Promise<void> {
-		this.failWithUsage();
-
-		return Promise.resolve();
-	}
-
-	protected failWithUsage(): void {
-		this.$errors.failWithHelp("Usage: ns widget ios");
-	}
-	public async canExecute(args: string[]): Promise<boolean> {
-		this.failWithUsage();
-		return false;
-	}
-
-	protected getIosSourcePathBase() {
-		const resources = this.$projectData.getAppResourcesDirectoryPath();
-		return path.join(resources, "iOS", "src");
-	}
-}
-export class WidgetIOSCommand extends WidgetCommand {
-	constructor(
-		$projectData: IProjectData,
-		$projectConfigService: IProjectConfigService,
-		$logger: ILogger,
-		$errors: IErrors,
-	) {
-		super($projectData, $projectConfigService, $logger, $errors);
-	}
-	public async canExecute(args: string[]): Promise<boolean> {
-		return true;
-	}
-
-	public async execute(args: string[]): Promise<void> {
-		this.startPrompt(args);
-	}
-
-	private async startPrompt(args: string[]) {
+	public async startPrompt(args: string[]) {
 		let result = await prompts.prompt({
 			type: "text",
 			name: "name",
@@ -935,5 +897,24 @@ declare class AppleWidgetUtils extends NSObject {
 }
 
 // No flat "widget": the subcommand registration below synthesizes the parent
-// dispatcher, and WidgetCommand serves as WidgetIOSCommand's base class.
-injector.registerCommand(["widget|ios"], WidgetIOSCommand);
+// dispatcher.
+export const widgetIOSCommandDefinition = defineCommand({
+	name: "widget|ios",
+	description: "Generates an iOS widget extension for the project.",
+	params: "any",
+	providers: [provideProject()],
+	run(ctx): void {
+		const $projectData = inject(ProjectData);
+
+		const generator = new IOSWidgetGenerator(
+			$projectData,
+			inject<IProjectConfigService>("projectConfigService"),
+			inject<ILogger>("logger"),
+			inject<IErrors>("errors"),
+		);
+
+		// Not awaited: the command has always reported completion before the
+		// prompts it opens are answered.
+		generator.startPrompt(ctx.args);
+	},
+});

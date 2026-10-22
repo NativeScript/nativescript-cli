@@ -1,9 +1,8 @@
 import { assert } from "chai";
-import { Yok, getInjector } from "../../lib/common/yok";
+import { Yok, getRootInjector } from "../../lib/common/yok";
 import { Injector, inject, runInInjectionContext } from "../../lib/common/di";
 import {
 	CommandRegistry,
-	KeyCommandRegistry,
 	ModuleRegistry,
 	PublicApiBuilder,
 } from "../../lib/common/contracts";
@@ -18,15 +17,11 @@ const FACADE_METHODS = [
 	"requirePublic",
 	"requirePublicClass",
 	"requireCommand",
-	"requireKeyCommand",
 	"resolve",
 	"resolveCommand",
-	"resolveKeyCommand",
 	"register",
 	"registerCommand",
-	"registerKeyCommand",
 	"getRegisteredCommandsNames",
-	"getRegisteredKeyCommandsNames",
 	"dynamicCall",
 	"getDynamicCallData",
 	"isDefaultCommand",
@@ -62,17 +57,17 @@ describe("injector facade surface", () => {
 		assert.strictEqual(sub.resolve("injector"), sub);
 	});
 
-	it("keeps getInjector() synchronized with a direct global.$injector assignment", () => {
-		const previous = getInjector();
+	it("keeps getRootInjector() synchronized with a direct global.$injector assignment", () => {
+		const previous = getRootInjector();
 		const fresh = new Yok();
 
 		(<any>global).$injector = fresh;
 		try {
-			assert.strictEqual(getInjector(), fresh);
+			assert.strictEqual(getRootInjector(), fresh);
 		} finally {
 			(<any>global).$injector = previous;
 		}
-		assert.strictEqual(getInjector(), previous);
+		assert.strictEqual(getRootInjector(), previous);
 	});
 
 	it("assigns the process-wide global.$injector", () => {
@@ -106,12 +101,7 @@ describe("injector facade surface", () => {
 	it("registers its subsystem faces as tokens that resolve to the facade", () => {
 		const inj = new Yok();
 
-		for (const token of [
-			CommandRegistry,
-			KeyCommandRegistry,
-			ModuleRegistry,
-			PublicApiBuilder,
-		]) {
+		for (const token of [CommandRegistry, ModuleRegistry, PublicApiBuilder]) {
 			assert.strictEqual(inj.get(<any>token), inj);
 		}
 		assert.strictEqual(inj.resolve("commandRegistry"), inj);

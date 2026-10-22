@@ -182,8 +182,16 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 				},
 			});
 
-			const devices = await this.getDeviceInstances(platform);
-			await this.executeLiveSyncOperation(devices, platform, {
+			// The restart is scoped to the devices this session was given; a
+			// device attached since then is not part of it, one that has gone
+			// away is dropped.
+			const sessionDevices = new Set(
+				devices.map((device) => device.deviceInfo.identifier),
+			);
+			const currentDevices = (await this.getDeviceInstances(platform)).filter(
+				(device) => sessionDevices.has(device.deviceInfo.identifier),
+			);
+			await this.executeLiveSyncOperation(currentDevices, platform, {
 				...additionalOptions,
 				restartLiveSync: false,
 			});

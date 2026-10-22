@@ -4,26 +4,26 @@ import { IGradleBuildArgsService } from "../../definitions/gradle";
 import { IAndroidBuildData } from "../../definitions/build";
 import { IHooksService, IAnalyticsService } from "../../common/declarations";
 import { injector } from "../../common/yok";
-import { IProjectData } from "../../definitions/project";
+import { IProjectDataService } from "../../definitions/project";
 
 export class GradleBuildArgsService implements IGradleBuildArgsService {
 	constructor(
 		private $hooksService: IHooksService,
 		private $analyticsService: IAnalyticsService,
 		private $staticConfig: Config.IStaticConfig,
-		private $projectData: IProjectData,
-		private $logger: ILogger
+		private $projectDataService: IProjectDataService,
+		private $logger: ILogger,
 	) {}
 
 	public async getBuildTaskArgs(
-		buildData: IAndroidBuildData
+		buildData: IAndroidBuildData,
 	): Promise<string[]> {
 		const args = this.getBaseTaskArgs(buildData);
 		args.unshift(this.getBuildTaskName(buildData));
 
 		if (
 			await this.$analyticsService.isEnabled(
-				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME
+				this.$staticConfig.TRACK_FEATURE_USAGE_SETTING_NAME,
 			)
 		) {
 			args.push("-PgatherAnalyticsData=true");
@@ -47,12 +47,13 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 	private getBaseTaskArgs(buildData: IAndroidBuildData): string[] {
 		const args = this.getBuildLoggingArgs();
 
-		// ensure we initialize project data
-		this.$projectData.initializeProjectData(buildData.projectDir);
+		const projectData = this.$projectDataService.getProjectData(
+			buildData.projectDir,
+		);
 
 		args.push(
-			`-PappPath=${this.$projectData.getAppDirectoryPath()}`,
-			`-PappResourcesPath=${this.$projectData.getAppResourcesDirectoryPath()}`
+			`-PappPath=${projectData.getAppDirectoryPath()}`,
+			`-PappResourcesPath=${projectData.getAppResourcesDirectoryPath()}`,
 		);
 		if (buildData.gradleArgs) {
 			args.push(buildData.gradleArgs);
@@ -64,7 +65,7 @@ export class GradleBuildArgsService implements IGradleBuildArgsService {
 				`-PksPath=${path.resolve(buildData.keyStorePath)}`,
 				`-Palias=${buildData.keyStoreAlias}`,
 				`-Ppassword=${buildData.keyStoreAliasPassword}`,
-				`-PksPassword=${buildData.keyStorePassword}`
+				`-PksPassword=${buildData.keyStorePassword}`,
 			);
 		}
 

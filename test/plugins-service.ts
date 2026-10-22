@@ -19,7 +19,8 @@ import { ProjectDataService } from "../lib/services/project-data-service";
 import { ProjectFilesManager } from "../lib/common/services/project-files-manager";
 import { ResourceLoader } from "../lib/common/resource-loader";
 import { PluginsService } from "../lib/services/plugins-service";
-import { AddPluginCommand } from "../lib/commands/plugin/add-plugin";
+import { addPluginCommandDefinition } from "../lib/commands/plugin/add-plugin";
+import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import { MessagesService } from "../lib/common/services/messages-service";
 import { NodeModulesBuilder } from "../lib/tools/node-modules/node-modules-builder";
 import { AndroidProjectService } from "../lib/services/android-project-service";
@@ -51,6 +52,7 @@ import {
 // import { ProjectConfigService } from "../lib/services/project-config-service";
 import { FileSystem } from "../lib/common/file-system";
 import { ProjectHelper } from "../lib/common/project-helper";
+import { runInInjectionContext } from "../lib/common/di";
 // import { basename } from 'path';
 
 let isErrorThrown = false;
@@ -246,7 +248,12 @@ function createProjectFile(testInjector: IInjector): string {
 	const fs = testInjector.resolve("fs") as FileSystem;
 	const tempFolder = mkdtempSync(path.join(tmpdir(), "pluginsService-"));
 	const options = testInjector.resolve("options");
-	options.path = tempFolder;
+	// An own property rather than options.path: the accessor writes into argv,
+	// which the command line re-parse that precedes a command replaces.
+	Object.defineProperty(options, "path", {
+		value: tempFolder,
+		configurable: true,
+	});
 
 	const packageJsonData = {
 		name: "testModuleName",
@@ -321,8 +328,9 @@ describe("Plugins service", () => {
 	const commands = ["add", "install"];
 	beforeEach(() => {
 		testInjector = createTestInjector();
-		testInjector.registerCommand("plugin|add", AddPluginCommand);
-		testInjector.registerCommand("plugin|install", AddPluginCommand);
+		runInInjectionContext(testInjector, () =>
+			registerCommand(addPluginCommandDefinition),
+		);
 	});
 
 	_.each(commands, (command) => {

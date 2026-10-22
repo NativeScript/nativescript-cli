@@ -4,6 +4,9 @@ import "chai-as-promised";
 import chaiAsPromised from "chai-as-promised";
 import { ICliGlobal } from "../lib/common/definitions/cli-global";
 
+// No test may launch a browser or an external application.
+process.env.NS_NO_OPEN = "1";
+
 shelljs.config.silent = true;
 shelljs.config.fatal = true;
 

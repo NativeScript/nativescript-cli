@@ -24,6 +24,38 @@ function getAllEmittedFiles(hash: string) {
 	];
 }
 
+type FakeChildProcess = EventEmitter & {
+	stdout: EventEmitter;
+	stderr: EventEmitter;
+	pid: number;
+	exitCode: number | null;
+	signalCode: string | null;
+	killSignals: string[];
+	kill(signal?: string): boolean;
+};
+
+function fakeChildProcess(pid: number): FakeChildProcess {
+	const childProcess = new EventEmitter() as FakeChildProcess;
+	childProcess.stdout = new EventEmitter();
+	childProcess.stderr = new EventEmitter();
+	childProcess.pid = pid;
+	childProcess.exitCode = null;
+	childProcess.signalCode = null;
+	childProcess.killSignals = [];
+	childProcess.kill = (signal?: string) => {
+		childProcess.killSignals.push(signal);
+		return true;
+	};
+
+	return childProcess;
+}
+
+const flush = async (): Promise<void> => {
+	for (let i = 0; i < 5; i++) {
+		await new Promise((resolve) => setImmediate(resolve));
+	}
+};
+
 function createTestInjector(
 	packageManager: PackageManagers = PackageManagers.npm,
 ): IInjector {
@@ -511,6 +543,154 @@ describe("BundlerCompilerService", () => {
 				),
 				`The bundler configuration file ${bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`,
 			);
+		});
+	});
+
+	describe("stopBundlerCompiler", () => {
+		const platformData = <any>{
+			platformNameLowerCase: "ios",
+			appDestinationDirectoryPath: "/platform/app",
+		};
+		const projectData = <any>{
+			projectDir: "/project",
+			bundler: "vite",
+			bundlerConfigPath: "/project/vite.config.ts",
+		};
+
+		function registerOnStart(childProcess: FakeChildProcess): void {
+			(<any>bundlerCompilerService).startBundleProcess = async () => {
+				(<any>bundlerCompilerService).bundlerProcesses[
+					platformData.platformNameLowerCase
+				] = childProcess;
+				return childProcess;
+			};
+		}
+
+		it("does not resolve until the bundler child has exited", async () => {
+			const childProcess = fakeChildProcess(111);
+			(<any>bundlerCompilerService).bundlerProcesses.ios = childProcess;
+
+			let stopped = false;
+			const stopping = bundlerCompilerService
+				.stopBundlerCompiler("ios")
+				.then(() => (stopped = true));
+
+			await flush();
+			assert.deepStrictEqual(childProcess.killSignals, ["SIGINT"]);
+			assert.isFalse(stopped);
+
+			childProcess.emit("close", 0);
+			await stopping;
+
+			assert.isTrue(stopped);
+			assert.isUndefined((<any>bundlerCompilerService).bundlerProcesses.ios);
+		});
+
+		it("kills a child that ignores SIGINT", async () => {
+			const childProcess = fakeChildProcess(222);
+
+			await (<any>bundlerCompilerService).terminate(childProcess, 1);
+
+			assert.deepStrictEqual(childProcess.killSignals, ["SIGINT", "SIGKILL"]);
+		});
+
+		it("does not wait for an exit that already happened", async () => {
+			const childProcess = fakeChildProcess(223);
+			childProcess.exitCode = 1;
+
+			await (<any>bundlerCompilerService).terminate(childProcess, 60_000);
+
+			assert.deepStrictEqual(childProcess.killSignals, ["SIGINT"]);
+		});
+
+		it("does nothing when no bundler is running for the platform", async () => {
+			await bundlerCompilerService.stopBundlerCompiler("ios");
+
+			assert.isUndefined((<any>bundlerCompilerService).bundlerProcesses.ios);
+		});
+
+		it("keeps a replacement watcher when the stopped child exits late", async () => {
+			const first = fakeChildProcess(11);
+			const replacement = fakeChildProcess(12);
+			(<any>bundlerCompilerService).bundlerProcesses.ios = first;
+
+			const stopping = bundlerCompilerService.stopBundlerCompiler("ios");
+			await flush();
+			(<any>bundlerCompilerService).bundlerProcesses.ios = replacement;
+
+			first.emit("close", 0);
+			await stopping;
+
+			assert.strictEqual(
+				(<any>bundlerCompilerService).bundlerProcesses.ios,
+				replacement,
+			);
+		});
+
+		it("keeps a replacement watcher when a closing child runs its own handler", async () => {
+			const first = fakeChildProcess(21);
+			const replacement = fakeChildProcess(22);
+
+			testInjector.resolve("options").hostProjectModuleName = "app";
+			(<any>bundlerCompilerService).getBundler = () => "vite";
+			(<any>bundlerCompilerService).copyViteBundleToNative = () => ({});
+			registerOnStart(first);
+
+			const compilation = bundlerCompilerService.compileWithWatch(
+				platformData,
+				projectData,
+				<any>{ hmr: false },
+			);
+			await flush();
+			first.emit("message", { emittedFiles: ["bundle.mjs"], hash: "hash-1" });
+			await compilation;
+
+			(<any>bundlerCompilerService).bundlerProcesses.ios = replacement;
+			first.emit("close", 1);
+			await flush();
+
+			assert.strictEqual(
+				(<any>bundlerCompilerService).bundlerProcesses.ios,
+				replacement,
+			);
+		});
+
+		it("drops compilations produced by a child it has stopped", async () => {
+			const childProcess = fakeChildProcess(33);
+
+			testInjector.resolve("options").hostProjectModuleName = "app";
+			(<any>bundlerCompilerService).getBundler = () => "vite";
+			(<any>bundlerCompilerService).copyViteBundleToNative = () => ({});
+			registerOnStart(childProcess);
+
+			const emittedEvents: any[] = [];
+			bundlerCompilerService.on(BUNDLER_COMPILATION_COMPLETE, (data) =>
+				emittedEvents.push(data),
+			);
+
+			const compilation = bundlerCompilerService.compileWithWatch(
+				platformData,
+				projectData,
+				<any>{ hmr: false },
+			);
+			await flush();
+			childProcess.emit("message", {
+				emittedFiles: ["bundle.mjs"],
+				hash: "hash-1",
+			});
+			await compilation;
+
+			const stopping = bundlerCompilerService.stopBundlerCompiler("ios");
+			await flush();
+			childProcess.emit("close", 0);
+			await stopping;
+
+			childProcess.emit("message", {
+				emittedFiles: ["bundle.mjs"],
+				hash: "hash-2",
+			});
+
+			assert.lengthOf(emittedEvents, 0);
 		});
 	});
 });

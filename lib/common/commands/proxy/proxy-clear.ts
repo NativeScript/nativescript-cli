@@ -1,22 +1,21 @@
-import { ProxyCommandBase } from "./proxy-base";
-import { IAnalyticsService, IProxyService } from "../../declarations";
-import { injector } from "../../yok";
+import { IProxyService } from "../../declarations";
+import { defineCommand } from "../../define-command";
+import { inject } from "../../di";
+import { tryTrackProxyCommandUsage } from "./proxy-base";
+
 const proxyClearCommandName = "proxy|clear";
 
-export class ProxyClearCommand extends ProxyCommandBase {
-	constructor(
-		protected $analyticsService: IAnalyticsService,
-		protected $logger: ILogger,
-		protected $proxyService: IProxyService
-	) {
-		super($analyticsService, $logger, $proxyService, proxyClearCommandName);
-	}
+export const proxyClearCommandDefinition = defineCommand({
+	name: proxyClearCommandName,
+	description: "Clears the currently configured proxy settings.",
+	params: "none",
+	disableAnalytics: true,
+	async run(): Promise<void> {
+		const $logger = inject<ILogger>("logger");
+		const $proxyService = inject<IProxyService>("proxyService");
 
-	public async execute(args: string[]): Promise<void> {
-		await this.$proxyService.clearCache();
-		this.$logger.info("Successfully cleared proxy.");
-		await this.tryTrackUsage();
-	}
-}
-
-injector.registerCommand(proxyClearCommandName, ProxyClearCommand);
+		await $proxyService.clearCache();
+		$logger.info("Successfully cleared proxy.");
+		await tryTrackProxyCommandUsage($logger, proxyClearCommandName);
+	},
+});
