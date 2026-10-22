@@ -95,8 +95,12 @@ interface IProjectService {
 	 * Checks if App_Resources exists, or pulls down a fresh set
 	 * from the default template otherwise.
 	 * @param {string} projectDir
+	 * @param {string} platformDirName When set, also adds App_Resources/<platformDirName> from the default template if it is missing.
 	 */
-	ensureAppResourcesExist(projectDir: string): Promise<void>;
+	ensureAppResourcesExist(
+		projectDir: string,
+		platformDirName?: string,
+	): Promise<void>;
 }
 
 interface INsConfigPlaform {

@@ -224,7 +224,10 @@ export class ProjectService implements IProjectService {
 	}
 
 	@performanceLog()
-	public async ensureAppResourcesExist(projectDir: string): Promise<void> {
+	public async ensureAppResourcesExist(
+		projectDir: string,
+		platformDirName?: string
+	): Promise<void> {
 		const projectData = this.$projectDataService.getProjectData(projectDir);
 		const appResourcesDestinationPath = projectData.getAppResourcesDirectoryPath(
 			projectDir
@@ -235,23 +238,48 @@ export class ProjectService implements IProjectService {
 				"Project does not have App_Resources - fetching from default template."
 			);
 			this.$fs.createDirectory(appResourcesDestinationPath);
-			const tempDir = await this.$tempService.mkdirSync("ns-default-template");
 			// the template installed doesn't have App_Resources -> get from a default template
-			await this.$pacoteService.extractPackage(
-				constants.RESERVED_TEMPLATE_NAMES["default"],
-				tempDir
-			);
-			const templateProjectData = this.$projectDataService.getProjectData(
-				tempDir
-			);
-			const templateAppResourcesDir = templateProjectData.getAppResourcesDirectoryPath(
-				tempDir
-			);
+			const templateAppResourcesDir = await this.getDefaultTemplateAppResourcesDir();
 			this.$fs.copyFile(
 				path.join(templateAppResourcesDir, "*"),
 				appResourcesDestinationPath
 			);
+			return;
 		}
+
+		// An app created before a platform was supported (e.g. Windows) has no folder for it.
+		if (
+			platformDirName &&
+			!this.$fs.exists(path.join(appResourcesDestinationPath, platformDirName))
+		) {
+			const templateAppResourcesDir = await this.getDefaultTemplateAppResourcesDir();
+			const templatePlatformDir = path.join(
+				templateAppResourcesDir,
+				platformDirName
+			);
+			if (!this.$fs.exists(templatePlatformDir)) {
+				this.$logger.warn(
+					`App_Resources/${platformDirName} is missing and the default template does not provide one.`
+				);
+				return;
+			}
+			this.$logger.info(
+				`Adding App_Resources/${platformDirName} from the default template.`
+			);
+			this.$fs.copyFile(templatePlatformDir, appResourcesDestinationPath);
+		}
+	}
+
+	private async getDefaultTemplateAppResourcesDir(): Promise<string> {
+		const tempDir = await this.$tempService.mkdirSync("ns-default-template");
+		await this.$pacoteService.extractPackage(
+			constants.RESERVED_TEMPLATE_NAMES["default"],
+			tempDir
+		);
+		const templateProjectData = this.$projectDataService.getProjectData(
+			tempDir
+		);
+		return templateProjectData.getAppResourcesDirectoryPath(tempDir);
 	}
 
 	@performanceLog()

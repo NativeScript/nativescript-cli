@@ -143,7 +143,10 @@ export class PrepareController
 		prepareData: IPrepareData,
 		projectData: IProjectData,
 	): Promise<IPrepareResultData> {
-		await this.$projectService.ensureAppResourcesExist(projectData.projectDir);
+		await this.$projectService.ensureAppResourcesExist(
+			projectData.projectDir,
+			this.$mobileHelper.normalizePlatformName(prepareData.platform),
+		);
 		await this.$platformController.addPlatformIfNeeded(
 			prepareData,
 			projectData,
