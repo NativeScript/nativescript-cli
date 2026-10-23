@@ -342,4 +342,99 @@ describe("projectService", () => {
 			assert.isFalse(projectService.isValidNativeScriptProject("some-dir"));
 		});
 	});
+
+	describe("ensureAppResourcesExist", () => {
+		const projectDir = path.resolve("app-resources-project");
+		const appResources = path.join(projectDir, "App_Resources");
+		const templateDir = path.resolve("default-template");
+		const templateAppResources = path.join(templateDir, "App_Resources");
+
+		const setup = (existing: string[]) => {
+			const exists = new Set(existing.map((p) => path.resolve(p)));
+			const copies: { from: string; to: string }[] = [];
+			let extracted = 0;
+			const testInjector = new yok.Yok();
+			testInjector.register("fs", {
+				exists: (p: string) => exists.has(path.resolve(p)),
+				createDirectory: (p: string) => exists.add(path.resolve(p)),
+				copyFile: (from: string, to: string) => copies.push({ from, to }),
+			});
+			testInjector.register("logger", LoggerStub);
+			testInjector.register("projectDataService", {
+				getProjectData: (dir: string): IProjectData =>
+					<any>{
+						getAppResourcesDirectoryPath: (d: string) =>
+							path.join(d === templateDir ? templateDir : dir, "App_Resources"),
+					},
+			});
+			testInjector.register("pacoteService", {
+				extractPackage: async () => {
+					extracted++;
+				},
+			});
+			testInjector.register("tempService", {
+				mkdirSync: async () => templateDir,
+			});
+			for (const name of [
+				"options",
+				"hooksService",
+				"packageManager",
+				"errors",
+				"projectConfigService",
+				"projectHelper",
+				"projectNameService",
+				"projectTemplatesService",
+				"staticConfig",
+				"childProcess",
+			]) {
+				testInjector.register(name, {});
+			}
+			const projectService: IProjectService = testInjector.resolve(
+				ProjectServiceLib.ProjectService
+			);
+			return { projectService, copies, extracted: () => extracted };
+		};
+
+		it("copies the whole App_Resources when it is missing", async () => {
+			const { projectService, copies } = setup([]);
+			await projectService.ensureAppResourcesExist(projectDir, "Windows");
+			assert.deepEqual(copies, [
+				{ from: path.join(templateAppResources, "*"), to: appResources },
+			]);
+		});
+
+		it("adds a missing platform folder from the default template", async () => {
+			const { projectService, copies } = setup([
+				appResources,
+				path.join(templateAppResources, "Windows"),
+			]);
+			await projectService.ensureAppResourcesExist(projectDir, "Windows");
+			assert.deepEqual(copies, [
+				{ from: path.join(templateAppResources, "Windows"), to: appResources },
+			]);
+		});
+
+		it("leaves an existing platform folder alone", async () => {
+			const { projectService, copies, extracted } = setup([
+				appResources,
+				path.join(appResources, "Windows"),
+			]);
+			await projectService.ensureAppResourcesExist(projectDir, "Windows");
+			assert.deepEqual(copies, []);
+			assert.equal(extracted(), 0);
+		});
+
+		it("copies nothing when the template has no folder for the platform", async () => {
+			const { projectService, copies } = setup([appResources]);
+			await projectService.ensureAppResourcesExist(projectDir, "Windows");
+			assert.deepEqual(copies, []);
+		});
+
+		it("does not look at platform folders without a platform", async () => {
+			const { projectService, copies, extracted } = setup([appResources]);
+			await projectService.ensureAppResourcesExist(projectDir);
+			assert.deepEqual(copies, []);
+			assert.equal(extracted(), 0);
+		});
+	});
 });
