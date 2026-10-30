@@ -7,18 +7,13 @@ import {
 	IBuildConfig,
 	IiOSBuildConfig,
 } from "../../definitions/project";
-import { IXcconfigService } from "../../declarations";
+import { IOptions, IXcconfigService } from "../../declarations";
 import { IPlatformData } from "../../definitions/platform";
 import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import * as _ from "lodash";
 
-import {
-	DevicePlatformSdkName,
-	SimulatorPlatformSdkName,
-	VisionDevicePlatformSdkName,
-	VisionSimulatorPlatformSdkName,
-} from "../ios-project-service";
+import { getDerivedDataPath } from "../ios-project-service";
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
 	constructor(
@@ -27,6 +22,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		private $fs: IFileSystem,
 		private $iOSWatchAppService: IIOSWatchAppService,
 		private $logger: ILogger,
+		private $options: IOptions,
 		private $xcconfigService: IXcconfigService,
 	) {}
 
@@ -43,13 +39,11 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			args = args.concat(["CODE_SIGN_IDENTITY="]);
 		}
 
-		let destination = "generic/platform=iOS Simulator";
+		let destination = buildConfig._device
+			? `platform=iOS Simulator,id=${buildConfig._device.deviceInfo.identifier}`
+			: "generic/platform=iOS Simulator";
 
-		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
-			buildConfig.platform,
-		);
-
-		if (isvisionOS) {
+		if (this.$devicePlatformsConstants.isvisionOS(buildConfig.platform)) {
 			destination = "generic/platform=visionOS Simulator";
 			if (buildConfig._device) {
 				destination += `,id=${buildConfig._device.deviceInfo.identifier}`;
@@ -64,15 +58,6 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 				"-configuration",
 				buildConfig.release ? Configurations.Release : Configurations.Debug,
 			])
-			.concat(
-				this.getBuildCommonArgs(
-					platformData,
-					projectData,
-					isvisionOS
-						? VisionSimulatorPlatformSdkName
-						: SimulatorPlatformSdkName,
-				),
-			)
 			.concat(this.getBuildLoggingArgs())
 			.concat(this.getXcodeProjectArgs(platformData, projectData));
 
@@ -89,10 +74,14 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			platformData.getBuildOutputPath(buildConfig),
 			projectData.projectName + ".xcarchive",
 		);
-		let destination = "generic/platform=iOS";
 		let isvisionOS = this.$devicePlatformsConstants.isvisionOS(
 			buildConfig.platform,
 		);
+		const shouldArchive = this.shouldArchiveDeviceBuild(buildConfig);
+		let destination =
+			!shouldArchive && buildConfig._device
+				? `platform=iOS,id=${buildConfig._device.deviceInfo.identifier}`
+				: "generic/platform=iOS";
 
 		if (isvisionOS) {
 			destination = "generic/platform=visionOS";
@@ -103,22 +92,13 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		const args = [
 			"-destination",
 			destination,
-			"archive",
-			"-archivePath",
-			archivePath,
+			...(shouldArchive ? ["archive", "-archivePath", archivePath] : ["build"]),
 			"-configuration",
 			buildConfig.release ? Configurations.Release : Configurations.Debug,
 			"-allowProvisioningUpdates",
 		]
 			.concat(this.getXcodeProjectArgs(platformData, projectData))
 			.concat(architectures)
-			.concat(
-				this.getBuildCommonArgs(
-					platformData,
-					projectData,
-					isvisionOS ? VisionDevicePlatformSdkName : DevicePlatformSdkName,
-				),
-			)
 			.concat(this.getBuildLoggingArgs());
 
 		// pbxproj-dom sets CODE_SIGN_IDENTITY[sdk=iphoneos*] which doesn't match
@@ -134,10 +114,20 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		return args;
 	}
 
+	/**
+	 * Debug device builds use a plain build, like Xcode's Run, so both share
+	 * one set of intermediates; archives are only needed for release.
+	 */
+	public shouldArchiveDeviceBuild(
+		buildConfig: IBuildConfig & { buildForAppStore?: boolean },
+	): boolean {
+		return !!(buildConfig.release || buildConfig.buildForAppStore);
+	}
+
 	private async getArchitecturesArgs(
 		buildConfig: IBuildConfig,
 	): Promise<string[]> {
-		const args = [];
+		const args: string[] = [];
 
 		if (this.$devicePlatformsConstants.isvisionOS(buildConfig.platform)) {
 			// visionOS builds (device/simulator) are arm64-only; rely on destination for arch
@@ -146,10 +136,22 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			return args;
 		}
 
-		const devicesArchitectures = buildConfig.buildForDevice
-			? await this.getArchitecturesFromConnectedDevices(buildConfig)
-			: [];
-		if (!buildConfig.buildForDevice || devicesArchitectures.length > 1) {
+		if (!buildConfig.buildForDevice) {
+			// A specific simulator destination already limits the build to its
+			// architecture, the same way Xcode builds for it.
+			if (!buildConfig._device) {
+				args.push("ONLY_ACTIVE_ARCH=NO");
+			}
+			return args;
+		}
+
+		if (buildConfig._device && !this.shouldArchiveDeviceBuild(buildConfig)) {
+			return args;
+		}
+
+		const devicesArchitectures =
+			await this.getArchitecturesFromConnectedDevices(buildConfig);
+		if (devicesArchitectures.length > 1) {
 			args.push("ONLY_ACTIVE_ARCH=NO");
 		}
 
@@ -180,6 +182,17 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			skipMacroValidation,
 		];
 
+		// Otherwise the workspace's DerivedData setting decides the location.
+		// Passing -derivedDataPath as well would move the module and SDK stat
+		// caches, whose paths end up in every compile command, so CLI and Xcode
+		// builds would no longer reuse each other's output.
+		if (this.$options.hostProjectPath) {
+			extraArgs.push(
+				"-derivedDataPath",
+				getDerivedDataPath(platformData.projectRoot, projectData.projectName),
+			);
+		}
+
 		// Selects how xcodebuild authenticates against private Swift Package
 		// registries ("netrc" or "keychain"). It describes the machine's
 		// credential setup rather than the build, so it is read from the
@@ -206,29 +219,20 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		// references: https://medium.com/@iostechset/why-cocoapods-eats-app-icons-79fe729808d4
 		// https://github.com/CocoaPods/CocoaPods/issues/7003
 
-		// Xcode 26 makes Swift "explicitly built modules" the default. A
-		// regression there prevents macro/compiler-plugin SPM targets from
-		// resolving their swift-syntax module dependencies, failing with:
-		// "Unable to resolve module dependency: 'SwiftSyntax'" (and SwiftParser,
-		// SwiftSyntaxMacros, SwiftCompilerPlugin, SwiftDiagnostics).
-		// Passed as a command-line build setting so it overrides ALL targets,
-		// including the package targets we don't control.
+		// Passed as a command-line build setting so it also reaches package
+		// targets, but only when the app sets it: any value Xcode wouldn't use
+		// itself stops CLI and Xcode builds from reusing each other's output.
+		// Early Xcode 26 releases fail on macro packages with explicit modules
+		// ("Unable to resolve module dependency: 'SwiftSyntax'"); setting it to
+		// NO in build.xcconfig works around that.
 		// ref: https://forums.swift.org/t/xcode-26-unable-to-find-module-dependency/80516
 		const explicitModulesProperty = "SWIFT_ENABLE_EXPLICIT_MODULES";
-		const explicitModulesValue =
-			this.$xcconfigService.readPropertyValue(
-				BUILD_SETTINGS_FILE_PATH,
-				explicitModulesProperty,
-			) || "NO";
-		extraArgs.push(`${explicitModulesProperty}=${explicitModulesValue}`);
-
-		const deployTargetProperty = "IPHONEOS_DEPLOYMENT_TARGET";
-		const deployTargetVersion = this.$xcconfigService.readPropertyValue(
+		const explicitModulesValue = this.$xcconfigService.readPropertyValue(
 			BUILD_SETTINGS_FILE_PATH,
-			deployTargetProperty,
+			explicitModulesProperty,
 		);
-		if (deployTargetVersion) {
-			extraArgs.push(`${deployTargetProperty}=${deployTargetVersion}`);
+		if (explicitModulesValue) {
+			extraArgs.push(`${explicitModulesProperty}=${explicitModulesValue}`);
 		}
 
 		const swiftUIBootProperty = "NS_SWIFTUI_BOOT";
@@ -265,26 +269,6 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 
 	private getBuildLoggingArgs(): string[] {
 		return this.$logger.getLevel() === "INFO" ? ["-quiet"] : [];
-	}
-
-	private getBuildCommonArgs(
-		platformData: IPlatformData,
-		projectData: IProjectData,
-		platformSdkName: string,
-	): string[] {
-		let args: string[] = [];
-
-		if (!this.$iOSWatchAppService.hasWatchApp(platformData, projectData)) {
-			args = args.concat(["-sdk", platformSdkName]);
-		}
-
-		args = args.concat([
-			"BUILD_DIR=" + path.join(platformData.projectRoot, constants.BUILD_DIR),
-			"SHARED_PRECOMPS_DIR=" +
-				path.join(platformData.projectRoot, constants.BUILD_DIR, "sharedpch"),
-		]);
-
-		return args;
 	}
 
 	private async getArchitecturesFromConnectedDevices(
