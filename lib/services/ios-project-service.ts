@@ -1532,7 +1532,11 @@ export class IOSProjectService
 		projectData: IProjectData,
 	): Promise<void> {
 		const project = this.createPbxProj(projectData);
-		const group = await this.getRootGroup(groupName, sourceFolderPath);
+		const group = await this.getRootGroup(
+			groupName,
+			sourceFolderPath,
+			projectData.projectDir,
+		);
 		// pin the sources to the main app target: without an explicit target the
 		// underlying xcode lib picks whichever "Sources" build phase it finds
 		// first, which can be an extension target (e.g. a widget) once one
@@ -1543,16 +1547,26 @@ export class IOSProjectService
 			filesRelativeToProject: true,
 			target: project.getFirstTarget()?.uuid,
 		});
-		project.addToHeaderSearchPaths(group.path);
-		const headerFiles = this.$fs.exists(sourceFolderPath)
+		// A glob is no use as a search path, the folders of its headers are.
+		const headerSearchPaths = fastGlob.isDynamicPattern(sourceFolderPath)
+			? _.uniq(
+					group.files
+						.filter((file) => path.extname(file) === ".h")
+						.map((file) => path.dirname(file)),
+				)
+			: [group.path];
+		headerSearchPaths.forEach((searchPath) =>
+			project.addToHeaderSearchPaths(searchPath),
+		);
+		const headerFiles = this.$fs.exists(group.path)
 			? this.$fs.enumerateFilesInDirectorySync(
-					sourceFolderPath,
+					group.path,
 					(file, stat) => stat.isDirectory() || path.extname(file) === ".h",
 				)
 			: [];
 		if (
 			headerFiles.length > 0 &&
-			!this.$fs.exists(path.join(sourceFolderPath, "module.modulemap"))
+			!this.$fs.exists(path.join(group.path, "module.modulemap"))
 		) {
 			this.$logger.warn(
 				`warning: Directory ${sourceFolderPath} with native iOS source code doesn't contain a modulemap file. Metadata for it will not be generated and it will not be accessible from JavaScript. To learn more see https://docs.nativescript.org/guides/ios-source-code`,
@@ -1597,7 +1611,11 @@ export class IOSProjectService
 		}
 	}
 
-	private async getRootGroup(name: string, rootPath: string) {
+	private async getRootGroup(
+		name: string,
+		rootPath: string,
+		projectRoot: string,
+	) {
 		const filePathsArr: string[] = [];
 		const rootGroup: INativeSourceCodeGroup = {
 			name: name,
@@ -1606,17 +1624,19 @@ export class IOSProjectService
 		};
 
 		if (fastGlob.isDynamicPattern(rootPath)) {
-			const projectRoot = this.$projectDataService.getProjectData().projectDir;
-			const filePaths = await fastGlob(rootPath);
+			// Relative to the project: --path can run the CLI from anywhere.
+			const filePaths = await fastGlob(rootPath, { cwd: projectRoot });
 			for (const filePath of filePaths) {
 				const sourceFilePath = path.normalize(path.join(projectRoot, filePath));
 				filePathsArr.push(sourceFilePath);
 			}
 		} else {
-			if (this.$fs.exists(rootPath)) {
-				const stats = this.$fs.getFsStats(rootPath);
-				if (stats.isDirectory() && !this.$fs.isEmptyDir(rootPath)) {
-					this.$fs.readDirectory(rootPath).forEach((fileName) => {
+			const folderPath = path.resolve(projectRoot, rootPath);
+			rootGroup.path = folderPath;
+			if (this.$fs.exists(folderPath)) {
+				const stats = this.$fs.getFsStats(folderPath);
+				if (stats.isDirectory() && !this.$fs.isEmptyDir(folderPath)) {
+					this.$fs.readDirectory(folderPath).forEach((fileName) => {
 						const filePath = path.join(rootGroup.path, fileName);
 						filePathsArr.push(filePath);
 					});
@@ -1684,6 +1704,7 @@ export class IOSProjectService
 		const group = await this.getRootGroup(
 			pluginData.name,
 			pluginPlatformsFolderPath,
+			projectData.projectDir,
 		);
 		project.removePbxGroup(group.name, group.path);
 		project.removeFromHeaderSearchPaths(group.path);
