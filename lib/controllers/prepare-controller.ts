@@ -526,6 +526,7 @@ export class PrepareController
 			}
 			if (prepareData && !prepareData.release) {
 				packageData.logChunkMarkers = true;
+				packageData.forwardStdio = true;
 			}
 			if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
 				packageData.discardUncaughtJsExceptions =

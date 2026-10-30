@@ -143,6 +143,8 @@ export class IOSSimulatorLogProvider
 				image: event.senderImagePath,
 				level: (event.messageType || "").toLowerCase(),
 				message: event.eventMessage,
+				subsystem: event.subsystem,
+				category: event.category,
 			},
 			this.$devicePlatformsConstants.iOS,
 			deviceId,

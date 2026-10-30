@@ -38,6 +38,10 @@ export function isIOSRuntimeLogEntry(entry: Mobile.IiOSLogEntry): boolean {
 	return path.basename(entry.image || "") === "NativeScript";
 }
 
+// The runtime forwards the app's stdout and stderr under this subsystem, when
+// the CLI asks for it through the forwardStdio key of the app's package.json.
+const STDIO_SUBSYSTEM = "org.nativescript.stdio";
+
 // Logged by the runtime itself on every launch, not by the app.
 const RUNTIME_NOISE = ["NativeScript loaded bundle"];
 
@@ -55,6 +59,10 @@ export function getIOSLogEntryText(
 ): string | null {
 	if (!entry || path.basename(entry.process || "") !== options.processName) {
 		return null;
+	}
+
+	if (entry.subsystem === STDIO_SUBSYSTEM) {
+		return options.includeNative ? `${entry.category}: ${entry.message}` : null;
 	}
 
 	const imageName = path.basename(entry.image || "");
@@ -78,7 +86,7 @@ export function getIOSLogEntryText(
 // asks for it, through the logChunkMarkers key of the app's package.json.
 const CHUNK_JOIN_MARKER = "\u2060";
 const CHUNK_LINE_MARKER = "\u2061";
-const CONSOLE_PREFIX = /^CONSOLE [A-Z]+: /;
+const REPEATED_PREFIX = /^(?:CONSOLE [A-Z]+|stdout|stderr): /;
 
 // Long enough to ride out a backlog of chunks, while the rest of a message that
 // never arrives, because the app crashed, still gets printed.
@@ -109,7 +117,7 @@ export class IOSLogChunkStitcher {
 
 		const message = this.pending.get(key) ?? {
 			text: "",
-			prefix: chunk.match(CONSOLE_PREFIX)?.[0] ?? "",
+			prefix: chunk.match(REPEATED_PREFIX)?.[0] ?? "",
 			separator: "",
 			timer: null,
 		};
