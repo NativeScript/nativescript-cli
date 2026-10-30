@@ -15,7 +15,7 @@ import { IBuildData } from "../../../definitions/build";
 export const WINDOWS_INSPECTOR_MARKER = "ns-inspector";
 export const WINDOWS_DEBUGBREAK_MARKER = "ns-debugbreak";
 export const WINDOWS_DEBUGGER_STARTED_MARKER = "ns-debugger-started";
-// Written by a running debug host that watches for WINDOWS_LIVESYNC_MARKER.
+// Present while the app's debug host is watching for WINDOWS_LIVESYNC_MARKER.
 export const WINDOWS_LIVESYNC_READY_MARKER = "ns-livesync-ready";
 export const WINDOWS_LIVESYNC_MARKER = "ns-livesync";
 
