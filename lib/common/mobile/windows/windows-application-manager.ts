@@ -3,7 +3,12 @@ import * as os from "os";
 import * as path from "path";
 import { spawn } from "child_process";
 import { ApplicationManagerBase } from "../application-manager-base";
-import { IHooksService, IChildProcess, IDictionary } from "../../declarations";
+import {
+	IHooksService,
+	IChildProcess,
+	IDictionary,
+	ISpawnResult,
+} from "../../declarations";
 import { IBuildData } from "../../../definitions/build";
 
 // LocalState sentinel files shared with the app host (RuntimeHost.cs).
@@ -117,34 +122,22 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		// pass `--certificate`/`--certificate-thumbprint` at build time for a sideloadable
 		// release package, this isn't something the install step can paper over.
 		const isLooseManifest = packageFilePath.toLowerCase().endsWith("appxmanifest.xml");
-		let addAppxCommand: string;
-		if (isLooseManifest) {
-			addAppxCommand = `Add-AppxPackage -ForceApplicationShutdown -Register -Path "${packageFilePath}"`;
-		} else {
-			// Thread through any Dependencies\<arch>\*.msix (e.g. the Windows App SDK runtime
-			// framework package) the same way Add-AppDevPackage.ps1 does via `-DependencyPath`.
-			// Needed on a machine that doesn't already have that framework package installed.
-			const arch = process.arch === "arm64" ? "arm64" : "x64";
-			const dependencyDir = path.join(path.dirname(packageFilePath), "Dependencies", arch);
-			const dependencyGlob = path.join(dependencyDir, "*.msix");
-			addAppxCommand = fs.existsSync(dependencyDir)
-				? `$deps = Get-ChildItem -Path "${dependencyGlob}" -ErrorAction SilentlyContinue; ` +
-					`if ($deps) { Add-AppxPackage -Path "${packageFilePath}" -DependencyPath $deps.FullName -ForceApplicationShutdown } ` +
-					`else { Add-AppxPackage -Path "${packageFilePath}" -ForceApplicationShutdown }`
-				: `Add-AppxPackage -Path "${packageFilePath}" -ForceApplicationShutdown`;
-		}
-		await this.$childProcess.spawnFromEvent(
-			"powershell.exe",
-			[
-				"-NoProfile",
-				"-ExecutionPolicy",
-				"Bypass",
-				"-Command",
-				addAppxCommand,
-			],
-			"close",
-			{},
-			{ throwError: true },
+		// Thread through any Dependencies\<arch>\*.msix (e.g. the Windows App SDK runtime
+		// framework package) the same way Add-AppDevPackage.ps1 does via `-DependencyPath`.
+		// Needed on a machine that doesn't already have that framework package installed.
+		const arch = process.arch === "arm64" ? "arm64" : "x64";
+		const dependencyDir = path.join(path.dirname(packageFilePath), "Dependencies", arch);
+		const addAppxCommand = isLooseManifest
+			? "Add-AppxPackage -ForceApplicationShutdown -Register -Path $env:NS_APPX_PATH"
+			: fs.existsSync(dependencyDir)
+				? "$deps = Get-ChildItem -LiteralPath $env:NS_APPX_DEPS -Filter *.msix -ErrorAction SilentlyContinue; " +
+					"if ($deps) { Add-AppxPackage -Path $env:NS_APPX_PATH -DependencyPath $deps.FullName -ForceApplicationShutdown } " +
+					"else { Add-AppxPackage -Path $env:NS_APPX_PATH -ForceApplicationShutdown }"
+				: "Add-AppxPackage -Path $env:NS_APPX_PATH -ForceApplicationShutdown";
+		await this._powershell(
+			addAppxCommand,
+			{ NS_APPX_PATH: packageFilePath, NS_APPX_DEPS: dependencyDir },
+			true,
 		);
 		// Pre-warm the PFN cache so startApplication does not need to resolve it.
 		if (appIdentifier) {
@@ -157,16 +150,11 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		delete this._installedExePaths[appIdentifier];
 		this._packageFamilyNames.delete(appIdentifier);
 
-		await this.$childProcess.spawnFromEvent(
-			"powershell.exe",
-			[
-				"-NoProfile",
-				"-Command",
-				`Get-AppxPackage -Name "${appIdentifier}" | Remove-AppxPackage`,
-			],
-			"close",
-			{},
-			{ throwError: false },
+		// -Name takes wildcards: escape the id so only this package is removed.
+		await this._powershell(
+			"Get-AppxPackage -Name ([WildcardPattern]::Escape($env:NS_APP_ID)) | Remove-AppxPackage",
+			{ NS_APP_ID: appIdentifier },
+			false,
 		);
 	}
 
@@ -303,16 +291,10 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 			}
 			this._runningPid = null;
 		} else {
-			await this.$childProcess.spawnFromEvent(
-				"powershell.exe",
-				[
-					"-NoProfile",
-					"-Command",
-					`Stop-Process -Name "${appData.projectName}" -ErrorAction SilentlyContinue`,
-				],
-				"close",
-				{},
-				{ throwError: false },
+			await this._powershell(
+				"Get-Process -Name ([WildcardPattern]::Escape($env:NS_PROCESS_NAME)) -ErrorAction SilentlyContinue | Stop-Process",
+				{ NS_PROCESS_NAME: appData.projectName },
+				false,
 			);
 		}
 	}
@@ -344,16 +326,11 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		if (cached) return cached;
 
 		try {
-			const result = await this.$childProcess.spawnFromEvent(
-				"powershell.exe",
-				[
-					"-NoProfile",
-					"-Command",
-					`(Get-AppxPackage | Where-Object { $_.Name -eq "${appId}" -or $_.PackageFullName -like "*${appId}*" } | Select-Object -First 1).PackageFamilyName`,
-				],
-				"close",
-				{},
-				{ throwError: false },
+			const result = await this._powershell(
+				"$id = $env:NS_APP_ID; $like = '*' + [WildcardPattern]::Escape($id) + '*'; " +
+					"(Get-AppxPackage | Where-Object { $_.Name -eq $id -or $_.PackageFullName -like $like } | Select-Object -First 1).PackageFamilyName",
+				{ NS_APP_ID: appId },
+				false,
 			);
 			const pfn = (result.stdout || "").trim();
 			if (pfn) {
@@ -400,7 +377,8 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 
 	private _localStatePath(pfn: string, fileName: string): string | null {
 		const localAppData = process.env.LOCALAPPDATA;
-		if (!localAppData) return null;
+		// An unresolved PFN falls back to the config's app id; never let it leave Packages\.
+		if (!localAppData || !/^[\w.-]+$/.test(pfn) || pfn.includes("..")) return null;
 		return path.join(localAppData, "Packages", pfn, "LocalState", fileName);
 	}
 
@@ -427,5 +405,20 @@ export class WindowsApplicationManager extends ApplicationManagerBase {
 		} catch (e) {
 			this.$logger.warn(`[Windows] Could not write ${name} marker: ${e}`);
 		}
+	}
+
+	// Values go in as $env:NS_* variables, never script text, so they can't change the command.
+	private _powershell(
+		script: string,
+		values: Record<string, string>,
+		throwError: boolean,
+	): Promise<ISpawnResult> {
+		return this.$childProcess.spawnFromEvent(
+			"powershell.exe",
+			["-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script],
+			"close",
+			{ env: { ...process.env, ...values } },
+			{ throwError },
+		);
 	}
 }
