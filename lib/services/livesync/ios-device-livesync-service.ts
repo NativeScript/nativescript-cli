@@ -217,12 +217,8 @@ export class IOSDeviceLiveSyncService
 		if (liveSyncInfo.useHotModuleReload) {
 			// enable HOT updates
 			// Starting the app again here would terminate the instance launched
-			// above. Only a launch that waits for a debugger still needs it, as
-			// that instance cannot answer the attach request.
-			await this.setupSocketIfNeeded(
-				projectData,
-				!!liveSyncInfo.waitForDebugger
-			);
+			// above.
+			await this.setupSocketIfNeeded(projectData, false);
 		}
 	}
 

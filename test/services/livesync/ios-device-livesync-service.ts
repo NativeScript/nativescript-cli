@@ -54,9 +54,10 @@ describe("IOSDeviceLiveSyncService", () => {
 		assert.deepStrictEqual(ensureAppStartedValues, [false]);
 	});
 
-	it("starts the app again when the restarted instance waits for a debugger", async () => {
-		const { ensureAppStartedValues } = await restart(true);
+	it("keeps an instance that waits for a debugger", async () => {
+		const { calls, ensureAppStartedValues } = await restart(true);
 
-		assert.deepStrictEqual(ensureAppStartedValues, [true]);
+		assert.deepStrictEqual(calls, ["restart", "socket"]);
+		assert.deepStrictEqual(ensureAppStartedValues, [false]);
 	});
 });
