@@ -8,6 +8,13 @@ import { IDictionary, IErrors, INet } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import { ITempService } from "../../definitions/temp-service";
 
+const REPLACED_CLOSE_REASON = "Replaced by a newer debugger client";
+
+interface IDebugProxySession {
+	appDebugSocket: net.Socket;
+	webSocket?: ws;
+}
+
 export class AppDebugSocketProxyFactory
 	extends EventEmitter
 	implements IAppDebugSocketProxyFactory
@@ -18,7 +25,6 @@ export class AppDebugSocketProxyFactory
 	constructor(
 		private $logger: ILogger,
 		private $errors: IErrors,
-		private $lockService: ILockService,
 		private $options: IOptions,
 		private $tempService: ITempService,
 		private $net: INet,
@@ -132,7 +138,6 @@ export class AppDebugSocketProxyFactory
 		projectName: string,
 		projectDir: string,
 	): Promise<ws.Server> {
-		let clientConnectionLockRelease: () => void;
 		const cacheKey = `${device.deviceInfo.identifier}-${appId}`;
 		const existingServer = this.deviceWebServers[cacheKey];
 		if (existingServer) {
@@ -141,76 +146,83 @@ export class AppDebugSocketProxyFactory
 			);
 		}
 
-		// NOTE: We will try to provide command line options to select ports, at least on the localhost.
-		const localPort = await this.$net.getAvailablePortInRange(41000);
-
 		this.$logger.info(
 			"\nSetting up debugger proxy...\nPress Ctrl + C to terminate, or disconnect.\n",
 		);
 
 		// NB: When the inspector frontend connects we might not have connected to the inspector backend yet.
 		// That's why we use the verifyClient callback of the websocket server to stall the upgrade request until we connect.
-		// We store the socket that connects us to the device in the upgrade request object itself and later on retrieve it
-		// in the connection callback.
+		// We store the session in the upgrade request object itself and later on retrieve it in the connection callback.
 
-		let currentAppSocket: net.Socket = null;
-		let currentWebSocket: ws = null;
-		const server = new ws.Server(<any>{
-			port: localPort,
-			verifyClient: async (
+		// The runtime serves a single frontend, so the newest client takes over.
+		// Handlers of a replaced session must leave the device socket alone, as
+		// by then it belongs to the session that replaced it.
+		let currentSession: IDebugProxySession = null;
+		let pendingConnect: Promise<void> = Promise.resolve();
+
+		const connectToApp = async (): Promise<IDebugProxySession> => {
+			const previousSession = currentSession;
+			currentSession = null;
+			if (previousSession) {
+				previousSession.webSocket?.close(1000, REPLACED_CLOSE_REASON);
+				await device.destroyDebugSocket(appId);
+			}
+
+			const appDebugSocket = await device.getDebugSocket(
+				appId,
+				projectName,
+				projectDir,
+			);
+			appDebugSocket.on("error", (err: Error) => {
+				this.$logger.trace("Error on debugger deviceSocket", err);
+			});
+			this.$logger.info("Backend socket created.");
+
+			currentSession = { appDebugSocket };
+			return currentSession;
+		};
+
+		const server = await this.listenOnAvailablePort(41000, {
+			verifyClient: (
 				info: any,
 				callback: (res: boolean, code?: number, message?: string) => void,
 			) => {
-				let acceptHandshake = true;
-				clientConnectionLockRelease = null;
+				this.$logger.info("Frontend client connected.");
 
-				try {
-					clientConnectionLockRelease = await this.$lockService.lock(
-						`debug-connection-${device.deviceInfo.identifier}-${appId}.lock`,
-					);
-
-					this.$logger.info("Frontend client connected.");
-					let appDebugSocket;
-					if (currentAppSocket) {
-						currentAppSocket.removeAllListeners();
-						currentAppSocket = null;
-						if (currentWebSocket) {
-							currentWebSocket.removeAllListeners();
-							currentWebSocket.close();
-							currentWebSocket = null;
-						}
-						await device.destroyDebugSocket(appId);
+				// Not released on "connection": that never fires for a client that
+				// drops during the handshake.
+				pendingConnect = pendingConnect.then(async () => {
+					try {
+						info.req["__session"] = await connectToApp();
+						callback(true);
+					} catch (err) {
+						err.deviceIdentifier = device.deviceInfo.identifier;
+						this.$logger.trace(err);
+						this.emit(CONNECTION_ERROR_EVENT_NAME, err);
+						this.$logger.warn(
+							`Cannot connect to device socket. The error message is '${err.message}'.`,
+						);
+						callback(false);
 					}
-					appDebugSocket = await device.getDebugSocket(
-						appId,
-						projectName,
-						projectDir,
-					);
-					currentAppSocket = appDebugSocket;
-					this.$logger.info("Backend socket created.");
-					info.req["__deviceSocket"] = appDebugSocket;
-				} catch (err) {
-					if (clientConnectionLockRelease) {
-						clientConnectionLockRelease();
-					}
-					err.deviceIdentifier = device.deviceInfo.identifier;
-					this.$logger.trace(err);
-					this.emit(CONNECTION_ERROR_EVENT_NAME, err);
-					acceptHandshake = false;
-					this.$logger.warn(
-						`Cannot connect to device socket. The error message is '${err.message}'.`,
-					);
-				}
-
-				callback(acceptHandshake);
+				});
 			},
 		});
 		this.deviceWebServers[cacheKey] = server;
 		server.on("connection", (webSocket, req) => {
-			currentWebSocket = webSocket;
 			const encoding = "utf16le";
 
-			const appDebugSocket: net.Socket = (<any>req)["__deviceSocket"];
+			webSocket.on("error", (err) => {
+				this.$logger.trace("Error on debugger websocket", err);
+			});
+
+			const session: IDebugProxySession = (<any>req)["__session"];
+			if (session !== currentSession || session.appDebugSocket.destroyed) {
+				webSocket.close(1000, REPLACED_CLOSE_REASON);
+				return;
+			}
+
+			session.webSocket = webSocket;
+			const appDebugSocket = session.appDebugSocket;
 			const packets = new MessageUnpackStream();
 			appDebugSocket.pipe(packets);
 
@@ -230,14 +242,6 @@ export class AppDebugSocketProxyFactory
 				}
 			});
 
-			webSocket.on("error", (err) => {
-				this.$logger.trace("Error on debugger websocket", err);
-			});
-
-			appDebugSocket.on("error", (err) => {
-				this.$logger.trace("Error on debugger deviceSocket", err);
-			});
-
 			webSocket.on("message", (message) => {
 				const msg = message.toString();
 				if (process.env.DEBUG_DEVTOOLS_SOCKETS) {
@@ -253,26 +257,63 @@ export class AppDebugSocketProxyFactory
 			});
 
 			appDebugSocket.on("close", () => {
-				currentAppSocket = null;
 				this.$logger.trace("Backend socket closed!");
+				if (currentSession === session) {
+					currentSession = null;
+				}
 				webSocket.close();
 			});
 
 			webSocket.on("close", async () => {
-				currentWebSocket = null;
 				this.$logger.trace("Frontend socket closed!");
 				appDebugSocket.unpipe(packets);
 				packets.destroy();
+				if (currentSession !== session) {
+					return;
+				}
+
+				currentSession = null;
 				await device.destroyDebugSocket(appId);
 				if (!this.$options.watch) {
 					process.exit(0);
 				}
 			});
-
-			clientConnectionLockRelease();
 		});
 
 		return server;
+	}
+
+	private async listenOnAvailablePort(
+		startPort: number,
+		options: ws.ServerOptions,
+	): Promise<ws.Server> {
+		// The port can still get taken after the check, by another CLI for example.
+		let port = await this.$net.getAvailablePortInRange(startPort);
+		while (true) {
+			const result = await new Promise<ws.Server | NodeJS.ErrnoException>(
+				(resolve) => {
+					const server = new ws.Server({ ...options, port });
+					server.once("listening", () => {
+						server.removeAllListeners("error");
+						server.on("error", (err: Error) => {
+							this.$logger.trace("Error on debugger web socket server", err);
+						});
+						resolve(server);
+					});
+					server.once("error", resolve);
+				},
+			);
+
+			if (result instanceof ws.Server) {
+				return result;
+			}
+
+			if (result.code !== "EADDRINUSE") {
+				throw result;
+			}
+
+			port = await this.$net.getAvailablePortInRange(port + 1);
+		}
 	}
 
 	public removeAllProxies() {

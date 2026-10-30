@@ -143,8 +143,8 @@ export class IOSDebuggerPortService implements IIOSDebuggerPortService {
 	private clearTimeout(data: IIOSDebuggerPortData): void {
 		const storedData =
 			this.mapDebuggerPortData[`${data.deviceId}${data.appId}`];
-		if (storedData && typeof storedData.timer === "number") {
-			clearTimeout(storedData.timer);
+		if (storedData && storedData.timer) {
+			clearTimeout(<any>storedData.timer);
 		}
 	}
 }
