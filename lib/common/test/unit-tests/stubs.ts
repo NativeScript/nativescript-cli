@@ -234,6 +234,18 @@ export class DeviceLogProviderStub
 		});
 	}
 
+	logEntry(
+		entry: Mobile.IiOSLogEntry,
+		platform: string,
+		deviceIdentifier: string,
+	): void {
+		this.logData(entry.message, platform, deviceIdentifier);
+	}
+
+	getProjectNameForDevice(deviceIdentifier: string): string {
+		return this.currentDeviceProjectNames[deviceIdentifier];
+	}
+
 	setLogLevel(level: string, deviceIdentifier?: string): void {}
 
 	setApplicationPidForDevice(deviceIdentifier: string, pid: string): void {

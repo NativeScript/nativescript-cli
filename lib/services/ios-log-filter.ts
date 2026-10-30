@@ -2,15 +2,17 @@ import { injector } from "../common/yok";
 
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
-	// This looks for artifacts like: AppName[22432] or AppName(SomeTextHere)[23123]
-	private appOutputRegex: RegExp = /([^\s\(\)]+)(?:\(([^\s]+)\))?\[[0-9]+\]/;
+	// This looks for artifacts like: AppName[22432], AppName(SomeTextHere)[23123]
+	// or kernel()[0] - a header must be recognized even without an image name,
+	// or the line is treated as a continuation of the previous message.
+	private appOutputRegex: RegExp = /([^\s\(\)]+)(?:\(([^\s]*)\))?\[[0-9]+\]/;
 
 	// Used to trim the passed messages to a simpler output
 	// Example:
 	// This: "May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:"
 	// Becomes: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:
 	protected infoFilterRegex = new RegExp(
-		`^.*(?:<Notice>:[ \t]?|<Error>:[ \t]?|<Warning>:[ \t]?|\\(NativeScript\\)[ \t]?|${this.appOutputRegex.source}:[ \t]?){1}`
+		`^.*(?:<Notice>:[ \t]?|<Error>:[ \t]?|<Warning>:[ \t]?|\\(NativeScript\\)[ \t]?|${this.appOutputRegex.source}:[ \t]?){1}`,
 	);
 
 	// Used to post filter messages that slip through but are not coming from NativeScript itself.
@@ -21,6 +23,11 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// we then use this to filter out non-NativeScript lines
 	protected postFilterRegex: RegExp = /^\((.+)\) \[com\.apple.+\]/;
 
+	// The markers the runtime ends a chunk of a split message with, which only the
+	// structured logs stitch. Syslog-style output shows them escaped.
+	private chunkMarkerRegex: RegExp =
+		/(?:\\M-b\\M\^A(?:\\240|\\M-!)|[\u2060\u2061])$/;
+
 	private filterActive: boolean = true;
 
 	private partialLine: string = null;
@@ -29,7 +36,7 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
 	public filterData(
 		data: string,
-		loggingOptions: Mobile.IDeviceLogOptions = <any>{}
+		loggingOptions: Mobile.IDeviceLogOptions = <any>{},
 	): string {
 		const specifiedLogLevel = (loggingOptions.logLevel || "").toUpperCase();
 
@@ -86,7 +93,8 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 				// remove lading space before CONSOLE
 				.replace(/^\s*CONSOLE/, "CONSOLE")
 				// trim trailing spaces only to preserve indentation
-				.trimEnd();
+				.trimEnd()
+				.replace(this.chunkMarkerRegex, "");
 
 			// post filtering: (<anything>) check if <anything> is not "NativeScript"
 			const postFilterMatch = this.postFilterRegex.exec(currentLine);
