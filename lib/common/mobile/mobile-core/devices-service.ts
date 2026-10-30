@@ -415,13 +415,23 @@ export class DevicesService
 		deviceInitOpts?: Mobile.IDeviceLookingOptions,
 	): Promise<void> {
 		const options = this.getDeviceLookingOptions(deviceInitOpts);
-
-		for (const deviceDiscovery of this._allDeviceDiscoveries) {
+		const startLooking = async (deviceDiscovery: Mobile.IDeviceDiscovery) => {
 			try {
 				await deviceDiscovery.startLookingForDevices(options);
 			} catch (err) {
 				this.$logger.trace("Error while checking for devices.", err);
 			}
+		};
+
+		// Concurrently, so a requested simulator ends the wait for physical
+		// devices. Otherwise in order, as device indexes follow discovery order.
+		if (options.isRequestedDeviceFound) {
+			await Promise.all(this._allDeviceDiscoveries.map(startLooking));
+			return;
+		}
+
+		for (const deviceDiscovery of this._allDeviceDiscoveries) {
+			await startLooking(deviceDiscovery);
 		}
 	}
 
@@ -516,6 +526,18 @@ export class DevicesService
 	 * The identifier is expected to be the same as the running device declares it (emulator-5554 for android or GUID for ios).
 	 * @param identifier running emulator or device identifier
 	 */
+	private findDevice(deviceOption: string): Mobile.IDevice {
+		return _.find(
+			this.getDeviceInstances(),
+			(d) =>
+				(d.deviceInfo.identifier && d.deviceInfo.identifier === deviceOption) ||
+				(d.deviceInfo.displayName &&
+					d.deviceInfo.displayName === deviceOption) ||
+				(d.deviceInfo.imageIdentifier &&
+					d.deviceInfo.imageIdentifier === deviceOption),
+		);
+	}
+
 	public getDeviceByIdentifier(identifier: string): Mobile.IDevice {
 		const searchedDevice = _.find(
 			this.getDeviceInstances(),
@@ -581,20 +603,7 @@ export class DevicesService
 	 * @param deviceOption parameter passed by the user to --device flag. Can be name, identifier or imageIdentifier.
 	 */
 	public async getDevice(deviceOption: string): Promise<Mobile.IDevice> {
-		let device: Mobile.IDevice = null;
-
-		if (!device) {
-			device = _.find(
-				this.getDeviceInstances(),
-				(d) =>
-					(d.deviceInfo.identifier &&
-						d.deviceInfo.identifier === deviceOption) ||
-					(d.deviceInfo.displayName &&
-						d.deviceInfo.displayName === deviceOption) ||
-					(d.deviceInfo.imageIdentifier &&
-						d.deviceInfo.imageIdentifier === deviceOption),
-			);
-		}
+		let device = this.findDevice(deviceOption);
 
 		if (!device && helpers.isNumberWithoutExponent(deviceOption)) {
 			device = this.getDeviceByIndex(parseInt(deviceOption, 10));
@@ -907,6 +916,13 @@ export class DevicesService
 		}
 
 		deviceInitOpts = deviceInitOpts || {};
+		const deviceOption = deviceInitOpts.deviceId;
+		if (deviceOption && !helpers.isNumberWithoutExponent(deviceOption)) {
+			deviceInitOpts = {
+				...deviceInitOpts,
+				isRequestedDeviceFound: () => !!this.findDevice(deviceOption),
+			};
+		}
 		this._data = deviceInitOpts;
 
 		if (!deviceInitOpts.skipEmulatorStart) {
@@ -915,13 +931,13 @@ export class DevicesService
 		}
 
 		const platform = deviceInitOpts.platform;
-		const deviceOption = deviceInitOpts.deviceId;
 		const deviceLookingOptions: Mobile.IDeviceLookingOptions = {
 			emulator: deviceInitOpts.emulator,
 			platform: deviceInitOpts.platform,
 			shouldReturnImmediateResult: deviceInitOpts.shouldReturnImmediateResult,
 			detectionInterval: deviceInitOpts.detectionInterval,
 			fullDiscovery: deviceInitOpts.fullDiscovery,
+			isRequestedDeviceFound: deviceInitOpts.isRequestedDeviceFound,
 		};
 
 		if (platform && deviceOption) {
@@ -1198,6 +1214,7 @@ export class DevicesService
 			shouldReturnImmediateResult: !!shouldReturnImmediateResult,
 			emulator: !!emulator,
 			fullDiscovery: deviceInitOpts.fullDiscovery,
+			isRequestedDeviceFound: deviceInitOpts.isRequestedDeviceFound,
 		};
 	}
 

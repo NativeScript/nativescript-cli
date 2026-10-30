@@ -114,6 +114,9 @@ declare global {
 			platformData: IPlatformData,
 			projectData: IProjectData,
 		): string[];
+		shouldArchiveDeviceBuild(
+			buildConfig: IBuildConfig & { buildForAppStore?: boolean },
+		): boolean;
 	}
 
 	interface IXcodebuildCommandService {

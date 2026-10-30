@@ -15,9 +15,21 @@ const exportOptionsPlistOutput = {
 };
 let actualBuildArgs: string[] = [];
 let actualBuildOptions: IXcodebuildCommandOptions = null;
+let spawnedCommands: string[][] = [];
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
+	spawnedCommands = [];
+	injector.register("childProcess", {
+		spawnFromEvent: async (command: string, args: string[]) => {
+			spawnedCommands.push([command, ...args]);
+		},
+	});
+	injector.register("fs", {
+		createDirectory: (): void => undefined,
+		deleteDirectory: (): void => undefined,
+		deleteFile: (): void => undefined,
+	});
 	injector.register("exportOptionsPlistService", {
 		createDevelopmentExportOptionsPlist: async () => exportOptionsPlistOutput,
 		createDistributionExportOptionsPlist: async () => exportOptionsPlistOutput,
@@ -25,11 +37,13 @@ function createTestInjector(): IInjector {
 	injector.register("xcodebuildArgsService", {
 		getBuildForDeviceArgs: async () => <string[]>[],
 		getBuildForSimulatorArgs: async () => <string[]>[],
+		shouldArchiveDeviceBuild: (buildConfig: any) =>
+			!!(buildConfig.release || buildConfig.buildForAppStore),
 	});
 	injector.register("xcodebuildCommandService", {
 		executeCommand: async (
 			args: string[],
-			options: IXcodebuildCommandOptions
+			options: IXcodebuildCommandOptions,
 		) => {
 			actualBuildArgs = args;
 			actualBuildOptions = options;
@@ -43,7 +57,7 @@ function createTestInjector(): IInjector {
 
 describe("xcodebuildService", () => {
 	describe("buildForDevice", () => {
-		it("should build correctly for device", async () => {
+		it("packages the built .app as an .ipa for debug builds", async () => {
 			const injector = createTestInjector();
 			const xcodebuildService = injector.resolve("xcodebuildService");
 			const platformData = {
@@ -55,7 +69,48 @@ describe("xcodebuildService", () => {
 			const buildResult = await xcodebuildService.buildForDevice(
 				platformData,
 				projectData,
-				{}
+				{},
+			);
+
+			const payloadPath = path.join(buildOutputPath, "ipa-staging", "Payload");
+			assert.deepStrictEqual(spawnedCommands, [
+				[
+					"cp",
+					"-cR",
+					path.join(buildOutputPath, `${projectName}.app`),
+					payloadPath,
+				],
+				[
+					"ditto",
+					"-c",
+					"-k",
+					"--norsrc",
+					"--zlibCompressionLevel",
+					"0",
+					"--keepParent",
+					payloadPath,
+					path.join(buildOutputPath, `${projectName}.ipa`),
+				],
+			]);
+			assert.deepStrictEqual(
+				buildResult,
+				path.join(buildOutputPath, `${projectName}.ipa`),
+			);
+		});
+
+		it("exports an archive for release builds", async () => {
+			const injector = createTestInjector();
+			const xcodebuildService = injector.resolve("xcodebuildService");
+			const platformData = {
+				getBuildOutputPath: () => buildOutputPath,
+				projectRoot,
+			};
+			const projectData = { projectName };
+
+			const buildResult = await xcodebuildService.buildForDevice(
+				platformData,
+				projectData,
+				{ release: true },
 			);
 
 			const expectedBuildArgs = [
@@ -63,7 +118,7 @@ describe("xcodebuildService", () => {
 				"-archivePath",
 				path.join(
 					platformData.getBuildOutputPath(),
-					`${projectName}.xcarchive`
+					`${projectName}.xcarchive`,
 				),
 				"-exportPath",
 				exportOptionsPlistOutput.exportFileDir,
@@ -77,7 +132,7 @@ describe("xcodebuildService", () => {
 			});
 			assert.deepStrictEqual(
 				buildResult,
-				exportOptionsPlistOutput.exportFilePath
+				exportOptionsPlistOutput.exportFilePath,
 			);
 		});
 	});
@@ -113,7 +168,7 @@ describe("xcodebuildService", () => {
 			const buildResult = await xcodebuildService.buildForAppStore(
 				platformData,
 				projectData,
-				{}
+				{},
 			);
 
 			const expectedBuildArgs = [
@@ -121,7 +176,7 @@ describe("xcodebuildService", () => {
 				"-archivePath",
 				path.join(
 					platformData.getBuildOutputPath(),
-					`${projectName}.xcarchive`
+					`${projectName}.xcarchive`,
 				),
 				"-exportPath",
 				exportOptionsPlistOutput.exportFileDir,
@@ -133,7 +188,7 @@ describe("xcodebuildService", () => {
 			assert.deepStrictEqual(actualBuildOptions, { cwd: projectRoot });
 			assert.deepStrictEqual(
 				buildResult,
-				exportOptionsPlistOutput.exportFilePath
+				exportOptionsPlistOutput.exportFilePath,
 			);
 		});
 	});
