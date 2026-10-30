@@ -391,6 +391,8 @@ export class WindowsProjectService
 		}
 
 		const dotnetArgs = ["build", csproj, "-c", config, `-p:Platform=${arch}`];
+		// The password goes in the environment, not -p, to keep it out of process lists and logs.
+		const dotnetEnv: NodeJS.ProcessEnv = { ...process.env };
 
 		if (isRelease) {
 			// Produce an MSIX package (sideload-signed by default) or a Microsoft
@@ -433,9 +435,7 @@ export class WindowsProjectService
 					`-p:PackageCertificateKeyFile=\"${certPath}\"`,
 				);
 				if (certificatePassword) {
-					dotnetArgs.push(
-						`-p:PackageCertificatePassword=${certificatePassword}`,
-					);
+					dotnetEnv.PackageCertificatePassword = certificatePassword;
 				}
 			} else {
 				// No signing material provided. Emit an unsigned package.
@@ -453,7 +453,7 @@ export class WindowsProjectService
 			"dotnet",
 			dotnetArgs,
 			"close",
-			{ cwd: path.join(projectRoot, projectData.projectName) },
+			{ cwd: path.join(projectRoot, projectData.projectName), env: dotnetEnv },
 			{ throwError: false },
 		);
 
@@ -533,11 +533,15 @@ export class WindowsProjectService
 				projectData?.nsConfig?.windows?.sourceProtect ??
 				false;
 			const bundlePath = path.join(appProjectDir, "app.nsbundle");
+			const keyPath = path.join(appProjectDir, "nsbundle.key");
 			if (!(isRelease && wantsSourceProtect) && fs.existsSync(bundlePath)) {
 				// A sealed bundle from an earlier release build takes priority over app/ (the
 				// .csproj condition), so it would shadow this build's fresh output.
 				fs.unlinkSync(bundlePath);
 				this.$logger.info("Removed stale app.nsbundle from a previous source-protected build.");
+			}
+			if (fs.existsSync(keyPath)) {
+				fs.unlinkSync(keyPath);
 			}
 			if (isRelease && wantsSourceProtect) {
 				const arch = process.arch === "arm64" ? "arm64" : "x64";
@@ -558,10 +562,16 @@ export class WindowsProjectService
 						"--input", path.join(appProjectDir, "app"),
 						"--output", path.join(appProjectDir, "app.nsbundle"),
 					];
-					if (keyHex) { args.push("--key-hex", keyHex); }
+					// Without a user key, seal with a fresh per-build key the app template embeds.
+					const keyArgs = keyHex ? ["--key-hex", keyHex] : ["--write-key", keyPath];
 					this.$logger.info(`Running nsbundle_pack (source protection): ${packExe}`);
 					try {
-						const result = await this.$childProcess.spawnFromEvent(packExe, args, "close", { cwd: platformData.projectRoot }, { throwError: false });
+						const spawnOptions = { cwd: platformData.projectRoot };
+						let result = await this.$childProcess.spawnFromEvent(packExe, [...args, ...keyArgs], "close", spawnOptions, { throwError: false });
+						if (!keyHex && result && result.exitCode !== 0 && /--write-key/.test(result.stderr || "")) {
+							// A framework from before per-build keys: seal with its shared default key.
+							result = await this.$childProcess.spawnFromEvent(packExe, args, "close", spawnOptions, { throwError: false });
+						}
 						if (result && result.stdout) { this.$logger.info(result.stdout); }
 					}
 					catch (err) {
