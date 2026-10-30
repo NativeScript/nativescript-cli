@@ -1,5 +1,6 @@
 import { Net } from "../../../services/net-service";
 import { assert } from "chai";
+import * as net from "net";
 import { Yok } from "../../../yok";
 import { ErrorsStub, CommonLoggerStub } from "../stubs";
 import { EOL } from "os";
@@ -24,6 +25,43 @@ describe("net", () => {
 
 		return testInjector;
 	};
+
+	describe("isPortAvailable", () => {
+		const hosts = [undefined, "127.0.0.1", "::1", "0.0.0.0", "::"];
+
+		for (const host of hosts) {
+			it(`returns false for a port taken on ${host || "the default address"}`, async (context: any) => {
+				const service = createTestInjector("darwin").resolve<INet>(Net);
+				const server = net.createServer();
+				const listening = await new Promise<boolean>((resolve) => {
+					server.once("error", () => resolve(false));
+					const onListening = () => resolve(true);
+					host ? server.listen(0, host, onListening) : server.listen(0, onListening);
+				});
+				if (!listening) {
+					context.skip();
+					return;
+				}
+				const { port } = <net.AddressInfo>server.address();
+
+				try {
+					assert.isFalse(await service.isPortAvailable(port));
+				} finally {
+					await new Promise((resolve) => server.close(resolve));
+				}
+			});
+		}
+
+		it("returns true for a free port", async () => {
+			const service = createTestInjector("darwin").resolve<INet>(Net);
+			const server = net.createServer();
+			await new Promise<void>((resolve) => server.listen(0, () => resolve()));
+			const { port } = <net.AddressInfo>server.address();
+			await new Promise((resolve) => server.close(resolve));
+
+			assert.isTrue(await service.isPortAvailable(port));
+		});
+	});
 
 	describe("waitForPortToListen", () => {
 		let execCalledCount = 0;
