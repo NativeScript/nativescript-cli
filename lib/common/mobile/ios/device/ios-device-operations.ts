@@ -86,21 +86,25 @@ export class IOSDeviceOperations
 
 			// We need this because we need to make sure that we have devices.
 			await new Promise<void>((resolve, reject) => {
-				let iterationsCount = 0;
-				const maxIterationsCount = 3;
+				const pollInterval = 100;
+				const maxWait = 6000;
+				let waited = 0;
 
 				const intervalHandle: NodeJS.Timer = setInterval(() => {
-					if (foundDevice && !options.fullDiscovery) {
+					if (
+						(foundDevice && !options.fullDiscovery) ||
+						options.isRequestedDeviceFound?.()
+					) {
 						resolve();
 						return clearInterval(intervalHandle as unknown as number);
 					}
 
-					iterationsCount++;
-					if (iterationsCount >= maxIterationsCount) {
+					waited += pollInterval;
+					if (waited >= maxWait) {
 						clearInterval(intervalHandle as unknown as number);
 						return resolve();
 					}
-				}, 2000);
+				}, pollInterval);
 			});
 		}
 	}
