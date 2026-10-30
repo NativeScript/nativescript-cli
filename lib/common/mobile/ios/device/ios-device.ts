@@ -17,6 +17,7 @@ export class IOSDevice extends IOSDeviceBase {
 	public fileSystem: Mobile.IDeviceFileSystem;
 	public deviceInfo: Mobile.IDeviceInfo;
 	private _deviceLogHandler: (...args: any[]) => void;
+	private _deviceLogEntryHandler: (...args: any[]) => void;
 
 	constructor(
 		private deviceActionInfo: IOSDeviceLib.IDeviceActionInfo,
@@ -30,16 +31,16 @@ export class IOSDevice extends IOSDeviceBase {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSDeviceProductNameMapper: Mobile.IiOSDeviceProductNameMapper,
 		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {
 		super();
 		this.applicationManager = this.$injector.resolve(
 			applicationManagerPath.IOSApplicationManager,
-			{ device: this, devicePointer: this.deviceActionInfo }
+			{ device: this, devicePointer: this.deviceActionInfo },
 		);
 		this.fileSystem = this.$injector.resolve(
 			fileSystemPath.IOSDeviceFileSystem,
-			{ device: this, devicePointer: this.deviceActionInfo }
+			{ device: this, devicePointer: this.deviceActionInfo },
 		);
 		const productType = deviceActionInfo.productType;
 		const isTablet = this.$mobileHelper.isiOSTablet(productType);
@@ -58,7 +59,7 @@ export class IOSDevice extends IOSDeviceBase {
 			isTablet: isTablet,
 			displayName:
 				this.$iOSDeviceProductNameMapper.resolveProductName(
-					deviceActionInfo.deviceName
+					deviceActionInfo.deviceName,
 				) || deviceActionInfo.deviceName,
 			model: this.$iOSDeviceProductNameMapper.resolveProductName(productType),
 			version: deviceActionInfo.productVersion,
@@ -81,28 +82,63 @@ export class IOSDevice extends IOSDeviceBase {
 
 	public get isOnlyWiFiConnected(): boolean {
 		const result = this.deviceInfo.connectionTypes.every(
-			(connectionType) => connectionType === constants.DeviceConnectionType.Wifi
+			(connectionType) =>
+				connectionType === constants.DeviceConnectionType.Wifi,
 		);
 		return result;
 	}
 
 	@cache()
 	public async openDeviceLogStream(): Promise<void> {
-		if (this.deviceInfo.status !== commonConstants.UNREACHABLE_STATUS) {
-			this._deviceLogHandler = this.actionOnDeviceLog.bind(this);
-			this.$iosDeviceOperations.on(
-				commonConstants.DEVICE_LOG_EVENT_NAME,
-				this._deviceLogHandler
-			);
-			this.$iosDeviceOperations.startDeviceLog(this.deviceInfo.identifier);
+		if (this.deviceInfo.status === commonConstants.UNREACHABLE_STATUS) {
+			return;
 		}
+
+		// Structured logs need the app's executable name to select its entries;
+		// without one (e.g. `ns device log`) the whole device log is shown.
+		const processName = this.$deviceLogProvider.getProjectNameForDevice(
+			this.deviceInfo.identifier,
+		);
+		if (processName && this.startStructuredDeviceLog(processName)) {
+			return;
+		}
+
+		this.startSyslogDeviceLog();
+	}
+
+	private startStructuredDeviceLog(processName: string): boolean {
+		this._deviceLogEntryHandler = this.actionOnDeviceLogEntry.bind(this);
+		this.$iosDeviceOperations.on(
+			commonConstants.DEVICE_LOG_ENTRY_EVENT_NAME,
+			this._deviceLogEntryHandler,
+		);
+		if (
+			this.$iosDeviceOperations.startDeviceLogStream(
+				this.deviceInfo.identifier,
+				processName,
+			)
+		) {
+			return true;
+		}
+
+		this.removeDeviceLogEntryHandler();
+		return false;
+	}
+
+	private startSyslogDeviceLog(): void {
+		this._deviceLogHandler = this.actionOnDeviceLog.bind(this);
+		this.$iosDeviceOperations.on(
+			commonConstants.DEVICE_LOG_EVENT_NAME,
+			this._deviceLogHandler,
+		);
+		this.$iosDeviceOperations.startDeviceLog(this.deviceInfo.identifier);
 	}
 
 	protected async getDebugSocketCore(appId: string): Promise<net.Socket> {
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(
 			this,
 			constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS,
-			appId
+			appId,
 		);
 		const port = await super.getDebuggerPort(appId);
 		const deviceId = this.deviceInfo.identifier;
@@ -113,7 +149,7 @@ export class IOSDevice extends IOSDeviceBase {
 					await this.$iosDeviceOperations.connectToPort([
 						{ deviceId: deviceId, port: port },
 					])
-				)[deviceId]
+				)[deviceId],
 			);
 			const _socket = new net.Socket();
 			_socket.connect(deviceResponse.port, deviceResponse.host);
@@ -128,8 +164,42 @@ export class IOSDevice extends IOSDeviceBase {
 			this.$deviceLogProvider.logData(
 				response.message,
 				this.$devicePlatformsConstants.iOS,
-				this.deviceInfo.identifier
+				this.deviceInfo.identifier,
 			);
+		}
+	}
+
+	private actionOnDeviceLogEntry(
+		response: IOSDeviceLib.IDeviceLogEntryData,
+	): void {
+		if (response.deviceId !== this.deviceInfo.identifier) {
+			return;
+		}
+
+		if (response.error) {
+			this.$logger.trace(
+				`Structured device logs are not available for ${this.deviceInfo.identifier}, falling back to the syslog relay.`,
+				response.error,
+			);
+			this.removeDeviceLogEntryHandler();
+			this.startSyslogDeviceLog();
+			return;
+		}
+
+		this.$deviceLogProvider.logEntry(
+			response.entry,
+			this.$devicePlatformsConstants.iOS,
+			this.deviceInfo.identifier,
+		);
+	}
+
+	private removeDeviceLogEntryHandler(): void {
+		if (this._deviceLogEntryHandler) {
+			this.$iosDeviceOperations.removeListener(
+				commonConstants.DEVICE_LOG_ENTRY_EVENT_NAME,
+				this._deviceLogEntryHandler,
+			);
+			this._deviceLogEntryHandler = null;
 		}
 	}
 
@@ -137,9 +207,10 @@ export class IOSDevice extends IOSDeviceBase {
 		if (this._deviceLogHandler) {
 			this.$iosDeviceOperations.removeListener(
 				commonConstants.DEVICE_LOG_EVENT_NAME,
-				this._deviceLogHandler
+				this._deviceLogHandler,
 			);
 		}
+		this.removeDeviceLogEntryHandler();
 	}
 
 	private getActiveArchitecture(productType: string): string {
