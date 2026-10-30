@@ -58,7 +58,8 @@ export class IOSDeviceLiveSyncService
 	}
 
 	private async setupSocketIfNeeded(
-		projectData: IProjectData
+		projectData: IProjectData,
+		ensureAppStarted: boolean = true
 	): Promise<boolean> {
 		// TODO: persist the sockets per app in order to support LiveSync on multiple apps on the same device
 		if (this.socket) {
@@ -67,8 +68,6 @@ export class IOSDeviceLiveSyncService
 
 		const appId = projectData.projectIdentifiers.ios;
 		try {
-			// TODO: temp workaround till we setup the sockets along with the app start
-			const ensureAppStarted = true;
 			this.socket = await this.device.getDebugSocket(
 				appId,
 				projectData.projectName,
@@ -217,7 +216,13 @@ export class IOSDeviceLiveSyncService
 
 		if (liveSyncInfo.useHotModuleReload) {
 			// enable HOT updates
-			await this.setupSocketIfNeeded(projectData);
+			// Starting the app again here would terminate the instance launched
+			// above. Only a launch that waits for a debugger still needs it, as
+			// that instance cannot answer the attach request.
+			await this.setupSocketIfNeeded(
+				projectData,
+				!!liveSyncInfo.waitForDebugger
+			);
 		}
 	}
 
