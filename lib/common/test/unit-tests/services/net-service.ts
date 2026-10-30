@@ -30,14 +30,18 @@ describe("net", () => {
 		const hosts = [undefined, "127.0.0.1", "::1", "0.0.0.0", "::"];
 
 		for (const host of hosts) {
-			it(`returns false for a port taken on ${host || "the default address"}`, async () => {
+			it(`returns false for a port taken on ${host || "the default address"}`, async function () {
 				const service = createTestInjector("darwin").resolve<INet>(Net);
 				const server = net.createServer();
-				await new Promise<void>((resolve) =>
-					host
-						? server.listen(0, host, () => resolve())
-						: server.listen(0, () => resolve()),
-				);
+				const listening = await new Promise<boolean>((resolve) => {
+					server.once("error", () => resolve(false));
+					const onListening = () => resolve(true);
+					host ? server.listen(0, host, onListening) : server.listen(0, onListening);
+				});
+				if (!listening) {
+					this.skip();
+					return;
+				}
 				const { port } = <net.AddressInfo>server.address();
 
 				try {

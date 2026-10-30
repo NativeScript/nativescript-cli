@@ -290,9 +290,6 @@ export class AppDebugSocketProxyFactory
 
 			appDebugSocket.on("close", () => {
 				this.$logger.trace("Backend socket closed!");
-				if (currentSession === session) {
-					currentSession = null;
-				}
 				webSocket.close();
 			});
 

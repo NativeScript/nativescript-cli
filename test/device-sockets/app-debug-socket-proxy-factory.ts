@@ -1,6 +1,7 @@
 import { assert } from "chai";
 import * as net from "net";
 import * as os from "os";
+import * as sinon from "sinon";
 import * as ws from "ws";
 import { MessageUnpackStream } from "ios-device-lib";
 import {
@@ -17,6 +18,11 @@ const encode = (message: string): Buffer => {
 	payload.write(message, 4, length, "utf16le");
 	return payload;
 };
+
+const hasIPv6Loopback = () =>
+	Object.values(os.networkInterfaces())
+		.flat()
+		.some((address) => address.internal && address.family === "IPv6");
 
 describe("AppDebugSocketProxyFactory", () => {
 	let backend: net.Server;
@@ -61,11 +67,14 @@ describe("AppDebugSocketProxyFactory", () => {
 		};
 	};
 
-	const createProxy = (getAvailablePortInRange?: () => Promise<number>) =>
+	const createProxy = (
+		getAvailablePortInRange?: () => Promise<number>,
+		watch = true,
+	) =>
 		new AppDebugSocketProxyFactory(
 			<any>{ info: () => {}, trace: () => {}, warn: () => {} },
 			<any>{ fail: (message: string) => assert.fail(message) },
-			<any>{ watch: true },
+			<any>{ watch },
 			<any>{},
 			<any>{
 				getAvailablePortInRange:
@@ -161,7 +170,11 @@ describe("AppDebugSocketProxyFactory", () => {
 	it("listens on both loopback addresses and nothing else", async () => {
 		const port = await startProxy();
 
-		for (const host of ["127.0.0.1", "[::1]"]) {
+		const hosts = ["127.0.0.1"];
+		if (hasIPv6Loopback()) {
+			hosts.push("[::1]");
+		}
+		for (const host of hosts) {
 			const client = await open(port, undefined, host);
 			assert.equal(await roundTrip(client, host), host);
 		}
@@ -227,6 +240,27 @@ describe("AppDebugSocketProxyFactory", () => {
 		assert.equal(await firstClosed, REPLACED_CLOSE_REASON);
 		assert.equal(await roundTrip(second, "hello"), "hello");
 		assert.equal(backendConnections, 2);
+	});
+
+	it("cleans up and exits without watch when the app goes away", async () => {
+		const exit = sinon.stub(process, "exit");
+		const destroyDebugSocket = sinon.spy(device, "destroyDebugSocket");
+		try {
+			const port = await startProxy(createProxy(undefined, false));
+			const client = await open(port);
+			const closed = closeReason(client);
+			const appSocket = await device.getDebugSocket("app");
+
+			appSocket.destroy();
+			await closed;
+			await new Promise((resolve) => setTimeout(resolve, 20));
+
+			assert.isTrue(destroyDebugSocket.called);
+			assert.isTrue(exit.calledWith(0));
+		} finally {
+			exit.restore();
+			destroyDebugSocket.restore();
+		}
 	});
 
 	it("keeps the new client's backend when the replaced client closes late", async () => {
