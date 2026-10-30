@@ -341,6 +341,7 @@ export class PrepareController
 			newNativeWatchStarted = await this.startNativeWatcher(
 				platformData,
 				projectData,
+				prepareData,
 			);
 		}
 
@@ -359,6 +360,7 @@ export class PrepareController
 	private async startNativeWatcher(
 		platformData: IPlatformData,
 		projectData: IProjectData,
+		prepareData: IPrepareData,
 	): Promise<boolean> {
 		if (
 			this.watchersData[projectData.projectDir][
@@ -388,7 +390,11 @@ export class PrepareController
 					this.$watchIgnoreListService.removeFileFromIgnoreList(filePath);
 				} else {
 					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
-					await this.writeRuntimePackageJson(projectData, platformData);
+					await this.writeRuntimePackageJson(
+						projectData,
+						platformData,
+						prepareData,
+					);
 					this.emitPrepareEvent({
 						files: [],
 						staleFiles: [],
@@ -517,6 +523,9 @@ export class PrepareController
 				packageData.ios.runtime = {
 					version: installedRuntimePackageJSON.version,
 				};
+			}
+			if (prepareData && !prepareData.release) {
+				packageData.logChunkMarkers = true;
 			}
 			if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
 				packageData.discardUncaughtJsExceptions =

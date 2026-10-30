@@ -7,6 +7,7 @@ import { IOptions } from "../../declarations";
 import { color, StyleFormat } from "../../color";
 
 import { ITimelineProfilerService } from "../../services/timeline-profiler-service";
+import { getIOSLogEntryText, getIOSLogScope } from "./ios/ios-log-entry";
 
 export class DeviceLogProvider extends DeviceLogProviderBase {
 	constructor(
@@ -15,6 +16,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		protected $logSourceMapService: Mobile.ILogSourceMapService,
 		protected $timelineProfilerService: ITimelineProfilerService,
 		protected $options: IOptions,
+		private $loggingLevels: Mobile.ILoggingLevels,
 	) {
 		super($logFilter, $logger, $logSourceMapService);
 	}
@@ -24,13 +26,41 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		platform: string,
 		deviceIdentifier: string,
 	): void {
-		// console.log(lineText)
 		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
-		let data = this.$logFilter.filterData(platform, lineText, loggingOptions);
+		const data = this.$logFilter.filterData(platform, lineText, loggingOptions);
+		this.printData(data, lineText, platform, deviceIdentifier);
+	}
+
+	public logEntry(
+		entry: Mobile.IiOSLogEntry,
+		platform: string,
+		deviceIdentifier: string,
+	): void {
+		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
+		const text = getIOSLogEntryText(entry, {
+			processName: loggingOptions.projectName,
+			...getIOSLogScope(
+				this.$logger.getLevel(),
+				loggingOptions.logLevel?.toUpperCase() === this.$loggingLevels.full,
+			),
+		});
+		if (text) {
+			this.stitchIOSLogEntry(entry, text, deviceIdentifier, (message) =>
+				this.printData(message + "\n", message, platform, deviceIdentifier),
+			);
+		}
+	}
+
+	private printData(
+		data: string,
+		lineText: string,
+		platform: string,
+		deviceIdentifier: string,
+	): void {
 		data = this.$logSourceMapService.replaceWithOriginalFileLocations(
 			platform,
 			data,
-			loggingOptions,
+			this.getDeviceLogOptionsForDevice(deviceIdentifier),
 		);
 
 		if (data) {

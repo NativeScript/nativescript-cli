@@ -154,6 +154,27 @@ declare global {
 		/**
 		 * Describes log stream options
 		 */
+		/**
+		 * A structured unified logging (os_log) entry.
+		 */
+		interface IiOSLogEntry {
+			/**
+			 * Together with the thread, tells apart messages logged at the same time.
+			 */
+			pid?: number;
+			thread?: number;
+			/**
+			 * Path of the executable of the process that logged the entry.
+			 */
+			process: string;
+			/**
+			 * Path of the binary (executable, framework or library) that logged the entry.
+			 */
+			image: string;
+			level: string;
+			message: string;
+		}
+
 		interface IiOSLogStreamOptions {
 			/**
 			 * This is the --predicate option which will be passed to `log stream` command
@@ -212,6 +233,21 @@ declare global {
 			 * @returns {void}
 			 */
 			logData(line: string, platform: string, deviceIdentifier: string): void;
+
+			/**
+			 * Logs a structured iOS log entry, when it belongs to the application
+			 * whose logs are shown on the device.
+			 */
+			logEntry(
+				entry: IiOSLogEntry,
+				platform: string,
+				deviceIdentifier: string,
+			): void;
+
+			/**
+			 * Returns the project name set for the device, if any.
+			 */
+			getProjectNameForDevice(deviceIdentifier: string): string;
 
 			/**
 			 * Sets the level of logging that will be used.
@@ -1330,6 +1366,15 @@ declare global {
 		): Promise<void>;
 
 		startDeviceLog(deviceIdentifier: string): void;
+
+		/**
+		 * Streams structured logs of the process with the given executable name.
+		 * Returns false when the installed ios-device-lib cannot stream them.
+		 */
+		startDeviceLogStream(
+			deviceIdentifier: string,
+			processName: string,
+		): boolean;
 
 		apps(
 			deviceIdentifiers: string[],
