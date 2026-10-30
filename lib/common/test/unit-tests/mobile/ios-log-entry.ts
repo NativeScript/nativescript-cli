@@ -98,6 +98,31 @@ describe("getIOSLogEntryText", () => {
 	});
 });
 
+describe("getIOSLogEntryText for forwarded stdio", () => {
+	const entry = {
+		process: "/var/containers/Bundle/Application/X/app.app/app",
+		image: "/private/Frameworks/NativeScript.framework/NativeScript",
+		level: "default",
+		message: "printed",
+		subsystem: "org.nativescript.stdio",
+		category: "stdout",
+	};
+
+	it("is hidden by default, unlike the runtime's console output", () => {
+		assert.isNull(getIOSLogEntryText(entry, { processName: "app" }));
+	});
+
+	it("is labeled with its stream along with native output", () => {
+		assert.equal(
+			getIOSLogEntryText(
+				{ ...entry, category: "stderr" },
+				{ processName: "app", includeNative: true },
+			),
+			"stderr: printed",
+		);
+	});
+});
+
 describe("getIOSLogScope", () => {
 	it("maps the CLI log level to the app logs that are shown", () => {
 		assert.deepEqual(getIOSLogScope("INFO", false), {
@@ -159,6 +184,11 @@ describe("IOSLogChunkStitcher", () => {
 	});
 
 	it("restores the line break a chunk was cut at", () => {
+		add(`stdout: one${JOIN}`);
+		add("stdout: two");
+		assert.deepEqual(messages, ["stdout: onetwo"]);
+		messages.length = 0;
+
 		add(`CONSOLE ERROR: first${LINE}`);
 		add("CONSOLE ERROR: second");
 		assert.deepEqual(messages, ["CONSOLE ERROR: first\nsecond"]);

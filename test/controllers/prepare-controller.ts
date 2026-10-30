@@ -181,6 +181,8 @@ describe("prepareController", () => {
 		it("asks for log chunk markers in iOS debug builds only", async () => {
 			assert.isTrue((await writePackageJson("ios", false)).logChunkMarkers);
 			assert.isUndefined((await writePackageJson("ios", true)).logChunkMarkers);
+			assert.isTrue((await writePackageJson("ios", false)).forwardStdio);
+			assert.isUndefined((await writePackageJson("ios", true)).forwardStdio);
 			assert.isUndefined(
 				(await writePackageJson("android", false)).logChunkMarkers,
 			);
