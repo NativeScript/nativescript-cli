@@ -537,6 +537,7 @@ export class PrepareController
 			!prepareData.release
 		) {
 			packageData.logFormat = IOS_LOG_FORMAT;
+			packageData.forwardStdio = true;
 		}
 		if (platform === PlatformTypes.android) {
 			if (installedRuntimePackageJSON) {

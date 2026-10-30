@@ -200,11 +200,14 @@ describe("prepareController", () => {
 			assert.equal(rewritten.main, "bundle.123");
 		});
 
-		it("asks for the structured log format in iOS and visionOS debug builds only", async () => {
+		it("asks for the structured log format and stdio in iOS and visionOS debug builds only", async () => {
 			assert.equal((await writePackageJson("ios", false)).logFormat, 1);
 			assert.equal((await writePackageJson("visionos", false)).logFormat, 1);
 			assert.isUndefined((await writePackageJson("ios", true)).logFormat);
 			assert.isUndefined((await writePackageJson("visionos", true)).logFormat);
+			assert.isTrue((await writePackageJson("ios", false)).forwardStdio);
+			assert.isTrue((await writePackageJson("visionos", false)).forwardStdio);
+			assert.isUndefined((await writePackageJson("ios", true)).forwardStdio);
 			assert.isUndefined((await writePackageJson("android", false)).logFormat);
 		});
 	});
