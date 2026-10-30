@@ -1,6 +1,9 @@
 import { IOSDeviceLib as IOSDeviceLibModule } from "ios-device-lib";
 import { cache } from "../../../decorators";
-import { DEVICE_LOG_EVENT_NAME } from "../../../constants";
+import {
+	DEVICE_LOG_ENTRY_EVENT_NAME,
+	DEVICE_LOG_EVENT_NAME,
+} from "../../../constants";
 import * as _ from "lodash";
 import * as assert from "assert";
 import { EventEmitter } from "events";
@@ -131,6 +134,28 @@ export class IOSDeviceOperations
 		this.attacheDeviceLogDataHandler();
 
 		this.deviceLib.startDeviceLog([deviceIdentifier]);
+	}
+
+	public startDeviceLogStream(
+		deviceIdentifier: string,
+		processName: string,
+	): boolean {
+		this.assertIsInitialized();
+		if (typeof this.deviceLib.startDeviceLogStream !== "function") {
+			return false;
+		}
+
+		this.setShouldDispose(false);
+		this.$logger.trace(
+			`Streaming structured logs of ${processName} on device with identifier: ${deviceIdentifier}.`,
+		);
+
+		this.attachDeviceLogEntryHandler();
+
+		this.deviceLib.startDeviceLogStream([
+			{ deviceId: deviceIdentifier, processName },
+		]);
+		return true;
 	}
 
 	public async apps(
@@ -378,6 +403,16 @@ export class IOSDeviceOperations
 
 	private assertIsInitialized(): void {
 		assert.ok(this.isInitialized, "iOS device operations not initialized.");
+	}
+
+	@cache()
+	private attachDeviceLogEntryHandler(): void {
+		this.deviceLib.on(
+			DEVICE_LOG_ENTRY_EVENT_NAME,
+			(response: IOSDeviceLib.IDeviceLogEntryData) => {
+				this.emit(DEVICE_LOG_ENTRY_EVENT_NAME, response);
+			},
+		);
 	}
 
 	@cache()
