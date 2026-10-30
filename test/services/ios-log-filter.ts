@@ -182,6 +182,58 @@ describe("iOSLogFilter", () => {
 	const infoLogLevel = "INFO";
 	const fullLogLevel = "FULL";
 
+	it("removes the markers of split messages, escaped or not", () => {
+		testInjector = createTestInjector("app");
+		logFilter = testInjector.resolve(IOSLogFilter);
+		const header =
+			"\u0000Oct 29 20:20:54 iPad app(NativeScript)[1514] <Notice>: ";
+		const chunks = [
+			`${header}CONSOLE LOG: a\\M-b\\M^A\\240\n`,
+			`${header}CONSOLE LOG: b\\M-b\\M^A\\M-!\n`,
+			`${header}CONSOLE LOG: c\u2060\n`,
+			`${header}CONSOLE LOG: d\n`,
+		];
+
+		const output = chunks
+			.map((chunk) =>
+				logFilter.filterData(chunk, {
+					logLevel: infoLogLevel,
+					projectName: "app",
+				}),
+			)
+			.join("");
+
+		assert.strictEqual(
+			output,
+			"CONSOLE LOG: a\nCONSOLE LOG: b\nCONSOLE LOG: c\nCONSOLE LOG: d\n",
+		);
+	});
+
+	it("drops other processes' lines that have no image name, such as the kernel's", () => {
+		testInjector = createTestInjector("nsconsoletablet");
+		logFilter = testInjector.resolve(IOSLogFilter);
+		const chunks = [
+			'\u0000Oct 29 20:20:54 iPad nsconsoletablet(NativeScript)[1514] <Notice>: CONSOLE LOG: [ "network", "internet probe -> true (status 200)" ]\n',
+			"\u0000Oct 29 20:20:45 iPad kernel()[0] <Notice>: wlan0:com.apple.p2p.awdl0: isInfraRealtimePacketThresholdAllowed allowed:1 option:32 threshold:50\n",
+			"\u0000Oct 29 20:20:45 iPad kernel()[0] <Notice>: wlan0:com.apple.p2p.awdl0: currentInfraTrafficType:9274 checking if realtime upgrade required\n",
+		];
+
+		const output = chunks
+			.map((chunk) =>
+				logFilter.filterData(chunk, {
+					logLevel: infoLogLevel,
+					projectName: "nsconsoletablet",
+				}),
+			)
+			.filter(Boolean)
+			.join("");
+
+		assert.strictEqual(
+			output,
+			'CONSOLE LOG: [ "network", "internet probe -> true (status 200)" ]\n',
+		);
+	});
+
 	describe("filterData", () => {
 		testData.forEach((data) => {
 			it(`returns correct data on iOS ${data.version} when data comes in chunks`, () => {
@@ -211,7 +263,7 @@ describe("iOSLogFilter", () => {
 
 				assert.deepStrictEqual(
 					output,
-					data.infoExpectedArr.filter((item) => item !== null).join("\n")
+					data.infoExpectedArr.filter((item) => item !== null).join("\n"),
 				);
 			});
 
@@ -220,7 +272,7 @@ describe("iOSLogFilter", () => {
 				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(
 					data.originalDataArr.join("\n"),
-					{ logLevel: fullLogLevel, projectName: data.projectName }
+					{ logLevel: fullLogLevel, projectName: data.projectName },
 				);
 				const actualArr = actualData.split("\n").map((line) => line.trim());
 				const expectedArr = data.originalDataArr
@@ -252,7 +304,7 @@ describe("iOSLogFilter", () => {
 				const actualArr = actualData.split("\n").map((line) => line.trim());
 				assert.deepStrictEqual(
 					actualArr,
-					data.simulatorExpectedArr.filter((item) => item !== null)
+					data.simulatorExpectedArr.filter((item) => item !== null),
 				);
 			});
 
@@ -261,11 +313,11 @@ describe("iOSLogFilter", () => {
 				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(
 					data.originalDataArr.join("\n"),
-					{ logLevel: infoLogLevel, projectName: data.projectName }
+					{ logLevel: infoLogLevel, projectName: data.projectName },
 				);
 				const actualArr = actualData.split("\n").map((line) => line.trim());
 				const expectedArr = data.infoExpectedArr.filter(
-					(item) => item !== null
+					(item) => item !== null,
 				);
 				assert.deepStrictEqual(actualArr, expectedArr);
 			});
