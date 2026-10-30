@@ -1237,6 +1237,39 @@ describe("devicesService", () => {
 			);
 		});
 
+		it("stops waiting for physical devices once the requested simulator is found", async () => {
+			let waitedForRequestedDevice = false;
+			(<any>iOSDeviceDiscovery).startLookingForDevices = (
+				options: Mobile.IDeviceLookingOptions,
+			) =>
+				new Promise<void>((resolve) => {
+					const poll = setInterval(() => {
+						if (options.isRequestedDeviceFound?.()) {
+							waitedForRequestedDevice = true;
+							clearInterval(poll);
+							resolve();
+						}
+					}, 5);
+				});
+			(<any>iOSSimulatorDiscovery).startLookingForDevices = async () => {
+				iOSSimulatorDiscovery.emit(
+					DeviceDiscoveryEventNames.DEVICE_FOUND,
+					iOSSimulator,
+				);
+			};
+
+			await devicesService.initialize({
+				platform: "ios",
+				deviceId: iOSSimulator.deviceInfo.identifier,
+				skipEmulatorStart: true,
+			});
+
+			assert.isTrue(waitedForRequestedDevice);
+			assert.deepStrictEqual(devicesService.getDeviceInstances(), <any>[
+				iOSSimulator,
+			]);
+		});
+
 		describe("when only deviceIdentifier is passed", () => {
 			const assertAllMethodsResults = async (deviceId: string) => {
 				assert.isFalse(

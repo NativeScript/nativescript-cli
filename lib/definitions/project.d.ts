@@ -563,6 +563,12 @@ interface ICocoaPodsService {
 		platformData: IPlatformData,
 	): Promise<void>;
 
+	applyPodfileBuildSettings(
+		projectData: IProjectData,
+		platformData: IPlatformData,
+		buildSettings: Record<string, string> | null,
+	): Promise<void>;
+
 	applyPodfileFromExtensions(
 		projectData: IProjectData,
 		platformData: IPlatformData,
