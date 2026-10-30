@@ -1,8 +1,12 @@
 import { assert } from "chai";
 import * as net from "net";
+import * as os from "os";
 import * as ws from "ws";
 import { MessageUnpackStream } from "ios-device-lib";
-import { AppDebugSocketProxyFactory } from "../../lib/device-sockets/ios/app-debug-socket-proxy-factory";
+import {
+	AppDebugSocketProxyFactory,
+	isAllowedDebuggerOrigin,
+} from "../../lib/device-sockets/ios/app-debug-socket-proxy-factory";
 
 const REPLACED_CLOSE_REASON = "Replaced by a newer debugger client";
 
@@ -87,12 +91,17 @@ describe("AppDebugSocketProxyFactory", () => {
 		return <number>(<any>server.address()).port;
 	};
 
-	const open = (port: number) =>
+	const open = (port: number, options?: ws.ClientOptions, host = "127.0.0.1") =>
 		new Promise<ws>((resolve, reject) => {
-			const client = new ws(`ws://127.0.0.1:${port}`);
+			const client = new ws(`ws://${host}:${port}`, options);
 			client.once("open", () => resolve(client));
 			client.once("error", reject);
 		});
+
+	const assertRejects = async (promise: Promise<ws>) => {
+		const client = await promise.catch((): ws => null);
+		assert.isNull(client);
+	};
 
 	const roundTrip = (client: ws, message: string) =>
 		new Promise<string>((resolve, reject) => {
@@ -125,7 +134,9 @@ describe("AppDebugSocketProxyFactory", () => {
 
 	it("moves to the next port when another server takes the checked one", async () => {
 		const blocker = net.createServer();
-		await new Promise<void>((resolve) => blocker.listen(0, () => resolve()));
+		await new Promise<void>((resolve) =>
+			blocker.listen(0, "127.0.0.1", () => resolve()),
+		);
 		const blockedPort = (<net.AddressInfo>blocker.address()).port;
 		const ports = [blockedPort];
 		const factory = createProxy(async () => {
@@ -145,6 +156,34 @@ describe("AppDebugSocketProxyFactory", () => {
 		assert.notEqual(port, blockedPort);
 		const client = await open(port);
 		assert.equal(await roundTrip(client, "hello"), "hello");
+	});
+
+	it("listens on both loopback addresses and nothing else", async () => {
+		const port = await startProxy();
+
+		for (const host of ["127.0.0.1", "[::1]"]) {
+			const client = await open(port, undefined, host);
+			assert.equal(await roundTrip(client, host), host);
+		}
+
+		const addresses = Object.values(os.networkInterfaces())
+			.flat()
+			.filter((address) => !address.internal && address.family === "IPv4");
+		for (const { address } of addresses) {
+			await assertRejects(open(port, undefined, address));
+		}
+	});
+
+	it("turns away web pages but not DevTools or clients without an origin", async () => {
+		const port = await startProxy();
+
+		await assertRejects(open(port, { origin: "https://evil.example" }));
+		assert.equal(backendConnections, 0);
+
+		const devtools = await open(port, { origin: "devtools://devtools" });
+		assert.equal(await roundTrip(devtools, "hello"), "hello");
+		const noOrigin = await open(port);
+		assert.equal(await roundTrip(noOrigin, "hello"), "hello");
 	});
 
 	it("serves a client after the previous one disconnected", async () => {
@@ -215,5 +254,37 @@ describe("AppDebugSocketProxyFactory", () => {
 		);
 		assert.lengthOf(connected, 1);
 		assert.equal(await roundTrip(connected[0], "hello"), "hello");
+	});
+
+	describe("isAllowedDebuggerOrigin", () => {
+		const allowed = [
+			undefined,
+			"",
+			"devtools://devtools",
+			"chrome-devtools://devtools",
+			"https://chrome-devtools-frontend.appspot.com",
+			"http://localhost:5173",
+			"http://127.0.0.1:8080",
+			"http://[::1]:3000",
+		];
+		for (const origin of allowed) {
+			it(`allows ${origin || "no origin"}`, () => {
+				assert.isTrue(isAllowedDebuggerOrigin(origin));
+			});
+		}
+
+		const rejected = [
+			"https://evil.example",
+			"http://localhost.evil.example",
+			"http://127.0.0.1.evil.example",
+			"https://chrome-devtools-frontend.appspot.com.evil.example",
+			"null",
+			"file://",
+		];
+		for (const origin of rejected) {
+			it(`rejects ${origin}`, () => {
+				assert.isFalse(isAllowedDebuggerOrigin(origin));
+			});
+		}
 	});
 });

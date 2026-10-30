@@ -10,6 +10,29 @@ import { ITempService } from "../../definitions/temp-service";
 
 const REPLACED_CLOSE_REASON = "Replaced by a newer debugger client";
 
+/**
+ * The debugger can run any code in the app, and any web page can try to open a
+ * WebSocket to this port. Clients that aren't browsers, like VS Code's debug
+ * adapter, send no origin.
+ */
+export function isAllowedDebuggerOrigin(origin?: string): boolean {
+	if (!origin) {
+		return true;
+	}
+
+	try {
+		const { protocol, hostname, origin: urlOrigin } = new URL(origin);
+		return (
+			protocol === "devtools:" ||
+			protocol === "chrome-devtools:" ||
+			urlOrigin === "https://chrome-devtools-frontend.appspot.com" ||
+			["localhost", "127.0.0.1", "[::1]"].includes(hostname)
+		);
+	} catch {
+		return false;
+	}
+}
+
 interface IDebugProxySession {
 	appDebugSocket: net.Socket;
 	webSocket?: ws;
@@ -182,11 +205,19 @@ export class AppDebugSocketProxyFactory
 			return currentSession;
 		};
 
-		const server = await this.listenOnAvailablePort(41000, {
+		const servers = await this.listenOnAvailablePort(41000, {
 			verifyClient: (
 				info: any,
 				callback: (res: boolean, code?: number, message?: string) => void,
 			) => {
+				if (!isAllowedDebuggerOrigin(info.origin)) {
+					this.$logger.warn(
+						`Rejected a debugger connection from origin '${info.origin}'.`,
+					);
+					callback(false, 403, "Origin not allowed");
+					return;
+				}
+
 				this.$logger.info("Frontend client connected.");
 
 				// Not released on "connection": that never fires for a client that
@@ -207,8 +238,9 @@ export class AppDebugSocketProxyFactory
 				});
 			},
 		});
+		const server = servers[0];
 		this.deviceWebServers[cacheKey] = server;
-		server.on("connection", (webSocket, req) => {
+		const onConnection = (webSocket: ws, req: any) => {
 			const encoding = "utf16le";
 
 			webSocket.on("error", (err) => {
@@ -278,6 +310,12 @@ export class AppDebugSocketProxyFactory
 					process.exit(0);
 				}
 			});
+		};
+		for (const listeningServer of servers) {
+			listeningServer.on("connection", onConnection);
+		}
+		server.once("close", () => {
+			servers.slice(1).forEach((other) => other.close());
 		});
 
 		return server;
@@ -286,34 +324,54 @@ export class AppDebugSocketProxyFactory
 	private async listenOnAvailablePort(
 		startPort: number,
 		options: ws.ServerOptions,
-	): Promise<ws.Server> {
+	): Promise<ws.Server[]> {
 		// The port can still get taken after the check, by another CLI for example.
 		let port = await this.$net.getAvailablePortInRange(startPort);
 		while (true) {
-			const result = await new Promise<ws.Server | NodeJS.ErrnoException>(
-				(resolve) => {
-					const server = new ws.Server({ ...options, port });
-					server.once("listening", () => {
-						server.removeAllListeners("error");
-						server.on("error", (err: Error) => {
-							this.$logger.trace("Error on debugger web socket server", err);
-						});
-						resolve(server);
-					});
-					server.once("error", resolve);
-				},
-			);
-
-			if (result instanceof ws.Server) {
-				return result;
+			const servers: ws.Server[] = [];
+			try {
+				// Only reachable from this machine. Clients told to use "localhost"
+				// may end up on either loopback address.
+				servers.push(await this.listen("127.0.0.1", port, options));
+				const ipv6Server = await this.listen("::1", port, options).catch(
+					(err: NodeJS.ErrnoException): ws.Server => {
+						if (err.code === "EADDRINUSE") {
+							throw err;
+						}
+						this.$logger.trace("Not listening on ::1", err);
+						return null;
+					},
+				);
+				if (ipv6Server) {
+					servers.push(ipv6Server);
+				}
+				return servers;
+			} catch (err) {
+				servers.forEach((server) => server.close());
+				if (err.code !== "EADDRINUSE") {
+					throw err;
+				}
+				port = await this.$net.getAvailablePortInRange(port + 1);
 			}
-
-			if (result.code !== "EADDRINUSE") {
-				throw result;
-			}
-
-			port = await this.$net.getAvailablePortInRange(port + 1);
 		}
+	}
+
+	private listen(
+		host: string,
+		port: number,
+		options: ws.ServerOptions,
+	): Promise<ws.Server> {
+		return new Promise<ws.Server>((resolve, reject) => {
+			const server = new ws.Server({ ...options, host, port });
+			server.once("listening", () => {
+				server.removeAllListeners("error");
+				server.on("error", (err: Error) => {
+					this.$logger.trace("Error on debugger web socket server", err);
+				});
+				resolve(server);
+			});
+			server.once("error", reject);
+		});
 	}
 
 	public removeAllProxies() {
