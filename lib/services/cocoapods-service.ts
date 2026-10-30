@@ -35,11 +35,11 @@ export class CocoaPodsService implements ICocoaPodsService {
 		private $logger: ILogger,
 		private $config: IConfiguration,
 		private $xcconfigService: IXcconfigService,
-		private $xcodeSelectService: XcodeSelectService
+		private $xcodeSelectService: XcodeSelectService,
 	) {
 		this.getCocoaPodsFromPodfile = _.memoize(
 			this._getCocoaPodsFromPodfile,
-			getHash
+			getHash,
 		);
 	}
 
@@ -57,7 +57,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 	public async executePodInstall(
 		projectRoot: string,
-		xcodeProjPath: string
+		xcodeProjPath: string,
 	): Promise<ISpawnResult> {
 		this.$logger.info("Installing pods...");
 		let podTool = this.$config.USE_POD_SANDBOX ? "sandbox-pod" : "pod";
@@ -79,7 +79,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 
 			if (!res.includes("Bad CPU type in executable")) {
 				this.$logger.trace(
-					"Running on arm64 but pod is installed under rosetta2 - running pod through rosetta2"
+					"Running on arm64 but pod is installed under rosetta2 - running pod through rosetta2",
 				);
 				args.unshift(podTool);
 				args.unshift("-x86_64");
@@ -92,7 +92,7 @@ export class CocoaPodsService implements ICocoaPodsService {
 			args,
 			"close",
 			{ cwd: projectRoot, stdio: ["pipe", process.stdout, process.stdout] },
-			{ throwError: false }
+			{ throwError: false },
 		);
 
 		if (podInstallResult.exitCode !== 0) {
@@ -113,28 +113,28 @@ ${versionResolutionHint}`);
 
 	public async mergePodXcconfigFile(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void> {
 		const podFilesRootDirName = path.join(
 			"Pods",
 			"Target Support Files",
-			`Pods-${projectData.projectName}`
+			`Pods-${projectData.projectName}`,
 		);
 		const podFolder = path.join(platformData.projectRoot, podFilesRootDirName);
 		if (this.$fs.exists(podFolder)) {
 			const pluginsXcconfigFilePaths =
 				this.$xcconfigService.getPluginsXcconfigFilePaths(
-					platformData.projectRoot
+					platformData.projectRoot,
 				);
 			for (const configuration in pluginsXcconfigFilePaths) {
 				const pluginsXcconfigFilePath = pluginsXcconfigFilePaths[configuration];
 				const podXcconfigFilePath = path.join(
 					podFolder,
-					`Pods-${projectData.projectName}.${configuration}.xcconfig`
+					`Pods-${projectData.projectName}.${configuration}.xcconfig`,
 				);
 				await this.$xcconfigService.mergeFiles(
 					podXcconfigFilePath,
-					pluginsXcconfigFilePath
+					pluginsXcconfigFilePath,
 				);
 			}
 		}
@@ -142,13 +142,13 @@ ${versionResolutionHint}`);
 
 	public async applyPodfileFromAppResources(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void> {
 		const { projectRoot, normalizedPlatformName } = platformData;
 		const mainPodfilePath = path.join(
 			projectData.appResourcesDirectoryPath,
 			normalizedPlatformName,
-			PODFILE_NAME
+			PODFILE_NAME,
 		);
 		const projectPodfilePath = this.getProjectPodfilePath(projectRoot);
 		if (
@@ -159,14 +159,14 @@ ${versionResolutionHint}`);
 				NS_BASE_PODFILE,
 				mainPodfilePath,
 				projectData,
-				platformData
+				platformData,
 			);
 		}
 	}
 
 	public async applyPodfileArchExclusions(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void> {
 		const xcodeVersionData = await this.$xcodeSelectService.getXcodeVersion();
 
@@ -194,24 +194,90 @@ end`.trim();
 			"NativeScript-CLI-Architecture-Exclusions",
 			exclusionsPodfile,
 			projectData,
-			platformData
+			platformData,
 		);
 
 		// clean up
 		this.$fs.deleteFile(exclusionsPodfile);
 	}
 
+	/**
+	 * Applies the app's build settings that pods need too: raises pods below
+	 * the app's deployment target (from build.xcconfig) up to it, and sets the
+	 * given settings on every pod target. Living in the Pods project rather
+	 * than on the xcodebuild command line, they apply the same way to CLI and
+	 * Xcode builds.
+	 */
+	public async applyPodfileBuildSettings(
+		projectData: IProjectData,
+		platformData: IPlatformData,
+		buildSettings: Record<string, string> | null,
+	): Promise<void> {
+		const { projectRoot } = platformData;
+		const buildSettingsPodfile = path.join(
+			projectRoot,
+			"Podfile-build-settings",
+		);
+		const deploymentTarget = this.$xcconfigService.readPropertyValue(
+			path.join(
+				projectData.appResourcesDirectoryPath,
+				platformData.normalizedPlatformName,
+				constants.BUILD_XCCONFIG_FILE_NAME,
+			),
+			"IPHONEOS_DEPLOYMENT_TARGET",
+		);
+
+		const configLines = _.map(
+			buildSettings,
+			(value, key) =>
+				`      config.build_settings[${JSON.stringify(key)}] = ${JSON.stringify(value)}`,
+		);
+		if (deploymentTarget) {
+			configLines.push(
+				`      current = config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"]`,
+				`      if current.nil? || Gem::Version.new(current) < Gem::Version.new(${JSON.stringify(deploymentTarget)})`,
+				`        config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = ${JSON.stringify(deploymentTarget)}`,
+				`      end`,
+			);
+		}
+
+		if (configLines.length) {
+			this.$fs.writeFile(
+				buildSettingsPodfile,
+				[
+					"post_install do |installer|",
+					"  installer.pods_project.targets.each do |target|",
+					"    target.build_configurations.each do |config|",
+					...configLines,
+					"    end",
+					"  end",
+					"end",
+				].join(EOL),
+			);
+		}
+
+		// Without a temporary Podfile this removes a previously applied section.
+		await this.applyPodfileToProject(
+			"NativeScript-CLI-Build-Settings",
+			buildSettingsPodfile,
+			projectData,
+			platformData,
+		);
+
+		this.$fs.deleteFile(buildSettingsPodfile);
+	}
+
 	public async applyPodfileFromExtensions(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	) {
 		const extensionFolderPath = path.join(
 			projectData.getAppResourcesDirectoryPath(),
 			constants.iOSAppResourcesFolderName,
-			constants.NATIVE_EXTENSION_FOLDER
+			constants.NATIVE_EXTENSION_FOLDER,
 		);
 		const projectPodfilePath = this.getProjectPodfilePath(
-			platformData.projectRoot
+			platformData.projectRoot,
 		);
 
 		if (
@@ -235,7 +301,7 @@ end`.trim();
 				podfilePath: path.join(
 					extensionFolderPath,
 					name,
-					constants.PODFILE_NAME
+					constants.PODFILE_NAME,
 				),
 			}));
 
@@ -244,9 +310,9 @@ end`.trim();
 			const regExpToRemove = new RegExp(
 				`${this.getExtensionPodfileHeader(
 					podfilePath,
-					targetName
+					targetName,
 				)}[\\s\\S]*?${this.getExtensionPodfileEnd()}`,
-				"mg"
+				"mg",
 			);
 			projectPodFileContent = projectPodFileContent.replace(regExpToRemove, "");
 
@@ -270,7 +336,7 @@ end`.trim();
 		moduleName: string,
 		podfilePath: string,
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<void> {
 		const nativeProjectPath = platformData.projectRoot;
 		if (!this.$fs.exists(podfilePath)) {
@@ -278,7 +344,7 @@ end`.trim();
 				moduleName,
 				podfilePath,
 				projectData,
-				nativeProjectPath
+				nativeProjectPath,
 			);
 			return;
 		}
@@ -288,7 +354,7 @@ end`.trim();
 				podfilePath,
 				moduleName,
 				projectData,
-				platformData
+				platformData,
 			);
 		const pathToProjectPodfile = this.getProjectPodfilePath(nativeProjectPath);
 		const projectPodfileContent = this.$fs.exists(pathToProjectPodfile)
@@ -301,24 +367,24 @@ end`.trim();
 				moduleName,
 				podfilePath,
 				projectData,
-				nativeProjectPath
+				nativeProjectPath,
 			);
 			let finalPodfileContent = this.$fs.exists(pathToProjectPodfile)
 				? this.getPodfileContentWithoutTarget(
 						projectData,
-						this.$fs.readText(pathToProjectPodfile)
-				  )
+						this.$fs.readText(pathToProjectPodfile),
+					)
 				: "";
 
 			if (
 				podfileContent.indexOf(
-					CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME
+					CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME,
 				) !== -1
 			) {
 				finalPodfileContent = this.addPostInstallHook(
 					replacedFunctions,
 					finalPodfileContent,
-					podfileContent
+					podfileContent,
 				);
 			}
 
@@ -326,7 +392,7 @@ end`.trim();
 				finalPodfileContent = this.$cocoaPodsPlatformManager.addPlatformSection(
 					projectData,
 					podfilePlatformData,
-					finalPodfileContent
+					finalPodfileContent,
 				);
 			}
 
@@ -334,7 +400,7 @@ end`.trim();
 			this.saveProjectPodfile(
 				projectData,
 				finalPodfileContent,
-				nativeProjectPath
+				nativeProjectPath,
 			);
 		}
 	}
@@ -343,33 +409,33 @@ end`.trim();
 		moduleName: string,
 		podfilePath: string,
 		projectData: IProjectData,
-		projectRoot: string
+		projectRoot: string,
 	): void {
 		if (this.$fs.exists(this.getProjectPodfilePath(projectRoot))) {
 			let projectPodFileContent = this.$fs.readText(
-				this.getProjectPodfilePath(projectRoot)
+				this.getProjectPodfilePath(projectRoot),
 			);
 			// Remove the data between #Begin Podfile and #EndPodfile
 			const regExpToRemove = new RegExp(
 				`${this.getPluginPodfileHeader(
-					podfilePath
+					podfilePath,
 				)}[\\s\\S]*?${this.getPluginPodfileEnd()}`,
-				"mg"
+				"mg",
 			);
 			projectPodFileContent = projectPodFileContent.replace(regExpToRemove, "");
 			projectPodFileContent = this.removePostInstallHook(
 				moduleName,
-				projectPodFileContent
+				projectPodFileContent,
 			);
 			projectPodFileContent =
 				this.$cocoaPodsPlatformManager.removePlatformSection(
 					moduleName,
 					projectPodFileContent,
-					podfilePath
+					podfilePath,
 				);
 
 			const defaultPodfileBeginning = this.getPodfileHeader(
-				projectData.projectName
+				projectData.projectName,
 			);
 			const defaultContentWithPostInstallHook = `${defaultPodfileBeginning}${this.getPostInstallHookHeader()}end${EOL}end`;
 			const defaultContentWithoutPostInstallHook = `${defaultPodfileBeginning}${EOL}end`;
@@ -383,7 +449,7 @@ end`.trim();
 			} else {
 				this.$fs.writeFile(
 					this.getProjectPodfilePath(projectRoot),
-					projectPodFileContent
+					projectPodFileContent,
 				);
 			}
 		}
@@ -391,11 +457,11 @@ end`.trim();
 
 	public getPluginPodfilePath(pluginData: IPluginData): string {
 		const pluginPlatformsFolderPath = pluginData.pluginPlatformsFolderPath(
-			PlatformTypes.ios
+			PlatformTypes.ios,
 		);
 		const pluginPodFilePath = path.join(
 			pluginPlatformsFolderPath,
-			PODFILE_NAME
+			PODFILE_NAME,
 		);
 		return pluginPodFilePath;
 	}
@@ -403,7 +469,7 @@ end`.trim();
 	private addPostInstallHook(
 		replacedFunctions: IRubyFunction[],
 		finalPodfileContent: string,
-		pluginPodfileContent: string
+		pluginPodfileContent: string,
 	): string {
 		const postInstallHookStart = this.getPostInstallHookHeader();
 		let postInstallHookContent = "";
@@ -424,11 +490,11 @@ end`.trim();
 			if (index !== -1) {
 				const regExp = new RegExp(
 					`(${regExpEscape(postInstallHookStart)}[\\s\\S]*?)(\\bend\\b)`,
-					"m"
+					"m",
 				);
 				finalPodfileContent = finalPodfileContent.replace(
 					regExp,
-					`$1${postInstallHookContent.trimRight()}${EOL}$2`
+					`$1${postInstallHookContent.trimRight()}${EOL}$2`,
 				);
 			} else {
 				if (finalPodfileContent.length > 0) {
@@ -444,13 +510,13 @@ end`.trim();
 
 	private getPodfileContentWithoutTarget(
 		projectData: IProjectData,
-		projectPodfileContent: string
+		projectPodfileContent: string,
 	): string {
 		const podFileHeader = this.getPodfileHeader(projectData.projectName);
 
 		if (_.startsWith(projectPodfileContent, podFileHeader)) {
 			projectPodfileContent = projectPodfileContent.substr(
-				podFileHeader.length
+				podFileHeader.length,
 			);
 
 			const podFileFooter = this.getPodfileFooter();
@@ -458,7 +524,7 @@ end`.trim();
 			if (_.endsWith(projectPodfileContent, podFileFooter)) {
 				projectPodfileContent = projectPodfileContent.substr(
 					0,
-					projectPodfileContent.length - podFileFooter.length
+					projectPodfileContent.length - podFileFooter.length,
 				);
 			}
 		}
@@ -469,11 +535,11 @@ end`.trim();
 	private saveProjectPodfile(
 		projectData: IProjectData,
 		projectPodfileContent: string,
-		projectRoot: string
+		projectRoot: string,
 	): void {
 		projectPodfileContent = this.getPodfileContentWithoutTarget(
 			projectData,
-			projectPodfileContent
+			projectPodfileContent,
 		);
 		const podFileHeader = this.getPodfileHeader(projectData.projectName);
 		const podFileFooter = this.getPodfileFooter();
@@ -484,14 +550,14 @@ end`.trim();
 
 	private removePostInstallHook(
 		moduleName: string,
-		projectPodFileContent: string
+		projectPodFileContent: string,
 	): string {
 		const regExp = new RegExp(
 			`^.*?${this.getHookBasicFuncNameForPlugin(
 				CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME,
-				moduleName
+				moduleName,
 			)}.*?$\\r?\\n`,
-			"gm"
+			"gm",
 		);
 		projectPodFileContent = projectPodFileContent.replace(regExp, "");
 		return projectPodFileContent;
@@ -499,7 +565,7 @@ end`.trim();
 
 	private getHookBasicFuncNameForPlugin(
 		hookName: string,
-		pluginName: string
+		pluginName: string,
 	): string {
 		// nativescript-hook and nativescript_hook should have different names, so replace all _ with ___ first and then replace all special symbols with _
 		// This will lead to a clash in case plugins are called nativescript-hook and nativescript___hook
@@ -512,13 +578,13 @@ end`.trim();
 	private replaceHookContent(
 		hookName: string,
 		podfileContent: string,
-		pluginName: string
+		pluginName: string,
 	): { replacedContent: string; newFunctions: IRubyFunction[] } {
 		const hookStart = `${hookName} do`;
 
 		const hookDefinitionRegExp = new RegExp(
 			`${hookStart} *(\\|(\\w+)\\|)?`,
-			"g"
+			"g",
 		);
 		const newFunctions: IRubyFunction[] = [];
 
@@ -528,11 +594,11 @@ end`.trim();
 				substring: string,
 				firstGroup: string,
 				secondGroup: string,
-				index: number
+				index: number,
 			): string => {
 				const newFunctionName = `${this.getHookBasicFuncNameForPlugin(
 					hookName,
-					pluginName
+					pluginName,
 				)}_${newFunctions.length}`;
 				let newDefinition = `def ${newFunctionName}`;
 
@@ -545,7 +611,7 @@ end`.trim();
 
 				newFunctions.push(rubyFunction);
 				return newDefinition;
-			}
+			},
 		);
 
 		return { replacedContent, newFunctions };
@@ -563,11 +629,11 @@ end`.trim();
 
 	private getExtensionPodfileHeader(
 		extensionPodFilePath: string,
-		targetName: string
+		targetName: string,
 	): string {
 		const targetHeader = `target "${targetName.trim()}" do`;
 		return `${this.getPluginPodfileHeader(
-			extensionPodFilePath
+			extensionPodFilePath,
 		)}${EOL}${targetHeader}`;
 	}
 
@@ -583,7 +649,7 @@ end`.trim();
 		pluginPodFilePath: string,
 		pluginName: string,
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): {
 		podfileContent: string;
 		replacedFunctions: IRubyFunction[];
@@ -593,11 +659,11 @@ end`.trim();
 		const data = this.replaceHookContent(
 			CocoaPodsService.PODFILE_POST_INSTALL_SECTION_NAME,
 			pluginPodfileContent,
-			pluginName
+			pluginName,
 		);
 		const cocoapodsData = this.$cocoaPodsPlatformManager.replacePlatformRow(
 			data.replacedContent,
-			pluginPodFilePath
+			pluginPodFilePath,
 		);
 		const podfilePlatformData = cocoapodsData.podfilePlatformData;
 		let replacedContent = cocoapodsData.replacedContent;
@@ -610,13 +676,13 @@ end`.trim();
 			replacedContent = this.overridePodsFromFile(
 				replacedContent,
 				projectData,
-				platformData
+				platformData,
 			);
 		}
 
 		return {
 			podfileContent: `${this.getPluginPodfileHeader(
-				pluginPodFilePath
+				pluginPodFilePath,
 			)}${EOL}${replacedContent}${EOL}${this.getPluginPodfileEnd()}`,
 			replacedFunctions: data.newFunctions,
 			podfilePlatformData,
@@ -625,19 +691,19 @@ end`.trim();
 
 	private getMainPodFilePath(
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): string {
 		return path.join(
 			projectData.appResourcesDirectoryPath,
 			platformData.normalizedPlatformName,
-			PODFILE_NAME
+			PODFILE_NAME,
 		);
 	}
 
 	private isMainPodFile(
 		podFilePath: string,
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): boolean {
 		const mainPodfilePath = this.getMainPodFilePath(projectData, platformData);
 
@@ -647,7 +713,7 @@ end`.trim();
 	private overridePodsFromFile(
 		podfileContent: string,
 		projectData: IProjectData,
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): string {
 		const mainPodfilePath = this.getMainPodFilePath(projectData, platformData);
 
@@ -657,7 +723,7 @@ end`.trim();
 			_.forEach(pods, (pod) => {
 				podfileContent = podfileContent.replace(
 					new RegExp(`^[ ]*pod\\s*["']${pod}['"].*$`, "gm"),
-					"#$&"
+					"#$&",
 				);
 			});
 		}

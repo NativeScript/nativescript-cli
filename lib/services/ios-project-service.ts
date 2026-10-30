@@ -7,7 +7,7 @@ import * as helpers from "../common/helpers";
 import { attachAwaitDetach } from "../common/helpers";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { PlistSession, Reporter } from "../tools/plist-merge/plist-session";
-import { EOL } from "os";
+import { EOL, userInfo } from "os";
 import * as plist from "plist";
 import * as fastGlob from "fast-glob";
 import { IOSProvisionService } from "./ios-provision-service";
@@ -69,6 +69,31 @@ export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
 export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
+
+const DERIVED_DATA_RELATIVE_PATH = path.join(
+	constants.BUILD_DIR,
+	"DerivedData",
+);
+
+/**
+ * With a workspace-relative DerivedData location, Xcode appends the workspace
+ * name to it, so this matches what Xcode uses and lets CLI and Xcode builds
+ * share one cache.
+ */
+export const getDerivedDataPath = (
+	projectRoot: string,
+	projectName: string,
+): string => path.join(projectRoot, DERIVED_DATA_RELATIVE_PATH, projectName);
+
+/**
+ * Lives next to the platform folder rather than in it, so regenerating
+ * platforms/ios still reuses unchanged compiles; deleting platforms/ clears it.
+ */
+export const getCompilationCachePath = (
+	platformsDir: string,
+	platformName: string,
+): string =>
+	path.join(platformsDir, ".cache", platformName, "CompilationCache");
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
@@ -177,8 +202,9 @@ export class IOSProjectService
 				getBuildOutputPath: (options: IBuildData): string => {
 					const config = getConfigurationName(!options || options.release);
 					return path.join(
-						projectRoot,
-						constants.BUILD_DIR,
+						getDerivedDataPath(projectRoot, projectData.projectName),
+						"Build",
+						"Products",
 						`${config}-${getPlatformSdkName(options)}`,
 					);
 				},
@@ -437,6 +463,7 @@ export class IOSProjectService
 		buildData: IOSBuildData,
 	): Promise<void> {
 		const platformData = this.getPlatformData(projectData);
+		this.ensureWorkspaceDerivedDataLocation(projectData, platformData);
 
 		// On a first build, the runtime (and any other Swift packages) download
 		// here. Pre-resolve under a clear spinner so the subsequent
@@ -928,6 +955,8 @@ export class IOSProjectService
 				"The support for Apple Watch App is currently in Beta. For more information about the current development state and any known issues, please check the relevant GitHub issue: https://github.com/NativeScript/nativescript-cli/issues/4589",
 			);
 		}
+
+		this.ensureWorkspaceDerivedDataLocation(projectData, platformData);
 	}
 
 	public prepareAppResources(projectData: IProjectData): void {
@@ -1292,6 +1321,11 @@ export class IOSProjectService
 			projectData,
 			platformData,
 		);
+		await this.$cocoapodsService.applyPodfileBuildSettings(
+			projectData,
+			platformData,
+			this.getCompilationCacheSettings(projectData),
+		);
 		await this.$cocoapodsService.applyPodfileFromExtensions(
 			projectData,
 			platformData,
@@ -1370,11 +1404,82 @@ export class IOSProjectService
 			}
 		}
 
+		// `pod install` may have just created the .xcworkspace, and Swift
+		// packages resolve into the location this sets.
+		this.ensureWorkspaceDerivedDataLocation(projectData, platformData);
+
 		await this.$spmService.applySPMPackages(
 			platformData,
 			projectData,
 			pluginSpmPackages,
 		);
+	}
+
+	/**
+	 * Puts DerivedData inside the platforms folder for both xcodebuild and
+	 * Xcode, so CLI and Xcode builds share one cache. Xcode ignores this
+	 * setting in xcshareddata, so it has to be the per-user file.
+	 */
+	private ensureWorkspaceDerivedDataLocation(
+		projectData: IProjectData,
+		platformData: IPlatformData,
+	): void {
+		if (this.$options.hostProjectPath) {
+			return;
+		}
+
+		const { projectRoot } = platformData;
+		const xcodeprojPath = path.join(
+			projectRoot,
+			`${projectData.projectName}.xcodeproj`,
+		);
+		const podsWorkspacePath = path.join(
+			projectRoot,
+			`${projectData.projectName}.xcworkspace`,
+		);
+		const workspacePaths = [
+			...(this.$fs.exists(xcodeprojPath)
+				? [path.join(xcodeprojPath, "project.xcworkspace")]
+				: []),
+			...(this.$fs.exists(podsWorkspacePath) ? [podsWorkspacePath] : []),
+		];
+		const settings: Record<string, string> = {
+			DerivedDataLocationStyle: "WorkspaceRelativePath",
+			DerivedDataCustomLocation: DERIVED_DATA_RELATIVE_PATH,
+		};
+
+		for (const workspacePath of workspacePaths) {
+			const contentsPath = path.join(workspacePath, "contents.xcworkspacedata");
+			if (!this.$fs.exists(contentsPath)) {
+				this.$fs.writeFile(
+					contentsPath,
+					`<?xml version="1.0" encoding="UTF-8"?>${EOL}<Workspace version = "1.0">${EOL}   <FileRef location = "self:">${EOL}   </FileRef>${EOL}</Workspace>${EOL}`,
+				);
+			}
+
+			const settingsPath = path.join(
+				workspacePath,
+				"xcuserdata",
+				`${userInfo().username}.xcuserdatad`,
+				"WorkspaceSettings.xcsettings",
+			);
+			let existing: Record<string, any> = {};
+			if (this.$fs.exists(settingsPath)) {
+				try {
+					existing = <any>plist.parse(this.$fs.readText(settingsPath));
+				} catch (err) {
+					this.$logger.trace(`Unable to parse ${settingsPath}: `, err);
+				}
+			}
+			if (_.isMatch(existing, settings)) {
+				continue;
+			}
+
+			this.$fs.writeFile(
+				settingsPath,
+				plist.build(<any>{ ...existing, ...settings }),
+			);
+		}
 	}
 
 	public beforePrepareAllPlugins(
@@ -1872,6 +1977,27 @@ export class IOSProjectService
 			}
 		}
 
+		const compilationCacheSettings =
+			this.getCompilationCacheSettings(projectData);
+		if (compilationCacheSettings) {
+			const tempDir = await this.$tempService.mkdirSync("compilation-cache");
+			const tempXcconfigPath = path.join(tempDir, "compilation-cache.xcconfig");
+			this.$fs.writeFile(
+				tempXcconfigPath,
+				_.map(
+					compilationCacheSettings,
+					(value, key) => `${key} = ${value}${EOL}`,
+				).join(""),
+			);
+			// Merged last, so the app's or a plugin's xcconfig can turn it off.
+			for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
+				await this.$xcconfigService.mergeFiles(
+					tempXcconfigPath,
+					pluginsXcconfigFilePath,
+				);
+			}
+		}
+
 		for (const pluginsXcconfigFilePath of pluginsXcconfigFilePaths) {
 			// Set Entitlements Property to point to default file if not set explicitly by the user.
 			const entitlementsPropertyValue = this.$xcconfigService.readPropertyValue(
@@ -1907,6 +2033,31 @@ export class IOSProjectService
 				);
 			}
 		}
+	}
+
+	/**
+	 * Xcode's compilation cache replays compiles whose inputs are unchanged,
+	 * even after the project is regenerated and file timestamps change.
+	 */
+	public getCompilationCacheSettings(
+		projectData: IProjectData,
+	): Record<string, string> | null {
+		if (this.$options.hostProjectPath) {
+			return null;
+		}
+
+		const platformData = this.getPlatformData(projectData);
+		return {
+			COMPILATION_CACHE_ENABLE_CACHING:
+				this.$xcconfigService.readPropertyValue(
+					this.getBuildXCConfigFilePath(projectData),
+					"COMPILATION_CACHE_ENABLE_CACHING",
+				) || "YES",
+			COMPILATION_CACHE_CAS_PATH: getCompilationCachePath(
+				projectData.platformsDir,
+				platformData.platformNameLowerCase,
+			),
+		};
 	}
 
 	private getBuildXCConfigFilePath(projectData: IProjectData): string {

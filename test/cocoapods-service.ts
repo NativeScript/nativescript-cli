@@ -6,6 +6,9 @@ import * as _ from "lodash";
 import { LoggerStub, ErrorsStub } from "./stubs";
 import { XcconfigService } from "../lib/services/xcconfig-service";
 import * as path from "path";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
+import { FileSystem } from "../lib/common/file-system";
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
 import { IPluginData } from "../lib/definitions/plugins";
 import { ICocoaPodsService, IProjectData } from "../lib/definitions/project";
@@ -27,10 +30,10 @@ interface IMergePodfileHooksTestCase {
 	pluginData?: IPluginData;
 }
 
-function createTestInjector(): IInjector {
+function createTestInjector(fs: any = {}): IInjector {
 	const testInjector: IInjector = new yok.Yok();
 
-	testInjector.register("fs", {});
+	testInjector.register("fs", fs);
 	testInjector.register("cocoapodsService", CocoaPodsService);
 	testInjector.register("childProcess", {});
 	testInjector.register("errors", ErrorsStub);
@@ -61,7 +64,7 @@ function changeNewLineCharacter(input: string): string {
 describe("Cocoapods service", () => {
 	if (require("os").platform() === "win32") {
 		console.log(
-			"Skipping 'Cocoapods service' tests. They can work only on macOS and Linux"
+			"Skipping 'Cocoapods service' tests. They can work only on macOS and Linux",
 		);
 		return;
 	}
@@ -92,7 +95,7 @@ describe("Cocoapods service", () => {
 		injector: IInjector,
 		podfileContent: string,
 		projectPodfileContent?: string,
-		appResourcesPodfileContent?: string
+		appResourcesPodfileContent?: string,
 	): void => {
 		const fs: IFileSystem = injector.resolve("fs");
 
@@ -567,21 +570,21 @@ end`,
 				mockFileSystem(
 					testInjector,
 					testCase.input,
-					testCase.projectPodfileContent
+					testCase.projectPodfileContent,
 				);
 
 				await cocoapodsService.applyPodfileToProject(
 					testCase.pluginData ? testCase.pluginData.name : mockPluginData.name,
 					cocoapodsService.getPluginPodfilePath(
-						testCase.pluginData || mockPluginData
+						testCase.pluginData || mockPluginData,
 					),
 					mockProjectData,
-					mockPlatformData
+					mockPlatformData,
 				);
 
 				assert.deepStrictEqual(
 					changeNewLineCharacter(newPodfileContent),
-					changeNewLineCharacter(testCase.output)
+					changeNewLineCharacter(testCase.output),
 				);
 			});
 		});
@@ -791,19 +794,19 @@ end`,
 				mockFileSystem(
 					testInjector,
 					testCase.input,
-					testCase.projectPodfileContent
+					testCase.projectPodfileContent,
 				);
 
 				cocoapodsService.removePodfileFromProject(
 					mockPluginData.name,
 					cocoapodsService.getPluginPodfilePath(mockPluginData),
 					mockProjectData,
-					nativeProjectPath
+					nativeProjectPath,
 				);
 
 				assert.deepStrictEqual(
 					changeNewLineCharacter(newPodfileContent),
-					changeNewLineCharacter(testCase.output)
+					changeNewLineCharacter(testCase.output),
 				);
 			});
 		});
@@ -818,7 +821,7 @@ end`,
 			childProcess.exec = async (
 				command: string,
 				options?: any,
-				execOptions?: IExecOptions
+				execOptions?: IExecOptions,
 			): Promise<any> => {
 				if (command === "arch -x86_64 pod --version") {
 					// This is the command that is used to check if cocoapods is installed under Rosetta 2
@@ -835,7 +838,7 @@ end`,
 				args: string[],
 				event: string,
 				options?: any,
-				spawnFromEventOptions?: ISpawnFromEventOptions
+				spawnFromEventOptions?: ISpawnFromEventOptions,
 			): Promise<ISpawnResult> => ({
 				stdout: "",
 				stderr: "",
@@ -857,7 +860,7 @@ end`,
 					args: string[],
 					event: string,
 					options?: any,
-					spawnFromEventOptions?: ISpawnFromEventOptions
+					spawnFromEventOptions?: ISpawnFromEventOptions,
 				): Promise<ISpawnResult> => {
 					commandCalled = command;
 					return {
@@ -880,7 +883,7 @@ end`,
 				args: string[],
 				event: string,
 				options?: any,
-				spawnFromEventOptions?: ISpawnFromEventOptions
+				spawnFromEventOptions?: ISpawnFromEventOptions,
 			): Promise<ISpawnResult> => {
 				commandCalled = command;
 				assert.deepStrictEqual(args, ["install"]);
@@ -908,7 +911,7 @@ end`,
 				args: string[],
 				event: string,
 				options?: any,
-				spawnFromEventOptions?: ISpawnFromEventOptions
+				spawnFromEventOptions?: ISpawnFromEventOptions,
 			): Promise<ISpawnResult> => {
 				return {
 					stdout: "",
@@ -919,7 +922,7 @@ end`,
 
 			await assert.isRejected(
 				cocoapodsService.executePodInstall(projectRoot, xcodeProjPath),
-				"'pod install' command failed."
+				"'pod install' command failed.",
 			);
 		});
 
@@ -935,14 +938,14 @@ end`,
 				args: string[],
 				event: string,
 				options?: any,
-				spawnFromEventOptions?: ISpawnFromEventOptions
+				spawnFromEventOptions?: ISpawnFromEventOptions,
 			): Promise<ISpawnResult> => {
 				return expectedResult;
 			};
 
 			const result = await cocoapodsService.executePodInstall(
 				projectRoot,
-				xcodeProjPath
+				xcodeProjPath,
 			);
 			assert.deepStrictEqual(result, expectedResult);
 		});
@@ -1084,13 +1087,13 @@ end`,
 						pod.name,
 						pod.path,
 						projectData,
-						platformData
+						platformData,
 					);
 				}
 
 				assert.deepStrictEqual(
 					projectPodfileContent,
-					testCase.expectedProjectPodfileContentAfterApply
+					testCase.expectedProjectPodfileContentAfterApply,
 				);
 
 				for (const pod of testCase.podsToRemove) {
@@ -1098,13 +1101,13 @@ end`,
 						pod.name,
 						pod.path,
 						projectData,
-						projectPodfilePath
+						projectPodfilePath,
 					);
 				}
 
 				assert.deepStrictEqual(
 					projectPodfileContent,
-					testCase.expectedProjectPodfileContentAfterRemove
+					testCase.expectedProjectPodfileContentAfterRemove,
 				);
 			});
 		});
@@ -1365,13 +1368,13 @@ end`,
 						pod.name,
 						pod.path,
 						projectData,
-						platformData
+						platformData,
 					);
 				}
 
 				assert.deepStrictEqual(
 					projectPodfileContent,
-					testCase.expectedProjectPodfileContent
+					testCase.expectedProjectPodfileContent,
 				);
 			});
 		});
@@ -1413,27 +1416,27 @@ end`,
 				testInjector,
 				testCase.pluginPodContent,
 				testCase.projectPodfileContent,
-				testCase.appResourcesPodContent
+				testCase.appResourcesPodContent,
 			);
 			await cocoapodsService.applyPodfileToProject(
 				mockPluginData.name,
 				cocoapodsService.getPluginPodfilePath(mockPluginData),
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedOutput)
+				changeNewLineCharacter(testCase.expectedOutput),
 			);
 			await cocoapodsService.applyPodfileFromAppResources(
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedFinalOutput)
+				changeNewLineCharacter(testCase.expectedFinalOutput),
 			);
 		});
 
@@ -1485,49 +1488,49 @@ end`,
 				testInjector,
 				testCase.pluginPodContent,
 				testCase.projectPodfileContent,
-				testCase.appResourcesPodContent
+				testCase.appResourcesPodContent,
 			);
 			await cocoapodsService.applyPodfileToProject(
 				mockPluginData.name,
 				cocoapodsService.getPluginPodfilePath(mockPluginData),
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedOutput)
+				changeNewLineCharacter(testCase.expectedOutput),
 			);
 			await cocoapodsService.applyPodfileFromAppResources(
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedIntermidiatOutput)
+				changeNewLineCharacter(testCase.expectedIntermidiatOutput),
 			);
 
 			mockFileSystem(
 				testInjector,
 				testCase.pluginPodContent,
 				testCase.projectPodfileContent,
-				testCase.updatedAppResourcesPodContent
+				testCase.updatedAppResourcesPodContent,
 			);
 			await cocoapodsService.applyPodfileToProject(
 				mockPluginData.name,
 				cocoapodsService.getPluginPodfilePath(mockPluginData),
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 			await cocoapodsService.applyPodfileFromAppResources(
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedFinalOutput)
+				changeNewLineCharacter(testCase.expectedFinalOutput),
 			);
 		});
 
@@ -1579,50 +1582,133 @@ end`,
 				testInjector,
 				testCase.pluginPodContent,
 				testCase.projectPodfileContent,
-				testCase.appResourcesPodContent
+				testCase.appResourcesPodContent,
 			);
 			await cocoapodsService.applyPodfileToProject(
 				mockPluginData.name,
 				cocoapodsService.getPluginPodfilePath(mockPluginData),
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedOutput)
+				changeNewLineCharacter(testCase.expectedOutput),
 			);
 			await cocoapodsService.applyPodfileFromAppResources(
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedIntermidiatOutput)
+				changeNewLineCharacter(testCase.expectedIntermidiatOutput),
 			);
 
 			mockFileSystem(
 				testInjector,
 				testCase.pluginPodContent,
 				testCase.projectPodfileContent,
-				testCase.updatedAppResourcesPodContent
+				testCase.updatedAppResourcesPodContent,
 			);
 			await cocoapodsService.applyPodfileToProject(
 				mockPluginData.name,
 				cocoapodsService.getPluginPodfilePath(mockPluginData),
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 			await cocoapodsService.applyPodfileFromAppResources(
 				projectDataMock,
-				mockPlatformData
+				mockPlatformData,
 			);
 
 			assert.deepStrictEqual(
 				changeNewLineCharacter(newPodfileContent),
-				changeNewLineCharacter(testCase.expectedFinalOutput)
+				changeNewLineCharacter(testCase.expectedFinalOutput),
 			);
 		});
+	});
+});
+
+describe("applyPodfileBuildSettings", () => {
+	const projectName = "projectName";
+
+	function setup(buildXcconfig: string) {
+		const dir = mkdtempSync(path.join(tmpdir(), "podfile-deployment-target-"));
+		const testInjector = createTestInjector(FileSystem);
+		const fs: IFileSystem = testInjector.resolve("fs");
+		const cocoapodsService: ICocoaPodsService =
+			testInjector.resolve("cocoapodsService");
+		const projectData: any = {
+			projectDir: dir,
+			projectName,
+			appResourcesDirectoryPath: path.join(dir, "App_Resources"),
+			nsConfig: { overridePods: false },
+		};
+		const platformData: any = {
+			projectRoot: path.join(dir, "platforms", "ios"),
+			normalizedPlatformName: "iOS",
+		};
+		const podfilePath = path.join(platformData.projectRoot, "Podfile");
+		const xcconfigPath = path.join(
+			projectData.appResourcesDirectoryPath,
+			"iOS",
+			"build.xcconfig",
+		);
+		fs.writeFile(
+			podfilePath,
+			`use_frameworks!${EOL}${EOL}target "${projectName}" do${EOL}${EOL}end`,
+		);
+		fs.writeFile(xcconfigPath, buildXcconfig);
+		const apply = (buildSettings: Record<string, string> = null) =>
+			cocoapodsService.applyPodfileBuildSettings(
+				projectData,
+				platformData,
+				buildSettings,
+			);
+		return { fs, podfilePath, xcconfigPath, platformData, apply };
+	}
+
+	it("raises pods below the app's deployment target", async () => {
+		const { fs, podfilePath, platformData, apply } = setup(
+			"IPHONEOS_DEPLOYMENT_TARGET = 18.0;",
+		);
+
+		await apply();
+
+		const podfile = fs.readText(podfilePath);
+		assert.include(podfile, "# Begin Podfile - ");
+		assert.include(podfile, 'Gem::Version.new("18.0")');
+		assert.include(podfile, "post_install do |installer|");
+		assert.isFalse(
+			fs.exists(path.join(platformData.projectRoot, "Podfile-build-settings")),
+		);
+	});
+
+	it("sets the given build settings on every pod target", async () => {
+		const { fs, podfilePath, apply } = setup("");
+
+		await apply({ COMPILATION_CACHE_ENABLE_CACHING: "YES" });
+
+		const podfile = fs.readText(podfilePath);
+		assert.include(
+			podfile,
+			'config.build_settings["COMPILATION_CACHE_ENABLE_CACHING"] = "YES"',
+		);
+		assert.notInclude(podfile, "IPHONEOS_DEPLOYMENT_TARGET");
+	});
+
+	it("removes the section once build.xcconfig no longer sets a deployment target", async () => {
+		const { fs, podfilePath, xcconfigPath, apply } = setup(
+			"IPHONEOS_DEPLOYMENT_TARGET = 18.0;",
+		);
+		await apply();
+
+		fs.writeFile(xcconfigPath, "");
+		await apply();
+
+		const podfile = fs.readText(podfilePath);
+		assert.notInclude(podfile, "Podfile-build-settings");
+		assert.notInclude(podfile, "IPHONEOS_DEPLOYMENT_TARGET");
 	});
 });
