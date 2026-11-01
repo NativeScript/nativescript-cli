@@ -118,7 +118,7 @@
     "@types/tar": "7.0.87",
     "@types/tunnel": "0.0.7",
     "@types/uuid": "^10.0.0",
-    "@types/ws": "8.18.1",
+    "@types/ws": "8.18.2",
     "@types/xml2js": "0.4.14",
     "@types/yargs": "17.0.33",
     "@types/yazl": "^3.3.0",
