@@ -1174,6 +1174,11 @@ declare global {
 			shouldReturnImmediateResult: boolean;
 			platform: string;
 			fullDiscovery?: boolean;
+			/**
+			 * Ends the wait for physical devices once the device requested on the
+			 * command line has been found by any discovery.
+			 */
+			isRequestedDeviceFound?: () => boolean;
 		}
 
 		interface IAndroidDeviceHashService {
