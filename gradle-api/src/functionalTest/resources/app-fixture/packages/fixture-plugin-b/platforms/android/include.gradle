@@ -1,0 +1,17 @@
+// A second plugin applying the library to the same project, after the sample has.
+apply plugin: "org.nativescript.api"
+
+def nsFromB = project.extensions.getByName("nativescript")
+println "NS|b.sameExtension|${nativescript.is(nsFromB)}"
+println "NS|b.projectDir|${nsFromB.projectDir}"
+
+// Scripts applied with `apply from` get their own class loader, which does not see the
+// classes buildscript.gradle put on the project's classpath, even though the plugin id resolves.
+def libraryClassVisible
+try {
+    Class.forName("org.nativescript.gradle.NativeScript")
+    libraryClassVisible = true
+} catch (ClassNotFoundException ignored) {
+    libraryClassVisible = false
+}
+println "NS|b.libraryClassVisible|$libraryClassVisible"

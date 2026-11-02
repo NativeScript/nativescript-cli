@@ -1,0 +1,3 @@
+dependencies {
+    classpath "org.nativescript:gradle-api:@LIBRARY_VERSION@"
+}

@@ -131,3 +131,9 @@ CLAUDE.local.md
 .env.*
 !.env.example
 .envrc
+
+# org.nativescript:gradle-api
+gradle-api/build/
+gradle-api/.gradle/
+gradle-api/.kotlin/
+gradle-api/samples/**/build/

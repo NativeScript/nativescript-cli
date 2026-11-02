@@ -180,6 +180,7 @@ function createTestInjector() {
 		"androidPluginBuildService",
 		stubs.AndroidPluginBuildServiceStub,
 	);
+	testInjector.register("androidPluginMirrorService", {});
 	testInjector.register("analyticsSettingsService", {});
 	testInjector.register(
 		"androidResourcesMigrationService",

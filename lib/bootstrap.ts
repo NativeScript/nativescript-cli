@@ -49,6 +49,10 @@ injector.require(
 	"./services/android/gradle-build-args-service",
 );
 injector.require(
+	"androidPluginMirrorService",
+	"./services/android/android-plugin-mirror-service",
+);
+injector.require(
 	"androidBundleToolService",
 	"./services/android/android-bundle-tool-service",
 );
