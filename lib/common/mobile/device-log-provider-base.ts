@@ -1,27 +1,29 @@
 import { EventEmitter } from "events";
 import { getPropertyName } from "../helpers";
 import { IDictionary } from "../declarations";
+import { IOSLogChunkStitcher, isIOSRuntimeLogEntry } from "./ios/ios-log-entry";
 
 export abstract class DeviceLogProviderBase
 	extends EventEmitter
 	implements Mobile.IDeviceLogProvider
 {
 	protected devicesLogOptions: IDictionary<Mobile.IDeviceLogOptions> = {};
+	private iOSLogChunkStitcher = new IOSLogChunkStitcher();
 
 	constructor(
 		protected $logFilter: Mobile.ILogFilter,
 		protected $logger: ILogger,
-		protected $logSourceMapService: Mobile.ILogSourceMapService
+		protected $logSourceMapService: Mobile.ILogSourceMapService,
 	) {
 		super();
 	}
 
 	public async setSourceFileLocation(
-		pathToOriginalFile: string
+		pathToOriginalFile: string,
 	): Promise<void> {
 		try {
 			await this.$logSourceMapService.setSourceMapConsumerForFile(
-				pathToOriginalFile
+				pathToOriginalFile,
 			);
 		} catch (err) {
 			this.$logger.trace("Error while trying to set source map file", err);
@@ -31,23 +33,47 @@ export abstract class DeviceLogProviderBase
 	public abstract logData(
 		lineText: string,
 		platform: string,
-		deviceIdentifier: string
+		deviceIdentifier: string,
+	): void;
+
+	public abstract logEntry(
+		entry: Mobile.IiOSLogEntry,
+		platform: string,
+		deviceIdentifier: string,
 	): void;
 
 	public abstract setLogLevel(
 		logLevel: string,
-		deviceIdentifier?: string
+		deviceIdentifier?: string,
 	): void;
+
+	protected stitchIOSLogEntry(
+		entry: Mobile.IiOSLogEntry,
+		text: string,
+		deviceIdentifier: string,
+		emit: (text: string) => void,
+	): void {
+		if (!isIOSRuntimeLogEntry(entry)) {
+			emit(text);
+			return;
+		}
+
+		this.iOSLogChunkStitcher.add(
+			`${deviceIdentifier}:${entry.pid}:${entry.thread}`,
+			text,
+			emit,
+		);
+	}
 
 	public setApplicationPidForDevice(
 		deviceIdentifier: string,
-		pid: string
+		pid: string,
 	): void {
 		this.setDeviceLogOptionsProperty(
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.applicationPid,
-			pid
+			pid,
 		);
 	}
 
@@ -56,31 +82,31 @@ export abstract class DeviceLogProviderBase
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.applicationId,
-			appId
+			appId,
 		);
 	}
 
 	public setProjectNameForDevice(
 		deviceIdentifier: string,
-		projectName: string
+		projectName: string,
 	): void {
 		this.setDeviceLogOptionsProperty(
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.projectName,
-			projectName
+			projectName,
 		);
 	}
 
 	public setProjectDirForDevice(
 		deviceIdentifier: string,
-		projectDir: string
+		projectDir: string,
 	): void {
 		this.setDeviceLogOptionsProperty(
 			deviceIdentifier,
 			(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 				deviceLogOptions.projectDir,
-			projectDir
+			projectDir,
 		);
 	}
 
@@ -99,6 +125,13 @@ export abstract class DeviceLogProviderBase
 		);
 	}
 
+	public getProjectNameForDevice(deviceIdentifier: string): string {
+		return (
+			this.devicesLogOptions[deviceIdentifier] &&
+			this.devicesLogOptions[deviceIdentifier].projectName
+		);
+	}
+
 	getApplicationIdForDevice(deviceIdentifier: string) {
 		return (
 			this.devicesLogOptions[deviceIdentifier] &&
@@ -107,7 +140,7 @@ export abstract class DeviceLogProviderBase
 	}
 
 	protected getDeviceLogOptionsForDevice(
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): Mobile.IDeviceLogOptions {
 		const loggingOptions = this.devicesLogOptions[deviceIdentifier];
 		if (!loggingOptions) {
@@ -120,7 +153,7 @@ export abstract class DeviceLogProviderBase
 	protected setDeviceLogOptionsProperty(
 		deviceIdentifier: string,
 		propNameFunction: Function,
-		propertyValue: string | boolean
+		propertyValue: string | boolean,
 	): void {
 		const propertyName = getPropertyName(propNameFunction);
 

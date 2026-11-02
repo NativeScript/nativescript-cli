@@ -1671,4 +1671,27 @@ at promiseReactionJob\n`,
 			});
 		});
 	});
+	describe("structured iOS log entries", () => {
+		const structuredDevice = "structuredDevice";
+		const appDir = "/private/var/containers/Bundle/Application/1/app.app";
+
+		it("prints the app's JS output and drops other entries", () => {
+			deviceLogProvider.setProjectNameForDevice(structuredDevice, "app");
+			const log = (image: string, message: string, process = `${appDir}/app`) =>
+				deviceLogProvider.logEntry(
+					{ process, image, level: "notice", message },
+					"iOS",
+					structuredDevice,
+				);
+
+			log(
+				`${appDir}/Frameworks/NativeScript.framework/NativeScript`,
+				"CONSOLE LOG: hello",
+			);
+			log("/System/Library/Frameworks/Network.framework/Network", "nw noise");
+			log("", "wlan0: noise", "/kernel");
+
+			assertData(logger.output, "CONSOLE LOG: hello\n");
+		});
+	});
 });
