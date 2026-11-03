@@ -36,7 +36,6 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as _ from "lodash";
-import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 import { cwd } from "process";
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
@@ -492,9 +491,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$projectData.nsConfig?.android?.runtimePackageName ||
 			SCOPED_ANDROID_RUNTIME_NAME;
 		try {
-			let result = await this.$packageManager.view(packageName, {
-				"dist-tags": true,
-			});
+			let result = await this.$packageManager.view(packageName, "dist-tags");
 			result = result?.["dist-tags"] ?? result;
 			runtimeVersion = result.latest;
 		} catch (err) {
@@ -529,19 +526,17 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			this.$projectData.nsConfig?.android?.runtimePackageName ||
 			SCOPED_ANDROID_RUNTIME_NAME;
 		// try reading from installed runtime first before reading from the npm registry...
-		const installedRuntimePackageJSONPath = resolvePackageJSONPath(
+		const installedRuntimePath = this.$packageManager.getInstalledPackagePath(
 			packageName,
-			{
-				paths: [this.$projectData.projectDir],
-			},
+			this.$projectData.projectDir,
 		);
 
-		if (!installedRuntimePackageJSONPath) {
+		if (!installedRuntimePath) {
 			return null;
 		}
 
 		const installedRuntimePackageJSON: IRuntimePackageJSON = this.$fs.readJson(
-			installedRuntimePackageJSONPath,
+			path.join(installedRuntimePath, "package.json"),
 		);
 
 		if (!installedRuntimePackageJSON) {
@@ -590,7 +585,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		try {
 			let output = await this.$packageManager.view(
 				`${packageName}@${runtimeVersion}`,
-				{ version_info: true },
+				"version_info",
 			);
 			output = output?.["version_info"] ?? output;
 
@@ -605,7 +600,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				 */
 				output = await this.$packageManager.view(
 					`${packageName}@${runtimeVersion}`,
-					{ gradle: true },
+					"gradle",
 				);
 				output = output?.["gradle"] ?? output;
 

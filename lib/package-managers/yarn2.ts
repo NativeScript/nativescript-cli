@@ -1,23 +1,34 @@
 import * as path from "path";
 import * as _ from "lodash";
 import { BasePackageManager } from "./base-package-manager";
-import { exported } from "./common/decorators";
+import { exported } from "../common/decorators";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
 	IFileSystem,
 	IHostInfo,
 	Server,
-	IDictionary,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class Yarn2PackageManager extends BasePackageManager {
+	protected readonly installFlags = {
+		dev: "--dev",
+		optional: "--optional",
+		exact: "--exact",
+		silent: "--silent",
+		// yarn berry has no --ignore-scripts; skip-build is the mode that
+		// installs without running any build scripts.
+		ignoreScripts: "--mode=skip-build",
+	};
+	protected readonly uninstallFlags = {};
+
 	private $hostInfo_: IHostInfo;
 	constructor(
 		$childProcess: IChildProcess,
@@ -46,23 +57,16 @@ export class Yarn2PackageManager extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		options: IPackageInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		if (config.disableNpmInstall) {
+		if (options.disableNpmInstall) {
 			return;
-		}
-		if (config.ignoreScripts) {
-			config["ignore-scripts"] = true;
 		}
 
 		const packageJsonPath = path.join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		// remove unsupported flags
-		// todo: refactor all package managers to map typed flags to the actual flags
-		const cleanedConfig = _.omit(config, ["save-dev", "save-exact"]);
-
-		const flags = this.getFlagsString(cleanedConfig, true);
+		const flags = this.getInstallFlags(options);
 		let params = [];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -88,25 +92,23 @@ export class Yarn2PackageManager extends BasePackageManager {
 	@exported("yarn2")
 	public uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		cwd?: string
 	): Promise<string> {
-		const flags = this.getFlagsString(config, false);
+		const flags = this.getUninstallFlags(options).join(" ");
 		return this.$childProcess.exec(`yarn remove ${packageName} ${flags}`, {
 			cwd,
 		});
 	}
 
 	@exported("yarn2")
-	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true });
-
-		const flags = this.getFlagsString(wrappedConfig, false);
+	public async view(packageName: string, field?: string): Promise<any> {
+		const args = [packageName, field && `--fields ${field}`, "--json"]
+			.filter(Boolean)
+			.join(" ");
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(
-				`yarn npm info ${packageName} ${flags}`
-			);
+			viewResult = await this.$childProcess.exec(`yarn npm info ${args}`);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
@@ -120,10 +122,7 @@ export class Yarn2PackageManager extends BasePackageManager {
 	}
 
 	@exported("yarn2")
-	public search(
-		filter: string[],
-		config: IDictionary<string | boolean>
-	): Promise<string> {
+	public search(filter: string[]): Promise<string> {
 		this.$errors.fail(
 			"Method not implemented. Yarn does not support searching for packages in the registry."
 		);
