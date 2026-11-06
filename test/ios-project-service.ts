@@ -132,6 +132,7 @@ function createTestInjector(
 		public async startLookingForDevices(): Promise<void> {}
 	}
 	testInjector.register("windowsDeviceDiscovery", WindowsDeviceDiscoveryStub);
+	testInjector.register("linuxDeviceDiscovery", WindowsDeviceDiscoveryStub);
 	testInjector.register("messages", Messages);
 	testInjector.register("mobileHelper", MobileHelper);
 	testInjector.register("deviceLogProvider", DeviceLogProvider);

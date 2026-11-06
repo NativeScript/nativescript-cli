@@ -144,6 +144,8 @@ interface INsConfigIOS extends INsConfigPlaform {
 
 interface INSConfigVisionOS extends INsConfigIOS {}
 
+interface INsConfigLinux extends INsConfigPlaform {}
+
 interface INsConfigWindows extends INsConfigPlaform {
 	/**
 	 * Seal the app's webpack output into an encrypted app.nsbundle instead of shipping it as
@@ -218,6 +220,7 @@ interface INsConfig {
 	android?: INsConfigAndroid;
 	visionos?: INSConfigVisionOS;
 	windows?: INsConfigWindows;
+	linux?: INsConfigLinux;
 	ignoredNativeDependencies?: string[];
 	hooks?: INsConfigHooks[];
 	projectName?: string;

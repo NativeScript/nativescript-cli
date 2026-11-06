@@ -36,6 +36,7 @@ class ProjectChangesServiceTest extends BaseServiceTest {
 		this.injector.register("androidProjectService", {});
 		this.injector.register("iOSProjectService", {});
 		this.injector.register("windowsProjectService", {});
+		this.injector.register("linuxProjectService", {});
 		this.injector.register("fs", FileSystem);
 		this.injector.register("devicePlatformsConstants", {});
 		this.injector.register("devicePlatformsConstants", {});

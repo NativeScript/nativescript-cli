@@ -90,6 +90,10 @@ injector.require(
 	"./mobile/windows/windows-device-discovery",
 );
 injector.require(
+	"linuxDeviceDiscovery",
+	"./mobile/linux/linux-device-discovery",
+);
+injector.require(
 	"androidEmulatorDiscovery",
 	"./mobile/mobile-core/android-emulator-discovery",
 );

@@ -50,7 +50,8 @@ export class DevicePathProvider implements IDevicePathProvider {
 				projectRoot = path.join(projectRoot, syncFolderName);
 			}
 		} else if (
-			this.$mobileHelper.isWindowsPlatform(device.deviceInfo.platform)
+			this.$mobileHelper.isWindowsPlatform(device.deviceInfo.platform) ||
+			this.$mobileHelper.isLinuxPlatform(device.deviceInfo.platform)
 		) {
 			const projectData = options.projectData;
 			if (projectData) {

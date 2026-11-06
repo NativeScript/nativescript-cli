@@ -113,6 +113,8 @@ describe("debugController", () => {
 
 		testInjector.register("windowsDeviceDebugService", PlatformDebugService);
 
+		testInjector.register("linuxDeviceDebugService", PlatformDebugService);
+
 		testInjector.register("mobileHelper", {
 			isAndroidPlatform: (platform: string) => {
 				return platform.toLowerCase() === "android";
@@ -122,6 +124,9 @@ describe("debugController", () => {
 			},
 			isWindowsPlatform: (platform: string) => {
 				return platform.toLowerCase() === "windows";
+			},
+			isLinuxPlatform: (platform: string) => {
+				return platform.toLowerCase() === "linux";
 			},
 		});
 
@@ -264,10 +269,14 @@ describe("debugController", () => {
 			it("windowsDeviceDebugService's debug method fails", async () => {
 				await assertIsRejectedWhenPlatformDebugServiceFails("windows");
 			});
+
+			it("linuxDeviceDebugService's debug method fails", async () => {
+				await assertIsRejectedWhenPlatformDebugServiceFails("linux");
+			});
 		});
 
 		describe(`raises ${CONNECTION_ERROR_EVENT_NAME} event`, () => {
-			_.each(["android", "iOS", "windows"], (platform) => {
+			_.each(["android", "iOS", "windows", "linux"], (platform) => {
 				it(`when ${platform}DebugService raises ${CONNECTION_ERROR_EVENT_NAME} event`, async () => {
 					const testData = getDefaultTestData();
 					testData.deviceInformation.deviceInfo.platform = platform;

@@ -655,6 +655,11 @@ export class ProjectDataService implements IProjectDataService {
 						constants.SCOPED_WINDOWS_QUICKJS_RUNTIME_NAME,
 						constants.SCOPED_WINDOWS_JSC_RUNTIME_NAME,
 					].includes(d.name);
+				} else if (platform === constants.PlatformTypes.linux) {
+					return [
+						constants.SCOPED_LINUX_RUNTIME_NAME,
+						constants.SCOPED_LINUX_QUICKJS_RUNTIME_NAME,
+					].includes(d.name);
 				}
 			});
 
@@ -723,6 +728,11 @@ export class ProjectDataService implements IProjectDataService {
 		} else if (platform === constants.PlatformTypes.windows) {
 			return {
 				name: constants.SCOPED_WINDOWS_RUNTIME_NAME,
+				version: null,
+			};
+		} else if (platform === constants.PlatformTypes.linux) {
+			return {
+				name: constants.SCOPED_LINUX_RUNTIME_NAME,
 				version: null,
 			};
 		}

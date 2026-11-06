@@ -70,6 +70,8 @@ export class IOSPrepareData extends PrepareData {
 
 export class AndroidPrepareData extends PrepareData {}
 
+export class LinuxPrepareData extends PrepareData {}
+
 export class WindowsPrepareData extends PrepareData {
 	public packageFamilyName?: string;
 
