@@ -13,7 +13,7 @@ import {
 	IValidatePlatformOutput,
 } from "../definitions/project";
 import { IOptions, IDependencyData } from "../declarations";
-import { IPluginData } from "../definitions/plugins";
+import { IPluginData, IPluginsService } from "../definitions/plugins";
 import {
 	IFileSystem,
 	IChildProcess,
@@ -23,6 +23,13 @@ import {
 import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 import { IProjectChangesInfo } from "../definitions/project-changes";
+import {
+	LinuxNativeCodeBuilder,
+	LinuxNativeUnit,
+	NATIVE_ENTRIES,
+	hasNativeCode,
+	nativeUnitName,
+} from "./linux-native-code";
 
 /** Rust's `std::env::consts::ARCH`, used in the metadata file name the runtime looks for. */
 const RUNTIME_ARCH: Record<string, string> = {
@@ -40,6 +47,10 @@ const RUNTIME_ARCH: Record<string, string> = {
  *   runtime/<x64|arm64>/ns-linux the runtime executable
  *   runtime/<x64|arm64>/metadata-<x86_64|aarch64>.bin
  *   typings/                     generated .d.ts for the C APIs in the metadata
+ *   tools/<x64|arm64>/           metadata generator for app / plugin native code
+ *
+ * Native code (see linux-native-code.ts) is built into `lib/` and `metadata/`
+ * next to the executable.
  */
 export class LinuxProjectService
 	extends projectServiceBaseLib.PlatformProjectServiceBase
@@ -94,7 +105,7 @@ export class LinuxProjectService
 						: { packageNames: [projectData.projectName] },
 				configurationFileName: "",
 				frameworkDirectoriesExtensions: [],
-				frameworkDirectoriesNames: ["runtime", "typings"],
+				frameworkDirectoriesNames: ["runtime", "typings", "tools"],
 				targetedOS: ["linux"],
 				relativeToFrameworkConfigurationFilePath: "",
 				fastLivesyncFileExtensions: [
@@ -211,16 +222,19 @@ export class LinuxProjectService
 				recursive: true,
 			},
 		);
-		const plugins = path.join(appProject, "plugins");
-		if (this.$fs.exists(plugins)) {
-			fs.cpSync(plugins, path.join(stage, "plugins"), { recursive: true });
-		}
 		const resources = this.getAppResourcesDestinationDirectoryPath(projectData);
 		if (this.$fs.exists(resources)) {
+			// sources and prebuilt libraries are build inputs only
+			const native = new Set(
+				NATIVE_ENTRIES.map((e) => path.join(resources, "Linux", e)),
+			);
 			fs.cpSync(resources, path.join(stage, "App_Resources"), {
 				recursive: true,
+				filter: (src) => !native.has(src),
 			});
 		}
+
+		await this.buildNativeCode(projectData, stage, release);
 
 		this.stageDesktopEntry(stage, projectData, release);
 
@@ -243,27 +257,10 @@ export class LinuxProjectService
 		projectData: IProjectData,
 		_prepareData: T,
 	): Promise<void> {
-		// drop staged native code of uninstalled plugins
-		const plugins = path.join(this.appProject(projectData), "plugins");
-		if (!this.$fs.exists(plugins)) {
-			return;
-		}
-		const pluginsService: any = injector.resolve("pluginsService");
-		const installed = new Set<string>(
-			pluginsService
-				.getAllInstalledPlugins(projectData)
-				.map((p: IPluginData) => p.name),
+		// plugin native code is built from node_modules, drop copies older CLIs staged
+		this.$fs.deleteDirectory(
+			path.join(this.appProject(projectData), "plugins"),
 		);
-		for (const entry of fs.readdirSync(plugins)) {
-			const names = entry.startsWith("@")
-				? fs.readdirSync(path.join(plugins, entry)).map((n) => `${entry}/${n}`)
-				: [entry];
-			for (const name of names) {
-				if (!installed.has(name)) {
-					this.$fs.deleteDirectory(path.join(plugins, name));
-				}
-			}
-		}
 	}
 
 	public async checkForChanges(
@@ -310,35 +307,16 @@ export class LinuxProjectService
 		return this.$fs.exists(path.join(projectRoot, projectData.projectName));
 	}
 
-	/** Stages `<plugin>/platforms/linux` (shared libraries, metadata) under `plugins/<name>`. */
+	/** Plugin native code is compiled at build time, see nativeUnits(). */
 	public async preparePluginNativeCode(
-		pluginData: IPluginData,
-		projectData: IProjectData,
-	): Promise<void> {
-		const source = path.join(
-			pluginData.fullPath,
-			constants.PLATFORMS_DIR_NAME,
-			LinuxProjectService.PLATFORM_NAME,
-		);
-		const destination = path.join(
-			this.appProject(projectData),
-			"plugins",
-			pluginData.name,
-		);
-		this.$fs.deleteDirectory(destination);
-		if (this.$fs.exists(source)) {
-			fs.cpSync(source, destination, { recursive: true });
-		}
-	}
+		_pluginData: IPluginData,
+		_projectData: IProjectData,
+	): Promise<void> {}
 
 	public async removePluginNativeCode(
-		pluginData: IPluginData,
-		projectData: IProjectData,
-	): Promise<void> {
-		this.$fs.deleteDirectory(
-			path.join(this.appProject(projectData), "plugins", pluginData.name),
-		);
-	}
+		_pluginData: IPluginData,
+		_projectData: IProjectData,
+	): Promise<void> {}
 
 	public async beforePrepareAllPlugins(
 		_projectData: IProjectData,
@@ -459,6 +437,95 @@ export class LinuxProjectService
 			);
 			fs.chmodSync(script, 0o755);
 		}
+	}
+
+	/**
+	 * Compiles app / plugin native code into `stage` (lib/, metadata/). Typings
+	 * refresh `typings/linux` once `ns typings linux` created it.
+	 */
+	public async buildNativeCode(
+		projectData: IProjectData,
+		stage: string,
+		release: boolean,
+		typingsDir?: string,
+	): Promise<void> {
+		const arch = this.arch();
+		const projectRoot = this.getPlatformData(projectData).projectRoot;
+		const projectTypings = path.join(
+			projectData.projectDir,
+			"typings",
+			"linux",
+		);
+		await new LinuxNativeCodeBuilder(this.$childProcess, this.$logger).build(
+			await this.nativeUnits(projectData),
+			{
+				arch,
+				release,
+				stage,
+				workDir: path.join(projectRoot, "build", "native"),
+				generatorDir: this.generatorDir(projectData, arch),
+				typingsDir:
+					typingsDir ??
+					(this.$fs.exists(projectTypings)
+						? projectTypings
+						: path.join(projectRoot, "typings")),
+			},
+		);
+	}
+
+	/** The platform's copy, or the installed runtime package before `platforms/linux` exists. */
+	private generatorDir(projectData: IProjectData, arch: string): string {
+		const platformTools = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			"tools",
+			arch,
+		);
+		if (this.$fs.exists(platformTools)) {
+			return platformTools;
+		}
+		const runtimePackage = this.$projectDataService.getRuntimePackage(
+			projectData.projectDir,
+			constants.PlatformTypes.linux,
+		);
+		return path.join(
+			projectData.projectDir,
+			constants.NODE_MODULES_FOLDER_NAME,
+			runtimePackage.name,
+			"framework",
+			"tools",
+			arch,
+		);
+	}
+
+	/** App_Resources/Linux and each plugin's platforms/linux with native code. */
+	private async nativeUnits(
+		projectData: IProjectData,
+	): Promise<LinuxNativeUnit[]> {
+		const units: LinuxNativeUnit[] = [];
+		const resources = ["Linux", "linux"]
+			.map((d) =>
+				projectData.appResourcesDirectoryPath
+					? path.join(projectData.appResourcesDirectoryPath, d)
+					: null,
+			)
+			.find((d) => d && this.$fs.exists(d));
+		if (resources && hasNativeCode(resources)) {
+			units.push({ name: "app", dir: resources });
+		}
+		const pluginsService: IPluginsService = injector.resolve("pluginsService");
+		for (const plugin of await pluginsService.getAllInstalledPlugins(
+			projectData,
+		)) {
+			const dir = path.join(
+				plugin.fullPath,
+				constants.PLATFORMS_DIR_NAME,
+				LinuxProjectService.PLATFORM_NAME,
+			);
+			if (hasNativeCode(dir)) {
+				units.push({ name: nativeUnitName(plugin.name), dir });
+			}
+		}
+		return units;
 	}
 
 	private appProject(projectData: IProjectData): string {
