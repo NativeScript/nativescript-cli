@@ -75,6 +75,27 @@ function walk(dir: string, filter: RegExp): string[] {
 		.sort();
 }
 
+/**
+ * `index.d.ts` for an app's `typings/linux`: the SDK typings in `sdk/` and
+ * the native code typings (`c!<unit>.d.ts`) next to it.
+ */
+export function writeTypingsIndex(dir: string): void {
+	const references = [
+		...(fs.existsSync(path.join(dir, "sdk", "index.d.ts"))
+			? ["./sdk/index.d.ts"]
+			: []),
+		...fs
+			.readdirSync(dir)
+			.filter((f) => f.startsWith("c!") && f.endsWith(".d.ts"))
+			.sort()
+			.map((f) => `./${f}`),
+	];
+	fs.writeFileSync(
+		path.join(dir, "index.d.ts"),
+		references.map((r) => `/// <reference path="${r}" />\n`).join(""),
+	);
+}
+
 export class LinuxNativeCodeBuilder {
 	constructor(
 		private $childProcess: IChildProcess,

@@ -29,6 +29,7 @@ import {
 	NATIVE_ENTRIES,
 	hasNativeCode,
 	nativeUnitName,
+	writeTypingsIndex,
 } from "./linux-native-code";
 
 /** Rust's `std::env::consts::ARCH`, used in the metadata file name the runtime looks for. */
@@ -494,6 +495,19 @@ export class LinuxProjectService
 						? projectTypings
 						: path.join(projectRoot, "typings")),
 			},
+		);
+		if (!typingsDir && this.$fs.exists(projectTypings)) {
+			writeTypingsIndex(projectTypings);
+		}
+	}
+
+	/** Typings of the SDK C APIs (`index.d.ts` references the GUI modules). */
+	public sdkTypingsDir(projectData: IProjectData): string {
+		return path.join(
+			this.toolsDir(projectData, this.arch()),
+			"..",
+			"..",
+			"typings",
 		);
 	}
 

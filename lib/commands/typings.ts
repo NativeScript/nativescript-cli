@@ -1,5 +1,6 @@
 import { glob } from "node:fs/promises";
 import { homedir } from "os";
+import * as fs from "fs";
 import * as path from "path";
 import { PromptObject } from "prompts";
 import { color } from "../color";
@@ -8,6 +9,7 @@ import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
 import { IOptions, IStaticConfig } from "../declarations";
 import { IProjectData } from "../definitions/project";
+import { writeTypingsIndex } from "../services/linux-native-code";
 
 export class TypingsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -320,6 +322,16 @@ export class TypingsCommand implements ICommand {
 			outDir,
 		);
 		this.$fs.deleteDirectory(stage);
+		const sdk = linuxProjectService.sdkTypingsDir(this.$projectData);
+		if (this.$fs.exists(sdk)) {
+			const target = path.join(outDir, "sdk");
+			this.$fs.deleteDirectory(target);
+			fs.cpSync(sdk, target, { recursive: true });
+		}
+		writeTypingsIndex(outDir);
+		this.$logger.info(
+			`Reference them with /// <reference path="./typings/linux/index.d.ts" />`,
+		);
 	}
 
 	private async handleiOSTypings() {
