@@ -144,7 +144,33 @@ interface INsConfigIOS extends INsConfigPlaform {
 
 interface INSConfigVisionOS extends INsConfigIOS {}
 
-interface INsConfigLinux extends INsConfigPlaform {}
+interface INsConfigLinux extends INsConfigPlaform {
+	/**
+	 * Release builds ship the app folder as one read-only archive, app.nsbundle (default true).
+	 */
+	bundle?: boolean;
+	/**
+	 * Globs of app files written next to the bundle (app.nsbundle.unpacked) for code that opens
+	 * them by path. Default `["fonts/**"]`; native addons (.node, .so) are always unpacked.
+	 */
+	bundleUnpack?: string[];
+	/**
+	 * Encrypt the bundle with a per-build key embedded in the executable. Release builds only;
+	 * overridable with --source-protect / --no-source-protect.
+	 */
+	sourceProtect?: boolean;
+	/** Release build switches baked into the executable. */
+	fuses?: {
+		/** Check app.nsbundle against the hash in the executable (default: on when bundled). */
+		bundleIntegrity?: boolean;
+		/** Only run the app from app.nsbundle (default: on when bundled). */
+		onlyLoadAppFromBundle?: boolean;
+		/** Allow `--inspect` (default off). */
+		inspector?: boolean;
+		/** Honor runtime flags and environment overrides such as NS_METADATA (default off). */
+		envOverrides?: boolean;
+	};
+}
 
 interface INsConfigWindows extends INsConfigPlaform {
 	/**

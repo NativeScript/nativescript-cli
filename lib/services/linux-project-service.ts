@@ -31,6 +31,7 @@ import {
 	nativeUnitName,
 	writeTypingsIndex,
 } from "./linux-native-code";
+import { LinuxAppBundler } from "./linux-app-bundle";
 
 /** App_Resources/Linux files consumed by the build (desktop entry, icon, AppStream, metadata filters). */
 const BUILD_INPUTS = [
@@ -60,7 +61,7 @@ const RUNTIME_ARCH: Record<string, string> = {
  *   tools/<x64|arm64>/           metadata generator for app / plugin native code
  *
  * Native code (see linux-native-code.ts) is built into `lib/` and `metadata/`
- * next to the executable.
+ * next to the executable. Release builds pack app/ into app.nsbundle (linux-app-bundle.ts).
  */
 export class LinuxProjectService
 	extends projectServiceBaseLib.PlatformProjectServiceBase
@@ -267,6 +268,22 @@ export class LinuxProjectService
 		}
 
 		await this.buildNativeCode(projectData, stage, release);
+
+		// debug builds keep the plain app/ for LiveSync and HMR
+		if (release) {
+			const options = this.$options as any;
+			await new LinuxAppBundler(this.$childProcess, this.$logger).pack({
+				stage,
+				executable,
+				toolsDir: this.toolsDir(projectData, arch),
+				config: projectData.nsConfig?.linux ?? {},
+				sourceProtect: buildConfig?.sourceProtect ?? options.sourceProtect,
+				keyHex:
+					buildConfig?.sourceProtectKeyHex ||
+					options.sourceProtectKeyHex ||
+					process.env.NS_LINUX_BUNDLE_KEY,
+			});
+		}
 
 		this.stageDesktopEntry(stage, projectData, release);
 

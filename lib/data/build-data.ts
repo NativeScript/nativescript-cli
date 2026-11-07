@@ -47,10 +47,14 @@ export class IOSBuildData extends BuildData implements IiOSBuildData {
 
 export class LinuxBuildData extends BuildData {
 	public arch?: string;
+	public sourceProtect?: boolean;
+	public sourceProtectKeyHex?: string;
 
 	constructor(projectDir: string, platform: string, data: any) {
 		super(projectDir, platform, data);
 		this.arch = data.arch;
+		this.sourceProtect = data.sourceProtect;
+		this.sourceProtectKeyHex = data.sourceProtectKeyHex;
 	}
 }
 
