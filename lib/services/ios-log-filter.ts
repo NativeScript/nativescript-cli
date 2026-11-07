@@ -1,4 +1,5 @@
 import { injector } from "../common/yok";
+import { IOS_LOG_PIECE_HEADER } from "../common/mobile/ios/ios-log-entry";
 
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
@@ -23,10 +24,9 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// we then use this to filter out non-NativeScript lines
 	protected postFilterRegex: RegExp = /^\((.+)\) \[com\.apple.+\]/;
 
-	// The markers the runtime ends a chunk of a split message with, which only the
-	// structured logs stitch. Syslog-style output shows them escaped.
-	private chunkMarkerRegex: RegExp =
-		/(?:\\M-b\\M\^A(?:\\240|\\M-!)|[\u2060\u2061])$/;
+	// Only the structured logs reassemble split messages; here their pieces just
+	// lose the header and show as consecutive lines.
+	private pieceHeaderRegex: RegExp = IOS_LOG_PIECE_HEADER;
 
 	private filterActive: boolean = true;
 
@@ -90,11 +90,11 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			}
 
 			currentLine = currentLine
+				.replace(this.pieceHeaderRegex, "")
 				// remove lading space before CONSOLE
 				.replace(/^\s*CONSOLE/, "CONSOLE")
 				// trim trailing spaces only to preserve indentation
-				.trimEnd()
-				.replace(this.chunkMarkerRegex, "");
+				.trimEnd();
 
 			// post filtering: (<anything>) check if <anything> is not "NativeScript"
 			const postFilterMatch = this.postFilterRegex.exec(currentLine);

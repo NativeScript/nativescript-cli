@@ -74,20 +74,31 @@ export function getIOSLogEntryText(
 	return `${imageName}: ${entry.message}`;
 }
 
-// The runtime ends a chunk of a split message with one of these when the CLI
-// asks for it, through the logChunkMarkers key of the app's package.json.
-const CHUNK_JOIN_MARKER = "\u2060";
-const CHUNK_LINE_MARKER = "\u2061";
-const CONSOLE_PREFIX = /^CONSOLE [A-Z]+: /;
+/**
+ * The newest log format the CLI understands, written to the logFormat key of
+ * the app's package.json. The runtime uses the lower of this and its own.
+ */
+export const IOS_LOG_FORMAT = 1;
 
-// Long enough to ride out a backlog of chunks, while the rest of a message that
-// never arrives, because the app crashed, still gets printed.
-const CHUNK_WAIT_MS = 500;
+// Format 1: each piece of a message the runtime had to split is logged as
+// "[ns <id> <index>/<count>] <piece>". The id is unique per message in the
+// process, and the pieces are consecutive slices of the message. A piece of
+// nothing but whitespace arrives as the bare header: the unified log strips
+// whitespace from the end of every entry.
+export const IOS_LOG_PIECE_HEADER = /^\[ns ([0-9a-f]+) (\d+)\/(\d+)\](?: |$)/;
+
+// Where a piece that never arrived belongs; os_log marks truncated text alike.
+const LOST_PIECE = "<…lost…>";
+
+// Long enough to ride out a backlog of pieces, while a message whose pieces
+// never all arrive, because os_log dropped some or the app crashed, still gets
+// printed.
+const PIECE_WAIT_MS = 500;
 
 interface IPendingLogMessage {
-	text: string;
-	prefix: string;
-	separator: string;
+	entry: Mobile.IiOSLogEntry;
+	pieces: string[];
+	received: number;
 	timer: NodeJS.Timeout;
 }
 
@@ -98,40 +109,66 @@ export class IOSLogChunkStitcher {
 	private pending = new Map<string, IPendingLogMessage>();
 
 	/**
-	 * @param key Identifies the logging thread: chunks from different threads can interleave.
-	 * @param emit Called with the complete message.
+	 * @param source Identifies the logging process, whose message ids are unique.
+	 * @param emit Called with each complete entry, in place of its pieces.
 	 */
-	public add(key: string, text: string, emit: (text: string) => void): void {
-		const marker = text[text.length - 1];
-		const continues =
-			marker === CHUNK_JOIN_MARKER || marker === CHUNK_LINE_MARKER;
-		const chunk = continues ? text.slice(0, -1) : text;
-
-		const message = this.pending.get(key) ?? {
-			text: "",
-			prefix: chunk.match(CONSOLE_PREFIX)?.[0] ?? "",
-			separator: "",
-			timer: null,
-		};
-		clearTimeout(message.timer);
-		message.text +=
-			message.separator +
-			(message.text && chunk.startsWith(message.prefix)
-				? chunk.slice(message.prefix.length)
-				: chunk);
-
-		if (!continues) {
-			this.pending.delete(key);
-			emit(message.text);
+	public add(
+		source: string,
+		entry: Mobile.IiOSLogEntry,
+		emit: (entry: Mobile.IiOSLogEntry) => void,
+	): void {
+		const header = (entry.message || "").match(IOS_LOG_PIECE_HEADER);
+		const index = header ? Number(header[2]) - 1 : -1;
+		const count = header ? Number(header[3]) : 0;
+		if (!header || index < 0 || index >= count) {
+			emit(entry);
 			return;
 		}
 
-		message.separator = marker === CHUNK_LINE_MARKER ? "\n" : "";
-		message.timer = setTimeout(() => {
+		const key = `${source}:${header[1]}`;
+		let message = this.pending.get(key);
+		if (!message || message.pieces.length !== count) {
+			message = {
+				entry,
+				pieces: new Array(count),
+				received: 0,
+				timer: null,
+			};
+			this.pending.set(key, message);
+		}
+		if (message.pieces[index] === undefined) {
+			message.pieces[index] = entry.message.slice(header[0].length);
+			message.received++;
+		}
+		if (index === 0) {
+			message.entry = entry;
+		}
+
+		clearTimeout(message.timer);
+		const finish = () => {
 			this.pending.delete(key);
-			emit(message.text);
-		}, CHUNK_WAIT_MS);
+			emit({ ...message.entry, message: joinPieces(message) });
+		};
+		if (message.received === count) {
+			finish();
+			return;
+		}
+
+		message.timer = setTimeout(finish, PIECE_WAIT_MS);
 		message.timer.unref();
-		this.pending.set(key, message);
 	}
+}
+
+function joinPieces(message: IPendingLogMessage): string {
+	let text = "";
+	for (let i = 0; i < message.pieces.length; i++) {
+		if (message.pieces[i] === undefined) {
+			if (!text.endsWith(LOST_PIECE)) {
+				text += LOST_PIECE;
+			}
+			continue;
+		}
+		text += message.pieces[i];
+	}
+	return text;
 }
