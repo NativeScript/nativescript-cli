@@ -182,15 +182,15 @@ describe("iOSLogFilter", () => {
 	const infoLogLevel = "INFO";
 	const fullLogLevel = "FULL";
 
-	it("removes the markers of split messages, escaped or not", () => {
+	it("removes the headers of split messages", () => {
 		testInjector = createTestInjector("app");
 		logFilter = testInjector.resolve(IOSLogFilter);
 		const header =
 			"\u0000Oct 29 20:20:54 iPad app(NativeScript)[1514] <Notice>: ";
 		const chunks = [
-			`${header}CONSOLE LOG: a\\M-b\\M^A\\240\n`,
-			`${header}CONSOLE LOG: b\\M-b\\M^A\\M-!\n`,
-			`${header}CONSOLE LOG: c\u2060\n`,
+			`${header}[ns 1f 1/3] CONSOLE LOG: a\n`,
+			`${header}[ns 1f 2/3] CONSOLE LOG: b\n`,
+			`${header}[ns 1f 3/3] CONSOLE LOG: c\n`,
 			`${header}CONSOLE LOG: d\n`,
 		];
 

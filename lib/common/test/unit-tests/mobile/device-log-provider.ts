@@ -1693,5 +1693,28 @@ at promiseReactionJob\n`,
 
 			assertData(logger.output, "CONSOLE LOG: hello\n");
 		});
+
+		it("prints a split message once, when all of its pieces are in", () => {
+			deviceLogProvider.setProjectNameForDevice(structuredDevice, "app");
+			const piece = (message: string) =>
+				deviceLogProvider.logEntry(
+					{
+						pid: 1,
+						thread: 2,
+						process: `${appDir}/app`,
+						image: `${appDir}/Frameworks/NativeScript.framework/NativeScript`,
+						level: "notice",
+						message,
+					},
+					"iOS",
+					structuredDevice,
+				);
+
+			piece("[ns 3 1/2] CONSOLE LOG: first");
+			assertData(logger.output, "");
+			piece("[ns 3 2/2] \nsecond");
+
+			assertData(logger.output, "CONSOLE LOG: first\nsecond\n");
+		});
 	});
 });

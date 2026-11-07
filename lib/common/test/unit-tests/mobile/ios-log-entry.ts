@@ -127,13 +127,15 @@ describe("getIOSLogScope", () => {
 });
 
 describe("IOSLogChunkStitcher", () => {
-	const JOIN = "\u2060";
-	const LINE = "\u2061";
 	let stitcher: IOSLogChunkStitcher;
 	let messages: string[];
 	let clock: sinon.SinonFakeTimers;
-	const add = (text: string, key = "thread") =>
-		stitcher.add(key, text, (message) => messages.push(message));
+	const add = (message: string, source = "process") =>
+		stitcher.add(
+			source,
+			{ process: "app", image: "NativeScript", level: "default", message },
+			(entry) => messages.push(entry.message),
+		);
 
 	beforeEach(() => {
 		clock = sinon.useFakeTimers();
@@ -150,38 +152,34 @@ describe("IOSLogChunkStitcher", () => {
 		assert.deepEqual(messages, ["CONSOLE LOG: hello"]);
 	});
 
-	it("rejoins chunks without the repeated prefix", () => {
-		add(`CONSOLE LOG: {"a":${JOIN}`);
-		add(`CONSOLE LOG: 1,"b":${JOIN}`);
+	it("joins the pieces of a message as they are", () => {
+		add('[ns 1f 1/3] CONSOLE LOG: {"a":');
+		add('[ns 1f 2/3] 1,"b":');
 		assert.isEmpty(messages);
-		add("CONSOLE LOG: 2}");
+		add("[ns 1f 3/3] 2}");
 		assert.deepEqual(messages, ['CONSOLE LOG: {"a":1,"b":2}']);
 	});
 
-	it("restores the line break a chunk was cut at", () => {
-		add(`CONSOLE ERROR: first${LINE}`);
-		add("CONSOLE ERROR: second");
-		assert.deepEqual(messages, ["CONSOLE ERROR: first\nsecond"]);
+	it("keeps the whitespace a piece starts with", () => {
+		add("[ns 2 1/3] CONSOLE ERROR: first");
+		add("[ns 2 2/3]  \nsecond");
+		add("[ns 2 3/3]   third");
+		assert.deepEqual(messages, ["CONSOLE ERROR: first \nsecond  third"]);
 	});
 
-	it("rejoins messages that have no prefix", () => {
-		add(`Assertion failed: a${JOIN}`);
-		add("b");
-		assert.deepEqual(messages, ["Assertion failed: ab"]);
+	it("takes a bare header for a piece of nothing but whitespace", () => {
+		add("[ns 9 1/3] CONSOLE LOG: a");
+		add("[ns 9 2/3]");
+		add("[ns 9 3/3]  b");
+		assert.deepEqual(messages, ["CONSOLE LOG: a b"]);
 	});
 
-	it("keeps a chunk's own text when it only looks like a prefix", () => {
-		add(`CONSOLE LOG: a${JOIN}`);
-		add("CONSOLE ERROR: b");
-		assert.deepEqual(messages, ["CONSOLE LOG: aCONSOLE ERROR: b"]);
-	});
-
-	it("keeps interleaved threads apart", () => {
-		add(`CONSOLE LOG: a1${JOIN}`, "a");
-		add(`CONSOLE LOG: b1${JOIN}`, "b");
-		add("CONSOLE LOG: other", "c");
-		add("CONSOLE LOG: a2", "a");
-		add("CONSOLE LOG: b2", "b");
+	it("keeps interleaved messages apart by id", () => {
+		add("[ns a 1/2] CONSOLE LOG: a1");
+		add("[ns b 1/2] CONSOLE LOG: b1");
+		add("CONSOLE LOG: other");
+		add("[ns a 2/2] a2");
+		add("[ns b 2/2] b2");
 		assert.deepEqual(messages, [
 			"CONSOLE LOG: other",
 			"CONSOLE LOG: a1a2",
@@ -189,12 +187,47 @@ describe("IOSLogChunkStitcher", () => {
 		]);
 	});
 
-	it("prints what it has when the rest never arrives", () => {
-		add(`CONSOLE LOG: a${JOIN}`);
-		clock.tick(500);
-		assert.deepEqual(messages, ["CONSOLE LOG: a"]);
+	it("keeps the same id from different processes apart", () => {
+		add("[ns 1 1/2] CONSOLE LOG: old", "launch-1");
+		add("[ns 1 1/2] CONSOLE LOG: new", "launch-2");
+		add("[ns 1 2/2] !", "launch-2");
+		assert.deepEqual(messages, ["CONSOLE LOG: new!"]);
+	});
 
-		add("CONSOLE LOG: unrelated");
-		assert.deepEqual(messages, ["CONSOLE LOG: a", "CONSOLE LOG: unrelated"]);
+	it("never joins the next message onto one whose last piece was lost", () => {
+		add("[ns 5 1/3] CONSOLE LOG: AAAA");
+		add("[ns 5 2/3] aaaa");
+		add("CONSOLE ERROR: B failed");
+		assert.deepEqual(messages, ["CONSOLE ERROR: B failed"]);
+
+		clock.tick(500);
+		assert.deepEqual(messages, [
+			"CONSOLE ERROR: B failed",
+			"CONSOLE LOG: AAAAaaaa<…lost…>",
+		]);
+	});
+
+	it("marks where a lost piece belongs", () => {
+		add("[ns 6 1/4] CONSOLE LOG: one\n");
+		add("[ns 6 4/4] four");
+		clock.tick(500);
+		assert.deepEqual(messages, ["CONSOLE LOG: one\n<…lost…>four"]);
+	});
+
+	it("prints what it has when the rest never arrives", () => {
+		add("[ns 7 2/2] tail");
+		clock.tick(499);
+		assert.isEmpty(messages);
+		clock.tick(1);
+		assert.deepEqual(messages, ["<…lost…>tail"]);
+	});
+
+	it("passes through text that only looks like a header", () => {
+		add("[ns 8 3/2] CONSOLE LOG: x");
+		add("[ns zz 1/2] CONSOLE LOG: y");
+		assert.deepEqual(messages, [
+			"[ns 8 3/2] CONSOLE LOG: x",
+			"[ns zz 1/2] CONSOLE LOG: y",
+		]);
 	});
 });

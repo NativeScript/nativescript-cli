@@ -49,18 +49,17 @@ export abstract class DeviceLogProviderBase
 
 	protected stitchIOSLogEntry(
 		entry: Mobile.IiOSLogEntry,
-		text: string,
 		deviceIdentifier: string,
-		emit: (text: string) => void,
+		emit: (entry: Mobile.IiOSLogEntry) => void,
 	): void {
 		if (!isIOSRuntimeLogEntry(entry)) {
-			emit(text);
+			emit(entry);
 			return;
 		}
 
 		this.iOSLogChunkStitcher.add(
-			`${deviceIdentifier}:${entry.pid}:${entry.thread}`,
-			text,
+			`${deviceIdentifier}:${entry.pid}`,
+			entry,
 			emit,
 		);
 	}
