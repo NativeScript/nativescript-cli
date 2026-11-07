@@ -105,7 +105,7 @@ export class LinuxProjectService
 						: { packageNames: [projectData.projectName] },
 				configurationFileName: "",
 				frameworkDirectoriesExtensions: [],
-				frameworkDirectoriesNames: ["runtime", "typings", "tools"],
+				frameworkDirectoriesNames: ["runtime", "typings"],
 				targetedOS: ["linux"],
 				relativeToFrameworkConfigurationFilePath: "",
 				fastLivesyncFileExtensions: [
@@ -154,6 +154,10 @@ export class LinuxProjectService
 		const projectRoot = this.getPlatformData(projectData).projectRoot;
 		this.$fs.ensureDirectoryExists(projectRoot);
 		for (const entry of fs.readdirSync(frameworkDir)) {
+			// build tools are used from the package, see toolsDir()
+			if (entry === "tools") {
+				continue;
+			}
 			const target =
 				entry === "__PROJECT_NAME__" ? projectData.projectName : entry;
 			fs.cpSync(
@@ -210,9 +214,25 @@ export class LinuxProjectService
 		const executable = path.join(stage, name);
 		fs.copyFileSync(runtime, executable);
 		fs.chmodSync(executable, 0o755);
+		const native = new LinuxNativeCodeBuilder(this.$childProcess, this.$logger);
 		for (const file of fs.readdirSync(runtimeDir)) {
 			if (file.startsWith("metadata-") && file.endsWith(".bin")) {
-				fs.copyFileSync(path.join(runtimeDir, file), path.join(stage, file));
+				await native.filterMetadata(
+					path.join(runtimeDir, file),
+					path.join(stage, file),
+					{
+						toolsDir: this.toolsDir(projectData, arch),
+						cacheDir: path.join(projectRoot, "build", "metadata"),
+						whitelist: path.join(
+							projectRoot,
+							constants.MetadataFilteringConstants.WHITELIST_FILE_NAME,
+						),
+						blacklist: path.join(
+							projectRoot,
+							constants.MetadataFilteringConstants.BLACKLIST_FILE_NAME,
+						),
+					},
+				);
 			}
 		}
 		fs.cpSync(
@@ -463,7 +483,11 @@ export class LinuxProjectService
 				release,
 				stage,
 				workDir: path.join(projectRoot, "build", "native"),
-				generatorDir: this.generatorDir(projectData, arch),
+				generatorDir: this.toolsDir(projectData, arch),
+				blacklist: path.join(
+					projectRoot,
+					constants.MetadataFilteringConstants.BLACKLIST_FILE_NAME,
+				),
 				typingsDir:
 					typingsDir ??
 					(this.$fs.exists(projectTypings)
@@ -473,16 +497,8 @@ export class LinuxProjectService
 		);
 	}
 
-	/** The platform's copy, or the installed runtime package before `platforms/linux` exists. */
-	private generatorDir(projectData: IProjectData, arch: string): string {
-		const platformTools = path.join(
-			this.getPlatformData(projectData).projectRoot,
-			"tools",
-			arch,
-		);
-		if (this.$fs.exists(platformTools)) {
-			return platformTools;
-		}
+	/** Build tools (metadata generator, filter) stay in the runtime package. */
+	private toolsDir(projectData: IProjectData, arch: string): string {
 		const runtimePackage = this.$projectDataService.getRuntimePackage(
 			projectData.projectDir,
 			constants.PlatformTypes.linux,

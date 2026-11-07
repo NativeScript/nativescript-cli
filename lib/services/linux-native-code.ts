@@ -13,6 +13,10 @@ import { IChildProcess, ISpawnResult } from "../common/declarations";
  *
  * Headers are run through the metadata generator into `metadata/<name>.bin`,
  * which the runtime loads next to the SDK metadata.
+ *
+ * Metadata filters (`native-api-usage.json`, written by prepare as
+ * whitelist.mdg / blacklist.mdg) shrink the SDK metadata; units are always
+ * kept but honor the blacklist.
  */
 export interface LinuxNativeUnit {
 	/** module / library name, a C identifier */
@@ -31,6 +35,8 @@ export interface LinuxNativeBuildOptions {
 	generatorDir: string;
 	/** generated .d.ts go here */
 	typingsDir: string;
+	/** `module:symbol` patterns excluded from the metadata */
+	blacklist?: string;
 }
 
 interface NativeConfig {
@@ -53,6 +59,10 @@ export function nativeUnitName(name: string): string {
 
 export function hasNativeCode(dir: string): boolean {
 	return NATIVE_ENTRIES.some((e) => fs.existsSync(path.join(dir, e)));
+}
+
+function readIfExists(file?: string): string {
+	return file && fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "";
 }
 
 function walk(dir: string, filter: RegExp): string[] {
@@ -199,6 +209,7 @@ export class LinuxNativeCodeBuilder {
 	private inputsHash(dir: string, options: LinuxNativeBuildOptions): string {
 		const hash = crypto.createHash("sha1");
 		hash.update(`${options.arch}|${options.release}\n`);
+		hash.update(readIfExists(options.blacklist));
 		const generator = path.join(options.generatorDir, "metadata-generator");
 		for (const file of [
 			generator,
@@ -297,6 +308,10 @@ export class LinuxNativeCodeBuilder {
 		// only this unit's declarations, not the system headers it includes
 		const whitelist = path.join(gen, "whitelist.txt");
 		fs.writeFileSync(whitelist, `${unit.name}\n`);
+		const blacklist =
+			options.blacklist && fs.existsSync(options.blacklist)
+				? ["-blacklist-modules-file", options.blacklist]
+				: [];
 		// clang finds its builtin headers relative to the working directory (lib/clang)
 		await this.run(
 			generator,
@@ -305,6 +320,7 @@ export class LinuxNativeCodeBuilder {
 				umbrella,
 				"-whitelist-modules-file",
 				whitelist,
+				...blacklist,
 				"-output-bin",
 				path.join(work, `${unit.name}.bin`),
 				"-output-typescript",
@@ -315,6 +331,58 @@ export class LinuxNativeCodeBuilder {
 			],
 			options.generatorDir,
 		);
+	}
+
+	/**
+	 * Copies the SDK metadata to `output`, filtered when there are whitelist /
+	 * blacklist files. Reuses the previous result while the inputs match.
+	 */
+	public async filterMetadata(
+		input: string,
+		output: string,
+		options: {
+			toolsDir: string;
+			cacheDir: string;
+			whitelist: string;
+			blacklist: string;
+		},
+	): Promise<void> {
+		const { toolsDir, cacheDir, whitelist, blacklist } = options;
+		const filters = [whitelist, blacklist].filter((f) => fs.existsSync(f));
+		const tool = path.join(toolsDir, "ns-metadata-filter");
+		if (!filters.length || !fs.existsSync(tool)) {
+			if (filters.length) {
+				this.$logger.warn(
+					"This runtime package has no metadata filter, native-api-usage.json is ignored.",
+				);
+			}
+			fs.copyFileSync(input, output);
+			return;
+		}
+		const stat = fs.statSync(input);
+		const hash = crypto
+			.createHash("sha1")
+			.update(`${input}|${stat.size}|${stat.mtimeMs}\n`)
+			.update(readIfExists(whitelist))
+			.update("\0")
+			.update(readIfExists(blacklist))
+			.digest("hex");
+		const cached = path.join(cacheDir, path.basename(output));
+		const stamp = `${cached}.stamp`;
+		if (
+			!fs.existsSync(cached) ||
+			!fs.existsSync(stamp) ||
+			fs.readFileSync(stamp, "utf8") !== hash
+		) {
+			fs.mkdirSync(cacheDir, { recursive: true });
+			const args = [input, cached];
+			if (fs.existsSync(whitelist)) args.push("--whitelist", whitelist);
+			if (fs.existsSync(blacklist)) args.push("--blacklist", blacklist);
+			const result = await this.run(tool, args, toolsDir);
+			this.$logger.info(`Metadata filtered: ${result.stdout.trim()}`);
+			fs.writeFileSync(stamp, hash);
+		}
+		fs.copyFileSync(cached, output);
 	}
 
 	private async pkgConfig(args: string[]): Promise<string[]> {

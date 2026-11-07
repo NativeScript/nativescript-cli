@@ -32,6 +32,10 @@ function fakeProcess() {
 					stderr: "",
 				};
 			}
+			if (command.endsWith("ns-metadata-filter")) {
+				fs.writeFileSync(args[1], "filtered");
+				return { exitCode: 0, stdout: "1 of 2 declarations", stderr: "" };
+			}
 			if (command.endsWith("metadata-generator")) {
 				fs.writeFileSync(output("-output-bin"), "bin");
 				fs.mkdirSync(output("-output-typescript"), { recursive: true });
@@ -160,5 +164,54 @@ describe("linuxNativeCode", () => {
 		);
 		assert.include(modulemap, `umbrella "${path.join(app.dir, "include")}"`);
 		assert.include(modulemap, 'link "libfoo.so.1"');
+	});
+
+	it("copies SDK metadata unless there are filters", async () => {
+		const input = path.join(root, "metadata-x86_64.bin");
+		fs.writeFileSync(input, "sdk");
+		fs.writeFileSync(path.join(options.generatorDir, "ns-metadata-filter"), "");
+		const filterOptions = {
+			toolsDir: options.generatorDir,
+			cacheDir: path.join(root, "cache"),
+			whitelist: path.join(root, "whitelist.mdg"),
+			blacklist: path.join(root, "blacklist.mdg"),
+		};
+		const proc = fakeProcess();
+		const builder = new LinuxNativeCodeBuilder(
+			<any>proc,
+			new stubs.LoggerStub(),
+		);
+		const output = path.join(root, "out.bin");
+
+		await builder.filterMetadata(input, output, filterOptions);
+		assert.equal(fs.readFileSync(output, "utf8"), "sdk");
+		assert.lengthOf(proc.calls, 0);
+
+		fs.writeFileSync(filterOptions.whitelist, "Gtk:gtk_*");
+		await builder.filterMetadata(input, output, filterOptions);
+		assert.lengthOf(proc.calls, 1);
+		assert.deepEqual(proc.calls[0].args.slice(2), [
+			"--whitelist",
+			filterOptions.whitelist,
+		]);
+		// same inputs reuse the filtered file
+		await builder.filterMetadata(input, output, filterOptions);
+		assert.lengthOf(proc.calls, 1);
+	});
+
+	it("passes the blacklist to the generator", async () => {
+		const app = unit({ "include/foo.h": "void foo(void);" });
+		const blacklist = path.join(root, "blacklist.mdg");
+		fs.writeFileSync(blacklist, "app:foo_private*");
+		const proc = fakeProcess();
+		await new LinuxNativeCodeBuilder(<any>proc, new stubs.LoggerStub()).build(
+			[app],
+			{ ...options, blacklist },
+		);
+		const generator = proc.calls.find((c) =>
+			c.command.endsWith("metadata-generator"),
+		);
+		assert.include(generator.args, "-blacklist-modules-file");
+		assert.include(generator.args, blacklist);
 	});
 });
