@@ -39,27 +39,28 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 		platform: string,
 		deviceIdentifier: string,
 	): void {
-		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
-		const text = getIOSLogEntryText(entry, {
-			processName: loggingOptions && loggingOptions.projectName,
-			...getIOSLogScope(
-				this.$logger.getLevel(),
-				loggingOptions?.logLevel?.toUpperCase() === this.$loggingLevels.full,
-			),
-		});
-		if (text) {
-			this.stitchIOSLogEntry(entry, text, deviceIdentifier, (message) =>
+		this.stitchIOSLogEntry(entry, deviceIdentifier, (completeEntry) => {
+			const loggingOptions =
+				this.getDeviceLogOptionsForDevice(deviceIdentifier);
+			const text = getIOSLogEntryText(completeEntry, {
+				processName: loggingOptions && loggingOptions.projectName,
+				...getIOSLogScope(
+					this.$logger.getLevel(),
+					loggingOptions?.logLevel?.toUpperCase() === this.$loggingLevels.full,
+				),
+			});
+			if (text) {
 				this.emitData(
 					this.$logSourceMapService.replaceWithOriginalFileLocations(
 						platform,
-						message + "\n",
+						text + "\n",
 						loggingOptions,
 					),
 					platform,
 					deviceIdentifier,
-				),
-			);
-		}
+				);
+			}
+		});
 	}
 
 	private emitData(

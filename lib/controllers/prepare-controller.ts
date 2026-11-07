@@ -11,6 +11,7 @@ import {
 import { cache, performanceLog } from "../common/decorators";
 import { hook } from "../common/helpers";
 import { injector } from "../common/yok";
+import { IOS_LOG_FORMAT } from "../common/mobile/ios/ios-log-entry";
 import {
 	AnalyticsEventLabelDelimiter,
 	BUNDLER_COMPILATION_COMPLETE,
@@ -525,7 +526,7 @@ export class PrepareController
 				};
 			}
 			if (prepareData && !prepareData.release) {
-				packageData.logChunkMarkers = true;
+				packageData.logFormat = IOS_LOG_FORMAT;
 			}
 			if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
 				packageData.discardUncaughtJsExceptions =
