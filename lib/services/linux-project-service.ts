@@ -50,6 +50,25 @@ const BUILD_INPUTS = [
 	"icon.svg",
 ];
 
+/** Packaged files stay writable by their owner only (a umask of 002 leaves them group-writable). */
+function dropGroupOtherWrite(dir: string): void {
+	for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+		const file = path.join(dir, entry.name);
+		if (entry.isSymbolicLink()) {
+			continue;
+		}
+		const mode = fs.statSync(file).mode & 0o7777;
+		if (mode & 0o022) {
+			fs.chmodSync(file, mode & ~0o022);
+		}
+		if (entry.isDirectory()) {
+			dropGroupOtherWrite(file);
+		}
+	}
+	const mode = fs.statSync(dir).mode & 0o7777;
+	fs.chmodSync(dir, mode & ~0o022);
+}
+
 /** Rust's `std::env::consts::ARCH`, used in the metadata file name the runtime looks for. */
 const RUNTIME_ARCH: Record<string, string> = {
 	x64: "x86_64",
@@ -297,15 +316,27 @@ export class LinuxProjectService
 
 		if (release) {
 			const archive = path.join(outputRoot, `${name}.tar.gz`);
-			await this.$childProcess.spawnFromEvent(
-				"tar",
-				["-czf", archive, "-C", outputRoot, name],
-				"close",
-				{},
-				{
-					throwError: true,
-				},
-			);
+			dropGroupOtherWrite(stage);
+			// entries owned by root: extracting as root mustn't hand the files to the builder's uid
+			const owner = ["--owner=0", "--group=0", "--numeric-owner"];
+			const tar = (extra: string[]) =>
+				this.$childProcess.spawnFromEvent(
+					"tar",
+					["-czf", archive, ...extra, "-C", outputRoot, "--", name],
+					"close",
+					{},
+					{ throwError: false },
+				);
+			let result = await tar(owner);
+			if (result.exitCode !== 0) {
+				// not GNU tar
+				result = await tar([]);
+			}
+			if (result.exitCode !== 0) {
+				throw new Error(
+					`tar failed (exit code ${result.exitCode}): ${result.stderr.trim()}`,
+				);
+			}
 			this.$logger.info(`Linux package: ${archive}`);
 		}
 	}
