@@ -659,6 +659,9 @@ export class ProjectDataService implements IProjectDataService {
 					return [
 						constants.SCOPED_LINUX_RUNTIME_NAME,
 						constants.SCOPED_LINUX_QUICKJS_RUNTIME_NAME,
+						constants.SCOPED_LINUX_V8_RUNTIME_NAME,
+						constants.SCOPED_LINUX_HERMES_RUNTIME_NAME,
+						constants.SCOPED_LINUX_JSC_RUNTIME_NAME,
 					].includes(d.name);
 				}
 			});
