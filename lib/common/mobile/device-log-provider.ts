@@ -36,19 +36,20 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		platform: string,
 		deviceIdentifier: string,
 	): void {
-		const loggingOptions = this.getDeviceLogOptionsForDevice(deviceIdentifier);
-		const text = getIOSLogEntryText(entry, {
-			processName: loggingOptions.projectName,
-			...getIOSLogScope(
-				this.$logger.getLevel(),
-				loggingOptions.logLevel?.toUpperCase() === this.$loggingLevels.full,
-			),
+		this.stitchIOSLogEntry(entry, deviceIdentifier, (completeEntry) => {
+			const loggingOptions =
+				this.getDeviceLogOptionsForDevice(deviceIdentifier);
+			const text = getIOSLogEntryText(completeEntry, {
+				processName: loggingOptions.projectName,
+				...getIOSLogScope(
+					this.$logger.getLevel(),
+					loggingOptions.logLevel?.toUpperCase() === this.$loggingLevels.full,
+				),
+			});
+			if (text) {
+				this.printData(text + "\n", text, platform, deviceIdentifier);
+			}
 		});
-		if (text) {
-			this.stitchIOSLogEntry(entry, text, deviceIdentifier, (message) =>
-				this.printData(message + "\n", message, platform, deviceIdentifier),
-			);
-		}
 	}
 
 	private printData(

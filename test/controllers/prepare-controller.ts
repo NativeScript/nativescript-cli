@@ -178,12 +178,10 @@ describe("prepareController", () => {
 			return written;
 		};
 
-		it("asks for log chunk markers in iOS debug builds only", async () => {
-			assert.isTrue((await writePackageJson("ios", false)).logChunkMarkers);
-			assert.isUndefined((await writePackageJson("ios", true)).logChunkMarkers);
-			assert.isUndefined(
-				(await writePackageJson("android", false)).logChunkMarkers,
-			);
+		it("asks for the structured log format in iOS debug builds only", async () => {
+			assert.equal((await writePackageJson("ios", false)).logFormat, 1);
+			assert.isUndefined((await writePackageJson("ios", true)).logFormat);
+			assert.isUndefined((await writePackageJson("android", false)).logFormat);
 		});
 	});
 
