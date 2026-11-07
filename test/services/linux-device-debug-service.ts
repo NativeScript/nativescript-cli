@@ -1,3 +1,4 @@
+import * as http from "http";
 import * as net from "net";
 import { assert } from "chai";
 import { LinuxDeviceDebugService } from "../../lib/services/linux-device-debug-service";
@@ -42,6 +43,32 @@ describe("linuxDeviceDebugService", () => {
 			assert.equal(
 				result.debugUrl,
 				`devtools://devtools/bundled/inspector.html?ws=127.0.0.1:${port}`,
+			);
+		} finally {
+			server.close();
+		}
+	});
+
+	it("adds the inspector's target id to the DevTools URL", async () => {
+		const id = "fe0f450d-2279-686c-661a-6024bea0f5f0";
+		const server = http.createServer((_request, response) => {
+			response.end(
+				JSON.stringify([
+					{ webSocketDebuggerUrl: `ws://127.0.0.1:${port}/${id}` },
+				]),
+			);
+		});
+		await new Promise<void>((resolve) =>
+			server.listen(0, "127.0.0.1", resolve),
+		);
+		const port = (<net.AddressInfo>server.address()).port;
+		try {
+			const result = await createService(port).debug(debugData, {
+				timeout: "2",
+			});
+			assert.equal(
+				result.debugUrl,
+				`devtools://devtools/bundled/inspector.html?ws=127.0.0.1:${port}/${id}`,
 			);
 		} finally {
 			server.close();

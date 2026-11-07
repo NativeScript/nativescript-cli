@@ -1,3 +1,4 @@
+import * as http from "http";
 import * as net from "net";
 import { sleep } from "../common/helpers";
 import { performanceLog } from "../common/decorators";
@@ -48,8 +49,35 @@ export class LinuxDeviceDebugService
 			);
 		}
 		this.$logger.info("# NativeScript Debugger started #");
-		result.debugUrl = this.getChromeDebugUrl(debugOptions, port);
+		// the runtime only upgrades its (random) target path
+		const target = await this.targetPath(port);
+		result.debugUrl =
+			this.getChromeDebugUrl(debugOptions, port) + (target ?? "");
 		return result;
+	}
+
+	/** `/<id>` of the inspector's target, from `/json/list`. */
+	private targetPath(port: number): Promise<string | null> {
+		return new Promise((resolve) => {
+			const request = http.get(
+				{ host: "127.0.0.1", port, path: "/json/list", timeout: 2000 },
+				(response) => {
+					let body = "";
+					response.setEncoding("utf8");
+					response.on("data", (chunk) => (body += chunk));
+					response.on("end", () => {
+						try {
+							const url = new URL(JSON.parse(body)[0].webSocketDebuggerUrl);
+							resolve(url.pathname.length > 1 ? url.pathname : null);
+						} catch {
+							resolve(null);
+						}
+					});
+				},
+			);
+			request.on("timeout", () => request.destroy());
+			request.on("error", () => resolve(null));
+		});
 	}
 
 	public async debugStop(): Promise<void> {
