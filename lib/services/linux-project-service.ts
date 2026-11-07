@@ -32,6 +32,15 @@ import {
 	writeTypingsIndex,
 } from "./linux-native-code";
 
+/** App_Resources/Linux files consumed by the build (desktop entry, icon, AppStream, metadata filters). */
+const BUILD_INPUTS = [
+	"native-api-usage.json",
+	"app.desktop",
+	"app.metainfo.xml",
+	"icon.png",
+	"icon.svg",
+];
+
 /** Rust's `std::env::consts::ARCH`, used in the metadata file name the runtime looks for. */
 const RUNTIME_ARCH: Record<string, string> = {
 	x64: "x86_64",
@@ -245,9 +254,11 @@ export class LinuxProjectService
 		);
 		const resources = this.getAppResourcesDestinationDirectoryPath(projectData);
 		if (this.$fs.exists(resources)) {
-			// sources and prebuilt libraries are build inputs only
+			// staged as lib/, metadata/, icons/ and the desktop entry instead
 			const native = new Set(
-				NATIVE_ENTRIES.map((e) => path.join(resources, "Linux", e)),
+				[...NATIVE_ENTRIES, ...BUILD_INPUTS].map((e) =>
+					path.join(resources, "Linux", e),
+				),
 			);
 			fs.cpSync(resources, path.join(stage, "App_Resources"), {
 				recursive: true,
@@ -384,7 +395,7 @@ export class LinuxProjectService
 	/**
 	 * Desktop integration next to the executable: icons/hicolor/<size>/apps/<app-id>.png|svg,
 	 * <app-id>.desktop and <app-id>.metainfo.xml from App_Resources/Linux
-	 * (templates use __APP_ID__, __APP_NAME__ and __EXEC__). Release builds
+	 * (templates use __APP_ID__, __APP_NAME__, __APP_VERSION__, __APP_DATE__ and __EXEC__). Release builds
 	 * also get install.sh, which installs the app into ~/.local.
 	 */
 	private stageDesktopEntry(
@@ -399,12 +410,19 @@ export class LinuxProjectService
 		const appId =
 			projectData.projectIdentifiers?.linux || projectData.projectId;
 		const name = projectData.projectName;
+		const version =
+			this.$fs.readJson(path.join(projectData.projectDir, "package.json"))
+				?.version || "1.0.0";
 		const fill = (template: string, exec: string) =>
 			template
 				.split("__APP_ID__")
 				.join(appId)
 				.split("__APP_NAME__")
 				.join(name)
+				.split("__APP_VERSION__")
+				.join(version)
+				.split("__APP_DATE__")
+				.join(new Date().toISOString().slice(0, 10))
 				.split("__EXEC__")
 				.join(exec);
 
