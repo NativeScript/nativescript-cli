@@ -6,12 +6,24 @@ import { LinuxAppBundler } from "../../lib/services/linux-app-bundle";
 import * as stubs from "../stubs";
 
 /** Fakes ns-bundle: `pack` writes the bundle and patches the executable. */
-function fakeTool(exitCode = 0) {
+function fakeTool(exitCode = 0, keyFromEnv = true) {
 	const calls: string[][] = [];
+	const envs: (NodeJS.ProcessEnv | undefined)[] = [];
 	return {
 		calls,
-		spawnFromEvent: async (_command: string, args: string[]) => {
+		envs,
+		spawnFromEvent: async (
+			_command: string,
+			args: string[],
+			_event: string,
+			options: { env?: NodeJS.ProcessEnv },
+		) => {
+			if (args[0] === "--help") {
+				const stdout = keyFromEnv ? "usage ... $NS_BUNDLE_KEY_HEX" : "usage";
+				return { exitCode: 0, stdout, stderr: "" };
+			}
 			calls.push(args);
+			envs.push(options?.env);
 			if (exitCode === 0 && args[0] === "pack") {
 				const output = args[args.indexOf("--output") + 1];
 				fs.writeFileSync(output, "NSB2");
@@ -83,12 +95,20 @@ describe("linuxAppBundle", () => {
 		const [args] = proc.calls;
 		assert.includeMembers(args, [
 			"--seal",
-			"--key-hex",
-			"ab".repeat(32),
 			"--no-default-unpack",
 			"data/**",
 			"inspector=on",
 		]);
+		// not on argv, where other local users can read it
+		assert.notInclude(args, "ab".repeat(32));
+		assert.equal(proc.envs[0].NS_BUNDLE_KEY_HEX, "ab".repeat(32));
+	});
+
+	it("passes the key on argv to tools without NS_BUNDLE_KEY_HEX", async () => {
+		const proc = fakeTool(0, false);
+		await pack(proc, { sourceProtect: true, keyHex: "cd".repeat(32) });
+		assert.includeMembers(proc.calls[0], ["--key-hex", "cd".repeat(32)]);
+		assert.isUndefined(proc.envs[0]);
 	});
 
 	it("only sets fuses with bundle: false", async () => {

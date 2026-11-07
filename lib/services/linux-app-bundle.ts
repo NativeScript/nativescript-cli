@@ -94,17 +94,23 @@ export class LinuxAppBundler {
 				args.push("--unpack", glob);
 			}
 		}
+		let env: NodeJS.ProcessEnv | undefined;
 		if (seal) {
 			args.push("--seal");
 			if (options.keyHex) {
-				args.push("--key-hex", options.keyHex);
+				// argv is readable by every local user; older tools only take --key-hex
+				if (await this.readsKeyFromEnv(tool, stage)) {
+					env = { ...process.env, NS_BUNDLE_KEY_HEX: options.keyHex };
+				} else {
+					args.push("--key-hex", options.keyHex);
+				}
 			}
 		}
 		args.push(...fuseArgs(true));
 		// the tool only patches the executable once the bundle is written
 		const pristine = fs.readFileSync(executable);
 		try {
-			const result = await this.run(tool, args, stage);
+			const result = await this.run(tool, args, stage, env);
 			this.$logger.info(result.stdout.trim());
 		} catch (e) {
 			for (const p of [output, unpacked]) {
@@ -128,12 +134,26 @@ export class LinuxAppBundler {
 		);
 	}
 
-	private async run(command: string, args: string[], cwd: string) {
+	private async readsKeyFromEnv(tool: string, cwd: string) {
+		try {
+			const help = await this.run(tool, ["--help"], cwd);
+			return help.stdout.includes("NS_BUNDLE_KEY_HEX");
+		} catch {
+			return false;
+		}
+	}
+
+	private async run(
+		command: string,
+		args: string[],
+		cwd: string,
+		env?: NodeJS.ProcessEnv,
+	) {
 		const result = await this.$childProcess.spawnFromEvent(
 			command,
 			args,
 			"close",
-			{ cwd },
+			env ? { cwd, env } : { cwd },
 			{ throwError: false },
 		);
 		if (result.exitCode !== 0) {
