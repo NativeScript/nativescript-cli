@@ -16,6 +16,8 @@ export class LiveSyncServiceResolver implements ILiveSyncServiceResolver {
 			return this.$injector.resolve("androidLiveSyncService");
 		} else if (this.$mobileHelper.isWindowsPlatform(platform)) {
 			return this.$injector.resolve("windowsLiveSyncService");
+		} else if (this.$mobileHelper.isLinuxPlatform(platform)) {
+			return this.$injector.resolve("linuxLiveSyncService");
 		}
 
 		this.$errors.fail(

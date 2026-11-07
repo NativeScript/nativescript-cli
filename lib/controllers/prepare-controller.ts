@@ -548,7 +548,10 @@ export class PrepareController
 				"package.json",
 			);
 		} else if (
-			this.$mobileHelper.isWindowsPlatform(platformData.platformNameLowerCase)
+			this.$mobileHelper.isWindowsPlatform(
+				platformData.platformNameLowerCase,
+			) ||
+			this.$mobileHelper.isLinuxPlatform(platformData.platformNameLowerCase)
 		) {
 			packagePath = path.join(
 				platformData.appDestinationDirectoryPath,

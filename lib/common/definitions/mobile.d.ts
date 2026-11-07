@@ -1113,6 +1113,7 @@ declare global {
 			isiOSPlatform(platform: string): boolean;
 			isvisionOSPlatform(platform: string): boolean;
 			isWindowsPlatform(platform: string): boolean;
+			isLinuxPlatform(platform: string): boolean;
 			isApplePlatform(platform: string): boolean;
 			normalizePlatformName(platform: string): string;
 			validatePlatformName(platform: string): string;
@@ -1158,11 +1159,13 @@ declare global {
 			Android: string;
 			visionOS: string;
 			Windows: string;
+			Linux: string;
 
 			isiOS(value: string): boolean;
 			isAndroid(value: string): boolean;
 			isvisionOS(value: string): boolean;
 			isWindows(value: string): boolean;
+			isLinux(value: string): boolean;
 		}
 
 		interface IDeviceApplication {

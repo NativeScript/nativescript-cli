@@ -44,6 +44,7 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 	private androidSysInfoCache: NativeScriptDoctor.IAndroidSysInfoData;
 	private iOSSysInfoCache: NativeScriptDoctor.IiOSSysInfoData;
 	private windowsSysInfoCache: NativeScriptDoctor.IWindowsSysInfoData;
+	private linuxSysInfoCache: NativeScriptDoctor.ILinuxSysInfoData;
 	private dotNetSdkVerCache: string;
 	private isWindowsDeveloperModeEnabledCache: boolean;
 
@@ -393,6 +394,20 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 			config &&
 			config.platform &&
 			config.platform.toLowerCase() ===
+				Constants.LINUX_PLATFORM_NAME.toLowerCase()
+		) {
+			return <NativeScriptDoctor.ISysInfoData>(
+				Object.assign(
+					await this.getCommonSysInfo(),
+					await this.getLinuxSysInfo(),
+				)
+			);
+		}
+
+		if (
+			config &&
+			config.platform &&
+			config.platform.toLowerCase() ===
 				Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
 		) {
 			return <NativeScriptDoctor.ISysInfoData>(
@@ -410,6 +425,9 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 		];
 		if (this.hostInfo.isWindows) {
 			sysInfoParts.push(await this.getWindowsSysInfo());
+		}
+		if (this.hostInfo.isLinux) {
+			sysInfoParts.push(await this.getLinuxSysInfo());
 		}
 		return Object.assign({}, ...sysInfoParts);
 	}
@@ -787,6 +805,24 @@ export class SysInfo implements NativeScriptDoctor.ISysInfo {
 				return result;
 			},
 		);
+	}
+
+	private async getLinuxSysInfo(): Promise<NativeScriptDoctor.ILinuxSysInfoData> {
+		if (this.linuxSysInfoCache === undefined) {
+			this.linuxSysInfoCache = {
+				isGtk4Installed: await this.isGtk4Installed(),
+			};
+		}
+		return this.linuxSysInfoCache;
+	}
+
+	// GTK apps only need the shared library, not the -dev package.
+	private async isGtk4Installed(): Promise<boolean> {
+		if (!this.hostInfo.isLinux) {
+			return false;
+		}
+		const output = await this.execCommand("ldconfig -p");
+		return !!output && output.includes("libgtk-4.so.1");
 	}
 
 	private getWindowsSysInfo(): Promise<NativeScriptDoctor.IWindowsSysInfoData> {

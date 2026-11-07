@@ -206,6 +206,7 @@ function createTestInjector(): IInjector {
 		public async startLookingForDevices(): Promise<void> {}
 	}
 	testInjector.register("windowsDeviceDiscovery", WindowsDeviceDiscoveryStub);
+	testInjector.register("linuxDeviceDiscovery", WindowsDeviceDiscoveryStub);
 	testInjector.register("staticConfig", { CLIENT_NAME: "unit-tests" });
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);
 	testInjector.register("androidEmulatorServices", AndroidEmulatorServices);

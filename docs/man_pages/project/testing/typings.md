@@ -15,6 +15,7 @@ Usage | Synopsis
 ---|---
 Generate typings to Android | `$ ns typings android [--jar <Jar1> --jar <Jar2>] [--aar <Aar1>] [--copy-to <Path>]`
 Generate typings to iOS | `$ ns typings ios [--filter <Filter>] [--copy-to <Path>]`
+Generate typings for Linux native code | `$ ns typings linux [--copy-to <Path>]`
 
 ### Options
 
@@ -28,6 +29,7 @@ Generate typings to iOS | `$ ns typings ios [--filter <Filter>] [--copy-to <Path
 `<Platform>` is the target mobile platform for which you want to generate typings. You can set the following target platforms:
  * `android` - Generate typings for android.
  * `ios` - Generate typings for iOS.
+ * `linux` - Generate typings for the C code in `App_Resources/Linux` and plugins' `platforms/linux` into `typings/linux`. Later builds keep them up to date.
 
 
 

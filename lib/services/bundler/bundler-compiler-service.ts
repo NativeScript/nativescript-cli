@@ -598,6 +598,7 @@ export class BundlerCompilerService
 					this.$options.hostProjectModuleName,
 				USER_PROJECT_PLATFORMS_IOS: this.$options.hostProjectPath,
 				USER_PROJECT_PLATFORMS_WINDOWS: this.$options.hostProjectPath,
+				USER_PROJECT_PLATFORMS_LINUX: this.$options.hostProjectPath,
 			});
 		}
 

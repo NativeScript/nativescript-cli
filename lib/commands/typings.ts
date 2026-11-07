@@ -1,5 +1,6 @@
 import { glob } from "node:fs/promises";
 import { homedir } from "os";
+import * as fs from "fs";
 import * as path from "path";
 import { PromptObject } from "prompts";
 import { color } from "../color";
@@ -8,6 +9,7 @@ import { ICommand, ICommandParameter } from "../common/definitions/commands";
 import { injector } from "../common/yok";
 import { IOptions, IStaticConfig } from "../declarations";
 import { IProjectData } from "../definitions/project";
+import { writeTypingsIndex } from "../services/linux-native-code";
 
 export class TypingsCommand implements ICommand {
 	public allowedParameters: ICommandParameter[] = [];
@@ -32,6 +34,8 @@ export class TypingsCommand implements ICommand {
 			result = await this.handleiOSTypings();
 		} else if (this.$mobileHelper.isWindowsPlatform(platform)) {
 			result = await this.handleWindowsTypings();
+		} else if (this.$mobileHelper.isLinuxPlatform(platform)) {
+			result = await this.handleLinuxTypings();
 		}
 		let typingsFolder = "./typings";
 		if (this.$options.copyTo) {
@@ -283,9 +287,51 @@ export class TypingsCommand implements ICommand {
 			generatorArgs.push("--libs", this.$options.libs);
 		}
 
-		await this.$childProcess.spawnFromEvent(generatorPath, generatorArgs, "exit", {
-			stdio: "inherit",
-		});
+		await this.$childProcess.spawnFromEvent(
+			generatorPath,
+			generatorArgs,
+			"exit",
+			{
+				stdio: "inherit",
+			},
+		);
+	}
+
+	/** Declarations for the C APIs of App_Resources/Linux and plugin native code. */
+	private async handleLinuxTypings() {
+		if (!this.$hostInfo.isLinux) {
+			this.$logger.warn("Linux typings can only be generated on Linux.");
+			return false;
+		}
+		const outDir = path.resolve(
+			this.$projectData.projectDir,
+			"typings",
+			"linux",
+		);
+		this.$fs.ensureDirectoryExists(outDir);
+		const linuxProjectService: any = injector.resolve("linuxProjectService");
+		const stage = path.join(
+			linuxProjectService.getPlatformData(this.$projectData).projectRoot,
+			"build",
+			"typings-stage",
+		);
+		await linuxProjectService.buildNativeCode(
+			this.$projectData,
+			stage,
+			false,
+			outDir,
+		);
+		this.$fs.deleteDirectory(stage);
+		const sdk = linuxProjectService.sdkTypingsDir(this.$projectData);
+		if (this.$fs.exists(sdk)) {
+			const target = path.join(outDir, "sdk");
+			this.$fs.deleteDirectory(target);
+			fs.cpSync(sdk, target, { recursive: true });
+		}
+		writeTypingsIndex(outDir);
+		this.$logger.info(
+			`Reference them with /// <reference path="./typings/linux/index.d.ts" />`,
+		);
 	}
 
 	private async handleiOSTypings() {
