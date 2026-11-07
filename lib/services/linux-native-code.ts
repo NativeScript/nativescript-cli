@@ -8,7 +8,7 @@ import { IChildProcess, ISpawnResult } from "../common/declarations";
  *
  *   src/            C / C++ sources (and headers), compiled into lib<name>.so
  *   include/        public headers; when present only these are exposed to JS
- *   lib/<arch>/     prebuilt .so (bundled in lib/) and .a (linked into lib<name>.so)
+ *   lib/<arch>/     prebuilt .so / .node (bundled in lib/) and .a (linked into lib<name>.so)
  *   native.json     { "pkg-config": [], "cflags": [], "libs": [] }
  *
  * Headers are run through the metadata generator into `metadata/<name>.bin`,
@@ -119,7 +119,8 @@ export class LinuxNativeCodeBuilder {
 		const prebuilt = fs.existsSync(prebuiltDir)
 			? fs.readdirSync(prebuiltDir).sort()
 			: [];
-		const shared = prebuilt.filter((f) => /\.so(\.\d+)*$/.test(f));
+		// Node-API addons (.node) are shared libraries too, loaded by path from lib/
+		const shared = prebuilt.filter((f) => /\.(so(\.\d+)*|node)$/.test(f));
 		const statics = prebuilt
 			.filter((f) => f.endsWith(".a"))
 			.map((f) => path.join(prebuiltDir, f));
