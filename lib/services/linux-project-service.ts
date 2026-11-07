@@ -605,7 +605,7 @@ export class LinuxProjectService
 		if (resources && hasNativeCode(resources)) {
 			units.push({ name: "app", dir: resources });
 		}
-		// production plugins include nested ones (a plugin's own plugin dependencies), as on iOS
+		// production plugins include nested ones (a plugin's own plugin dependencies)
 		const pluginsService: IPluginsService = injector.resolve("pluginsService");
 		for (const plugin of pluginsService.getAllProductionPlugins(
 			projectData,
