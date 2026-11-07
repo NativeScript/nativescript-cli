@@ -222,6 +222,8 @@ export class LinuxProjectService
 			});
 		}
 
+		this.stageDesktopEntry(stage, projectData, release);
+
 		if (release) {
 			const archive = path.join(outputRoot, `${name}.tar.gz`);
 			await this.$childProcess.spawnFromEvent(
@@ -272,12 +274,25 @@ export class LinuxProjectService
 		// no native project to check
 	}
 
-	/** Mirrors `App_Resources/Linux` (icons, .desktop entries...) into the platform project. */
+	/**
+	 * Mirrors `App_Resources/Linux` into the platform project. A project without
+	 * one gets the runtime package's defaults (icon, .desktop and metainfo templates).
+	 */
 	public prepareAppResources(projectData: IProjectData): void {
 		const resourcesDir = projectData.appResourcesDirectoryPath;
-		const source = ["Linux", "linux"]
+		let source = ["Linux", "linux"]
 			.map((d) => resourcesDir && path.join(resourcesDir, d))
 			.find((d) => d && this.$fs.exists(d));
+		const defaults = path.join(
+			this.getPlatformData(projectData).projectRoot,
+			"App_Resources",
+			"Linux",
+		);
+		if (!source && resourcesDir && this.$fs.exists(defaults)) {
+			source = path.join(resourcesDir, "Linux");
+			fs.cpSync(defaults, source, { recursive: true });
+			this.$logger.info(`Added the default Linux resources to ${source}`);
+		}
 		const destination = path.join(
 			this.getAppResourcesDestinationDirectoryPath(projectData),
 			"Linux",
@@ -365,6 +380,85 @@ export class LinuxProjectService
 
 	public async cleanProject(projectRoot: string): Promise<void> {
 		this.$fs.deleteDirectory(path.join(projectRoot, constants.BUILD_DIR));
+	}
+
+	/**
+	 * Desktop integration next to the executable: icons/hicolor/<size>/apps/<app-id>.png|svg,
+	 * <app-id>.desktop and <app-id>.metainfo.xml from App_Resources/Linux
+	 * (templates use __APP_ID__, __APP_NAME__ and __EXEC__). Release builds
+	 * also get install.sh, which installs the app into ~/.local.
+	 */
+	private stageDesktopEntry(
+		stage: string,
+		projectData: IProjectData,
+		release: boolean,
+	): void {
+		const resources = path.join(
+			this.getAppResourcesDestinationDirectoryPath(projectData),
+			"Linux",
+		);
+		const appId =
+			projectData.projectIdentifiers?.linux || projectData.projectId;
+		const name = projectData.projectName;
+		const fill = (template: string, exec: string) =>
+			template
+				.split("__APP_ID__")
+				.join(appId)
+				.split("__APP_NAME__")
+				.join(name)
+				.split("__EXEC__")
+				.join(exec);
+
+		const icon = ["icon.svg", "icon.png"]
+			.map((f) => path.join(resources, f))
+			.find((f) => this.$fs.exists(f));
+		if (icon) {
+			// an icon theme layout, so GTK and the desktop find it by app id
+			const size = path.extname(icon) === ".svg" ? "scalable" : "512x512";
+			const icons = path.join(stage, "icons", "hicolor", size, "apps");
+			this.$fs.ensureDirectoryExists(icons);
+			fs.copyFileSync(icon, path.join(icons, appId + path.extname(icon)));
+		}
+
+		const desktopTemplate = path.join(resources, "app.desktop");
+		const desktop = this.$fs.exists(desktopTemplate)
+			? this.$fs.readText(desktopTemplate)
+			: `[Desktop Entry]\nType=Application\nName=__APP_NAME__\nExec=__EXEC__\nIcon=__APP_ID__\nTerminal=false\nStartupWMClass=__APP_ID__\n`;
+		// debug builds point at this folder, install.sh rewrites release entries
+		fs.writeFileSync(
+			path.join(stage, `${appId}.desktop`),
+			fill(desktop, release ? "__EXEC__" : path.join(stage, name)),
+		);
+
+		const metainfo = path.join(resources, "app.metainfo.xml");
+		if (this.$fs.exists(metainfo)) {
+			fs.writeFileSync(
+				path.join(stage, `${appId}.metainfo.xml`),
+				fill(this.$fs.readText(metainfo), name),
+			);
+		}
+
+		if (release) {
+			const script = path.join(stage, "install.sh");
+			fs.writeFileSync(
+				script,
+				[
+					"#!/bin/sh",
+					"# Installs the app for the current user (~/.local).",
+					"set -e",
+					'src="$(cd "$(dirname "$0")" && pwd)"',
+					'data="${XDG_DATA_HOME:-$HOME/.local/share}"',
+					`dest="$data/${appId}"`,
+					'rm -rf "$dest" && mkdir -p "$dest" "$data/applications" "$data/icons"',
+					'cp -r "$src/." "$dest/"',
+					`sed "s|__EXEC__|$dest/${name}|g" "$src/${appId}.desktop" > "$data/applications/${appId}.desktop"`,
+					'[ -d "$src/icons" ] && cp -r "$src/icons/." "$data/icons/"',
+					`echo "Installed ${name} to $dest"`,
+					"",
+				].join("\n"),
+			);
+			fs.chmodSync(script, 0o755);
+		}
 	}
 
 	private appProject(projectData: IProjectData): string {
