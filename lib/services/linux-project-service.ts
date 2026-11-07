@@ -32,6 +32,14 @@ import {
 	writeTypingsIndex,
 } from "./linux-native-code";
 import { LinuxAppBundler } from "./linux-app-bundle";
+import {
+	assertLinuxAppId,
+	desktopExecArg,
+	desktopString,
+	fillTemplate,
+	installScript,
+	xmlEscape,
+} from "./linux-desktop-entry";
 
 /** App_Resources/Linux files consumed by the build (desktop entry, icon, AppStream, metadata filters). */
 const BUILD_INPUTS = [
@@ -426,22 +434,18 @@ export class LinuxProjectService
 		);
 		const appId =
 			projectData.projectIdentifiers?.linux || projectData.projectId;
+		assertLinuxAppId(appId);
 		const name = projectData.projectName;
 		const version =
 			this.$fs.readJson(path.join(projectData.projectDir, "package.json"))
 				?.version || "1.0.0";
-		const fill = (template: string, exec: string) =>
-			template
-				.split("__APP_ID__")
-				.join(appId)
-				.split("__APP_NAME__")
-				.join(name)
-				.split("__APP_VERSION__")
-				.join(version)
-				.split("__APP_DATE__")
-				.join(new Date().toISOString().slice(0, 10))
-				.split("__EXEC__")
-				.join(exec);
+		const values = (escape: (v: string) => string, exec: string) => ({
+			APP_ID: escape(appId),
+			APP_NAME: escape(name),
+			APP_VERSION: escape(String(version)),
+			APP_DATE: new Date().toISOString().slice(0, 10),
+			EXEC: exec,
+		});
 
 		const icon = ["icon.svg", "icon.png"]
 			.map((f) => path.join(resources, f))
@@ -461,36 +465,29 @@ export class LinuxProjectService
 		// debug builds point at this folder, install.sh rewrites release entries
 		fs.writeFileSync(
 			path.join(stage, `${appId}.desktop`),
-			fill(desktop, release ? "__EXEC__" : path.join(stage, name)),
+			fillTemplate(
+				desktop,
+				values(
+					desktopString,
+					release ? "__EXEC__" : desktopExecArg(path.join(stage, name)),
+				),
+			),
 		);
 
 		const metainfo = path.join(resources, "app.metainfo.xml");
 		if (this.$fs.exists(metainfo)) {
 			fs.writeFileSync(
 				path.join(stage, `${appId}.metainfo.xml`),
-				fill(this.$fs.readText(metainfo), name),
+				fillTemplate(
+					this.$fs.readText(metainfo),
+					values(xmlEscape, xmlEscape(name)),
+				),
 			);
 		}
 
 		if (release) {
 			const script = path.join(stage, "install.sh");
-			fs.writeFileSync(
-				script,
-				[
-					"#!/bin/sh",
-					"# Installs the app for the current user (~/.local).",
-					"set -e",
-					'src="$(cd "$(dirname "$0")" && pwd)"',
-					'data="${XDG_DATA_HOME:-$HOME/.local/share}"',
-					`dest="$data/${appId}"`,
-					'rm -rf "$dest" && mkdir -p "$dest" "$data/applications" "$data/icons"',
-					'cp -r "$src/." "$dest/"',
-					`sed "s|__EXEC__|$dest/${name}|g" "$src/${appId}.desktop" > "$data/applications/${appId}.desktop"`,
-					'[ -d "$src/icons" ] && cp -r "$src/icons/." "$data/icons/"',
-					`echo "Installed ${name} to $dest"`,
-					"",
-				].join("\n"),
-			);
+			fs.writeFileSync(script, installScript(appId, name));
 			fs.chmodSync(script, 0o755);
 		}
 	}
