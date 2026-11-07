@@ -562,11 +562,21 @@ export class WindowsProjectService
 						"--input", path.join(appProjectDir, "app"),
 						"--output", path.join(appProjectDir, "app.nsbundle"),
 					];
-					// Without a user key, seal with a fresh per-build key the app template embeds.
-					const keyArgs = keyHex ? ["--key-hex", keyHex] : ["--write-key", keyPath];
 					this.$logger.info(`Running nsbundle_pack (source protection): ${packExe}`);
 					try {
-						const spawnOptions = { cwd: platformData.projectRoot };
+						const spawnOptions: any = { cwd: platformData.projectRoot };
+						// Without a user key, seal with a fresh per-build key the app template embeds.
+						let keyArgs = ["--write-key", keyPath];
+						if (keyHex) {
+							// command lines show up in process lists and audit logs; older tools only take --key-hex
+							const help = await this.$childProcess.spawnFromEvent(packExe, ["--help"], "close", spawnOptions, { throwError: false });
+							if (/NS_BUNDLE_KEY_HEX/.test(`${help?.stdout}${help?.stderr}`)) {
+								keyArgs = [];
+								spawnOptions.env = { ...process.env, NS_BUNDLE_KEY_HEX: keyHex };
+							} else {
+								keyArgs = ["--key-hex", keyHex];
+							}
+						}
 						let result = await this.$childProcess.spawnFromEvent(packExe, [...args, ...keyArgs], "close", spawnOptions, { throwError: false });
 						if (!keyHex && result && result.exitCode !== 0 && /--write-key/.test(result.stderr || "")) {
 							// A framework from before per-build keys: seal with its shared default key.
