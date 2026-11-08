@@ -48,35 +48,32 @@ export class Net implements INet {
 	}
 
 	public async isPortAvailable(port: number): Promise<boolean> {
-		return new Promise<boolean>((resolve, reject) => {
-			let isResolved = false;
+		// A listener on one address does not stop a bind on another (e.g. the
+		// wildcard next to the loopback), so each of them has to be free.
+		for (const host of ["127.0.0.1", "::1", "0.0.0.0", "::"]) {
+			if (!(await this.canListen(port, host))) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	private canListen(port: number, host: string): Promise<boolean> {
+		return new Promise<boolean>((resolve) => {
 			const server = net.createServer();
 
-			server.on("error", (err: Error) => {
-				if (!isResolved) {
-					isResolved = true;
-					resolve(false);
-				}
+			server.once("error", (err: NodeJS.ErrnoException) => {
+				// The host has no such address (e.g. IPv6 is disabled), so nothing
+				// can be listening on it either.
+				resolve(err.code === "EADDRNOTAVAIL" || err.code === "EAFNOSUPPORT");
 			});
 
-			server.once("close", () => {
-				if (!isResolved) {
-					// "close" will be emitted right after "error"
-					isResolved = true;
-					resolve(true);
-				}
+			server.once("listening", () => {
+				server.close(() => resolve(true));
 			});
 
-			server.on("listening", (err: Error) => {
-				if (err && !isResolved) {
-					isResolved = true;
-					resolve(true);
-				}
-
-				server.close();
-			});
-
-			server.listen(port, "localhost");
+			server.listen(port, host);
 		});
 	}
 
