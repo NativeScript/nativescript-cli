@@ -21,6 +21,8 @@ const TARGET_NAME = "TNSBlank";
 // its PBXFrameworksBuildPhase uuid in that fixture (a group is also named
 // "Frameworks", so tests that strip the phase must key on the uuid)
 const FRAMEWORKS_PHASE_ID = "858B83F418CA22B800AB12DE";
+// its "Embed Frameworks" PBXCopyFilesBuildPhase uuid in that fixture
+const EMBED_PHASE_ID = "85F5BDFC1A9363BE006B9701";
 
 const remotePackage: IosSPMPackage = {
 	name: "swift-numerics",
@@ -33,6 +35,13 @@ const localPackage: IosSPMPackage = {
 	name: "LocalPkg",
 	libs: ["LocalPkg"],
 	path: "vendor/LocalPkg",
+};
+
+const dynamicPackage: IosSPMPackage = {
+	name: "DynamicPkg",
+	libs: ["DynamicProduct", "StaticProduct"],
+	embed: ["DynamicProduct"],
+	path: "vendor/DynamicPkg",
 };
 
 let warnings: string[] = [];
@@ -72,6 +81,55 @@ function readPbxproj(projectRoot: string): string {
 
 function countOccurrences(contents: string, needle: string): number {
 	return contents.split(needle).length - 1;
+}
+
+/** Removes a build phase from the fixture target: its section entry and its slot in buildPhases. */
+function stripBuildPhase(projectRoot: string, phaseId: string, name: string) {
+	const pbxPath = path.join(
+		projectRoot,
+		`${TARGET_NAME}.xcodeproj`,
+		"project.pbxproj",
+	);
+	const stripped = readFileSync(pbxPath, "utf8")
+		.replace(new RegExp(`^\\s*${phaseId} /\\* ${name} \\*/,\\n`, "m"), "")
+		.replace(
+			new RegExp(
+				`^\\s*${phaseId} /\\* ${name} \\*/ = \\{[\\s\\S]*?\\};\\n`,
+				"m",
+			),
+			"",
+		);
+	writeFileSync(pbxPath, stripped);
+}
+
+function parsePbxproj(projectRoot: string): any {
+	const xcode = require("nativescript-dev-xcode");
+	const project = new xcode.project(
+		path.join(projectRoot, `${TARGET_NAME}.xcodeproj`, "project.pbxproj"),
+	);
+	project.parseSync();
+	return project;
+}
+
+/** The uuids of the build files in the fixture target's "Embed Frameworks" phase. */
+function embedPhaseFileUuids(project: any): string[] {
+	const targets = project.pbxNativeTargetSection();
+	const target =
+		targets[
+			Object.keys(targets).find(
+				(key) => !key.endsWith("_comment") && targets[key].name === TARGET_NAME,
+			)
+		];
+	const copyPhases = project.hash.project.objects["PBXCopyFilesBuildPhase"];
+	const embedPhases = (target.buildPhases as any[])
+		.map((phase) => copyPhases[phase.value])
+		.filter((phase) => phase && String(phase.dstSubfolderSpec) === "10");
+	assert.lengthOf(
+		embedPhases,
+		1,
+		"the target should have exactly one Embed Frameworks phase",
+	);
+	return (embedPhases[0].files ?? []).map((file: any) => file.value);
 }
 
 describe("SPMPbxprojService", () => {
@@ -246,29 +304,7 @@ describe("SPMPbxprojService", () => {
 		});
 
 		it("skips a target without a Frameworks build phase, warns, and writes nothing", () => {
-			// strip the Frameworks build phase from the fixture target — both the
-			// section entry and its slot in the target's buildPhases
-			const pbxPath = path.join(
-				projectRoot,
-				`${TARGET_NAME}.xcodeproj`,
-				"project.pbxproj",
-			);
-			const stripped = readFileSync(pbxPath, "utf8")
-				.replace(
-					new RegExp(
-						`^\\s*${FRAMEWORKS_PHASE_ID} /\\* Frameworks \\*/,\\n`,
-						"m",
-					),
-					"",
-				)
-				.replace(
-					new RegExp(
-						`^\\s*${FRAMEWORKS_PHASE_ID} /\\* Frameworks \\*/ = \\{[\\s\\S]*?\\};\\n`,
-						"m",
-					),
-					"",
-				);
-			writeFileSync(pbxPath, stripped);
+			stripBuildPhase(projectRoot, FRAMEWORKS_PHASE_ID, "Frameworks");
 
 			const result = service.addPackages(projectRoot, [
 				{ targetName: TARGET_NAME, package: remotePackage },
@@ -329,6 +365,122 @@ describe("SPMPbxprojService", () => {
 				2,
 				"the two product dependencies should point at different packages",
 			);
+		});
+
+		describe("embed", () => {
+			it("copies an embedded product into the Embed Frameworks phase with CodeSignOnCopy, and still links it", () => {
+				assert.isTrue(
+					service.addPackages(projectRoot, [
+						{ targetName: TARGET_NAME, package: dynamicPackage },
+					]),
+				);
+
+				const contents = readPbxproj(projectRoot);
+				assert.include(contents, "DynamicProduct in Frameworks");
+				assert.include(contents, "DynamicProduct in Embed Frameworks");
+				assert.match(
+					contents,
+					/DynamicProduct in Embed Frameworks \*\/ = \{[^}]*settings = \{ATTRIBUTES = \(CodeSignOnCopy, \); \};/,
+					"the embed build file should carry the CodeSignOnCopy attribute",
+				);
+				assert.include(contents, "StaticProduct in Frameworks");
+				assert.notInclude(
+					contents,
+					"StaticProduct in Embed Frameworks",
+					"a product not listed in embed must only be linked",
+				);
+
+				const project = parsePbxproj(projectRoot);
+				const buildFiles = project.hash.project.objects["PBXBuildFile"];
+				const embeddedUuids = embedPhaseFileUuids(project);
+				assert.lengthOf(embeddedUuids, 1);
+				assert.equal(
+					buildFiles[`${embeddedUuids[0]}_comment`],
+					"DynamicProduct in Embed Frameworks",
+				);
+				assert.deepEqual(buildFiles[embeddedUuids[0]].settings, {
+					ATTRIBUTES: ["CodeSignOnCopy"],
+				});
+
+				// link and embed entries are distinct build files for the same product
+				const productRefs = Object.keys(buildFiles)
+					.filter((key) => !key.endsWith("_comment"))
+					.map((key) => buildFiles[key])
+					.filter((file) => file.productRef_comment === "DynamicProduct")
+					.map((file) => file.productRef);
+				assert.lengthOf(productRefs, 2);
+				assert.equal(new Set(productRefs).size, 1);
+			});
+
+			it("is idempotent — reapplying an embedded package does not duplicate the embed entry", () => {
+				const assignments: IosSPMPackageAssignment[] = [
+					{ targetName: TARGET_NAME, package: dynamicPackage },
+				];
+
+				assert.isTrue(service.addPackages(projectRoot, assignments));
+				const afterFirst = readPbxproj(projectRoot);
+				assert.isTrue(service.addPackages(projectRoot, assignments));
+				const afterSecond = readPbxproj(projectRoot);
+
+				assert.equal(afterSecond, afterFirst);
+				assert.equal(
+					countOccurrences(
+						afterSecond,
+						"DynamicProduct in Embed Frameworks */ = {",
+					),
+					1,
+				);
+				assert.lengthOf(embedPhaseFileUuids(parsePbxproj(projectRoot)), 1);
+			});
+
+			it("creates the Embed Frameworks phase when the target has none", () => {
+				stripBuildPhase(projectRoot, EMBED_PHASE_ID, "Embed Frameworks");
+				assert.notInclude(readPbxproj(projectRoot), "Embed Frameworks");
+
+				assert.isTrue(
+					service.addPackages(projectRoot, [
+						{ targetName: TARGET_NAME, package: dynamicPackage },
+					]),
+				);
+
+				const contents = readPbxproj(projectRoot);
+				assert.include(contents, 'name = "Embed Frameworks";');
+				assert.include(contents, "dstSubfolderSpec = 10;");
+				assert.lengthOf(embedPhaseFileUuids(parsePbxproj(projectRoot)), 1);
+			});
+
+			it("does not create an Embed Frameworks phase for a package that embeds nothing", () => {
+				stripBuildPhase(projectRoot, EMBED_PHASE_ID, "Embed Frameworks");
+
+				assert.isTrue(
+					service.addPackages(projectRoot, [
+						{ targetName: TARGET_NAME, package: remotePackage },
+					]),
+				);
+
+				assert.notInclude(readPbxproj(projectRoot), "Embed Frameworks");
+			});
+
+			it("warns about an embed entry that is not a linked lib, and skips it", () => {
+				assert.isTrue(
+					service.addPackages(projectRoot, [
+						{
+							targetName: TARGET_NAME,
+							package: { ...dynamicPackage, embed: ["NotLinked"] },
+						},
+					]),
+				);
+
+				assert.isTrue(
+					warnings.some(
+						(w) => w.includes("NotLinked") && w.includes("not in libs"),
+					),
+					`expected a warning naming the unlinked product, got: ${warnings}`,
+				);
+				const contents = readPbxproj(projectRoot);
+				assert.notInclude(contents, "in Embed Frameworks");
+				assert.include(contents, "DynamicProduct in Frameworks");
+			});
 		});
 
 		it("quotes requirement values a pbxproj cannot hold bare", () => {
