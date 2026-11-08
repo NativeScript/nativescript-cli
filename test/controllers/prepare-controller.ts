@@ -178,9 +178,11 @@ describe("prepareController", () => {
 			return written;
 		};
 
-		it("asks for the structured log format in iOS debug builds only", async () => {
+		it("asks for the structured log format and stdio in iOS debug builds only", async () => {
 			assert.equal((await writePackageJson("ios", false)).logFormat, 1);
 			assert.isUndefined((await writePackageJson("ios", true)).logFormat);
+			assert.isTrue((await writePackageJson("ios", false)).forwardStdio);
+			assert.isUndefined((await writePackageJson("ios", true)).forwardStdio);
 			assert.isUndefined((await writePackageJson("android", false)).logFormat);
 		});
 	});

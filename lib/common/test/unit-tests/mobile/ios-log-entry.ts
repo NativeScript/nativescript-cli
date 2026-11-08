@@ -98,6 +98,47 @@ describe("getIOSLogEntryText", () => {
 	});
 });
 
+describe("getIOSLogEntryText for forwarded stdio", () => {
+	const entry = {
+		process: "/var/containers/Bundle/Application/X/app.app/app",
+		image: "/private/Frameworks/NativeScript.framework/NativeScript",
+		level: "default",
+		message: "printed",
+		subsystem: "org.nativescript.stdio",
+		category: "stdout",
+	};
+
+	it("is hidden by default, unlike the runtime's console output", () => {
+		assert.isNull(getIOSLogEntryText(entry, { processName: "app" }));
+	});
+
+	it("is labeled with its stream along with native output", () => {
+		assert.equal(
+			getIOSLogEntryText(
+				{ ...entry, category: "stderr" },
+				{ processName: "app", includeNative: true },
+			),
+			"stderr: printed",
+		);
+	});
+
+	it("is labeled once when a long line was split", () => {
+		const stitcher = new IOSLogChunkStitcher();
+		const printed: string[] = [];
+		for (const message of ["[ns 4 1/2] one", "[ns 4 2/2]  two"]) {
+			stitcher.add("process", { ...entry, message }, (complete) =>
+				printed.push(
+					getIOSLogEntryText(complete, {
+						processName: "app",
+						includeNative: true,
+					}),
+				),
+			);
+		}
+		assert.deepEqual(printed, ["stdout: one two"]);
+	});
+});
+
 describe("getIOSLogScope", () => {
 	it("maps the CLI log level to the app logs that are shown", () => {
 		assert.deepEqual(getIOSLogScope("INFO", false), {
