@@ -4,6 +4,7 @@ import { ChildProcess, spawn } from "child_process";
 import { ApplicationManagerBase } from "../application-manager-base";
 import { IHooksService, IDictionary } from "../../declarations";
 import { IBuildData } from "../../../definitions/build";
+import { installDebugDesktopEntry } from "../../../services/linux-desktop-entry";
 
 /** Port of the runtime's DevTools inspector for `ns debug linux`. */
 export const LINUX_INSPECTOR_PORT = 9229;
@@ -53,6 +54,13 @@ export class LinuxApplicationManager extends ApplicationManagerBase {
 		this._executables[path.basename(packageFilePath)] = packageFilePath;
 		if (appIdentifier) {
 			this._executables[appIdentifier] = packageFilePath;
+			try {
+				installDebugDesktopEntry(path.dirname(packageFilePath), appIdentifier);
+			} catch (e) {
+				this.$logger.warn(
+					`Couldn't register ${appIdentifier} with the desktop: ${e?.message ?? e}`,
+				);
+			}
 		}
 	}
 

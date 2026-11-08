@@ -3,6 +3,10 @@
  * metainfo and install.sh, filled from App_Resources/Linux templates.
  */
 
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+
 /** Reverse-DNS style id; it names files (`<id>.desktop`) and the install folder. */
 const APP_ID = /^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$/;
 
@@ -61,6 +65,59 @@ export function fillTemplate(
 /** A POSIX shell single-quoted word. */
 export function shellQuote(value: string): string {
 	return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/** Marks entries written by debug runs. */
+export const DEBUG_ENTRY_KEY = "X-NativeScript-Debug";
+
+export function xdgDataHome(): string {
+	const value = process.env.XDG_DATA_HOME;
+	return value && path.isAbsolute(value)
+		? value
+		: path.join(os.homedir(), ".local", "share");
+}
+
+/** Installs a debug build's desktop entry and icons; never replaces an entry it didn't write. */
+export function installDebugDesktopEntry(
+	stage: string,
+	appId: string,
+	dataHome: string = xdgDataHome(),
+): boolean {
+	assertLinuxAppId(appId);
+	const source = path.join(stage, `${appId}.desktop`);
+	if (!fs.existsSync(source)) {
+		return false;
+	}
+	const entry = fs.readFileSync(source, "utf8");
+	if (entry.includes("__EXEC__")) {
+		return false;
+	}
+	const applications = path.join(dataHome, "applications");
+	const destination = path.join(applications, `${appId}.desktop`);
+	if (
+		fs.existsSync(destination) &&
+		!fs
+			.readFileSync(destination, "utf8")
+			.split(/\r?\n/)
+			.includes(`${DEBUG_ENTRY_KEY}=true`)
+	) {
+		return false;
+	}
+	// before any action groups
+	const group = /^\[Desktop Entry\][^\S\n]*$/m;
+	const marked = group.test(entry)
+		? entry.replace(group, (header) => `${header}\n${DEBUG_ENTRY_KEY}=true`)
+		: `[Desktop Entry]\n${DEBUG_ENTRY_KEY}=true\n${entry}`;
+	fs.mkdirSync(applications, { recursive: true });
+	const temp = `${destination}.${process.pid}.tmp`;
+	fs.writeFileSync(temp, marked);
+	fs.renameSync(temp, destination);
+
+	const icons = path.join(stage, "icons");
+	if (fs.existsSync(icons)) {
+		fs.cpSync(icons, path.join(dataHome, "icons"), { recursive: true });
+	}
+	return true;
 }
 
 /**
