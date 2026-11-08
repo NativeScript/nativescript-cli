@@ -125,6 +125,71 @@ function sanitizePluginName(pluginName: string): string {
 	return pluginName.split("/").pop();
 }
 
+function getScopeQualifiedPluginName(pluginName: string): string | null {
+	const parts = pluginName.split("/");
+	if (parts.length < 2 || !parts[0].startsWith("@")) {
+		return null;
+	}
+
+	const scope = parts[0].slice(1).replace(/[^A-Za-z0-9_]/g, "_");
+	return `${scope}_${getShortPluginName(pluginName)}`;
+}
+
+// The aar name doubles as a Java package segment (the `org.nativescript.<name>`
+// namespace fallback), which cannot start with a digit.
+function withoutLeadingDigit(name: string): string {
+	return /^[0-9]/.test(name) ? `_${name}` : name;
+}
+
+/**
+ * Maps each plugin name to a file-system and Java-package safe name for its aar
+ * that is unique among `pluginNames`. A plugin whose short name is not shared
+ * keeps `getShortPluginName(name)`, so projects without clashes keep their names.
+ * Throws if two plugins still end up with the same name.
+ */
+export function getUniqueShortPluginNames(
+	pluginNames: string[],
+): Map<string, string> {
+	const sortedNames = _.sortBy(_.uniq(pluginNames));
+	const namesByShortName = _.groupBy(sortedNames, getShortPluginName);
+	const result = new Map<string, string>();
+	const owners = new Map<string, string>();
+
+	for (const pluginName of sortedNames) {
+		const shortName = getShortPluginName(pluginName);
+		const aarName =
+			namesByShortName[shortName].length === 1
+				? shortName
+				: withoutLeadingDigit(
+						getScopeQualifiedPluginName(pluginName) ?? shortName,
+					);
+
+		const owner = owners.get(aarName);
+		if (owner !== undefined) {
+			throw new Error(
+				`The plugins "${owner}" and "${pluginName}" both need the Android aar name "${aarName}". Remove one of them from the project.`,
+			);
+		}
+
+		owners.set(aarName, pluginName);
+		result.set(pluginName, aarName);
+	}
+
+	return result;
+}
+
+/**
+ * Every aar name `getUniqueShortPluginNames` can give this plugin, depending on
+ * which other plugins are installed.
+ */
+export function getCandidateAarNames(pluginName: string): string[] {
+	const shortName = getShortPluginName(pluginName);
+	return _.uniq([
+		shortName,
+		withoutLeadingDigit(getScopeQualifiedPluginName(pluginName) ?? shortName),
+	]);
+}
+
 export async function executeActionByChunks<T>(
 	initialData: T[] | IDictionary<T>,
 	chunkSize: number,

@@ -1,0 +1,135 @@
+name: 'org.nativescript:gradle-api'
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'gradle-api/**'
+      - 'vendor/gradle-plugin/**'
+      - 'lib/services/android-plugin-build-service.ts'
+      - 'lib/services/android-project-service.ts'
+      - 'lib/services/android/**'
+      - '.github/workflows/gradle_api.yml'
+  push:
+    branches: [ 'main' ]
+    # Path filters do not apply to tag pushes.
+    tags: [ 'gradle-api-v*' ]
+    paths:
+      - 'gradle-api/**'
+      - 'vendor/gradle-plugin/**'
+      - 'lib/services/android-plugin-build-service.ts'
+      - 'lib/services/android-project-service.ts'
+      - 'lib/services/android/**'
+      - '.github/workflows/gradle_api.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          # vendor/gradle-plugin/gradle/wrapper/gradle-wrapper.jar, which the CLI copies into
+          # plugin builds, matches no published Gradle wrapper checksum.
+          allow-checksums: 414142e6bc3b156908436f13b29e198bb3d59824f9c245ef145c809ddd5fe0a3
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          # Done by the wrapper-validation step, which can allow the vendored jar.
+          validate-wrappers: false
+
+      # The Android SDK preinstalled on the runner (ANDROID_HOME) enables the plugin build tests.
+      - name: Check
+        working-directory: gradle-api
+        run: ./gradlew check --console=plain
+
+  publish:
+    name: Publish to Maven Central
+    if: startsWith(github.ref, 'refs/tags/gradle-api-v')
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: maven-central
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          allow-checksums: 414142e6bc3b156908436f13b29e198bb3d59824f9c245ef145c809ddd5fe0a3
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          cache-read-only: true
+          validate-wrappers: false
+
+      - name: Check the tag matches the version
+        working-directory: gradle-api
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(sed -n 's/^VERSION_NAME=//p' gradle.properties)"
+          if [ "$TAG" != "gradle-api-v$version" ]; then
+            echo "::error::Tag $TAG does not match VERSION_NAME=$version in gradle-api/gradle.properties"
+            exit 1
+          fi
+          case "$version" in
+            *-SNAPSHOT)
+              echo "::error::$version is a snapshot version"
+              exit 1
+              ;;
+          esac
+
+      - name: Publish
+        working-directory: gradle-api
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_CENTRAL_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_CENTRAL_SIGNING_KEY_PASSWORD }}
+        run: |
+          # The build skips signing without a key, which Maven Central would only reject later.
+          for name in ORG_GRADLE_PROJECT_mavenCentralUsername ORG_GRADLE_PROJECT_mavenCentralPassword ORG_GRADLE_PROJECT_signingInMemoryKey; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is empty; check the maven-central environment's secrets"
+              exit 1
+            fi
+          done
+          ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache --console=plain
