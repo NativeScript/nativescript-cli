@@ -11,6 +11,7 @@ import {
 import { cache, performanceLog } from "../common/decorators";
 import { hook } from "../common/helpers";
 import { injector } from "../common/yok";
+import { IOS_LOG_FORMAT } from "../common/mobile/ios/ios-log-entry";
 import {
 	AnalyticsEventLabelDelimiter,
 	BUNDLER_COMPILATION_COMPLETE,
@@ -341,6 +342,7 @@ export class PrepareController
 			newNativeWatchStarted = await this.startNativeWatcher(
 				platformData,
 				projectData,
+				prepareData,
 			);
 		}
 
@@ -359,6 +361,7 @@ export class PrepareController
 	private async startNativeWatcher(
 		platformData: IPlatformData,
 		projectData: IProjectData,
+		prepareData: IPrepareData,
 	): Promise<boolean> {
 		if (
 			this.watchersData[projectData.projectDir][
@@ -388,7 +391,11 @@ export class PrepareController
 					this.$watchIgnoreListService.removeFileFromIgnoreList(filePath);
 				} else {
 					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
-					await this.writeRuntimePackageJson(projectData, platformData);
+					await this.writeRuntimePackageJson(
+						projectData,
+						platformData,
+						prepareData,
+					);
 					this.emitPrepareEvent({
 						files: [],
 						staleFiles: [],
@@ -517,6 +524,9 @@ export class PrepareController
 				packageData.ios.runtime = {
 					version: installedRuntimePackageJSON.version,
 				};
+			}
+			if (prepareData && !prepareData.release) {
+				packageData.logFormat = IOS_LOG_FORMAT;
 			}
 			if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
 				packageData.discardUncaughtJsExceptions =

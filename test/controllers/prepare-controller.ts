@@ -151,6 +151,40 @@ describe("prepareController", () => {
 		});
 	});
 
+	describe("writeRuntimePackageJson", () => {
+		const writePackageJson = async (platform: string, release: boolean) => {
+			const injector = createTestInjector({ hasNativeChanges: false });
+			let written: any;
+			const prepareController: PrepareController =
+				injector.resolve("prepareController");
+			_.assign(prepareController, {
+				$projectConfigService: {
+					detectProjectConfigs: () => ({ usingNSConfig: false }),
+					readConfig: () => ({}),
+				},
+				$fs: {
+					readJson: () => ({}),
+					writeJson: (filePath: string, data: any) => {
+						written = data;
+					},
+				},
+			});
+			await prepareController.writeRuntimePackageJson(
+				<any>{ projectDir, projectName: "app", packageJsonData: {} },
+				<any>{ platformNameLowerCase: platform, projectRoot: projectDir },
+				<any>{ ...prepareData, release },
+			);
+
+			return written;
+		};
+
+		it("asks for the structured log format in iOS debug builds only", async () => {
+			assert.equal((await writePackageJson("ios", false)).logFormat, 1);
+			assert.isUndefined((await writePackageJson("ios", true)).logFormat);
+			assert.isUndefined((await writePackageJson("android", false)).logFormat);
+		});
+	});
+
 	describe("stopWatchers", () => {
 		it("detaches the bundler handler of a paused watcher", async () => {
 			const injector = createTestInjector({ hasNativeChanges: false });
