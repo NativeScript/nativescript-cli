@@ -1633,7 +1633,9 @@ end`,
 describe("applyPodfileBuildSettings", () => {
 	const projectName = "projectName";
 
-	function setup(buildXcconfig: string) {
+	const pod = `pod 'Alamofire'`;
+
+	function setup(buildXcconfig: string, { withPodfile = true } = {}) {
 		const dir = mkdtempSync(path.join(tmpdir(), "podfile-deployment-target-"));
 		const testInjector = createTestInjector(FileSystem);
 		const fs: IFileSystem = testInjector.resolve("fs");
@@ -1655,10 +1657,12 @@ describe("applyPodfileBuildSettings", () => {
 			"iOS",
 			"build.xcconfig",
 		);
-		fs.writeFile(
-			podfilePath,
-			`use_frameworks!${EOL}${EOL}target "${projectName}" do${EOL}${EOL}end`,
-		);
+		if (withPodfile) {
+			fs.writeFile(
+				podfilePath,
+				`use_frameworks!${EOL}${EOL}target "${projectName}" do${EOL}${EOL}${pod}${EOL}${EOL}end`,
+			);
+		}
 		fs.writeFile(xcconfigPath, buildXcconfig);
 		const apply = (buildSettings: Record<string, string> = null) =>
 			cocoapodsService.applyPodfileBuildSettings(
@@ -1678,7 +1682,7 @@ describe("applyPodfileBuildSettings", () => {
 
 		const podfile = fs.readText(podfilePath);
 		assert.include(podfile, "# Begin Podfile - ");
-		assert.include(podfile, 'Gem::Version.new("18.0")');
+		assert.include(podfile, "Gem::Version.new('18.0')");
 		assert.include(podfile, "post_install do |installer|");
 		assert.isFalse(
 			fs.exists(path.join(platformData.projectRoot, "Podfile-build-settings")),
@@ -1693,7 +1697,7 @@ describe("applyPodfileBuildSettings", () => {
 		const podfile = fs.readText(podfilePath);
 		assert.include(
 			podfile,
-			'config.build_settings["COMPILATION_CACHE_ENABLE_CACHING"] = "YES"',
+			"config.build_settings['COMPILATION_CACHE_ENABLE_CACHING'] = 'YES'",
 		);
 		assert.notInclude(podfile, "IPHONEOS_DEPLOYMENT_TARGET");
 	});
@@ -1710,5 +1714,39 @@ describe("applyPodfileBuildSettings", () => {
 		const podfile = fs.readText(podfilePath);
 		assert.notInclude(podfile, "Podfile-build-settings");
 		assert.notInclude(podfile, "IPHONEOS_DEPLOYMENT_TARGET");
+	});
+
+	it("doesn't create a Podfile for an app without pods", async () => {
+		const { fs, podfilePath, apply } = setup(
+			"IPHONEOS_DEPLOYMENT_TARGET = 18.0;",
+			{ withPodfile: false },
+		);
+
+		await apply({ COMPILATION_CACHE_ENABLE_CACHING: "YES" });
+
+		assert.isFalse(fs.exists(podfilePath));
+	});
+
+	it("deletes the Podfile once these settings are all that's left in it", async () => {
+		const { fs, podfilePath, apply } = setup(
+			"IPHONEOS_DEPLOYMENT_TARGET = 18.0;",
+		);
+		await apply({ COMPILATION_CACHE_ENABLE_CACHING: "YES" });
+		fs.writeFile(podfilePath, fs.readText(podfilePath).replace(pod, ""));
+
+		await apply({ COMPILATION_CACHE_ENABLE_CACHING: "YES" });
+
+		assert.isFalse(fs.exists(podfilePath));
+	});
+
+	it("writes values as Ruby literals that aren't interpolated", async () => {
+		const { fs, podfilePath, apply } = setup("");
+
+		await apply({ COMPILATION_CACHE_CAS_PATH: `/a/#{x}/#$y/it's\\` });
+
+		assert.include(
+			fs.readText(podfilePath),
+			`config.build_settings['COMPILATION_CACHE_CAS_PATH'] = '/a/#{x}/#$y/it\\'s\\\\'`,
+		);
 	});
 });
