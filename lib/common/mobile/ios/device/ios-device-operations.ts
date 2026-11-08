@@ -11,6 +11,22 @@ import {
 } from "../../../declarations";
 import { injector } from "../../../yok";
 
+// Other devices can still be arriving by then, and device indexes follow the
+// order they were discovered in.
+const MIN_DISCOVERY_WAIT_MS = 2000;
+
+export function isDeviceDiscoveryDone(
+	foundDevice: boolean,
+	waitedMs: number,
+	options?: Mobile.IDeviceLookingOptions,
+): boolean {
+	if (options?.isRequestedDeviceFound) {
+		return options.isRequestedDeviceFound();
+	}
+
+	return foundDevice && !options?.fullDiscovery && waitedMs >= MIN_DISCOVERY_WAIT_MS;
+}
+
 export class IOSDeviceOperations
 	extends EventEmitter
 	implements IIOSDeviceOperations, IDisposable, IShouldDispose
@@ -86,21 +102,20 @@ export class IOSDeviceOperations
 
 			// We need this because we need to make sure that we have devices.
 			await new Promise<void>((resolve, reject) => {
-				let iterationsCount = 0;
-				const maxIterationsCount = 3;
+				const pollInterval = 100;
+				const maxWait = 6000;
+				let waited = 0;
 
 				const intervalHandle: NodeJS.Timer = setInterval(() => {
-					if (foundDevice && !options.fullDiscovery) {
-						resolve();
-						return clearInterval(intervalHandle as unknown as number);
-					}
-
-					iterationsCount++;
-					if (iterationsCount >= maxIterationsCount) {
+					waited += pollInterval;
+					if (
+						waited >= maxWait ||
+						isDeviceDiscoveryDone(foundDevice, waited, options)
+					) {
 						clearInterval(intervalHandle as unknown as number);
 						return resolve();
 					}
-				}, 2000);
+				}, pollInterval);
 			});
 		}
 	}
