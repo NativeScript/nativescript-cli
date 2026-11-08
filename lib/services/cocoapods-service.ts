@@ -23,6 +23,14 @@ import { injector } from "../common/yok";
 import { XcodeSelectService } from "../common/services/xcode-select-service";
 import * as constants from "../constants";
 
+/**
+ * A single-quoted Ruby literal: unlike double quotes, Ruby doesn't interpolate
+ * `#{}`, `#$` or `#@` in it, and only `\\` and `\'` are escapes.
+ */
+function toRubyString(value: string): string {
+	return `'${value.replace(/[\\']/g, "\\$&")}'`;
+}
+
 export class CocoaPodsService implements ICocoaPodsService {
 	private static PODFILE_POST_INSTALL_SECTION_NAME = "post_install";
 	private static INSTALLER_BLOCK_PARAMETER_NAME = "installer";
@@ -214,10 +222,24 @@ end`.trim();
 		buildSettings: Record<string, string> | null,
 	): Promise<void> {
 		const { projectRoot } = platformData;
+		const moduleName = "NativeScript-CLI-Build-Settings";
 		const buildSettingsPodfile = path.join(
 			projectRoot,
 			"Podfile-build-settings",
 		);
+
+		// Removed first so this section alone never keeps a Podfile alive: an app
+		// without pods must not get one, or every prepare would run `pod install`.
+		this.removePodfileFromProject(
+			moduleName,
+			buildSettingsPodfile,
+			projectData,
+			projectRoot,
+		);
+		if (!this.$fs.exists(this.getProjectPodfilePath(projectRoot))) {
+			return;
+		}
+
 		const deploymentTarget = this.$xcconfigService.readPropertyValue(
 			path.join(
 				projectData.appResourcesDirectoryPath,
@@ -230,41 +252,43 @@ end`.trim();
 		const configLines = _.map(
 			buildSettings,
 			(value, key) =>
-				`      config.build_settings[${JSON.stringify(key)}] = ${JSON.stringify(value)}`,
+				`      config.build_settings[${toRubyString(key)}] = ${toRubyString(value)}`,
 		);
 		if (deploymentTarget) {
 			configLines.push(
 				`      current = config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"]`,
-				`      if current.nil? || Gem::Version.new(current) < Gem::Version.new(${JSON.stringify(deploymentTarget)})`,
-				`        config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = ${JSON.stringify(deploymentTarget)}`,
+				`      if current.nil? || Gem::Version.new(current) < Gem::Version.new(${toRubyString(deploymentTarget)})`,
+				`        config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = ${toRubyString(deploymentTarget)}`,
 				`      end`,
 			);
 		}
 
-		if (configLines.length) {
-			this.$fs.writeFile(
-				buildSettingsPodfile,
-				[
-					"post_install do |installer|",
-					"  installer.pods_project.targets.each do |target|",
-					"    target.build_configurations.each do |config|",
-					...configLines,
-					"    end",
-					"  end",
-					"end",
-				].join(EOL),
-			);
+		if (!configLines.length) {
+			return;
 		}
 
-		// Without a temporary Podfile this removes a previously applied section.
-		await this.applyPodfileToProject(
-			"NativeScript-CLI-Build-Settings",
+		this.$fs.writeFile(
 			buildSettingsPodfile,
-			projectData,
-			platformData,
+			[
+				"post_install do |installer|",
+				"  installer.pods_project.targets.each do |target|",
+				"    target.build_configurations.each do |config|",
+				...configLines,
+				"    end",
+				"  end",
+				"end",
+			].join(EOL),
 		);
-
-		this.$fs.deleteFile(buildSettingsPodfile);
+		try {
+			await this.applyPodfileToProject(
+				moduleName,
+				buildSettingsPodfile,
+				projectData,
+				platformData,
+			);
+		} finally {
+			this.$fs.deleteFile(buildSettingsPodfile);
+		}
 	}
 
 	public async applyPodfileFromExtensions(
@@ -439,11 +463,16 @@ end`.trim();
 			);
 			const defaultContentWithPostInstallHook = `${defaultPodfileBeginning}${this.getPostInstallHookHeader()}end${EOL}end`;
 			const defaultContentWithoutPostInstallHook = `${defaultPodfileBeginning}${EOL}end`;
-			const trimmedProjectPodFileContent = projectPodFileContent.trim();
+			// Removing sections leaves blank lines behind, so compare ignoring them.
+			const normalize = (content: string) =>
+				content.replace(/\s+/g, " ").trim();
+			const normalizedProjectPodFileContent = normalize(projectPodFileContent);
 			if (
-				!trimmedProjectPodFileContent ||
-				trimmedProjectPodFileContent === defaultContentWithPostInstallHook ||
-				trimmedProjectPodFileContent === defaultContentWithoutPostInstallHook
+				!normalizedProjectPodFileContent ||
+				normalizedProjectPodFileContent ===
+					normalize(defaultContentWithPostInstallHook) ||
+				normalizedProjectPodFileContent ===
+					normalize(defaultContentWithoutPostInstallHook)
 			) {
 				this.$fs.deleteFile(this.getProjectPodfilePath(projectRoot));
 			} else {
