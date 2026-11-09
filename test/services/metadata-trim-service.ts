@@ -10,6 +10,10 @@ import {
 } from "../../lib/definitions/metadata-trim-service";
 import { AndroidMetadataToolchain } from "../../lib/services/metadata-trim/android-toolchain";
 import { AppleMetadataToolchain } from "../../lib/services/metadata-trim/apple-toolchain";
+import {
+	mergeDeclaredRules,
+	readDeclaredRules,
+} from "../../lib/services/metadata-trim/declared-rules";
 
 describe("metadataTrimService", () => {
 	let directory: string;
@@ -130,6 +134,91 @@ describe("metadataTrimService", () => {
 	});
 });
 
+describe("declared metadata rules", () => {
+	const plugin = { uses: ["java.util:List"], blacklist: ["java.util:Locale"] };
+
+	it("adds the app's whitelist and blacklist", () => {
+		const rules = mergeDeclaredRules(
+			{
+				"whitelist-plugins-usages": false,
+				whitelist: ["a:B"],
+				blacklist: ["c:D"],
+			},
+			[],
+		);
+
+		assert.deepEqual(rules, { keep: ["a:B"], blacklist: ["c:D"] });
+	});
+
+	it("includes plugin rules when the app opts in", () => {
+		const rules = mergeDeclaredRules(
+			{ "whitelist-plugins-usages": true, whitelist: [], blacklist: [] },
+			[plugin],
+		);
+
+		assert.deepEqual(rules, {
+			keep: ["java.util:List"],
+			blacklist: ["java.util:Locale"],
+		});
+	});
+
+	it("ignores plugin rules when the app opts out", () => {
+		const rules = mergeDeclaredRules(
+			{ "whitelist-plugins-usages": false, whitelist: [], blacklist: [] },
+			[plugin],
+		);
+
+		assert.deepEqual(rules, { keep: [], blacklist: [] });
+	});
+
+	it("keeps plugin uses but not their blacklist when the app has no file", () => {
+		assert.deepEqual(mergeDeclaredRules(null, [plugin]), {
+			keep: ["java.util:List"],
+			blacklist: [],
+		});
+	});
+
+	describe("readDeclaredRules", () => {
+		let file: string;
+
+		beforeEach(() => {
+			file = path.join(
+				fs.mkdtempSync(path.join(os.tmpdir(), "metadata-rules-")),
+				"native-api-usage.json",
+			);
+		});
+
+		afterEach(() => {
+			fs.rmSync(path.dirname(file), { recursive: true, force: true });
+		});
+
+		it("reads the app format", () => {
+			fs.writeFileSync(
+				file,
+				JSON.stringify({ whitelist: ["a:B"], blacklist: ["c:D"] }),
+			);
+
+			assert.deepEqual(readDeclaredRules(file), {
+				keep: ["a:B"],
+				blacklist: ["c:D"],
+			});
+		});
+
+		it("reads the plugin format", () => {
+			fs.writeFileSync(file, JSON.stringify({ uses: ["a:B"] }));
+
+			assert.deepEqual(readDeclaredRules(file), {
+				keep: ["a:B"],
+				blacklist: [],
+			});
+		});
+
+		it("names the file when it can't be read", () => {
+			assert.throws(() => readDeclaredRules(`${file}.missing`), /Cannot read/);
+		});
+	});
+});
+
 describe("AndroidMetadataToolchain", () => {
 	let directory: string;
 	let project: string;
@@ -215,6 +304,19 @@ describe("AndroidMetadataToolchain", () => {
 		}
 
 		assert.match(failure.message, /--android-project/);
+	});
+
+	it("writes the blacklist beside the whitelist", async () => {
+		const toolchain = new AndroidMetadataToolchain(childProcess as any);
+		const trimOptions = options({ blacklist: ["java.util:Locale"] });
+		const usage = await toolchain.analyze(trimOptions);
+
+		await toolchain.install(usage, undefined, trimOptions);
+
+		assert.equal(
+			fs.readFileSync(path.join(project, "blacklist.mdg"), "utf8"),
+			"java.util:Locale\n",
+		);
 	});
 
 	it("installs the whitelist and asks for the closure build", async () => {
@@ -305,6 +407,26 @@ describe("AppleMetadataToolchain", () => {
 		assert.equal(
 			args[args.indexOf("-target") + 1],
 			"arm64-apple-ios15.0-simulator",
+		);
+	});
+
+	it("passes blacklisted patterns to the generator", async () => {
+		const toolchain = new AppleMetadataToolchain(childProcess as any);
+		const usage = {
+			whitelistPath: "w.mdg",
+			patternCount: 1,
+			unrestricted: false,
+		};
+
+		await toolchain.generate(
+			usage,
+			options({ blacklist: ["UIKit:UIWebView"] }),
+		);
+
+		const args = spawned[0].args;
+		assert.equal(
+			fs.readFileSync(args[args.indexOf("-blacklist-modules") + 1], "utf8"),
+			"UIKit:UIWebView\n",
 		);
 	});
 

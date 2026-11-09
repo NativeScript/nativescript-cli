@@ -9,6 +9,8 @@ position: 26
 
 Reduces the native API metadata an app ships to what its JavaScript uses. The app's emitted bundle is analyzed for the native symbols it references, and the generator keeps those plus the types they depend on.
 
+Rules in `native-api-usage.json` still apply. Entries from `whitelist` and from plugins' `uses` are kept in addition to what the analysis finds, and `blacklist` entries are removed. A blacklisted type that a kept API's signature needs can't be removed: on Apple platforms it stays in the metadata, and on Android the build fails and names it. In a NativeScript project these files are found automatically for iOS and Android; other hosts pass them with `--native-api-usage`.
+
 If the bundle reads globals dynamically (an alias of `globalThis`, for example), its usage cannot be determined and nothing is trimmed.
 
 ### Commands
@@ -27,6 +29,7 @@ Write the whitelist for an Android project | `$ ns metadata trim android <Bundle
 
 * `--out` - Output directory. Defaults to `metadata-trim`.
 * `--keep` - A `Module:Symbol` pattern to keep regardless of the analysis. Repeat for several.
+* `--native-api-usage` - A `native-api-usage.json` file to apply, in the app or plugin format. Repeat for several.
 * `--analyzer` - `ns-metadata-symbols` on Apple platforms; overrides the runtime's `seed.js` on Android.
 * `--generator` - `objc-metadata-generator`. Use the one from the runtime release the app ships.
 * `--framework` - A `NativeScript.framework` to copy into the output directory with the trimmed metadata embedded.

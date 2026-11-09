@@ -6,6 +6,8 @@ export interface IMetadataTrimOptions {
 	outDir: string;
 	/** Filter patterns (`Module:Symbol`) to keep regardless of what is found. */
 	keep: string[];
+	/** Filter patterns to remove even if the app references them. */
+	blacklist?: string[];
 	analyzerPath?: string;
 	generatorPath?: string;
 	/** A NativeScript.framework to embed the trimmed metadata into. */
@@ -15,6 +17,12 @@ export interface IMetadataTrimOptions {
 	sdk?: string;
 	arch?: string;
 	minVersion?: string;
+}
+
+/** What native-api-usage.json files declare, as filter patterns. */
+export interface IDeclaredMetadataRules {
+	keep: string[];
+	blacklist: string[];
 }
 
 /** The native symbols an app's JavaScript can reach. */

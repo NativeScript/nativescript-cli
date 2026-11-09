@@ -71,6 +71,15 @@ export class AppleMetadataToolchain implements IMetadataToolchain {
 			`metadata.${options.platform}.${arch}`,
 		);
 		const metadataPath = `${base}.nsmd`;
+		const blacklistArgs: string[] = [];
+		if (options.blacklist?.length) {
+			const blacklistPath = path.join(
+				options.outDir,
+				`blacklist.${options.platform}.mdg`,
+			);
+			fs.writeFileSync(blacklistPath, options.blacklist.join("\n") + "\n");
+			blacklistArgs.push("-blacklist-modules", blacklistPath);
+		}
 		const sdk = options.sdk ?? this.defaultSdk(options.platform);
 		const sdkPath = (
 			await this.$childProcess.exec(`xcrun --sdk ${sdk} --show-sdk-path`)
@@ -84,6 +93,7 @@ export class AppleMetadataToolchain implements IMetadataToolchain {
 				`${base}.h`,
 				"-whitelist-modules",
 				usage.whitelistPath,
+				...blacklistArgs,
 				"Xclang",
 				"-isysroot",
 				sdkPath,

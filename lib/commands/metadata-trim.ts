@@ -6,13 +6,21 @@ import {
 	stringOption,
 } from "../common/define-command";
 import { inject } from "../common/di";
-import { IMetadataTrimService } from "../definitions/metadata-trim-service";
+import { IMetadataFilteringService } from "../definitions/metadata-filtering-service";
+import {
+	IDeclaredMetadataRules,
+	IMetadataTrimService,
+} from "../definitions/metadata-trim-service";
+import { IProjectData } from "../definitions/project";
+import { IProjectHelper } from "../common/declarations";
+import { readDeclaredRules } from "../services/metadata-trim/declared-rules";
 
 const PLATFORMS = ["ios", "macos", "android"];
 
 const metadataTrimOptions = {
 	out: stringOption(),
 	keep: arrayOption(),
+	nativeApiUsage: arrayOption(),
 	analyzer: stringOption(),
 	generator: stringOption(),
 	framework: stringOption(),
@@ -37,9 +45,14 @@ export class MetadataTrimCommand extends Command({
 	params: "any",
 }) {
 	private $logger = inject<ILogger>("logger");
+	private $metadataFilteringService = inject<IMetadataFilteringService>(
+		"metadataFilteringService",
+	);
 	private $metadataTrimService = inject<IMetadataTrimService>(
 		"metadataTrimService",
 	);
+	private $projectData = inject<IProjectData>("projectData");
+	private $projectHelper = inject<IProjectHelper>("projectHelper");
 
 	public canExecute(): boolean {
 		const [platform, ...bundles] = this.args;
@@ -57,11 +70,13 @@ export class MetadataTrimCommand extends Command({
 	public async run(): Promise<void> {
 		const [platform, ...bundles] = this.args;
 		const options = this.options;
+		const declared = this.declaredRules(platform.toLowerCase());
 		const result = await this.$metadataTrimService.trim({
 			platform: platform.toLowerCase(),
 			bundles: bundles.map((bundle) => path.resolve(bundle)),
 			outDir: path.resolve(options.out ?? "metadata-trim"),
-			keep: options.keep ?? [],
+			keep: [...(options.keep ?? []), ...declared.keep],
+			blacklist: declared.blacklist,
 			analyzerPath: resolved(options.analyzer),
 			generatorPath: resolved(options.generator),
 			framework: resolved(options.framework),
@@ -71,6 +86,11 @@ export class MetadataTrimCommand extends Command({
 			minVersion: options.minVersion,
 		});
 
+		if (declared.keep.length || declared.blacklist.length) {
+			this.$logger.info(
+				`Applied native-api-usage.json: ${declared.keep.length} kept, ${declared.blacklist.length} removed.`,
+			);
+		}
 		if (result.metadataBytes !== undefined) {
 			this.$logger.info(
 				`Generated ${formatBytes(result.metadataBytes)} of metadata: ${result.metadataPath}`,
@@ -85,5 +105,25 @@ export class MetadataTrimCommand extends Command({
 		if (result.nextStep) {
 			this.$logger.info(result.nextStep);
 		}
+	}
+
+	private declaredRules(platform: string): IDeclaredMetadataRules {
+		const files = (this.options.nativeApiUsage ?? []).map((file) =>
+			readDeclaredRules(path.resolve(file)),
+		);
+		// A standard project's files only exist for iOS and Android.
+		if (this.$projectHelper.projectDir && platform !== "macos") {
+			this.$projectData.initializeProjectData();
+			files.push(
+				this.$metadataFilteringService.getDeclaredRules(
+					this.$projectData,
+					platform,
+				),
+			);
+		}
+		return {
+			keep: files.flatMap((rules) => rules.keep),
+			blacklist: files.flatMap((rules) => rules.blacklist),
+		};
 	}
 }

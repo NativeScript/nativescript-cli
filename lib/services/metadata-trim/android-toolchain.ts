@@ -11,6 +11,7 @@ import { readFilterPatterns } from "./apple-toolchain";
 
 const SEED_SCRIPT = path.join("build-tools", "metadata-filter", "seed.js");
 const WHITELIST_NAME = "whitelist.mdg";
+const BLACKLIST_NAME = "blacklist.mdg";
 
 /** Android's metadata generator runs in Gradle; this produces its whitelist. */
 export class AndroidMetadataToolchain implements IMetadataToolchain {
@@ -82,6 +83,12 @@ export class AndroidMetadataToolchain implements IMetadataToolchain {
 	> {
 		const installedTo = path.join(options.androidProject, WHITELIST_NAME);
 		fs.copyFileSync(usage.whitelistPath, installedTo);
+		if (options.blacklist?.length) {
+			fs.writeFileSync(
+				path.join(options.androidProject, BLACKLIST_NAME),
+				options.blacklist.join("\n") + "\n",
+			);
+		}
 		return {
 			installedTo,
 			// Without this flag Gradle filters by the list as written, dropping
