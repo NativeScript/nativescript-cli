@@ -1,25 +1,23 @@
-import { cache, exported, invokeInit } from "./common/decorators";
-import { performanceLog } from "./common/decorators";
-import { PackageManagers } from "./constants";
+import { exported } from "../common/decorators";
+import { performanceLog } from "../common/decorators";
+import { PackageManagers } from "../constants";
 import {
 	IPackageManager,
 	INodePackageManager,
 	IOptions,
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 	INpmPackageNameParts,
-} from "./declarations";
-import {
-	IErrors,
-	IUserSettingsService,
-	IDictionary,
-} from "./common/declarations";
-import { injector } from "./common/yok";
-import { IProjectConfigService } from "./definitions/project";
+} from "../declarations";
+import { IErrors, IUserSettingsService } from "../common/declarations";
+import { injector } from "../common/yok";
+import { IProjectConfigService } from "../definitions/project";
+
 export class PackageManager implements IPackageManager {
-	private packageManager: INodePackageManager;
-	private _packageManagerName: string;
+	private selected: INodePackageManager;
+	private selectedName: string;
 
 	constructor(
 		private $errors: IErrors,
@@ -31,89 +29,79 @@ export class PackageManager implements IPackageManager {
 		private $bun: INodePackageManager,
 		private $logger: ILogger,
 		private $userSettingsService: IUserSettingsService,
-		private $projectConfigService: IProjectConfigService
+		private $projectConfigService: IProjectConfigService,
 	) {}
 
-	@cache()
-	protected async init(): Promise<void> {
-		this.packageManager = await this._determinePackageManager();
-	}
-
-	@invokeInit()
 	public async getPackageManagerName(): Promise<string> {
-		return this._packageManagerName;
+		this.packageManager;
+		return this.selectedName;
 	}
 
 	@exported("packageManager")
 	@performanceLog()
-	@invokeInit()
 	public install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo> {
-		return this.packageManager.install(packageName, pathToSave, config);
-	}
-	@exported("packageManager")
-	@invokeInit()
-	public uninstall(
-		packageName: string,
-		config?: IDictionary<string | boolean>,
-		path?: string
-	): Promise<string> {
-		return this.packageManager.uninstall(packageName, config, path);
-	}
-	@exported("packageManager")
-	@invokeInit()
-	public view(packageName: string, config: Object): Promise<any> {
-		return this.packageManager.view(packageName, config);
-	}
-	@exported("packageManager")
-	@invokeInit()
-	public search(
-		filter: string[],
-		config: IDictionary<string | boolean>
-	): Promise<string> {
-		return this.packageManager.search(filter, config);
+		return this.packageManager.install(packageName, pathToSave, options);
 	}
 
-	@invokeInit()
+	@exported("packageManager")
+	public uninstall(
+		packageName: string,
+		options?: IPackageUninstallOptions,
+		path?: string,
+	): Promise<string> {
+		return this.packageManager.uninstall(packageName, options, path);
+	}
+
+	@exported("packageManager")
+	public view(packageName: string, field?: string): Promise<any> {
+		return this.packageManager.view(packageName, field);
+	}
+
+	@exported("packageManager")
+	public search(filter: string[]): Promise<string> {
+		return this.packageManager.search(filter);
+	}
+
 	public searchNpms(keyword: string): Promise<INpmsResult> {
 		return this.packageManager.searchNpms(keyword);
 	}
 
-	@invokeInit()
-	public async isRegistered(packageName: string): Promise<boolean> {
+	public isRegistered(packageName: string): Promise<boolean> {
 		return this.packageManager.isRegistered(packageName);
 	}
 
-	@invokeInit()
-	public async getPackageFullName(
-		packageNameParts: INpmPackageNameParts
+	public getPackageFullName(
+		packageNameParts: INpmPackageNameParts,
 	): Promise<string> {
 		return this.packageManager.getPackageFullName(packageNameParts);
 	}
 
-	@invokeInit()
-	public async getPackageNameParts(
-		fullPackageName: string
+	public getPackageNameParts(
+		fullPackageName: string,
 	): Promise<INpmPackageNameParts> {
 		return this.packageManager.getPackageNameParts(fullPackageName);
 	}
 
-	@invokeInit()
 	public getRegistryPackageData(packageName: string): Promise<any> {
 		return this.packageManager.getRegistryPackageData(packageName);
 	}
 
-	@invokeInit()
 	public getCachePath(): Promise<string> {
 		return this.packageManager.getCachePath();
 	}
 
+	@exported("packageManager")
+	public getInstalledPackagePath(packageName: string, fromDir: string): string {
+		return this.packageManager.getInstalledPackagePath(packageName, fromDir);
+	}
+
 	public async getTagVersion(
 		packageName: string,
-		tag: string
+		tag: string,
 	): Promise<string> {
 		let version: string = null;
 		if (!tag) {
@@ -121,11 +109,11 @@ export class PackageManager implements IPackageManager {
 		}
 
 		try {
-			const result = await this.view(packageName, { "dist-tags": true });
+			const result = await this.view(packageName, "dist-tags");
 			version = result[tag];
 		} catch (err) {
 			this.$logger.trace(
-				`Error while getting tag version from view command: ${err}`
+				`Error while getting tag version from view command: ${err}`,
 			);
 			const registryData = await this.getRegistryPackageData(packageName);
 			version = registryData["dist-tags"][tag];
@@ -134,13 +122,21 @@ export class PackageManager implements IPackageManager {
 		return version;
 	}
 
-	private async _determinePackageManager(): Promise<INodePackageManager> {
-		let pm = null;
+	private get packageManager(): INodePackageManager {
+		if (!this.selected) {
+			this.selected = this.determinePackageManager();
+		}
+
+		return this.selected;
+	}
+
+	private determinePackageManager(): INodePackageManager {
+		let pm: string = null;
 		try {
-			pm = await this.$userSettingsService.getSettingValue("packageManager");
+			pm = this.$userSettingsService.getSettingValueSync("packageManager");
 		} catch (err) {
 			this.$errors.fail(
-				`Unable to read package manager config from user settings ${err}`
+				`Unable to read package manager config from user settings ${err}`,
 			);
 		}
 
@@ -150,7 +146,7 @@ export class PackageManager implements IPackageManager {
 
 			if (configPm) {
 				this.$logger.trace(
-					`Determined packageManager to use from user config is: ${configPm}`
+					`Determined packageManager to use from user config is: ${configPm}`,
 				);
 				pm = configPm;
 			}
@@ -158,25 +154,25 @@ export class PackageManager implements IPackageManager {
 			// ignore error, but log info
 			this.$logger.trace(
 				"Tried to read cli.packageManager from project config and failed. Error is: ",
-				err
+				err,
 			);
 		}
 
 		if (pm === PackageManagers.yarn || this.$options.yarn) {
-			this._packageManagerName = PackageManagers.yarn;
+			this.selectedName = PackageManagers.yarn;
 			return this.$yarn;
 		}
 		if (pm === PackageManagers.yarn2 || this.$options.yarn2) {
-			this._packageManagerName = PackageManagers.yarn2;
+			this.selectedName = PackageManagers.yarn2;
 			return this.$yarn2;
 		} else if (pm === PackageManagers.pnpm || this.$options.pnpm) {
-			this._packageManagerName = PackageManagers.pnpm;
+			this.selectedName = PackageManagers.pnpm;
 			return this.$pnpm;
 		} else if (pm === PackageManagers.bun) {
-			this._packageManagerName = PackageManagers.bun;
+			this.selectedName = PackageManagers.bun;
 			return this.$bun;
 		} else {
-			this._packageManagerName = PackageManagers.npm;
+			this.selectedName = PackageManagers.npm;
 			return this.$npm;
 		}
 	}

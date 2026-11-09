@@ -1,11 +1,10 @@
 import * as path from "path";
 import { PACKAGE_JSON_FILE_NAME } from "../../constants";
 import { INodeModulesDependenciesBuilder } from "../../definitions/platform";
-import { IDependencyData } from "../../declarations";
+import { IDependencyData, IPackageManager } from "../../declarations";
 import { IFileSystem } from "../../common/declarations";
 import * as _ from "lodash";
 import { injector } from "../../common/yok";
-import { resolvePackagePath } from "@rigor789/resolve-package-path";
 
 interface IDependencyDescription {
 	parent: IDependencyDescription;
@@ -17,7 +16,10 @@ interface IDependencyDescription {
 export class NodeModulesDependenciesBuilder
 	implements INodeModulesDependenciesBuilder
 {
-	public constructor(private $fs: IFileSystem) {}
+	public constructor(
+		private $fs: IFileSystem,
+		private $packageManager: IPackageManager,
+	) {}
 
 	public getProductionDependencies(
 		projectPath: string,
@@ -96,16 +98,18 @@ export class NodeModulesDependenciesBuilder
 			const parentModulesPath =
 				depDescription?.parentDir ?? depDescription?.parent?.parentDir;
 
-			let modulePath: string = resolvePackagePath(depDescription.name, {
-				paths: [parentModulesPath],
-			});
+			let modulePath = this.$packageManager.getInstalledPackagePath(
+				depDescription.name,
+				parentModulesPath,
+			);
 
 			// perhaps traverse up the tree here?
 			if (!modulePath) {
 				// fallback to searching in the root path
-				modulePath = resolvePackagePath(depDescription.name, {
-					paths: [rootPath],
-				});
+				modulePath = this.$packageManager.getInstalledPackagePath(
+					depDescription.name,
+					rootPath,
+				);
 			}
 
 			// if we failed to find the module...

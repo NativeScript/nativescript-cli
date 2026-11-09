@@ -1,23 +1,38 @@
 import * as path from "path";
 import { BasePackageManager } from "./base-package-manager";
-import { exported, cache } from "./common/decorators";
-import { CACACHE_DIRECTORY_NAME } from "./constants";
+import { exported, cache } from "../common/decorators";
+import { CACACHE_DIRECTORY_NAME } from "../constants";
 import * as _ from "lodash";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
-} from "./declarations";
+} from "../declarations";
 import {
 	IChildProcess,
 	IErrors,
 	IFileSystem,
 	IHostInfo,
 	Server,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
 export class BunPackageManager extends BasePackageManager {
+	protected readonly installFlags = {
+		save: "--save",
+		noSave: "--no-save",
+		dev: "--dev",
+		optional: "--optional",
+		exact: "--exact",
+		silent: "--silent",
+		ignoreScripts: "--ignore-scripts",
+	};
+	protected readonly uninstallFlags = {
+		save: "--save",
+		noSave: "--no-save",
+	};
+
 	constructor(
 		$childProcess: IChildProcess,
 		private $errors: IErrors,
@@ -34,19 +49,16 @@ export class BunPackageManager extends BasePackageManager {
 	public async install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions
+		options: IPackageInstallOptions
 	): Promise<INpmInstallResultInfo> {
-		if (config.disableNpmInstall) {
+		if (options.disableNpmInstall) {
 			return;
-		}
-		if (config.ignoreScripts) {
-			config["ignore-scripts"] = true;
 		}
 
 		const packageJsonPath = path.join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
 
-		const flags = this.getFlagsString(config, true);
+		const flags = this.getInstallFlags(options);
 		let params = ["install"];
 		const isInstallingAllDependencies = packageName === pathToSave;
 		if (!isInstallingAllDependencies) {
@@ -73,26 +85,22 @@ export class BunPackageManager extends BasePackageManager {
 	@exported("bun")
 	public async uninstall(
 		packageName: string,
-		config?: any,
+		options?: IPackageUninstallOptions,
 		cwd?: string
 	): Promise<string> {
-		const flags = this.getFlagsString(config, false);
+		const flags = this.getUninstallFlags(options).join(" ");
 		return this.$childProcess.exec(`bun remove ${packageName} ${flags}`, {
 			cwd,
 		});
 	}
 
-	// Bun does not have a `view` command; use npm.
 	@exported("bun")
-	public async view(packageName: string, config: Object): Promise<any> {
-		const wrappedConfig = _.extend({}, config, { json: true }); // always require view response as JSON
-
-		const flags = this.getFlagsString(wrappedConfig, false);
+	// Bun does not have a `view` command; use npm.
+	public async view(packageName: string, field?: string): Promise<any> {
+		const args = [packageName, field, "--json"].filter(Boolean).join(" ");
 		let viewResult: any;
 		try {
-			viewResult = await this.$childProcess.exec(
-				`npm view ${packageName} ${flags}`
-			);
+			viewResult = await this.$childProcess.exec(`npm view ${args}`);
 		} catch (e) {
 			this.$errors.fail(e.message);
 		}
@@ -104,11 +112,10 @@ export class BunPackageManager extends BasePackageManager {
 		}
 	}
 
-	// Bun does not have a `search` command; use npm.
 	@exported("bun")
-	public async search(filter: string[], config: any): Promise<string> {
-		const flags = this.getFlagsString(config, false);
-		return this.$childProcess.exec(`npm search ${filter.join(" ")} ${flags}`);
+	// Bun does not have a `search` command; use npm.
+	public async search(filter: string[]): Promise<string> {
+		return this.$childProcess.exec(`npm search ${filter.join(" ")}`);
 	}
 
 	public async searchNpms(keyword: string): Promise<INpmsResult> {

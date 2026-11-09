@@ -56,6 +56,28 @@ export class JsonFileSettingsService implements IJsonFileSettingsService {
 		);
 	}
 
+	public getSettingValueSync<T>(settingName: string): T {
+		if (!this.jsonSettingsData && this.$fs.exists(this.jsonSettingsFilePath)) {
+			try {
+				this.jsonSettingsData = parseJson(
+					this.$fs.readText(this.jsonSettingsFilePath)
+				);
+			} catch (err) {
+				this.$logger.trace(
+					`Error while trying to parse ${this.jsonSettingsFilePath}. Err is: ${err}`
+				);
+				return null;
+			}
+		}
+
+		if (this.jsonSettingsData && _.has(this.jsonSettingsData, settingName)) {
+			const data = this.jsonSettingsData[settingName];
+			return data.modifiedByCacheMechanism ? data.value : data;
+		}
+
+		return null;
+	}
+
 	public async saveSetting<T>(
 		key: string,
 		value: T,

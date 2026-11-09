@@ -1,7 +1,7 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { assert } from "chai";
-import { BunPackageManager } from "../lib/bun-package-manager";
+import { BunPackageManager } from "../lib/package-managers/bun";
 import { IInjector } from "../lib/common/definitions/yok";
 
 function createTestInjector(configuration: {} = {}): IInjector {

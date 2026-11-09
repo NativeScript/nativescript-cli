@@ -1,34 +1,46 @@
-import { isInteractive } from "./common/helpers";
+import { isInteractive } from "../common/helpers";
+import { resolvePackagePath } from "../helpers/package-path-helper";
 import {
 	INodePackageManager,
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
+	IPackageUninstallOptions,
 	INpmInstallResultInfo,
 	INpmsResult,
 	INpmPackageNameParts,
-} from "./declarations";
-import {
-	IDictionary,
-	IChildProcess,
-	IFileSystem,
-	IHostInfo,
-} from "./common/declarations";
+} from "../declarations";
+import { IChildProcess, IFileSystem, IHostInfo } from "../common/declarations";
+
+/**
+ * How one package manager spells each IPackageInstallOptions flag on its
+ * command line. A missing entry means the manager has no such flag and the
+ * option is dropped rather than passed through.
+ */
+export interface IPackageManagerFlags {
+	save?: string;
+	noSave?: string;
+	dev?: string;
+	optional?: string;
+	exact?: string;
+	silent?: string;
+	ignoreScripts?: string;
+}
 
 export abstract class BasePackageManager implements INodePackageManager {
+	protected abstract readonly installFlags: IPackageManagerFlags;
+	protected abstract readonly uninstallFlags: IPackageManagerFlags;
+
 	public abstract install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 	public abstract uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		path?: string,
 	): Promise<string>;
-	public abstract view(packageName: string, config: Object): Promise<any>;
-	public abstract search(
-		filter: string[],
-		config: IDictionary<string | boolean>,
-	): Promise<string>;
+	public abstract view(packageName: string, field?: string): Promise<any>;
+	public abstract search(filter: string[]): Promise<string>;
 	public abstract searchNpms(keyword: string): Promise<INpmsResult>;
 	public abstract getRegistryPackageData(packageName: string): Promise<any>;
 	public abstract getCachePath(): Promise<string>;
@@ -51,7 +63,7 @@ export abstract class BasePackageManager implements INodePackageManager {
 		}
 
 		try {
-			const viewResult = await this.view(packageName, { name: true });
+			const viewResult = await this.view(packageName, "name");
 
 			// `npm view nonExistingPackageName` will return `nativescript`
 			// if executed in the root dir of the CLI (npm 6.4.1)
@@ -133,39 +145,39 @@ export abstract class BasePackageManager implements INodePackageManager {
 		};
 	}
 
-	protected getFlagsString(config: any, asArray: boolean): any {
-		const array: Array<string> = [];
-		for (const flag in config) {
-			if (
-				flag === "global" &&
-				this.packageManager !== "yarn" &&
-				this.packageManager !== "yarn2"
-			) {
-				array.push(`--${flag}`);
-				array.push(`${config[flag]}`);
-			} else if (config[flag]) {
-				if (
-					flag === "dist-tags" ||
-					flag === "versions" ||
-					flag === "name" ||
-					flag === "gradle" ||
-					flag === "version_info"
-				) {
-					if (this.packageManager === "yarn2") {
-						array.push(`--fields ${flag}`);
-					} else {
-						array.push(` ${flag}`);
-					}
-					continue;
-				}
-				array.push(`--${flag}`);
-			}
-		}
-		if (asArray) {
-			return array;
-		}
+	public getInstalledPackagePath(packageName: string, fromDir: string): string {
+		return resolvePackagePath(packageName, { paths: [fromDir] }) || null;
+	}
 
-		return array.join(" ");
+	protected getInstallFlags(options: IPackageInstallOptions): string[] {
+		return this.mapFlags(options, this.installFlags);
+	}
+
+	protected getUninstallFlags(options: IPackageUninstallOptions): string[] {
+		return this.mapFlags(options, this.uninstallFlags);
+	}
+
+	private mapFlags(
+		options: IPackageInstallOptions,
+		flags: IPackageManagerFlags,
+	): string[] {
+		const result: string[] = [];
+		if (!options) {
+			return result;
+		}
+		const push = (flag?: string) => {
+			if (flag) {
+				result.push(flag);
+			}
+		};
+		if (options.save === true) push(flags.save);
+		if (options.save === false) push(flags.noSave);
+		if (options.dev) push(flags.dev);
+		if (options.optional) push(flags.optional);
+		if (options.exact) push(flags.exact);
+		if (options.silent) push(flags.silent);
+		if (options.ignoreScripts) push(flags.ignoreScripts);
+		return result;
 	}
 
 	private isTgz(packageName: string): boolean {

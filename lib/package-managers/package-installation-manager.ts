@@ -1,20 +1,21 @@
 import * as path from "path";
-import * as constants from "./constants";
+import * as constants from "../constants";
 import {
 	INpmInstallOptions,
 	INpmInstallResultInfo,
+	IPackageInstallOptions,
 	IPackageInstallationManager,
 	IPackageManager,
 	IStaticConfig,
-} from "./declarations";
-import { IProjectDataService } from "./definitions/project";
+} from "../declarations";
+import { IProjectDataService } from "../definitions/project";
 import {
 	IChildProcess,
 	IDictionary,
 	IFileSystem,
 	ISettingsService,
-} from "./common/declarations";
-import { injector } from "./common/yok";
+} from "../common/declarations";
+import { injector } from "../common/yok";
 
 import * as semver from "semver";
 
@@ -66,9 +67,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		versionRange: string
 	): Promise<string> {
-		const data = await this.$packageManager.view(packageName, {
-			versions: true,
-		});
+		const data = await this.$packageManager.view(packageName, "versions");
 
 		let versions;
 
@@ -152,13 +151,13 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		try {
 			const pathToSave = projectDir;
 			const version = (opts && opts.version) || null;
-			const dependencyType = (opts && opts.dependencyType) || null;
+			const dev = !!(opts && opts.dev);
 
 			return await this.installCore(
 				packageToInstall,
 				pathToSave,
 				version,
-				dependencyType
+				dev
 			);
 		} catch (error) {
 			this.$logger.trace(error);
@@ -189,14 +188,12 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		inspectorNpmPackageName: string,
 		projectDir: string
 	): Promise<string> {
-		const inspectorPath = path.join(
-			projectDir,
-			constants.NODE_MODULES_FOLDER_NAME,
-			inspectorNpmPackageName
-		);
-
 		// local installation takes precedence over cache
-		if (this.inspectorAlreadyInstalled(inspectorPath)) {
+		const inspectorPath = this.$packageManager.getInstalledPackagePath(
+			inspectorNpmPackageName,
+			projectDir
+		);
+		if (inspectorPath) {
 			return inspectorPath;
 		}
 
@@ -265,19 +262,11 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		}
 	}
 
-	private inspectorAlreadyInstalled(pathToInspector: string): Boolean {
-		if (this.$fs.exists(pathToInspector)) {
-			return true;
-		}
-
-		return false;
-	}
-
 	private async installCore(
 		packageName: string,
 		pathToSave: string,
 		version: string,
-		dependencyType: string
+		dev: boolean
 	): Promise<string> {
 		const possiblePackageName = path.resolve(packageName);
 		if (this.$fs.exists(possiblePackageName)) {
@@ -290,34 +279,29 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 			packageName,
 			pathToSave,
 			version,
-			dependencyType
+			dev
 		);
-		const installedPackageName = installResultInfo.name;
-
-		const pathToInstalledPackage = path.join(
-			pathToSave,
-			"node_modules",
-			installedPackageName
+		return this.$packageManager.getInstalledPackagePath(
+			installResultInfo.name,
+			pathToSave
 		);
-
-		return pathToInstalledPackage;
 	}
 
 	private async npmInstall(
 		packageName: string,
 		pathToSave: string,
 		version: string,
-		dependencyType: string
+		dev: boolean
 	): Promise<INpmInstallResultInfo> {
 		this.$logger.info(`Installing ${packageName}`);
 
 		packageName = packageName + (version ? `@${version}` : "");
 
-		const npmOptions: any = { silent: true, "save-exact": true };
-
-		if (dependencyType) {
-			npmOptions[dependencyType] = true;
-		}
+		const npmOptions: IPackageInstallOptions = {
+			silent: true,
+			exact: true,
+			dev,
+		};
 
 		return await this.$packageManager.install(
 			packageName,
@@ -334,9 +318,7 @@ export class PackageInstallationManager implements IPackageInstallationManager {
 		packageName: string,
 		version: string
 	): Promise<string> {
-		let data: any = await this.$packageManager.view(packageName, {
-			"dist-tags": true,
-		});
+		let data: any = await this.$packageManager.view(packageName, "dist-tags");
 		data = data?.["dist-tags"] ?? data;
 		this.$logger.trace("Using version %s. ", data[version]);
 

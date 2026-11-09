@@ -27,25 +27,25 @@ interface INodePackageManager {
 	 * Installs dependency
 	 * @param  {string}                            packageName The name of the dependency - can be a path, a url or a string.
 	 * @param  {string}                            pathToSave  The destination of the installation.
-	 * @param  {INodePackageManagerInstallOptions} config      Additional options that can be passed to manipulate installation.
+	 * @param  {IPackageInstallOptions}            options     Package-manager-agnostic installation options.
 	 * @return {Promise<INpmInstallResultInfo>}                Information about installed package.
 	 */
 	install(
 		packageName: string,
 		pathToSave: string,
-		config: INodePackageManagerInstallOptions,
+		options: IPackageInstallOptions,
 	): Promise<INpmInstallResultInfo>;
 
 	/**
 	 * Uninstalls a dependency
 	 * @param  {string}                            packageName The name of the dependency.
-	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate uninstallation.
+	 * @param  {IPackageUninstallOptions}          options     Package-manager-agnostic uninstallation options.
 	 * @param  {string}                            path  The destination of the uninstallation.
 	 * @return {Promise<string>}                The output of the uninstallation.
 	 */
 	uninstall(
 		packageName: string,
-		config?: IDictionary<string | boolean>,
+		options?: IPackageUninstallOptions,
 		path?: string,
 	): Promise<string>;
 
@@ -55,7 +55,13 @@ interface INodePackageManager {
 	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
 	 * @return {Promise<any>}                Object, containing information about the package.
 	 */
-	view(packageName: string, config: Object): Promise<any>;
+	/**
+	 * Provides registry information about a package.
+	 * @param  {string} packageName The name of the package, optionally with a version.
+	 * @param  {string} field       @optional A single registry field (e.g. "versions" or "dist-tags") to return instead of the whole document.
+	 * @return {Promise<any>} The parsed registry data, or null when it cannot be parsed.
+	 */
+	view(packageName: string, field?: string): Promise<any>;
 
 	/**
 	 * Checks if the specified string is name of a packaged published in the NPM registry.
@@ -84,10 +90,7 @@ interface INodePackageManager {
 	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate search.
 	 * @return {Promise<string>}                The output of the uninstallation.
 	 */
-	search(
-		filter: string[],
-		config: IDictionary<string | boolean>,
-	): Promise<string>;
+	search(filter: string[]): Promise<string>;
 
 	/**
 	 * Searches for npm packages in npms by keyword.
@@ -108,6 +111,14 @@ interface INodePackageManager {
 	 * @returns {string} The full path to npm cache directory
 	 */
 	getCachePath(): Promise<string>;
+
+	/**
+	 * Locates a package the way the package manager laid it out on disk.
+	 * @param  {string} packageName The name of the package.
+	 * @param  {string} fromDir     The directory whose dependencies are searched, usually the project directory.
+	 * @return {string} The absolute path of the package directory, or null when it is not installed.
+	 */
+	getInstalledPackagePath(packageName: string, fromDir: string): string;
 }
 
 /** @deprecated Kept so existing annotations compile; use the {@link PackageManager} contract. */
@@ -167,16 +178,40 @@ interface IPackageInstallationManager {
 }
 
 /**
- * Describes options that can be passed to manipulate package installation.
+ * Package-manager-agnostic installation options. Each package manager maps
+ * these onto its own command line flags; options a manager has no flag for
+ * are dropped rather than passed through.
  */
-interface INodePackageManagerInstallOptions
-	extends INpmInstallConfigurationOptions, IDictionary<string | boolean> {
+interface IPackageInstallOptions {
 	/**
-	 * Destination of the installation.
-	 * @type {string}
-	 * @optional
+	 * Record the package in package.json. Every supported package manager
+	 * does this by default, so only `false` changes behaviour.
 	 */
+	save?: boolean;
+	/** Record the package under devDependencies. */
+	dev?: boolean;
+	/** Record the package under optionalDependencies. */
+	optional?: boolean;
+	/** Pin the exact resolved version instead of a semver range. */
+	exact?: boolean;
+	/** Suppress the package manager's own output. */
+	silent?: boolean;
+	/** Do not run lifecycle scripts. */
+	ignoreScripts?: boolean;
+	/** Skip the installation entirely (the --disable-npm-install CLI flag). */
+	disableNpmInstall?: boolean;
+	/** Local runtime location (the --frameworkPath CLI flag). */
+	frameworkPath?: string;
+	/** Destination of the installation (the --path CLI flag). */
 	path?: string;
+}
+
+/**
+ * Package-manager-agnostic uninstallation options.
+ */
+interface IPackageUninstallOptions {
+	/** Remove the package from package.json. */
+	save?: boolean;
 }
 
 /**
@@ -396,7 +431,8 @@ interface INpmInstallResultInfo {
 interface INpmInstallOptions {
 	pathToSave?: string;
 	version?: string;
-	dependencyType?: string;
+	/** Record the package under devDependencies. */
+	dev?: boolean;
 }
 
 /**
