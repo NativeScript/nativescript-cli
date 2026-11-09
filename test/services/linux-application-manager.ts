@@ -89,6 +89,21 @@ describe.runIf(isLinux)("LinuxApplicationManager", () => {
 		await waitFor(() => lines.includes("synced"));
 	});
 
+	it("runs the staged executable of a release archive", async () => {
+		const staged = path.join(dir, "demo");
+		fs.mkdirSync(staged);
+		fs.writeFileSync(path.join(staged, "demo"), "#!/bin/sh\necho release\n");
+		const archive = path.join(dir, "demo.tar.gz");
+		fs.writeFileSync(archive, "not a script");
+		await manager.installApplication(archive, "org.demo");
+		assert.equal(fs.statSync(archive).mode & 0o111, 0);
+		await manager.startApplication(<any>{
+			appId: "org.demo",
+			projectName: "demo",
+		});
+		await waitFor(() => lines.includes("release"));
+	});
+
 	it("fails to start an app that wasn't built", async () => {
 		let error: Error;
 		try {

@@ -44,24 +44,33 @@ export class LinuxApplicationManager extends ApplicationManagerBase {
 		});
 	}
 
-	/** `packageFilePath` is the executable in the build output. */
+	/** `packageFilePath` is the executable (debug) or the `.tar.gz` (release) in the build output. */
 	public async installApplication(
 		packageFilePath: string,
 		appIdentifier?: string,
 		_buildData?: IBuildData,
 	): Promise<void> {
-		fs.chmodSync(packageFilePath, 0o755);
-		this._executables[path.basename(packageFilePath)] = packageFilePath;
+		const executable = LinuxApplicationManager.executableIn(packageFilePath);
+		fs.chmodSync(executable, 0o755);
+		this._executables[path.basename(executable)] = executable;
 		if (appIdentifier) {
-			this._executables[appIdentifier] = packageFilePath;
+			this._executables[appIdentifier] = executable;
 			try {
-				installDebugDesktopEntry(path.dirname(packageFilePath), appIdentifier);
+				installDebugDesktopEntry(path.dirname(executable), appIdentifier);
 			} catch (e) {
 				this.$logger.warn(
 					`Couldn't register ${appIdentifier} with the desktop: ${e?.message ?? e}`,
 				);
 			}
 		}
+	}
+
+	/** Release archives are packed from the staged `<name>/<name>`. */
+	private static executableIn(packageFilePath: string): string {
+		const archive = path.basename(packageFilePath).match(/^(.+)\.tar\.gz$/);
+		return archive
+			? path.join(path.dirname(packageFilePath), archive[1], archive[1])
+			: packageFilePath;
 	}
 
 	public async uninstallApplication(appIdentifier: string): Promise<void> {
