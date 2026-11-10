@@ -13,6 +13,14 @@ import {
 	IHostInfo,
 } from "./common/declarations";
 
+// Options for the CLI itself. npm 12 fails on flags it doesn't know.
+const CLI_ONLY_OPTIONS = [
+	"path",
+	"frameworkPath",
+	"disableNpmInstall",
+	"ignoreScripts",
+];
+
 export abstract class BasePackageManager implements INodePackageManager {
 	public abstract install(
 		packageName: string,
@@ -136,6 +144,10 @@ export abstract class BasePackageManager implements INodePackageManager {
 	protected getFlagsString(config: any, asArray: boolean): any {
 		const array: Array<string> = [];
 		for (const flag in config) {
+			if (CLI_ONLY_OPTIONS.includes(flag)) {
+				continue;
+			}
+
 			if (
 				flag === "global" &&
 				this.packageManager !== "yarn" &&
