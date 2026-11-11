@@ -274,3 +274,52 @@ export class RunWindowsCommand implements ICommand {
 }
 
 injector.registerCommand("run|windows", RunWindowsCommand);
+
+export class RunLinuxCommand implements ICommand {
+	@cache()
+	private get runCommand(): RunCommandBase {
+		const runCommand = this.$injector.resolve<RunCommandBase>(RunCommandBase);
+		runCommand.platform = this.platform;
+		return runCommand;
+	}
+
+	public allowedParameters: ICommandParameter[] = [];
+	public get platform(): string {
+		return this.$devicePlatformsConstants.Linux;
+	}
+
+	constructor(
+		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		private $errors: IErrors,
+		private $injector: IInjector,
+		private $options: IOptions,
+		private $platformValidationService: IPlatformValidationService,
+		private $projectData: IProjectData,
+	) {}
+
+	public async execute(args: string[]): Promise<void> {
+		return this.runCommand.execute(args);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		await this.runCommand.canExecute(args);
+		if (
+			!this.$platformValidationService.isPlatformSupportedForOS(
+				this.platform,
+				this.$projectData,
+			)
+		) {
+			this.$errors.fail(
+				`Applications for platform ${this.platform} can not be built on this OS`,
+			);
+		}
+		return this.$platformValidationService.validateOptions(
+			this.$options.provision,
+			this.$options.teamId,
+			this.$projectData,
+			this.platform.toLowerCase(),
+		);
+	}
+}
+
+injector.registerCommand("run|linux", RunLinuxCommand);

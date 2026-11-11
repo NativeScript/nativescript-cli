@@ -12,12 +12,14 @@ export class PlatformsDataService implements IPlatformsDataService {
 		$androidProjectService: IPlatformProjectService,
 		$iOSProjectService: IPlatformProjectService,
 		$windowsProjectService: IPlatformProjectService,
+		$linuxProjectService: IPlatformProjectService,
 	) {
 		this.platformsDataService = {
 			ios: $iOSProjectService,
 			android: $androidProjectService,
 			visionos: $iOSProjectService,
 			windows: $windowsProjectService,
+			linux: $linuxProjectService,
 		};
 	}
 

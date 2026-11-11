@@ -62,6 +62,7 @@ Run on a selected connected device or running emulator. Will start emulator with
  * `android` - Run your project on all Android devices and emulators.
  * `ios` - Run your project on all iOS devices and simulators.
  * `windows` - Run your project on the local Windows machine (Windows only).
+ * `linux` - Run your project on the local Linux machine (Linux only).
 
 <% } %>
 
@@ -89,6 +90,7 @@ Command | Description
 [run android](run-android.html) | Runs your project on a connected Android device or in a native Android emulator, if configured.
 [run ios](run-ios.html) | Runs your project on a connected iOS device or in the iOS Simulator, if configured.
 [run windows](run-windows.html) | Runs your project on the local Windows machine.
+[run linux](run-linux.html) | Runs your project on the local Linux machine.
 [test init](test-init.html) | Configures your project for unit testing with a selected framework.
 [test android](test-android.html) | Runs the tests in your project on Android devices or native emulators.
 [test ios](test-ios.html) | Runs the tests in your project on iOS devices or the iOS Simulator.

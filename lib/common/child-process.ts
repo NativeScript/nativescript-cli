@@ -300,7 +300,14 @@ export class ChildProcess extends EventEmitter implements IChildProcess {
 
 	private getArgumentsAsQuotedString(args: string[]): string {
 		return (
-			args && args.length && args.map((argument) => `"${argument}"`).join(" ")
+			args &&
+			args.length &&
+			args
+				// source protection keys stay out of the logs
+				.map((argument, i) =>
+					args[i - 1] === "--key-hex" ? '"<redacted>"' : `"${argument}"`,
+				)
+				.join(" ")
 		);
 	}
 }

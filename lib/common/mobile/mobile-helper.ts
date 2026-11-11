@@ -22,6 +22,7 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			this.$devicePlatformsConstants.Android,
 			this.$devicePlatformsConstants.visionOS,
 			this.$devicePlatformsConstants.Windows,
+			this.$devicePlatformsConstants.Linux,
 		];
 	}
 
@@ -57,6 +58,14 @@ export class MobileHelper implements Mobile.IMobileHelper {
 		);
 	}
 
+	public isLinuxPlatform(platform: string): boolean {
+		return !!(
+			platform &&
+			this.$devicePlatformsConstants.Linux.toLowerCase() ===
+				platform.toLowerCase()
+		);
+	}
+
 	public isApplePlatform(platform: string): boolean {
 		return this.isiOSPlatform(platform) || this.isvisionOSPlatform(platform);
 	}
@@ -70,6 +79,8 @@ export class MobileHelper implements Mobile.IMobileHelper {
 			return "visionOS";
 		} else if (this.isWindowsPlatform(platform)) {
 			return "Windows";
+		} else if (this.isLinuxPlatform(platform)) {
+			return "Linux";
 		}
 
 		return undefined;

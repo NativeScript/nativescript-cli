@@ -2,6 +2,7 @@ import {
 	IOSPrepareData,
 	AndroidPrepareData,
 	WindowsPrepareData,
+	LinuxPrepareData,
 } from "../data/prepare-data";
 import { injector } from "../common/yok";
 import { IOptions } from "../declarations";
@@ -18,6 +19,8 @@ export class PrepareDataService implements IPrepareDataService {
 			return new AndroidPrepareData(projectDir, platformLowerCase, data);
 		} else if (this.$mobileHelper.isWindowsPlatform(platform)) {
 			return new WindowsPrepareData(projectDir, platformLowerCase, data);
+		} else if (this.$mobileHelper.isLinuxPlatform(platform)) {
+			return new LinuxPrepareData(projectDir, platformLowerCase, data);
 		}
 	}
 }

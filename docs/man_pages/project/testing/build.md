@@ -25,7 +25,8 @@ Usage | Synopsis
 `<Platform>` is the target platform for which you want to build your project. You can set the following target platforms.
 * `android` - Build the project for Android and produces an `APK` that you can manually deploy on a device or in the native emulator.
 * `ios` - Build the project for iOS and produces an `APP` or `IPA` that you can manually deploy in the iOS Simulator or on a device.
-* `windows` - Build the project for Windows. Release builds produce an `MSIX` package (Windows only).<% } %>
+* `windows` - Build the project for Windows. Release builds produce an `MSIX` package (Windows only).
+* `linux` - Build the project for Linux. Release builds produce a `.tar.gz` (Linux only).<% } %>
 
 ### Options
 
@@ -55,6 +56,7 @@ Command | Description
 [build android](build-android.html) | Builds the project for Android and produces an APK that you can manually deploy on device or in the native emulator.
 [build ios](build-ios.html) | Builds the project for iOS and produces an APP or IPA that you can manually deploy in the iOS Simulator or on device, respectively.
 [build windows](build-windows.html) | Builds the project for Windows.
+[build linux](build-linux.html) | Builds the project for Linux.
 [debug android](debug-android.html) | Debugs your project on a connected Android device or in a native emulator.
 [debug ios](debug-ios.html) | Debugs your project on a connected iOS device or in a native emulator.
 [debug](debug.html) | Debugs your project on a connected device or in a native emulator.

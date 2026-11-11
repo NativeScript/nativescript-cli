@@ -349,3 +349,54 @@ export class BuildWindowsCommand extends BuildCommandBase implements ICommand {
 }
 
 injector.registerCommand("build|windows", BuildWindowsCommand);
+
+export class BuildLinuxCommand extends BuildCommandBase implements ICommand {
+	public allowedParameters: ICommandParameter[] = [];
+
+	constructor(
+		protected $options: IOptions,
+		$errors: IErrors,
+		$projectData: IProjectData,
+		$platformsDataService: IPlatformsDataService,
+		protected $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
+		$buildController: IBuildController,
+		$platformValidationService: IPlatformValidationService,
+		$buildDataService: IBuildDataService,
+		protected $logger: ILogger,
+		private $migrateController: IMigrateController,
+	) {
+		super(
+			$options,
+			$errors,
+			$projectData,
+			$platformsDataService,
+			$devicePlatformsConstants,
+			$buildController,
+			$platformValidationService,
+			$buildDataService,
+			$logger,
+		);
+	}
+
+	public async execute(_args: string[]): Promise<void> {
+		await this.executeCore([
+			this.$devicePlatformsConstants.Linux.toLowerCase(),
+		]);
+	}
+
+	public async canExecute(args: string[]): Promise<boolean> {
+		const platform = this.$devicePlatformsConstants.Linux;
+		if (!this.$options.force) {
+			await this.$migrateController.validate({
+				projectDir: this.$projectData.projectDir,
+				platforms: [platform],
+			});
+		}
+		return (
+			(await super.canExecuteCommandBase(platform)) &&
+			super.validateArgs(args, platform)
+		);
+	}
+}
+
+injector.registerCommand("build|linux", BuildLinuxCommand);

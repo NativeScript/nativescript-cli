@@ -380,11 +380,21 @@ declare module NativeScriptDoctor {
 		isWindowsDeveloperModeEnabled?: boolean;
 	}
 
+	interface ILinuxSysInfoData {
+		/**
+		 * Whether GTK 4 (libgtk-4.so.1) is installed. Valid only on Linux.
+		 * @type {boolean}
+		 */
+		isGtk4Installed?: boolean;
+	}
+
 	interface ISysInfoData
-		extends ICommonSysInfoData,
+		extends
+			ICommonSysInfoData,
 			IiOSSysInfoData,
 			IAndroidSysInfoData,
-			IWindowsSysInfoData {}
+			IWindowsSysInfoData,
+			ILinuxSysInfoData {}
 
 	/**
 	 * Describes warning returned from @nativescript/doctor check.

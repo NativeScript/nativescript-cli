@@ -4,6 +4,7 @@ import { HostInfo } from "./host-info";
 import { AndroidLocalBuildRequirements } from "./local-build-requirements/android-local-build-requirements";
 import { IosLocalBuildRequirements } from "./local-build-requirements/ios-local-build-requirements";
 import { WindowsLocalBuildRequirements } from "./local-build-requirements/windows-local-build-requirements";
+import { LinuxLocalBuildRequirements } from "./local-build-requirements/linux-local-build-requirements";
 import * as semver from "semver";
 
 export class Doctor implements NativeScriptDoctor.IDoctor {
@@ -16,6 +17,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		private sysInfo: NativeScriptDoctor.ISysInfo,
 		private androidToolsInfo: NativeScriptDoctor.IAndroidToolsInfo,
 		private windowsLocalBuildRequirements: WindowsLocalBuildRequirements,
+		private linuxLocalBuildRequirements?: LinuxLocalBuildRequirements,
 	) {}
 
 	public async canExecuteLocalBuild(
@@ -40,6 +42,10 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			platform.toLowerCase() === Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
 		) {
 			return await this.windowsLocalBuildRequirements.checkRequirements();
+		} else if (
+			platform.toLowerCase() === Constants.LINUX_PLATFORM_NAME.toLowerCase()
+		) {
+			return !!(await this.linuxLocalBuildRequirements?.checkRequirements());
 		}
 
 		return false;
@@ -82,6 +88,15 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 				Constants.WINDOWS_PLATFORM_NAME.toLowerCase()
 		) {
 			result = result.concat(this.getWindowsInfos(sysInfoData));
+		}
+
+		if (
+			!config ||
+			!config.platform ||
+			config.platform.toLowerCase() ===
+				Constants.LINUX_PLATFORM_NAME.toLowerCase()
+		) {
+			result = result.concat(this.getLinuxInfos(sysInfoData));
 		}
 
 		if (!this.hostInfo.isDarwin) {
@@ -303,6 +318,34 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 		return result;
 	}
 
+	private getLinuxInfos(
+		sysInfoData: NativeScriptDoctor.ISysInfoData,
+	): NativeScriptDoctor.IInfo[] {
+		if (!this.hostInfo.isLinux) {
+			return [
+				{
+					message:
+						"Local builds for Linux can be executed only on a Linux system.",
+					additionalInformation: "",
+					platforms: [Constants.LINUX_PLATFORM_NAME],
+					type: Constants.INFO_TYPE_NAME,
+				},
+			];
+		}
+		return [
+			this.processSysInfoItem({
+				item: sysInfoData.isGtk4Installed,
+				infoMessage: "GTK 4 is installed.",
+				warningMessage: "GTK 4 is not installed.",
+				additionalInformation:
+					`You will not be able to run your projects on this machine.${EOL}` +
+					`Install GTK 4 (e.g. \`sudo apt install libgtk-4-1\` or \`sudo dnf install gtk4\`).${EOL}` +
+					`For more information visit: ${Constants.LINUX_SYSTEM_REQUIREMENTS_LINK}`,
+				platforms: [Constants.LINUX_PLATFORM_NAME],
+			}),
+		];
+	}
+
 	private getWindowsInfos(
 		sysInfoData: NativeScriptDoctor.ISysInfoData,
 	): NativeScriptDoctor.IInfo[] {
@@ -312,8 +355,7 @@ export class Doctor implements NativeScriptDoctor.IDoctor {
 			const minDotNetSdkVer = Constants.DOTNET_SDK_MIN_REQUIRED_VERSION;
 			result = result.concat(
 				this.processSysInfoItem({
-					item:
-						!!dotNetSdkVer && semver.major(dotNetSdkVer) >= minDotNetSdkVer,
+					item: !!dotNetSdkVer && semver.major(dotNetSdkVer) >= minDotNetSdkVer,
 					infoMessage: `The .NET SDK ${dotNetSdkVer} is installed.`,
 					warningMessage: dotNetSdkVer
 						? `The .NET SDK ${dotNetSdkVer} is older than the required version ${minDotNetSdkVer}.`
