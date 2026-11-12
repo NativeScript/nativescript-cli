@@ -262,6 +262,10 @@ registerBuiltInCommand<typeof import("./commands/preview").PreviewCommand>(
 	"preview",
 	() => require("./commands/preview").PreviewCommand,
 );
+registerBuiltInCommand<typeof import("./commands/live").LiveCommand>(
+	"live",
+	() => require("./commands/live").LiveCommand,
+);
 
 registerBuiltInCommand<typeof import("./commands/debug").iosDebugCommand>(
 	"debug|ios",
