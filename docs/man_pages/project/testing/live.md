@@ -31,6 +31,6 @@ Creates an Electron project with native views and runs it on this Mac | `ns live
 ### Command Limitations
 
 * `--mac` and `--electron` need an Apple Silicon Mac with macOS 14.4 or later.
-* `ns live` runs `npx @nativescript/cloudflare-cli live`, which you can also run without the NativeScript CLI installed.
+* `ns live` runs `npx @nativescript/edge-cli live`, which you can also run without the NativeScript CLI installed.
 
 <% } %>

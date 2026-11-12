@@ -47,7 +47,7 @@ describe("live command", () => {
 				command: "npx",
 				args: [
 					"--yes",
-					"@nativescript/cloudflare-cli@latest",
+					"@nativescript/edge-cli@latest",
 					"live",
 					"--mac",
 					"--new",

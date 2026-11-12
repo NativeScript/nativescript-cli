@@ -2,7 +2,7 @@ import { IChildProcess } from "../common/declarations";
 import { Command } from "../common/define-command";
 import { inject } from "../common/di";
 
-const LIVE_CLI_PACKAGE = "@nativescript/cloudflare-cli";
+const LIVE_CLI_PACKAGE = "@nativescript/edge-cli";
 
 export class LiveCommand extends Command({
 	name: "live",
