@@ -385,6 +385,17 @@ describe("compiledReleaseService", () => {
 			);
 		});
 
+		it("leaves the Android build on the debug key without --key-store-* options", async () => {
+			installCompilerPackage();
+			const service = createService();
+
+			await service.build(platformData("Android"), createProjectData(), <any>{ release: true });
+
+			assert.deepStrictEqual(gradleCalls[0].args.slice(2), [":assembleRelease", "--quiet"]);
+			assert.lengthOf(warnings, 1);
+			assert.match(warnings[0], /debug key/);
+		});
+
 		it("names the TypeScript line of each Kotlin error when the Gradle build fails", async () => {
 			const packageDir = installCompilerPackage();
 			const service = createService();

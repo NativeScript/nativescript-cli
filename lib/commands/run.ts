@@ -179,9 +179,10 @@ export class RunAndroidCommand implements ICommand {
 			(this.$options.release || this.$options.aab) &&
 			!hasValidAndroidSigning(this.$options)
 		) {
-			if (this.$options.release) {
+			// A compiled APK without --key-store-* options is signed with the debug key.
+			if (this.$options.release && !this.$options.compiled) {
 				this.$errors.failWithHelp(ANDROID_RELEASE_BUILD_ERROR_MESSAGE);
-			} else {
+			} else if (this.$options.aab) {
 				this.$errors.failWithHelp(ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE);
 			}
 		}

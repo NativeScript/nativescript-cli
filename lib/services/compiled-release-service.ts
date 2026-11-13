@@ -571,6 +571,12 @@ export class CompiledReleaseService {
 			capture.stop();
 		}
 
+		if (!buildData.keyStorePath) {
+			this.$logger.warn(
+				"No --key-store-* options: signed with the debug key, which installs for testing but no store accepts.",
+			);
+		}
+
 		// The generated project is the app module itself, so AGP names its
 		// outputs after the root project, which the compiler names --name.
 		const outputName = projectData.projectName;
