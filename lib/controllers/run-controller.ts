@@ -25,6 +25,7 @@ import {
 import { IInjector } from "../common/definitions/yok";
 import { ViteHmrPortService } from "../contracts/vite-hmr-port-service";
 import { injector } from "../common/yok";
+import { isIOSMacDevice } from "../common/mobile/ios/mac/ios-mac-constants";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
@@ -635,6 +636,7 @@ export class RunController extends EventEmitter implements IRunController {
 			const buildData = {
 				...deviceDescriptor.buildData,
 				buildForDevice: !device.isEmulator,
+				buildForMac: isIOSMacDevice(device),
 			};
 			const platformData = this.$platformsDataService.getPlatformData(
 				device.deviceInfo.platform,

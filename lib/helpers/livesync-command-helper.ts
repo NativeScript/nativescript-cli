@@ -14,6 +14,7 @@ import { IBuildController, IBuildDataService } from "../definitions/build";
 import { ICleanupService } from "../definitions/cleanup-service";
 import { IPlatformsDataService } from "../definitions/platform";
 import { IProjectData, IValidatePlatformOutput } from "../definitions/project";
+import { isIOSMacDevice } from "../common/mobile/ios/mac/ios-mac-constants";
 
 export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 	constructor(
@@ -100,6 +101,7 @@ export class LiveSyncCommandHelper implements ILiveSyncCommandHelper {
 					...this.$options.argv,
 					outputPath,
 					buildForDevice: !d.isEmulator,
+					buildForMac: isIOSMacDevice(d),
 					watch: !this.$options.release && this.$options.watch,
 					nativePrepare: {
 						forceRebuildNativeApp: additionalOptions.forceRebuildNativeApp,

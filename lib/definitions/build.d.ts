@@ -13,6 +13,7 @@ interface IBuildData extends IPrepareData {
 	emulator?: boolean;
 	clean: boolean;
 	buildForDevice?: boolean;
+	buildForMac?: boolean;
 	buildForAppStore?: boolean;
 	buildOutputStdio?: string;
 	outputPath?: string;

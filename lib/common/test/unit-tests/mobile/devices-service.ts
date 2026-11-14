@@ -201,6 +201,7 @@ function createTestInjector(): IInjector {
 	testInjector.register("errors", ErrorsStub);
 	testInjector.register("iOSDeviceDiscovery", IOSDeviceDiscoveryStub);
 	testInjector.register("iOSSimulatorDiscovery", IOSSimulatorDiscoveryStub);
+	testInjector.register("iOSMacDeviceDiscovery", IOSDeviceDiscoveryStub);
 	testInjector.register("androidDeviceDiscovery", AndroidDeviceDiscoveryStub);
 	testInjector.register("staticConfig", { CLIENT_NAME: "unit-tests" });
 	testInjector.register("devicePlatformsConstants", DevicePlatformsConstants);

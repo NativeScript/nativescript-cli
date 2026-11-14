@@ -4,6 +4,7 @@ import { IAndroidBundleValidatorHelper, IOptions } from "../declarations";
 import { IBuildDataService } from "../definitions/build";
 import { IProjectData } from "../definitions/project";
 import { injector } from "../common/yok";
+import { isIOSMacDevice } from "../common/mobile/ios/mac/ios-mac-constants";
 
 export class DeployCommandHelper {
 	constructor(
@@ -54,6 +55,7 @@ export class DeployCommandHelper {
 					...this.$options.argv,
 					outputPath,
 					buildForDevice: !d.isEmulator,
+					buildForMac: isIOSMacDevice(d),
 					skipWatcher: !this.$options.watch,
 					nativePrepare: {
 						skipNativePrepare:

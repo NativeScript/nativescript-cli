@@ -1,5 +1,6 @@
 import * as _ from "lodash";
 import { injector } from "../common/yok";
+import { isIOSMacDevice } from "../common/mobile/ios/mac/ios-mac-constants";
 
 export class DeployController implements IDeployController {
 	constructor(
@@ -26,7 +27,11 @@ export class DeployController implements IDeployController {
 			const packageFilePath = await deviceDescriptor.buildAction();
 			await this.$deviceInstallAppService.installOnDevice(
 				device,
-				{ ...deviceDescriptor.buildData, buildForDevice: !device.isEmulator },
+				{
+					...deviceDescriptor.buildData,
+					buildForDevice: !device.isEmulator,
+					buildForMac: isIOSMacDevice(device),
+				},
 				packageFilePath,
 			);
 		};

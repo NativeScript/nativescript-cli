@@ -12,6 +12,7 @@ import { IPlatformData } from "../../definitions/platform";
 import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import * as _ from "lodash";
+import { IOS_MAC_BUILD_DIR_NAME } from "../../common/mobile/ios/mac/ios-mac-constants";
 
 import {
 	DevicePlatformSdkName,
@@ -77,6 +78,51 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			.concat(this.getXcodeProjectArgs(platformData, projectData));
 
 		return args;
+	}
+
+	/**
+	 * A plain build, not an archive: the app runs from Xcode's products folder
+	 * the way it does when you pick "My Mac (Designed for iPad)" in Xcode.
+	 * Naming the Mac as the destination is what lets automatic signing
+	 * register it and add it to the development profile.
+	 */
+	public async getBuildForMacArgs(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		buildConfig: IBuildConfig,
+	): Promise<string[]> {
+		const destination = [
+			"platform=macOS",
+			"arch=arm64",
+			"variant=Designed for iPad",
+			...(buildConfig._device
+				? [`id=${buildConfig._device.deviceInfo.identifier}`]
+				: []),
+		].join(",");
+
+		return [
+			"-destination",
+			destination,
+			"build",
+			"-configuration",
+			buildConfig.release ? Configurations.Release : Configurations.Debug,
+			"-allowProvisioningUpdates",
+			"-allowProvisioningDeviceRegistration",
+		]
+			.concat(this.getXcodeProjectArgs(platformData, projectData))
+			.concat(
+				this.getBuildCommonArgs(
+					platformData,
+					projectData,
+					DevicePlatformSdkName,
+					path.join(
+						platformData.projectRoot,
+						constants.BUILD_DIR,
+						IOS_MAC_BUILD_DIR_NAME,
+					),
+				),
+			)
+			.concat(this.getBuildLoggingArgs());
 	}
 
 	public async getBuildForDeviceArgs(
@@ -271,6 +317,7 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		platformData: IPlatformData,
 		projectData: IProjectData,
 		platformSdkName: string,
+		buildDir = path.join(platformData.projectRoot, constants.BUILD_DIR),
 	): string[] {
 		let args: string[] = [];
 
@@ -279,9 +326,8 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		}
 
 		args = args.concat([
-			"BUILD_DIR=" + path.join(platformData.projectRoot, constants.BUILD_DIR),
-			"SHARED_PRECOMPS_DIR=" +
-				path.join(platformData.projectRoot, constants.BUILD_DIR, "sharedpch"),
+			"BUILD_DIR=" + buildDir,
+			"SHARED_PRECOMPS_DIR=" + path.join(buildDir, "sharedpch"),
 		]);
 
 		return args;

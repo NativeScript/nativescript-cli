@@ -201,6 +201,10 @@ injector.require(
 	"./mobile/mobile-core/ios-simulator-discovery",
 );
 injector.require(
+	"iOSMacDeviceDiscovery",
+	"./mobile/mobile-core/ios-mac-device-discovery",
+);
+injector.require(
 	"androidDeviceDiscovery",
 	"./mobile/mobile-core/android-device-discovery",
 );

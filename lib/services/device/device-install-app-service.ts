@@ -13,6 +13,7 @@ import {
 } from "../../definitions/platform";
 import { IAnalyticsService, IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
+import { isIOSMacDevice } from "../../common/mobile/ios/mac/ios-mac-constants";
 
 export class DeviceInstallAppService implements IDeviceInstallAppService {
 	constructor(
@@ -127,7 +128,11 @@ export class DeviceInstallAppService implements IDeviceInstallAppService {
 			await this.$buildInfoFileService.getDeviceBuildInfo(device, projectData);
 		const localBuildInfo = this.$buildInfoFileService.getLocalBuildInfo(
 			platformData,
-			{ ...buildData, buildForDevice: !device.isEmulator },
+			{
+				...buildData,
+				buildForDevice: !device.isEmulator,
+				buildForMac: isIOSMacDevice(device),
+			},
 		);
 
 		return (

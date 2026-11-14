@@ -24,6 +24,11 @@ declare global {
 	}
 
 	interface IXcodebuildService {
+		buildForMac(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig,
+		): Promise<void>;
 		buildForSimulator(
 			platformData: IPlatformData,
 			projectData: IProjectData,
@@ -100,6 +105,11 @@ declare global {
 	}
 
 	interface IXcodebuildArgsService {
+		getBuildForMacArgs(
+			platformData: IPlatformData,
+			projectData: IProjectData,
+			buildConfig: IBuildConfig,
+		): Promise<string[]>;
 		getBuildForSimulatorArgs(
 			platformData: IPlatformData,
 			projectData: IProjectData,
