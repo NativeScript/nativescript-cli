@@ -4,6 +4,8 @@ import { LiveSyncPaths } from "./common/constants";
 import * as path from "path";
 import { IErrors } from "./common/declarations";
 import { injector } from "./common/yok";
+import { isIOSMacDevice } from "./common/mobile/ios/mac/ios-mac-constants";
+import type { IOSMacDevice } from "./common/mobile/ios/mac/ios-mac-device";
 
 export class DevicePathProvider implements IDevicePathProvider {
 	constructor(
@@ -17,7 +19,14 @@ export class DevicePathProvider implements IDevicePathProvider {
 		options: IDeviceProjectRootOptions
 	): Promise<string> {
 		let projectRoot = "";
-		if (this.$mobileHelper.isApplePlatform(device.deviceInfo.platform)) {
+		if (isIOSMacDevice(device)) {
+			projectRoot = (<IOSMacDevice>device).applicationBundlePath;
+			if (!options.getDirname) {
+				projectRoot = path.join(projectRoot, APP_FOLDER_NAME);
+			}
+		} else if (
+			this.$mobileHelper.isApplePlatform(device.deviceInfo.platform)
+		) {
 			projectRoot = device.isEmulator
 				? await this.$iOSSimResolver.iOSSim.getApplicationPath(
 						device.deviceInfo.identifier,

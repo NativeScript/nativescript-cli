@@ -126,6 +126,7 @@ function createTestInjector(
 	testInjector.register("devicesService", DevicesService);
 	testInjector.register("iOSDeviceDiscovery", IOSDeviceDiscovery);
 	testInjector.register("iOSSimulatorDiscovery", IOSSimulatorDiscoveryMock);
+	testInjector.register("iOSMacDeviceDiscovery", IOSSimulatorDiscoveryMock);
 	testInjector.register("iOSSimResolver", {});
 	testInjector.register("androidDeviceDiscovery", AndroidDeviceDiscovery);
 	testInjector.register("messages", Messages);

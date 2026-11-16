@@ -58,6 +58,10 @@ import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 import { IProjectChangesInfo } from "../definitions/project-changes";
 import { ITempService } from "../definitions/temp-service";
+import {
+	IOS_MAC_BUILD_DIR_NAME,
+	iOSRuntimeCanRunOnMac,
+} from "../common/mobile/ios/mac/ios-mac-constants";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -74,7 +78,10 @@ const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 
 const getPlatformSdkName = (buildData: IBuildData): string => {
 	const forDevice =
-		!buildData || buildData.buildForDevice || buildData.buildForAppStore;
+		!buildData ||
+		buildData.buildForDevice ||
+		buildData.buildForMac ||
+		buildData.buildForAppStore;
 	const isvisionOS = injector
 		.resolve("devicePlatformsConstants")
 		.isvisionOS(buildData.platform);
@@ -179,12 +186,17 @@ export class IOSProjectService
 					return path.join(
 						projectRoot,
 						constants.BUILD_DIR,
+						...(options?.buildForMac ? [IOS_MAC_BUILD_DIR_NAME] : []),
 						`${config}-${getPlatformSdkName(options)}`,
 					);
 				},
 				getValidBuildOutputData: (
 					buildOptions: IBuildData,
 				): IValidBuildOutputData => {
+					if (buildOptions?.buildForMac) {
+						return { packageNames: [`${projectData.projectName}.app`] };
+					}
+
 					const forDevice =
 						!buildOptions ||
 						!!buildOptions.buildForDevice ||
@@ -450,7 +462,24 @@ export class IOSProjectService
 			this.emit(constants.BUILD_OUTPUT_EVENT_NAME, data);
 		};
 
-		if (buildData.buildForDevice) {
+		if (buildData.buildForMac) {
+			this.warnIfRuntimeCannotRunOnMac(projectData);
+			await this.$iOSSigningService.setupSigningForDevice(
+				projectRoot,
+				projectData,
+				buildData,
+			);
+			await attachAwaitDetach(
+				constants.BUILD_OUTPUT_EVENT_NAME,
+				this.$childProcess,
+				handler,
+				this.$xcodebuildService.buildForMac(
+					platformData,
+					projectData,
+					<any>buildData,
+				),
+			);
+		} else if (buildData.buildForDevice) {
 			await this.$iOSSigningService.setupSigningForDevice(
 				projectRoot,
 				projectData,
@@ -491,6 +520,18 @@ export class IOSProjectService
 		}
 
 		this.validateApplicationIdentifier(projectData);
+	}
+
+	private warnIfRuntimeCannotRunOnMac(projectData: IProjectData): void {
+		const { version } = this.$projectDataService.getRuntimePackage(
+			projectData.projectDir,
+			constants.PlatformTypes.ios,
+		);
+		if (!iOSRuntimeCanRunOnMac(version)) {
+			this.$logger.warn(
+				`@nativescript/ios ${version} stops at launch on a Mac. Use @nativescript/ios 9.1.1 or later, or @nativescript/ios@next.`,
+			);
+		}
 	}
 
 	public isPlatformPrepared(

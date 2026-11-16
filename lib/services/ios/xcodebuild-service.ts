@@ -32,6 +32,22 @@ export class XcodebuildService implements IXcodebuildService {
 		return archivePath;
 	}
 
+	public async buildForMac(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		buildConfig: IBuildConfig
+	): Promise<void> {
+		const args = await this.$xcodebuildArgsService.getBuildForMacArgs(
+			platformData,
+			projectData,
+			buildConfig
+		);
+		await this.$xcodebuildCommandService.executeCommand(args, {
+			cwd: platformData.projectRoot,
+			stdio: buildConfig.buildOutputStdio,
+		});
+	}
+
 	public async buildForSimulator(
 		platformData: IPlatformData,
 		projectData: IProjectData,

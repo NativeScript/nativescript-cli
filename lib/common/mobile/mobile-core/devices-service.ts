@@ -41,6 +41,7 @@ export class DevicesService
 		private $errors: IErrors,
 		private $iOSSimulatorDiscovery: Mobile.IiOSSimulatorDiscovery,
 		private $iOSDeviceDiscovery: Mobile.IDeviceDiscovery,
+		private $iOSMacDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $androidDeviceDiscovery: Mobile.IDeviceDiscovery,
 		private $staticConfig: Config.IStaticConfig,
 		private $messages: IMessages,
@@ -64,6 +65,7 @@ export class DevicesService
 			this.$iOSDeviceDiscovery,
 			this.$androidDeviceDiscovery,
 			this.$iOSSimulatorDiscovery,
+			this.$iOSMacDeviceDiscovery,
 		];
 	}
 
@@ -324,6 +326,7 @@ export class DevicesService
 			this.$iOSSimulatorDiscovery,
 			this.$iOSDeviceDiscovery,
 			this.$androidDeviceDiscovery,
+			this.$iOSMacDeviceDiscovery,
 		].forEach(this.attachToDeviceDiscoveryEvents.bind(this));
 	}
 
@@ -823,7 +826,8 @@ export class DevicesService
 				const activeDeviceInstance = _.find(
 					deviceInstances,
 					(device: Mobile.IDevice) =>
-						device.deviceInfo.identifier === data.deviceId,
+						device.deviceInfo.identifier === data.deviceId ||
+						device.deviceInfo.imageIdentifier === data.deviceId,
 				);
 				if (!activeDeviceInstance) {
 					return this.startEmulatorCore(data);
