@@ -39,11 +39,13 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 		this.stitchIOSLogEntry(entry, deviceIdentifier, (completeEntry) => {
 			const loggingOptions =
 				this.getDeviceLogOptionsForDevice(deviceIdentifier);
+			const deviceLogLevel =
+				loggingOptions.logLevel || this.$logFilter.loggingLevel;
 			const text = getIOSLogEntryText(completeEntry, {
 				processName: loggingOptions.projectName,
 				...getIOSLogScope(
 					this.$logger.getLevel(),
-					loggingOptions.logLevel?.toUpperCase() === this.$loggingLevels.full,
+					deviceLogLevel?.toUpperCase() === this.$loggingLevels.full,
 				),
 			});
 			if (text) {
