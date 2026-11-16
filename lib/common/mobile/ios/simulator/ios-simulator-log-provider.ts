@@ -76,6 +76,11 @@ export class IOSSimulatorLogProvider
 				readline
 					.createInterface({ input: deviceLogChildProcess.stdout })
 					.on("line", (line) => this.logStructuredLine(deviceId, line));
+				deviceLogChildProcess.stderr?.on("data", (data: Buffer | string) => {
+					this.$logger.trace(
+						`log stream on simulator ${deviceId}: ${data.toString()}`,
+					);
+				});
 			} else {
 				if (deviceLogChildProcess.stdout) {
 					deviceLogChildProcess.stdout.on("data", action.bind(this));
