@@ -111,6 +111,16 @@ interface IOSSPMPackageBase {
 	 * you can list their names here to include the Swift Package with them
 	 */
 	targets?: string[];
+	/**
+	 * Optional: products built as dynamic libraries (`.library(type: .dynamic)`)
+	 * must also be copied into the app bundle. List the subset of `libs` to
+	 * embed; a dynamic product that is linked but not embedded builds fine but
+	 * fails in dyld at launch on a device.
+	 *
+	 * A `.library(...)` without a type is static and is compiled into the app
+	 * executable, so it needs no embedding.
+	 */
+	embed?: string[];
 }
 
 export interface IOSRemoteSPMPackage extends IOSSPMPackageBase {
