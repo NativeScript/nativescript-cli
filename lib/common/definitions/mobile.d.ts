@@ -1359,7 +1359,7 @@ declare global {
 		start(
 			startArray: IOSDeviceLib.IIOSApplicationData[],
 			errorHandler?: DeviceOperationErrorHandler,
-		): Promise<IOSDeviceResponse>;
+		): Promise<IDictionary<IOSDeviceLib.IStartApplicationResponse[]>>;
 
 		stop(
 			stopArray: IOSDeviceLib.IIOSApplicationData[],

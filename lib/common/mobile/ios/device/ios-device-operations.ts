@@ -227,7 +227,7 @@ export class IOSDeviceOperations
 	public async start(
 		startArray: IOSDeviceLib.IDdiApplicationData[],
 		errorHandler?: DeviceOperationErrorHandler,
-	): Promise<IOSDeviceResponse> {
+	): Promise<IDictionary<IOSDeviceLib.IStartApplicationResponse[]>> {
 		this.assertIsInitialized();
 
 		_.each(startArray, (s) => {
@@ -236,7 +236,7 @@ export class IOSDeviceOperations
 			);
 		});
 
-		return this.getMultipleResults<IOSDeviceLib.IDeviceResponse>(
+		return this.getMultipleResults<IOSDeviceLib.IStartApplicationResponse>(
 			() => this.deviceLib.start(startArray),
 			errorHandler,
 		);
