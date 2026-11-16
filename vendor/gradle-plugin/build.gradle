@@ -120,6 +120,16 @@ buildscript {
             }
         }
 
+        // Opt-in: published plugins' buildscript.gradle files were written for the app build
+        // and may not expect to run in their own aar build.
+        if (project.findProperty("nativescript.readOnlyNodeModules") == "true") {
+            def ownBuildScriptGradle = file("${getDepPlatformDir(pluginData)}/buildscript.gradle")
+            if (ownBuildScriptGradle.exists()) {
+                outLogger.withStyle(Style.SuccessHeader).println "\t + applying the plugin's own buildscript from ${ownBuildScriptGradle}"
+                apply from: ownBuildScriptGradle, to: buildscript
+            }
+        }
+
         def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
         def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
         if (pluginBuildScriptGradle.exists()) {
@@ -129,6 +139,16 @@ buildscript {
     }
     applyBuildScriptConfigurations()
 
+}
+
+// Only the dependencies/repositories blocks of the plugin's include.gradle are copied into this
+// build, so its top-level `apply plugin: "org.nativescript.api"` never runs here. Applying the
+// library whenever a buildscript.gradle put it on the classpath keeps those blocks able to use it.
+if (project.findProperty("nativescript.readOnlyNodeModules") == "true") {
+    try {
+        apply plugin: Class.forName("org.nativescript.gradle.NativeScriptPlugin", true, buildscript.classLoader)
+    } catch (ClassNotFoundException ignored) {
+    }
 }
 
 def pluginDependencies

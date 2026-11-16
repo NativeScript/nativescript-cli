@@ -1,0 +1,41 @@
+{
+	"schemaVersion": 1,
+	"cli": { "version": "9.2.0" },
+	"runtime": { "name": "@nativescript/android", "version": "9.0.0" },
+	"dependenciesJson": { "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570" },
+	"capabilities": [],
+	"project": {
+		"root": "../..",
+		"appDir": "../../src",
+		"appResourcesDir": "../../App_Resources"
+	},
+	"plugins": [
+		{
+			"name": "@nativescript/core",
+			"packageDir": "../../node_modules/@nativescript/core",
+			"nativeDir": "../../node_modules/@nativescript/core/platforms/android",
+			"aarName": "core",
+			"aar": "../../node_modules/@nativescript/core/platforms/android/core.aar",
+			"dependencies": [],
+			"options": {}
+		},
+		{
+			"name": "@foo/plugin-x",
+			"packageDir": "../../node_modules/@foo/plugin-x",
+			"nativeDir": ".ns-plugins/foo_plugin_x/platforms/android",
+			"aarName": "foo_plugin_x",
+			"aar": ".ns-plugins/foo_plugin_x/platforms/android/foo_plugin_x.aar",
+			"dependencies": ["@nativescript/core"],
+			"options": {}
+		},
+		{
+			"name": "@bar/plugin-x",
+			"packageDir": "../../node_modules/@bar/plugin-x",
+			"nativeDir": "../../node_modules/@bar/plugin-x/platforms/android",
+			"aarName": "bar_plugin_x",
+			"aar": "../../node_modules/@bar/plugin-x/platforms/android/bar_plugin_x.aar",
+			"dependencies": [],
+			"options": {}
+		}
+	]
+}

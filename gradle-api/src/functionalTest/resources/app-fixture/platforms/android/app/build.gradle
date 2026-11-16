@@ -1,0 +1,67 @@
+// Mirrors how the @nativescript/android app template's app/build.gradle applies plugins' Gradle
+// files: buildscript.gradle to this project's buildscript, include.gradle from inside `android {}`.
+// The template reads the root project's properties implicitly, which Gradle 9 deprecates; reading
+// them through rootProject keeps the build free of deprecations so the tests can fail on any.
+buildscript {
+    def applyBuildScriptConfigurations = { ->
+        rootProject.nativescriptDependencies.each { dep ->
+            def pathToPluginBuildScriptGradle = "$rootDir/${dep.directory}/${rootProject.PLATFORMS_ANDROID}/buildscript.gradle"
+            def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
+            if (pluginBuildScriptGradle.exists()) {
+                apply from: pathToPluginBuildScriptGradle, to: buildscript
+            }
+        }
+    }
+    applyBuildScriptConfigurations()
+}
+
+// Stands in for the Android Gradle Plugin's extension, so include.gradle runs with the same
+// closure delegation as in a real app build.
+class FakeAndroidExtension {
+    String namespace
+}
+
+extensions.create("android", FakeAndroidExtension)
+
+def applyPluginGradleConfigurations = { ->
+    rootProject.nativescriptDependencies.each { dep ->
+        def includeGradlePath = "$rootDir/${dep.directory}/${rootProject.PLATFORMS_ANDROID}/include.gradle"
+        if (file(includeGradlePath).exists()) {
+            apply from: includeGradlePath
+        }
+    }
+}
+
+android {
+    namespace = "org.nativescript.fixture"
+    applyPluginGradleConfigurations()
+}
+
+def ns = extensions.getByName("nativescript")
+println "NS|typed|${org.nativescript.gradle.NativeScript.of(project).is(ns)}"
+println "NS|apiLevel|${ns.apiLevel}"
+println "NS|pluginBuild|${ns.pluginBuild}"
+println "NS|self|${ns.self}"
+println "NS|buildingSample|${ns.isBuildingPlugin('@nativescript/gradle-api-sample')}"
+println "NS|projectDir|${ns.projectDir}"
+println "NS|appDir|${ns.appDir}"
+println "NS|appResourcesDir|${ns.appResourcesDir}"
+println "NS|has|${ns.has('fixture.capability')}"
+def core = ns.plugin("@nativescript/core")
+println "NS|core.packageDir|${core.packageDir}"
+println "NS|core.nativeDir|${core.nativeDir}"
+println "NS|core.artifacts|${core.artifacts.files.collect { it.name }.sort().join(',')}"
+println "NS|core.aarName|${core.aarName}"
+println "NS|core.aar|${core.aar}"
+println "NS|core.options|${core.options}"
+println "NS|sample.nativeDir|${ns.plugin('@nativescript/gradle-api-sample').nativeDir}"
+println "NS|jsOnly|${ns.findPackage('js-only')}"
+println "NS|jsOnlyPlugin|${ns.findPlugin('js-only')}"
+println "NS|missingPlugin|${ns.findPlugin('not-installed')}"
+println "NS|missingPackage|${ns.findPackage('not-installed')}"
+try {
+    ns.plugin("not-installed")
+    println "NS|pluginError|none"
+} catch (GradleException e) {
+    println "NS|pluginError|${e.message}"
+}

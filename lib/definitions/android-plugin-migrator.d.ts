@@ -3,6 +3,20 @@ import { IProjectDir } from "../common/declarations";
 
 interface IPluginBuildOptions extends IAndroidBuildOptions {
 	projectDir?: string;
+	/**
+	 * File name (without extension) of the built aar and of its temp build dir.
+	 * Defaults to the plugin's short name.
+	 */
+	aarName?: string;
+	/**
+	 * The project keeps node_modules read-only, so `aarOutputDir` is a CLI-owned
+	 * copy of the plugin's platforms/android.
+	 */
+	readOnlyNodeModules?: boolean;
+	/**
+	 * The project's nativescript-gradle.json, passed to the plugin's Gradle build when it exists.
+	 */
+	gradleFactsFile?: string;
 }
 
 interface IAndroidBuildOptions {
@@ -17,6 +31,33 @@ interface IAndroidBuildOptions {
 interface IAndroidPluginBuildService {
 	buildAar(options: IPluginBuildOptions): Promise<boolean>;
 	migrateIncludeGradle(options: IPluginBuildOptions): boolean;
+	/**
+	 * Whether the plugin has sources to build but `aarOutputDir` lacks its aar
+	 * or still holds one under another of its candidate names.
+	 */
+	hasOutdatedAar(options: IPluginBuildOptions): boolean;
+}
+
+interface IAndroidPluginMirror {
+	pluginName: string;
+	/**
+	 * The installed npm package.
+	 */
+	packageDir: string;
+	mirrorDir: string;
+	/**
+	 * Paths relative to the package's platforms/android that are not copied.
+	 */
+	excludedNativeFiles?: string[];
+}
+
+interface IAndroidPluginMirrorService {
+	/**
+	 * Brings `<mirrorsRoot>/<dir>` in line with each plugin's package.json and
+	 * platforms/android, and removes mirrors of plugins not in `mirrors`.
+	 * @returns The names of the plugins whose mirror changed.
+	 */
+	syncMirrors(mirrorsRoot: string, mirrors: IAndroidPluginMirror[]): string[];
 }
 
 /**
@@ -49,4 +90,14 @@ interface IBuildAndroidPluginData extends Partial<IProjectDir> {
 	 * Optional custom Gradle arguments.
 	 */
 	gradleArgs?: string;
+
+	/**
+	 * The project keeps node_modules read-only (`android.readOnlyNodeModules`).
+	 */
+	readOnlyNodeModules?: boolean;
+
+	/**
+	 * Absolute path of the project's nativescript-gradle.json, when it exists.
+	 */
+	gradleFactsFile?: string;
 }
