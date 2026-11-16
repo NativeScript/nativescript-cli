@@ -12,7 +12,7 @@ import {
 } from "../common/define-command";
 import { inject } from "../common/di";
 import { ErrorCodes } from "../common/enums";
-import { hasValidAndroidSigning } from "../common/helpers";
+import { hasValidAndroidSigning, isCIEnvironment } from "../common/helpers";
 import {
 	ANDROID_APP_BUNDLE_SIGNING_ERROR_MESSAGE,
 	ANDROID_RELEASE_BUILD_ERROR_MESSAGE,
@@ -35,7 +35,15 @@ const testCommandOptions = {
 	// The CLI-wide default is true; unit testing has always opted out of it.
 	hmr: booleanOption({ default: false }),
 	force: booleanOption(),
-	watch: booleanOption(),
+	// Watch mode keeps the run alive waiting for changes; CI runs must
+	// execute once and exit, so --watch defaults to off there. The schema is
+	// module-level, so the environment is read lazily at command resolution.
+	watch: {
+		type: "boolean",
+		get default(): boolean {
+			return !isCIEnvironment();
+		},
+	},
 	justlaunch: booleanOption(),
 	debugBrk: booleanOption(),
 	device: stringOption(),
