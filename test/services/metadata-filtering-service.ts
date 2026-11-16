@@ -25,12 +25,12 @@ describe("metadataFilteringService", () => {
 	const appResourcesNativeApiUsageFilePath = path.join(
 		projectData.appResourcesDirectoryPath,
 		platform,
-		MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
+		MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME,
 	);
 	const pluginPlatformsDir = path.join("pluginDir", platform);
 	const pluginNativeApiUsageFilePath = path.join(
 		pluginPlatformsDir,
-		MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME
+		MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME,
 	);
 	const pluginsUses: string[] = ["pluginUses1", "pluginUses2"];
 
@@ -41,14 +41,14 @@ describe("metadataFilteringService", () => {
 		testInjector.register("pluginsService", {
 			getAllProductionPlugins: (
 				prjData: IProjectData,
-				dependencies?: IDependencyData[]
+				dependencies?: IDependencyData[],
 			): IPluginData[] => {
 				const plugins = !!(input && input.hasPlugins)
 					? [
 							<any>{
 								pluginPlatformsFolderPath: (pl: string) => pluginPlatformsDir,
 							},
-					  ]
+						]
 					: [];
 
 				return plugins;
@@ -63,6 +63,46 @@ describe("metadataFilteringService", () => {
 		});
 		return testInjector;
 	};
+
+	describe("getDeclaredRules", () => {
+		const service = (input: { hasPlugins: boolean }, files: any) => {
+			const testInjector = createTestInjector(input);
+			const fileSystem = testInjector.resolve("fs");
+			fileSystem.exists = (filePath: string) => filePath in files;
+			fileSystem.readJson = (filePath: string) => files[filePath];
+			return testInjector.resolve<IMetadataFilteringService>(
+				MetadataFilteringService,
+			);
+		};
+
+		it("merges the app's rules with its plugins' declarations", () => {
+			const rules = service(
+				{ hasPlugins: true },
+				{
+					[appResourcesNativeApiUsageFilePath]: {
+						"whitelist-plugins-usages": true,
+						whitelist: whitelistArray,
+						blacklist: blacklistArray,
+					},
+					[pluginNativeApiUsageFilePath]: { uses: pluginsUses },
+				},
+			).getDeclaredRules(projectData, platform);
+
+			assert.deepEqual(rules, {
+				keep: [...whitelistArray, ...pluginsUses],
+				blacklist: blacklistArray,
+			});
+		});
+
+		it("returns nothing when no file exists", () => {
+			const rules = service({ hasPlugins: true }, {}).getDeclaredRules(
+				projectData,
+				platform,
+			);
+
+			assert.deepEqual(rules, { keep: [], blacklist: [] });
+		});
+	});
 
 	describe("generateMetadataFilters", () => {
 		const mockFs = (input: {
@@ -96,14 +136,13 @@ describe("metadataFilteringService", () => {
 
 		it("deletes previously generated files for metadata filtering", () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { fs } = mockFs({
 				testInjector,
 				writeFileAction: (filePath: string, data: string) => {
 					throw new Error(
-						`No data should be written when the ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} does not exist in App_Resource/<platform>`
+						`No data should be written when the ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} does not exist in App_Resource/<platform>`,
 					);
 				},
 			});
@@ -119,9 +158,8 @@ describe("metadataFilteringService", () => {
 
 		it(`generates ${MetadataFilteringConstants.BLACKLIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [appResourcesNativeApiUsageFilePath],
@@ -137,7 +175,7 @@ describe("metadataFilteringService", () => {
 			assert.deepStrictEqual(dataWritten, {
 				[path.join(
 					projectRoot,
-					MetadataFilteringConstants.BLACKLIST_FILE_NAME
+					MetadataFilteringConstants.BLACKLIST_FILE_NAME,
 				)]: blacklistArray.join(EOL),
 			});
 		});
@@ -149,7 +187,7 @@ describe("metadataFilteringService", () => {
 			let finalContent = "";
 			if (input.pluginWhitelist) {
 				finalContent += `// Added from: ${pluginNativeApiUsageFilePath}${EOL}${input.pluginWhitelist.join(
-					EOL
+					EOL,
 				)}${EOL}// Finished part from ${pluginNativeApiUsageFilePath}${EOL}`;
 			}
 
@@ -159,7 +197,7 @@ describe("metadataFilteringService", () => {
 				}
 
 				finalContent += `// Added from application${EOL}${input.applicationWhitelist.join(
-					EOL
+					EOL,
 				)}${EOL}// Finished part from application${EOL}`;
 			}
 
@@ -168,9 +206,8 @@ describe("metadataFilteringService", () => {
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform>`, () => {
 			const testInjector = createTestInjector();
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [appResourcesNativeApiUsageFilePath],
@@ -185,7 +222,7 @@ describe("metadataFilteringService", () => {
 			assert.deepStrictEqual(dataWritten, {
 				[path.join(
 					projectRoot,
-					MetadataFilteringConstants.WHITELIST_FILE_NAME
+					MetadataFilteringConstants.WHITELIST_FILE_NAME,
 				)]: getExpectedWhitelistContent({
 					applicationWhitelist: whitelistArray,
 				}),
@@ -194,9 +231,8 @@ describe("metadataFilteringService", () => {
 
 		it(`generates ${MetadataFilteringConstants.WHITELIST_FILE_NAME} with content from plugins when the file ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} exists in App_Resources/<platform> and whitelist-plugins-usages is true`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
@@ -215,16 +251,15 @@ describe("metadataFilteringService", () => {
 			assert.deepStrictEqual(dataWritten, {
 				[path.join(
 					projectRoot,
-					MetadataFilteringConstants.WHITELIST_FILE_NAME
+					MetadataFilteringConstants.WHITELIST_FILE_NAME,
 				)]: getExpectedWhitelistContent({ pluginWhitelist: whitelistArray }),
 			});
 		});
 
 		it(`generates all files when both plugins and applications filters are included`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
@@ -250,20 +285,19 @@ describe("metadataFilteringService", () => {
 			assert.deepStrictEqual(dataWritten, {
 				[path.join(
 					projectRoot,
-					MetadataFilteringConstants.WHITELIST_FILE_NAME
+					MetadataFilteringConstants.WHITELIST_FILE_NAME,
 				)]: expectedWhitelist,
 				[path.join(
 					projectRoot,
-					MetadataFilteringConstants.BLACKLIST_FILE_NAME
+					MetadataFilteringConstants.BLACKLIST_FILE_NAME,
 				)]: blacklistArray.join(EOL),
 			});
 		});
 
 		it(`skips plugins ${MetadataFilteringConstants.NATIVE_API_USAGE_FILE_NAME} files when whitelist-plugins-usages in App_Resources is false`, () => {
 			const testInjector = createTestInjector({ hasPlugins: true });
-			const metadataFilteringService: IMetadataFilteringService = testInjector.resolve(
-				MetadataFilteringService
-			);
+			const metadataFilteringService: IMetadataFilteringService =
+				testInjector.resolve(MetadataFilteringService);
 			const { dataWritten } = mockFs({
 				testInjector,
 				existingFiles: [
@@ -288,11 +322,11 @@ describe("metadataFilteringService", () => {
 			assert.deepStrictEqual(dataWritten, {
 				[path.join(
 					projectRoot,
-					MetadataFilteringConstants.WHITELIST_FILE_NAME
+					MetadataFilteringConstants.WHITELIST_FILE_NAME,
 				)]: expectedWhitelist,
 				[path.join(
 					projectRoot,
-					MetadataFilteringConstants.BLACKLIST_FILE_NAME
+					MetadataFilteringConstants.BLACKLIST_FILE_NAME,
 				)]: blacklistArray.join(EOL),
 			});
 		});

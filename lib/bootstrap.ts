@@ -197,6 +197,12 @@ registerBuiltInCommand<
 	typeof import("./commands/generate").generateCommandDefinition
 >("generate", () => require("./commands/generate").generateCommandDefinition);
 registerBuiltInCommand<
+	typeof import("./commands/metadata-trim").MetadataTrimCommand
+>(
+	"metadata|trim",
+	() => require("./commands/metadata-trim").MetadataTrimCommand,
+);
+registerBuiltInCommand<
 	typeof import("./commands/list-platforms").listPlatformsCommandDefinition
 >(
 	"platform|*list",
@@ -711,6 +717,7 @@ injector.require(
 	"metadataFilteringService",
 	"./services/metadata-filtering-service",
 );
+injector.require("metadataTrimService", "./services/metadata-trim-service");
 injector.require("tempService", "./services/temp-service");
 
 injector.require("sharedEventBus", "./shared-event-bus");
