@@ -33,6 +33,7 @@ Start an emulator with specified device identifier and sdk | `$ ns run ios [--de
 * `--emulator` - If set, runs the app in all available and configured ios simulators. It will start a simulator if none are already running.
 * `--sdk` - Specifies the target simulator's sdk.
 * `--justlaunch` - If set, does not print the application output in the console.
+* `--log <Level>` - Also controls how much of the application output is printed. By default only its JavaScript output is shown. `debug` adds everything else the app logs - its native code and the system frameworks it uses, like Xcode's console - and `trace` adds debug level entries as well.
 * `--clean` - If set, forces the complete rebuild of the native application.
 * `--no-watch` - If set, changes in your code will not be reflected during the execution of this command.
 * `--release` - If set, produces a release build by running webpack in production mode and native build in release mode. Otherwise, produces a debug build.
