@@ -527,6 +527,7 @@ export class PrepareController
 			}
 			if (prepareData && !prepareData.release) {
 				packageData.logFormat = IOS_LOG_FORMAT;
+				packageData.forwardStdio = true;
 			}
 			if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
 				packageData.discardUncaughtJsExceptions =

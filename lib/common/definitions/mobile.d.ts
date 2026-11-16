@@ -173,6 +173,8 @@ declare global {
 			image: string;
 			level: string;
 			message: string;
+			subsystem?: string;
+			category?: string;
 		}
 
 		interface IiOSLogStreamOptions {

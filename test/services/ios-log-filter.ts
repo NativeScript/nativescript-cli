@@ -209,6 +209,55 @@ describe("iOSLogFilter", () => {
 		);
 	});
 
+	describe("forwarded stdio", () => {
+		const deviceHeader =
+			"\u0000Oct 29 20:20:54 iPad app(NativeScript)[1514] <Notice>: ";
+		const simulatorHeader =
+			"2017-10-09 13:34:38.527844+0300  localhost app[52946]: (NativeScript) ";
+		const lines = [
+			`${deviceHeader}[org.nativescript.stdio:stdout] printed\n`,
+			`${deviceHeader}[org.nativescript.stdio:stderr] logged\n`,
+			`${deviceHeader}[org.nativescript.stdio:stdout] [ns 2 1/2] long\n`,
+			`${deviceHeader}[org.nativescript.stdio:stdout] [ns 2 2/2]  line\n`,
+			`${simulatorHeader}[org.nativescript.stdio:stdout] simulated\n`,
+			`${deviceHeader}CONSOLE LOG: js\n`,
+		];
+		const filter = (cliLogLevel: string) => {
+			testInjector = createTestInjector("app");
+			testInjector.resolve("logger").getLevel = () => cliLogLevel;
+			logFilter = testInjector.resolve(IOSLogFilter);
+			return lines
+				.map((line) =>
+					logFilter.filterData(line, {
+						logLevel: infoLogLevel,
+						projectName: "app",
+					}),
+				)
+				.filter(Boolean)
+				.join("");
+		};
+
+		it("is hidden by default", () => {
+			assert.strictEqual(filter(undefined), "CONSOLE LOG: js\n");
+			assert.strictEqual(filter("INFO"), "CONSOLE LOG: js\n");
+		});
+
+		it("shows from --log debug, labeled with its stream", () => {
+			assert.strictEqual(
+				filter("DEBUG"),
+				[
+					"stdout: printed",
+					"stderr: logged",
+					"stdout: long",
+					"stdout:  line",
+					"stdout: simulated",
+					"CONSOLE LOG: js",
+					"",
+				].join("\n"),
+			);
+		});
+	});
+
 	it("drops other processes' lines that have no image name, such as the kernel's", () => {
 		testInjector = createTestInjector("nsconsoletablet");
 		logFilter = testInjector.resolve(IOSLogFilter);
