@@ -1694,6 +1694,27 @@ at promiseReactionJob\n`,
 			assertData(logger.output, "CONSOLE LOG: hello\n");
 		});
 
+		it("prints native debug entries when the device log level is FULL for all devices", () => {
+			deviceLogProvider.setProjectNameForDevice(structuredDevice, "app");
+			deviceLogProvider.setLogLevel("FULL");
+			try {
+				deviceLogProvider.logEntry(
+					{
+						process: `${appDir}/app`,
+						image: "/usr/lib/libobjc.A.dylib",
+						level: "debug",
+						message: "native detail",
+					},
+					"iOS",
+					structuredDevice,
+				);
+			} finally {
+				deviceLogProvider.setLogLevel("INFO");
+			}
+
+			assertData(logger.output, "libobjc.A.dylib: native detail\n");
+		});
+
 		it("prints a split message once, when all of its pieces are in", () => {
 			deviceLogProvider.setProjectNameForDevice(structuredDevice, "app");
 			const piece = (message: string) =>

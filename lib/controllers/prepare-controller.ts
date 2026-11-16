@@ -591,8 +591,14 @@ export class PrepareController
 			);
 		}
 
-		if (prepareData?.uniqueBundle) {
-			packageData.main = `${packageData.main}.${prepareData.uniqueBundle}`;
+		// The native watcher rewrites this file without a new bundler emit, so
+		// main can already carry the suffix.
+		const bundleSuffix = `.${prepareData?.uniqueBundle}`;
+		if (
+			prepareData?.uniqueBundle &&
+			!packageData.main?.endsWith(bundleSuffix)
+		) {
+			packageData.main = `${packageData.main}${bundleSuffix}`;
 		}
 
 		this.$fs.writeJson(packagePath, packageData);

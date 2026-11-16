@@ -152,7 +152,11 @@ describe("prepareController", () => {
 	});
 
 	describe("writeRuntimePackageJson", () => {
-		const writePackageJson = async (platform: string, release: boolean) => {
+		const writePackageJson = async (
+			platform: string,
+			release: boolean,
+			overrides: { emitted?: any; uniqueBundle?: number } = {},
+		) => {
 			const injector = createTestInjector({ hasNativeChanges: false });
 			let written: any;
 			const prepareController: PrepareController =
@@ -163,7 +167,7 @@ describe("prepareController", () => {
 					readConfig: () => ({}),
 				},
 				$fs: {
-					readJson: () => ({}),
+					readJson: () => overrides.emitted ?? {},
 					writeJson: (filePath: string, data: any) => {
 						written = data;
 					},
@@ -172,11 +176,29 @@ describe("prepareController", () => {
 			await prepareController.writeRuntimePackageJson(
 				<any>{ projectDir, projectName: "app", packageJsonData: {} },
 				<any>{ platformNameLowerCase: platform, projectRoot: projectDir },
-				<any>{ ...prepareData, release },
+				<any>{
+					...prepareData,
+					release,
+					uniqueBundle: overrides.uniqueBundle ?? prepareData.uniqueBundle,
+				},
 			);
 
 			return written;
 		};
+
+		it("adds the unique bundle suffix to the emitted main once", async () => {
+			const fresh = await writePackageJson("ios", false, {
+				emitted: { main: "bundle" },
+				uniqueBundle: 123,
+			});
+			assert.equal(fresh.main, "bundle.123");
+
+			const rewritten = await writePackageJson("ios", false, {
+				emitted: { main: "bundle.123" },
+				uniqueBundle: 123,
+			});
+			assert.equal(rewritten.main, "bundle.123");
+		});
 
 		it("asks for the structured log format in iOS debug builds only", async () => {
 			assert.equal((await writePackageJson("ios", false)).logFormat, 1);
