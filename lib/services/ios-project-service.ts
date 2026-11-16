@@ -779,13 +779,13 @@ export class IOSProjectService
 				// 	}
 				// );
 
-				const metadataPath = path.relative(
-					this.$options.hostProjectPath,
-					buildFolderPath,
-				);
-				project.addToOtherLinkerFlags(
+				const metadataPath = path
+					.relative(this.$options.hostProjectPath, buildFolderPath)
+					.replace(/\\/g, "/");
+				this.setHostMetadataLinkerFlag(
+					project,
 					JSON.stringify(
-						`-sectcreate __DATA __TNSMetadata "${metadataPath}/metadata-arm64.bin"`,
+						`-sectcreate __DATA __TNSMetadata "${metadataPath}/metadata-$(CURRENT_ARCH).bin"`,
 					),
 				);
 
@@ -820,7 +820,7 @@ export class IOSProjectService
 
 				this.savePbxProj(project, projectData);
 			} catch (err) {
-				this.$logger.trace(
+				this.$logger.error(
 					"Error adding NativeScript group to host project",
 					err,
 				);
@@ -1970,6 +1970,35 @@ export class IOSProjectService
 				);
 			}
 		}
+	}
+
+	private setHostMetadataLinkerFlag(
+		project: any,
+		flag: string,
+	): void {
+		const configurations = project.pbxXCBuildConfigurationSection();
+		for (const key of Object.keys(configurations || {})) {
+			if (key.endsWith("_comment")) {
+				continue;
+			}
+			const buildSettings = configurations[key]?.buildSettings;
+			if (!buildSettings) {
+				continue;
+			}
+			const ldFlags = buildSettings.OTHER_LDFLAGS;
+			if (Array.isArray(ldFlags)) {
+				buildSettings.OTHER_LDFLAGS = ldFlags.filter(
+					(entry: string) =>
+						!String(entry).includes("-sectcreate __DATA __TNSMetadata"),
+				);
+			} else if (
+				typeof ldFlags === "string" &&
+				ldFlags.includes("-sectcreate __DATA __TNSMetadata")
+			) {
+				delete buildSettings.OTHER_LDFLAGS;
+			}
+		}
+		project.addToOtherLinkerFlags(flag);
 	}
 }
 
