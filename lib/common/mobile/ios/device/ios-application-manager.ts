@@ -189,7 +189,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 			},
 		]);
 
-		const pid: number = (<any>result?.[deviceId]?.[0])?.pid;
+		const pid = result?.[deviceId]?.[0]?.pid;
 		if (appData.waitForDebugger && pid > 0) {
 			this.attachNativeDebugger(appData.appId, pid);
 		}
