@@ -84,8 +84,11 @@ export const IOS_LOG_FORMAT = 1;
 // "[ns <id> <index>/<count>] <piece>". The id is unique per message in the
 // process, and the pieces are consecutive slices of the message. A piece of
 // nothing but whitespace arrives as the bare header: the unified log strips
-// whitespace from the end of every entry.
-export const IOS_LOG_PIECE_HEADER = /^\[ns ([0-9a-f]+) (\d+)\/(\d+)\](?: |$)/;
+// whitespace from the end of every entry. The runtime writes ids of at most 8
+// hex digits and counts of at most 7 decimal ones, so anything longer is text
+// that only looks like a header.
+export const IOS_LOG_PIECE_HEADER =
+	/^\[ns ([0-9a-f]{1,8}) (\d{1,7})\/(\d{1,7})\](?: |$)/;
 
 // Where a piece that never arrived belongs; os_log marks truncated text alike.
 const LOST_PIECE = "<…lost…>";
@@ -97,8 +100,9 @@ const PIECE_WAIT_MS = 500;
 
 interface IPendingLogMessage {
 	entry: Mobile.IiOSLogEntry;
-	pieces: string[];
-	received: number;
+	count: number;
+	// By index; the count comes from the log, so it is never preallocated.
+	pieces: Map<number, string>;
 	timer: NodeJS.Timeout;
 }
 
@@ -127,48 +131,59 @@ export class IOSLogChunkStitcher {
 
 		const key = `${source}:${header[1]}`;
 		let message = this.pending.get(key);
-		if (!message || message.pieces.length !== count) {
-			message = {
-				entry,
-				pieces: new Array(count),
-				received: 0,
-				timer: null,
-			};
+		if (message && message.count !== count) {
+			this.finish(key, message, emit);
+			message = undefined;
+		}
+		if (!message) {
+			message = { entry, count, pieces: new Map(), timer: null };
 			this.pending.set(key, message);
 		}
-		if (message.pieces[index] === undefined) {
-			message.pieces[index] = entry.message.slice(header[0].length);
-			message.received++;
+		if (!message.pieces.has(index)) {
+			message.pieces.set(index, entry.message.slice(header[0].length));
 		}
 		if (index === 0) {
 			message.entry = entry;
 		}
 
 		clearTimeout(message.timer);
-		const finish = () => {
-			this.pending.delete(key);
-			emit({ ...message.entry, message: joinPieces(message) });
-		};
-		if (message.received === count) {
-			finish();
+		if (message.pieces.size === count) {
+			this.finish(key, message, emit);
 			return;
 		}
 
-		message.timer = setTimeout(finish, PIECE_WAIT_MS);
+		const pending = message;
+		message.timer = setTimeout(
+			() => this.finish(key, pending, emit),
+			PIECE_WAIT_MS,
+		);
 		message.timer.unref();
+	}
+
+	private finish(
+		key: string,
+		message: IPendingLogMessage,
+		emit: (entry: Mobile.IiOSLogEntry) => void,
+	): void {
+		clearTimeout(message.timer);
+		this.pending.delete(key);
+		emit({ ...message.entry, message: joinPieces(message) });
 	}
 }
 
 function joinPieces(message: IPendingLogMessage): string {
 	let text = "";
-	for (let i = 0; i < message.pieces.length; i++) {
-		if (message.pieces[i] === undefined) {
-			if (!text.endsWith(LOST_PIECE)) {
-				text += LOST_PIECE;
-			}
-			continue;
+	let next = 0;
+	const indexes = [...message.pieces.keys()].sort((a, b) => a - b);
+	for (const index of indexes) {
+		if (index > next) {
+			text += LOST_PIECE;
 		}
-		text += message.pieces[i];
+		text += message.pieces.get(index);
+		next = index + 1;
+	}
+	if (next < message.count) {
+		text += LOST_PIECE;
 	}
 	return text;
 }

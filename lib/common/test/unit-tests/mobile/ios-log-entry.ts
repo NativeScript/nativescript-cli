@@ -225,9 +225,48 @@ describe("IOSLogChunkStitcher", () => {
 	it("passes through text that only looks like a header", () => {
 		add("[ns 8 3/2] CONSOLE LOG: x");
 		add("[ns zz 1/2] CONSOLE LOG: y");
+		add("[ns 8 0/2] CONSOLE LOG: z");
 		assert.deepEqual(messages, [
 			"[ns 8 3/2] CONSOLE LOG: x",
 			"[ns zz 1/2] CONSOLE LOG: y",
+			"[ns 8 0/2] CONSOLE LOG: z",
+		]);
+	});
+
+	it("passes through headers with more digits than the runtime writes", () => {
+		add("[ns 1 1/9999999999] x");
+		add("[ns 1 1/12345678] x");
+		add("[ns 12345678 1/12345678] x");
+		add("[ns 123456789 1/2] x");
+		assert.deepEqual(messages, [
+			"[ns 1 1/9999999999] x",
+			"[ns 1 1/12345678] x",
+			"[ns 12345678 1/12345678] x",
+			"[ns 123456789 1/2] x",
+		]);
+	});
+
+	it("handles the largest count the runtime writes", () => {
+		add("[ns ffffffff 9999999/9999999] last");
+		assert.isEmpty(messages);
+		clock.tick(500);
+		assert.deepEqual(messages, ["<…lost…>last"]);
+	});
+
+	it("prints a message at once when its id starts over with another count", () => {
+		add("[ns 3 1/2] CONSOLE LOG: old");
+		clock.tick(300);
+		add("[ns 3 1/3] CONSOLE LOG: new");
+		assert.deepEqual(messages, ["CONSOLE LOG: old<…lost…>"]);
+
+		clock.tick(300);
+		add("[ns 3 2/3] b");
+		clock.tick(100);
+		add("[ns 3 3/3] c");
+		clock.tick(1000);
+		assert.deepEqual(messages, [
+			"CONSOLE LOG: old<…lost…>",
+			"CONSOLE LOG: newbc",
 		]);
 	});
 });
