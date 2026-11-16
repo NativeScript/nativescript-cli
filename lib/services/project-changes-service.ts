@@ -109,7 +109,9 @@ export class ProjectChangesService implements IProjectChangesService {
 			this.$nodeModulesDependenciesBuilder
 				.getProductionDependencies(
 					projectData.projectDir,
-					projectData.ignoredDependencies
+					projectData.getIgnoredDependencies(
+						platformData.platformNameLowerCase,
+					)
 				)
 				.filter(
 					(dep) =>
