@@ -39,7 +39,8 @@ import {
 } from "./stubs";
 import { xcode } from "../lib/node/xcode";
 import { mkdtempSync } from "fs";
-import { tmpdir } from "os";
+import { tmpdir, userInfo } from "os";
+import * as plist from "plist";
 import * as path from "path";
 import { CocoaPodsPlatformManager } from "../lib/services/cocoapods-platform-manager";
 import { XcodebuildService } from "../lib/services/ios/xcodebuild-service";
@@ -406,6 +407,9 @@ describeOnMacOS("Cocoapods support", () => {
 			const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
 
 			const testInjector = createTestInjector(projectPath, projectName);
+			// Keeps the expected Podfile to the plugin's own section.
+			testInjector.resolve("iOSProjectService").getCompilationCacheSettings =
+				(): null => null;
 			const fs: IFileSystem = testInjector.resolve("fs");
 
 			const packageJsonData = {
@@ -516,6 +520,9 @@ describeOnMacOS("Cocoapods support", () => {
 			const projectPath = mkdtempSync(path.join(tmpdir(), `${projectName}-`));
 
 			const testInjector = createTestInjector(projectPath, projectName);
+			// Keeps the expected Podfile to the plugin's own section.
+			testInjector.resolve("iOSProjectService").getCompilationCacheSettings =
+				(): null => null;
 			const fs: IFileSystem = testInjector.resolve("fs");
 
 			const packageJsonData = {
@@ -1392,7 +1399,7 @@ describeOnMacOS("Merge Project XCConfig files", () => {
 		});
 	});
 
-	it("creates empty plugins-<config>.xcconfig in case there are no build.xcconfig in App_Resources and in plugins", async () => {
+	it("creates plugins-<config>.xcconfig with only the compilation cache settings when there are no build.xcconfig in App_Resources and in plugins", async () => {
 		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
 
 		const destinationFilePaths =
@@ -1403,9 +1410,48 @@ describeOnMacOS("Merge Project XCConfig files", () => {
 				fs.exists(destinationFilePath),
 				`Target build xcconfig ${destinationFilePath} is missing.`,
 			);
-			const content = fs.readFile(destinationFilePath).toString();
-			assert.equal(content, "");
+			assert.equal(
+				xcconfigService.readPropertyValue(
+					destinationFilePath,
+					"COMPILATION_CACHE_ENABLE_CACHING",
+				),
+				"YES",
+			);
+			assert.equal(
+				xcconfigService.readPropertyValue(
+					destinationFilePath,
+					"COMPILATION_CACHE_CAS_PATH",
+				),
+				path.join(
+					projectData.platformsDir,
+					".cache",
+					"ios",
+					"CompilationCache",
+				),
+			);
 		});
+	});
+
+	it("lets the app's build.xcconfig turn compilation caching off", async () => {
+		fs.writeFile(
+			appResourcesXcconfigPath,
+			"COMPILATION_CACHE_ENABLE_CACHING = NO",
+		);
+
+		await (<any>iOSProjectService).mergeProjectXcconfigFiles(projectData);
+
+		_.each(
+			xcconfigService.getPluginsXcconfigFilePaths(projectRoot),
+			(destinationFilePath) => {
+				assert.equal(
+					xcconfigService.readPropertyValue(
+						destinationFilePath,
+						"COMPILATION_CACHE_ENABLE_CACHING",
+					),
+					"NO",
+				);
+			},
+		);
 	});
 });
 
@@ -1439,6 +1485,85 @@ describe("handleNativeDependenciesChange", () => {
 			"podInstall",
 			"podMerge",
 		]);
+	});
+});
+
+describe("workspace DerivedData location", () => {
+	const projectName = "myTestProjectName";
+	const settingsFile = (workspacePath: string) =>
+		path.join(
+			workspacePath,
+			"xcuserdata",
+			`${userInfo().username}.xcuserdatad`,
+			"WorkspaceSettings.xcsettings",
+		);
+
+	function setup() {
+		const dir = mkdtempSync(path.join(tmpdir(), "derivedDataLocation-"));
+		const testInjector = createTestInjector(dir, projectName);
+		const iOSProjectService = testInjector.resolve("iOSProjectService");
+		const projectData = testInjector.resolve("projectData");
+		const platformData = iOSProjectService.getPlatformData(projectData);
+		const fs: IFileSystem = testInjector.resolve("fs");
+		const xcodeprojPath = path.join(
+			platformData.projectRoot,
+			`${projectName}.xcodeproj`,
+		);
+		fs.createDirectory(xcodeprojPath);
+		const writeSettings = () =>
+			iOSProjectService.ensureWorkspaceDerivedDataLocation(
+				projectData,
+				platformData,
+			);
+		return { fs, platformData, xcodeprojPath, writeSettings };
+	}
+
+	it("points the project and pods workspaces at the CLI's DerivedData folder", () => {
+		const { fs, platformData, xcodeprojPath, writeSettings } = setup();
+		const podsWorkspacePath = path.join(
+			platformData.projectRoot,
+			`${projectName}.xcworkspace`,
+		);
+		fs.createDirectory(podsWorkspacePath);
+
+		writeSettings();
+
+		const projectWorkspacePath = path.join(
+			xcodeprojPath,
+			"project.xcworkspace",
+		);
+		assert.isTrue(
+			fs.exists(path.join(projectWorkspacePath, "contents.xcworkspacedata")),
+		);
+		for (const workspacePath of [projectWorkspacePath, podsWorkspacePath]) {
+			assert.deepStrictEqual(
+				plist.parse(fs.readText(settingsFile(workspacePath))),
+				{
+					DerivedDataLocationStyle: "WorkspaceRelativePath",
+					DerivedDataCustomLocation: path.join("build", "DerivedData"),
+				},
+			);
+		}
+	});
+
+	it("keeps other workspace settings", () => {
+		const { fs, xcodeprojPath, writeSettings } = setup();
+		const file = settingsFile(path.join(xcodeprojPath, "project.xcworkspace"));
+		fs.writeFile(
+			file,
+			plist.build({
+				DerivedDataLocationStyle: "Default",
+				ShowSharedSchemesAutomaticallyEnabled: true,
+			}),
+		);
+
+		writeSettings();
+
+		assert.deepStrictEqual(plist.parse(fs.readText(file)), {
+			DerivedDataLocationStyle: "WorkspaceRelativePath",
+			DerivedDataCustomLocation: path.join("build", "DerivedData"),
+			ShowSharedSchemesAutomaticallyEnabled: true,
+		});
 	});
 });
 
