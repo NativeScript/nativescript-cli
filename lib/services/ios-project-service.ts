@@ -1976,14 +1976,17 @@ export class IOSProjectService
 		project: any,
 		flag: string,
 	): void {
-		const stripMetadataDirective = (value: string): string =>
-			value
+		const stripMetadataDirective = (value: string): string => {
+			const stripped = value
 				.replace(
-					/-sectcreate\s+__DATA\s+__TNSMetadata\s+(?:\\?"[^"]*\\?"|\S+)/g,
+					/-sectcreate\s+__DATA\s+__TNSMetadata\s+(?:\\?"[^"]*\\?"|[^\s"]+)/g,
 					"",
-				)
-				.replace(/\s{2,}/g, " ")
-				.trim();
+				);
+			if (stripped === value) {
+				return value;
+			}
+			return stripped.replace(/\s{2,}/g, " ").trim();
+		};
 
 		const configurations = project.pbxXCBuildConfigurationSection();
 		for (const key of Object.keys(configurations || {})) {
