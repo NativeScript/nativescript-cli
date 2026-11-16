@@ -8,7 +8,7 @@ class FakeLldb extends EventEmitter {
 	public input: string[] = [];
 	public exitCode: number = null;
 	public signalCode: string = null;
-	public killed = false;
+	public signals: string[] = [];
 	public stdout = new EventEmitter();
 	public stderr = new EventEmitter();
 	public stdin = Object.assign(new EventEmitter(), {
@@ -29,13 +29,16 @@ class FakeLldb extends EventEmitter {
 	constructor(
 		private exitsOnEnd: boolean,
 		private events: string[],
+		private exitsOnSignals: string[],
 	) {
 		super();
 	}
 
-	public kill() {
-		this.killed = true;
-		this.exit();
+	public kill(signal: string) {
+		this.signals.push(signal);
+		if (this.exitsOnSignals.includes(signal)) {
+			setImmediate(() => this.exit());
+		}
 	}
 
 	private exit() {
@@ -56,7 +59,11 @@ describe("IOSApplicationManager native debugger", () => {
 		clock = undefined;
 	});
 
-	const setup = (pid?: number, lldbExitsOnEnd = true) => {
+	const setup = (
+		pid?: number,
+		lldbExitsOnEnd = true,
+		lldbExitsOnSignals = ["SIGTERM", "SIGKILL"],
+	) => {
 		const events: string[] = [];
 		const lldbs: FakeLldb[] = [];
 		const spawned: { args: string[]; options: any }[] = [];
@@ -87,7 +94,7 @@ describe("IOSApplicationManager native debugger", () => {
 			{
 				spawn: (command: string, args: string[], options: any) => {
 					spawned.push({ args: [command, ...args], options });
-					const lldb = new FakeLldb(lldbExitsOnEnd, events);
+					const lldb = new FakeLldb(lldbExitsOnEnd, events, lldbExitsOnSignals);
 					lldbs.push(lldb);
 					return lldb;
 				},
@@ -222,7 +229,7 @@ describe("IOSApplicationManager native debugger", () => {
 
 		assert.include(lldbs[0].input[lldbs[0].input.length - 1], "process detach");
 		assert.deepEqual(events, ["lldb exit", "stop"]);
-		assert.isFalse(lldbs[0].killed);
+		assert.deepEqual(lldbs[0].signals, []);
 	});
 
 	it("kills lldb when it doesn't exit after detaching", async () => {
@@ -238,8 +245,35 @@ describe("IOSApplicationManager native debugger", () => {
 		await clock.tickAsync(60000);
 		await stopped;
 
-		assert.isTrue(lldbs[0].killed);
+		assert.deepEqual(lldbs[0].signals, ["SIGTERM"]);
 		assert.deepEqual(events, ["lldb exit", "stop"]);
+	});
+
+	it("force-kills lldb when it ignores SIGTERM", async () => {
+		clock = sinon.useFakeTimers();
+		const { manager, lldbs, events } = setup(42, false, ["SIGKILL"]);
+
+		await manager.restartApplication(debugBrk);
+		events.length = 0;
+		const stopped = manager.stopApplication(appData);
+		await clock.tickAsync(60000);
+		await stopped;
+
+		assert.deepEqual(lldbs[0].signals, ["SIGTERM", "SIGKILL"]);
+		assert.deepEqual(events, ["lldb exit", "stop"]);
+	});
+
+	it("stops the app even when lldb never exits", async () => {
+		clock = sinon.useFakeTimers();
+		const { manager, events } = setup(42, false, []);
+
+		await manager.restartApplication(debugBrk);
+		events.length = 0;
+		const stopped = manager.stopApplication(appData);
+		await clock.tickAsync(60000);
+		await stopped;
+
+		assert.deepEqual(events, ["stop"]);
 	});
 
 	it("detaches before launching the app without waiting for the debugger", async () => {

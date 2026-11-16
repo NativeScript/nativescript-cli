@@ -269,18 +269,36 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		delete this.lldbProcesses[appId];
 
 		if (lldb.pid && lldb.exitCode === null && lldb.signalCode === null) {
-			let timer: NodeJS.Timeout;
-			await new Promise<void>((resolve) => {
-				timer = setTimeout(() => {
-					this.$logger.trace("lldb did not exit in time, killing it");
-					lldb.kill();
-					resolve();
-				}, IOSApplicationManager.LLDB_EXIT_TIMEOUT);
-				lldb.once("exit", () => resolve());
-				lldb.stdin?.end("process detach\nquit\n");
-			});
-			clearTimeout(timer);
+			const exited = new Promise<void>((resolve) =>
+				lldb.once("exit", () => resolve())
+			);
+			lldb.stdin?.end("process detach\nquit\n");
+			for (const signal of [null, "SIGTERM", "SIGKILL"] as const) {
+				if (signal) {
+					this.$logger.trace(
+						`lldb did not exit in time, sending ${signal}`
+					);
+					lldb.kill(signal);
+				}
+				const timeout = IOSApplicationManager.LLDB_EXIT_TIMEOUT;
+				if (await this.exitsWithin(exited, timeout)) {
+					break;
+				}
+			}
 		}
+	}
+
+	private async exitsWithin(
+		exited: Promise<void>,
+		ms: number
+	): Promise<boolean> {
+		let timer: NodeJS.Timeout;
+		const timeout = new Promise<boolean>((resolve) => {
+			timer = setTimeout(() => resolve(false), ms);
+		});
+		const result = await Promise.race([exited.then(() => true), timeout]);
+		clearTimeout(timer);
+		return result;
 	}
 
 	@cache()
