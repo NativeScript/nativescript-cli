@@ -14,6 +14,9 @@ import {
 } from "../../../declarations";
 
 export class IOSApplicationManager extends ApplicationManagerBase {
+	private static readonly LLDB_CONTINUE_TIMEOUT = 10000;
+	private static readonly LLDB_EXIT_TIMEOUT = 3000;
+
 	private applicationsLiveSyncInfos: Mobile.IApplicationInfo[];
 	private lldbProcesses: IDictionary<ChildProcess> = {};
 
@@ -122,7 +125,7 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 		const { appId } = appData;
 
 		await this.device.destroyDebugSocket(appId);
-		this.detachNativeDebugger(appId);
+		await this.detachNativeDebugger(appId);
 
 		const action = () =>
 			this.$iosDeviceOperations.stop([
@@ -178,6 +181,8 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 	private async runApplicationCore(
 		appData: Mobile.IStartApplicationData
 	): Promise<void> {
+		await this.detachNativeDebugger(appData.appId);
+
 		const deviceId = this.device.deviceInfo.identifier;
 		const waitForDebugger = (!!appData.waitForDebugger).toString();
 		const result = await this.$iosDeviceOperations.start([
@@ -197,41 +202,84 @@ export class IOSApplicationManager extends ApplicationManagerBase {
 
 	// iOS kills an app that takes about 20 seconds to launch, which is what waiting
 	// for or pausing in the JS debugger looks like, unless a native debugger is
-	// attached. lldb only knows about devices since Xcode 16; without it the wait
-	// is just limited to those 20 seconds.
+	// attached. An lldb without the `device` commands (believed to need Xcode 16)
+	// can't attach, which limits the wait to those 20 seconds.
 	private attachNativeDebugger(appId: string, pid: number): void {
-		this.detachNativeDebugger(appId);
-
-		const lldb = this.$childProcess.spawn("xcrun", ["lldb"]);
+		// Its own process group keeps Ctrl-C from reaching lldb, which would stop
+		// the app. lldb still exits when the CLI does, as its stdin closes.
+		const lldb = this.$childProcess.spawn("xcrun", ["lldb"], {
+			detached: true,
+		});
 		this.lldbProcesses[appId] = lldb;
 		lldb.on("error", (err: Error) => {
 			this.$logger.trace("Unable to attach lldb to the application", err);
 		});
-		// Attaching stops the app. It can only be continued once that has happened,
-		// and until then it can't answer the JS debugger's attach request.
-		let output = "";
-		lldb.stdout?.on("data", (data: Buffer) => {
-			this.$logger.trace(`${data}`);
-			if (output !== null) {
-				output += data;
-				if (/Process \d+ stopped/.test(output)) {
-					output = null;
-					lldb.stdin?.write("process continue\n");
-				}
-			}
+		lldb.stdin?.on("error", (err: Error) => {
+			this.$logger.trace("Unable to write to lldb", err);
 		});
-		lldb.stderr?.on("data", (data: Buffer) => this.$logger.trace(`${data}`));
+
+		// Attaching stops the app, and until it continues it can't answer the JS
+		// debugger's attach request. The continue is sent once lldb reports the
+		// stop, or after a timeout in case that report never shows up.
+		let settled = false;
+		const continueApp = () => lldb.stdin?.write("process continue\n");
+		const fallback = setTimeout(
+			continueApp,
+			IOSApplicationManager.LLDB_CONTINUE_TIMEOUT
+		);
+		const done = () => {
+			settled = true;
+			clearTimeout(fallback);
+		};
+		lldb.on("close", done);
+		lldb.on("error", done);
+
+		const watch = (stream: NodeJS.ReadableStream) => {
+			let output = "";
+			stream?.on("data", (data: Buffer) => {
+				this.$logger.trace(`${data}`);
+				if (settled) {
+					return;
+				}
+				output += data;
+				const state = /Process \d+ (stopped|resuming)/.exec(output)?.[1];
+				if (state) {
+					done();
+					if (state === "stopped") {
+						continueApp();
+					}
+				}
+			});
+		};
+		watch(lldb.stdout);
+		watch(lldb.stderr);
+
 		lldb.stdin?.write(
 			`device select ${this.device.deviceInfo.identifier}\ndevice process attach -p ${pid}\n`
 		);
 	}
 
-	private detachNativeDebugger(appId: string): void {
+	// Stop the app only once lldb is gone, or lldb intercepts the termination
+	// signal and leaves the app suspended.
+	private async detachNativeDebugger(appId: string): Promise<void> {
 		const lldb = this.lldbProcesses[appId];
-		if (lldb) {
-			delete this.lldbProcesses[appId];
-			lldb.stdin?.write("process detach\nquit\n");
-			lldb.stdin?.end();
+		if (!lldb) {
+			return;
+		}
+		delete this.lldbProcesses[appId];
+
+		if (lldb.pid && lldb.exitCode === null && lldb.signalCode === null) {
+			let timer: NodeJS.Timeout;
+			await new Promise<void>((resolve) => {
+				timer = setTimeout(() => {
+					this.$logger.trace("lldb did not exit in time, killing it");
+					lldb.kill();
+					resolve();
+				}, IOSApplicationManager.LLDB_EXIT_TIMEOUT);
+				lldb.once("exit", () => resolve());
+				lldb.stdin?.end("process detach\nquit\n");
+			});
+			clearTimeout(timer);
 		}
 	}
 
