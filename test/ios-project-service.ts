@@ -1490,4 +1490,56 @@ describe("setHostMetadataLinkerFlag", () => {
 		]);
 		assert.strictEqual(addedFlags.length, 2);
 	});
+
+	it("preserves unrelated linker flags in scalar strings and multi-directive array elements", () => {
+		const dir = mkdtempSync(path.join(tmpdir(), "myTestProjectPath-"));
+		const testInjector = createTestInjector(dir, "myTestProjectName");
+		const iOSProjectService = testInjector.resolve("iOSProjectService");
+
+		const scalarConfig: any = {
+			buildSettings: {
+				PRODUCT_NAME: '"myTestProjectName"',
+				OTHER_LDFLAGS:
+					'$(inherited) -ObjC -sectcreate __DATA __TNSMetadata "app/metadata-arm64.bin" -lHostDep',
+			},
+		};
+		const multiArrayConfig: any = {
+			buildSettings: {
+				PRODUCT_NAME: '"myTestProjectName"',
+				OTHER_LDFLAGS: [
+					'"$(inherited)"',
+					'-ObjC -sectcreate __DATA __TNSMetadata "app/metadata-arm64.bin" -lOther',
+				],
+			},
+		};
+		const mockProject: any = {
+			pbxXCBuildConfigurationSection: () => ({
+				SCALAR: scalarConfig,
+				MULTI: multiArrayConfig,
+			}),
+			addToOtherLinkerFlags: (flag: string) => {
+				for (const cfg of [scalarConfig, multiArrayConfig]) {
+					if (!Array.isArray(cfg.buildSettings.OTHER_LDFLAGS)) {
+						cfg.buildSettings.OTHER_LDFLAGS = ['"$(inherited)"'];
+					}
+					cfg.buildSettings.OTHER_LDFLAGS.push(flag);
+				}
+			},
+		};
+
+		const newFlag = JSON.stringify(
+			'-sectcreate __DATA __TNSMetadata "app/metadata-$(CURRENT_ARCH).bin"',
+		);
+		iOSProjectService.setHostMetadataLinkerFlag(mockProject, newFlag);
+
+		assert.deepStrictEqual(scalarConfig.buildSettings.OTHER_LDFLAGS, [
+			"$(inherited) -ObjC -lHostDep",
+			newFlag,
+		]);
+		assert.deepStrictEqual(multiArrayConfig.buildSettings.OTHER_LDFLAGS, [
+			'"$(inherited)"',
+			"-ObjC -lOther",
+			newFlag,
+		]);
+	});
 });

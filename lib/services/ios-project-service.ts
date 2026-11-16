@@ -1976,6 +1976,15 @@ export class IOSProjectService
 		project: any,
 		flag: string,
 	): void {
+		const stripMetadataDirective = (value: string): string =>
+			value
+				.replace(
+					/-sectcreate\s+__DATA\s+__TNSMetadata\s+(?:\\?"[^"]*\\?"|\S+)/g,
+					"",
+				)
+				.replace(/\s{2,}/g, " ")
+				.trim();
+
 		const configurations = project.pbxXCBuildConfigurationSection();
 		for (const key of Object.keys(configurations || {})) {
 			if (key.endsWith("_comment")) {
@@ -1987,15 +1996,17 @@ export class IOSProjectService
 			}
 			const ldFlags = buildSettings.OTHER_LDFLAGS;
 			if (Array.isArray(ldFlags)) {
-				buildSettings.OTHER_LDFLAGS = ldFlags.filter(
-					(entry: string) =>
-						!String(entry).includes("-sectcreate __DATA __TNSMetadata"),
-				);
-			} else if (
-				typeof ldFlags === "string" &&
-				ldFlags.includes("-sectcreate __DATA __TNSMetadata")
-			) {
-				delete buildSettings.OTHER_LDFLAGS;
+				buildSettings.OTHER_LDFLAGS = ldFlags
+					.map((entry: string) => stripMetadataDirective(String(entry)))
+					.filter((entry: string) => entry.length > 0 && entry !== '""');
+			} else if (typeof ldFlags === "string") {
+				const cleaned = stripMetadataDirective(ldFlags);
+				if (!cleaned || cleaned === '""') {
+					delete buildSettings.OTHER_LDFLAGS;
+				} else if (cleaned !== '"$(inherited)"') {
+					// pbxProject.addToOtherLinkerFlags calls .push(), so convert scalar to array
+					buildSettings.OTHER_LDFLAGS = [cleaned];
+				}
 			}
 		}
 		project.addToOtherLinkerFlags(flag);
