@@ -40,7 +40,7 @@ export function isIOSRuntimeLogEntry(entry: Mobile.IiOSLogEntry): boolean {
 
 // The runtime forwards the app's stdout and stderr under this subsystem, when
 // the CLI asks for it through the forwardStdio key of the app's package.json.
-const STDIO_SUBSYSTEM = "org.nativescript.stdio";
+export const IOS_STDIO_SUBSYSTEM = "org.nativescript.stdio";
 
 // Logged by the runtime itself on every launch, not by the app.
 const RUNTIME_NOISE = ["NativeScript loaded bundle"];
@@ -61,8 +61,10 @@ export function getIOSLogEntryText(
 		return null;
 	}
 
-	if (entry.subsystem === STDIO_SUBSYSTEM) {
-		return options.includeNative ? `${entry.category}: ${entry.message}` : null;
+	if (entry.subsystem === IOS_STDIO_SUBSYSTEM) {
+		return options.includeNative
+			? `${entry.category || "stdout"}: ${entry.message}`
+			: null;
 	}
 
 	const imageName = path.basename(entry.image || "");

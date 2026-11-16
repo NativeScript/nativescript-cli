@@ -122,6 +122,16 @@ describe("getIOSLogEntryText for forwarded stdio", () => {
 		);
 	});
 
+	it("is labeled as stdout when it has no category", () => {
+		assert.equal(
+			getIOSLogEntryText(
+				{ ...entry, category: undefined },
+				{ processName: "app", includeNative: true },
+			),
+			"stdout: printed",
+		);
+	});
+
 	it("is labeled once when a long line was split", () => {
 		const stitcher = new IOSLogChunkStitcher();
 		const printed: string[] = [];
