@@ -6,14 +6,14 @@ export class IPService implements IIPService {
 	private static GET_IP_TIMEOUT = 1000;
 	constructor(
 		private $httpClient: Server.IHttpClient,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	@cache()
 	public async getCurrentIPv4Address(): Promise<string> {
 		const ipAddress =
 			(await this.getIPAddressFromServiceReturningJSONWithIPProperty(
-				"https://api.myip.com"
+				"https://api.myip.com",
 			)) ||
 			(await this.getIPAddressFromIpifyOrgAPI()) ||
 			null;
@@ -22,7 +22,7 @@ export class IPService implements IIPService {
 	}
 
 	private async getIPAddressFromServiceReturningJSONWithIPProperty(
-		apiEndpoint: string
+		apiEndpoint: string,
 	): Promise<string> {
 		let ipAddress: string = null;
 		try {
@@ -39,7 +39,7 @@ export class IPService implements IIPService {
 		} catch (err) {
 			this.$logger.trace(
 				`Unable to get information about current IP Address from ${apiEndpoint} Error is:`,
-				err
+				err,
 			);
 		}
 
@@ -63,7 +63,7 @@ export class IPService implements IIPService {
 		} catch (err) {
 			this.$logger.trace(
 				`Unable to get information about current IP Address from ${ipifyOrgAPIEndpoint} Error is:`,
-				err
+				err,
 			);
 		}
 

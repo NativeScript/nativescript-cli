@@ -120,9 +120,9 @@ export function keyShortcutsEnabled(): boolean {
  * rather than spelled again here.
  */
 export type DevicePlatformName = {
-	[
-		K in keyof Mobile.IDevicePlatformsConstants
-	]: Mobile.IDevicePlatformsConstants[K] extends string ? K : never;
+	[K in keyof Mobile.IDevicePlatformsConstants]: Mobile.IDevicePlatformsConstants[K] extends string
+		? K
+		: never;
 }[keyof Mobile.IDevicePlatformsConstants];
 
 export type KeyProcessType = "start" | "run";

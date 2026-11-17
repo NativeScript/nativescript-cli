@@ -696,7 +696,8 @@ const androidApiLevel23MapForPid8141 = [
 	{
 		input:
 			"07-25 06:37:04.998  8141  8141 W System.err: 	at com.tns.Runtime.callJSMethodNative(Native Method)",
-		output: "System.err: 	at com.tns.Runtime.callJSMethodNative(Native Method)",
+		output:
+			"System.err: 	at com.tns.Runtime.callJSMethodNative(Native Method)",
 	},
 	{
 		input:
@@ -707,7 +708,8 @@ const androidApiLevel23MapForPid8141 = [
 	{
 		input:
 			"07-25 06:37:04.998  8141  8141 W System.err: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:925)",
-		output: "System.err: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:925)",
+		output:
+			"System.err: 	at com.tns.Runtime.callJSMethodImpl(Runtime.java:925)",
 	},
 	{
 		input:

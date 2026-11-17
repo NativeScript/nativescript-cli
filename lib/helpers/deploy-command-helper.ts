@@ -13,12 +13,12 @@ export class DeployCommandHelper {
 		private $devicesService: Mobile.IDevicesService,
 		private $deployController: DeployController,
 		private $options: IOptions,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {}
 
 	public async deploy(
 		platform: string,
-		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions
+		additionalOptions?: ILiveSyncCommandHelperAdditionalOptions,
 	) {
 		const emulator = this.$options.emulator;
 		await this.$devicesService.initialize({
@@ -34,7 +34,7 @@ export class DeployCommandHelper {
 			.filter(
 				(d) =>
 					!platform ||
-					d.deviceInfo.platform.toLowerCase() === platform.toLowerCase()
+					d.deviceInfo.platform.toLowerCase() === platform.toLowerCase(),
 			);
 
 		const deviceDescriptors: ILiveSyncDeviceDescriptor[] = devices.map((d) => {
@@ -59,7 +59,7 @@ export class DeployCommandHelper {
 						skipNativePrepare:
 							additionalOptions && additionalOptions.skipNativePrepare,
 					},
-				}
+				},
 			);
 
 			this.$androidBundleValidatorHelper.validateDeviceApiLevel(d, buildData);
@@ -69,8 +69,8 @@ export class DeployCommandHelper {
 							additionalOptions.buildPlatform,
 							d.deviceInfo.platform,
 							buildData,
-							this.$projectData
-					  )
+							this.$projectData,
+						)
 					: this.$buildController.build.bind(this.$buildController, buildData);
 
 			const info: ILiveSyncDeviceDescriptor = {

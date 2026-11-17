@@ -7,18 +7,18 @@ export class XcodebuildService implements IXcodebuildService {
 	constructor(
 		private $exportOptionsPlistService: IExportOptionsPlistService,
 		private $xcodebuildArgsService: IXcodebuildArgsService,
-		private $xcodebuildCommandService: IXcodebuildCommandService
+		private $xcodebuildCommandService: IXcodebuildCommandService,
 	) {}
 
 	public async buildForDevice(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<string> {
 		const args = await this.$xcodebuildArgsService.getBuildForDeviceArgs(
 			platformData,
 			projectData,
-			buildConfig
+			buildConfig,
 		);
 		await this.$xcodebuildCommandService.executeCommand(args, {
 			cwd: platformData.projectRoot,
@@ -27,7 +27,7 @@ export class XcodebuildService implements IXcodebuildService {
 		const archivePath = await this.createDevelopmentArchive(
 			platformData,
 			projectData,
-			buildConfig
+			buildConfig,
 		);
 		return archivePath;
 	}
@@ -35,12 +35,12 @@ export class XcodebuildService implements IXcodebuildService {
 	public async buildForSimulator(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<void> {
 		const args = await this.$xcodebuildArgsService.getBuildForSimulatorArgs(
 			platformData,
 			projectData,
-			buildConfig
+			buildConfig,
 		);
 		await this.$xcodebuildCommandService.executeCommand(args, {
 			cwd: platformData.projectRoot,
@@ -51,12 +51,12 @@ export class XcodebuildService implements IXcodebuildService {
 	public async buildForAppStore(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<string> {
 		const args = await this.$xcodebuildArgsService.getBuildForDeviceArgs(
 			platformData,
 			projectData,
-			buildConfig
+			buildConfig,
 		);
 		await this.$xcodebuildCommandService.executeCommand(args, {
 			cwd: platformData.projectRoot,
@@ -65,7 +65,7 @@ export class XcodebuildService implements IXcodebuildService {
 		const archivePath = await this.createDistributionArchive(
 			platformData,
 			projectData,
-			buildConfig
+			buildConfig,
 		);
 		return archivePath;
 	}
@@ -73,17 +73,17 @@ export class XcodebuildService implements IXcodebuildService {
 	private async createDevelopmentArchive(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<string> {
 		const archivePath = path.join(
 			platformData.getBuildOutputPath(buildConfig),
-			projectData.projectName + ".xcarchive"
+			projectData.projectName + ".xcarchive",
 		);
 		const output =
 			await this.$exportOptionsPlistService.createDevelopmentExportOptionsPlist(
 				archivePath,
 				projectData,
-				buildConfig
+				buildConfig,
 			);
 		const args = [
 			"-exportArchive",
@@ -105,17 +105,17 @@ export class XcodebuildService implements IXcodebuildService {
 	private async createDistributionArchive(
 		platformData: IPlatformData,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<string> {
 		const archivePath = path.join(
 			platformData.getBuildOutputPath(buildConfig),
-			projectData.projectName + ".xcarchive"
+			projectData.projectName + ".xcarchive",
 		);
 		const output =
 			await this.$exportOptionsPlistService.createDistributionExportOptionsPlist(
 				archivePath,
 				projectData,
-				buildConfig
+				buildConfig,
 			);
 		const provision =
 			buildConfig.provision || buildConfig.mobileProvisionIdentifier;

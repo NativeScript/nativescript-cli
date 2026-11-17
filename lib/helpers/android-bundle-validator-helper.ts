@@ -10,7 +10,8 @@ import { injector } from "../common/yok";
 
 export class AndroidBundleValidatorHelper
 	extends VersionValidatorHelper
-	implements IAndroidBundleValidatorHelper {
+	implements IAndroidBundleValidatorHelper
+{
 	public static MIN_RUNTIME_VERSION = "5.0.0";
 	public static MIN_ANDROID_WITH_AAB_SUPPORT = "4.4.0";
 
@@ -19,7 +20,7 @@ export class AndroidBundleValidatorHelper
 		protected $errors: IErrors,
 		protected $options: IOptions,
 		protected $projectDataService: IProjectDataService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {
 		super();
 	}
@@ -27,7 +28,7 @@ export class AndroidBundleValidatorHelper
 	public validateNoAab(): void {
 		if (this.$options.aab) {
 			this.$errors.failWithHelp(
-				AndroidBundleValidatorMessages.AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE
+				AndroidBundleValidatorMessages.AAB_NOT_SUPPORTED_BY_COMMNAND_MESSAGE,
 			);
 		}
 	}
@@ -36,7 +37,7 @@ export class AndroidBundleValidatorHelper
 		if (this.$options.aab) {
 			const runtimePackage = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				PlatformTypes.android
+				PlatformTypes.android,
 			);
 			const androidRuntimeVersion = runtimePackage
 				? runtimePackage.version
@@ -46,15 +47,15 @@ export class AndroidBundleValidatorHelper
 				this.isValidVersion(androidRuntimeVersion) &&
 				this.isVersionLowerThan(
 					androidRuntimeVersion,
-					AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION
+					AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION,
 				);
 
 			if (shouldThrowError) {
 				this.$errors.fail(
 					util.format(
 						AndroidBundleValidatorMessages.NOT_SUPPORTED_RUNTIME_VERSION,
-						AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION
-					)
+						AndroidBundleValidatorHelper.MIN_RUNTIME_VERSION,
+					),
 				);
 			}
 		}
@@ -62,7 +63,7 @@ export class AndroidBundleValidatorHelper
 
 	public validateDeviceApiLevel(
 		device: Mobile.IDevice,
-		buildData: IBuildData
+		buildData: IBuildData,
 	): void {
 		if (this.$mobileHelper.isAndroidPlatform(device.deviceInfo.platform)) {
 			const androidBuildData = <IAndroidBuildData>buildData;
@@ -71,7 +72,7 @@ export class AndroidBundleValidatorHelper
 					!!device.deviceInfo.version &&
 					semver.lt(
 						semver.coerce(device.deviceInfo.version),
-						AndroidBundleValidatorHelper.MIN_ANDROID_WITH_AAB_SUPPORT
+						AndroidBundleValidatorHelper.MIN_ANDROID_WITH_AAB_SUPPORT,
 					)
 				) {
 					this.$errors.fail(
@@ -79,8 +80,8 @@ export class AndroidBundleValidatorHelper
 							AndroidBundleValidatorMessages.NOT_SUPPORTED_ANDROID_VERSION,
 							device.deviceInfo.identifier,
 							device.deviceInfo.version,
-							AndroidBundleValidatorHelper.MIN_ANDROID_WITH_AAB_SUPPORT
-						)
+							AndroidBundleValidatorHelper.MIN_ANDROID_WITH_AAB_SUPPORT,
+						),
 					);
 				}
 			}

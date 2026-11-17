@@ -47,7 +47,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 	private get $platformsDataService(): IPlatformsDataService {
 		return this.$injector.resolve<IPlatformsDataService>(
-			"platformsDataService"
+			"platformsDataService",
 		);
 	}
 	constructor(
@@ -56,13 +56,13 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		private $injector: IInjector,
 		private $options: IOptions,
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {
 		this.getProjectData = _.memoize(
-			this.$projectDataService.getProjectData.bind(this.$projectDataService)
+			this.$projectDataService.getProjectData.bind(this.$projectDataService),
 		);
 		this.getRuntimeVersion = _.memoize(this.getRuntimeVersionCore, (...args) =>
-			args.join(LogSourceMapService.MEMOIZE_FUNCTION_RANDOM_KEY_FOR_JOIN)
+			args.join(LogSourceMapService.MEMOIZE_FUNCTION_RANDOM_KEY_FOR_JOIN),
 		);
 	}
 
@@ -75,7 +75,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 				// Skip files bigger than 50MB
 				if (this.$fs.getFileSize(filePath) > 50 * 1000 * 1000) {
 					this.$logger.trace(
-						`Skipping source map for file ${filePath} because it is too big (> 50MB).`
+						`Skipping source map for file ${filePath} because it is too big (> 50MB).`,
 					);
 					return;
 				}
@@ -86,9 +86,9 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 						source,
 						(filename) => {
 							return this.$fs.readText(
-								path.join(path.dirname(filePath), filename)
+								path.join(path.dirname(filePath), filename),
 							);
-						}
+						},
 					);
 				} else {
 					sourceMapRaw = sourceMapConverter.fromSource(source);
@@ -105,7 +105,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			}
 		} catch (err) {
 			this.$logger.trace(
-				`Unable to set sourceMapConsumer for file ${filePath}. Error is: ${err}`
+				`Unable to set sourceMapConsumer for file ${filePath}. Error is: ${err}`,
 			);
 		}
 	}
@@ -113,7 +113,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	public replaceWithOriginalFileLocations(
 		platform: string,
 		messageData: string,
-		loggingOptions: Mobile.IDeviceLogOptions
+		loggingOptions: Mobile.IDeviceLogOptions,
 	): string {
 		if (!messageData || !loggingOptions || !loggingOptions.projectDir) {
 			return messageData;
@@ -134,13 +134,13 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			const originalLocation = this.getOriginalFileLocation(
 				platform,
 				parsedLine,
-				projectData
+				projectData,
 			);
 
 			if (originalLocation && originalLocation.sourceFile) {
 				const runtimeVersion = this.getRuntimeVersion(
 					loggingOptions.projectDir,
-					platform
+					platform,
 				);
 				const { sourceFile, line, column } = originalLocation;
 				if (
@@ -148,7 +148,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 					semver.gte(semver.coerce(runtimeVersion), "6.1.0")
 				) {
 					const lastIndexOfFile = rawLine.lastIndexOf(
-						LogSourceMapService.FILE_PREFIX
+						LogSourceMapService.FILE_PREFIX,
 					);
 					const firstPart = rawLine.substr(0, lastIndexOfFile);
 
@@ -158,7 +158,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 							.substring(lastIndexOfFile)
 							.replace(
 								/file:\/\/\/.+?:\d+:\d+/,
-								`${LogSourceMapService.FILE_PREFIX_REPLACEMENT}${sourceFile}:${line}:${column}`
+								`${LogSourceMapService.FILE_PREFIX_REPLACEMENT}${sourceFile}:${line}:${column}`,
 							) +
 						"\n";
 				} else {
@@ -178,17 +178,17 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 			const projectData = this.getProjectData(projectDir);
 			const platformData = this.$platformsDataService.getPlatformData(
 				platform,
-				projectData
+				projectData,
 			);
 			const runtimeVersionData = this.$projectDataService.getRuntimePackage(
 				projectData.projectDir,
-				<PlatformTypes>platformData.platformNameLowerCase
+				<PlatformTypes>platformData.platformNameLowerCase,
 			);
 			runtimeVersion = runtimeVersionData && runtimeVersionData.version;
 		} catch (err) {
 			this.$logger.trace(
 				`Unable to get runtime version for project directory: ${projectDir} and platform ${platform}. Error is: `,
-				err
+				err,
 			);
 		}
 
@@ -198,11 +198,11 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 	private getOriginalFileLocation(
 		platform: string,
 		parsedLine: IParsedMessage,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): IFileLocation {
 		const fileLocation = path.join(
 			this.getFilesLocation(platform, projectData),
-			this.$options.hostProjectModuleName
+			this.$options.hostProjectModuleName,
 		);
 
 		if (parsedLine && parsedLine.filePath) {
@@ -236,7 +236,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 						});
 						if (
 							this.$fs.exists(
-								path.join(projectData.projectDir, platformSpecificFile)
+								path.join(projectData.projectDir, platformSpecificFile),
 							)
 						) {
 							this.originalFilesLocationCache[sourceFile] =
@@ -258,14 +258,14 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 	private parseAndroidLog(
 		projectData: IProjectData,
-		rawMessage: string
+		rawMessage: string,
 	): IParsedMessage {
 		// "JS: at module.exports.push../main-view-model.ts.HelloWorldModel.onTap (file:///data/data/org.nativescript.sourceMap/files/app/bundle.js:303:17)"
 		// "System.err: File: "file:///data/data/org.nativescript.sourceMap/files/app/bundle.js, line: 304, column: 8"
 		const fileIndex = rawMessage.lastIndexOf(LogSourceMapService.FILE_PREFIX);
 		const deviceProjectPath = util.format(
 			ANDROID_DEVICE_APP_ROOT_TEMPLATE,
-			projectData.projectIdentifiers.android
+			projectData.projectIdentifiers.android,
 		);
 		let separator = ",";
 		let messageSuffix = "";
@@ -273,7 +273,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 		if (fileIndex >= 0) {
 			const fileSubstring = rawMessage.substring(
-				fileIndex + LogSourceMapService.FILE_PREFIX.length
+				fileIndex + LogSourceMapService.FILE_PREFIX.length,
 			);
 			//"data/data/org.nativescript.sourceMap/files/app/bundle.js, line: 304, column: 8"
 			parts = fileSubstring.split(separator);
@@ -320,7 +320,7 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 		if (fileIndex >= 0) {
 			// "app/vendor.js:131:36: HMR: Hot Module Replacement Enabled. Waiting for signal."
 			const fileSubstring = rawMessage.substring(
-				fileIndex + LogSourceMapService.FILE_PREFIX.length
+				fileIndex + LogSourceMapService.FILE_PREFIX.length,
 			);
 			parts = fileSubstring.split(":");
 
@@ -345,12 +345,12 @@ export class LogSourceMapService implements Mobile.ILogSourceMapService {
 
 	private getFilesLocation(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		try {
 			const platformsData = this.$platformsDataService.getPlatformData(
 				platform.toLowerCase(),
-				projectData
+				projectData,
 			);
 			return platformsData.appDestinationDirectoryPath;
 		} catch (err) {

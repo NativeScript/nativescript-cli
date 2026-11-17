@@ -17,7 +17,7 @@ export class PerformanceService implements IPerformanceService {
 		private $options: IOptions,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $analyticsService: IAnalyticsService
+		private $analyticsService: IAnalyticsService,
 	) {
 		if (this.isPerformanceModuleSupported()) {
 			this.performance = require("perf_hooks").performance;
@@ -28,7 +28,7 @@ export class PerformanceService implements IPerformanceService {
 		methodInfo: string,
 		startTime: number,
 		endTime: number,
-		args: any[]
+		args: any[],
 	): void {
 		const executionTime = Math.floor(endTime - startTime);
 
@@ -39,13 +39,13 @@ export class PerformanceService implements IPerformanceService {
 				this.$options.performance,
 				methodInfo,
 				executionTime,
-				args
+				args,
 			);
 		} else if (this.$options.performance) {
 			this.$logger.info(
 				PerformanceService.LOG_MESSAGE_TEMPLATE,
 				methodInfo,
-				executionTime
+				executionTime,
 			);
 		}
 	}
@@ -61,7 +61,7 @@ export class PerformanceService implements IPerformanceService {
 	private isPerformanceModuleSupported(): boolean {
 		return semver.gte(
 			process.version,
-			PerformanceService.MIN_NODE_PERFORMANCE_MODULE_VERSION
+			PerformanceService.MIN_NODE_PERFORMANCE_MODULE_VERSION,
 		);
 	}
 
@@ -81,7 +81,7 @@ export class PerformanceService implements IPerformanceService {
 		filePath: string,
 		methodInfo: string,
 		executionTime: number,
-		args: any[]
+		args: any[],
 	) {
 		let methodArgs;
 
@@ -103,12 +103,12 @@ export class PerformanceService implements IPerformanceService {
 		} catch (e) {
 			this.$logger.trace(
 				PerformanceService.FAIL_LOG_MESSAGE_TEMPLATE,
-				methodInfo
+				methodInfo,
 			);
 			this.$logger.info(
 				PerformanceService.LOG_MESSAGE_TEMPLATE,
 				methodInfo,
-				executionTime
+				executionTime,
 			);
 		}
 	}

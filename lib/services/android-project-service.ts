@@ -772,7 +772,7 @@ export class AndroidProjectService
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME,
 		);
-		let nativeDependencyData = dependencies.filter(
+		const nativeDependencyData = dependencies.filter(
 			AndroidProjectService.isNativeAndroidDependency,
 		);
 

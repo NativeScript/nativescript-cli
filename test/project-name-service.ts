@@ -14,9 +14,7 @@ const mockProjectNameValidator = {
 const dummyString: string = "dummyString";
 
 function createTestInjector(): IInjector {
-	let testInjector: IInjector;
-
-	testInjector = new Yok();
+	const testInjector: IInjector = new Yok();
 	testInjector.register("projectNameService", ProjectNameService);
 	testInjector.register("projectNameValidator", mockProjectNameValidator);
 	testInjector.register("errors", ErrorsStub);

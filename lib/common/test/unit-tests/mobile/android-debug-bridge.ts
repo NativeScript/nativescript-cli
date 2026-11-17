@@ -51,14 +51,14 @@ describe("androidDebugBridge", () => {
 		});
 		injector.register(
 			"androidDebugBridgeResultHandler",
-			AndroidDebugBridgeResultHandler
+			AndroidDebugBridgeResultHandler,
 		);
 		injector.register("childProcess", {
 			spawnFromEvent: async (
 				command: string,
 				args: string[],
 				event: string,
-				opts?: any
+				opts?: any,
 			): Promise<ISpawnResult> => {
 				isAdbSpawnedFromEvent = command.indexOf(adbPath) !== -1;
 				spawnedArgs = args;
@@ -75,7 +75,7 @@ describe("androidDebugBridge", () => {
 			spawn: async (
 				command: string,
 				args?: string[],
-				opts?: any
+				opts?: any,
 			): Promise<any> => {
 				isAdbSpawnedFromChildProcess = command.indexOf(adbPath) !== -1;
 				spawnedArgs = args;
@@ -230,11 +230,11 @@ describe("androidDebugBridge", () => {
 			assert.deepStrictEqual(
 				result,
 				[],
-				"When adb get devices fail, getDevicesSafe must return empty array"
+				"When adb get devices fail, getDevicesSafe must return empty array",
 			);
 			assert.isTrue(
 				logger.traceOutput.indexOf("Getting adb devices failed with error") !==
-					-1
+					-1,
 			);
 		});
 	});

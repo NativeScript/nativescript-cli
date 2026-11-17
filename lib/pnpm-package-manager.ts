@@ -99,7 +99,7 @@ export class PnpmPackageManager extends BasePackageManager {
 	}
 
 	@exported("pnpm")
-	public async view(packageName: string, config: Object): Promise<any> {
+	public async view(packageName: string, config: object): Promise<any> {
 		const wrappedConfig = _.extend({}, config, { json: true });
 
 		const flags = this.getFlagsString(wrappedConfig, false);

@@ -26,7 +26,8 @@ import { injector } from "../common/yok";
 
 export class IOSDeviceDebugService
 	extends DebugServiceBase
-	implements IDeviceDebugService {
+	implements IDeviceDebugService
+{
 	private deviceIdentifier: string;
 
 	constructor(
@@ -38,12 +39,12 @@ export class IOSDeviceDebugService
 		private $errors: IErrors,
 		private $packageInstallationManager: IPackageInstallationManager,
 		private $appDebugSocketProxyFactory: IAppDebugSocketProxyFactory,
-		private $projectDataService: IProjectDataService
+		private $projectDataService: IProjectDataService,
 	) {
 		super(device, $devicesService);
 		this.$appDebugSocketProxyFactory.on(
 			CONNECTION_ERROR_EVENT_NAME,
-			(e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e)
+			(e: Error) => this.emit(CONNECTION_ERROR_EVENT_NAME, e),
 		);
 		this.deviceIdentifier = this.device.deviceInfo.identifier;
 	}
@@ -55,7 +56,7 @@ export class IOSDeviceDebugService
 	@performanceLog()
 	public async debug(
 		debugData: IDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<IDebugResultInfo> {
 		await this.validateOptions(debugOptions);
 		const result: IDebugResultInfo = { debugUrl: null };
@@ -72,13 +73,13 @@ export class IOSDeviceDebugService
 	private async validateOptions(debugOptions: IDebugOptions) {
 		if (!this.$hostInfo.isWindows && !this.$hostInfo.isDarwin) {
 			this.$errors.fail(
-				`Debugging on iOS devices is not supported for ${platform()} yet.`
+				`Debugging on iOS devices is not supported for ${platform()} yet.`,
 			);
 		}
 
 		if (debugOptions.debugBrk && debugOptions.start) {
 			this.$errors.fail(
-				"Expected exactly one of the --debug-brk or --start options."
+				"Expected exactly one of the --debug-brk or --start options.",
 			);
 		}
 
@@ -97,7 +98,7 @@ export class IOSDeviceDebugService
 				.map((type) => DeviceConnectionType[type])
 				.join(", ");
 			this.$errors.fail(
-				`Debugging application requires a USB or LOCAL connection while the target device "${this.deviceIdentifier}" has connection type "${deviceConnectionTypes}".`
+				`Debugging application requires a USB or LOCAL connection while the target device "${this.deviceIdentifier}" has connection type "${deviceConnectionTypes}".`,
 			);
 		}
 	}
@@ -106,7 +107,7 @@ export class IOSDeviceDebugService
 		let projectName = debugData.projectName;
 		if (!projectName && debugData.projectDir) {
 			const projectData = this.$projectDataService.getProjectData(
-				debugData.projectDir
+				debugData.projectDir,
 			);
 			projectName = projectData.projectName;
 		}
@@ -126,7 +127,7 @@ export class IOSDeviceDebugService
 	@performanceLog()
 	private async wireDebuggerClient(
 		debugData: IDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<string> {
 		if (
 			(debugOptions.inspector || !debugOptions.client) &&
@@ -140,32 +141,33 @@ export class IOSDeviceDebugService
 
 	private async setupWebAppDebugProxy(
 		debugOptions: IDebugOptions,
-		debugData: IDebugData
+		debugData: IDebugData,
 	): Promise<string> {
 		if (debugOptions.chrome) {
 			this.$logger.info(
-				"'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector."
+				"'--chrome' is the default behavior. Use --inspector to debug iOS applications using the Safari Web Inspector.",
 			);
 		}
 		const projectName = this.getProjectName(debugData);
-		const webSocketProxy = await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(
-			this.device,
-			debugData.applicationIdentifier,
-			projectName,
-			debugData.projectDir
-		);
+		const webSocketProxy =
+			await this.$appDebugSocketProxyFactory.ensureWebSocketProxy(
+				this.device,
+				debugData.applicationIdentifier,
+				projectName,
+				debugData.projectDir,
+			);
 
 		return this.getChromeDebugUrl(debugOptions, webSocketProxy.options.port);
 	}
 
 	private async setupTcpAppDebugProxy(
 		debugData: IDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<string> {
 		const projectName = this.getProjectName(debugData);
 		const existingTcpProxy = this.$appDebugSocketProxyFactory.getTCPSocketProxy(
 			this.deviceIdentifier,
-			debugData.applicationIdentifier
+			debugData.applicationIdentifier,
 		);
 		const tcpSocketProxy =
 			existingTcpProxy ||
@@ -173,13 +175,13 @@ export class IOSDeviceDebugService
 				this.device,
 				debugData.applicationIdentifier,
 				projectName,
-				debugData.projectDir
+				debugData.projectDir,
 			));
 		if (!existingTcpProxy) {
 			const inspectorProcess = await this.openAppInspector(
 				tcpSocketProxy.address(),
 				debugData,
-				debugOptions
+				debugOptions,
 			);
 			if (inspectorProcess) {
 				tcpSocketProxy.on("close", async () => {
@@ -195,18 +197,19 @@ export class IOSDeviceDebugService
 	private async openAppInspector(
 		fileDescriptor: string,
 		debugData: IDebugData,
-		debugOptions: IDebugOptions
+		debugOptions: IDebugOptions,
 	): Promise<ChildProcess> {
 		if (debugOptions.client) {
-			const inspectorPath = await this.$packageInstallationManager.getInspectorFromCache(
-				inspectorNpmPackageName,
-				debugData.projectDir
-			);
+			const inspectorPath =
+				await this.$packageInstallationManager.getInspectorFromCache(
+					inspectorNpmPackageName,
+					debugData.projectDir,
+				);
 
 			const inspectorSourceLocation = path.join(
 				inspectorPath,
 				inspectorUiDir,
-				"Main.html"
+				"Main.html",
 			);
 			const inspectorApplicationPath = path.join(
 				inspectorPath,
@@ -216,12 +219,12 @@ export class IOSDeviceDebugService
 				inspectorAppName,
 				"Contents",
 				"MacOS",
-				"NativeScript Inspector"
+				"NativeScript Inspector",
 			);
 
 			const inspectorProcess: ChildProcess = this.$childProcess.spawn(
 				inspectorApplicationPath,
-				[inspectorSourceLocation, debugData.projectName, fileDescriptor]
+				[inspectorSourceLocation, debugData.projectName, fileDescriptor],
 			);
 			inspectorProcess.on("error", (e: Error) => this.$logger.trace(e));
 			return inspectorProcess;

@@ -19,7 +19,7 @@ class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 		$androidProcessService: Mobile.IAndroidProcessService,
 		$staticConfig: IStaticConfig,
 		$net: INet,
-		$deviceLogProvider: Mobile.IDeviceLogProvider
+		$deviceLogProvider: Mobile.IDeviceLogProvider,
 	) {
 		super(
 			<any>{ deviceInfo: { identifier: "123" } },
@@ -30,7 +30,7 @@ class AndroidDeviceDebugServiceInheritor extends AndroidDeviceDebugService {
 			$androidProcessService,
 			$staticConfig,
 			$net,
-			$deviceLogProvider
+			$deviceLogProvider,
 		);
 	}
 
@@ -181,12 +181,13 @@ describe("androidDeviceDebugService", () => {
 		for (const testCase of chromUrlTestCases) {
 			it(`returns correct url when ${testCase.scenarioName}`, () => {
 				const testInjector = createTestInjector();
-				const androidDeviceDebugService = testInjector.resolve<
-					AndroidDeviceDebugServiceInheritor
-				>(AndroidDeviceDebugServiceInheritor);
+				const androidDeviceDebugService =
+					testInjector.resolve<AndroidDeviceDebugServiceInheritor>(
+						AndroidDeviceDebugServiceInheritor,
+					);
 				const actualChromeUrl = androidDeviceDebugService.getChromeDebugUrl(
 					testCase.debugOptions,
-					expectedPort
+					expectedPort,
 				);
 				assert.equal(actualChromeUrl, testCase.expectedChromeUrl);
 			});

@@ -11,7 +11,6 @@ import type { FileSystem } from "../contracts/file-system";
 import type { HostInfo } from "../contracts/host-info";
 import type { HttpClient } from "../contracts/http-client";
 
-// tslint:disable-next-line:interface-name
 interface Object {
 	[key: string]: any;
 }
@@ -21,7 +20,6 @@ interface IStringDictionary extends IDictionary<string> {}
 /**
  * Describes iTunes Connect application types
  */
-// tslint:disable-next-line:interface-name
 interface IiTunesConnectApplicationType {
 	/**
 	 * Applications developed for iOS
@@ -44,7 +42,6 @@ interface IiTunesConnectApplicationType {
 /**
  * Descibes iTunes Connect applications
  */
-// tslint:disable-next-line:interface-name
 interface IiTunesConnectApplication {
 	/**
 	 * Unique Apple ID for each application. Automatically generated and assigned by Apple.
@@ -159,7 +156,7 @@ interface IContentDeliveryBody {
 	};
 }
 
-declare module Server {
+declare namespace Server {
 	interface IResponse {
 		response: any;
 		body?: any;
@@ -688,13 +685,11 @@ interface ISysInfo {
 /** @deprecated Kept so existing annotations compile; use the {@link HostInfo} contract. */
 interface IHostInfo extends HostInfo {}
 
-// tslint:disable-next-line:interface-name
 interface GenericFunction<T> extends Function {
 	(...args: any[]): T;
 }
 
 declare global {
-	// tslint:disable-next-line:interface-name
 	interface Function {
 		$inject: {
 			args: string[];
@@ -706,7 +701,6 @@ declare global {
 	 * Extends Nodejs' Error interface.
 	 * The native interface already has name and message properties
 	 */
-	// tslint:disable-next-line:interface-name
 	interface Error {
 		/**
 		 * Error's stack trace
@@ -1177,7 +1171,6 @@ interface IDeferPromise<T> extends IPromiseActions<T> {
 /**
  * Describes service used for interaction with Notification Center
  */
-// tslint:disable-next-line:interface-name
 interface IiOSNotificationService {
 	/**
 	 * Posts a notification and waits for a response.

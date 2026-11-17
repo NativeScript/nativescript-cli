@@ -4,7 +4,10 @@ export type Type<T> = new (...args: any[]) => T;
 export type AbstractType<T> = abstract new (...args: any[]) => T;
 
 export type ProviderToken<T = any> =
-	string | Type<T> | AbstractType<T> | InjectionToken<T>;
+	| string
+	| Type<T>
+	| AbstractType<T>
+	| InjectionToken<T>;
 
 interface IBaseProvider<T> {
 	provide: ProviderToken<T>;

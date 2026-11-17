@@ -22,7 +22,7 @@ declare global {
 		executeActionWithLock<T>(
 			action: () => Promise<T>,
 			lockFilePath?: string,
-			lockOpts?: ILockOptions
+			lockOpts?: ILockOptions,
 		): Promise<T>;
 		// TODO: expose as decorator
 

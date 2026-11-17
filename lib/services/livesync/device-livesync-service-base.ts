@@ -10,18 +10,18 @@ export abstract class DeviceLiveSyncServiceBase {
 
 	constructor(
 		protected platformsDataService: IPlatformsDataService,
-		protected device: Mobile.IDevice
+		protected device: Mobile.IDevice,
 	) {}
 
 	public canExecuteFastSync(
 		liveSyncResult: ILiveSyncResultInfo,
 		filePath: string,
 		projectData: IProjectData,
-		platform: string
+		platform: string,
 	): boolean {
 		const fastSyncFileExtensions = this.getFastLiveSyncFileExtensions(
 			platform,
-			projectData
+			projectData,
 		);
 		return (
 			liveSyncResult.useHotModuleReload ||
@@ -33,7 +33,7 @@ export abstract class DeviceLiveSyncServiceBase {
 		liveSyncResult: ILiveSyncResultInfo,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		projectData: IProjectData,
-		platform: string
+		platform: string,
 	) {
 		return !_.some(
 			localToDevicePaths,
@@ -42,23 +42,24 @@ export abstract class DeviceLiveSyncServiceBase {
 					liveSyncResult,
 					localToDevicePath.getLocalPath(),
 					projectData,
-					this.device.deviceInfo.platform
-				)
+					this.device.deviceInfo.platform,
+				),
 		);
 	}
 
 	@cache()
 	private getFastLiveSyncFileExtensions(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string[] {
 		const platformData = this.platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
-		const fastSyncFileExtensions = DeviceLiveSyncServiceBase.FAST_SYNC_FILE_EXTENSIONS.concat(
-			platformData.fastLivesyncFileExtensions
-		);
+		const fastSyncFileExtensions =
+			DeviceLiveSyncServiceBase.FAST_SYNC_FILE_EXTENSIONS.concat(
+				platformData.fastLivesyncFileExtensions,
+			);
 		return fastSyncFileExtensions;
 	}
 
@@ -69,7 +70,7 @@ export abstract class DeviceLiveSyncServiceBase {
 		projectFilesPath: string,
 		projectData: IProjectData,
 		liveSyncDeviceDescriptor: ILiveSyncDeviceDescriptor,
-		options: ITransferFilesOptions
+		options: ITransferFilesOptions,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		let transferredFiles: Mobile.ILocalToDevicePathData[] = [];
 
@@ -77,12 +78,12 @@ export abstract class DeviceLiveSyncServiceBase {
 			transferredFiles = await this.device.fileSystem.transferDirectory(
 				deviceAppData,
 				localToDevicePaths,
-				projectFilesPath
+				projectFilesPath,
 			);
 		} else {
 			transferredFiles = await this.device.fileSystem.transferFiles(
 				deviceAppData,
-				localToDevicePaths
+				localToDevicePaths,
 			);
 		}
 
@@ -91,7 +92,7 @@ export abstract class DeviceLiveSyncServiceBase {
 
 	public async finalizeSync(
 		liveSyncInfo: ILiveSyncResultInfo,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<IAndroidLivesyncSyncOperationResult> {
 		//implement in case a sync point for all remove/create operation is needed
 		return {

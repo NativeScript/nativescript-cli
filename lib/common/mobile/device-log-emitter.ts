@@ -8,7 +8,7 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 		protected $logFilter: Mobile.ILogFilter,
 		$logger: ILogger,
 		private $loggingLevels: Mobile.ILoggingLevels,
-		protected $logSourceMapService: Mobile.ILogSourceMapService
+		protected $logSourceMapService: Mobile.ILogSourceMapService,
 	) {
 		super($logFilter, $logger, $logSourceMapService);
 	}
@@ -16,18 +16,18 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 	public logData(
 		line: string,
 		platform: string,
-		deviceIdentifier: string
+		deviceIdentifier: string,
 	): void {
 		this.setDefaultLogLevelForDevice(deviceIdentifier);
 
 		const loggingOptions = this.getDeviceLogOptionsForDevice(
-			deviceIdentifier
+			deviceIdentifier,
 		) || { logLevel: this.$loggingLevels.info, projectDir: null };
 		let data = this.$logFilter.filterData(platform, line, loggingOptions);
 		data = this.$logSourceMapService.replaceWithOriginalFileLocations(
 			platform,
 			data,
-			loggingOptions
+			loggingOptions,
 		);
 
 		if (data) {
@@ -42,7 +42,7 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 				deviceIdentifier,
 				(deviceLogOptions: Mobile.IDeviceLogOptions) =>
 					deviceLogOptions.logLevel,
-				logLevel.toUpperCase()
+				logLevel.toUpperCase(),
 			);
 		} else {
 			this.$logFilter.loggingLevel = logLevel.toUpperCase();
@@ -50,9 +50,8 @@ export class DeviceLogEmitter extends DeviceLogProviderBase {
 			_.keys(this.devicesLogOptions).forEach((deviceId) => {
 				this.devicesLogOptions[deviceId] =
 					this.devicesLogOptions[deviceId] || <Mobile.IDeviceLogOptions>{};
-				this.devicesLogOptions[
-					deviceId
-				].logLevel = this.$logFilter.loggingLevel;
+				this.devicesLogOptions[deviceId].logLevel =
+					this.$logFilter.loggingLevel;
 			});
 		}
 	}

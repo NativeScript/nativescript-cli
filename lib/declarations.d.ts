@@ -55,7 +55,7 @@ interface INodePackageManager {
 	 * @param  {IDictionary<string | boolean>} config      Additional options that can be passed to manipulate view.
 	 * @return {Promise<any>}                Object, containing information about the package.
 	 */
-	view(packageName: string, config: Object): Promise<any>;
+	view(packageName: string, config: object): Promise<any>;
 
 	/**
 	 * Checks if the specified string is name of a packaged published in the NPM registry.
@@ -369,7 +369,7 @@ interface INpm5InstallCliResult {
 	 * Time elapsed.
 	 * @type {Number}
 	 */
-	elapsed: Number;
+	elapsed: number;
 }
 
 /**
@@ -552,7 +552,7 @@ interface IDebugInformation extends IPort, Mobile.IDeviceIdentifier {
 }
 
 interface IPort {
-	port: Number;
+	port: number;
 }
 
 interface IPluginSeedOptions {
@@ -650,8 +650,8 @@ interface IOptions
 	template: string;
 	certificate: string;
 	certificatePassword: string;
-	var: Object;
-	default: Boolean;
+	var: object;
+	default: boolean;
 	count: number;
 	hooks: boolean;
 	debug: boolean;
@@ -694,7 +694,7 @@ interface IOptions
 	background: string;
 	hmr: boolean;
 	link: boolean;
-	performance: Object;
+	performance: object;
 	cleanupLogFile: string;
 	appleApplicationSpecificPassword: string;
 	appleSessionBase64: string;
@@ -917,7 +917,6 @@ interface IAppDebugSocketProxyFactory extends NodeJS.EventEmitter {
 	removeAllProxies(): void;
 }
 
-// tslint:disable-next-line:interface-name
 interface IiOSNotification extends NodeJS.EventEmitter {
 	getAttachRequest(appId: string, deviceId: string): string;
 	getReadyForAttach(appId: string): string;
@@ -925,7 +924,6 @@ interface IiOSNotification extends NodeJS.EventEmitter {
 	getAppRefreshStarted(appId: string): string;
 }
 
-// tslint:disable-next-line:interface-name
 interface IiOSSocketRequestExecutor {
 	executeAttachRequest(
 		device: Mobile.IiOSDevice,

@@ -12,10 +12,11 @@ import { PlatformTypes } from "../constants";
 
 export abstract class PlatformProjectServiceBase
 	extends EventEmitter
-	implements IPlatformProjectServiceBase {
+	implements IPlatformProjectServiceBase
+{
 	constructor(
 		protected $fs: IFileSystem,
-		protected $projectDataService: IProjectDataService
+		protected $projectDataService: IProjectDataService,
 	) {
 		super();
 	}
@@ -24,7 +25,7 @@ export abstract class PlatformProjectServiceBase
 
 	public getPluginPlatformsFolderPath(
 		pluginData: IPluginData,
-		platform: string
+		platform: string,
 	): string {
 		return pluginData.pluginPlatformsFolderPath(platform);
 	}
@@ -32,7 +33,7 @@ export abstract class PlatformProjectServiceBase
 	public getFrameworkVersion(projectData: IProjectData): string {
 		const frameworkData = this.$projectDataService.getRuntimePackage(
 			projectData.projectDir,
-			<PlatformTypes>this.getPlatformData(projectData).platformNameLowerCase
+			<PlatformTypes>this.getPlatformData(projectData).platformNameLowerCase,
 		);
 		return frameworkData && frameworkData.version;
 	}
@@ -40,11 +41,11 @@ export abstract class PlatformProjectServiceBase
 	protected getAllNativeLibrariesForPlugin(
 		pluginData: IPluginData,
 		platform: string,
-		filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean
+		filter: (fileName: string, _pluginPlatformsFolderPath: string) => boolean,
 	): string[] {
 		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(
 			pluginData,
-			platform
+			platform,
 		);
 		let nativeLibraries: string[] = [];
 
@@ -53,11 +54,11 @@ export abstract class PlatformProjectServiceBase
 			this.$fs.exists(pluginPlatformsFolderPath)
 		) {
 			const platformsContents = this.$fs.readDirectory(
-				pluginPlatformsFolderPath
+				pluginPlatformsFolderPath,
 			);
 			nativeLibraries = _(platformsContents)
 				.filter((platformItemName) =>
-					filter(platformItemName, pluginPlatformsFolderPath)
+					filter(platformItemName, pluginPlatformsFolderPath),
 				)
 				.value();
 		}

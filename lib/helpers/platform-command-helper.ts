@@ -30,17 +30,17 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		private $platformValidationService: PlatformValidationService,
 		private $projectChangesService: IProjectChangesService,
 		private $projectDataService: IProjectDataService,
-		private $tempService: ITempService
+		private $tempService: ITempService,
 	) {}
 
 	public async addPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		frameworkPath: string
+		frameworkPath: string,
 	): Promise<void> {
 		if (this.$options.hostProjectPath) {
 			this.$logger.info(
-				"Ignoring platform add becuase of --hostProjectPath flag"
+				"Ignoring platform add becuase of --hostProjectPath flag",
 			);
 			return;
 		}
@@ -55,7 +55,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			const isPlatformAdded = this.isPlatformAdded(
 				platform,
 				platformPath,
-				projectData
+				projectData,
 			);
 			if (isPlatformAdded) {
 				this.$errors.fail(`Platform ${platform} already added`);
@@ -72,12 +72,12 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	public async cleanPlatforms(
 		platforms: string[],
 		projectData: IProjectData,
-		framworkPath: string
+		framworkPath: string,
 	): Promise<void> {
 		for (const platform of platforms) {
 			const version: string = this.getCurrentPlatformVersion(
 				platform,
-				projectData
+				projectData,
 			);
 
 			await this.removePlatforms([platform], projectData);
@@ -89,11 +89,11 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 	public async removePlatforms(
 		platforms: string[],
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		if (this.$options.hostProjectPath) {
 			this.$logger.info(
-				"Ignoring platform remove becuase of --native-host flag"
+				"Ignoring platform remove becuase of --native-host flag",
 			);
 			return;
 		}
@@ -101,17 +101,17 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		for (const platform of platforms) {
 			this.$platformValidationService.validatePlatformInstalled(
 				platform,
-				projectData
+				projectData,
 			);
 			const platformData = this.$platformsDataService.getPlatformData(
 				platform,
-				projectData
+				projectData,
 			);
 			let errorMessage;
 
 			try {
 				await platformData.platformProjectService.stopServices(
-					platformData.projectRoot
+					platformData.projectRoot,
 				);
 			} catch (err) {
 				errorMessage = err.message;
@@ -120,12 +120,12 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			try {
 				const platformDir = path.join(
 					projectData.platformsDir,
-					platform.toLowerCase()
+					platform.toLowerCase(),
 				);
 				this.$fs.deleteDirectory(platformDir);
 				await this.$packageInstallationManager.uninstall(
 					platformData.frameworkPackageName,
-					projectData.projectDir
+					projectData.projectDir,
 				);
 				// this.$projectDataService.removeNSProperty(
 				// 	projectData.projectDir,
@@ -135,7 +135,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				this.$logger.info(`Platform ${platform} successfully removed.`);
 			} catch (err) {
 				this.$logger.error(
-					`Failed to remove ${platform} platform with errors:`
+					`Failed to remove ${platform} platform with errors:`,
 				);
 				if (errorMessage) {
 					this.$logger.error(errorMessage);
@@ -147,7 +147,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 	public async updatePlatforms(
 		platforms: string[],
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		for (const platformParam of platforms) {
 			const data = platformParam.split("@"),
@@ -155,7 +155,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 				version = data[1];
 
 			const hasPlatformDirectory = this.$fs.exists(
-				path.join(projectData.platformsDir, platform.toLowerCase())
+				path.join(projectData.platformsDir, platform.toLowerCase()),
 			);
 			if (hasPlatformDirectory) {
 				await this.updatePlatform(platform, version, projectData);
@@ -175,7 +175,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 		const subDirs = this.$fs.readDirectory(projectData.platformsDir);
 		const platforms = this.$mobileHelper.platformNames.map((p) =>
-			p.toLowerCase()
+			p.toLowerCase(),
 		);
 		return _.filter(subDirs, (p) => platforms.indexOf(p) > -1);
 	}
@@ -198,15 +198,15 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 	public getCurrentPlatformVersion(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): string {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 		const currentPlatformData: any = this.$projectDataService.getRuntimePackage(
 			projectData.projectDir,
-			<constants.PlatformTypes>platformData.platformNameLowerCase
+			<constants.PlatformTypes>platformData.platformNameLowerCase,
 		);
 		const version = currentPlatformData && currentPlatformData.version;
 
@@ -216,7 +216,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	private isPlatformAdded(
 		platform: string,
 		platformPath: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean {
 		if (!this.$fs.exists(platformPath)) {
 			return false;
@@ -224,7 +224,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 		const prepareInfo =
 			this.$projectChangesService.getPrepareInfo(platformData);
@@ -241,44 +241,43 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	private async updatePlatform(
 		platform: string,
 		version: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 
 		const data = this.$projectDataService.getRuntimePackage(
 			projectData.projectDir,
-			<constants.PlatformTypes>platformData.platformNameLowerCase
+			<constants.PlatformTypes>platformData.platformNameLowerCase,
 		);
 		const currentVersion = data && data.version ? data.version : "0.2.0";
 
-		const installedModuleDir = await this.$tempService.mkdirSync(
-			"runtime-to-update"
-		);
+		const installedModuleDir =
+			await this.$tempService.mkdirSync("runtime-to-update");
 		let newVersion =
 			version === constants.PackageVersion.NEXT
 				? await this.$packageInstallationManager.getNextVersion(
-						platformData.frameworkPackageName
-				  )
+						platformData.frameworkPackageName,
+					)
 				: version ||
-				  (await this.$packageInstallationManager.getLatestCompatibleVersion(
-						platformData.frameworkPackageName
-				  ));
+					(await this.$packageInstallationManager.getLatestCompatibleVersion(
+						platformData.frameworkPackageName,
+					));
 		await this.$pacoteService.extractPackage(
 			`${platformData.frameworkPackageName}@${newVersion}`,
-			installedModuleDir
+			installedModuleDir,
 		);
 		const cachedPackageData = this.$fs.readJson(
-			path.join(installedModuleDir, "package.json")
+			path.join(installedModuleDir, "package.json"),
 		);
 		newVersion = (cachedPackageData && cachedPackageData.version) || newVersion;
 
 		if (!semver.valid(newVersion)) {
 			this.$errors.fail(
 				"The version %s is not valid. The version should consists from 3 parts separated by dot.",
-				newVersion
+				newVersion,
 			);
 		}
 
@@ -286,13 +285,13 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 			await this.updatePlatformCore(
 				platformData,
 				{ currentVersion, newVersion },
-				projectData
+				projectData,
 			);
 		} else if (semver.eq(currentVersion, newVersion)) {
 			this.$errors.fail("Current and new version are the same.");
 		} else {
 			this.$errors.fail(
-				`Your current version: ${currentVersion} is higher than the one you're trying to install ${newVersion}.`
+				`Your current version: ${currentVersion} is higher than the one you're trying to install ${newVersion}.`,
 			);
 		}
 	}
@@ -300,7 +299,7 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 	private async updatePlatformCore(
 		platformData: IPlatformData,
 		updateOptions: IUpdatePlatformOptions,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): Promise<void> {
 		let packageName = platformData.normalizedPlatformName.toLowerCase();
 		await this.removePlatforms([packageName], projectData);
@@ -313,21 +312,21 @@ export class PlatformCommandHelper implements IPlatformCommandHelper {
 		});
 		this.$logger.info(
 			"Successfully updated to version ",
-			updateOptions.newVersion
+			updateOptions.newVersion,
 		);
 	}
 
 	private isPlatformPrepared(
 		platform: string,
-		projectData: IProjectData
+		projectData: IProjectData,
 	): boolean {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform,
-			projectData
+			projectData,
 		);
 		return platformData.platformProjectService.isPlatformPrepared(
 			platformData.projectRoot,
-			projectData
+			projectData,
 		);
 	}
 }

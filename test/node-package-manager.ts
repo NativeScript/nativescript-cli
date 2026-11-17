@@ -30,15 +30,13 @@ describe("node-package-manager", () => {
 				expectedName: "some-template",
 			},
 			{
-				name:
-					"should return both name and version when valid fullName with scope passed",
+				name: "should return both name and version when valid fullName with scope passed",
 				templateFullName: "@nativescript/some-template@1.0.0",
 				expectedVersion: "1.0.0",
 				expectedName: "@nativescript/some-template",
 			},
 			{
-				name:
-					"should return only name when version is not specified and the template is scoped",
+				name: "should return only name when version is not specified and the template is scoped",
 				templateFullName: "@nativescript/some-template",
 				expectedVersion: "",
 				expectedName: "@nativescript/some-template",
@@ -54,7 +52,7 @@ describe("node-package-manager", () => {
 				const testInjector = createTestInjector();
 				const npm = testInjector.resolve<NodePackageManager>("npm");
 				const templateNameParts = await npm.getPackageNameParts(
-					testCase.templateFullName
+					testCase.templateFullName,
 				);
 				assert.strictEqual(templateNameParts.name, testCase.expectedName);
 				assert.strictEqual(templateNameParts.version, testCase.expectedVersion);

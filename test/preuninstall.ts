@@ -26,7 +26,7 @@ describe("preuninstall.js", () => {
 		childProcess.spawn = (
 			command: string,
 			args?: string[],
-			options?: SpawnOptions
+			options?: SpawnOptions,
 		): ChildProcess => {
 			isSpawnCalled = true;
 			argsPassedToSpawn = args;
@@ -49,14 +49,14 @@ describe("preuninstall.js", () => {
 
 		assert.isTrue(
 			isSpawnCalled,
-			"child_process.spawn must be called from preuninstall.js"
+			"child_process.spawn must be called from preuninstall.js",
 		);
 
 		const expectedPathToCliExecutable = path.join(
 			__dirname,
 			"..",
 			"bin",
-			"tns"
+			"tns",
 		);
 
 		assert.deepStrictEqual(argsPassedToSpawn, [
@@ -66,7 +66,7 @@ describe("preuninstall.js", () => {
 		assert.deepStrictEqual(
 			optionsPassedToSpawn,
 			[{ stdio: "inherit" }],
-			"The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode."
+			"The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.",
 		);
 		assert.deepStrictEqual(dataPassedToConsoleError, []);
 
@@ -79,18 +79,17 @@ describe("preuninstall.js", () => {
 
 	it("passes --analyticsLogFile option when NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE is set", () => {
 		const content = readFileSync(
-			path.join(__dirname, "..", "preuninstall.js")
+			path.join(__dirname, "..", "preuninstall.js"),
 		).toString();
 		const originalEnvValue = process.env.NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE;
 		process.env.NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE =
 			"value from env analyticsLog.txt";
-		/* tslint:disable:no-eval */
+		// eslint-disable-next-line no-eval
 		eval(content);
-		/* tslint:enable:no-eval */
 		process.env.NS_CLI_PREUNINSTALL_ANALYTICS_LOG_FILE = originalEnvValue;
 		assert.isTrue(
 			isSpawnCalled,
-			"child_process.spawn must be called from preuninstall.js"
+			"child_process.spawn must be called from preuninstall.js",
 		);
 
 		// NOTE: As the script is eval'd, the `__dirname` in it is resolved to current file's location,
@@ -106,7 +105,7 @@ describe("preuninstall.js", () => {
 		assert.deepStrictEqual(
 			optionsPassedToSpawn,
 			[{ stdio: "inherit" }],
-			"The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode."
+			"The stdio must be inherit as this way CLI's command can determine correctly if terminal is in interactive mode.",
 		);
 		assert.deepStrictEqual(dataPassedToConsoleError, []);
 	});

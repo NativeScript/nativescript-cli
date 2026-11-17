@@ -28,7 +28,10 @@
     "tsc": "tsc",
     "test-watch": "node ./dev/tsc-to-vitest-watch.js",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
-    "prettier": "prettier --write ./lib/**/*{.ts,.d.ts} ./test/**/*{.ts,.d.ts}",
+    "format": "oxfmt \"lib/**/*.ts\" \"test/**/*.ts\"",
+    "format.check": "oxfmt --check \"lib/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "oxlint lib test",
+    "lint.fix": "oxlint lib test --fix",
     "build.release": "npm run clean.build && tsc -p tsconfig.release.json && node scripts/generate-test-deps.js && node scripts/copy-assets.js --release && node scripts/set-ga-id.js live --dir dist && node scripts/set-ga-id.js verify --dir dist",
     "pack.release": "npm run build.release && npm pack ./dist"
   },
@@ -130,6 +133,8 @@
     "fast-check": "3.23.2",
     "husky": "9.1.7",
     "lint-staged": "~15.5.2",
+    "oxfmt": "^0.61.0",
+    "oxlint": "^1.76.0",
     "sinon": "22.1.0",
     "source-map-support": "0.5.21",
     "vitest": "^4.1.10",
@@ -144,6 +149,6 @@
     "node": ">=20.0.0"
   },
   "lint-staged": {
-    "*.ts": "prettier --write"
+    "*.ts": "oxfmt"
   }
 }

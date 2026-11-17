@@ -55,7 +55,7 @@ export class InvokeBeforeDecoratorsTest {
 
 	@invokeBefore("promisifiedInvokedBeforeThrowingMethod")
 	public async methodPromisifiedInvokeBeforeThrowing(
-		num: number
+		num: number,
 	): Promise<number> {
 		this.counter++;
 		return num;
@@ -69,7 +69,7 @@ export class InvokeBeforeDecoratorsTest {
 
 	@invokeBefore("promisifiedInvokedBeforeMethod", ["arg1"])
 	public async methodPromisifiedInvokeBeforeWithArgs(
-		num: number
+		num: number,
 	): Promise<number> {
 		this.counter++;
 		return num;

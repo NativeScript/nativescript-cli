@@ -76,7 +76,7 @@ describe("logger", () => {
 			it(`${methodName} should obfuscate password parameter when the string is larger`, () => {
 				const dataFilePath = path.join(
 					__dirname,
-					"./mocks/nativescript-cloud-npmjs-result.txt"
+					"./mocks/nativescript-cloud-npmjs-result.txt",
 				);
 				const data = fs.readText(dataFilePath);
 				const before = Date.now();
@@ -91,7 +91,7 @@ describe("logger", () => {
 			it(`${methodName} should not get slower when the string is really large`, () => {
 				const dataFilePath = path.join(
 					__dirname,
-					"./mocks/tns-android-npmjs-result.txt"
+					"./mocks/tns-android-npmjs-result.txt",
 				);
 				const data = fs.readText(dataFilePath);
 				const before = Date.now();
@@ -100,9 +100,9 @@ describe("logger", () => {
 
 				assert.notEqual(
 					outputs[methodName].indexOf(
-						"https://github.com/NativeScript/android-runtime"
+						"https://github.com/NativeScript/android-runtime",
 					),
-					-1
+					-1,
 				);
 				assert.isTrue(after - before < 50);
 			});
@@ -116,7 +116,7 @@ describe("logger", () => {
 					assert.deepStrictEqual(
 						outputs[methodName],
 						`{ certificate${passwordString}: '${passwordReplacement}', otherProperty: 'pass' }`,
-						`logger.${methodName} should obfuscate ${passwordString} properties`
+						`logger.${methodName} should obfuscate ${passwordString} properties`,
 					);
 				});
 
@@ -128,7 +128,7 @@ describe("logger", () => {
 					assert.deepStrictEqual(
 						outputs[methodName],
 						`{ certificate${passwordString}: '${passwordReplacement}' }`,
-						`logger.${methodName} should obfuscate ${passwordString} properties`
+						`logger.${methodName} should obfuscate ${passwordString} properties`,
 					);
 				});
 
@@ -140,7 +140,7 @@ describe("logger", () => {
 					assert.deepStrictEqual(
 						outputs[methodName],
 						`{ certificate${passwordString}: "${passwordReplacement}", otherProperty: "pass" }`,
-						`logger.${methodName} should obfuscate ${passwordString} properties`
+						`logger.${methodName} should obfuscate ${passwordString} properties`,
 					);
 				});
 
@@ -152,7 +152,7 @@ describe("logger", () => {
 					assert.deepStrictEqual(
 						outputs[methodName],
 						`{ certificate${passwordString}: "${passwordReplacement}" }`,
-						`logger.${methodName} should obfuscate ${passwordString} properties`
+						`logger.${methodName} should obfuscate ${passwordString} properties`,
 					);
 				});
 
@@ -164,7 +164,7 @@ describe("logger", () => {
 					assert.deepStrictEqual(
 						outputs[methodName],
 						`{ proto: 'https', host: 'platform.telerik.com', path: '/appbuilder/api/itmstransporter/applications?username=dragon.telerikov%40yahoo.com&${passwordString}=${passwordReplacement}', method: 'POST' }`,
-						`logger.${methodName} should obfuscate ${passwordString} when in query parameter`
+						`logger.${methodName} should obfuscate ${passwordString} when in query parameter`,
 					);
 				});
 
@@ -176,7 +176,7 @@ describe("logger", () => {
 					assert.deepStrictEqual(
 						outputs[methodName],
 						`{ proto: 'https', host: 'platform.telerik.com', path: '/appbuilder/api/itmstransporter/applications?username=dragon.telerikov%40yahoo.com&${passwordString}=${passwordReplacement}&data=someOtherData', method: 'POST' }`,
-						`logger.${methodName} should obfuscate ${passwordString} when in query parameter`
+						`logger.${methodName} should obfuscate ${passwordString} when in query parameter`,
 					);
 				});
 			});
@@ -194,7 +194,7 @@ describe("logger", () => {
 			assert.deepStrictEqual(
 				outputs.trace,
 				`${request}${requestBody}`,
-				"logger.trace should not obfuscate body of request unless it is towards api/itmstransporter"
+				"logger.trace should not obfuscate body of request unless it is towards api/itmstransporter",
 			);
 		});
 	});
@@ -215,12 +215,12 @@ describe("logger", () => {
 				assert.deepStrictEqual(
 					outputs.context,
 					{},
-					"Nothing should be added to logger context."
+					"Nothing should be added to logger context.",
 				);
 				assert.deepStrictEqual(
 					outputs.removedContext,
 					{},
-					"Removed context should be empty."
+					"Removed context should be empty.",
 				);
 			});
 
@@ -230,12 +230,12 @@ describe("logger", () => {
 				assert.deepStrictEqual(
 					outputs.context,
 					{ [LoggerConfigData.skipNewLine]: true },
-					`${LoggerConfigData.skipNewLine} should be set with value true.`
+					`${LoggerConfigData.skipNewLine} should be set with value true.`,
 				);
 				assert.deepStrictEqual(
 					outputs.removedContext,
 					{ [LoggerConfigData.skipNewLine]: true },
-					`Removed context should contain ${LoggerConfigData.skipNewLine}`
+					`Removed context should contain ${LoggerConfigData.skipNewLine}`,
 				);
 			});
 		});
@@ -284,12 +284,12 @@ describe("logger", () => {
 			assert.deepStrictEqual(
 				outputs.context,
 				{ [LoggerConfigData.skipNewLine]: true },
-				`${LoggerConfigData.skipNewLine} should be set with value true.`
+				`${LoggerConfigData.skipNewLine} should be set with value true.`,
 			);
 			assert.deepStrictEqual(
 				outputs.removedContext,
 				{ [LoggerConfigData.skipNewLine]: true },
-				`Removed context should contain ${LoggerConfigData.skipNewLine}`
+				`Removed context should contain ${LoggerConfigData.skipNewLine}`,
 			);
 		});
 	});
@@ -302,12 +302,12 @@ describe("logger", () => {
 			assert.deepStrictEqual(
 				outputs.context,
 				{ [LoggerConfigData.useStderr]: true },
-				`${LoggerConfigData.useStderr} should be set with value true.`
+				`${LoggerConfigData.useStderr} should be set with value true.`,
 			);
 			assert.deepStrictEqual(
 				outputs.removedContext,
 				{ [LoggerConfigData.useStderr]: true },
-				`Removed context should contain ${LoggerConfigData.useStderr}`
+				`Removed context should contain ${LoggerConfigData.useStderr}`,
 			);
 		});
 
@@ -317,12 +317,12 @@ describe("logger", () => {
 			assert.deepStrictEqual(
 				outputs.context,
 				{ [LoggerConfigData.useStderr]: false },
-				`${LoggerConfigData.useStderr} should be set with value false.`
+				`${LoggerConfigData.useStderr} should be set with value false.`,
 			);
 			assert.deepStrictEqual(
 				outputs.removedContext,
 				{ [LoggerConfigData.useStderr]: true },
-				`Removed context should contain ${LoggerConfigData.useStderr}`
+				`Removed context should contain ${LoggerConfigData.useStderr}`,
 			);
 		});
 	});

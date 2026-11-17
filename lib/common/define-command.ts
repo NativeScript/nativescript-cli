@@ -22,7 +22,11 @@ export const COMMAND_DEFINITION_MARKER: unique symbol = Symbol.for(
 );
 
 export type CommandOptionType =
-	"boolean" | "string" | "number" | "array" | "object";
+	| "boolean"
+	| "string"
+	| "number"
+	| "array"
+	| "object";
 
 export interface CommandOptionSpec<TValue = any> {
 	type: CommandOptionType;
@@ -127,7 +131,9 @@ export type ArgumentSpec<TSchema extends CommandOptionsSchema = {}> =
  * an array declares them one by one.
  */
 export type ParamsPolicy<TSchema extends CommandOptionsSchema = {}> =
-	"none" | "any" | ParamSpec<TSchema>[];
+	| "none"
+	| "any"
+	| ParamSpec<TSchema>[];
 
 /** @deprecated Use ParamsPolicy. */
 export type ArgumentsPolicy<TSchema extends CommandOptionsSchema = {}> =
@@ -795,7 +801,8 @@ export type CommandClass<
 
 /** Either accepted form of a command, as a registration site takes it. */
 export type RegisterableCommand =
-	DefinedCommand<any, any, any> | CommandClass<any, any>;
+	| DefinedCommand<any, any, any>
+	| CommandClass<any, any>;
 
 export function isCommandClass(value: any): value is CommandClass<any, any> {
 	return (

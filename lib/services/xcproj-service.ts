@@ -9,11 +9,11 @@ import { injector } from "../common/yok";
 class XcprojService implements IXcprojService {
 	public getXcodeprojPath(
 		projectData: IProjectData,
-		projectRoot: string
+		projectRoot: string,
 	): string {
 		return path.join(
 			projectRoot,
-			projectData.projectName + IosProjectConstants.XcodeProjExtName
+			projectData.projectName + IosProjectConstants.XcodeProjExtName,
 		);
 	}
 

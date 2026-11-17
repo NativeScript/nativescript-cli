@@ -39,8 +39,7 @@ interface IAnalyticsBroker {
 }
 
 interface IGoogleAnalyticsTrackingInformation
-	extends IGoogleAnalyticsData,
-		ITrackingInformation {}
+	extends IGoogleAnalyticsData, ITrackingInformation {}
 
 /**
  * Describes methods required to track in Google Analytics.

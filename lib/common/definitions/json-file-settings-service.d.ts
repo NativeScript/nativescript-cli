@@ -11,12 +11,12 @@ interface IUseCacheOpts {
 interface IJsonFileSettingsService {
 	getSettingValue<T>(
 		settingName: string,
-		cacheOpts?: ICacheTimeoutOpts
+		cacheOpts?: ICacheTimeoutOpts,
 	): Promise<T>;
 	saveSetting<T>(
 		key: string,
 		value: T,
-		cacheOpts?: IUseCacheOpts
+		cacheOpts?: IUseCacheOpts,
 	): Promise<void>;
 	removeSetting(key: string): Promise<void>;
 	loadUserSettingsFile(): Promise<void>;

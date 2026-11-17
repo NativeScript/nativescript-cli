@@ -6,7 +6,8 @@ import { injector } from "../../yok";
 
 export class DeviceDiscovery
 	extends EventEmitter
-	implements Mobile.IDeviceDiscovery {
+	implements Mobile.IDeviceDiscovery
+{
 	private devices: IDictionary<Mobile.IDevice> = {};
 
 	public async startLookingForDevices(): Promise<void> {

@@ -14,25 +14,25 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 	constructor(
 		private $errors: IErrors,
 		private $fs: IFileSystem,
-		private $logger: ILogger
+		private $logger: ILogger,
 	) {}
 
 	public async getLatestAppPackagePath(
 		platformData: IPlatformData,
-		buildOutputOptions: IBuildOutputOptions
+		buildOutputOptions: IBuildOutputOptions,
 	): Promise<string> {
 		const outputPath =
 			buildOutputOptions.outputPath ||
 			platformData.getBuildOutputPath(buildOutputOptions);
 		const applicationPackage = this.getLatestApplicationPackage(
 			outputPath,
-			platformData.getValidBuildOutputData(buildOutputOptions)
+			platformData.getValidBuildOutputData(buildOutputOptions),
 		);
 		const packageFile = applicationPackage.packageName;
 
 		if (!packageFile || !this.$fs.exists(packageFile)) {
 			this.$errors.fail(
-				`Unable to find built application. Try 'ns build ${platformData.platformNameLowerCase}'.`
+				`Unable to find built application. Try 'ns build ${platformData.platformNameLowerCase}'.`,
 			);
 		}
 
@@ -41,14 +41,14 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 
 	public getAllAppPackages(
 		buildOutputPath: string,
-		validBuildOutputData: IValidBuildOutputData
+		validBuildOutputData: IValidBuildOutputData,
 	): IApplicationPackage[] {
 		const rootFiles = this.$fs
 			.readDirectory(buildOutputPath)
 			.map((filename) => path.join(buildOutputPath, filename));
 		let result = this.getApplicationPackagesCore(
 			rootFiles,
-			validBuildOutputData.packageNames
+			validBuildOutputData.packageNames,
 		);
 		if (result) {
 			return result;
@@ -57,7 +57,7 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		const candidates = this.$fs.enumerateFilesInDirectorySync(buildOutputPath);
 		result = this.getApplicationPackagesCore(
 			candidates,
-			validBuildOutputData.packageNames
+			validBuildOutputData.packageNames,
 		);
 		if (result) {
 			return result;
@@ -66,8 +66,8 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		if (validBuildOutputData.regexes && validBuildOutputData.regexes.length) {
 			const packages = candidates.filter((filepath) =>
 				_.some(validBuildOutputData.regexes, (regex) =>
-					regex.test(path.basename(filepath))
-				)
+					regex.test(path.basename(filepath)),
+				),
 			);
 			return this.createApplicationPackages(packages);
 		}
@@ -78,7 +78,7 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 	public copyLatestAppPackage(
 		targetPath: string,
 		platformData: IPlatformData,
-		buildOutputOptions: IBuildOutputOptions
+		buildOutputOptions: IBuildOutputOptions,
 	): void {
 		targetPath = path.resolve(targetPath);
 
@@ -87,7 +87,7 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 			platformData.getBuildOutputPath(buildOutputOptions);
 		const applicationPackage = this.getLatestApplicationPackage(
 			outputPath,
-			platformData.getValidBuildOutputData(buildOutputOptions)
+			platformData.getValidBuildOutputData(buildOutputOptions),
 		);
 		const packageFile = applicationPackage.packageName;
 
@@ -99,7 +99,7 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 		) {
 			const sourceFileName = path.basename(packageFile);
 			this.$logger.trace(
-				`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`
+				`Specified target path: '${targetPath}' is directory. Same filename will be used: '${sourceFileName}'.`,
 			);
 			targetPath = path.join(targetPath, sourceFileName);
 		}
@@ -109,22 +109,22 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 
 	private getLatestApplicationPackage(
 		buildOutputPath: string,
-		validBuildOutputData: IValidBuildOutputData
+		validBuildOutputData: IValidBuildOutputData,
 	): IApplicationPackage {
 		let packages = this.getAllAppPackages(
 			buildOutputPath,
-			validBuildOutputData
+			validBuildOutputData,
 		);
 		const packageExtName = path.extname(validBuildOutputData.packageNames[0]);
 		if (packages.length === 0) {
 			this.$errors.fail(
-				`No ${packageExtName} found in ${buildOutputPath} directory.`
+				`No ${packageExtName} found in ${buildOutputPath} directory.`,
 			);
 		}
 
 		if (packages.length > 1) {
 			this.$logger.warn(
-				`More than one ${packageExtName} found in ${buildOutputPath} directory. Using the last one produced from build.`
+				`More than one ${packageExtName} found in ${buildOutputPath} directory. Using the last one produced from build.`,
 			);
 		}
 
@@ -135,10 +135,10 @@ export class BuildArtifactsService implements IBuildArtifactsService {
 
 	private getApplicationPackagesCore(
 		candidates: string[],
-		validPackageNames: string[]
+		validPackageNames: string[],
 	): IApplicationPackage[] {
 		const packages = candidates.filter((filePath) =>
-			_.includes(validPackageNames, path.basename(filePath))
+			_.includes(validPackageNames, path.basename(filePath)),
 		);
 		if (packages.length > 0) {
 			return this.createApplicationPackages(packages);

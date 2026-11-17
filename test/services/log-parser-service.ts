@@ -55,7 +55,7 @@ describe("iOSLogParserService", () => {
 		deviceLogProvider.emit(
 			DEVICE_LOG_EVENT_NAME,
 			message,
-			device.deviceInfo.identifier
+			device.deviceInfo.identifier,
 		);
 	}
 

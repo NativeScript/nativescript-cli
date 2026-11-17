@@ -12,19 +12,19 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		protected $platformsDataService: IPlatformsDataService,
 		protected $filesHashService: IFilesHashService,
 		protected $logger: ILogger,
-		protected device: Mobile.IAndroidDevice
+		protected device: Mobile.IAndroidDevice,
 	) {
 		super($platformsDataService, device);
 	}
 
 	public abstract transferFilesOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<void>;
 	public abstract transferDirectoryOnDevice(
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		projectFilesPath: string
+		projectFilesPath: string,
 	): Promise<void>;
 
 	public async transferFiles(
@@ -33,24 +33,25 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		projectFilesPath: string,
 		projectData: IProjectData,
 		liveSyncDeviceDescriptor: ILiveSyncDeviceDescriptor,
-		options: ITransferFilesOptions
+		options: ITransferFilesOptions,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		const deviceHashService = this.device.fileSystem.getDeviceHashService(
-			deviceAppData.appIdentifier
+			deviceAppData.appIdentifier,
 		);
-		const currentHashes = await deviceHashService.generateHashesFromLocalToDevicePaths(
-			localToDevicePaths
-		);
+		const currentHashes =
+			await deviceHashService.generateHashesFromLocalToDevicePaths(
+				localToDevicePaths,
+			);
 		const transferredFiles = await this.transferFilesCore(
 			deviceAppData,
 			localToDevicePaths,
 			projectFilesPath,
 			currentHashes,
-			options
+			options,
 		);
 		await this.device.fileSystem.updateHashesOnDevice(
 			currentHashes,
-			deviceAppData.appIdentifier
+			deviceAppData.appIdentifier,
 		);
 		return transferredFiles;
 	}
@@ -60,38 +61,39 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		projectFilesPath: string,
 		currentHashes: IStringDictionary,
-		options: ITransferFilesOptions
+		options: ITransferFilesOptions,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		if (options.force && options.isFullSync) {
 			const hashFileDevicePath = this.device.fileSystem.getDeviceHashService(
-				deviceAppData.appIdentifier
+				deviceAppData.appIdentifier,
 			).hashFileDevicePath;
 			await this.device.fileSystem.deleteFile(
 				hashFileDevicePath,
-				deviceAppData.appIdentifier
+				deviceAppData.appIdentifier,
 			);
 			this.$logger.trace(
 				"Before transfer directory on device ",
-				localToDevicePaths
+				localToDevicePaths,
 			);
 			await this.transferDirectoryOnDevice(
 				deviceAppData,
 				localToDevicePaths,
-				projectFilesPath
+				projectFilesPath,
 			);
 			return localToDevicePaths;
 		}
 
-		const localToDevicePathsToTransfer = await this.getLocalToDevicePathsToTransfer(
-			deviceAppData,
-			localToDevicePaths,
-			currentHashes,
-			options
-		);
+		const localToDevicePathsToTransfer =
+			await this.getLocalToDevicePathsToTransfer(
+				deviceAppData,
+				localToDevicePaths,
+				currentHashes,
+				options,
+			);
 		this.$logger.trace("Files to transfer: ", localToDevicePathsToTransfer);
 		await this.transferFilesOnDevice(
 			deviceAppData,
-			localToDevicePathsToTransfer
+			localToDevicePathsToTransfer,
 		);
 		return localToDevicePathsToTransfer;
 	}
@@ -100,7 +102,7 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		deviceAppData: Mobile.IDeviceAppData,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 		currentHashes: IStringDictionary,
-		options: ITransferFilesOptions
+		options: ITransferFilesOptions,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
 		if (options.force || !options.isFullSync) {
 			return localToDevicePaths;
@@ -109,7 +111,7 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 		const changedLocalToDevicePaths = await this.getChangedLocalToDevicePaths(
 			deviceAppData.appIdentifier,
 			localToDevicePaths,
-			currentHashes
+			currentHashes,
 		);
 		return changedLocalToDevicePaths;
 	}
@@ -117,20 +119,19 @@ export abstract class AndroidDeviceLiveSyncServiceBase extends DeviceLiveSyncSer
 	private async getChangedLocalToDevicePaths(
 		appIdentifier: string,
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		currentHashes: IStringDictionary
+		currentHashes: IStringDictionary,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
-		const deviceHashService = this.device.fileSystem.getDeviceHashService(
-			appIdentifier
-		);
+		const deviceHashService =
+			this.device.fileSystem.getDeviceHashService(appIdentifier);
 		const oldHashes = (await deviceHashService.getShasumsFromDevice()) || {};
 		const changedHashes = deviceHashService.getChangedShasums(
 			oldHashes,
-			currentHashes
+			currentHashes,
 		);
 		const changedFiles = _.keys(changedHashes);
 		const changedLocalToDevicePaths = localToDevicePaths.filter(
 			(localToDevicePathData) =>
-				changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0
+				changedFiles.indexOf(localToDevicePathData.getLocalPath()) >= 0,
 		);
 		return changedLocalToDevicePaths;
 	}

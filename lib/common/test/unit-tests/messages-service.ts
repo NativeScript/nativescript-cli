@@ -9,7 +9,7 @@ import { IInjector } from "../../definitions/yok";
 
 function createTestInjector(
 	jsonContents: any,
-	options?: { useRealFsExists: boolean }
+	options?: { useRealFsExists: boolean },
 ): IInjector {
 	const testInjector = new Yok();
 	testInjector.register("fs", {
@@ -32,7 +32,7 @@ describe("messages-service", () => {
 			assert.deepStrictEqual(
 				1,
 				service.pathsToMessageJsonFiles.length,
-				"Messages service should initialize with a default json file."
+				"Messages service should initialize with a default json file.",
 			);
 		});
 
@@ -44,7 +44,7 @@ describe("messages-service", () => {
 			assert.deepStrictEqual(
 				2,
 				service.pathsToMessageJsonFiles.length,
-				"Messages service should append the default json file."
+				"Messages service should append the default json file.",
 			);
 		});
 
@@ -66,7 +66,7 @@ describe("messages-service", () => {
 			assert.deepStrictEqual(
 				stringMessage,
 				resultMessage,
-				"Messages service should return the given message if not found as key in any json file in `pathsToMessageJsonFiles` property."
+				"Messages service should return the given message if not found as key in any json file in `pathsToMessageJsonFiles` property.",
 			);
 		});
 
@@ -81,7 +81,7 @@ describe("messages-service", () => {
 			assert.deepStrictEqual(
 				expectedMessage,
 				resultMessage,
-				"Messages service should apply util.format."
+				"Messages service should apply util.format.",
 			);
 		});
 
@@ -93,7 +93,7 @@ describe("messages-service", () => {
 			assert.deepStrictEqual(
 				jsonContents.KEY,
 				service.getMessage("KEY"),
-				"Messages service should return correct value from json file by given key."
+				"Messages service should return correct value from json file by given key.",
 			);
 		});
 
@@ -109,7 +109,7 @@ describe("messages-service", () => {
 			assert.deepStrictEqual(
 				expectedMessage,
 				actualMessage,
-				"Messages service should util.format value from json file by given key when value is format."
+				"Messages service should util.format value from json file by given key when value is format.",
 			);
 		});
 
@@ -125,7 +125,7 @@ describe("messages-service", () => {
 			assert.deepStrictEqual(
 				jsonContents.KEY.NESTED_KEY,
 				service.getMessage("KEY.NESTED_KEY"),
-				"Messages service should return correct value from json file by given complex key."
+				"Messages service should return correct value from json file by given complex key.",
 			);
 		});
 
@@ -142,7 +142,7 @@ describe("messages-service", () => {
 					"..",
 					"resources",
 					"messages",
-					"errorMessages.json"
+					"errorMessages.json",
 				),
 				injector = createTestInjector({});
 
@@ -159,12 +159,12 @@ describe("messages-service", () => {
 			assert.notDeepEqual(
 				commonJsonContents.KEY,
 				service.getMessage("KEY"),
-				"Messages service should return correct value from json file when value is overriden by client."
+				"Messages service should return correct value from json file when value is overriden by client.",
 			);
 			assert.deepStrictEqual(
 				clientJsonContents.KEY,
 				service.getMessage("KEY"),
-				"Messages service should return correct value from json file when value is overriden by client."
+				"Messages service should return correct value from json file when value is overriden by client.",
 			);
 		});
 	});

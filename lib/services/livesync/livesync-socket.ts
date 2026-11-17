@@ -3,9 +3,9 @@ import { injector } from "../../common/yok";
 
 export class LiveSyncSocket extends net.Socket implements ILiveSyncSocket {
 	public uid: string;
-	public writeAsync(data: Buffer): Promise<Boolean> {
+	public writeAsync(data: Buffer): Promise<boolean> {
 		return new Promise((resolve, reject) => {
-			const result: Boolean = this.write(data, () => resolve(result));
+			const result: boolean = this.write(data, () => resolve(result));
 		});
 	}
 }
