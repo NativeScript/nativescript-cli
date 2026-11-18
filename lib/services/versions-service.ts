@@ -2,7 +2,11 @@ import * as constants from "../constants";
 import * as helpers from "../common/helpers";
 import * as semver from "semver";
 import * as path from "path";
-import { IVersionsService, IPackageInstallationManager } from "../declarations";
+import {
+	IVersionsService,
+	IPackageInstallationManager,
+	IPackageManager,
+} from "../declarations";
 import { IProjectData, IProjectDataService } from "../definitions/project";
 import { IPluginsService, IBasePluginData } from "../definitions/plugins";
 import { IFileSystem, IVersionInformation } from "../common/declarations";
@@ -28,6 +32,7 @@ class VersionsService implements IVersionsService {
 	constructor(
 		private $fs: IFileSystem,
 		private $packageInstallationManager: IPackageInstallationManager,
+		private $packageManager: IPackageManager,
 		private $injector: IInjector,
 		private $logger: ILogger,
 		private $staticConfig: Config.IStaticConfig,
@@ -63,18 +68,13 @@ class VersionsService implements IVersionsService {
 		const versionInformations: IVersionInformation[] = [];
 
 		if (this.projectData) {
-			const nodeModulesPath = path.join(
-				this.projectData.projectDir,
-				constants.NODE_MODULES_FOLDER_NAME
-			);
-			const scopedPackagePath = path.join(
-				nodeModulesPath,
-				constants.SCOPED_TNS_CORE_MODULES
-			);
-			const tnsCoreModulesPath = path.join(
-				nodeModulesPath,
-				constants.TNS_CORE_MODULES_NAME
-			);
+			const resolve = (packageName: string) =>
+				this.$packageManager.getInstalledPackagePath(
+					packageName,
+					this.projectData.projectDir
+				);
+			let scopedPackagePath = resolve(constants.SCOPED_TNS_CORE_MODULES);
+			let tnsCoreModulesPath = resolve(constants.TNS_CORE_MODULES_NAME);
 
 			const dependsOnNonScopedPackage = !!this.projectData.dependencies[
 				constants.TNS_CORE_MODULES_NAME
@@ -83,18 +83,19 @@ class VersionsService implements IVersionsService {
 				constants.SCOPED_TNS_CORE_MODULES
 			];
 
-			// ensure the dependencies are installed, so we can get their actual versions from node_modules
+			// ensure the dependencies are installed, so we can read their actual versions
 			if (
-				!this.$fs.exists(nodeModulesPath) ||
-				(dependsOnNonScopedPackage && !this.$fs.exists(tnsCoreModulesPath)) ||
-				(dependsOnScopedPackage && !this.$fs.exists(scopedPackagePath))
+				(dependsOnNonScopedPackage && !tnsCoreModulesPath) ||
+				(dependsOnScopedPackage && !scopedPackagePath)
 			) {
 				await this.$pluginsService.ensureAllDependenciesAreInstalled(
 					this.projectData
 				);
+				scopedPackagePath = resolve(constants.SCOPED_TNS_CORE_MODULES);
+				tnsCoreModulesPath = resolve(constants.TNS_CORE_MODULES_NAME);
 			}
 
-			if (dependsOnNonScopedPackage && this.$fs.exists(tnsCoreModulesPath)) {
+			if (dependsOnNonScopedPackage && tnsCoreModulesPath) {
 				const currentTnsCoreModulesVersion = this.$fs.readJson(
 					path.join(tnsCoreModulesPath, constants.PACKAGE_JSON_FILE_NAME)
 				).version;
@@ -102,7 +103,7 @@ class VersionsService implements IVersionsService {
 				versionInformations.push(nativescriptCoreModulesInfo);
 			}
 
-			if (dependsOnScopedPackage && this.$fs.exists(scopedPackagePath)) {
+			if (dependsOnScopedPackage && scopedPackagePath) {
 				const scopedModulesInformation: IVersionInformation = {
 					componentName: constants.SCOPED_TNS_CORE_MODULES,
 					latestVersion: await this.$packageInstallationManager.getLatestVersion(

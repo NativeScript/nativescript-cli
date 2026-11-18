@@ -126,13 +126,6 @@ export const TemplatesV2PackageJsonKeysToRemove: Array<String> = [
 	"nativescript",
 ];
 
-export class SaveOptions {
-	static PRODUCTION = "save";
-	static DEV = "save-dev";
-	static OPTIONAL = "save-optional";
-	static EXACT = "save-exact";
-}
-
 export class ReleaseType {
 	static MAJOR = "major";
 	static PREMAJOR = "premajor";

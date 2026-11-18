@@ -13,6 +13,11 @@ interface IJsonFileSettingsService {
 		settingName: string,
 		cacheOpts?: ICacheTimeoutOpts
 	): Promise<T>;
+	/**
+	 * Reads a setting without taking the settings lock. Suitable for values that
+	 * only change through explicit user commands, where a torn read is harmless.
+	 */
+	getSettingValueSync<T>(settingName: string): T;
 	saveSetting<T>(
 		key: string,
 		value: T,

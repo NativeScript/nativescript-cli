@@ -27,6 +27,7 @@ import {
 import {
 	IAndroidResourcesMigrationService,
 	IStaticConfig,
+	IPackageManager,
 } from "../declarations";
 import { IBasePluginData, IPluginsService } from "../definitions/plugins";
 import { IDictionary, IFileSystem, IProjectDir } from "../common/declarations";
@@ -34,7 +35,6 @@ import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
 import * as semver from "semver";
-import { resolvePackageJSONPath } from "../helpers/package-path-helper";
 
 interface IProjectFileData {
 	projectData: any;
@@ -653,20 +653,17 @@ export class ProjectDataService implements IProjectDataService {
 			// in case we are using a local tgz for the runtime or a range like ~8.0.0, ^8.0.0 etc. or a tag like JSC
 			if (runtimePackage.version.includes("tgz") || isRange || isTag) {
 				try {
-					const runtimePackageJsonPath = resolvePackageJSONPath(
-						runtimePackage.name,
-						{
-							paths: [projectDir],
-						},
-					);
+					const runtimePackagePath = this.$injector
+						.resolve<IPackageManager>("packageManager")
+						.getInstalledPackagePath(runtimePackage.name, projectDir);
 
-					if (!runtimePackageJsonPath) {
+					if (!runtimePackagePath) {
 						// caught below
-						throw new Error("Runtime package.json not found.");
+						throw new Error("Runtime package not found.");
 					}
 
 					runtimePackage.version = this.$fs.readJson(
-						runtimePackageJsonPath,
+						path.join(runtimePackagePath, constants.PACKAGE_JSON_FILE_NAME),
 					).version;
 				} catch (err) {
 					if (isRange) {

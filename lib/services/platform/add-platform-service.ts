@@ -120,9 +120,8 @@ export class AddPlatformService implements IAddPlatformService {
 			{
 				silent: true,
 				dev: true,
-				"save-dev": true,
-				"save-exact": true,
-			} as any
+				exact: true,
+			}
 		);
 
 		if (!installedPackage.name) {

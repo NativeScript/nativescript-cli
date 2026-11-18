@@ -3,7 +3,7 @@ import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
 import { assert } from "chai";
 import { setIsInteractive } from "../lib/common/helpers";
-import { PnpmPackageManager } from "../lib/pnpm-package-manager";
+import { PnpmPackageManager } from "../lib/package-managers/pnpm";
 import { IInjector } from "../lib/common/definitions/yok";
 
 class RecordingChildProcessStub extends stubs.ChildProcessStub {
@@ -146,7 +146,7 @@ describe("pnpm-package-manager", () => {
 				fs.textFiles[npmrcPath] =
 					`registry=https://example.com\n${layoutKey}=*types*\n`;
 
-				await pnpm.install(projectDir, projectDir, {} as any);
+				await pnpm.install(projectDir, projectDir, {});
 
 				assert.deepEqual(childProcess.spawnedArgs[0], ["i"]);
 			});
@@ -180,7 +180,7 @@ describe("pnpm-package-manager", () => {
 				ignoreScripts: true,
 				path: "/some/path",
 				frameworkPath: "/some/framework",
-			} as any);
+			});
 
 			const args = childProcess.spawnedArgs[0];
 			assert.include(args, "--ignore-scripts");
@@ -197,7 +197,7 @@ describe("pnpm-package-manager", () => {
 
 			setIsInteractive(() => false);
 			try {
-				await pnpm.install(projectDir, projectDir, {} as any);
+				await pnpm.install(projectDir, projectDir, {});
 			} finally {
 				setIsInteractive(undefined);
 			}
@@ -217,13 +217,12 @@ describe("pnpm-package-manager", () => {
 			const childProcess =
 				testInjector.resolve<RecordingChildProcessStub>("childProcess");
 
-			await pnpm.install("left-pad", projectDir, { save: true } as any);
+			await pnpm.install("left-pad", projectDir, { save: true });
 
 			assert.deepEqual(childProcess.spawnedArgs[0], [
 				"i",
 				"--shamefully-hoist",
 				"left-pad",
-				"--save",
 			]);
 		});
 	});

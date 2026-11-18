@@ -4,7 +4,11 @@ import { cache } from "../common/decorators";
 import * as constants from "../constants";
 import { createRegExp, regExpEscape } from "../common/helpers";
 import { reportDeprecation } from "../common/deprecation";
-import { INodePackageManager, INpmsSingleResultData } from "../declarations";
+import {
+	INodePackageManager,
+	INpmsSingleResultData,
+	IPackageInstallOptions,
+} from "../declarations";
 import {
 	IDictionary,
 	IFileSystem,
@@ -119,9 +123,9 @@ export class ExtensibilityService implements IExtensibilityService {
 
 		await this.assertPackageJsonExists();
 
-		const npmOpts: any = {
+		const npmOpts: IPackageInstallOptions = {
 			save: true,
-			["save-exact"]: true,
+			exact: true,
 		};
 
 		const localPath = path.resolve(extensionName);
@@ -508,11 +512,12 @@ export class ExtensibilityService implements IExtensibilityService {
 		extensionName: string,
 	): Promise<void> {
 		this.$logger.trace(`Asserting extension ${extensionName} is installed.`);
-		const installedExtensions = this.$fs.readDirectory(
-			path.join(this.pathToExtensions, constants.NODE_MODULES_FOLDER_NAME),
+		const installedPath = this.$packageManager.getInstalledPackagePath(
+			extensionName,
+			this.pathToExtensions,
 		);
 
-		if (installedExtensions.indexOf(extensionName) === -1) {
+		if (!installedPath) {
 			this.$logger.trace(
 				`Extension ${extensionName} is not installed, starting installation.`,
 			);
