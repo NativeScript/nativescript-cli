@@ -239,6 +239,8 @@ export const FILES_CHANGE_EVENT_NAME = "filesChangeEvent";
 export const INITIAL_SYNC_EVENT_NAME = "initialSyncEvent";
 export const PREPARE_READY_EVENT_NAME = "prepareReadyEvent";
 export const BUNDLER_COMPILATION_COMPLETE = "bundlerCompilationComplete";
+/** Payload: `IBundlerAppRestartRequest`. */
+export const BUNDLER_APP_RESTART_REQUESTED = "bundlerAppRestartRequested";
 
 export class DebugCommandErrors {
 	public static UNABLE_TO_USE_FOR_DEVICE_AND_EMULATOR =

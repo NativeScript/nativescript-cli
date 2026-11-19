@@ -6,6 +6,7 @@ import * as path from "path";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
 import {
+	BUNDLER_APP_RESTART_REQUESTED,
 	BUNDLER_COMPILATION_COMPLETE,
 	CONFIG_FILE_NAME_DISPLAY,
 	PackageManagers,
@@ -543,6 +544,129 @@ describe("BundlerCompilerService", () => {
 				),
 				`The bundler configuration file ${bundlerConfigPath} does not exist. Ensure the file exists, or update the path in ${CONFIG_FILE_NAME_DISPLAY}`,
 			);
+		});
+	});
+
+	describe("vite dev server", () => {
+		const platformData = <any>{
+			platformNameLowerCase: "ios",
+			appDestinationDirectoryPath: "/platform/app",
+		};
+		const projectData = <any>{
+			projectDir: "/project",
+			bundler: "vite",
+			bundlerConfigPath: "/project/vite.config.ts",
+		};
+		const prepareData = <any>{ watch: true, hmr: true };
+
+		let serveProcess: FakeChildProcess = null;
+		let spawnOptions: any = null;
+		let restartRequests: IBundlerAppRestartRequest[] = null;
+
+		const waitForDebounce = () =>
+			new Promise((resolve) => setTimeout(resolve, 20));
+
+		beforeEach(async () => {
+			serveProcess = fakeChildProcess(456);
+			spawnOptions = null;
+			restartRequests = [];
+
+			const service = <any>bundlerCompilerService;
+			service.getBundler = () => "vite";
+			service.getBundlerExecutablePath = () => "/project/vite.js";
+			service.buildEnvData = () => ({});
+			service.buildEnvCommandLineParams = async (): Promise<string[]> => [];
+			service.waitForPort = async () => true;
+			service.appRestartDebounceMs = 5;
+			testInjector.resolve("childProcess").spawn = (
+				_command: string,
+				_args: string[],
+				options: any,
+			) => {
+				spawnOptions = options;
+				return serveProcess;
+			};
+			bundlerCompilerService.on(BUNDLER_APP_RESTART_REQUESTED, (request) =>
+				restartRequests.push(request),
+			);
+
+			await service.startViteDevServer(platformData, projectData, prepareData);
+		});
+
+		it("opens an IPC channel and keeps the output inherited", () => {
+			assert.deepStrictEqual(spawnOptions.stdio, [
+				"inherit",
+				"inherit",
+				"inherit",
+				"ipc",
+			]);
+		});
+
+		it("asks for an app restart when the dev server requests one", async () => {
+			serveProcess.emit("message", {
+				type: "nativescript:restart",
+				reason: "vite.config.ts changed",
+			});
+			await waitForDebounce();
+
+			assert.deepStrictEqual(restartRequests, [
+				{
+					projectDir: "/project",
+					platform: "ios",
+					reason: "vite.config.ts changed",
+				},
+			]);
+		});
+
+		it("collapses requests that arrive close together into one", async () => {
+			serveProcess.emit("message", {
+				type: "nativescript:restart",
+				reason: "a.ts changed",
+			});
+			serveProcess.emit("message", {
+				type: "nativescript:restart",
+				reason: "b.ts changed",
+			});
+			serveProcess.emit("message", {
+				type: "nativescript:restart",
+				reason: "a.ts changed",
+			});
+			await waitForDebounce();
+
+			assert.deepStrictEqual(restartRequests, [
+				{
+					projectDir: "/project",
+					platform: "ios",
+					reason: "a.ts changed; b.ts changed",
+				},
+			]);
+		});
+
+		it("ignores messages it does not know", async () => {
+			serveProcess.emit("message", "nativescript:restart");
+			serveProcess.emit("message", null);
+			serveProcess.emit("message", { type: "nativescript:something-else" });
+			serveProcess.emit("message", {
+				emittedFiles: ["bundle.mjs"],
+				hash: "hash-1",
+				isHMR: false,
+				buildType: "incremental",
+			});
+			await waitForDebounce();
+
+			assert.lengthOf(restartRequests, 0);
+		});
+
+		it("drops a pending request when the dev server is stopped", async () => {
+			serveProcess.emit("message", {
+				type: "nativescript:restart",
+				reason: "a.ts changed",
+			});
+			serveProcess.exitCode = 0;
+			await bundlerCompilerService.stopBundlerCompiler("ios");
+			await waitForDebounce();
+
+			assert.lengthOf(restartRequests, 0);
 		});
 	});
 

@@ -1,5 +1,6 @@
 import { HmrConstants, DeviceDiscoveryEventNames } from "../common/constants";
 import {
+	BUNDLER_APP_RESTART_REQUESTED,
 	PREPARE_READY_EVENT_NAME,
 	TrackActionNames,
 	DEBUGGER_DETACHED_EVENT_NAME,
@@ -28,6 +29,9 @@ import { injector } from "../common/yok";
 
 export class RunController extends EventEmitter implements IRunController {
 	private prepareReadyEventHandler: any = null;
+	private appRestartRequestHandler: (
+		request: IBundlerAppRestartRequest,
+	) => void = null;
 	private _syncInProgress = false;
 	private _pendingSyncs: Map<
 		string,
@@ -41,6 +45,7 @@ export class RunController extends EventEmitter implements IRunController {
 	constructor(
 		protected $analyticsService: IAnalyticsService,
 		private $buildController: IBuildController,
+		private $bundlerCompilerService: IBundlerCompilerService,
 		private $debugController: IDebugController,
 		private $deviceInstallAppService: IDeviceInstallAppService,
 		protected $devicesService: Mobile.IDevicesService,
@@ -124,6 +129,14 @@ export class RunController extends EventEmitter implements IRunController {
 				this.prepareReadyEventHandler,
 			);
 		}
+		if (!this.appRestartRequestHandler) {
+			this.appRestartRequestHandler = (request) =>
+				this.restartApplicationOnPlatform(request);
+			this.$bundlerCompilerService.on(
+				BUNDLER_APP_RESTART_REQUESTED,
+				this.appRestartRequestHandler,
+			);
+		}
 		await this.syncInitialDataOnDevices(
 			projectData,
 			liveSyncInfo,
@@ -196,6 +209,14 @@ export class RunController extends EventEmitter implements IRunController {
 						this.prepareReadyEventHandler,
 					);
 					this.prepareReadyEventHandler = null;
+				}
+
+				if (this.appRestartRequestHandler) {
+					this.$bundlerCompilerService.removeListener(
+						BUNDLER_APP_RESTART_REQUESTED,
+						this.appRestartRequestHandler,
+					);
+					this.appRestartRequestHandler = null;
 				}
 
 				const projectData = this.$projectDataService.getProjectData(projectDir);
@@ -344,6 +365,36 @@ export class RunController extends EventEmitter implements IRunController {
 				(device: Mobile.IDevice) => !!findCurrentDescriptor(device),
 			),
 		);
+	}
+
+	private async restartApplicationOnPlatform(
+		request: IBundlerAppRestartRequest,
+	): Promise<void> {
+		const { projectDir, platform, reason } = request;
+		const onPlatform = this.$devicesService
+			.getDevicesForPlatform(platform)
+			.map((device) => device.deviceInfo.identifier);
+		const deviceIdentifiers = this.$liveSyncProcessDataService
+			.getDeviceDescriptors(projectDir)
+			.map((descriptor) => descriptor.identifier)
+			.filter((identifier) => onPlatform.includes(identifier));
+
+		// An empty list would mean "every device" to `restartApplication`.
+		if (!deviceIdentifiers.length) {
+			this.$logger.trace(
+				`Ignoring the ${platform} app restart request (${reason}): no ${platform} device in the session.`,
+			);
+			return;
+		}
+
+		this.$logger.info(`Restarting the app on ${platform}: ${reason}`);
+		try {
+			await this.restartApplication({ projectDir, deviceIdentifiers });
+		} catch (err) {
+			this.$logger.warn(
+				`Unable to restart the app on ${platform}: ${err.message || err}`,
+			);
+		}
 	}
 
 	protected async refreshApplication(

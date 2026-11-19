@@ -8,6 +8,7 @@ import { performanceLog } from "../../common/decorators";
 import {
 	WEBPACK_PLUGIN_NAME,
 	BUNDLER_COMPILATION_COMPLETE,
+	BUNDLER_APP_RESTART_REQUESTED,
 	PackageManagers,
 	CONFIG_FILE_NAME_DISPLAY,
 	VITE_DIST_FOLDER_NAME,
@@ -59,6 +60,12 @@ const debugLog = false;
 /** Grace period a bundler child gets to honour SIGINT before it is killed. */
 const BUNDLER_STOP_TIMEOUT_MS = 5000;
 
+/**
+ * IPC message `vite serve` (`@nativescript/vite`) sends when a change can only
+ * be applied by restarting the app process.
+ */
+const VITE_APP_RESTART_MESSAGE_TYPE = "nativescript:restart";
+
 export class BundlerCompilerService
 	extends EventEmitter
 	implements IBundlerCompilerService
@@ -68,6 +75,12 @@ export class BundlerCompilerService
 	// modules and HMR updates from. Keyed by platform, managed by this CLI
 	// so users no longer need a separate `concurrently`/`wait-on` process.
 	private viteServeProcesses: IDictionary<child_process.ChildProcess> = {};
+	private pendingAppRestarts: IDictionary<{
+		reasons: string[];
+		timer: NodeJS.Timeout;
+	}> = {};
+	/** Restart requests within this window collapse into one restart. */
+	private appRestartDebounceMs = 300;
 	private expectedHashes: IStringDictionary = {};
 
 	constructor(
@@ -736,10 +749,10 @@ export class BundlerCompilerService
 
 			const options: { [key: string]: any } = {
 				cwd: projectData.projectDir,
-				// Inherit so the dev server's URLs/logs stream to the user as
-				// before. No IPC needed here — the build watcher provides the
-				// bundle-complete IPC; the dev server is fetched over HTTP/ws.
-				stdio: "inherit",
+				// Logs stream straight to the user. The IPC channel only carries
+				// app-restart requests; a server that never sends one behaves as
+				// with plain "inherit".
+				stdio: ["inherit", "inherit", "inherit", "ipc"],
 				env: {
 					...process.env,
 					NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
@@ -762,9 +775,14 @@ export class BundlerCompilerService
 			this.viteServeProcesses[key] = childProcess;
 			await this.$cleanupService.addKillProcess(childProcess.pid.toString());
 
+			childProcess.on("message", (message: unknown) =>
+				this.handleViteServeMessage(message, key, projectData.projectDir),
+			);
+
 			childProcess.once("exit", (code: number) => {
 				if (this.viteServeProcesses[key] === childProcess) {
 					delete this.viteServeProcesses[key];
+					this.cancelAppRestart(key);
 				}
 				if (code) {
 					this.$logger.warn(
@@ -793,6 +811,68 @@ export class BundlerCompilerService
 			this.$logger.warn(
 				`Failed to start the Vite dev server: ${err}. HMR may be unavailable.`,
 			);
+		}
+	}
+
+	/**
+	 * Unknown message shapes are ignored without a log, so a newer
+	 * `@nativescript/vite` can add message types without breaking this CLI.
+	 */
+	private handleViteServeMessage(
+		message: unknown,
+		platform: string,
+		projectDir: string,
+	): void {
+		if (
+			!message ||
+			typeof message !== "object" ||
+			(message as { type?: unknown }).type !== VITE_APP_RESTART_MESSAGE_TYPE
+		) {
+			return;
+		}
+
+		const { reason } = message as { reason?: unknown };
+		this.requestAppRestart(
+			platform,
+			projectDir,
+			typeof reason === "string" && reason
+				? reason
+				: "the Vite dev server requested it",
+		);
+	}
+
+	private requestAppRestart(
+		platform: string,
+		projectDir: string,
+		reason: string,
+	): void {
+		const pending = this.pendingAppRestarts[platform] || {
+			reasons: [],
+			timer: null,
+		};
+		if (!pending.reasons.includes(reason)) {
+			pending.reasons.push(reason);
+		}
+		clearTimeout(pending.timer);
+		pending.timer = setTimeout(() => {
+			delete this.pendingAppRestarts[platform];
+			const request: IBundlerAppRestartRequest = {
+				projectDir,
+				platform,
+				reason: pending.reasons.join("; "),
+			};
+			this.emit(BUNDLER_APP_RESTART_REQUESTED, request);
+		}, this.appRestartDebounceMs);
+		// A pending timer must not be what keeps the CLI alive.
+		pending.timer.unref?.();
+		this.pendingAppRestarts[platform] = pending;
+	}
+
+	private cancelAppRestart(platform: string): void {
+		const pending = this.pendingAppRestarts[platform];
+		if (pending) {
+			clearTimeout(pending.timer);
+			delete this.pendingAppRestarts[platform];
 		}
 	}
 
@@ -1034,6 +1114,8 @@ export class BundlerCompilerService
 		// Tear down the Vite dev server we manage alongside the build watcher.
 		const viteServeProcess = this.viteServeProcesses[platform];
 		if (viteServeProcess) {
+			viteServeProcess.removeAllListeners("message");
+			this.cancelAppRestart(platform);
 			await this.terminate(viteServeProcess);
 			if (this.viteServeProcesses[platform] === viteServeProcess) {
 				delete this.viteServeProcesses[platform];
