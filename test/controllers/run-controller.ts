@@ -4,7 +4,11 @@ import { LiveSyncServiceResolver } from "../../lib/resolvers/livesync-service-re
 import { MobileHelper } from "../../lib/common/mobile/mobile-helper";
 import { assert } from "chai";
 import * as _ from "lodash";
-import { RunOnDeviceEvents } from "../../lib/constants";
+import { EventEmitter } from "events";
+import {
+	BUNDLER_APP_RESTART_REQUESTED,
+	RunOnDeviceEvents,
+} from "../../lib/constants";
 import { PrepareData } from "../../lib/data/prepare-data";
 import { PrepareDataService } from "../../lib/services/prepare-data-service";
 import { BuildDataService } from "../../lib/services/build-data-service";
@@ -124,6 +128,7 @@ function createTestInjector() {
 	});
 	injector.register("prepareNativePlatformService", {});
 	injector.register("projectChangesService", {});
+	injector.register("bundlerCompilerService", new EventEmitter());
 	injector.register("runController", RunController);
 	injector.register("prepareDataService", PrepareDataService);
 	injector.register("buildDataService", BuildDataService);
@@ -422,6 +427,96 @@ describe("RunController", () => {
 			assert.deepStrictEqual(restartedApps, [
 				{ device: "myiOSDevice", isFullSync: false },
 			]);
+		});
+
+		describe("requested by the bundler", () => {
+			let bundlerCompilerService: EventEmitter = null;
+
+			beforeEach(async () => {
+				bundlerCompilerService = injector.resolve("bundlerCompilerService");
+				mockDevicesService(injector, []);
+				await runController.run({ liveSyncInfo, deviceDescriptors: [] });
+
+				startSession(
+					[iOSDeviceDescriptor, androidDeviceDescriptor],
+					[iOSDevice, androidDevice],
+				);
+				injector.resolve("devicesService").getDevicesForPlatform = (
+					platform: string,
+				) =>
+					[iOSDevice, androidDevice].filter(
+						(device) => device.deviceInfo.platform === platform,
+					);
+				infoMessages = [];
+			});
+
+			async function requestRestart(platform: string, reason: string) {
+				bundlerCompilerService.emit(BUNDLER_APP_RESTART_REQUESTED, {
+					projectDir,
+					platform,
+					reason,
+				});
+				await injector
+					.resolve("liveSyncProcessDataService")
+					.getPersistedData(projectDir).actionsChain;
+			}
+
+			it("restarts the app only on the session's devices of that platform", async () => {
+				await requestRestart("android", "vite.config.ts changed");
+
+				assert.deepStrictEqual(restartedApps, [
+					{ device: "myAndroidDevice", isFullSync: false },
+				]);
+				assert.deepStrictEqual(infoMessages, [
+					"Restarting the app on android: vite.config.ts changed",
+				]);
+			});
+
+			it("restarts nothing when the session has no device of that platform", async () => {
+				const persisted = injector
+					.resolve("liveSyncProcessDataService")
+					.getPersistedData(projectDir);
+				_.remove(
+					persisted.deviceDescriptors,
+					(descriptor: ILiveSyncDeviceDescriptor) =>
+						descriptor.identifier === "myAndroidDevice",
+				);
+
+				await requestRestart("android", "vite.config.ts changed");
+
+				assert.lengthOf(restartedApps, 0);
+				assert.lengthOf(infoMessages, 0);
+			});
+
+			it("waits for the action already running on the session", async () => {
+				const persisted = injector
+					.resolve("liveSyncProcessDataService")
+					.getPersistedData(projectDir);
+				let release: () => void;
+				persisted.actionsChain = new Promise<void>((resolve) => {
+					release = resolve;
+				});
+
+				const restarting = requestRestart("ios", "app.ts changed");
+				await new Promise((resolve) => setImmediate(resolve));
+				assert.lengthOf(restartedApps, 0);
+
+				release();
+				await restarting;
+
+				assert.deepStrictEqual(restartedApps, [
+					{ device: "myiOSDevice", isFullSync: false },
+				]);
+			});
+
+			it("stops listening once the session stops", async () => {
+				await runController.stop({ projectDir });
+
+				assert.strictEqual(
+					bundlerCompilerService.listenerCount(BUNDLER_APP_RESTART_REQUESTED),
+					0,
+				);
+			});
 		});
 	});
 

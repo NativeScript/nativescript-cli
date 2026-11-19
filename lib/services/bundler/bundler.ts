@@ -32,6 +32,18 @@ declare global {
 		stopBundlerCompiler(platform: string): Promise<void>;
 	}
 
+	/**
+	 * The bundler's dev server asked for the app process to be restarted,
+	 * because a change cannot be applied as a hot update.
+	 */
+	interface IBundlerAppRestartRequest {
+		projectDir: string;
+		/** Lowercase platform name. */
+		platform: string;
+		/** Human-readable; may combine several requests. */
+		reason: string;
+	}
+
 	interface IBundlerEnvOptions {
 		sourceMap?: boolean;
 		uglify?: boolean;
