@@ -52,7 +52,7 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 			spawnOptions?: any,
 		) => {
 			spawnCalls.push({ command, args, options });
-			if (compilerFailure && args[0]?.endsWith("ns-native.js")) {
+			if (compilerFailure && args[0]?.endsWith("ns-compiled.js")) {
 				childProcess.emit(spawnOptions.emitOptions.eventName, { data: compilerFailure, pipe: "stderr" });
 				return { stdout: "", stderr: compilerFailure, exitCode: 1 };
 			}
@@ -75,7 +75,7 @@ function createService(nsConfig: any = {}): CompiledReleaseService {
 	injector.register("exportOptionsPlistService", {});
 	injector.register("fs", {
 		exists: (file: string) =>
-			path.basename(file) === "ns-native-project.json"
+			path.basename(file) === "ns-compiled-project.json"
 				? fs.existsSync(file)
 				: true,
 		readJson: (file: string) => JSON.parse(fs.readFileSync(file, "utf8")),
@@ -154,12 +154,18 @@ function installCompilerPackage(): string {
 		JSON.stringify({
 			name: "@nativescript/compiler",
 			bin: {
-				"ns-native": "bin/ns-native.js",
-				"ns-native-retrace": "bin/ns-native-retrace.js",
+				"ns-compiled": "bin/ns-compiled.js",
+				"ns-compiled-retrace": "bin/ns-compiled-retrace.js",
 			},
 		}),
 	);
 	return fs.realpathSync(packageDir);
+}
+
+function writeProjectMarker(marker: { workspace?: string; project?: string }): void {
+	const iosRoot = path.join(projectDir, "platforms", "compiled", "ios");
+	fs.mkdirSync(iosRoot, { recursive: true });
+	fs.writeFileSync(path.join(iosRoot, "ns-compiled-project.json"), JSON.stringify(marker));
 }
 
 const platformData = (platform: string): any => ({
@@ -270,7 +276,7 @@ describe("compiledReleaseService", () => {
 			assert.lengthOf(spawnCalls, 1);
 			assert.equal(spawnCalls[0].command, process.execPath);
 			assert.deepStrictEqual(spawnCalls[0].args, [
-				path.join(packageDir, "bin", "ns-native.js"),
+				path.join(packageDir, "bin", "ns-compiled.js"),
 				projectDir,
 				"--platform",
 				"ios",
@@ -416,9 +422,9 @@ describe("compiledReleaseService", () => {
 
 			assert.match(failure.message, /gradlew failed/);
 			assert.equal(gradleCalls[0].options.stdio, "pipe");
-			const retrace = spawnCalls.find((c) => c.args[0].endsWith("ns-native-retrace.js"));
+			const retrace = spawnCalls.find((c) => c.args[0].endsWith("ns-compiled-retrace.js"));
 			assert.deepStrictEqual(retrace.args.slice(1, 3), ["--build-log", projectRoot]);
-			assert.equal(retrace.args[0], path.join(packageDir, "bin", "ns-native-retrace.js"));
+			assert.equal(retrace.args[0], path.join(packageDir, "bin", "ns-compiled-retrace.js"));
 			assert.equal(writtenFiles[retrace.args[3]], `${kotlinError}\n`);
 			assert.deepStrictEqual(errorsLogged, ["Kotlin errors in your source:\ne: app/home.ts:7: Unresolved reference 'x'. (Home.kt:14:9)"]);
 			assert.include(failure.message, "ns compiled report android");
@@ -444,6 +450,7 @@ describe("compiledReleaseService", () => {
 
 		it("builds the iOS simulator app", async () => {
 			const service = createService();
+			writeProjectMarker({ project: "demo.xcodeproj" });
 
 			const result = await service.build(
 				platformData("iOS"),
@@ -451,8 +458,9 @@ describe("compiledReleaseService", () => {
 				<any>{ release: true, buildForDevice: false },
 			);
 
-			assert.deepStrictEqual(spawnCalls[0].args, ["generate", "--quiet"]);
+			assert.lengthOf(spawnCalls, 0);
 			assert.lengthOf(xcodebuildCalls, 1);
+			assert.deepStrictEqual(xcodebuildCalls[0].slice(0, 2), ["-project", "demo.xcodeproj"]);
 			assert.include(xcodebuildCalls[0], "generic/platform=iOS Simulator");
 			assert.include(xcodebuildCalls[0], "ARCHS=$(NATIVE_ARCH_ACTUAL)");
 			assert.match(
@@ -461,8 +469,39 @@ describe("compiledReleaseService", () => {
 			);
 		});
 
+		it("builds the workspace ns-compiled-project.json names", async () => {
+			const service = createService();
+			writeProjectMarker({ workspace: "demo.xcworkspace" });
+
+			await service.build(
+				platformData("iOS"),
+				createProjectData(),
+				<any>{ release: true, buildForDevice: false },
+			);
+
+			assert.deepStrictEqual(xcodebuildCalls[0].slice(0, 2), ["-workspace", "demo.xcworkspace"]);
+		});
+
+		it("refuses an iOS build without ns-compiled-project.json", async () => {
+			const service = createService();
+
+			let error: Error;
+			try {
+				await service.build(platformData("iOS"), createProjectData(), <any>{ release: true });
+			} catch (err) {
+				error = err;
+			}
+
+			assert.equal(
+				error.message,
+				"platforms/compiled/ios/ns-compiled-project.json is missing: ns-compiled writes it when it compiles the app for iOS.",
+			);
+			assert.lengthOf(xcodebuildCalls, 0);
+		});
+
 		it("keeps swiftc's errors as a report draft when the Xcode build fails", async () => {
 			const service = createService();
+			writeProjectMarker({ project: "demo.xcodeproj" });
 			xcodebuildFailure = `${projectDir}/app/main.ts:3:5: error: cannot convert value of type 'Int' to expected argument type 'String'\n** BUILD FAILED **\n`;
 
 			let error: Error;
@@ -479,6 +518,7 @@ describe("compiledReleaseService", () => {
 
 		it("runs the project's build hooks around the compiled build, with the compiled project as projectRoot", async () => {
 			const service = createService();
+			writeProjectMarker({ project: "demo.xcodeproj" });
 
 			await service.build(
 				platformData("iOS"),
@@ -499,6 +539,7 @@ describe("compiledReleaseService", () => {
 
 		it("archives an unsigned device build without --team-id or --provision", async () => {
 			const service = createService();
+			writeProjectMarker({ project: "demo.xcodeproj" });
 
 			const result = await service.build(
 				platformData("iOS"),
@@ -517,6 +558,7 @@ describe("compiledReleaseService", () => {
 
 		it("signs with --provision at export, leaving the kit's package target unsigned", async () => {
 			const service = createService();
+			writeProjectMarker({ project: "demo.xcodeproj" });
 
 			const result = await service.build(
 				platformData("iOS"),

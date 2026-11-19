@@ -229,10 +229,10 @@ export class CompiledReleaseService {
 	}
 
 	private getCompilerPath(projectData: IProjectData): string {
-		return this.getCompilerBin(projectData, "ns-native");
+		return this.getCompilerBin(projectData, "ns-compiled");
 	}
 
-	/** A command of the project's `@nativescript/compiler` (`ns-native`, `ns-compiled-verify`), as a script for Node. */
+	/** A command of the project's `@nativescript/compiler` (`ns-compiled`, `ns-compiled-verify`), as a script for Node. */
 	public getCompilerBin(projectData: IProjectData, name: string): string {
 		const packageDir = this.getPackageDir(projectData);
 		const { bin } = this.$fs.readJson(path.join(packageDir, "package.json"));
@@ -267,34 +267,19 @@ export class CompiledReleaseService {
 		const projectRoot = this.getProjectRoot(projectData, "ios");
 		const name = projectData.projectName;
 
-		// The compiler generates the Xcode project (and integrates CocoaPods) and names
-		// the project or workspace to build; a compiler that does not is run through XcodeGen here.
-		const integrated = path.join(projectRoot, "ns-native-project.json");
-		const generated: { workspace?: string; project?: string } | null = this.$fs.exists(integrated)
-			? this.$fs.readJson(integrated)
-			: null;
-		const workspace = generated?.workspace ?? null;
-		if (!generated) {
-			try {
-				await this.$childProcess.spawnFromEvent(
-					"xcodegen",
-					["generate", "--quiet"],
-					"close",
-					{ cwd: projectRoot, stdio: "inherit" },
-				);
-			} catch (err) {
-				this.$errors.fail(
-					err.code === "ENOENT"
-						? "The native iOS build generates its Xcode project with XcodeGen. Install it with 'brew install xcodegen'."
-						: err.message,
-				);
-			}
+		// The compiler generates the Xcode project (and integrates CocoaPods) and names the project or workspace to build.
+		const marker = path.join(projectRoot, "ns-compiled-project.json");
+		if (!this.$fs.exists(marker)) {
+			this.$errors.fail(
+				`${path.relative(projectData.projectDir, marker)} is missing: ns-compiled writes it when it compiles the app for iOS.`,
+			);
 		}
+		const generated: { workspace?: string; project?: string } = this.$fs.readJson(marker);
 
 		const projectArgs = [
-			...(workspace
-				? ["-workspace", workspace]
-				: ["-project", generated?.project ?? `${name}.xcodeproj`]),
+			...(generated.workspace
+				? ["-workspace", generated.workspace]
+				: ["-project", generated.project]),
 			"-scheme",
 			name,
 			"-configuration",
@@ -499,7 +484,7 @@ export class CompiledReleaseService {
 		try {
 			const result = await this.$childProcess.spawnFromEvent(
 				process.execPath,
-				[this.getCompilerBin(projectData, "ns-native-retrace"), "--build-log", projectRoot, logFile],
+				[this.getCompilerBin(projectData, "ns-compiled-retrace"), "--build-log", projectRoot, logFile],
 				"close",
 				{ cwd: projectData.projectDir },
 				{ throwError: false },
