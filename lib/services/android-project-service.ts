@@ -858,6 +858,10 @@ export class AndroidProjectService
 		prepareData: IPrepareData,
 		projectData: IProjectData,
 	): Promise<void> {
+		// Native prepare skips `prepareDevServerAccess` for a host project.
+		if (this.$options.hostProjectPath) {
+			return;
+		}
 		const manifestPath = this.getDebugManifestPath(projectData);
 		const current = this.$fs.exists(manifestPath)
 			? this.$fs.readText(manifestPath)
