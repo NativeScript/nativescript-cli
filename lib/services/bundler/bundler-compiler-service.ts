@@ -66,6 +66,30 @@ const BUNDLER_STOP_TIMEOUT_MS = 5000;
  */
 const VITE_APP_RESTART_MESSAGE_TYPE = "nativescript:restart";
 
+/**
+ * Set to "1" on `vite serve` when it runs alone: `@nativescript/vite` then
+ * writes `bundle.mjs` and the app's static files itself and sends the build
+ * messages a `vite build --watch` would. "0" in the CLI's environment keeps
+ * the build process.
+ */
+const VITE_SINGLE_PROCESS_ENV = "NS_VITE_SINGLE_PROCESS";
+
+function isViteBuildMessage(message: unknown): message is IBundlerEmitMessage {
+	return (
+		!!message &&
+		typeof message === "object" &&
+		Array.isArray((message as IBundlerEmitMessage).emittedFiles)
+	);
+}
+
+interface ViteDevServerHooks {
+	singleProcess?: boolean;
+	/** Runs right after the spawn, before any event of the child can arrive. */
+	onSpawn?: (childProcess: child_process.ChildProcess) => void;
+	onMessage?: (message: unknown) => void;
+	onExit?: (code: number) => void;
+}
+
 export class BundlerCompilerService
 	extends EventEmitter
 	implements IBundlerCompilerService
@@ -148,6 +172,17 @@ export class BundlerCompilerService
 			let isFirstBundlerWatchCompilation = true;
 			prepareData.watch = true;
 
+			if (
+				this.isViteSingleProcessSession(platformData, projectData, prepareData)
+			) {
+				this.watchWithViteDevServer(
+					platformData,
+					projectData,
+					prepareData,
+				).then(resolve, reject);
+				return;
+			}
+
 			// Bring up the Vite HMR dev server the device fetches modules /
 			// HMR updates from. No-op unless bundler is vite + hmr + watch.
 			// Fired in parallel with the build watcher; both child processes
@@ -201,37 +236,12 @@ export class BundlerCompilerService
 							console.log("Received Vite IPC message:", message);
 						}
 
-						// Copy Vite output files directly to platform destination
-						const { distOutput, destDir } = this.getViteBuildPaths(
+						this.applyViteBuildMessage(
+							message,
 							platformData,
 							projectData,
+							isFirstBundlerWatchCompilation,
 						);
-
-						if (debugLog) {
-							console.log(`Copying from ${distOutput} to ${destDir}.`);
-						}
-
-						// Determine which files to copy based on build type and changes
-						if (
-							message.buildType === "incremental" &&
-							message.emittedFiles &&
-							message.emittedFiles.length > 0
-						) {
-							// Incremental builds: only copy files that are likely affected by the changes
-							const filesToCopy = this.getIncrementalFilesToCopy(
-								message.emittedFiles,
-							);
-							if (debugLog) {
-								console.log("Incremental build - files to copy:", filesToCopy);
-							}
-
-							this.copyViteBundleToNative(distOutput, destDir, filesToCopy);
-						} else {
-							if (debugLog) {
-								console.log("Full build - copying all files.");
-							}
-							this.copyViteBundleToNative(distOutput, destDir);
-						}
 
 						// Resolve the promise on first build completion — gated on
 						// the HMR dev server being reachable (no-op resolve for
@@ -247,39 +257,7 @@ export class BundlerCompilerService
 								);
 							}
 							viteDevServerStartup.then(() => resolve(childProcess));
-							return;
 						}
-
-						// Transform Vite message to match webpack format
-						const files = (message as IBundlerEmitMessage).emittedFiles.map(
-							(file) =>
-								path.join(
-									platformData.appDestinationDirectoryPath,
-									this.$options.hostProjectModuleName,
-									file,
-								),
-						);
-
-						const data = {
-							files,
-							hasOnlyHotUpdateFiles: message.isHMR || false,
-							hmrData: {
-								hash: (message as IBundlerEmitMessage).hash || "",
-								fallbackFiles: [] as string[],
-							},
-							platform: platformData.platformNameLowerCase,
-						};
-
-						this.$logger.info(
-							`Vite build completed! Files copied to native platform.`,
-						);
-
-						if (debugLog) {
-							console.log(
-								"Emitting BUNDLER_COMPILATION_COMPLETE for full build.",
-							);
-						}
-						this.emit(BUNDLER_COMPILATION_COMPLETE, data);
 
 						return;
 					}
@@ -427,6 +405,154 @@ export class BundlerCompilerService
 			} catch (err) {
 				reject(err);
 			}
+		});
+	}
+
+	/**
+	 * Copies a Vite build message's files into the native app and, for every
+	 * message but the initial build's, emits the live sync event for them.
+	 */
+	private applyViteBuildMessage(
+		message: IBundlerEmitMessage,
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		isInitialBuild: boolean,
+	): void {
+		const { distOutput, destDir } = this.getViteBuildPaths(
+			platformData,
+			projectData,
+		);
+
+		if (debugLog) {
+			console.log(`Copying from ${distOutput} to ${destDir}.`);
+		}
+
+		const removedFiles = message.removedFiles || [];
+		this.removeViteFilesFromNative(destDir, removedFiles);
+
+		if (
+			message.buildType === "incremental" &&
+			(message.emittedFiles.length > 0 || removedFiles.length > 0)
+		) {
+			// Incremental builds: only copy files that are likely affected by the changes
+			const filesToCopy = this.getIncrementalFilesToCopy(message.emittedFiles);
+			if (debugLog) {
+				console.log("Incremental build - files to copy:", filesToCopy);
+			}
+
+			this.copyViteBundleToNative(distOutput, destDir, filesToCopy);
+		} else {
+			if (debugLog) {
+				console.log("Full build - copying all files.");
+			}
+			this.copyViteBundleToNative(distOutput, destDir);
+		}
+
+		// Live sync only adds and replaces files on the device, so a removal
+		// alone has nothing to sync.
+		if (
+			isInitialBuild ||
+			(message.emittedFiles.length === 0 && removedFiles.length > 0)
+		) {
+			return;
+		}
+
+		// Transform Vite message to match webpack format
+		const files = message.emittedFiles.map((file) =>
+			path.join(
+				platformData.appDestinationDirectoryPath,
+				this.$options.hostProjectModuleName,
+				file,
+			),
+		);
+
+		const data = {
+			files,
+			hasOnlyHotUpdateFiles: message.isHMR || false,
+			hmrData: {
+				hash: message.hash || "",
+				fallbackFiles: [] as string[],
+			},
+			platform: platformData.platformNameLowerCase,
+		};
+
+		this.$logger.info(`Vite build completed! Files copied to native platform.`);
+
+		if (debugLog) {
+			console.log("Emitting BUNDLER_COMPILATION_COMPLETE for full build.");
+		}
+		this.emit(BUNDLER_COMPILATION_COMPLETE, data);
+	}
+
+	private removeViteFilesFromNative(destDir: string, files: string[]): void {
+		for (const file of files) {
+			const target = path.resolve(destDir, file);
+			if (!target.startsWith(destDir + path.sep)) {
+				continue;
+			}
+			try {
+				if (this.$fs.exists(target)) {
+					this.$fs.deleteFile(target);
+				}
+			} catch (error) {
+				this.$logger.warn(
+					`Failed to remove ${file} from the native app: ${error instanceof Error ? error.message : error}`,
+				);
+			}
+		}
+	}
+
+	/**
+	 * Runs a Vite HMR session on `vite serve` alone: it writes the app's
+	 * bundle and static files itself and sends the messages `vite build
+	 * --watch` would. Resolves on the first, which it sends once it listens
+	 * with the app's boot modules transformed.
+	 */
+	private watchWithViteDevServer(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		prepareData: IPrepareData,
+	): Promise<child_process.ChildProcess> {
+		const platform = platformData.platformNameLowerCase;
+		return new Promise((resolve, reject) => {
+			let childProcess: child_process.ChildProcess;
+			let isInitialBuild = true;
+			this.spawnViteDevServer(platformData, projectData, prepareData, {
+				singleProcess: true,
+				onSpawn: (spawned) => {
+					childProcess = spawned;
+					this.bundlerProcesses[platform] = spawned;
+				},
+				onMessage: (message) => {
+					if (!isViteBuildMessage(message)) {
+						return;
+					}
+					if (debugLog) {
+						console.log("Received Vite IPC message:", message);
+					}
+					this.applyViteBuildMessage(
+						message,
+						platformData,
+						projectData,
+						isInitialBuild,
+					);
+					if (isInitialBuild) {
+						isInitialBuild = false;
+						this.$logger.info(`Vite dev server ready (HMR for ${platform}).`);
+						resolve(childProcess);
+					}
+				},
+				onExit: (code) => {
+					this.forgetBundlerProcess(platform, childProcess);
+					if (isInitialBuild) {
+						reject(
+							new Error(
+								`The Vite dev server exited with code ${code} before it wrote the app's bundle.`,
+							),
+						);
+					}
+				},
+			}).catch(reject);
 		});
 	}
 
@@ -658,6 +784,48 @@ export class BundlerCompilerService
 	}
 
 	/**
+	 * Whether the installed `@nativescript/vite` can run the session on
+	 * `vite serve` alone for `platform`: its package.json lists the platform
+	 * under `nativescriptCli.singleProcessDev`.
+	 */
+	private supportsViteSingleProcess(
+		platform: string,
+		projectData: IProjectData,
+	): boolean {
+		if (process.env[VITE_SINGLE_PROCESS_ENV] === "0") {
+			return false;
+		}
+		try {
+			const packageJSONPath = resolvePackageJSONPath(
+				this.getBundlerPackageName(),
+				{ paths: [projectData.projectDir] },
+			);
+			if (!packageJSONPath) {
+				return false;
+			}
+			const platforms =
+				this.$fs.readJson(packageJSONPath)?.nativescriptCli?.singleProcessDev;
+			return Array.isArray(platforms) && platforms.includes(platform);
+		} catch {
+			return false;
+		}
+	}
+
+	private isViteSingleProcessSession(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		prepareData: IPrepareData,
+	): boolean {
+		return (
+			this.isViteHmrSession(prepareData) &&
+			this.supportsViteSingleProcess(
+				platformData.platformNameLowerCase,
+				projectData,
+			)
+		);
+	}
+
+	/**
 	 * Environment both Vite children (the build watcher and the dev server)
 	 * must share for a platform: the staging directory, and — for HMR
 	 * sessions — the dev-server port. The port is resolved here, once, and
@@ -713,83 +881,11 @@ export class BundlerCompilerService
 				return;
 			}
 
-			const viteEnv = await this.getViteChildEnv(key, prepareData);
-			const port = Number(viteEnv.NS_HMR_PORT);
-
-			const envData = this.buildEnvData(
-				platformData.platformNameLowerCase,
-				projectData,
-				prepareData,
-			);
-			const cliArgs = await this.buildEnvCommandLineParams(
-				envData,
+			const { port } = await this.spawnViteDevServer(
 				platformData,
 				projectData,
 				prepareData,
 			);
-
-			const additionalNodeArgs =
-				semver.major(process.version) <= 8 ? ["--harmony"] : [];
-			if (await this.shouldUsePreserveSymlinksOption()) {
-				additionalNodeArgs.push("--preserve-symlinks");
-			}
-
-			// `vite serve` (not `build`): runs the dev server and watches on
-			// its own — no `--watch`. Env flags (`--env.android --env.hmr …`)
-			// go after `--` so vite's CLI doesn't choke on unknown options.
-			const args = [
-				...additionalNodeArgs,
-				this.getBundlerExecutablePath(projectData),
-				"serve",
-				`--config=${projectData.bundlerConfigPath}`,
-				`--mode=development`,
-				"--",
-				...cliArgs,
-			].filter(Boolean);
-
-			const options: { [key: string]: any } = {
-				cwd: projectData.projectDir,
-				// Logs stream straight to the user. The IPC channel only carries
-				// app-restart requests; a server that never sends one behaves as
-				// with plain "inherit".
-				stdio: ["inherit", "inherit", "inherit", "ipc"],
-				env: {
-					...process.env,
-					NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
-					...viteEnv,
-				},
-			};
-			if (this.$hostInfo.isWindows) {
-				Object.assign(options.env, { APPDATA: process.env.appData });
-			}
-
-			this.$logger.info(
-				`Starting Vite dev server (HMR) for ${key} on port ${port}…`,
-			);
-
-			const childProcess = this.$childProcess.spawn(
-				process.execPath,
-				args,
-				options,
-			);
-			this.viteServeProcesses[key] = childProcess;
-			await this.$cleanupService.addKillProcess(childProcess.pid.toString());
-
-			childProcess.on("message", (message: unknown) =>
-				this.handleViteServeMessage(message, key, projectData.projectDir),
-			);
-
-			childProcess.once("exit", (code: number) => {
-				if (this.viteServeProcesses[key] === childProcess) {
-					delete this.viteServeProcesses[key];
-					this.cancelAppRestart(key);
-				}
-				if (code) {
-					this.$logger.warn(
-						`Vite dev server for ${key} exited with code ${code}.`,
-					);
-				}
-			});
 
 			// Bounded readiness probe so we can surface a clear log once the
 			// device can actually reach modules.
@@ -812,6 +908,100 @@ export class BundlerCompilerService
 				`Failed to start the Vite dev server: ${err}. HMR may be unavailable.`,
 			);
 		}
+	}
+
+	private async spawnViteDevServer(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+		prepareData: IPrepareData,
+		hooks: ViteDevServerHooks = {},
+	): Promise<{ childProcess: child_process.ChildProcess; port: number }> {
+		const key = platformData.platformNameLowerCase;
+		const viteEnv = await this.getViteChildEnv(key, prepareData);
+		const port = Number(viteEnv.NS_HMR_PORT);
+
+		const envData = this.buildEnvData(
+			platformData.platformNameLowerCase,
+			projectData,
+			prepareData,
+		);
+		const cliArgs = await this.buildEnvCommandLineParams(
+			envData,
+			platformData,
+			projectData,
+			prepareData,
+		);
+
+		const additionalNodeArgs =
+			semver.major(process.version) <= 8 ? ["--harmony"] : [];
+		if (await this.shouldUsePreserveSymlinksOption()) {
+			additionalNodeArgs.push("--preserve-symlinks");
+		}
+
+		// `vite serve` (not `build`): runs the dev server and watches on
+		// its own — no `--watch`. Env flags (`--env.android --env.hmr …`)
+		// go after `--` so vite's CLI doesn't choke on unknown options.
+		const args = [
+			...additionalNodeArgs,
+			this.getBundlerExecutablePath(projectData),
+			"serve",
+			`--config=${projectData.bundlerConfigPath}`,
+			`--mode=development`,
+			"--",
+			...cliArgs,
+		].filter(Boolean);
+
+		const options: { [key: string]: any } = {
+			cwd: projectData.projectDir,
+			// Logs stream straight to the user. The IPC channel carries
+			// app-restart requests, and the build messages when the server
+			// runs alone; a server that sends neither behaves as with plain
+			// "inherit".
+			stdio: ["inherit", "inherit", "inherit", "ipc"],
+			env: {
+				...process.env,
+				NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
+				...viteEnv,
+				...(hooks.singleProcess ? { [VITE_SINGLE_PROCESS_ENV]: "1" } : {}),
+			},
+		};
+		if (this.$hostInfo.isWindows) {
+			Object.assign(options.env, { APPDATA: process.env.appData });
+		}
+
+		this.$logger.info(
+			`Starting Vite dev server (HMR) for ${key} on port ${port}…`,
+		);
+
+		const childProcess = this.$childProcess.spawn(
+			process.execPath,
+			args,
+			options,
+		);
+		this.viteServeProcesses[key] = childProcess;
+		hooks.onSpawn?.(childProcess);
+
+		childProcess.on("message", (message: unknown) => {
+			hooks.onMessage?.(message);
+			this.handleViteServeMessage(message, key, projectData.projectDir);
+		});
+
+		childProcess.once("exit", (code: number) => {
+			if (this.viteServeProcesses[key] === childProcess) {
+				delete this.viteServeProcesses[key];
+				this.cancelAppRestart(key);
+			}
+			if (code) {
+				this.$logger.warn(
+					`Vite dev server for ${key} exited with code ${code}.`,
+				);
+			}
+			hooks.onExit?.(code);
+		});
+
+		await this.$cleanupService.addKillProcess(childProcess.pid.toString());
+
+		return { childProcess, port };
 	}
 
 	/**
@@ -1116,7 +1306,10 @@ export class BundlerCompilerService
 		if (viteServeProcess) {
 			viteServeProcess.removeAllListeners("message");
 			this.cancelAppRestart(platform);
-			await this.terminate(viteServeProcess);
+			// Already stopped above when it is the session's only process.
+			if (viteServeProcess !== bundlerProcess) {
+				await this.terminate(viteServeProcess);
+			}
 			if (this.viteServeProcesses[platform] === viteServeProcess) {
 				delete this.viteServeProcesses[platform];
 			}

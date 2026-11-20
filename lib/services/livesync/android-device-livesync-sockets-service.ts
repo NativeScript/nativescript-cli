@@ -14,6 +14,22 @@ import { ICleanupService } from "../../definitions/cleanup-service";
 import { ISpawnCommandInfo } from "../../detached-processes/cleanup-process-definitions";
 import { ITempService } from "../../definitions/temp-service";
 
+/**
+ * Whether a file sync asks the app to refresh itself in place. Never under
+ * Vite HMR: the dev server updates the app, and every file the CLI syncs
+ * there is applied by restarting it, while the in-app refresh runs
+ * `__onLiveSync`, which can't reload an app served by Vite.
+ */
+export function refreshesInPlaceOnSync(
+	liveSyncInfo: Pick<ILiveSyncResultInfo, "isFullSync" | "useHotModuleReload">,
+	projectData: Pick<IProjectData, "bundler">,
+): boolean {
+	return (
+		!liveSyncInfo.isFullSync &&
+		!(liveSyncInfo.useHotModuleReload && projectData.bundler === "vite")
+	);
+}
+
 export class AndroidDeviceSocketsLiveSyncService
 	extends AndroidDeviceLiveSyncServiceBase
 	implements
@@ -127,7 +143,7 @@ export class AndroidDeviceSocketsLiveSyncService
 
 		if (liveSyncInfo.modifiedFilesData.length) {
 			const canExecuteFastSync =
-				!liveSyncInfo.isFullSync &&
+				refreshesInPlaceOnSync(liveSyncInfo, projectData) &&
 				this.canExecuteFastSyncForPaths(
 					liveSyncInfo,
 					liveSyncInfo.modifiedFilesData,
