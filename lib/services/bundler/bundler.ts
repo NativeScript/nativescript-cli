@@ -157,6 +157,14 @@ declare global {
 		prepareAppResources(projectData: IProjectData): void;
 
 		/**
+		 * Lets a dev build reach the bundler's dev server. Runs after `prepareAppResources`.
+		 */
+		prepareDevServerAccess?(
+			projectData: IProjectData,
+			prepareData: TPrepareData,
+		): void;
+
+		/**
 		 * Defines if current platform is prepared (i.e. if <project dir>/platforms/<platform> dir exists).
 		 * @param {string} projectRoot The project directory (path where root's package.json is located).
 		 * @param {IProjectData} projectData DTO with information about the project.
