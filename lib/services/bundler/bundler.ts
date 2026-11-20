@@ -88,6 +88,8 @@ declare global {
 		isHMR?: boolean;
 		filesToCopy?: string[];
 		buildType?: string;
+		/** Output-relative files the build deleted (`@nativescript/vite`'s dev server). */
+		removedFiles?: string[];
 	}
 
 	interface IPlatformProjectService<

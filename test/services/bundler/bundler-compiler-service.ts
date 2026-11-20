@@ -2,6 +2,8 @@ import { Yok } from "../../../lib/common/yok";
 import { BundlerCompilerService } from "../../../lib/services/bundler/bundler-compiler-service";
 import { assert } from "chai";
 import { EventEmitter } from "events";
+import * as fs from "fs";
+import * as os from "os";
 import * as path from "path";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
@@ -667,6 +669,239 @@ describe("BundlerCompilerService", () => {
 			await waitForDebounce();
 
 			assert.lengthOf(restartRequests, 0);
+		});
+	});
+
+	describe("vite single-process dev server", () => {
+		const platformData = <any>{
+			platformNameLowerCase: "ios",
+			appDestinationDirectoryPath: "/platform/app",
+		};
+		const projectData = <any>{
+			projectDir: "/project",
+			bundler: "vite",
+			bundlerConfigPath: "/project/vite.config.ts",
+		};
+
+		let serveProcess: FakeChildProcess = null;
+		let spawnOptions: any = null;
+		let copies: any[][] = null;
+		let removals: any[][] = null;
+		let syncEvents: any[] = null;
+		let buildProcessStarted = false;
+
+		beforeEach(() => {
+			serveProcess = fakeChildProcess(789);
+			spawnOptions = null;
+			copies = [];
+			removals = [];
+			syncEvents = [];
+			buildProcessStarted = false;
+
+			testInjector.resolve("options").hostProjectModuleName = "app";
+			const service = <any>bundlerCompilerService;
+			service.getBundler = () => "vite";
+			service.getBundlerExecutablePath = () => "/project/vite.js";
+			service.buildEnvData = () => ({});
+			service.buildEnvCommandLineParams = async (): Promise<string[]> => [];
+			service.supportsViteSingleProcess = () => true;
+			service.startBundleProcess = async () => {
+				buildProcessStarted = true;
+				return fakeChildProcess(1);
+			};
+			service.copyViteBundleToNative = (...args: any[]) => copies.push(args);
+			service.removeViteFilesFromNative = (...args: any[]) =>
+				removals.push(args);
+			testInjector.resolve("childProcess").spawn = (
+				_command: string,
+				_args: string[],
+				options: any,
+			) => {
+				spawnOptions = options;
+				return serveProcess;
+			};
+			bundlerCompilerService.on(BUNDLER_COMPILATION_COMPLETE, (data) =>
+				syncEvents.push(data),
+			);
+		});
+
+		const compile = (prepareData: any = { hmr: true }) =>
+			bundlerCompilerService.compileWithWatch(
+				platformData,
+				projectData,
+				prepareData,
+			);
+
+		it("runs vite serve alone and starts the app on its first build message", async () => {
+			const compiling = compile();
+			await flush();
+
+			assert.isFalse(buildProcessStarted);
+			assert.strictEqual(spawnOptions.env.NS_VITE_SINGLE_PROCESS, "1");
+			assert.strictEqual(
+				(<any>bundlerCompilerService).bundlerProcesses.ios,
+				serveProcess,
+			);
+
+			serveProcess.emit("message", {
+				emittedFiles: ["bundle.mjs", "package.json", "assets/logo.png"],
+				chunkFiles: [],
+				hash: "1",
+				isHMR: false,
+				buildType: "initial",
+			});
+
+			assert.strictEqual(await compiling, serveProcess);
+			assert.deepStrictEqual(copies, [
+				["/project/.ns-vite-build/ios", "/platform/app/app"],
+			]);
+			assert.lengthOf(syncEvents, 0);
+		});
+
+		it("syncs the files of later messages and only removes a removed file", async () => {
+			const compiling = compile();
+			await flush();
+			serveProcess.emit("message", {
+				emittedFiles: ["bundle.mjs"],
+				buildType: "initial",
+			});
+			await compiling;
+			copies = [];
+			removals = [];
+
+			serveProcess.emit("message", {
+				emittedFiles: ["assets/logo.png"],
+				hash: "2",
+				isHMR: false,
+				buildType: "incremental",
+			});
+			serveProcess.emit("message", {
+				emittedFiles: [],
+				removedFiles: ["assets/old.png"],
+				hash: "3",
+				isHMR: false,
+				buildType: "incremental",
+			});
+
+			assert.deepStrictEqual(copies, [
+				[
+					"/project/.ns-vite-build/ios",
+					"/platform/app/app",
+					["assets/logo.png"],
+				],
+				["/project/.ns-vite-build/ios", "/platform/app/app", []],
+			]);
+			assert.deepStrictEqual(removals, [
+				["/platform/app/app", []],
+				["/platform/app/app", ["assets/old.png"]],
+			]);
+			assert.deepStrictEqual(syncEvents, [
+				{
+					files: ["/platform/app/app/assets/logo.png"],
+					hasOnlyHotUpdateFiles: false,
+					hmrData: { hash: "2", fallbackFiles: [] },
+					platform: "ios",
+				},
+			]);
+		});
+
+		it("fails the run when the dev server exits before its first build message", async () => {
+			const compiling = compile();
+			await flush();
+			serveProcess.emit("exit", 1);
+
+			await assert.isRejected(compiling, "exited with code 1");
+			assert.isUndefined((<any>bundlerCompilerService).bundlerProcesses.ios);
+		});
+
+		it("stops the dev server once", async () => {
+			const compiling = compile();
+			await flush();
+			serveProcess.emit("message", {
+				emittedFiles: ["bundle.mjs"],
+				buildType: "initial",
+			});
+			await compiling;
+
+			const stopping = bundlerCompilerService.stopBundlerCompiler("ios");
+			await flush();
+			serveProcess.emit("exit", 0);
+			serveProcess.emit("close", 0);
+			await stopping;
+
+			assert.deepStrictEqual(serveProcess.killSignals, ["SIGINT"]);
+			assert.isUndefined((<any>bundlerCompilerService).bundlerProcesses.ios);
+			assert.isUndefined((<any>bundlerCompilerService).viteServeProcesses.ios);
+		});
+
+		it("keeps the build process when the package does not support it", async () => {
+			(<any>bundlerCompilerService).supportsViteSingleProcess = () => false;
+			(<any>bundlerCompilerService).waitForPort = async () => true;
+			void compile();
+			await flush();
+
+			assert.isTrue(buildProcessStarted);
+			assert.isUndefined(spawnOptions.env.NS_VITE_SINGLE_PROCESS);
+		});
+	});
+
+	describe("supportsViteSingleProcess", () => {
+		let projectDir: string;
+		const originalEnv = process.env.NS_VITE_SINGLE_PROCESS;
+
+		const writeVitePackage = (pkg: object) => {
+			const dir = path.join(
+				projectDir,
+				"node_modules",
+				"@nativescript",
+				"vite",
+			);
+			fs.mkdirSync(dir, { recursive: true });
+			fs.writeFileSync(path.join(dir, "package.json"), JSON.stringify(pkg));
+		};
+		const supports = (platform: string) =>
+			(<any>bundlerCompilerService).supportsViteSingleProcess(platform, {
+				projectDir,
+			});
+
+		beforeEach(() => {
+			projectDir = fs.mkdtempSync(path.join(os.tmpdir(), "ns-vite-sp-"));
+			(<any>bundlerCompilerService).getBundler = () => "vite";
+			testInjector.resolve("fs").readJson = (file: string) =>
+				JSON.parse(fs.readFileSync(file, "utf8"));
+			delete process.env.NS_VITE_SINGLE_PROCESS;
+		});
+
+		afterEach(() => {
+			fs.rmSync(projectDir, { recursive: true, force: true });
+			if (originalEnv === undefined) {
+				delete process.env.NS_VITE_SINGLE_PROCESS;
+			} else {
+				process.env.NS_VITE_SINGLE_PROCESS = originalEnv;
+			}
+		});
+
+		it("reads the platforms the installed @nativescript/vite declares", () => {
+			writeVitePackage({
+				name: "@nativescript/vite",
+				nativescriptCli: { singleProcessDev: ["ios", "visionos"] },
+			});
+
+			assert.isTrue(supports("ios"));
+			assert.isTrue(supports("visionos"));
+			assert.isFalse(supports("android"));
+		});
+
+		it("is off for a package that declares nothing, or when the user opts out", () => {
+			writeVitePackage({ name: "@nativescript/vite" });
+			assert.isFalse(supports("ios"));
+
+			writeVitePackage({
+				name: "@nativescript/vite",
+				nativescriptCli: { singleProcessDev: ["ios"] },
+			});
+			process.env.NS_VITE_SINGLE_PROCESS = "0";
+			assert.isFalse(supports("ios"));
 		});
 	});
 
