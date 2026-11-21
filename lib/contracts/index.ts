@@ -42,6 +42,7 @@ export { Errors } from "./errors";
 export { FileSystem } from "./file-system";
 export { HostInfo } from "./host-info";
 export { HttpClient } from "./http-client";
+export { IOSDeviceTunnelService } from "./ios-device-tunnel-service";
 export { Logger } from "./logger";
 export { PackageManager } from "./package-manager";
 export { ProjectData } from "./project-data";

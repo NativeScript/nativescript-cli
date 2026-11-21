@@ -676,6 +676,10 @@ injector.require(
 	"viteHmrPortService",
 	"./services/bundler/vite-hmr-port-service",
 );
+injector.require(
+	"iOSDeviceTunnelService",
+	"./services/ios/ios-device-tunnel-service",
+);
 
 injector.require(
 	"applePortalSessionService",

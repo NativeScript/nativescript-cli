@@ -35,6 +35,7 @@ import {
 } from "../../common/declarations";
 import { ICleanupService } from "../../definitions/cleanup-service";
 import { ViteHmrPortService } from "../../contracts/vite-hmr-port-service";
+import { IOSDeviceTunnelService } from "../../contracts/ios-device-tunnel-service";
 import { injector } from "../../common/yok";
 import {
 	resolvePackagePath,
@@ -121,6 +122,7 @@ export class BundlerCompilerService
 		private $packageInstallationManager: IPackageInstallationManager, // private $sharedEventBus: ISharedEventBus
 		private $projectConfigService: IProjectConfigService,
 		private $viteHmrPortService: ViteHmrPortService,
+		private $iOSDeviceTunnelService: IOSDeviceTunnelService,
 	) {
 		super();
 	}
@@ -795,19 +797,38 @@ export class BundlerCompilerService
 		if (process.env[VITE_SINGLE_PROCESS_ENV] === "0") {
 			return false;
 		}
+		return this.getViteSingleProcessPlatforms(projectData).includes(platform);
+	}
+
+	/**
+	 * Older `@nativescript/vite` releases bind the dev server to
+	 * `NS_HMR_HOST` and put an IPv6 literal into URLs unbracketed. The fix
+	 * shipped together with single-process dev, so its platform list is the
+	 * capability marker.
+	 */
+	public acceptsIPv6DevHost(
+		platform: string,
+		projectData: IProjectData,
+	): boolean {
+		return this.getViteSingleProcessPlatforms(projectData).includes(
+			platform.toLowerCase(),
+		);
+	}
+
+	private getViteSingleProcessPlatforms(projectData: IProjectData): string[] {
 		try {
 			const packageJSONPath = resolvePackageJSONPath(
 				this.getBundlerPackageName(),
 				{ paths: [projectData.projectDir] },
 			);
 			if (!packageJSONPath) {
-				return false;
+				return [];
 			}
 			const platforms =
 				this.$fs.readJson(packageJSONPath)?.nativescriptCli?.singleProcessDev;
-			return Array.isArray(platforms) && platforms.includes(platform);
+			return Array.isArray(platforms) ? platforms : [];
 		} catch {
-			return false;
+			return [];
 		}
 	}
 
@@ -831,6 +852,8 @@ export class BundlerCompilerService
 	 * sessions — the dev-server port. The port is resolved here, once, and
 	 * handed to `@nativescript/vite` as `NS_HMR_PORT`, so the URLs baked into
 	 * `bundle.mjs`, the server's bind and the `adb reverse` tunnel all match.
+	 * When the platform's only device has a USB tunnel open, its Mac address
+	 * becomes `NS_HMR_HOST`, unless the user set one.
 	 */
 	private async getViteChildEnv(
 		platform: string,
@@ -843,6 +866,10 @@ export class BundlerCompilerService
 			env.NS_HMR_PORT = String(
 				await this.$viteHmrPortService.getPort(platform),
 			);
+			const tunnelHost = this.$iOSDeviceTunnelService.getHostAddress(platform);
+			if (tunnelHost && !process.env.NS_HMR_HOST) {
+				env.NS_HMR_HOST = tunnelHost;
+			}
 		}
 		return env;
 	}
