@@ -92,6 +92,9 @@ function createTestInjector(
 	testInjector.register("viteHmrPortService", {
 		getPort: async () => 5173,
 	});
+	testInjector.register("iOSDeviceTunnelService", {
+		getHostAddress: (): string => undefined,
+	});
 
 	return testInjector;
 }
@@ -373,6 +376,56 @@ describe("BundlerCompilerService", () => {
 				}),
 				{ NS_VITE_DIST_DIR: ".ns-vite-build/ios" },
 			);
+		});
+
+		describe("with a USB tunnel open", () => {
+			let previousHost: string;
+			beforeEach(() => {
+				previousHost = process.env.NS_HMR_HOST;
+				delete process.env.NS_HMR_HOST;
+				testInjector.resolve("iOSDeviceTunnelService").getHostAddress = (
+					platform: string,
+				) => (platform === "ios" ? "fd6f:72e:8d34::2" : undefined);
+			});
+			afterEach(() => {
+				if (previousHost === undefined) {
+					delete process.env.NS_HMR_HOST;
+				} else {
+					process.env.NS_HMR_HOST = previousHost;
+				}
+			});
+
+			it("hands the tunnel's Mac address to that platform only", async () => {
+				assert.deepEqual(
+					await (<any>bundlerCompilerService).getViteChildEnv("ios", {
+						watch: true,
+						hmr: true,
+					}),
+					{
+						NS_VITE_DIST_DIR: ".ns-vite-build/ios",
+						NS_HMR_PORT: "5173",
+						NS_HMR_HOST: "fd6f:72e:8d34::2",
+					},
+				);
+				assert.notProperty(
+					await (<any>bundlerCompilerService).getViteChildEnv("android", {
+						watch: true,
+						hmr: true,
+					}),
+					"NS_HMR_HOST",
+				);
+			});
+
+			it("leaves a user-set NS_HMR_HOST alone", async () => {
+				process.env.NS_HMR_HOST = "192.168.1.10";
+				assert.notProperty(
+					await (<any>bundlerCompilerService).getViteChildEnv("ios", {
+						watch: true,
+						hmr: true,
+					}),
+					"NS_HMR_HOST",
+				);
+			});
 		});
 	});
 
@@ -902,6 +955,23 @@ describe("BundlerCompilerService", () => {
 			});
 			process.env.NS_VITE_SINGLE_PROCESS = "0";
 			assert.isFalse(supports("ios"));
+		});
+
+		it("marks the packages that accept an IPv6 dev host, opted out or not", () => {
+			const accepts = (platform: string) =>
+				bundlerCompilerService.acceptsIPv6DevHost(platform, <any>{
+					projectDir,
+				});
+			writeVitePackage({ name: "@nativescript/vite" });
+			assert.isFalse(accepts("iOS"));
+
+			writeVitePackage({
+				name: "@nativescript/vite",
+				nativescriptCli: { singleProcessDev: ["ios"] },
+			});
+			process.env.NS_VITE_SINGLE_PROCESS = "0";
+			assert.isTrue(accepts("iOS"));
+			assert.isFalse(accepts("visionOS"));
 		});
 	});
 

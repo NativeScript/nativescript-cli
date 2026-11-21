@@ -30,6 +30,11 @@ declare global {
 			prepareData: IPrepareData,
 		): Promise<void>;
 		stopBundlerCompiler(platform: string): Promise<void>;
+		/**
+		 * Whether the installed `@nativescript/vite` accepts a bare IPv6
+		 * address as `NS_HMR_HOST` for `platform`.
+		 */
+		acceptsIPv6DevHost(platform: string, projectData: IProjectData): boolean;
 	}
 
 	/**
