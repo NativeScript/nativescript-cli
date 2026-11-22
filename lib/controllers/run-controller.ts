@@ -871,7 +871,16 @@ export class RunController extends EventEmitter implements IRunController {
 			return;
 		}
 
+		// Descriptors cover every discovered device; `--device` narrows the
+		// session to one of them.
+		const selected = this.$devicesService.getDeviceByDeviceOption();
 		const platformTargets = sessionDeviceDescriptors.filter((descriptor) => {
+			if (
+				selected &&
+				descriptor.identifier !== selected.deviceInfo.identifier
+			) {
+				return false;
+			}
 			const target = this.$devicesService.getDeviceByIdentifier(
 				descriptor.identifier,
 			);

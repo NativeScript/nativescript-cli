@@ -363,6 +363,24 @@ describe("RunController", () => {
 			assert.deepStrictEqual(openedFor, []);
 		});
 
+		it("opens the tunnel of the --device selection when another iOS device is attached", async () => {
+			const devicesService = injector.resolve("devicesService");
+			devicesService.getDeviceByDeviceOption = () => iOSDevice;
+			mockDevicesService(injector, [iOSDevice]);
+
+			try {
+				await runController.run({
+					liveSyncInfo: hmrLiveSyncInfo,
+					deviceDescriptors: [iOSDeviceDescriptor, secondIOSDeviceDescriptor],
+				});
+			} finally {
+				devicesService.getDeviceByDeviceOption = (): Mobile.IDevice =>
+					undefined;
+			}
+
+			assert.deepStrictEqual(openedFor, ["myiOSDevice"]);
+		});
+
 		it("does not open a tunnel when the user set NS_HMR_HOST", async () => {
 			process.env.NS_HMR_HOST = "192.168.1.10";
 			mockDevicesService(injector, [iOSDevice]);
