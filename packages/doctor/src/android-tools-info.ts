@@ -606,7 +606,7 @@ export class AndroidToolsInfo implements NativeScriptDoctor.IAndroidToolsInfo {
 			if (foundRuntime) {
 				let version = content.devDependencies[foundRuntime];
 
-				if (version.includes("tgz")) {
+				if (version.includes("tgz") || version.startsWith("catalog:")) {
 					try {
 						const packagePath = require.resolve(
 							`${foundRuntime}/package.json`,

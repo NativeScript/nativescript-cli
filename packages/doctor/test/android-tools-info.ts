@@ -1,11 +1,14 @@
 import { AndroidToolsInfo } from "../src/android-tools-info";
-import { EOL } from "os";
+import { EOL, tmpdir } from "os";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "fs";
+import { join } from "path";
 import { assert } from "chai";
 import { ChildProcess } from "../src/wrappers/child-process";
 import { FileSystem } from "../src/wrappers/file-system";
 import { HostInfo } from "../src/host-info";
 import { Helpers } from "../src/helpers";
 import { Constants } from "../src/constants";
+import { WinReg } from "../src/winreg";
 
 interface ITestData {
 	javacVersion: string;
@@ -153,6 +156,36 @@ describe("androidToolsInfo", () => {
 			const supportedTargets = androidToolsInfo.getSupportedTargets("test");
 			assert.deepEqual(supportedTargets, expectedTargets);
 		};
+
+		it.each(["catalog:", "catalog:mobile"])(
+			"reads the installed Android runtime for %s",
+			(specifier) => {
+				const projectDir = mkdtempSync(join(tmpdir(), "doctor-catalog-"));
+				try {
+					const runtimeDir = join(projectDir, "node_modules", "@nativescript", "android");
+					mkdirSync(runtimeDir, { recursive: true });
+					writeFileSync(
+						join(projectDir, "package.json"),
+						JSON.stringify({ devDependencies: { "@nativescript/android": specifier } }),
+					);
+					writeFileSync(join(runtimeDir, "package.json"), JSON.stringify({ version: "8.1.0" }));
+					const childProcess = new ChildProcess();
+					const distTags = vi.spyOn(childProcess, "execSync").mockReturnValue("{}");
+					const hostInfo = new HostInfo(new WinReg());
+					const info = new AndroidToolsInfo(
+						childProcess,
+						new FileSystem(),
+						hostInfo,
+						new Helpers(hostInfo),
+					);
+					const targets = info.getSupportedTargets(projectDir);
+					assert.equal(targets[targets.length - 1], "android-30");
+					assert.lengthOf(distTags.mock.calls, 0);
+				} finally {
+					rmSync(projectDir, { recursive: true, force: true });
+				}
+			},
+		);
 
 		it("runtime 6.0.0 should support android-17 - android-28", () => {
 			assertSupportedTargets(
