@@ -1,5 +1,6 @@
 package org.nativescript.gradle;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -15,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
 import org.gradle.testkit.runner.BuildResult;
 
 final class Fixtures {
@@ -78,13 +83,80 @@ final class Fixtures {
         return target;
     }
 
-    /** A stand-in for @nativescript/core: a package whose native directory holds archives. */
+    /**
+     * A stand-in for @nativescript/core: a package whose native directory holds Android libraries,
+     * one of them below the top level. {@code widgets-release.aar} contains {@link #CORE_CLASS}.
+     */
     static Path installCore(Path projectDir) {
         Path core = projectDir.resolve("node_modules/@nativescript/core");
         write(core.resolve("package.json"), "{ \"name\": \"@nativescript/core\", \"version\": \"9.0.0\" }\n");
-        write(core.resolve("platforms/android/widgets-release.aar"), "not really an aar");
-        write(core.resolve("platforms/android/nested/inner.aar"), "not really an aar");
+        Path classes = projectDir.resolve("core-classes");
+        writeAar(core.resolve("platforms/android/widgets-release.aar"), compile(classes, CORE_CLASS));
+        writeAar(core.resolve("platforms/android/nested/inner.aar"), compile(classes, "org.nativescript.widgets.nested.Inner"));
         return core;
+    }
+
+    static final String CORE_CLASS = "org.nativescript.widgets.Probe";
+
+    private static Map<String, byte[]> compile(Path workDir, String className) {
+        JavaCompiler javac = ToolProvider.getSystemJavaCompiler();
+        if (javac == null) {
+            throw new IllegalStateException("The functional tests need a JDK, not a JRE");
+        }
+        int dot = className.lastIndexOf('.');
+        String packageName = className.substring(0, dot);
+        String simpleName = className.substring(dot + 1);
+        Path out = workDir.resolve(simpleName + "-classes");
+        Path source = write(workDir.resolve(simpleName + "-src").resolve(className.replace('.', '/') + ".java"),
+                "package " + packageName + ";\npublic final class " + simpleName + " {}\n");
+        try {
+            Files.createDirectories(out);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        int exit = javac.run(null, null, null, "--release", "11", "-d", path(out), path(source));
+        if (exit != 0) {
+            throw new IllegalStateException("javac failed for " + source);
+        }
+        String entry = className.replace('.', '/') + ".class";
+        return Map.of(entry, readBytes(out.resolve(entry)));
+    }
+
+    private static void writeAar(Path aar, Map<String, byte[]> classes) {
+        ByteArrayOutputStream classesJar = new ByteArrayOutputStream();
+        try (ZipOutputStream jar = new ZipOutputStream(classesJar)) {
+            for (Map.Entry<String, byte[]> entry : classes.entrySet()) {
+                putEntry(jar, entry.getKey(), entry.getValue());
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        String packageName = classes.keySet().iterator().next().replaceFirst("/[^/]+$", "").replace('/', '.');
+        try {
+            Files.createDirectories(aar.getParent());
+            try (ZipOutputStream zip = new ZipOutputStream(Files.newOutputStream(aar))) {
+                putEntry(zip, "AndroidManifest.xml", ("<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\" package=\""
+                        + packageName + "\" />\n").getBytes(StandardCharsets.UTF_8));
+                putEntry(zip, "classes.jar", classesJar.toByteArray());
+                putEntry(zip, "R.txt", new byte[0]);
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static void putEntry(ZipOutputStream zip, String name, byte[] content) throws IOException {
+        zip.putNextEntry(new ZipEntry(name));
+        zip.write(content);
+        zip.closeEntry();
+    }
+
+    private static byte[] readBytes(Path file) {
+        try {
+            return Files.readAllBytes(file);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     static Path write(Path file, String content) {

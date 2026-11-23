@@ -1,13 +1,15 @@
 apply plugin: "org.nativescript.api"
 
-// The CLI builds this plugin's aar in a separate project that runs only the first block below, not
-// the rest of this file, and newer CLIs apply the library there only on request. Look the extension
-// up by name and keep the old CLI branch so the block works in every such build.
+// The CLI builds this plugin's aar in a separate project that runs only the next block, not the
+// rest of this file. CLI 9.2+ applies the library there; older CLIs may not, so the block falls
+// back to what they provide when the extension is missing.
 dependencies {
-    def ns = project.extensions.findByName("nativescript")
-    if (ns != null && ns.pluginBuild) {
-        compileOnly ns.plugin("@nativescript/core").artifacts
-    } else if (project.hasProperty("tempBuild")) {
-        compileOnly fileTree(dir: "$USER_PROJECT_ROOT/node_modules/@nativescript/core/platforms/android", include: "*.aar")
+    if (project.hasProperty("tempBuild")) {
+        def ns = project.extensions.findByName("nativescript")
+        if (ns != null) {
+            compileOnly ns.plugin("@nativescript/core").artifacts
+        } else {
+            compileOnly fileTree(dir: "$USER_PROJECT_ROOT/node_modules/@nativescript/core/platforms/android", include: ["**/*.aar", "**/*.jar"])
+        }
     }
 }

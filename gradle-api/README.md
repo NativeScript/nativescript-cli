@@ -76,21 +76,9 @@ In that build, **only the `dependencies {}` and `repositories {}` blocks of your
 run**: the CLI copies them out of the file. Nothing else in the file runs there, including the
 `apply plugin:` line.
 
-On CLI 9.2+ with `android.pluginBuildLocation: "platforms"`, the CLI loads your `buildscript.gradle` in
-that build and applies the library for you. On older CLIs it doesn't, so the library isn't
-available there. Inside those two blocks, look the extension up instead of assuming it exists, and
-keep the old code as the fallback:
-
-```groovy
-dependencies {
-    def ns = project.extensions.findByName("nativescript")
-    if (ns != null && ns.pluginBuild) {
-        compileOnly ns.plugin("@nativescript/core").artifacts
-    } else if (project.hasProperty("tempBuild")) {
-        compileOnly fileTree(dir: "$USER_PROJECT_ROOT/node_modules/@nativescript/core/platforms/android", include: "*.aar")
-    }
-}
-```
+CLI 9.2+ also runs your `buildscript.gradle` in that build and applies the library for you, so
+`nativescript` is available in those two blocks. Older CLIs don't, so if your plugin supports them,
+write those two blocks as shown in [Supporting CLIs before 9.2](#supporting-clis-before-92).
 
 Elsewhere in `include.gradle` (outside those two blocks) you can use `nativescript` directly.
 
@@ -102,6 +90,45 @@ them, even when the plugin itself is applied. Always go through the `nativescrip
 The CLI finds those blocks by searching for the first occurrence of the words `dependencies` and
 `repositories` in the file, so keep those words out of comments and code above the real blocks, and
 never put a `buildscript {}` block in `include.gradle`.
+
+### Supporting CLIs before 9.2
+
+Before 9.2, the CLI doesn't run your own `buildscript.gradle` in your `.aar` build, so the
+extension is usually missing in your copied `dependencies {}` / `repositories {}` blocks. (It is
+there when a plugin yours depends on loaded the library, so don't treat its presence as a CLI
+version check.) Look it up, and fall back to what those CLIs provide when it's missing:
+
+```groovy
+dependencies {
+    if (project.hasProperty("tempBuild")) {
+        def ns = project.extensions.findByName("nativescript")
+        if (ns != null) {
+            compileOnly ns.plugin("@nativescript/core").artifacts
+        } else {
+            compileOnly fileTree(dir: "$USER_PROJECT_ROOT/node_modules/@nativescript/core/platforms/android", include: ["**/*.aar", "**/*.jar"])
+        }
+    }
+}
+```
+
+- `tempBuild` is set in every plugin `.aar` build by every CLI since 8.4: your own build, and the
+  builds of plugins that depend on yours, where your full `include.gradle` runs. It needs no
+  library, so it is the outer check.
+- Each copied block runs on its own, without the rest of the file: blocks can't share variables,
+  so each looks the extension up itself.
+
+What older CLIs provide in those blocks:
+
+| Library | CLIs before 9.2 |
+|---|---|
+| `ns.pluginBuild` | `project.hasProperty("tempBuild")` |
+| `ns.projectDir` | `file(USER_PROJECT_ROOT)` |
+| `ns.appResourcesDir` | `file(getAppResourcesPath())` |
+| `ns.findPackage("<name>")` | `file("$USER_PROJECT_ROOT/node_modules/<name>")` |
+| `ns.plugin("<name>").artifacts` | `fileTree(dir: "$USER_PROJECT_ROOT/node_modules/<name>/platforms/android", include: ["**/*.aar", "**/*.jar"])` |
+
+The right-hand column only holds in a plugin's `.aar` build, and assumes a hoisted `node_modules`
+at the project root.
 
 ## API
 
@@ -156,7 +183,7 @@ your app doesn't depend on directly.
 ## Recipes
 
 **Compile against another plugin's Android library (e.g. core's widgets) in your own `.aar` build:**
-the guarded block in [The one thing to know](#the-one-thing-to-know-your-plugins-own-aar-build).
+the block in [Supporting CLIs before 9.2](#supporting-clis-before-92).
 Use `compileOnly`, not `implementation`: an Android library can't bundle local `.aar` files, and the
 app build already links every plugin.
 
@@ -180,11 +207,14 @@ repositories {
 
 ## Compatibility
 
-| | CLI 9.1 and older | CLI 9.2+ | CLI 9.2+ with `pluginBuildLocation: "platforms"` |
-|---|---|---|---|
-| Plugin not using the library | Unchanged | Unchanged | Gradle reads its files from a copy in `platforms/android/.ns-plugins/`, and its own `buildscript.gradle` also runs in its own `.aar` build |
-| Plugin using the library, app build | Fallback rules | Facts from the CLI | Facts from the CLI |
-| Plugin using the library, its own `.aar` build | Library not loaded: the guarded fallback runs | Library not loaded: the guarded fallback runs | Library loaded |
+| | CLI 9.1 and older | CLI 9.2+ |
+|---|---|---|
+| Plugin not using the library | Unchanged | Its own `buildscript.gradle` also runs in its own `.aar` build |
+| Plugin using the library, app build | Fallback rules | Facts from the CLI |
+| Plugin using the library, its own `.aar` build | Library not applied unless a plugin it depends on loaded it: the [fallback branch](#supporting-clis-before-92) runs | Library applied |
+
+With [`pluginBuildLocation: "platforms"`](#for-app-developers-building-plugins-in-platformsandroid-opt-in)
+(CLI 9.2+), Gradle also reads every plugin's files from a copy in `platforms/android/.ns-plugins/`.
 
 The fallback rules are exactly what CLIs up to 9.1 do: plugins live in
 `node_modules/<name>/platforms/android`, the project root is `USER_PROJECT_ROOT`, the app and
@@ -222,7 +252,8 @@ future major version of the CLI.
   an older one. To use something newer only when it's available, check `apiLevel` (or `has(...)`)
   first.
 - Never build paths into `node_modules` or into the CLI's output folders; ask the library.
-- In `dependencies {}` / `repositories {}`, use the guarded lookup shown above.
+- In `dependencies {}` / `repositories {}`, look the extension up and keep a fallback while you
+  support CLIs before 9.2 ([how](#supporting-clis-before-92)).
 
 ## How it works
 

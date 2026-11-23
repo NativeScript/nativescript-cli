@@ -577,10 +577,6 @@ dependencies {
 			assert.deepStrictEqual(fs.readDirectory(pluginFolder), [
 				"AndroidManifest.xml",
 			]);
-			assert.include(
-				lastGradleArgs,
-				"-Pnativescript.pluginBuildLocation=platforms",
-			);
 			assert.deepStrictEqual(ignoredFiles, []);
 		});
 

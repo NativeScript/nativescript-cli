@@ -922,10 +922,6 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 		}
 
-		if (pluginBuildSettings.pluginBuildLocation === "platforms") {
-			localArgs.push("-Pnativescript.pluginBuildLocation=platforms");
-		}
-
 		if (pluginBuildSettings.gradleArgs) {
 			localArgs.push(pluginBuildSettings.gradleArgs);
 		}
