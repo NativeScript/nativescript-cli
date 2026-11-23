@@ -13,6 +13,7 @@ import {
 } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
 import {
+	AndroidPluginBuildLocation,
 	IProjectData,
 	IProjectDataService,
 	IValidatePlatformOutput,
@@ -73,7 +74,7 @@ interface IAndroidPluginLocation {
 	 */
 	nativeDir: string;
 	/**
-	 * Set when node_modules is read-only.
+	 * Set when plugins are built in platforms/android.
 	 */
 	mirrorDir?: string;
 }
@@ -81,7 +82,7 @@ interface IAndroidPluginLocation {
 interface IAndroidPluginLayout {
 	key: string;
 	platformDir: string;
-	readOnlyNodeModules: boolean;
+	pluginBuildLocation: AndroidPluginBuildLocation;
 	plugins: Map<string, IAndroidPluginLocation>;
 	/**
 	 * Plugins whose mirror changed since they were last prepared.
@@ -739,9 +740,9 @@ export class AndroidProjectService
 
 		const layout = this.getPluginLayout(projectData);
 		const plugin = layout.plugins.get(pluginData.name);
-		if (!plugin && layout.readOnlyNodeModules) {
-			// Gradle only reads the plugins listed in dependencies.json, and with
-			// read-only node_modules there is nowhere else to build this one to.
+		if (!plugin && layout.pluginBuildLocation === "platforms") {
+			// Gradle only reads the plugins listed in dependencies.json, and only
+			// those get a copy in platforms/android to build into.
 			this.$logger.trace(
 				`Skipping ${pluginData.name}: it does not declare Android support in its package.json.`,
 			);
@@ -805,9 +806,10 @@ export class AndroidProjectService
 			projectDir: projectData.projectDir,
 			pluginName: pluginData.name,
 			platformsAndroidDirPath: pluginPlatformsFolderPath,
-			aarOutputDir: layout.readOnlyNodeModules
-				? plugin.nativeDir
-				: pluginPlatformsFolderPath,
+			aarOutputDir:
+				layout.pluginBuildLocation === "platforms"
+					? plugin.nativeDir
+					: pluginPlatformsFolderPath,
 			tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
 			gradleFactsFile: getGradleFactsFilePath(layout.platformDir),
 		};
@@ -816,8 +818,8 @@ export class AndroidProjectService
 			options.aarName = plugin.aarName;
 		}
 
-		if (layout.readOnlyNodeModules) {
-			options.readOnlyNodeModules = true;
+		if (layout.pluginBuildLocation === "platforms") {
+			options.pluginBuildLocation = "platforms";
 		}
 
 		return options;
@@ -832,15 +834,26 @@ export class AndroidProjectService
 				);
 	}
 
-	private isReadOnlyNodeModules(projectData: IProjectData): boolean {
-		return projectData.nsConfig?.android?.readOnlyNodeModules === true;
+	private getPluginBuildLocation(
+		projectData: IProjectData,
+	): AndroidPluginBuildLocation {
+		const location =
+			projectData.nsConfig?.android?.pluginBuildLocation ?? "node_modules";
+		if (location !== "node_modules" && location !== "platforms") {
+			this.$errors.fail(
+				'Invalid value %s for android.pluginBuildLocation in nativescript.config: use "node_modules" or "platforms".',
+				JSON.stringify(location),
+			);
+		}
+
+		return location;
 	}
 
 	private getPluginLayoutKey(projectData: IProjectData): string {
 		return JSON.stringify([
 			projectData.projectDir,
 			this.getAndroidPlatformDir(projectData),
-			this.isReadOnlyNodeModules(projectData),
+			this.getPluginBuildLocation(projectData),
 		]);
 	}
 
@@ -877,7 +890,7 @@ export class AndroidProjectService
 		nativeDependencyData: IDependencyData[],
 	): IAndroidPluginLayout {
 		const platformDir = this.getAndroidPlatformDir(projectData);
-		const readOnlyNodeModules = this.isReadOnlyNodeModules(projectData);
+		const pluginBuildLocation = this.getPluginBuildLocation(projectData);
 		const mirrorsRoot = path.join(
 			platformDir,
 			constants.ANDROID_PLUGIN_MIRRORS_DIR_NAME,
@@ -895,9 +908,10 @@ export class AndroidProjectService
 		const plugins = new Map<string, IAndroidPluginLocation>();
 		for (const dep of nativeDependencyData) {
 			const aarName = aarNames.get(dep.name);
-			const mirrorDir = readOnlyNodeModules
-				? path.join(mirrorsRoot, aarName)
-				: undefined;
+			const mirrorDir =
+				pluginBuildLocation === "platforms"
+					? path.join(mirrorsRoot, aarName)
+					: undefined;
 			plugins.set(dep.name, {
 				aarName,
 				packageDir: dep.directory,
@@ -911,7 +925,7 @@ export class AndroidProjectService
 		}
 
 		let changedMirrors: string[] = [];
-		if (readOnlyNodeModules) {
+		if (pluginBuildLocation === "platforms") {
 			changedMirrors = this.$androidPluginMirrorService.syncMirrors(
 				mirrorsRoot,
 				nativeDependencyData.map((dep) => {
@@ -933,7 +947,7 @@ export class AndroidProjectService
 		return {
 			key: this.getPluginLayoutKey(projectData),
 			platformDir,
-			readOnlyNodeModules,
+			pluginBuildLocation,
 			plugins,
 			changedMirrors: new Set(changedMirrors),
 		};

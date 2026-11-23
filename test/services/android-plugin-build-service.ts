@@ -561,11 +561,11 @@ dependencies {
 			);
 		});
 
-		it("builds into the CLI-owned output dir when node_modules is read-only", async () => {
+		it('builds into the CLI-owned output dir when pluginBuildLocation is "platforms"', async () => {
 			const mirrorDir = mkdtempSync(path.join(tmpdir(), "aar-mirror-"));
 			const config = setupScoped({
 				aarOutputDir: mirrorDir,
-				readOnlyNodeModules: true,
+				pluginBuildLocation: "platforms",
 			});
 			const staleAar = path.join(mirrorDir, `${shortPluginName}.aar`);
 			fs.writeFile(staleAar, "not ours");
@@ -577,7 +577,10 @@ dependencies {
 			assert.deepStrictEqual(fs.readDirectory(pluginFolder), [
 				"AndroidManifest.xml",
 			]);
-			assert.include(lastGradleArgs, "-Pnativescript.readOnlyNodeModules=true");
+			assert.include(
+				lastGradleArgs,
+				"-Pnativescript.pluginBuildLocation=platforms",
+			);
 			assert.deepStrictEqual(ignoredFiles, []);
 		});
 

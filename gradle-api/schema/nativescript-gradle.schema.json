@@ -78,7 +78,7 @@
 					"$ref": "#/$defs/path"
 				},
 				"nativeDir": {
-					"description": "The directory Gradle reads the plugin's Android files from: the package's platforms/android, or the CLI's copy of it when node_modules is kept read-only.",
+					"description": "The directory Gradle reads the plugin's Android files from: the package's platforms/android, or the CLI's copy of it in platforms/android/.ns-plugins when the app sets android.pluginBuildLocation to \"platforms\".",
 					"$ref": "#/$defs/path"
 				},
 				"aarName": {

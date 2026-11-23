@@ -1,5 +1,6 @@
 import { IAndroidToolsInfoData } from "../declarations";
 import { IProjectDir } from "../common/declarations";
+import { AndroidPluginBuildLocation } from "./project";
 
 interface IPluginBuildOptions extends IAndroidBuildOptions {
 	projectDir?: string;
@@ -9,10 +10,10 @@ interface IPluginBuildOptions extends IAndroidBuildOptions {
 	 */
 	aarName?: string;
 	/**
-	 * The project keeps node_modules read-only, so `aarOutputDir` is a CLI-owned
-	 * copy of the plugin's platforms/android.
+	 * When `"platforms"`, `aarOutputDir` is a CLI-owned copy of the plugin's
+	 * platforms/android. Absent means `"node_modules"`.
 	 */
-	readOnlyNodeModules?: boolean;
+	pluginBuildLocation?: AndroidPluginBuildLocation;
 	/**
 	 * The project's nativescript-gradle.json, passed to the plugin's Gradle build when it exists.
 	 */
@@ -92,9 +93,9 @@ interface IBuildAndroidPluginData extends Partial<IProjectDir> {
 	gradleArgs?: string;
 
 	/**
-	 * The project keeps node_modules read-only (`android.readOnlyNodeModules`).
+	 * The project's `android.pluginBuildLocation`. Absent means `"node_modules"`.
 	 */
-	readOnlyNodeModules?: boolean;
+	pluginBuildLocation?: AndroidPluginBuildLocation;
 
 	/**
 	 * Absolute path of the project's nativescript-gradle.json, when it exists.

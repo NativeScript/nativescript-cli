@@ -51,9 +51,10 @@ class PluginBuildTest {
         assumeTrue(androidHome != null && new File(androidHome).isDirectory(), "ANDROID_HOME is not set");
     }
 
-    @ParameterizedTest(name = "readOnlyNodeModules={0}")
-    @ValueSource(booleans = {false, true})
-    void configuresThePluginBuild(boolean readOnlyNodeModules) throws Exception {
+    @ParameterizedTest(name = "pluginBuildLocation={0}")
+    @ValueSource(strings = {"node_modules", "platforms"})
+    void configuresThePluginBuild(String pluginBuildLocation) throws Exception {
+        boolean buildsInPlatforms = pluginBuildLocation.equals("platforms");
         Path project = tempDir.toRealPath().resolve("project");
         Path platformsAndroid = project.resolve("platforms/android");
         Fixtures.installCore(project);
@@ -87,8 +88,8 @@ class PluginBuildTest {
                 "-PtempBuild=true",
                 "-PappPath=" + Fixtures.path(project.resolve("app")),
                 "-PappResourcesPath=" + Fixtures.path(project.resolve("app/App_Resources"))));
-        if (readOnlyNodeModules) {
-            arguments.add("-Pnativescript.readOnlyNodeModules=true");
+        if (buildsInPlatforms) {
+            arguments.add("-Pnativescript.pluginBuildLocation=platforms");
         }
         Map<String, String> environment = new HashMap<>(System.getenv());
         environment.put("USER_PROJECT_ROOT", Fixtures.path(project));
@@ -103,7 +104,7 @@ class PluginBuildTest {
                 .build();
         Map<String, String> probes = Fixtures.probes(result);
 
-        if (!readOnlyNodeModules) {
+        if (!buildsInPlatforms) {
             // The template only runs the plugin's own buildscript.gradle on request, so the
             // library is not on the classpath and the block takes its old CLI branch.
             assertEquals("false", probes.get("extension"));

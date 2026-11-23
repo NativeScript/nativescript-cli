@@ -282,14 +282,14 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				pluginName: options.pluginName,
 				projectDir: options.projectDir,
 			};
-			if (options.readOnlyNodeModules) {
-				pluginBuildData.readOnlyNodeModules = true;
+			if (options.pluginBuildLocation === "platforms") {
+				pluginBuildData.pluginBuildLocation = "platforms";
 			}
 			if (options.gradleFactsFile && this.$fs.exists(options.gradleFactsFile)) {
 				pluginBuildData.gradleFactsFile = path.resolve(options.gradleFactsFile);
 			}
 			await this.buildPlugin(pluginBuildData);
-			if (!options.readOnlyNodeModules) {
+			if (options.pluginBuildLocation !== "platforms") {
 				this.$watchIgnoreListService.addFileToIgnoreList(
 					path.join(options.aarOutputDir, `${aarName}.aar`),
 				);
@@ -345,7 +345,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	 */
 	private removeStaleAars(options: IPluginBuildOptions, aarName: string): void {
 		for (const staleAarPath of this.getStaleAarPaths(options, aarName)) {
-			if (!options.readOnlyNodeModules) {
+			if (options.pluginBuildLocation !== "platforms") {
 				const staleName = path.basename(staleAarPath, ".aar");
 				const previousOutput = path.join(
 					options.tempPluginDirPath,
@@ -922,8 +922,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			);
 		}
 
-		if (pluginBuildSettings.readOnlyNodeModules) {
-			localArgs.push("-Pnativescript.readOnlyNodeModules=true");
+		if (pluginBuildSettings.pluginBuildLocation === "platforms") {
+			localArgs.push("-Pnativescript.pluginBuildLocation=platforms");
 		}
 
 		if (pluginBuildSettings.gradleArgs) {

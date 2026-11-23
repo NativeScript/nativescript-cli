@@ -21,8 +21,9 @@ public interface PluginInfo {
     String getName();
 
     /**
-     * The installed npm package. Treat it as read-only: the CLI may keep {@code node_modules}
-     * read-only and work on a copy of the native files instead.
+     * The installed npm package. Treat it as read-only: with {@code android.pluginBuildLocation}
+     * set to {@code "platforms"}, the CLI leaves {@code node_modules} untouched and works on a copy
+     * of the native files instead.
      *
      * @return an absolute, normalized directory
      * @since API level 1

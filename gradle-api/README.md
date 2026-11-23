@@ -76,7 +76,7 @@ In that build, **only the `dependencies {}` and `repositories {}` blocks of your
 run**: the CLI copies them out of the file. Nothing else in the file runs there, including the
 `apply plugin:` line.
 
-On CLI 9.2+ with `android.readOnlyNodeModules` enabled, the CLI loads your `buildscript.gradle` in
+On CLI 9.2+ with `android.pluginBuildLocation: "platforms"`, the CLI loads your `buildscript.gradle` in
 that build and applies the library for you. On older CLIs it doesn't, so the library isn't
 available there. Inside those two blocks, look the extension up instead of assuming it exists, and
 keep the old code as the fallback:
@@ -180,7 +180,7 @@ repositories {
 
 ## Compatibility
 
-| | CLI 9.1 and older | CLI 9.2+ | CLI 9.2+ with `readOnlyNodeModules` |
+| | CLI 9.1 and older | CLI 9.2+ | CLI 9.2+ with `pluginBuildLocation: "platforms"` |
 |---|---|---|---|
 | Plugin not using the library | Unchanged | Unchanged | Gradle reads its files from a copy in `platforms/android/.ns-plugins/`, and its own `buildscript.gradle` also runs in its own `.aar` build |
 | Plugin using the library, app build | Fallback rules | Facts from the CLI | Facts from the CLI |
@@ -194,21 +194,26 @@ Building `platforms/android` from Android Studio works too: CLI 9.2+ leaves the 
 after `ns prepare android`, so the library has the same answers without the CLI's command-line
 flags.
 
-### For app developers: keeping `node_modules` read-only (opt-in)
+### For app developers: building plugins in `platforms/android` (opt-in)
 
 ```ts
 // nativescript.config.ts
 export default {
-  android: { readOnlyNodeModules: true },
+  android: { pluginBuildLocation: "platforms" },
 } satisfies NativeScriptConfig;
 ```
 
-With this, the CLI never writes into `node_modules`. It copies each native plugin's
+`android.pluginBuildLocation` sets where the CLI builds plugins' native Android code. The default,
+`"node_modules"`, builds each plugin's `.aar` inside its package, as CLIs up to 9.1 do. With
+`"platforms"`, the CLI never writes into `node_modules`. It copies each native plugin's
 `platforms/android` and `package.json` into `platforms/android/.ns-plugins/<name>/`, builds plugin
 `.aar`s there, and points the Android build at the copies. No runtime change is needed (checked
 against the runtime's Gradle templates from 6.5.3 to current), and Android Studio builds use the
 copies too. Earlier builds may have left `.aar` files inside `node_modules`;
 reinstall `node_modules` once after turning this on to get rid of them.
+
+`"platforms"` is opt-in while plugins adopt this library, and is expected to become the default in a
+future major version of the CLI.
 
 ## Rules for plugin authors
 

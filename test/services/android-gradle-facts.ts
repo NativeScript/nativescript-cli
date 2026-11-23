@@ -50,14 +50,14 @@ describe("android plugin layout and Gradle facts", () => {
 		};
 	})();
 
-	function createProjectData(readOnlyNodeModules?: boolean): IProjectData {
+	function createProjectData(pluginBuildLocation?: unknown): IProjectData {
 		return <IProjectData>(<unknown>{
 			projectDir,
 			platformsDir: path.join(projectDir, "platforms"),
 			nsConfig:
-				readOnlyNodeModules === undefined
+				pluginBuildLocation === undefined
 					? {}
-					: { android: { readOnlyNodeModules } },
+					: { android: { pluginBuildLocation } },
 			ignoredDependencies: [],
 			getAppDirectoryPath: () => path.join(projectDir, "src"),
 			getAppResourcesDirectoryPath: () =>
@@ -375,12 +375,12 @@ describe("android plugin layout and Gradle facts", () => {
 		});
 	});
 
-	describe("read-only node_modules", () => {
+	describe('pluginBuildLocation: "platforms"', () => {
 		it("points dependencies.json and the facts at CLI-owned copies", async () => {
 			addFixturePlugins();
 
 			await service.beforePrepareAllPlugins(
-				createProjectData(true),
+				createProjectData("platforms"),
 				dependencies,
 			);
 
@@ -430,7 +430,7 @@ describe("android plugin layout and Gradle facts", () => {
 
 		it("builds from the package into the copy", async () => {
 			addFixturePlugins();
-			const projectData = createProjectData(true);
+			const projectData = createProjectData("platforms");
 			await service.beforePrepareAllPlugins(projectData, dependencies);
 
 			await service.preparePluginNativeCode(
@@ -456,7 +456,7 @@ describe("android plugin layout and Gradle facts", () => {
 				),
 				aarOutputDir: mirrorNativeDir,
 				aarName: "foo_plugin_x",
-				readOnlyNodeModules: true,
+				pluginBuildLocation: "platforms",
 			});
 			assert.equal(
 				migrateIncludeGradleCalls[0].platformsAndroidDirPath,
@@ -466,7 +466,7 @@ describe("android plugin layout and Gradle facts", () => {
 
 		it("asks for a reprepare of plugins whose copy changed until they are prepared", async () => {
 			addFixturePlugins();
-			const projectData = createProjectData(true);
+			const projectData = createProjectData("platforms");
 			const foo = pluginData("@foo/plugin-x");
 
 			await service.beforePrepareAllPlugins(projectData, dependencies);
@@ -492,7 +492,7 @@ describe("android plugin layout and Gradle facts", () => {
 				),
 				"<manifest/>",
 			);
-			const projectData = createProjectData(true);
+			const projectData = createProjectData("platforms");
 			await service.beforePrepareAllPlugins(projectData, dependencies);
 
 			await service.preparePluginNativeCode(pluginData("lodash"), projectData);
@@ -500,16 +500,16 @@ describe("android plugin layout and Gradle facts", () => {
 			assert.deepStrictEqual(buildAarCalls, []);
 		});
 
-		it("drops the copies when switched off", async () => {
+		it('drops the copies when switched back to "node_modules"', async () => {
 			addFixturePlugins();
 			await service.beforePrepareAllPlugins(
-				createProjectData(true),
+				createProjectData("platforms"),
 				dependencies,
 			);
 			assert.isTrue(fs.exists(path.join(platformDir, ".ns-plugins")));
 
 			await service.beforePrepareAllPlugins(
-				createProjectData(false),
+				createProjectData("node_modules"),
 				dependencies,
 			);
 
@@ -519,6 +519,18 @@ describe("android plugin layout and Gradle facts", () => {
 				readFacts().plugins[0].nativeDir,
 				"../../node_modules/@nativescript/core/platforms/android",
 			);
+		});
+	});
+
+	describe("invalid pluginBuildLocation", () => {
+		it("fails prepare and names the allowed values", async () => {
+			addFixturePlugins();
+
+			await assert.isRejected(
+				service.beforePrepareAllPlugins(createProjectData(true), dependencies),
+				/Invalid value true for android\.pluginBuildLocation .*"node_modules" or "platforms"/,
+			);
+			assert.isFalse(fs.exists(path.join(platformDir, "dependencies.json")));
 		});
 	});
 });
