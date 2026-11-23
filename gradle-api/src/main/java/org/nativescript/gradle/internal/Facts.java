@@ -37,7 +37,6 @@ public final class Facts {
     private static final Map<String, CachedFacts> CACHE = new ConcurrentHashMap<>();
 
     private final File file;
-    private final int schemaVersion;
     private final String dependenciesJsonSha256;
     private final Set<String> capabilities;
     private final File projectRoot;
@@ -47,7 +46,6 @@ public final class Facts {
 
     private Facts(
             File file,
-            int schemaVersion,
             String dependenciesJsonSha256,
             Set<String> capabilities,
             File projectRoot,
@@ -55,7 +53,6 @@ public final class Facts {
             File appResourcesDir,
             Map<String, PluginData> plugins) {
         this.file = file;
-        this.schemaVersion = schemaVersion;
         this.dependenciesJsonSha256 = dependenciesJsonSha256;
         this.capabilities = Collections.unmodifiableSet(capabilities);
         this.projectRoot = projectRoot;
@@ -168,7 +165,7 @@ public final class Facts {
         }
 
         return new Facts(
-                file, schemaVersion, dependenciesJsonSha256, capabilities, projectRoot, appDir, appResourcesDir, plugins);
+                file, dependenciesJsonSha256, capabilities, projectRoot, appDir, appResourcesDir, plugins);
     }
 
     private static GradleException invalid(File file, String problem) {
@@ -218,15 +215,6 @@ public final class Facts {
 
     public File getFile() {
         return file;
-    }
-
-    public int getSchemaVersion() {
-        return schemaVersion;
-    }
-
-    /** Null if the writer did not record it. */
-    public String getDependenciesJsonSha256() {
-        return dependenciesJsonSha256;
     }
 
     public Set<String> getCapabilities() {
