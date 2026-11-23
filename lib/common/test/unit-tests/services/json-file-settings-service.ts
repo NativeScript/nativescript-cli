@@ -65,6 +65,37 @@ describe("jsonFileSettingsService", () => {
 		Date.now = originalDateNow;
 	});
 
+	describe("getSettingValueSync", () => {
+		it("returns the stored value without going through the lock", () => {
+			const testInjector = createTestInjector();
+			dataInFile[jsonFileSettingsPath] = { prop1: "value1" };
+			const lockService = testInjector.resolve("lockService");
+			lockService.executeActionWithLock = () => {
+				throw new Error("lock must not be used for sync reads");
+			};
+
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath }
+				);
+			assert.equal(jsonFileSettingsService.getSettingValueSync("prop1"), "value1");
+			assert.isNull(jsonFileSettingsService.getSettingValueSync("missing"));
+		});
+
+		it("returns null when the settings file does not exist", () => {
+			const testInjector = createTestInjector();
+			const fs = testInjector.resolve("fs");
+			fs.exists = () => false;
+			const jsonFileSettingsService =
+				testInjector.resolve<IJsonFileSettingsService>(
+					"jsonFileSettingsService",
+					{ jsonFileSettingsPath }
+				);
+			assert.isNull(jsonFileSettingsService.getSettingValueSync("prop1"));
+		});
+	});
+
 	describe("getSettingValue", () => {
 		it("returns correct data without cache", async () => {
 			dataInFile = { [jsonFileSettingsPath]: { prop1: 1 } };

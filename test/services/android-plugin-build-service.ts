@@ -10,6 +10,7 @@ import * as FsLib from "../../lib/common/file-system";
 import * as path from "path";
 import * as stubs from "../stubs";
 import { mkdtempSync } from "fs";
+import { resolvePackagePath } from "../../lib/helpers/package-path-helper";
 import { tmpdir } from "os";
 import {
 	IFileSystem,
@@ -128,6 +129,8 @@ describe("androidPluginBuildService", () => {
 		addProjectRuntime?: boolean;
 	}): any {
 		return {
+			getInstalledPackagePath: (packageName: string, fromDir: string): string =>
+				resolvePackagePath(packageName, { paths: [fromDir] }) || null,
 			getRegistryPackageData: async (packageName: string): Promise<any> => {
 				const result: any = [];
 				result["dist-tags"] = { latest: "4.1.2" };
@@ -149,9 +152,9 @@ describe("androidPluginBuildService", () => {
 
 				return result;
 			},
-			view: async (packageName: string, config: any): Promise<any> => {
+			view: async (packageName: string, field?: string): Promise<any> => {
 				let result: any = null;
-				if (config && config.gradle) {
+				if (field === "gradle") {
 					const packageNameParts = packageName.split("@");
 					const packageVersion = packageNameParts[packageNameParts.length - 1];
 					switch (packageVersion) {
@@ -170,7 +173,7 @@ describe("androidPluginBuildService", () => {
 					}
 				}
 
-				if (config && config["dist-tags"]) {
+				if (field === "dist-tags") {
 					result = {
 						latest: "4.1.2",
 					};

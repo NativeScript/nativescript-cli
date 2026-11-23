@@ -1,12 +1,12 @@
 import { Yok } from "../lib/common/yok";
 import * as stubs from "./stubs";
-import { PackageManager } from "../lib/package-manager";
-import { PackageInstallationManager } from "../lib/package-installation-manager";
-import { NodePackageManager } from "../lib/node-package-manager";
-import { YarnPackageManager } from "../lib/yarn-package-manager";
-import { Yarn2PackageManager } from "../lib/yarn2-package-manager";
-import { PnpmPackageManager } from "../lib/pnpm-package-manager";
-import { BunPackageManager } from "../lib/bun-package-manager";
+import { PackageManager } from "../lib/package-managers";
+import { PackageInstallationManager } from "../lib/package-managers/package-installation-manager";
+import { NpmPackageManager } from "../lib/package-managers/npm";
+import { YarnPackageManager } from "../lib/package-managers/yarn";
+import { Yarn2PackageManager } from "../lib/package-managers/yarn2";
+import { PnpmPackageManager } from "../lib/package-managers/pnpm";
+import { BunPackageManager } from "../lib/package-managers/bun";
 import { ProjectData } from "../lib/project-data";
 import { ChildProcess } from "../lib/common/child-process";
 import { Options } from "../lib/options";
@@ -69,13 +69,14 @@ function createTestInjector() {
 	testInjector.register("messagesService", MessagesService);
 	testInjector.register("userSettingsService", {
 		getSettingValue: async (settingName: string): Promise<void> => undefined,
+		getSettingValueSync: (settingName: string): void => undefined,
 	});
 	testInjector.register("packageManager", PackageManager);
 	testInjector.register(
 		"projectConfigService",
 		stubs.PackageInstallationManagerStub,
 	);
-	testInjector.register("npm", NodePackageManager);
+	testInjector.register("npm", NpmPackageManager);
 	testInjector.register("yarn", YarnPackageManager);
 	testInjector.register("yarn2", Yarn2PackageManager);
 	testInjector.register("pnpm", PnpmPackageManager);

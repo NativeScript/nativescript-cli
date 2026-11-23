@@ -6,7 +6,7 @@ import * as path from "path";
 import * as sinon from "sinon";
 import * as _ from "lodash";
 import { IProjectDataService } from "../../lib/definitions/project";
-import { IVersionsService } from "../../lib/declarations";
+import { IVersionsService, IPackageManager } from "../../lib/declarations";
 import {
 	ICheckEnvironmentRequirementsInput,
 	ICheckEnvironmentRequirementsOutput,
@@ -45,6 +45,7 @@ class DoctorServiceInheritor extends DoctorService {
 		$terminalSpinnerService: ITerminalSpinnerService,
 		$versionsService: IVersionsService,
 		$settingsService: ISettingsService,
+		$packageManager: IPackageManager,
 	) {
 		super(
 			$analyticsService,
@@ -57,6 +58,7 @@ class DoctorServiceInheritor extends DoctorService {
 			$terminalSpinnerService,
 			$versionsService,
 			$settingsService,
+			$packageManager,
 		);
 	}
 
@@ -93,6 +95,12 @@ describe("doctorService", () => {
 				},
 		});
 		testInjector.register("versionsService", {});
+		testInjector.register("packageManager", {
+			getInstalledPackagePath: (packageName: string, fromDir: string): string =>
+				packageName === "tns-core-modules"
+					? path.join(fromDir, "node_modules", packageName)
+					: null,
+		});
 		testInjector.register("settingsService", {
 			getProfileDir: (): string => "",
 		});
@@ -349,7 +357,7 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 			},
 		];
 
-		it("getDeprecatedShortImportsInFiles returns correct results", () => {
+		it("getDeprecatedShortImportsInFiles returns correct results", async () => {
 			const testInjector = createTestInjector();
 			const doctorService =
 				testInjector.resolve<DoctorServiceInheritor>("doctorService");
@@ -365,15 +373,32 @@ const Observable = require("tns-core-modules-widgets/data/observable").Observabl
 				}
 			};
 
-			testData.forEach(({ filesContents, expectedShortImports }) => {
+			for (const { filesContents, expectedShortImports } of testData) {
 				fs.readText = (filePath) => filesContents[filePath];
 
-				const shortImports = doctorService.getDeprecatedShortImportsInFiles(
-					_.keys(filesContents),
-					"projectDir",
-				);
+				const shortImports =
+					doctorService.getDeprecatedShortImportsInFiles(
+						_.keys(filesContents),
+						"projectDir",
+					);
 				assert.deepStrictEqual(shortImports, expectedShortImports);
-			});
+			}
+		});
+
+		it("getDeprecatedShortImportsInFiles returns no results when tns-core-modules is not installed", async () => {
+			const testInjector = createTestInjector();
+			const packageManager = testInjector.resolve("packageManager");
+			packageManager.getInstalledPackagePath = (): string => null;
+			const doctorService =
+				testInjector.resolve<DoctorServiceInheritor>("doctorService");
+			const fs = testInjector.resolve<IFileSystem>("fs");
+			fs.readText = () => 'const application = require("application");';
+
+			const shortImports = doctorService.getDeprecatedShortImportsInFiles(
+				["file1"],
+				"projectDir",
+			);
+			assert.deepStrictEqual(shortImports, []);
 		});
 	});
 

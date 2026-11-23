@@ -17,7 +17,7 @@ import {
 } from "../definitions/platform";
 import { IProjectDataService, IProjectData } from "../definitions/project";
 import {
-	INodePackageManagerInstallOptions,
+	IPackageInstallOptions,
 	INodePackageManager,
 	IOptions,
 	IDependencyData,
@@ -32,10 +32,6 @@ import { IFilesHashService } from "../definitions/files-hash-service";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
-import {
-	resolvePackagePath,
-	resolvePackageJSONPath,
-} from "../helpers/package-path-helper";
 import { color } from "../color";
 
 export class PluginsService implements IPluginsService {
@@ -59,7 +55,7 @@ export class PluginsService implements IPluginsService {
 		return this.$injector.resolve("projectDataService");
 	}
 
-	private get npmInstallOptions(): INodePackageManagerInstallOptions {
+	private get npmInstallOptions(): IPackageInstallOptions {
 		return _.merge(
 			{
 				disableNpmInstall: this.$options.disableNpmInstall,
@@ -84,7 +80,7 @@ export class PluginsService implements IPluginsService {
 	) {}
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
-		await this.ensure(projectData);
+		await this.ensureAllDependenciesAreInstalled(projectData);
 		const possiblePackageName = path.resolve(plugin);
 		if (
 			possiblePackageName.indexOf(".tgz") !== -1 &&
@@ -298,24 +294,18 @@ export class PluginsService implements IPluginsService {
 			_.keys(packageJsonContent.devDependencies),
 		);
 
-		const notInstalledDependencies = allDependencies
-			.map((dep) => {
-				this.$logger.trace(`Checking if ${dep} is installed...`);
-				const pathToPackage = resolvePackagePath(dep, {
-					paths: [projectData.projectDir],
-				});
-
-				if (pathToPackage) {
-					// return false if the dependency is installed - we'll filter out boolean values
-					// and end up with an array of dep names that are not installed if we end up
-					// inside the catch block.
-					return false;
-				}
-
+		const notInstalledDependencies: string[] = [];
+		for (const dep of allDependencies) {
+			this.$logger.trace(`Checking if ${dep} is installed...`);
+			const pathToPackage = this.$packageManager.getInstalledPackagePath(
+				dep,
+				projectData.projectDir,
+			);
+			if (!pathToPackage) {
 				this.$logger.trace(`${dep} is not installed, or couldn't be found`);
-				return dep;
-			})
-			.filter(Boolean);
+				notInstalledDependencies.push(dep);
+			}
+		}
 
 		if (this.$options.force || notInstalledDependencies.length) {
 			this.$logger.trace(
@@ -635,9 +625,7 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 			pluginData.version = cacheData.version;
 			pluginData.fullPath =
 				(<IDependencyData>cacheData).directory ||
-				path.dirname(
-					this.getPackageJsonFilePathForModule(cacheData.name, projectDir),
-				);
+				(<INodeModuleData>cacheData).fullPath;
 			pluginData.isPlugin = !!cacheData.nativescript;
 			pluginData.pluginPlatformsFolderPath = (platform: string) => {
 				if (this.$mobileHelper.isvisionOSPlatform(platform)) {
@@ -702,10 +690,6 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		}));
 	}
 
-	private getNodeModulesPath(projectDir: string): string {
-		return path.join(projectDir, "node_modules");
-	}
-
 	private getPackageJsonFilePath(projectDir: string): string {
 		return path.join(projectDir, "package.json");
 	}
@@ -714,10 +698,11 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		moduleName: string,
 		projectDir: string,
 	): string {
-		const pathToJsonFile = resolvePackageJSONPath(moduleName, {
-			paths: [projectDir],
-		});
-		return pathToJsonFile;
+		const pathToModule = this.$packageManager.getInstalledPackagePath(
+			moduleName,
+			projectDir,
+		);
+		return pathToModule && path.join(pathToModule, "package.json");
 	}
 
 	private getDependencies(projectDir: string): string[] {
@@ -754,22 +739,17 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		};
 	}
 
-	private async ensure(projectData: IProjectData): Promise<void> {
-		await this.ensureAllDependenciesAreInstalled(projectData);
-		this.$fs.ensureDirectoryExists(
-			this.getNodeModulesPath(projectData.projectDir),
-		);
-	}
-
 	private async getAllInstalledModules(
 		projectData: IProjectData,
 	): Promise<INodeModuleData[]> {
-		await this.ensure(projectData);
+		await this.ensureAllDependenciesAreInstalled(projectData);
 
 		const nodeModules = this.getDependencies(projectData.projectDir);
-		return _.map(nodeModules, (nodeModuleName) =>
-			this.getNodeModuleData(nodeModuleName, projectData.projectDir),
-		).filter(Boolean);
+		return nodeModules
+			.map((nodeModuleName) =>
+				this.getNodeModuleData(nodeModuleName, projectData.projectDir),
+			)
+			.filter(Boolean);
 	}
 
 	private async executeNpmCommand(
