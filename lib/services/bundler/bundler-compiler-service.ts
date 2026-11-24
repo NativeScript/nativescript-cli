@@ -37,6 +37,7 @@ import { ICleanupService } from "../../definitions/cleanup-service";
 import { ViteHmrPortService } from "../../contracts/vite-hmr-port-service";
 import { IOSDeviceTunnelService } from "../../contracts/ios-device-tunnel-service";
 import { injector } from "../../common/yok";
+import { inject } from "../../common/di/inject";
 import {
 	resolvePackagePath,
 	resolvePackageJSONPath,
@@ -95,6 +96,7 @@ export class BundlerCompilerService
 	extends EventEmitter
 	implements IBundlerCompilerService
 {
+	private iOSDeviceTunnelService = inject(IOSDeviceTunnelService);
 	private bundlerProcesses: IDictionary<child_process.ChildProcess> = {};
 	// Vite-only: the long-lived `vite serve` dev server the device fetches
 	// modules and HMR updates from. Keyed by platform, managed by this CLI
@@ -122,7 +124,6 @@ export class BundlerCompilerService
 		private $packageInstallationManager: IPackageInstallationManager, // private $sharedEventBus: ISharedEventBus
 		private $projectConfigService: IProjectConfigService,
 		private $viteHmrPortService: ViteHmrPortService,
-		private $iOSDeviceTunnelService: IOSDeviceTunnelService,
 	) {
 		super();
 	}
@@ -866,7 +867,7 @@ export class BundlerCompilerService
 			env.NS_HMR_PORT = String(
 				await this.$viteHmrPortService.getPort(platform),
 			);
-			const tunnelHost = this.$iOSDeviceTunnelService.getHostAddress(platform);
+			const tunnelHost = this.iOSDeviceTunnelService.getHostAddress(platform);
 			if (tunnelHost && !process.env.NS_HMR_HOST) {
 				env.NS_HMR_HOST = tunnelHost;
 			}

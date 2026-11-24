@@ -2,9 +2,11 @@ import { assert } from "chai";
 import { EventEmitter } from "events";
 import { Yok } from "../../../lib/common/yok";
 import { IInjector } from "../../../lib/common/definitions/yok";
+import { provide } from "../../../lib/common/di";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import { DeviceConnectionType } from "../../../lib/constants";
+import { IOSDeviceTunnelService } from "../../../lib/contracts/ios-device-tunnel-service";
 import { IOSDeviceTunnelServiceImpl } from "../../../lib/services/ios/ios-device-tunnel-service";
 import { ErrorsStub, LoggerStub, TempServiceStub } from "../../stubs";
 
@@ -149,9 +151,11 @@ describe("IOSDeviceTunnelService", () => {
 		injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 		injector.register("mobileHelper", MobileHelper);
 		injector.register("tempService", TempServiceStub);
-		injector.register("iOSDeviceTunnelService", IOSDeviceTunnelServiceImpl);
+		injector.register(
+			provide(IOSDeviceTunnelService, IOSDeviceTunnelServiceImpl),
+		);
 
-		service = injector.resolve("iOSDeviceTunnelService");
+		service = <IOSDeviceTunnelServiceImpl>injector.get(IOSDeviceTunnelService);
 		(<any>service).tunnelReadyTimeoutMs = 200;
 		(<any>service).tunnelPollIntervalMs = 1;
 		(<any>service).getNetworkInterfaces = () => macInterfaces;

@@ -1,5 +1,7 @@
 import { injector } from "./common/yok";
+import { provideLazy } from "./common/di/providers";
 import { registerBuiltInCommand } from "./common/services/command-definition-adapter";
+import { IOSDeviceTunnelService } from "./contracts/ios-device-tunnel-service";
 import type { fontsCommandDefinition } from "./commands/fonts";
 
 require("./common/bootstrap");
@@ -676,9 +678,13 @@ injector.require(
 	"viteHmrPortService",
 	"./services/bundler/vite-hmr-port-service",
 );
-injector.require(
-	"iOSDeviceTunnelService",
-	"./services/ios/ios-device-tunnel-service",
+injector.register(
+	provideLazy(
+		IOSDeviceTunnelService,
+		(): typeof import("./services/ios/ios-device-tunnel-service").IOSDeviceTunnelServiceImpl =>
+			require("./services/ios/ios-device-tunnel-service")
+				.IOSDeviceTunnelServiceImpl,
+	),
 );
 
 injector.require(

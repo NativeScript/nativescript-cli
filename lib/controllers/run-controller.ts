@@ -27,8 +27,10 @@ import { IInjector } from "../common/definitions/yok";
 import { ViteHmrPortService } from "../contracts/vite-hmr-port-service";
 import { IOSDeviceTunnelService } from "../contracts/ios-device-tunnel-service";
 import { injector } from "../common/yok";
+import { inject } from "../common/di/inject";
 
 export class RunController extends EventEmitter implements IRunController {
+	private iOSDeviceTunnelService = inject(IOSDeviceTunnelService);
 	private prepareReadyEventHandler: any = null;
 	private appRestartRequestHandler: (
 		request: IBundlerAppRestartRequest,
@@ -67,7 +69,6 @@ export class RunController extends EventEmitter implements IRunController {
 		protected $projectDataService: IProjectDataService,
 		private $staticConfig: Config.IStaticConfig,
 		private $viteHmrPortService: ViteHmrPortService,
-		private $iOSDeviceTunnelService: IOSDeviceTunnelService,
 	) {
 		super();
 	}
@@ -170,7 +171,7 @@ export class RunController extends EventEmitter implements IRunController {
 			).map((descriptor) => descriptor.identifier);
 
 			for (const deviceIdentifier of removedDeviceIdentifiers) {
-				await this.$iOSDeviceTunnelService.close(deviceIdentifier);
+				await this.iOSDeviceTunnelService.close(deviceIdentifier);
 			}
 
 			// Handle the case when no more devices left for any of the persisted platforms
@@ -896,7 +897,7 @@ export class RunController extends EventEmitter implements IRunController {
 			return;
 		}
 
-		await this.$iOSDeviceTunnelService.open(device);
+		await this.iOSDeviceTunnelService.open(device);
 	}
 
 	/**

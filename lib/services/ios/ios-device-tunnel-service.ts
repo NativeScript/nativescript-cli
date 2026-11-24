@@ -1,15 +1,14 @@
 import * as os from "os";
 import * as semver from "semver";
-import {
-	IChildProcess,
-	IDictionary,
-	IFileSystem,
-	IHostInfo,
-} from "../../common/declarations";
-import { injector } from "../../common/yok";
+import { IDictionary } from "../../common/declarations";
+import { inject } from "../../common/di/inject";
+import { ChildProcess } from "../../contracts/child-process";
+import { FileSystem } from "../../contracts/file-system";
+import { HostInfo } from "../../contracts/host-info";
 import { IOSDeviceTunnelService } from "../../contracts/ios-device-tunnel-service";
+import { Logger } from "../../contracts/logger";
+import { TempService } from "../../contracts/temp-service";
 import { ICleanupService } from "../../definitions/cleanup-service";
-import { ITempService } from "../../definitions/temp-service";
 import { DeviceConnectionType } from "../../constants";
 import type * as child_process from "child_process";
 
@@ -29,21 +28,19 @@ interface ITunnel {
 	closed: boolean;
 }
 
-export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
+export class IOSDeviceTunnelServiceImpl extends IOSDeviceTunnelService {
+	private childProcess = inject(ChildProcess);
+	private cleanupService = inject<ICleanupService>("cleanupService");
+	private fs = inject(FileSystem);
+	private hostInfo = inject(HostInfo);
+	private logger = inject(Logger);
+	private mobileHelper = inject<Mobile.IMobileHelper>("mobileHelper");
+	private tempService = inject(TempService);
+
 	private tunnels: IDictionary<ITunnel> = {};
 	private hostAddresses: IDictionary<string> = {};
 	private tunnelReadyTimeoutMs = 10000;
 	private tunnelPollIntervalMs = 500;
-
-	constructor(
-		private $childProcess: IChildProcess,
-		private $cleanupService: ICleanupService,
-		private $fs: IFileSystem,
-		private $hostInfo: IHostInfo,
-		private $logger: ILogger,
-		private $mobileHelper: Mobile.IMobileHelper,
-		private $tempService: ITempService,
-	) {}
 
 	public open(device: Mobile.IDevice): Promise<string | null> {
 		const id = device.deviceInfo.identifier;
@@ -55,7 +52,7 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 			};
 			this.tunnels[id] = tunnel;
 			tunnel.address = this.openCore(device, tunnel).catch((err): null => {
-				this.$logger.trace(`Unable to open the USB tunnel to ${id}: ${err}`);
+				this.logger.trace(`Unable to open the USB tunnel to ${id}: ${err}`);
 				this.stopHolder(tunnel);
 				return null;
 			});
@@ -88,17 +85,17 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 		const id = device.deviceInfo.identifier;
 		const ineligible = this.getIneligibilityReason(device);
 		if (ineligible) {
-			this.$logger.trace(`Not using a USB tunnel for ${id}: ${ineligible}.`);
+			this.logger.trace(`Not using a USB tunnel for ${id}: ${ineligible}.`);
 			return null;
 		}
 
-		const jsonPath = await this.$tempService.path({
+		const jsonPath = await this.tempService.path({
 			prefix: "ns-devicectl-",
 			suffix: ".json",
 		});
 		const connection = await this.getConnection(id, jsonPath);
 		if (connection?.transportType !== "wired") {
-			this.$logger.trace(
+			this.logger.trace(
 				`Not using a USB tunnel for ${id}: devicectl reports ${connection ? `transport ${connection.transportType}` : "no such device"}.`,
 			);
 			return null;
@@ -109,7 +106,7 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 		const hostAddress =
 			deviceAddress && this.findLocalTunnelAddress(deviceAddress);
 		if (!hostAddress) {
-			this.$logger.trace(
+			this.logger.trace(
 				`Not using a USB tunnel for ${id}: ${deviceAddress ? `no local address on the tunnel to ${deviceAddress}` : "the tunnel did not come up"}.`,
 			);
 			this.stopHolder(tunnel);
@@ -120,7 +117,7 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 		}
 
 		this.hostAddresses[tunnel.platform] = hostAddress;
-		this.$logger.info(
+		this.logger.info(
 			`Using the USB tunnel to ${device.deviceInfo.displayName} (Mac address ${hostAddress}) for the Vite dev server.`,
 		);
 		return hostAddress;
@@ -128,7 +125,7 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 
 	private getIneligibilityReason(device: Mobile.IDevice): string | null {
 		const { deviceInfo } = device;
-		if (!this.$hostInfo.isDarwin) {
+		if (!this.hostInfo.isDarwin) {
 			return "not on macOS";
 		}
 		if (device.isEmulator) {
@@ -139,7 +136,7 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 		}
 		const version = semver.coerce(deviceInfo.version);
 		if (
-			this.$mobileHelper.isiOSPlatform(deviceInfo.platform) &&
+			this.mobileHelper.isiOSPlatform(deviceInfo.platform) &&
 			(!version || semver.major(version) < 17)
 		) {
 			return `iOS ${deviceInfo.version} has no CoreDevice tunnel`;
@@ -151,7 +148,7 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 		deviceIdentifier: string,
 		jsonPath: string,
 	): Promise<ICoreDeviceConnection | null> {
-		const result = await this.$childProcess.trySpawnFromCloseEvent("xcrun", [
+		const result = await this.childProcess.trySpawnFromCloseEvent("xcrun", [
 			"devicectl",
 			"list",
 			"devices",
@@ -159,10 +156,10 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 			"--json-output",
 			jsonPath,
 		]);
-		if (result.exitCode !== 0 || !this.$fs.exists(jsonPath)) {
+		if (result.exitCode !== 0 || !this.fs.exists(jsonPath)) {
 			return null;
 		}
-		const devices: any[] = this.$fs.readJson(jsonPath)?.result?.devices || [];
+		const devices: any[] = this.fs.readJson(jsonPath)?.result?.devices || [];
 		const match = devices.find(
 			(d) => d?.hardwareProperties?.udid === deviceIdentifier,
 		);
@@ -173,7 +170,7 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 		deviceIdentifier: string,
 		tunnel: ITunnel,
 	): child_process.ChildProcess {
-		const holder = this.$childProcess.spawn(
+		const holder = this.childProcess.spawn(
 			"xcrun",
 			[
 				"devicectl",
@@ -193,11 +190,11 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 			{ stdio: "ignore" },
 		);
 		holder.on("error", (err: Error) =>
-			this.$logger.trace(`USB tunnel holder for ${deviceIdentifier}: ${err}`),
+			this.logger.trace(`USB tunnel holder for ${deviceIdentifier}: ${err}`),
 		);
 		holder.once("exit", () => {
 			if (holder.pid) {
-				this.$cleanupService.removeKillProcess(holder.pid.toString());
+				this.cleanupService.removeKillProcess(holder.pid.toString());
 			}
 			if (tunnel.closed || tunnel.holder !== holder) {
 				return;
@@ -205,14 +202,14 @@ export class IOSDeviceTunnelServiceImpl implements IOSDeviceTunnelService {
 			tunnel.holder = undefined;
 			tunnel.address.then((address) => {
 				if (address && !tunnel.closed) {
-					this.$logger.warn(
+					this.logger.warn(
 						`The USB tunnel to ${deviceIdentifier} closed, so the app can no longer reach the Vite dev server at ${address}. Restart the run to reconnect.`,
 					);
 				}
 			});
 		});
 		if (holder.pid) {
-			this.$cleanupService.addKillProcess(holder.pid.toString());
+			this.cleanupService.addKillProcess(holder.pid.toString());
 		}
 		return holder;
 	}
@@ -308,5 +305,3 @@ function parseIPv6(address: string): number[] | null {
 		? groups
 		: null;
 }
-
-injector.register("iOSDeviceTunnelService", IOSDeviceTunnelServiceImpl);
