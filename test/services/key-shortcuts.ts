@@ -5,6 +5,7 @@ import { getContractName } from "../../lib/common/di/contract";
 import { Injector } from "../../lib/common/di/injector";
 import { KeyShortcutRegistryService } from "../../lib/services/key-shortcut-registry";
 import {
+	commandShortcutsOwnTerminal,
 	findShortcut,
 	KeyContextBase,
 	KeyShortcut,
@@ -19,10 +20,16 @@ import {
 class FakeStdin extends EventEmitter {
 	public isTTY: boolean = true;
 	public rawMode: boolean = null;
+	/** The mode the terminal is really in, which another process can change. */
+	public terminalRaw: boolean = false;
 	public resumeCount: number = 0;
 	public pauseCount: number = 0;
 
 	public setRawMode(value: boolean): any {
+		// Like Node, only a change from the mode it last set reaches the terminal.
+		if (value !== this.rawMode) {
+			this.terminalRaw = value;
+		}
 		this.rawMode = value;
 		return this;
 	}
@@ -467,6 +474,61 @@ describe("key shortcuts", () => {
 		});
 	});
 
+	describe("commandShortcutsOwnTerminal", () => {
+		const env = [
+			"NS_COMMAND_SHORTCUTS",
+			"NS_KEY_SHORTCUTS",
+			"CI",
+			"JENKINS_HOME",
+		];
+		let saved: { [key: string]: string };
+		let stdin: FakeStdin;
+		let restoreStdin: () => void;
+
+		beforeEach(() => {
+			saved = {};
+			for (const name of env) {
+				saved[name] = process.env[name];
+				delete process.env[name];
+			}
+			process.env.NS_COMMAND_SHORTCUTS = "1";
+			stdin = new FakeStdin();
+			restoreStdin = swapStdin(stdin);
+		});
+
+		afterEach(() => {
+			restoreStdin();
+			for (const name of env) {
+				if (saved[name] === undefined) {
+					delete process.env[name];
+				} else {
+					process.env[name] = saved[name];
+				}
+			}
+		});
+
+		it("holds for a command's shortcuts on a terminal", () => {
+			assert.isTrue(commandShortcutsOwnTerminal());
+		});
+
+		it("does not hold while command shortcuts are off", () => {
+			delete process.env.NS_COMMAND_SHORTCUTS;
+			assert.isFalse(commandShortcutsOwnTerminal());
+		});
+
+		it("does not hold when key shortcuts are switched off", () => {
+			process.env.NS_KEY_SHORTCUTS = "false";
+			assert.isFalse(commandShortcutsOwnTerminal());
+		});
+
+		it("does not hold for a stdin that is not a terminal, even when forced on", () => {
+			// A `ns run` spawned by `ns start`: its keys come over IPC.
+			process.env.NS_KEY_SHORTCUTS = "true";
+			stdin.isTTY = false;
+			assert.isFalse(commandShortcutsOwnTerminal());
+		});
+	});
+
 	describe("KeyShortcutService", () => {
 		let stdin: FakeStdin;
 		let restoreStdin: () => void;
@@ -695,6 +757,43 @@ describe("key shortcuts", () => {
 			assert.isFalse(stdin.rawMode);
 			assert.equal(stdin.listenerCount("data"), 0);
 			assert.equal(stdin.pauseCount, 1);
+		});
+
+		it("takes the terminal back into raw mode after an action", async () => {
+			service.attach({
+				shortcuts: [
+					{
+						key: "R",
+						description: "Restart",
+						action: () => {
+							// A child that shared the terminal exits and restores the
+							// cooked mode it started with.
+							stdin.terminalRaw = false;
+						},
+					},
+				],
+			});
+			assert.isTrue(stdin.terminalRaw);
+
+			await press("R");
+
+			assert.isTrue(stdin.terminalRaw);
+		});
+
+		it("leaves the terminal alone after an action that detached", async () => {
+			service.attach({
+				shortcuts: [
+					{
+						key: "x",
+						description: "Detach",
+						action: () => service.detach(),
+					},
+				],
+			});
+
+			await press("x");
+
+			assert.isFalse(stdin.terminalRaw);
 		});
 
 		it("tears down when the process exits", () => {

@@ -373,6 +373,92 @@ describe("BundlerCompilerService", () => {
 		});
 	});
 
+	describe("startViteDevServer", () => {
+		const env = ["NS_COMMAND_SHORTCUTS", "NS_KEY_SHORTCUTS"];
+		let savedEnv: { [key: string]: string };
+		let originalStdin: PropertyDescriptor;
+		let spawned: { [key: string]: any }[];
+
+		const useStdin = (isTTY: boolean): void => {
+			Object.defineProperty(process, "stdin", {
+				value: { isTTY, setRawMode: (): void => undefined },
+				configurable: true,
+			});
+		};
+
+		const devServerStdin = async (): Promise<string> => {
+			await (<any>bundlerCompilerService).startViteDevServer(
+				{ platformNameLowerCase: "ios" },
+				{
+					projectDir: "/project",
+					bundlerConfigPath: "/project/vite.config.ts",
+				},
+				{ watch: true, hmr: true },
+			);
+			assert.lengthOf(spawned, 1);
+
+			return spawned[0].stdio[0];
+		};
+
+		beforeEach(() => {
+			savedEnv = {};
+			for (const name of env) {
+				savedEnv[name] = process.env[name];
+				delete process.env[name];
+			}
+			originalStdin = Object.getOwnPropertyDescriptor(process, "stdin");
+
+			spawned = [];
+			testInjector.resolve("childProcess").spawn = (
+				_command: string,
+				_args: string[],
+				options: { [key: string]: any },
+			) => {
+				spawned.push(options);
+				return fakeChildProcess(321);
+			};
+			const service = <any>bundlerCompilerService;
+			service.getBundler = () => "vite";
+			service.buildEnvData = () => ({});
+			service.buildEnvCommandLineParams = async (): Promise<string[]> => [];
+			service.getBundlerExecutablePath = () => "/project/vite.js";
+			service.waitForPort = async () => true;
+		});
+
+		afterEach(() => {
+			Object.defineProperty(process, "stdin", originalStdin);
+			for (const name of env) {
+				if (savedEnv[name] === undefined) {
+					delete process.env[name];
+				} else {
+					process.env[name] = savedEnv[name];
+				}
+			}
+		});
+
+		it("keeps the dev server off the terminal the CLI's shortcuts read", async () => {
+			process.env.NS_COMMAND_SHORTCUTS = "1";
+			process.env.NS_KEY_SHORTCUTS = "true";
+			useStdin(true);
+
+			assert.equal(await devServerStdin(), "ignore");
+		});
+
+		it("hands the dev server the terminal while the CLI's shortcuts are off", async () => {
+			useStdin(true);
+
+			assert.equal(await devServerStdin(), "inherit");
+		});
+
+		it("hands the dev server its stdin when the CLI has no terminal to read", async () => {
+			process.env.NS_COMMAND_SHORTCUTS = "1";
+			process.env.NS_KEY_SHORTCUTS = "true";
+			useStdin(false);
+
+			assert.equal(await devServerStdin(), "inherit");
+		});
+	});
+
 	describe("compileWithWatch", () => {
 		it("fails when the value set for bundlerConfigPath is not existant file", async () => {
 			const bundlerConfigPath = "some path.js";
