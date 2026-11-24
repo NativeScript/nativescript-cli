@@ -373,6 +373,40 @@ describe("BundlerCompilerService", () => {
 		});
 	});
 
+	describe("startViteDevServer", () => {
+		it("does not hand the dev server the terminal's stdin", async () => {
+			const spawned: { [key: string]: any }[] = [];
+			testInjector.resolve("childProcess").spawn = (
+				_command: string,
+				_args: string[],
+				options: { [key: string]: any },
+			) => {
+				spawned.push(options);
+				return fakeChildProcess(321);
+			};
+			const service = <any>bundlerCompilerService;
+			service.getBundler = () => "vite";
+			service.buildEnvData = () => ({});
+			service.buildEnvCommandLineParams = async (): Promise<string[]> => [];
+			service.getBundlerExecutablePath = () => "/project/vite.js";
+			service.waitForPort = async () => true;
+
+			await service.startViteDevServer(
+				{ platformNameLowerCase: "ios" },
+				{
+					projectDir: "/project",
+					bundlerConfigPath: "/project/vite.config.ts",
+				},
+				{ watch: true, hmr: true },
+			);
+
+			assert.lengthOf(spawned, 1);
+			const { stdio } = spawned[0];
+			assert.isArray(stdio);
+			assert.equal(stdio[0], "ignore");
+		});
+	});
+
 	describe("compileWithWatch", () => {
 		it("fails when the value set for bundlerConfigPath is not existant file", async () => {
 			const bundlerConfigPath = "some path.js";

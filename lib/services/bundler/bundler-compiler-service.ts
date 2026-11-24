@@ -736,10 +736,12 @@ export class BundlerCompilerService
 
 			const options: { [key: string]: any } = {
 				cwd: projectData.projectDir,
-				// Inherit so the dev server's URLs/logs stream to the user as
-				// before. No IPC needed here — the build watcher provides the
+				// Output is inherited so the dev server's URLs/logs stream to the
+				// user. No IPC needed here — the build watcher provides the
 				// bundle-complete IPC; the dev server is fetched over HTTP/ws.
-				stdio: "inherit",
+				// stdin must not be the terminal: Vite reads it for shortcuts of
+				// its own and would take the keys meant for the CLI's.
+				stdio: ["ignore", "inherit", "inherit"],
 				env: {
 					...process.env,
 					NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
