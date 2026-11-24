@@ -25,9 +25,12 @@ import {
 } from "../common/declarations";
 import { IInjector } from "../common/definitions/yok";
 import { ViteHmrPortService } from "../contracts/vite-hmr-port-service";
+import { IOSDeviceTunnelService } from "../contracts/ios-device-tunnel-service";
 import { injector } from "../common/yok";
+import { inject } from "../common/di/inject";
 
 export class RunController extends EventEmitter implements IRunController {
+	private iOSDeviceTunnelService = inject(IOSDeviceTunnelService);
 	private prepareReadyEventHandler: any = null;
 	private appRestartRequestHandler: (
 		request: IBundlerAppRestartRequest,
@@ -166,6 +169,10 @@ export class RunController extends EventEmitter implements IRunController {
 				(descriptor) =>
 					_.includes(deviceIdentifiersToRemove, descriptor.identifier),
 			).map((descriptor) => descriptor.identifier);
+
+			for (const deviceIdentifier of removedDeviceIdentifiers) {
+				await this.iOSDeviceTunnelService.close(deviceIdentifier);
+			}
 
 			// Handle the case when no more devices left for any of the persisted platforms
 
@@ -647,6 +654,13 @@ export class RunController extends EventEmitter implements IRunController {
 			platform: string;
 			isEmulator: boolean;
 		}> = {};
+		// Snapshot before any device action: a device whose sync fails leaves
+		// the session but must still count as a target of its platform.
+		const sessionDeviceDescriptors = [
+			...this.$liveSyncProcessDataService.getDeviceDescriptors(
+				projectData.projectDir,
+			),
+		];
 
 		const deviceAction = async (device: Mobile.IDevice) => {
 			const deviceDescriptor = _.find(
@@ -678,6 +692,12 @@ export class RunController extends EventEmitter implements IRunController {
 				projectData,
 				liveSyncInfo,
 				"pre-build",
+			);
+			await this.openIOSViteHmrTunnel(
+				device,
+				projectData,
+				liveSyncInfo,
+				sessionDeviceDescriptors,
 			);
 
 			const prepareResultData =
@@ -817,6 +837,67 @@ export class RunController extends EventEmitter implements IRunController {
 				),
 			),
 		);
+	}
+
+	/**
+	 * Serves Vite HMR to a USB-connected iOS / visionOS device over its
+	 * CoreDevice tunnel. One dev server bakes one origin into `bundle.mjs`
+	 * and a tunnel address is reachable only from its own device, so this
+	 * applies only when the device is the session's only target of its
+	 * platform. Must run before `prepare` spawns the Vite children.
+	 */
+	private async openIOSViteHmrTunnel(
+		device: Mobile.IDevice,
+		projectData: IProjectData,
+		liveSyncInfo: ILiveSyncInfo,
+		sessionDeviceDescriptors: ILiveSyncDeviceDescriptor[],
+	): Promise<void> {
+		const { platform, identifier } = device.deviceInfo;
+		if (
+			!this.$mobileHelper.isApplePlatform(platform) ||
+			projectData.bundler !== "vite" ||
+			liveSyncInfo.skipWatcher ||
+			!liveSyncInfo.useHotModuleReload ||
+			liveSyncInfo.release ||
+			process.env.NS_HMR_HOST
+		) {
+			return;
+		}
+		if (
+			!this.$bundlerCompilerService.acceptsIPv6DevHost(platform, projectData)
+		) {
+			this.$logger.trace(
+				`Not using a USB tunnel for ${identifier}: the installed @nativescript/vite does not accept an IPv6 dev host.`,
+			);
+			return;
+		}
+
+		// Descriptors cover every discovered device; `--device` narrows the
+		// session to one of them.
+		const selected = this.$devicesService.getDeviceByDeviceOption();
+		const platformTargets = sessionDeviceDescriptors.filter((descriptor) => {
+			if (
+				selected &&
+				descriptor.identifier !== selected.deviceInfo.identifier
+			) {
+				return false;
+			}
+			const target = this.$devicesService.getDeviceByIdentifier(
+				descriptor.identifier,
+			);
+			return (
+				!target ||
+				target.deviceInfo.platform.toLowerCase() === platform.toLowerCase()
+			);
+		});
+		if (platformTargets.length !== 1) {
+			this.$logger.trace(
+				`Not using a USB tunnel for ${identifier}: the session has ${platformTargets.length} ${platform} targets.`,
+			);
+			return;
+		}
+
+		await this.iOSDeviceTunnelService.open(device);
 	}
 
 	/**

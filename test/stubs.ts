@@ -1540,6 +1540,7 @@ export class InjectorStub extends Yok implements IInjector {
 		this.register("devicesService", {
 			getDevice: (): Mobile.IDevice => undefined,
 			getDeviceByIdentifier: (): Mobile.IDevice => undefined,
+			getDeviceByDeviceOption: (): Mobile.IDevice => undefined,
 		});
 		this.register("terminalSpinnerService", TerminalSpinnerServiceStub);
 	}

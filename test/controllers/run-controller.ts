@@ -16,6 +16,7 @@ import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
 import { IDictionary } from "../../lib/common/declarations";
 import { IInjector } from "../../lib/common/definitions/yok";
+import { IOSDeviceTunnelService } from "../../lib/contracts/ios-device-tunnel-service";
 
 let isAttachToHmrStatusCalled = false;
 let prepareData: IPrepareData = null;
@@ -142,6 +143,14 @@ function createTestInjector() {
 	injector.register("viteHmrPortService", {
 		getPort: async () => 5173,
 	});
+	injector.register({
+		provide: IOSDeviceTunnelService,
+		useValue: {
+			open: async (): Promise<string> => null,
+			getHostAddress: (): string => undefined,
+			close: async () => ({}),
+		},
+	});
 
 	const devicesService = injector.resolve("devicesService");
 	devicesService.getDevicesForPlatform = () =>
@@ -263,6 +272,167 @@ describe("RunController", () => {
 					);
 				});
 			});
+		});
+	});
+
+	describe("USB tunnel for Vite HMR", () => {
+		const secondIOSDevice = <any>{
+			deviceInfo: { identifier: "mySecondiOSDevice", platform: "ios" },
+		};
+		const secondIOSDeviceDescriptor = {
+			identifier: "mySecondiOSDevice",
+			buildAction: async () => buildOutputPath,
+			buildData: <any>{},
+		};
+		const hmrLiveSyncInfo = { ...liveSyncInfo, useHotModuleReload: true };
+		let openedFor: string[] = null;
+		let closed: string[] = null;
+		let events: string[] = null;
+		let previousHost: string = undefined;
+		let acceptsIPv6DevHost: boolean;
+
+		beforeEach(() => {
+			acceptsIPv6DevHost = true;
+			injector.resolve("bundlerCompilerService").acceptsIPv6DevHost = () =>
+				acceptsIPv6DevHost;
+			openedFor = [];
+			closed = [];
+			events = [];
+			previousHost = process.env.NS_HMR_HOST;
+			delete process.env.NS_HMR_HOST;
+			map.mySecondiOSDevice = {
+				device: secondIOSDevice,
+				descriptor: secondIOSDeviceDescriptor,
+			};
+
+			const projectDataService = injector.resolve("projectDataService");
+			const getProjectData =
+				projectDataService.getProjectData.bind(projectDataService);
+			projectDataService.getProjectData = (dir: string) => {
+				const projectData = getProjectData(dir);
+				projectData.bundler = "vite";
+				return projectData;
+			};
+			injector.resolve("devicesService").getDeviceByIdentifier = (
+				identifier: string,
+			) => map[identifier]?.device;
+			const tunnelService = injector.get(IOSDeviceTunnelService);
+			tunnelService.open = async (device: Mobile.IDevice) => {
+				openedFor.push(device.deviceInfo.identifier);
+				events.push("tunnel");
+				return "fd00::2";
+			};
+			tunnelService.close = async (identifier: string) => {
+				closed.push(identifier);
+			};
+			const prepareController = injector.resolve("prepareController");
+			prepareController.prepare = async (currentPrepareData: PrepareData) => {
+				events.push(`prepare ${currentPrepareData.platform}`);
+				return {
+					platform: currentPrepareData.platform,
+					hasNativeChanges: false,
+				};
+			};
+		});
+
+		afterEach(() => {
+			delete map.mySecondiOSDevice;
+			if (previousHost === undefined) {
+				delete process.env.NS_HMR_HOST;
+			} else {
+				process.env.NS_HMR_HOST = previousHost;
+			}
+		});
+
+		it("opens the tunnel of the session's only iOS device before preparing", async () => {
+			mockDevicesService(injector, [iOSDevice, androidDevice]);
+
+			await runController.run({
+				liveSyncInfo: hmrLiveSyncInfo,
+				deviceDescriptors: [iOSDeviceDescriptor, androidDeviceDescriptor],
+			});
+
+			assert.deepStrictEqual(openedFor, ["myiOSDevice"]);
+			assert.isBelow(events.indexOf("tunnel"), events.indexOf("prepare ios"));
+		});
+
+		it("does not open a tunnel when the session has two iOS devices", async () => {
+			mockDevicesService(injector, [iOSDevice, secondIOSDevice]);
+
+			await runController.run({
+				liveSyncInfo: hmrLiveSyncInfo,
+				deviceDescriptors: [iOSDeviceDescriptor, secondIOSDeviceDescriptor],
+			});
+
+			assert.deepStrictEqual(openedFor, []);
+		});
+
+		it("opens the tunnel of the --device selection when another iOS device is attached", async () => {
+			const devicesService = injector.resolve("devicesService");
+			devicesService.getDeviceByDeviceOption = () => iOSDevice;
+			mockDevicesService(injector, [iOSDevice]);
+
+			try {
+				await runController.run({
+					liveSyncInfo: hmrLiveSyncInfo,
+					deviceDescriptors: [iOSDeviceDescriptor, secondIOSDeviceDescriptor],
+				});
+			} finally {
+				devicesService.getDeviceByDeviceOption = (): Mobile.IDevice =>
+					undefined;
+			}
+
+			assert.deepStrictEqual(openedFor, ["myiOSDevice"]);
+		});
+
+		it("does not open a tunnel when the user set NS_HMR_HOST", async () => {
+			process.env.NS_HMR_HOST = "192.168.1.10";
+			mockDevicesService(injector, [iOSDevice]);
+
+			await runController.run({
+				liveSyncInfo: hmrLiveSyncInfo,
+				deviceDescriptors: [iOSDeviceDescriptor],
+			});
+
+			assert.deepStrictEqual(openedFor, []);
+		});
+
+		it("does not open a tunnel for a @nativescript/vite without IPv6 dev hosts", async () => {
+			acceptsIPv6DevHost = false;
+			mockDevicesService(injector, [iOSDevice]);
+
+			await runController.run({
+				liveSyncInfo: hmrLiveSyncInfo,
+				deviceDescriptors: [iOSDeviceDescriptor],
+			});
+
+			assert.deepStrictEqual(openedFor, []);
+		});
+
+		it("does not open a tunnel without HMR", async () => {
+			mockDevicesService(injector, [iOSDevice]);
+
+			await runController.run({
+				liveSyncInfo,
+				deviceDescriptors: [iOSDeviceDescriptor],
+			});
+
+			assert.deepStrictEqual(openedFor, []);
+		});
+
+		it("closes the tunnel of a device that stops", async () => {
+			mockDevicesService(injector, [iOSDevice]);
+			await runController.run({
+				liveSyncInfo: hmrLiveSyncInfo,
+				deviceDescriptors: [iOSDeviceDescriptor],
+			});
+
+			await runController.stop({
+				projectDir,
+				deviceIdentifiers: ["myiOSDevice"],
+			});
+
+			assert.deepStrictEqual(closed, ["myiOSDevice"]);
 		});
 	});
 
