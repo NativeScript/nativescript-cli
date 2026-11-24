@@ -7,6 +7,7 @@ import * as os from "os";
 import * as path from "path";
 import { ErrorsStub } from "../../stubs";
 import { IInjector } from "../../../lib/common/definitions/yok";
+import { IOSDeviceTunnelService } from "../../../lib/contracts/ios-device-tunnel-service";
 import {
 	BUNDLER_APP_RESTART_REQUESTED,
 	BUNDLER_COMPILATION_COMPLETE,
@@ -92,8 +93,9 @@ function createTestInjector(
 	testInjector.register("viteHmrPortService", {
 		getPort: async () => 5173,
 	});
-	testInjector.register("iOSDeviceTunnelService", {
-		getHostAddress: (): string => undefined,
+	testInjector.register({
+		provide: IOSDeviceTunnelService,
+		useValue: { getHostAddress: (): string => undefined },
 	});
 
 	return testInjector;
@@ -383,7 +385,7 @@ describe("BundlerCompilerService", () => {
 			beforeEach(() => {
 				previousHost = process.env.NS_HMR_HOST;
 				delete process.env.NS_HMR_HOST;
-				testInjector.resolve("iOSDeviceTunnelService").getHostAddress = (
+				testInjector.get(IOSDeviceTunnelService).getHostAddress = (
 					platform: string,
 				) => (platform === "ios" ? "fd6f:72e:8d34::2" : undefined);
 			});

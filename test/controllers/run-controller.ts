@@ -16,6 +16,7 @@ import { PrepareController } from "../../lib/controllers/prepare-controller";
 import { LiveSyncProcessDataService } from "../../lib/services/livesync-process-data-service";
 import { IDictionary } from "../../lib/common/declarations";
 import { IInjector } from "../../lib/common/definitions/yok";
+import { IOSDeviceTunnelService } from "../../lib/contracts/ios-device-tunnel-service";
 
 let isAttachToHmrStatusCalled = false;
 let prepareData: IPrepareData = null;
@@ -142,10 +143,13 @@ function createTestInjector() {
 	injector.register("viteHmrPortService", {
 		getPort: async () => 5173,
 	});
-	injector.register("iOSDeviceTunnelService", {
-		open: async (): Promise<string> => null,
-		getHostAddress: (): string => undefined,
-		close: async () => ({}),
+	injector.register({
+		provide: IOSDeviceTunnelService,
+		useValue: {
+			open: async (): Promise<string> => null,
+			getHostAddress: (): string => undefined,
+			close: async () => ({}),
+		},
 	});
 
 	const devicesService = injector.resolve("devicesService");
@@ -312,7 +316,7 @@ describe("RunController", () => {
 			injector.resolve("devicesService").getDeviceByIdentifier = (
 				identifier: string,
 			) => map[identifier]?.device;
-			const tunnelService = injector.resolve("iOSDeviceTunnelService");
+			const tunnelService = injector.get(IOSDeviceTunnelService);
 			tunnelService.open = async (device: Mobile.IDevice) => {
 				openedFor.push(device.deviceInfo.identifier);
 				events.push("tunnel");

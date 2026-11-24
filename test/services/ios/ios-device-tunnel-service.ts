@@ -6,7 +6,15 @@ import { provide } from "../../../lib/common/di";
 import { MobileHelper } from "../../../lib/common/mobile/mobile-helper";
 import { DevicePlatformsConstants } from "../../../lib/common/mobile/device-platforms-constants";
 import { DeviceConnectionType } from "../../../lib/constants";
-import { IOSDeviceTunnelService } from "../../../lib/contracts/ios-device-tunnel-service";
+import {
+	ChildProcess,
+	Errors,
+	FileSystem,
+	HostInfo,
+	IOSDeviceTunnelService,
+	Logger,
+	TempService,
+} from "../../../lib/contracts";
 import { IOSDeviceTunnelServiceImpl } from "../../../lib/services/ios/ios-device-tunnel-service";
 import { ErrorsStub, LoggerStub, TempServiceStub } from "../../stubs";
 
@@ -115,45 +123,56 @@ describe("IOSDeviceTunnelService", () => {
 		let lastListing: object[] = [];
 
 		const injector: IInjector = new Yok();
-		injector.register("childProcess", {
-			trySpawnFromCloseEvent: async () => {
-				listCalls++;
-				if (devicectlListings.length) {
-					lastListing = devicectlListings.shift();
-				}
-				return { exitCode: lastListing ? 0 : 1 };
-			},
-			spawn: (command: string, args: string[]) => {
-				const holder = new FakeHolder();
-				spawned.push({ args: [command, ...args], holder });
-				return holder;
+		injector.register({
+			provide: ChildProcess,
+			useValue: {
+				trySpawnFromCloseEvent: async () => {
+					listCalls++;
+					if (devicectlListings.length) {
+						lastListing = devicectlListings.shift();
+					}
+					return { exitCode: lastListing ? 0 : 1 };
+				},
+				spawn: (command: string, args: string[]) => {
+					const holder = new FakeHolder();
+					spawned.push({ args: [command, ...args], holder });
+					return holder;
+				},
 			},
 		});
 		injector.register("cleanupService", {
 			addKillProcess: async () => ({}),
 			removeKillProcess: async () => ({}),
 		});
-		injector.register("fs", {
-			exists: () => true,
-			readJson: () => ({ result: { devices: lastListing } }),
+		injector.register({
+			provide: FileSystem,
+			useValue: {
+				exists: () => true,
+				readJson: () => ({ result: { devices: lastListing } }),
+			},
 		});
-		injector.register("hostInfo", {
-			get isDarwin() {
-				return isDarwin;
+		injector.register({
+			provide: HostInfo,
+			useValue: {
+				get isDarwin() {
+					return isDarwin;
+				},
 			},
 		});
 		const logger = new LoggerStub();
 		logger.warn = (message: string) => {
 			warnings.push(message);
 		};
-		injector.register("logger", logger);
-		injector.register("errors", ErrorsStub);
+		injector.register([
+			{ provide: Logger, useValue: logger },
+			{ provide: Errors, useClass: ErrorsStub },
+		]);
 		injector.register("devicePlatformsConstants", DevicePlatformsConstants);
 		injector.register("mobileHelper", MobileHelper);
-		injector.register("tempService", TempServiceStub);
-		injector.register(
+		injector.register([
+			{ provide: TempService, useClass: TempServiceStub },
 			provide(IOSDeviceTunnelService, IOSDeviceTunnelServiceImpl),
-		);
+		]);
 
 		service = <IOSDeviceTunnelServiceImpl>injector.get(IOSDeviceTunnelService);
 		(<any>service).tunnelReadyTimeoutMs = 200;
