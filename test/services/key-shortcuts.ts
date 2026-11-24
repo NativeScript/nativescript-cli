@@ -19,10 +19,16 @@ import {
 class FakeStdin extends EventEmitter {
 	public isTTY: boolean = true;
 	public rawMode: boolean = null;
+	/** The mode the terminal is really in, which another process can change. */
+	public terminalRaw: boolean = false;
 	public resumeCount: number = 0;
 	public pauseCount: number = 0;
 
 	public setRawMode(value: boolean): any {
+		// Like Node, only a change from the mode it last set reaches the terminal.
+		if (value !== this.rawMode) {
+			this.terminalRaw = value;
+		}
 		this.rawMode = value;
 		return this;
 	}
@@ -695,6 +701,43 @@ describe("key shortcuts", () => {
 			assert.isFalse(stdin.rawMode);
 			assert.equal(stdin.listenerCount("data"), 0);
 			assert.equal(stdin.pauseCount, 1);
+		});
+
+		it("takes the terminal back into raw mode after an action", async () => {
+			service.attach({
+				shortcuts: [
+					{
+						key: "R",
+						description: "Restart",
+						action: () => {
+							// A child that shared the terminal exits and restores the
+							// cooked mode it started with.
+							stdin.terminalRaw = false;
+						},
+					},
+				],
+			});
+			assert.isTrue(stdin.terminalRaw);
+
+			await press("R");
+
+			assert.isTrue(stdin.terminalRaw);
+		});
+
+		it("leaves the terminal alone after an action that detached", async () => {
+			service.attach({
+				shortcuts: [
+					{
+						key: "x",
+						description: "Detach",
+						action: () => service.detach(),
+					},
+				],
+			});
+
+			await press("x");
+
+			assert.isFalse(stdin.terminalRaw);
 		});
 
 		it("tears down when the process exits", () => {

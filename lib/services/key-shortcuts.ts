@@ -99,6 +99,16 @@ export function findShortcut<TContext extends KeyContextBase>(
 }
 
 /**
+ * Node skips `setRawMode(true)` while it believes the terminal is already
+ * raw, so the mode is cleared first to make the call reach the terminal even
+ * when something else has changed it since.
+ */
+function enterRawMode(stdin: NodeJS.ReadStream): void {
+	stdin.setRawMode(false);
+	stdin.setRawMode(true);
+}
+
+/**
  * Raw mode outlives the process that set it, so a CI runner or a redirected
  * stdin must never get it; `NS_KEY_SHORTCUTS=false` is the manual opt-out.
  */
@@ -428,8 +438,7 @@ export class KeyShortcutService implements IKeyShortcutService {
 			return false;
 		}
 
-		stdin.setRawMode(false);
-		stdin.setRawMode(true);
+		enterRawMode(stdin);
 		stdin.resume();
 		stdin.on("data", this.onData);
 		process.once("exit", this.onExit);
@@ -592,6 +601,12 @@ export class KeyShortcutService implements IKeyShortcutService {
 		} finally {
 			this.running = false;
 			if (process.stdin.setRawMode) {
+				// A Node child writing to the terminal, such as the Vite dev server
+				// an action stops, restores the terminal mode it started with when
+				// it exits; that can be cooked mode, where keys wait for Enter.
+				if (this.attached && process.stdin.isTTY) {
+					enterRawMode(process.stdin);
+				}
 				process.stdin.resume();
 			}
 		}
