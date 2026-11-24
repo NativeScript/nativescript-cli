@@ -46,6 +46,14 @@ import {
 } from "../definitions/gradle";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
+import { IProjectChangesInfo } from "../definitions/project-changes";
+import {
+	DEV_CLEARTEXT_MARKER,
+	devCleartextManifest,
+	hasDevCleartext,
+	needsDevCleartext,
+	withDevCleartext,
+} from "./android/dev-cleartext-manifest";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 
 interface NativeDependency {
@@ -845,8 +853,64 @@ export class AndroidProjectService
 		await adb.executeShellCommand(["rm", "-rf", deviceRootPath]);
 	}
 
-	public async checkForChanges(): Promise<void> {
-		// Nothing android specific to check yet.
+	public async checkForChanges(
+		changesInfo: IProjectChangesInfo,
+		prepareData: IPrepareData,
+		projectData: IProjectData,
+	): Promise<void> {
+		// Native prepare skips `prepareDevServerAccess` for a host project.
+		if (this.$options.hostProjectPath) {
+			return;
+		}
+		const manifestPath = this.getDebugManifestPath(projectData);
+		const current = this.$fs.exists(manifestPath)
+			? this.$fs.readText(manifestPath)
+			: null;
+		// The build is what carries the permission, so a change has to rebuild.
+		if (
+			needsDevCleartext(projectData, prepareData) !== hasDevCleartext(current)
+		) {
+			changesInfo.appResourcesChanged = true;
+		}
+	}
+
+	/**
+	 * Lets a Vite HMR debug build fetch its code from the dev server over
+	 * plain HTTP, through the debug source set's manifest in the native
+	 * project. Runs after `prepareAppResources`, which restores the app's own
+	 * debug manifest, if any, from App_Resources.
+	 */
+	public prepareDevServerAccess(
+		projectData: IProjectData,
+		prepareData: IPrepareData,
+	): void {
+		const manifestPath = this.getDebugManifestPath(projectData);
+		const current = this.$fs.exists(manifestPath)
+			? this.$fs.readText(manifestPath)
+			: null;
+		if (!needsDevCleartext(projectData, prepareData)) {
+			if (current !== null && current.includes(DEV_CLEARTEXT_MARKER)) {
+				this.$fs.deleteFile(manifestPath);
+			}
+			return;
+		}
+		if (hasDevCleartext(current)) {
+			return;
+		}
+		this.$fs.writeFile(
+			manifestPath,
+			current === null ? devCleartextManifest() : withDevCleartext(current),
+		);
+	}
+
+	private getDebugManifestPath(projectData: IProjectData): string {
+		return path.join(
+			this.getPlatformData(projectData).projectRoot,
+			this.$options.hostProjectModuleName,
+			constants.SRC_DIR,
+			"debug",
+			constants.MANIFEST_FILE_NAME,
+		);
 	}
 
 	public getDeploymentTarget(projectData: IProjectData): semver.SemVer {

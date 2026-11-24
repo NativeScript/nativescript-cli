@@ -88,6 +88,8 @@ declare global {
 		isHMR?: boolean;
 		filesToCopy?: string[];
 		buildType?: string;
+		/** Output-relative files the build deleted (`@nativescript/vite`'s dev server). */
+		removedFiles?: string[];
 	}
 
 	interface IPlatformProjectService<
@@ -153,6 +155,14 @@ declare global {
 		 * @returns {void}
 		 */
 		prepareAppResources(projectData: IProjectData): void;
+
+		/**
+		 * Lets a dev build reach the bundler's dev server. Runs after `prepareAppResources`.
+		 */
+		prepareDevServerAccess?(
+			projectData: IProjectData,
+			prepareData: TPrepareData,
+		): void;
 
 		/**
 		 * Defines if current platform is prepared (i.e. if <project dir>/platforms/<platform> dir exists).

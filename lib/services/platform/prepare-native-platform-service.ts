@@ -50,6 +50,10 @@ export class PrepareNativePlatformService
 
 		if (!this.$options.hostProjectPath) {
 			platformData.platformProjectService.prepareAppResources(projectData);
+			platformData.platformProjectService.prepareDevServerAccess?.(
+				projectData,
+				prepareData
+			);
 		}
 
 		if (hasChangesRequirePrepare || this.$options.hostProjectPath) {
