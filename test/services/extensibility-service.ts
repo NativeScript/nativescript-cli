@@ -409,6 +409,96 @@ describe("extensibilityService", () => {
 				assert.isTrue(isNpmInstallCalled);
 			});
 
+			it("loads already-installed scoped extensions without re-running npm install", async () => {
+				const testInjector = getTestInjector();
+				const fs: IFileSystem = testInjector.resolve("fs");
+				const extensionNames = ["@scope/extension1", "extension2"];
+				fs.exists = (): boolean => true;
+				fs.readDirectory = (dir: string): string[] => {
+					if (path.basename(dir) === constants.NODE_MODULES_FOLDER_NAME) {
+						return ["@scope", "extension2"];
+					}
+					if (path.basename(dir) === "@scope") {
+						return ["extension1"];
+					}
+					return [];
+				};
+
+				mockFsReadJson(testInjector, extensionNames);
+
+				let isNpmInstallCalled = false;
+				const npm: INodePackageManager = testInjector.resolve("npm");
+				npm.install = async (): Promise<any> => {
+					isNpmInstallCalled = true;
+					return {};
+				};
+
+				const expectedResults: IExtensionData[] = _.map(
+					extensionNames,
+					(extensionName) => ({
+						extensionName,
+						version: "1.0.0",
+						pathToExtension: getExpectedInstallationPathForExtension(
+							testInjector,
+							extensionName,
+						),
+						docs: undefined as any,
+					}),
+				);
+
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
+				const actualResult = await Promise.all(
+					extensibilityService.loadExtensions(),
+				);
+				assert.deepStrictEqual(actualResult, expectedResults);
+				assert.isFalse(isNpmInstallCalled);
+			});
+
+			it("installs a missing scoped extension when its scope directory exists without the package", async () => {
+				const testInjector = getTestInjector();
+				const fs: IFileSystem = testInjector.resolve("fs");
+				const extensionName = "@scope/missing-ext";
+				fs.exists = (pathToCheck: string): boolean =>
+					pathToCheck !== path.resolve(extensionName);
+				fs.readDirectory = (dir: string): string[] => {
+					if (path.basename(dir) === constants.NODE_MODULES_FOLDER_NAME) {
+						return ["@scope"];
+					}
+					if (path.basename(dir) === "@scope") {
+						return ["other-ext"];
+					}
+					return [];
+				};
+
+				mockFsReadJson(testInjector, [extensionName]);
+
+				const installedPackages: string[] = [];
+				const npm: INodePackageManager = testInjector.resolve("npm");
+				npm.install = async (packageName: string): Promise<any> => {
+					installedPackages.push(packageName);
+					return { name: packageName };
+				};
+
+				const extensibilityService: IExtensibilityService =
+					testInjector.resolve(ExtensibilityService);
+				const actualResult = await Promise.all(
+					extensibilityService.loadExtensions(),
+				);
+				assert.deepStrictEqual(installedPackages, [extensionName]);
+				assert.deepStrictEqual(actualResult, [
+					{
+						extensionName,
+						version: "1.0.0",
+						pathToExtension: getExpectedInstallationPathForExtension(
+							testInjector,
+							extensionName,
+						),
+						docs: undefined as any,
+					},
+				]);
+			});
+
 			it("rejects only promises for extensions that cannot be loaded", async () => {
 				const testInjector = getTestInjector();
 				const fs: IFileSystem = testInjector.resolve("fs");

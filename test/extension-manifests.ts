@@ -1023,4 +1023,51 @@ describe("extension manifests", () => {
 			assert.deepEqual(capture.loadedModules, ["defaults-default"]);
 		});
 	});
+
+	describe("scoped extensions", () => {
+		it("loads an installed scoped extension lazily without reinstalling", async () => {
+			const extensionName = "@nsm/scoped-ext";
+			const contractsPath = require.resolve("../lib/contracts");
+			writeExtension(
+				extensionName,
+				{ commands: { "nsmscoped|run": "./dist/run.js" } },
+				{
+					"main.js": mainModule("scoped-main"),
+					"dist/run.js": `const { defineCommand } = require(${JSON.stringify(contractsPath)});
+						global.__nsmCapture.loadedModules.push("scoped-run");
+						module.exports = defineCommand({
+							name: "nsmscoped|run",
+							params: "any",
+							async run(ctx) {
+								global.__nsmCapture.executed.push({ marker: "scoped-run", args: ctx.args });
+							},
+						});`,
+				},
+			);
+
+			let installCalled = false;
+			testInjector.register("packageManager", {
+				install: async () => {
+					installCalled = true;
+					throw new Error("should not reinstall an installed scoped extension");
+				},
+			});
+
+			const extensibilityService = resolveService(testInjector);
+			const data = await extensibilityService.loadExtension(extensionName);
+
+			assert.isFalse(installCalled);
+			assert.equal(data.extensionName, extensionName);
+			assert.deepEqual(capture.loadedModules, []);
+
+			const command = testInjector.resolveCommand("nsmscoped|run");
+			assert.isOk(command);
+			assert.deepEqual(capture.loadedModules, ["scoped-run"]);
+
+			await command.execute(["ok"]);
+			assert.deepEqual(capture.executed, [
+				{ marker: "scoped-run", args: ["ok"] },
+			]);
+		});
+	});
 });
