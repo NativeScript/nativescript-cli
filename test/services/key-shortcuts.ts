@@ -5,6 +5,7 @@ import { getContractName } from "../../lib/common/di/contract";
 import { Injector } from "../../lib/common/di/injector";
 import { KeyShortcutRegistryService } from "../../lib/services/key-shortcut-registry";
 import {
+	commandShortcutsOwnTerminal,
 	findShortcut,
 	KeyContextBase,
 	KeyShortcut,
@@ -470,6 +471,61 @@ describe("key shortcuts", () => {
 			process.env.CI = "true";
 			process.env.NS_KEY_SHORTCUTS = "true";
 			assert.isTrue(keyShortcutsEnabled());
+		});
+	});
+
+	describe("commandShortcutsOwnTerminal", () => {
+		const env = [
+			"NS_COMMAND_SHORTCUTS",
+			"NS_KEY_SHORTCUTS",
+			"CI",
+			"JENKINS_HOME",
+		];
+		let saved: { [key: string]: string };
+		let stdin: FakeStdin;
+		let restoreStdin: () => void;
+
+		beforeEach(() => {
+			saved = {};
+			for (const name of env) {
+				saved[name] = process.env[name];
+				delete process.env[name];
+			}
+			process.env.NS_COMMAND_SHORTCUTS = "1";
+			stdin = new FakeStdin();
+			restoreStdin = swapStdin(stdin);
+		});
+
+		afterEach(() => {
+			restoreStdin();
+			for (const name of env) {
+				if (saved[name] === undefined) {
+					delete process.env[name];
+				} else {
+					process.env[name] = saved[name];
+				}
+			}
+		});
+
+		it("holds for a command's shortcuts on a terminal", () => {
+			assert.isTrue(commandShortcutsOwnTerminal());
+		});
+
+		it("does not hold while command shortcuts are off", () => {
+			delete process.env.NS_COMMAND_SHORTCUTS;
+			assert.isFalse(commandShortcutsOwnTerminal());
+		});
+
+		it("does not hold when key shortcuts are switched off", () => {
+			process.env.NS_KEY_SHORTCUTS = "false";
+			assert.isFalse(commandShortcutsOwnTerminal());
+		});
+
+		it("does not hold for a stdin that is not a terminal, even when forced on", () => {
+			// A `ns run` spawned by `ns start`: its keys come over IPC.
+			process.env.NS_KEY_SHORTCUTS = "true";
+			stdin.isTTY = false;
+			assert.isFalse(commandShortcutsOwnTerminal());
 		});
 	});
 

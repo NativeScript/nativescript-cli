@@ -5,6 +5,7 @@ import { RunOnDeviceEvents } from "../constants";
 import { IChildProcess } from "../common/declarations";
 import { Injector } from "../common/di/injector";
 import {
+	commandShortcutsEnabled,
 	envSwitchIsOn,
 	IKeyShortcutService,
 	KeyContextBase,
@@ -123,6 +124,23 @@ export function keyShortcutsEnabled(): boolean {
 	}
 
 	return !!process.stdin.isTTY;
+}
+
+function isRawModeTerminal(stdin: NodeJS.ReadStream): boolean {
+	return !!stdin.isTTY && typeof stdin.setRawMode === "function";
+}
+
+/**
+ * Whether a command's shortcuts, once attached, read the keys straight off
+ * the terminal. Answerable before the attach, so a child spawned earlier can
+ * be kept off a terminal the CLI is about to read.
+ */
+export function commandShortcutsOwnTerminal(): boolean {
+	return (
+		commandShortcutsEnabled() &&
+		isRawModeTerminal(process.stdin) &&
+		keyShortcutsEnabled()
+	);
 }
 
 /**
@@ -420,7 +438,7 @@ export class KeyShortcutService implements IKeyShortcutService {
 		);
 
 		const stdin = process.stdin;
-		if (!stdin.isTTY || typeof stdin.setRawMode !== "function") {
+		if (!isRawModeTerminal(stdin)) {
 			if (typeof process.send !== "function") {
 				this.releaseShortcuts();
 				return false;

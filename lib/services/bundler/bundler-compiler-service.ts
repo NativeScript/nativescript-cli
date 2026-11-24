@@ -39,6 +39,7 @@ import {
 	resolvePackagePath,
 	resolvePackageJSONPath,
 } from "../../helpers/package-path-helper";
+import { commandShortcutsOwnTerminal } from "../key-shortcuts";
 
 // todo: move out of here
 interface IBundlerMessage<T = any> {
@@ -739,9 +740,14 @@ export class BundlerCompilerService
 				// Output is inherited so the dev server's URLs/logs stream to the
 				// user. No IPC needed here — the build watcher provides the
 				// bundle-complete IPC; the dev server is fetched over HTTP/ws.
-				// stdin must not be the terminal: Vite reads it for shortcuts of
-				// its own and would take the keys meant for the CLI's.
-				stdio: ["ignore", "inherit", "inherit"],
+				// Vite reads a terminal stdin for shortcuts of its own, which would
+				// take the keys meant for the CLI's; otherwise its shortcuts are the
+				// only ones the terminal has.
+				stdio: [
+					commandShortcutsOwnTerminal() ? "ignore" : "inherit",
+					"inherit",
+					"inherit",
+				],
 				env: {
 					...process.env,
 					NATIVESCRIPT_BUNDLER_ENV: JSON.stringify(envData),
