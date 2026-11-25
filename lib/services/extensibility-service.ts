@@ -508,11 +508,25 @@ export class ExtensibilityService implements IExtensibilityService {
 		extensionName: string,
 	): Promise<void> {
 		this.$logger.trace(`Asserting extension ${extensionName} is installed.`);
-		const installedExtensions = this.$fs.readDirectory(
-			path.join(this.pathToExtensions, constants.NODE_MODULES_FOLDER_NAME),
+		const nodeModulesPath = path.join(
+			this.pathToExtensions,
+			constants.NODE_MODULES_FOLDER_NAME,
 		);
+		const installedExtensions = this.$fs.readDirectory(nodeModulesPath);
 
-		if (installedExtensions.indexOf(extensionName) === -1) {
+		let isInstalled: boolean;
+		if (extensionName.startsWith("@") && extensionName.includes("/")) {
+			const [scope, pkgName] = extensionName.split("/");
+			isInstalled =
+				installedExtensions.indexOf(scope) !== -1 &&
+				this.$fs
+					.readDirectory(path.join(nodeModulesPath, scope))
+					.indexOf(pkgName) !== -1;
+		} else {
+			isInstalled = installedExtensions.indexOf(extensionName) !== -1;
+		}
+
+		if (!isInstalled) {
 			this.$logger.trace(
 				`Extension ${extensionName} is not installed, starting installation.`,
 			);
