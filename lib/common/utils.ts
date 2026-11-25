@@ -3,7 +3,10 @@ import { IUtils } from "./declarations";
 import { injector } from "./yok";
 
 export class Utils implements IUtils {
-	constructor(private $options: IOptions, private $logger: ILogger) {}
+	constructor(
+		private $options: IOptions,
+		private $logger: ILogger,
+	) {}
 
 	public getParsedTimeout(defaultTimeout: number): number {
 		let timeout = defaultTimeout;
@@ -15,7 +18,7 @@ export class Utils implements IUtils {
 				this.$logger.warn(
 					"Specify timeout in a number of seconds to wait. Default value: " +
 						timeout +
-						" seconds will be used."
+						" seconds will be used.",
 				);
 			}
 		}

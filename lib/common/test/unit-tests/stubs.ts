@@ -1,5 +1,3 @@
-/* tslint:disable:no-empty */
-
 import * as util from "util";
 import { EventEmitter } from "events";
 import * as _ from "lodash";

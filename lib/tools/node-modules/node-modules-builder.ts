@@ -11,26 +11,28 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 	constructor(
 		private $logger: ILogger,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
-		private $pluginsService: IPluginsService
+		private $pluginsService: IPluginsService,
 	) {}
 
 	public async prepareNodeModules({
 		platformData,
 		projectData,
 	}: IPrepareNodeModulesData): Promise<void> {
-		let dependencies = this.$nodeModulesDependenciesBuilder.getProductionDependencies(
-			projectData.projectDir,
-			projectData.ignoredDependencies
-		);
-		dependencies = await platformData.platformProjectService.beforePrepareAllPlugins(
-			projectData,
-			dependencies
-		);
+		let dependencies =
+			this.$nodeModulesDependenciesBuilder.getProductionDependencies(
+				projectData.projectDir,
+				projectData.ignoredDependencies,
+			);
+		dependencies =
+			await platformData.platformProjectService.beforePrepareAllPlugins(
+				projectData,
+				dependencies,
+			);
 
 		const pluginsData = this.$pluginsService.getAllProductionPlugins(
 			projectData,
 			platformData.platformNameLowerCase,
-			dependencies
+			dependencies,
 		);
 		if (_.isEmpty(pluginsData)) {
 			return;
@@ -47,7 +49,7 @@ export class NodeModulesBuilder implements INodeModulesBuilder {
 			this.$logger.trace(
 				`Successfully prepared plugin ${
 					pluginData.name
-				} for ${platformData.normalizedPlatformName.toLowerCase()}.`
+				} for ${platformData.normalizedPlatformName.toLowerCase()}.`,
 			);
 		}
 	}

@@ -7,6 +7,6 @@ interface ITerminalSpinnerService {
 	createSpinner(spinnerOptions?: ITerminalSpinnerOptions): ITerminalSpinner;
 	execute<T>(
 		spinnerOptions: ITerminalSpinnerOptions,
-		action: () => Promise<T>
+		action: () => Promise<T>,
 	): Promise<T>;
 }

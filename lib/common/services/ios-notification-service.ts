@@ -9,10 +9,10 @@ export class IOSNotificationService implements IiOSNotificationService {
 	public async awaitNotification(
 		deviceIdentifier: string,
 		socket: number,
-		timeout: number
+		timeout: number,
 	): Promise<string> {
-		const notificationResponse = await this.$iosDeviceOperations.awaitNotificationResponse(
-			[
+		const notificationResponse =
+			await this.$iosDeviceOperations.awaitNotificationResponse([
 				{
 					deviceId: deviceIdentifier,
 					socket: socket,
@@ -20,8 +20,7 @@ export class IOSNotificationService implements IiOSNotificationService {
 					responseCommandType: constants.IOS_RELAY_NOTIFICATION_COMMAND_TYPE,
 					responsePropertyName: "Name",
 				},
-			]
-		);
+			]);
 
 		return _.first(notificationResponse[deviceIdentifier]).response;
 	}
@@ -29,7 +28,7 @@ export class IOSNotificationService implements IiOSNotificationService {
 	public async postNotification(
 		deviceIdentifier: string,
 		notification: string,
-		commandType?: string
+		commandType?: string,
 	): Promise<number> {
 		commandType = commandType || constants.IOS_POST_NOTIFICATION_COMMAND_TYPE;
 		const response = await this.$iosDeviceOperations.postNotification([

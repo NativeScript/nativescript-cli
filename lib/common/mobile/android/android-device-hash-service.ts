@@ -7,7 +7,8 @@ import { IFileSystem, IStringDictionary } from "../../declarations";
 import { ITempService } from "../../../definitions/temp-service";
 
 export class AndroidDeviceHashService
-	implements Mobile.IAndroidDeviceHashService {
+	implements Mobile.IAndroidDeviceHashService
+{
 	private static HASH_FILE_NAME = "hashes";
 
 	constructor(
@@ -15,7 +16,7 @@ export class AndroidDeviceHashService
 		private appIdentifier: string,
 		private $fs: IFileSystem,
 		private $mobileHelper: Mobile.IMobileHelper,
-		private $tempService: ITempService
+		private $tempService: ITempService,
 	) {}
 
 	@cache()
@@ -23,7 +24,7 @@ export class AndroidDeviceHashService
 		return this.$mobileHelper.buildDevicePath(
 			LiveSyncPaths.ANDROID_TMP_DIR_NAME,
 			this.appIdentifier,
-			AndroidDeviceHashService.HASH_FILE_NAME
+			AndroidDeviceHashService.HASH_FILE_NAME,
 		);
 	}
 
@@ -52,12 +53,12 @@ export class AndroidDeviceHashService
 	}
 
 	public async updateHashes(
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<void> {
 		const oldShasums = (await this.getShasumsFromDevice()) || {};
 		await this.generateHashesFromLocalToDevicePaths(
 			localToDevicePaths,
-			oldShasums
+			oldShasums,
 		);
 
 		await this.uploadHashFileToDevice(oldShasums);
@@ -65,10 +66,10 @@ export class AndroidDeviceHashService
 
 	public async generateHashesFromLocalToDevicePaths(
 		localToDevicePaths: Mobile.ILocalToDevicePathData[],
-		initialShasums: IStringDictionary = {}
+		initialShasums: IStringDictionary = {},
 	): Promise<IStringDictionary> {
 		const action = async (
-			localToDevicePathData: Mobile.ILocalToDevicePathData
+			localToDevicePathData: Mobile.ILocalToDevicePathData,
 		) => {
 			const localPath = localToDevicePathData.getLocalPath();
 			if (this.$fs.getFsStats(localPath).isFile()) {
@@ -81,14 +82,14 @@ export class AndroidDeviceHashService
 		await executeActionByChunks<Mobile.ILocalToDevicePathData>(
 			localToDevicePaths,
 			DEFAULT_CHUNK_SIZE,
-			action
+			action,
 		);
 
 		return initialShasums;
 	}
 
 	public getDevicePaths(
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): string[] {
 		return _.map(localToDevicePaths, (localToDevicePathData) => {
 			return `"${localToDevicePathData.getDevicePath()}"`;
@@ -97,7 +98,7 @@ export class AndroidDeviceHashService
 
 	public getChangedShasums(
 		oldShasums: IStringDictionary,
-		currentShasums: IStringDictionary
+		currentShasums: IStringDictionary,
 	): IStringDictionary {
 		if (!oldShasums) {
 			return currentShasums;
@@ -106,18 +107,18 @@ export class AndroidDeviceHashService
 		return _.omitBy(
 			currentShasums,
 			(hash: string, pathToFile: string) =>
-				!!oldShasums[pathToFile] && oldShasums[pathToFile] === hash
+				!!oldShasums[pathToFile] && oldShasums[pathToFile] === hash,
 		);
 	}
 
 	public async removeHashes(
-		localToDevicePaths: Mobile.ILocalToDevicePathData[]
+		localToDevicePaths: Mobile.ILocalToDevicePathData[],
 	): Promise<boolean> {
 		const oldShasums = await this.getShasumsFromDevice();
 		if (oldShasums) {
 			const fileToShasumDictionary = <IStringDictionary>_.omit(
 				oldShasums,
-				localToDevicePaths.map((ldp) => ldp.getLocalPath())
+				localToDevicePaths.map((ldp) => ldp.getLocalPath()),
 			);
 			await this.uploadHashFileToDevice(fileToShasumDictionary);
 			return true;
@@ -130,14 +131,14 @@ export class AndroidDeviceHashService
 	private async getHashFileLocalPath(): Promise<string> {
 		return path.join(
 			await this.getTempDir(),
-			AndroidDeviceHashService.HASH_FILE_NAME
+			AndroidDeviceHashService.HASH_FILE_NAME,
 		);
 	}
 
 	@cache()
 	private getTempDir(): Promise<string> {
 		return this.$tempService.mkdirSync(
-			`android-device-hash-service-${this.appIdentifier}`
+			`android-device-hash-service-${this.appIdentifier}`,
 		);
 	}
 

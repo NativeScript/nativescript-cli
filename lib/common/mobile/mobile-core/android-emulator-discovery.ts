@@ -6,18 +6,19 @@ import { injector } from "../../yok";
 
 export class AndroidEmulatorDiscovery
 	extends EventEmitter
-	implements Mobile.IDeviceDiscovery {
+	implements Mobile.IDeviceDiscovery
+{
 	private _emulators: IDictionary<Mobile.IDeviceInfo> = {};
 
 	constructor(
 		private $androidEmulatorServices: Mobile.IEmulatorPlatformService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {
 		super();
 	}
 
 	public async startLookingForDevices(
-		options?: Mobile.IDeviceLookingOptions
+		options?: Mobile.IDeviceLookingOptions,
 	): Promise<void> {
 		if (
 			options &&
@@ -27,7 +28,8 @@ export class AndroidEmulatorDiscovery
 			return;
 		}
 
-		const availableEmulatorsOutput = await this.$androidEmulatorServices.getEmulatorImages();
+		const availableEmulatorsOutput =
+			await this.$androidEmulatorServices.getEmulatorImages();
 		const currentEmulators = availableEmulatorsOutput.devices;
 		const cachedEmulators = _.values(this._emulators);
 
@@ -37,8 +39,8 @@ export class AndroidEmulatorDiscovery
 				_.some(
 					currentEmulators,
 					(emulator) =>
-						emulator && e && emulator.imageIdentifier === e.imageIdentifier
-				)
+						emulator && e && emulator.imageIdentifier === e.imageIdentifier,
+				),
 			)
 			.value();
 
@@ -48,8 +50,8 @@ export class AndroidEmulatorDiscovery
 				_.some(
 					cachedEmulators,
 					(emulator) =>
-						emulator && e && emulator.imageIdentifier === e.imageIdentifier
-				)
+						emulator && e && emulator.imageIdentifier === e.imageIdentifier,
+				),
 			)
 			.value();
 

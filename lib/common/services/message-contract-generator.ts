@@ -13,7 +13,7 @@ import { injector } from "../yok";
 export class MessageContractGenerator implements IServiceContractGenerator {
 	constructor(
 		private $fs: IFileSystem,
-		private $messagesService: IMessagesService
+		private $messagesService: IMessagesService,
 	) {}
 
 	public async generate(): Promise<IServiceContractClientCode> {
@@ -22,7 +22,7 @@ export class MessageContractGenerator implements IServiceContractGenerator {
 
 		implementationsFile.writeLine("//");
 		implementationsFile.writeLine(
-			"// automatically generated code; do not edit manually!"
+			"// automatically generated code; do not edit manually!",
 		);
 		implementationsFile.writeLine("//");
 		implementationsFile.writeLine("/* tslint:disable:all */");
@@ -30,13 +30,13 @@ export class MessageContractGenerator implements IServiceContractGenerator {
 
 		interfacesFile.writeLine("//");
 		interfacesFile.writeLine(
-			"// automatically generated code; do not edit manually!"
+			"// automatically generated code; do not edit manually!",
 		);
 		interfacesFile.writeLine("//");
 		interfacesFile.writeLine("/* tslint:disable:all */");
 
 		const messagesClass = new Block(
-			"export class Messages implements IMessages"
+			"export class Messages implements IMessages",
 		);
 		const messagesInterface = new Block("interface IMessages");
 
@@ -76,7 +76,7 @@ export class MessageContractGenerator implements IServiceContractGenerator {
 		propertyValue: string,
 		block: CodeGeneration.IBlock,
 		depth: number,
-		options: { shouldGenerateInterface: boolean }
+		options: { shouldGenerateInterface: boolean },
 	): void {
 		_.each(jsonContents, (val: any, key: string) => {
 			let newPropertyValue = propertyValue + key;
@@ -101,7 +101,7 @@ export class MessageContractGenerator implements IServiceContractGenerator {
 				newPropertyValue + ".",
 				newBlock,
 				depth + 1,
-				options
+				options,
 			);
 			block.addBlock(newBlock);
 		});

@@ -270,12 +270,10 @@ export class DevicesService
 		);
 	}
 
-	/* tslint:disable:no-unused-variable */
 	@exported("devicesService")
 	public setLogLevel(logLevel: string, deviceIdentifier?: string): void {
 		this.$deviceLogProvider.setLogLevel(logLevel, deviceIdentifier);
 	}
-	/* tslint:enable:no-unused-variable */
 
 	@exported("devicesService")
 	public isAppInstalledOnDevices(

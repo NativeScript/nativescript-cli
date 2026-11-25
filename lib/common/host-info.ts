@@ -24,7 +24,10 @@ export class HostInfo implements IHostInfo {
 		return this.$injector.resolve("logger");
 	}
 
-	constructor(private $errors: IErrors, private $injector: IInjector) {}
+	constructor(
+		private $errors: IErrors,
+		private $injector: IInjector,
+	) {}
 
 	public get isWindows() {
 		return process.platform === HostInfo.WIN32_NAME;
@@ -65,26 +68,26 @@ export class HostInfo implements IHostInfo {
 		this.$logger.trace("Trying to get macOS version.");
 		let macOSVersion: string;
 		try {
-			const systemProfileOutput = await this.$childProcess.exec(
-				systemProfileCommand
-			);
+			const systemProfileOutput =
+				await this.$childProcess.exec(systemProfileCommand);
 
-			const versionRegExp = /System Version:\s+?macOS\s+?(\d+\.\d+)(\.\d+)?\s+/g;
+			const versionRegExp =
+				/System Version:\s+?macOS\s+?(\d+\.\d+)(\.\d+)?\s+/g;
 			const regExpMatchers = versionRegExp.exec(systemProfileOutput);
 			macOSVersion = regExpMatchers && regExpMatchers[1];
 			if (macOSVersion) {
 				this.$logger.trace(
-					`macOS version based on system_profiler is ${macOSVersion}.`
+					`macOS version based on system_profiler is ${macOSVersion}.`,
 				);
 				return macOSVersion;
 			}
 
 			this.$logger.trace(
-				`Unable to get macOS version from ${systemProfileCommand} output.`
+				`Unable to get macOS version from ${systemProfileCommand} output.`,
 			);
 		} catch (err) {
 			this.$logger.trace(
-				`Unable to get macOS version from ${systemProfileCommand}. Error is: ${err}`
+				`Unable to get macOS version from ${systemProfileCommand}. Error is: ${err}`,
 			);
 		}
 
@@ -95,7 +98,7 @@ export class HostInfo implements IHostInfo {
 		const majorVersion = osRelease && _.first(osRelease.split("."));
 		macOSVersion = majorVersion && `10.${+majorVersion - 4}`;
 		this.$logger.trace(
-			`macOS version based on os.release() (${osRelease}) is ${macOSVersion}.`
+			`macOS version based on os.release() (${osRelease}) is ${macOSVersion}.`,
 		);
 		return macOSVersion;
 	}
@@ -128,7 +131,7 @@ export class HostInfo implements IHostInfo {
 				return true;
 			} catch (e) {
 				this.$errors.fail(
-					message || "An error occurred while reading the registry."
+					message || "An error occurred while reading the registry.",
 				);
 			}
 		} else {

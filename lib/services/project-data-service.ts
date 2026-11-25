@@ -77,7 +77,7 @@ export class ProjectDataService implements IProjectDataService {
 		);
 	}
 
-	public getNSValueFromContent(jsonData: Object, propertyName: string): any {
+	public getNSValueFromContent(jsonData: object, propertyName: string): any {
 		try {
 			return this.getPropertyValueFromJson(
 				jsonData,
@@ -569,7 +569,7 @@ export class ProjectDataService implements IProjectDataService {
 		};
 	}
 
-	private getNsConfigDefaultObject(data?: Object): INsConfig {
+	private getNsConfigDefaultObject(data?: object): INsConfig {
 		const config: INsConfig = {};
 		Object.assign(config, data);
 
@@ -711,7 +711,7 @@ export class ProjectDataService implements IProjectDataService {
 	}
 
 	@exported("projectDataService")
-	public getNsConfigDefaultContent(data?: Object): string {
+	public getNsConfigDefaultContent(data?: object): string {
 		const config = this.getNsConfigDefaultObject(data);
 
 		return JSON.stringify(config);

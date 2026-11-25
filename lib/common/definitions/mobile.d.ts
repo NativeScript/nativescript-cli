@@ -14,7 +14,7 @@ import {
 import type { DevicesService } from "../../contracts/devices-service";
 
 declare global {
-	export module Mobile {
+	export namespace Mobile {
 		/**
 		 * Describes available information for a device.
 		 */

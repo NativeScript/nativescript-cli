@@ -11,7 +11,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	constructor(
 		private $fs: IFileSystem,
 		private $tempService: ITempService,
-		private $projectData: IProjectData
+		private $projectData: IProjectData,
 	) {}
 
 	private getExtensionProvisions() {
@@ -19,14 +19,14 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 			this.$projectData.getAppResourcesDirectoryPath(),
 			constants.iOSAppResourcesFolderName,
 			constants.NATIVE_EXTENSION_FOLDER,
-			constants.EXTENSION_PROVISIONING_FILENAME
+			constants.EXTENSION_PROVISIONING_FILENAME,
 		);
 		if (!this.$fs.exists(provisioningJSONPath)) {
 			return "";
 		}
 
 		const provisioningJSON = this.$fs.readJson(
-			provisioningJSONPath
+			provisioningJSONPath,
 		) as IProvisioningJSON;
 
 		return Object.entries(provisioningJSON)
@@ -39,11 +39,11 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	public async createDevelopmentExportOptionsPlist(
 		archivePath: string,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<IExportOptionsPlistOutput> {
 		const exportOptionsMethod = this.getExportOptionsMethod(
 			projectData,
-			archivePath
+			archivePath,
 		);
 		const provision =
 			buildConfig.provision || buildConfig.mobileProvisionIdentifier;
@@ -87,7 +87,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 		const exportFileDir = path.resolve(path.dirname(archivePath));
 		const exportFilePath = path.join(
 			exportFileDir,
-			projectData.projectName + ".ipa"
+			projectData.projectName + ".ipa",
 		);
 
 		return { exportFileDir, exportFilePath, exportOptionsPlistFilePath };
@@ -96,7 +96,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 	public async createDistributionExportOptionsPlist(
 		archivePath: string,
 		projectData: IProjectData,
-		buildConfig: IBuildConfig
+		buildConfig: IBuildConfig,
 	): Promise<IExportOptionsPlistOutput> {
 		const provision =
 			buildConfig.provision || buildConfig.mobileProvisionIdentifier;
@@ -142,7 +142,7 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 		const exportFileDir = path.resolve(path.dirname(archivePath));
 		const exportFilePath = path.join(
 			exportFileDir,
-			projectData.projectName + ".ipa"
+			projectData.projectName + ".ipa",
 		);
 
 		return { exportFileDir, exportFilePath, exportOptionsPlistFilePath };
@@ -150,17 +150,17 @@ export class ExportOptionsPlistService implements IExportOptionsPlistService {
 
 	private getExportOptionsMethod(
 		projectData: IProjectData,
-		archivePath: string
+		archivePath: string,
 	): string {
 		const embeddedMobileProvisionPath = path.join(
 			archivePath,
 			"Products",
 			"Applications",
 			`${projectData.projectName}.app`,
-			"embedded.mobileprovision"
+			"embedded.mobileprovision",
 		);
 		const provision = mobileProvisionFinder.provision.readFromFile(
-			embeddedMobileProvisionPath
+			embeddedMobileProvisionPath,
 		);
 
 		return {

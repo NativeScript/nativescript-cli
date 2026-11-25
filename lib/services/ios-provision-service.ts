@@ -27,12 +27,12 @@ export class IOSProvisionService {
 		private $logger: ILogger,
 		private $options: IOptions,
 		private $devicesService: Mobile.IDevicesService,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {}
 
 	public async pick(
 		uuidOrName: string,
-		projectId: string
+		projectId: string,
 	): Promise<mobileprovision.provision.MobileProvision> {
 		const match = (await this.queryProvisioningProfilesAndDevices(projectId))
 			.match;
@@ -50,12 +50,12 @@ export class IOSProvisionService {
 		const match = data.match;
 
 		function formatSupportedDeviceCount(
-			prov: mobileprovision.provision.MobileProvision
+			prov: mobileprovision.provision.MobileProvision,
 		) {
 			if (devices.length > 0 && prov.Type === "Development") {
 				return (
 					prov.ProvisionedDevices.filter(
-						(device) => devices.indexOf(device) >= 0
+						(device) => devices.indexOf(device) >= 0,
 					).length +
 					"/" +
 					devices.length +
@@ -67,7 +67,7 @@ export class IOSProvisionService {
 		}
 
 		function formatTotalDeviceCount(
-			prov: mobileprovision.provision.MobileProvision
+			prov: mobileprovision.provision.MobileProvision,
 		) {
 			if (prov.Type === "Development" && prov.ProvisionedDevices) {
 				return prov.ProvisionedDevices.length + " total";
@@ -85,7 +85,7 @@ export class IOSProvisionService {
 				"Type / Due",
 				"Devices",
 			],
-			[]
+			[],
 		);
 
 		function pushProvision(prov: mobileprovision.provision.MobileProvision) {
@@ -113,7 +113,7 @@ export class IOSProvisionService {
 		this.$logger.info(
 			"There are also " +
 				match.nonEligible.length +
-				" non-eligible provisioning profiles."
+				" non-eligible provisioning profiles.",
 		);
 		this.$logger.info();
 	}
@@ -122,13 +122,13 @@ export class IOSProvisionService {
 		const teams = await this.getDevelopmentTeams();
 		const table = createTable(
 			["Team Name", "Team ID"],
-			teams.map((team) => [quoteString(team.name), team.id])
+			teams.map((team) => [quoteString(team.name), team.id]),
 		);
 		this.$logger.info(table.toString());
 	}
 
 	private async queryProvisioningProfilesAndDevices(
-		projectId: string
+		projectId: string,
 	): Promise<{ devices: string[]; match: mobileprovision.provision.Result }> {
 		const certificates = mobileprovision.cert.read();
 		const provisions = mobileprovision.provision.read();
@@ -170,7 +170,7 @@ export class IOSProvisionService {
 						teams[provision.TeamName] = new Set();
 					}
 					teams[provision.TeamName].add(id);
-				})
+				}),
 		);
 		const teamsArray = Object.keys(teams).reduce((arr, name) => {
 			teams[name].forEach((id) => arr.push({ id, name }));

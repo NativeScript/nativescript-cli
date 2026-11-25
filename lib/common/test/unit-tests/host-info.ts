@@ -60,7 +60,7 @@ describe("hostInfo", () => {
 			childProcess.exec = async (
 				command: string,
 				options?: any,
-				execOptions?: IExecOptions
+				execOptions?: IExecOptions,
 			): Promise<any> => {
 				calledCommand = command;
 				return `Software:
@@ -76,7 +76,7 @@ describe("hostInfo", () => {
 			assert.deepStrictEqual(macOSVersion, "10.13");
 			assert.equal(
 				calledCommand,
-				"system_profiler SPSoftwareDataType -detailLevel mini"
+				"system_profiler SPSoftwareDataType -detailLevel mini",
 			);
 		});
 
@@ -88,7 +88,7 @@ describe("hostInfo", () => {
 			childProcess.exec = async (
 				command: string,
 				options?: any,
-				execOptions?: IExecOptions
+				execOptions?: IExecOptions,
 			): Promise<any> => {
 				calledCommand = command;
 				return `Software:
@@ -104,7 +104,7 @@ describe("hostInfo", () => {
 			assert.deepStrictEqual(macOSVersion, "10.14");
 			assert.equal(
 				calledCommand,
-				"system_profiler SPSoftwareDataType -detailLevel mini"
+				"system_profiler SPSoftwareDataType -detailLevel mini",
 			);
 		});
 
@@ -115,7 +115,7 @@ describe("hostInfo", () => {
 			childProcess.exec = async (
 				command: string,
 				options?: any,
-				execOptions?: IExecOptions
+				execOptions?: IExecOptions,
 			): Promise<any> => {
 				throw new Error("Err");
 			};
@@ -133,7 +133,7 @@ describe("hostInfo", () => {
 			childProcess.exec = async (
 				command: string,
 				options?: any,
-				execOptions?: IExecOptions
+				execOptions?: IExecOptions,
 			): Promise<any> => {
 				return "Non-matching data";
 			};

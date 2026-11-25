@@ -30,16 +30,16 @@ export class IOSDevice extends IOSDeviceBase {
 		private $devicePlatformsConstants: Mobile.IDevicePlatformsConstants,
 		private $iOSDeviceProductNameMapper: Mobile.IiOSDeviceProductNameMapper,
 		private $iosDeviceOperations: IIOSDeviceOperations,
-		private $mobileHelper: Mobile.IMobileHelper
+		private $mobileHelper: Mobile.IMobileHelper,
 	) {
 		super();
 		this.applicationManager = this.$injector.resolve(
 			applicationManagerPath.IOSApplicationManager,
-			{ device: this, devicePointer: this.deviceActionInfo }
+			{ device: this, devicePointer: this.deviceActionInfo },
 		);
 		this.fileSystem = this.$injector.resolve(
 			fileSystemPath.IOSDeviceFileSystem,
-			{ device: this, devicePointer: this.deviceActionInfo }
+			{ device: this, devicePointer: this.deviceActionInfo },
 		);
 		const productType = deviceActionInfo.productType;
 		const isTablet = this.$mobileHelper.isiOSTablet(productType);
@@ -58,7 +58,7 @@ export class IOSDevice extends IOSDeviceBase {
 			isTablet: isTablet,
 			displayName:
 				this.$iOSDeviceProductNameMapper.resolveProductName(
-					deviceActionInfo.deviceName
+					deviceActionInfo.deviceName,
 				) || deviceActionInfo.deviceName,
 			model: this.$iOSDeviceProductNameMapper.resolveProductName(productType),
 			version: deviceActionInfo.productVersion,
@@ -81,7 +81,8 @@ export class IOSDevice extends IOSDeviceBase {
 
 	public get isOnlyWiFiConnected(): boolean {
 		const result = this.deviceInfo.connectionTypes.every(
-			(connectionType) => connectionType === constants.DeviceConnectionType.Wifi
+			(connectionType) =>
+				connectionType === constants.DeviceConnectionType.Wifi,
 		);
 		return result;
 	}
@@ -92,7 +93,7 @@ export class IOSDevice extends IOSDeviceBase {
 			this._deviceLogHandler = this.actionOnDeviceLog.bind(this);
 			this.$iosDeviceOperations.on(
 				commonConstants.DEVICE_LOG_EVENT_NAME,
-				this._deviceLogHandler
+				this._deviceLogHandler,
 			);
 			this.$iosDeviceOperations.startDeviceLog(this.deviceInfo.identifier);
 		}
@@ -102,7 +103,7 @@ export class IOSDevice extends IOSDeviceBase {
 		await this.$iOSSocketRequestExecutor.executeAttachRequest(
 			this,
 			constants.AWAIT_NOTIFICATION_TIMEOUT_SECONDS,
-			appId
+			appId,
 		);
 		const port = await super.getDebuggerPort(appId);
 		const deviceId = this.deviceInfo.identifier;
@@ -113,7 +114,7 @@ export class IOSDevice extends IOSDeviceBase {
 					await this.$iosDeviceOperations.connectToPort([
 						{ deviceId: deviceId, port: port },
 					])
-				)[deviceId]
+				)[deviceId],
 			);
 			const _socket = new net.Socket();
 			_socket.connect(deviceResponse.port, deviceResponse.host);
@@ -128,7 +129,7 @@ export class IOSDevice extends IOSDeviceBase {
 			this.$deviceLogProvider.logData(
 				response.message,
 				this.$devicePlatformsConstants.iOS,
-				this.deviceInfo.identifier
+				this.deviceInfo.identifier,
 			);
 		}
 	}
@@ -137,7 +138,7 @@ export class IOSDevice extends IOSDeviceBase {
 		if (this._deviceLogHandler) {
 			this.$iosDeviceOperations.removeListener(
 				commonConstants.DEVICE_LOG_EVENT_NAME,
-				this._deviceLogHandler
+				this._deviceLogHandler,
 			);
 		}
 	}
@@ -146,7 +147,7 @@ export class IOSDevice extends IOSDeviceBase {
 		let activeArchitecture = "";
 		if (productType) {
 			productType = productType.toLowerCase().trim();
-			const majorVersionAsString = productType.match(/.*?(\d+)\,(\d+)/)[1];
+			const majorVersionAsString = productType.match(/.*?(\d+),(\d+)/)[1];
 			const majorVersion = parseInt(majorVersionAsString);
 			let isArm64Architecture = false;
 			//https://en.wikipedia.org/wiki/List_of_iOS_devices

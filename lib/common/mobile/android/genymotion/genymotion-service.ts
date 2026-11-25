@@ -14,7 +14,8 @@ import { IChildProcess, IFileSystem, IDictionary } from "../../../declarations";
 import { injector } from "../../../yok";
 
 export class AndroidGenymotionService
-	implements Mobile.IAndroidVirtualDeviceService {
+	implements Mobile.IAndroidVirtualDeviceService
+{
 	constructor(
 		private $adb: Mobile.IAndroidDebugBridge,
 		private $childProcess: IChildProcess,
@@ -22,30 +23,29 @@ export class AndroidGenymotionService
 		private $emulatorHelper: Mobile.IEmulatorHelper,
 		private $fs: IFileSystem,
 		private $logger: ILogger,
-		private $virtualBoxService: Mobile.IVirtualBoxService
+		private $virtualBoxService: Mobile.IVirtualBoxService,
 	) {}
 
 	public async getEmulatorImages(
-		adbDevicesOutput: string[]
+		adbDevicesOutput: string[],
 	): Promise<Mobile.IEmulatorImagesOutput> {
 		const availableEmulatorsOutput = await this.getEmulatorImagesCore();
-		const runningEmulatorIds = await this.getRunningEmulatorIds(
-			adbDevicesOutput
-		);
+		const runningEmulatorIds =
+			await this.getRunningEmulatorIds(adbDevicesOutput);
 		const runningEmulators = await settlePromises(
 			_.map(runningEmulatorIds, (emulatorId) =>
 				this.getRunningEmulatorData(
 					emulatorId,
-					availableEmulatorsOutput.devices
-				)
-			)
+					availableEmulatorsOutput.devices,
+				),
+			),
 		);
 		const devices = availableEmulatorsOutput.devices.map(
 			(emulator) =>
 				this.$emulatorHelper.getEmulatorByImageIdentifier(
 					emulator.imageIdentifier,
-					runningEmulators
-				) || emulator
+					runningEmulators,
+				) || emulator,
 		);
 		return {
 			devices,
@@ -54,12 +54,12 @@ export class AndroidGenymotionService
 	}
 
 	public async getRunningEmulatorIds(
-		adbDevicesOutput: string[]
+		adbDevicesOutput: string[],
 	): Promise<string[]> {
 		const results = await Promise.all<string>(
 			<Promise<string>[]>_(adbDevicesOutput)
 				.filter(
-					(r) => !r.match(AndroidVirtualDevice.RUNNING_AVD_EMULATOR_REGEX)
+					(r) => !r.match(AndroidVirtualDevice.RUNNING_AVD_EMULATOR_REGEX),
 				)
 				.map(async (row) => {
 					const match = row.match(/^(.+?)\s+device$/);
@@ -74,7 +74,7 @@ export class AndroidGenymotionService
 
 					return Promise.resolve(undefined);
 				})
-				.value()
+				.value(),
 		);
 
 		return _(results)
@@ -106,32 +106,32 @@ export class AndroidGenymotionService
 	public async getRunningEmulatorName(emulatorId: string): Promise<string> {
 		const output = await this.$adb.getPropertyValue(
 			emulatorId,
-			"ro.product.model"
+			"ro.product.model",
 		);
 		this.$logger.trace(output);
 		return (<string>_.first(output.split(EOL))).trim();
 	}
 
 	public async getRunningEmulatorImageIdentifier(
-		emulatorId: string
+		emulatorId: string,
 	): Promise<string> {
 		const adbDevices = await this.$adb.getDevicesSafe();
 		const emulatorImages = (await this.getEmulatorImages(adbDevices)).devices;
 		const emulator = await this.getRunningEmulatorData(
 			emulatorId,
-			emulatorImages
+			emulatorImages,
 		);
 		return emulator ? emulator.imageIdentifier : null;
 	}
 
 	private async getRunningEmulatorData(
 		runningEmulatorId: string,
-		availableEmulators: Mobile.IDeviceInfo[]
+		availableEmulators: Mobile.IDeviceInfo[],
 	): Promise<Mobile.IDeviceInfo> {
 		const emulatorName = await this.getRunningEmulatorName(runningEmulatorId);
 		const runningEmulator = this.$emulatorHelper.getEmulatorByIdOrName(
 			emulatorName,
-			availableEmulators
+			availableEmulators,
 		);
 		if (!runningEmulator) {
 			return null;
@@ -139,7 +139,7 @@ export class AndroidGenymotionService
 
 		this.$emulatorHelper.setRunningAndroidEmulatorProperties(
 			runningEmulatorId,
-			runningEmulator
+			runningEmulator,
 		);
 
 		return runningEmulator;
@@ -161,7 +161,7 @@ export class AndroidGenymotionService
 	}
 
 	private async parseListVmsOutput(
-		vms: Mobile.IVirtualBoxVm[]
+		vms: Mobile.IVirtualBoxVm[],
 	): Promise<Mobile.IDeviceInfo[]> {
 		const configurationError = await this.getConfigurationError();
 		const devices: Mobile.IDeviceInfo[] = [];
@@ -169,7 +169,7 @@ export class AndroidGenymotionService
 		for (const vm of vms) {
 			try {
 				const output = await this.$virtualBoxService.enumerateGuestProperties(
-					vm.id
+					vm.id,
 				);
 				if (
 					output &&
@@ -182,8 +182,8 @@ export class AndroidGenymotionService
 							vm.id,
 							vm.name,
 							output.error,
-							configurationError
-						)
+							configurationError,
+						),
 					);
 				}
 			} catch (err) {
@@ -199,7 +199,7 @@ export class AndroidGenymotionService
 		id: string,
 		name: string,
 		error: string,
-		configurationError: string
+		configurationError: string,
 	): Mobile.IDeviceInfo {
 		return {
 			identifier: null,
@@ -231,7 +231,7 @@ export class AndroidGenymotionService
 	private async isGenymotionEmulator(emulatorId: string): Promise<boolean> {
 		const manufacturer = await this.$adb.getPropertyValue(
 			emulatorId,
-			"ro.product.manufacturer"
+			"ro.product.manufacturer",
 		);
 		if (manufacturer && manufacturer.match(/^Genymotion/i)) {
 			return true;
@@ -239,7 +239,7 @@ export class AndroidGenymotionService
 
 		const buildProduct = await this.$adb.getPropertyValue(
 			emulatorId,
-			"ro.build.product"
+			"ro.build.product",
 		);
 		if (buildProduct && _.includes(buildProduct.toLowerCase(), "vbox")) {
 			return true;
@@ -264,14 +264,14 @@ In case you have installed Genymotion in a different location, please add the pa
 			this.pathToEmulatorExecutable,
 			[],
 			{},
-			{ throwError: false }
+			{ throwError: false },
 		);
 		// When player is spawned, it always prints message on stderr.
 		if (
 			result &&
 			result.stderr &&
 			result.stderr.indexOf(
-				AndroidVirtualDevice.GENYMOTION_DEFAULT_STDERR_STRING
+				AndroidVirtualDevice.GENYMOTION_DEFAULT_STDERR_STRING,
 			) === -1
 		) {
 			this.$logger.trace("Configuration error for Genymotion", result);

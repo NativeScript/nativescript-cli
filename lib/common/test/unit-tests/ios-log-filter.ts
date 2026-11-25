@@ -147,7 +147,7 @@ describe("iOSLogFilter", () => {
 		inputData: string,
 		expectedOutput: string,
 		_logLevel?: string,
-		_pid?: string
+		_pid?: string,
 	) => {
 		const testInjector = new Yok();
 		testInjector.register("loggingLevels", LoggingLevels);
@@ -162,7 +162,7 @@ describe("iOSLogFilter", () => {
 		assert.deepStrictEqual(
 			filteredData,
 			expectedOutput,
-			`The actual result '${filteredData}' did NOT match expected output '${expectedOutput}'.`
+			`The actual result '${filteredData}' did NOT match expected output '${expectedOutput}'.`,
 		);
 	};
 
@@ -208,7 +208,7 @@ describe("iOSLogFilter", () => {
 						testData.input,
 						testData.pid13309Output,
 						logLevel,
-						pid
+						pid,
 					);
 				});
 			});

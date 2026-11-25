@@ -13,7 +13,7 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 	constructor(
 		private $platformsDataService: IPlatformsDataService,
 		$mobileHelper: Mobile.IMobileHelper,
-		$options: IOptions
+		$options: IOptions,
 	) {
 		super($mobileHelper, $options);
 	}
@@ -24,45 +24,45 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 		filePath: string,
 		platform: string,
 		projectData: IProjectData,
-		projectFilesConfig: IProjectFilesConfig
+		projectFilesConfig: IProjectFilesConfig,
 	): string {
 		const platformData = this.$platformsDataService.getPlatformData(
 			platform.toLowerCase(),
-			projectData
+			projectData,
 		);
 		const parsedFilePath = this.getPreparedFilePath(
 			filePath,
-			projectFilesConfig
+			projectFilesConfig,
 		);
 		let mappedFilePath = "";
 		let relativePath;
 		if (parsedFilePath.indexOf(constants.NODE_MODULES_FOLDER_NAME) > -1) {
 			relativePath = path.relative(
 				path.join(projectData.projectDir, constants.NODE_MODULES_FOLDER_NAME),
-				parsedFilePath
+				parsedFilePath,
 			);
 			mappedFilePath = path.join(
 				platformData.appDestinationDirectoryPath,
 				constants.APP_FOLDER_NAME,
 				constants.TNS_MODULES_FOLDER_NAME,
-				relativePath
+				relativePath,
 			);
 		} else {
 			relativePath = path.relative(
 				projectData.appDirectoryPath,
-				parsedFilePath
+				parsedFilePath,
 			);
 			mappedFilePath = path.join(
 				platformData.appDestinationDirectoryPath,
 				this.$options.hostProjectModuleName,
-				relativePath
+				relativePath,
 			);
 		}
 
 		const appResourcesDirectoryPath = projectData.appResourcesDirectoryPath;
 		const platformSpecificAppResourcesDirectoryPath = path.join(
 			appResourcesDirectoryPath,
-			platformData.normalizedPlatformName
+			platformData.normalizedPlatformName,
 		);
 		if (
 			parsedFilePath.indexOf(appResourcesDirectoryPath) > -1 &&
@@ -77,15 +77,15 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 			const appResourcesRelativePath = path.relative(
 				path.join(
 					projectData.appResourcesDirectoryPath,
-					platformData.normalizedPlatformName
+					platformData.normalizedPlatformName,
 				),
-				parsedFilePath
+				parsedFilePath,
 			);
 			mappedFilePath = path.join(
 				platformData.platformProjectService.getAppResourcesDestinationDirectoryPath(
-					projectData
+					projectData,
 				),
-				appResourcesRelativePath
+				appResourcesRelativePath,
 			);
 		}
 
@@ -94,7 +94,7 @@ export class ProjectFilesProvider extends ProjectFilesProviderBase {
 
 	public isFileExcluded(filePath: string): boolean {
 		return !!_.find(ProjectFilesProvider.INTERNAL_NONPROJECT_FILES, (pattern) =>
-			minimatch(filePath, pattern, { nocase: true })
+			minimatch(filePath, pattern, { nocase: true }),
 		);
 	}
 }

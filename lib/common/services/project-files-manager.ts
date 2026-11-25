@@ -16,26 +16,26 @@ export class ProjectFilesManager implements IProjectFilesManager {
 		private $fs: IFileSystem,
 		private $localToDevicePathDataFactory: Mobile.ILocalToDevicePathDataFactory,
 		private $logger: ILogger,
-		private $projectFilesProvider: IProjectFilesProvider
+		private $projectFilesProvider: IProjectFilesProvider,
 	) {}
 
 	public getProjectFiles(
 		projectFilesPath: string,
 		excludedProjectDirsAndFiles?: string[],
 		filter?: (filePath: string, stat: IFsStats) => boolean,
-		opts?: any
+		opts?: any,
 	): string[] {
 		const projectFiles = this.$fs.enumerateFilesInDirectorySync(
 			projectFilesPath,
 			(filePath, stat) => {
 				const isFileExcluded = this.isFileExcluded(
 					path.relative(projectFilesPath, filePath),
-					excludedProjectDirsAndFiles
+					excludedProjectDirsAndFiles,
 				);
 				const isFileFiltered = filter ? filter(filePath, stat) : false;
 				return !isFileExcluded && !isFileFiltered;
 			},
-			opts
+			opts,
 		);
 
 		this.$logger.trace("enumerateProjectFiles: %s", util.inspect(projectFiles));
@@ -45,10 +45,10 @@ export class ProjectFilesManager implements IProjectFilesManager {
 
 	public isFileExcluded(
 		filePath: string,
-		excludedProjectDirsAndFiles?: string[]
+		excludedProjectDirsAndFiles?: string[],
 	): boolean {
 		const isInExcludedList = !!_.find(excludedProjectDirsAndFiles, (pattern) =>
-			minimatch(filePath, pattern, { nocase: true })
+			minimatch(filePath, pattern, { nocase: true }),
 		);
 		return (
 			isInExcludedList || this.$projectFilesProvider.isFileExcluded(filePath)
@@ -60,9 +60,10 @@ export class ProjectFilesManager implements IProjectFilesManager {
 		projectFilesPath: string,
 		files: string[],
 		excludedProjectDirsAndFiles: string[],
-		projectFilesConfig?: IProjectFilesConfig
+		projectFilesConfig?: IProjectFilesConfig,
 	): Promise<Mobile.ILocalToDevicePathData[]> {
-		const deviceProjectRootPath = await deviceAppData.getDeviceProjectRootPath();
+		const deviceProjectRootPath =
+			await deviceAppData.getDeviceProjectRootPath();
 
 		files =
 			files ||
@@ -70,7 +71,7 @@ export class ProjectFilesManager implements IProjectFilesManager {
 				projectFilesPath,
 				excludedProjectDirsAndFiles,
 				null,
-				{ enumerateDirectories: true }
+				{ enumerateDirectories: true },
 			);
 		const localToDevicePaths = Promise.all(
 			files
@@ -78,8 +79,8 @@ export class ProjectFilesManager implements IProjectFilesManager {
 					this.$projectFilesProvider.getProjectFileInfo(
 						projectFile,
 						deviceAppData.platform,
-						projectFilesConfig
-					)
+						projectFilesConfig,
+					),
 				)
 				.filter((projectFileInfo) => projectFileInfo.shouldIncludeFile)
 				.map(async (projectFileInfo) =>
@@ -87,9 +88,9 @@ export class ProjectFilesManager implements IProjectFilesManager {
 						projectFileInfo.filePath,
 						projectFilesPath,
 						projectFileInfo.onDeviceFileName,
-						deviceProjectRootPath
-					)
-				)
+						deviceProjectRootPath,
+					),
+				),
 		);
 
 		return localToDevicePaths;
@@ -99,7 +100,7 @@ export class ProjectFilesManager implements IProjectFilesManager {
 		directoryPath: string,
 		platform: string,
 		projectFilesConfig: IProjectFilesConfig,
-		excludedDirs?: string[]
+		excludedDirs?: string[],
 	): void {
 		const contents = this.$fs.readDirectory(directoryPath);
 		const files: string[] = [];
@@ -111,7 +112,7 @@ export class ProjectFilesManager implements IProjectFilesManager {
 				this.processPlatformSpecificFilesCore(
 					platform,
 					this.$fs.enumerateFilesInDirectorySync(filePath),
-					projectFilesConfig
+					projectFilesConfig,
 				);
 			} else if (fsStat.isFile()) {
 				files.push(filePath);
@@ -124,21 +125,21 @@ export class ProjectFilesManager implements IProjectFilesManager {
 	private processPlatformSpecificFilesCore(
 		platform: string,
 		files: string[],
-		projectFilesConfig: IProjectFilesConfig
+		projectFilesConfig: IProjectFilesConfig,
 	): void {
 		// Renames the files that have `platform` as substring and removes the files from other platform
 		_.each(files, (filePath) => {
 			const projectFileInfo = this.$projectFilesProvider.getProjectFileInfo(
 				filePath,
 				platform,
-				projectFilesConfig
+				projectFilesConfig,
 			);
 			if (!projectFileInfo.shouldIncludeFile) {
 				this.$fs.deleteFile(filePath);
 			} else if (projectFileInfo.onDeviceFileName) {
 				const onDeviceFilePath = path.join(
 					path.dirname(filePath),
-					projectFileInfo.onDeviceFileName
+					projectFileInfo.onDeviceFileName,
 				);
 
 				// Fix .js.map entries
@@ -157,7 +158,7 @@ export class ProjectFilesManager implements IProjectFilesManager {
 						let fileContent = this.$fs.readText(filePath);
 						fileContent = fileContent.replace(
 							new RegExp(oldName, "g"),
-							newName
+							newName,
 						);
 						this.$fs.writeFile(filePath, fileContent);
 					}
@@ -172,7 +173,7 @@ export class ProjectFilesManager implements IProjectFilesManager {
 
 	private getFileName(filePath: string, extension: string): string {
 		return path.basename(
-			filePath.replace(extension === ".map" ? ".js.map" : ".js", "")
+			filePath.replace(extension === ".map" ? ".js.map" : ".js", ""),
 		);
 	}
 }

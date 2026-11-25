@@ -17,7 +17,7 @@ function createTestInjector(config: {
 		spawnFromEvent: (
 			command: string,
 			args: string[],
-			event: string
+			event: string,
 		): Promise<any> =>
 			Promise.resolve({
 				stdout: config.xcodeSelectStdout,
@@ -26,7 +26,7 @@ function createTestInjector(config: {
 	testInjector.register("sysInfo", {
 		getSysInfo: (
 			pathToPackageJson: string,
-			androidToolsInfo?: { pathToAdb: string; pathToAndroid: string }
+			androidToolsInfo?: { pathToAdb: string; pathToAndroid: string },
 		) => {
 			return Promise.resolve({
 				xcodeVer: config.xcodeVersionOutput,
@@ -75,7 +75,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			await service.getDeveloperDirectoryPath(),
 			defaultXcodeSelectStdout,
-			"xcode-select service should get correct trimmed  path to Developer directory on Mac OS X."
+			"xcode-select service should get correct trimmed  path to Developer directory on Mac OS X.",
 		);
 	});
 
@@ -89,7 +89,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			await service.getDeveloperDirectoryPath(),
 			defaultXcodeSelectStdout,
-			"xcode-select service should get correct trimmed  path to Developer directory on Mac OS X."
+			"xcode-select service should get correct trimmed  path to Developer directory on Mac OS X.",
 		);
 	});
 
@@ -106,12 +106,12 @@ describe("xcode-select-service", () => {
 		assert.strictEqual(
 			xcodeVersion.major,
 			"7",
-			"xcodeSelectService should get correct Xcode version"
+			"xcodeSelectService should get correct Xcode version",
 		);
 		assert.strictEqual(
 			xcodeVersion.minor,
 			"3",
-			"xcodeSelectService should get correct Xcode version"
+			"xcodeSelectService should get correct Xcode version",
 		);
 	});
 
@@ -125,7 +125,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			await service.getDeveloperDirectoryPath(),
 			defaultXcodeSelectStdout,
-			"xcode-select service should get correct path to Developer directory on Mac OS X."
+			"xcode-select service should get correct path to Developer directory on Mac OS X.",
 		);
 	});
 
@@ -141,7 +141,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			await service.getContentsDirectoryPath(),
 			expected,
-			"xcode-select service should get correct path to Contents directory on Mac OS X."
+			"xcode-select service should get correct path to Contents directory on Mac OS X.",
 		);
 	});
 
@@ -157,7 +157,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			executionStopped,
 			true,
-			"xcode-select service should stop executon unless on Mac OS X."
+			"xcode-select service should stop executon unless on Mac OS X.",
 		);
 	});
 
@@ -173,7 +173,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			executionStopped,
 			true,
-			"xcode-select service should stop executon unless on Mac OS X."
+			"xcode-select service should stop executon unless on Mac OS X.",
 		);
 	});
 
@@ -186,7 +186,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			executionStopped,
 			true,
-			"xcode-select service should stop executon when Developer directory is empty on Mac OS X."
+			"xcode-select service should stop executon when Developer directory is empty on Mac OS X.",
 		);
 	});
 
@@ -199,7 +199,7 @@ describe("xcode-select-service", () => {
 		assert.deepStrictEqual(
 			executionStopped,
 			true,
-			"xcode-select service should stop executon when Contents directory is empty on Mac OS X."
+			"xcode-select service should stop executon when Contents directory is empty on Mac OS X.",
 		);
 	});
 });

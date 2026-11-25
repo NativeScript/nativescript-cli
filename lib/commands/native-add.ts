@@ -128,7 +128,7 @@ function generateJavaKotlin(
 ): void {
 	const $projectData = ctx.injector.get(ProjectData);
 	const $logger = ctx.injector.get<ILogger>("logger");
-	const fileExt = extension == "java" ? extension : "kt";
+	const fileExt = extension === "java" ? extension : "kt";
 	const packageName = getPackageName(className);
 	const classSimpleName = getClassSimpleName(className);
 	const packagePath = path.join(
@@ -142,12 +142,12 @@ function generateJavaKotlin(
 		return;
 	}
 
-	if (extension == "kotlin" && !checkAndUpdateGradleProperties(ctx)) {
+	if (extension === "kotlin" && !checkAndUpdateGradleProperties(ctx)) {
 		return;
 	}
 
 	const fileContent =
-		extension == "java"
+		extension === "java"
 			? generateJavaClassContent(packageName, classSimpleName)
 			: generateKotlinClassContent(packageName, classSimpleName);
 

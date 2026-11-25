@@ -1097,7 +1097,11 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 		comment: string,
 		target: string,
 	) {
-		let buildPhase = project.buildPhaseObject(buildPhaseType, comment, target);
+		const buildPhase = project.buildPhaseObject(
+			buildPhaseType,
+			comment,
+			target,
+		);
 		if (!buildPhase) {
 			project.addBuildPhase([], buildPhaseType, comment, target);
 		}
@@ -1261,7 +1265,7 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 				.filter((t) => !!t);
 			const targets = moduleDef.dependencies
 				.map((dependency) =>
-					currentTargetsArray.find((t) => t.name === `\"${dependency}\"`),
+					currentTargetsArray.find((t) => t.name === `"${dependency}"`),
 				)
 				.filter((s) => !!s);
 			if (targets.length) {
@@ -1301,8 +1305,8 @@ export class IOSWatchAppService implements IIOSWatchAppService {
 			config.sharedModulesBuildConfigurationProperties
 		) {
 			const configurationProperties = {
-				...(config.sharedModulesBuildConfigurationProperties || {}),
-				...(moduleDef.buildConfigurationProperties || {}),
+				...config.sharedModulesBuildConfigurationProperties,
+				...moduleDef.buildConfigurationProperties,
 			};
 			this.$iOSNativeTargetService.setXcodeTargetBuildConfigurationProperties(
 				Object.keys(configurationProperties).map((k) => ({

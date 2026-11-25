@@ -31,7 +31,7 @@ export class ProjectCleanupService implements IProjectCleanupService {
 			isSilent: options?.silent,
 		});
 
-		let stats = options?.stats ? new Map<string, number>() : false;
+		const stats = options?.stats ? new Map<string, number>() : false;
 
 		let success = true;
 		for (const pathToClean of pathsToClean) {

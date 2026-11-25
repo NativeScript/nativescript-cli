@@ -2935,7 +2935,7 @@ describe("defineCommand", () => {
 				for (const ctor of [base, Anonymous, Named]) {
 					let message = "";
 					try {
-						ctor.definition;
+						void ctor.definition;
 					} catch (err) {
 						message = err.message;
 					}

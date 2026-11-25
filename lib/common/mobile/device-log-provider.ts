@@ -94,7 +94,7 @@ export class DeviceLogProvider extends DeviceLogProviderBase {
 
 		// todo: extract into an injectable printer/logger service
 		let shouldPrepend = false;
-		let splitIndexes: number[] = [];
+		const splitIndexes: number[] = [];
 		const lines = data
 			.split(/\n(CONSOLE)/)
 			.map((line, index, lines) => {

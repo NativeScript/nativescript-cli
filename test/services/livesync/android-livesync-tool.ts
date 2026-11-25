@@ -27,7 +27,7 @@ class TestSocket extends LiveSyncSocket {
 		data: Buffer | string,
 		cb?: string | Function,
 		encoding?: Function | string,
-	): Promise<Boolean> {
+	): Promise<boolean> {
 		if (data instanceof Buffer) {
 			this.accomulatedData.push(data);
 		} else {

@@ -31,9 +31,9 @@ import { injector } from "./yok";
  */
 export function cache(): any {
 	return (
-		target: Object,
+		target: object,
 		propertyKey: string,
-		descriptor: TypedPropertyDescriptor<any>
+		descriptor: TypedPropertyDescriptor<any>,
 	): TypedPropertyDescriptor<any> => {
 		let result: any;
 		const propName: string = descriptor.value ? "value" : "get";
@@ -61,9 +61,9 @@ interface MemoizeOptions {
 let memoizeIDCounter = 0;
 export function memoize(options: MemoizeOptions): any {
 	return (
-		target: Object,
+		target: object,
 		propertyKey: string,
-		descriptor: TypedPropertyDescriptor<any>
+		descriptor: TypedPropertyDescriptor<any>,
 	): TypedPropertyDescriptor<any> => {
 		// todo: remove once surely working as intended.
 		const DEBUG = false;
@@ -150,7 +150,7 @@ export function invokeBefore(methodName: string, methodArgs?: any[]): any {
 	return (
 		target: any,
 		propertyKey: string,
-		descriptor: TypedPropertyDescriptor<any>
+		descriptor: TypedPropertyDescriptor<any>,
 	): TypedPropertyDescriptor<any> => {
 		const originalValue = descriptor.value;
 		descriptor.value = async function (...args: any[]) {
@@ -168,9 +168,9 @@ export function invokeInit(): any {
 
 export function exported(moduleName: string): any {
 	return (
-		target: Object,
+		target: object,
 		propertyKey: string,
-		descriptor: TypedPropertyDescriptor<any>
+		descriptor: TypedPropertyDescriptor<any>,
 	): TypedPropertyDescriptor<any> => {
 		injector.publicApi.__modules__[moduleName] =
 			injector.publicApi.__modules__[moduleName] || {};
@@ -193,14 +193,13 @@ export function performanceLog(localInjector?: IInjector): any {
 	return function (
 		target: any,
 		propertyKey: string,
-		descriptor: PropertyDescriptor
+		descriptor: PropertyDescriptor,
 	): any {
 		const originalMethod = descriptor.value;
 		const className = target.constructor.name;
 		const trackName = `${className}${AnalyticsEventLabelDelimiter}${propertyKey}`;
-		const performanceService: IPerformanceService = localInjector.resolve(
-			"performanceService"
-		);
+		const performanceService: IPerformanceService =
+			localInjector.resolve("performanceService");
 
 		//needed for the returned function to have the same name as the original - used in hooks decorator
 		const functionWrapper = {
@@ -221,7 +220,7 @@ export function performanceLog(localInjector?: IInjector): any {
 								trackName,
 								start,
 								end,
-								args
+								args,
 							);
 						})
 						.catch((err) => {
@@ -230,7 +229,7 @@ export function performanceLog(localInjector?: IInjector): any {
 								trackName,
 								start,
 								end,
-								args
+								args,
 							);
 						});
 				}
@@ -252,13 +251,13 @@ export function performanceLog(localInjector?: IInjector): any {
 // inspired by https://github.com/NativeScript/NativeScript/blob/55dfe25938569edbec89255008e5ad9804901305/tns-core-modules/globals/globals.ts#L121-L137
 export function deprecated(
 	additionalInfo?: string,
-	localInjector?: IInjector
+	localInjector?: IInjector,
 ): any {
 	const isDeprecatedMessage = " is deprecated.";
 	return (
-		target: Object,
+		target: object,
 		key: string,
-		descriptor: TypedPropertyDescriptor<any>
+		descriptor: TypedPropertyDescriptor<any>,
 	): TypedPropertyDescriptor<any> => {
 		localInjector = localInjector || injector;
 		additionalInfo = additionalInfo || "";
@@ -270,7 +269,7 @@ export function deprecated(
 
 				descriptor.value = function (...args: any[]) {
 					$logger.warn(
-						`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`
+						`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`,
 					);
 
 					return originalMethod.apply(this, args);
@@ -283,7 +282,7 @@ export function deprecated(
 					const originalSetter = descriptor.set;
 					descriptor.set = function (...args: any[]) {
 						$logger.warn(
-							`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`
+							`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`,
 						);
 
 						originalSetter.apply(this, args);
@@ -294,7 +293,7 @@ export function deprecated(
 					const originalGetter = descriptor.get;
 					descriptor.get = function (...args: any[]) {
 						$logger.warn(
-							`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`
+							`${key.toString()}${isDeprecatedMessage} ${additionalInfo}`,
 						);
 
 						return originalGetter.apply(this, args);
@@ -311,7 +310,7 @@ export function deprecated(
 						((<any>target).name ||
 							((<any>target).constructor && (<any>target).constructor.name))) ||
 					target
-				}${isDeprecatedMessage} ${additionalInfo}`
+				}${isDeprecatedMessage} ${additionalInfo}`,
 			);
 
 			return target;

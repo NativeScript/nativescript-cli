@@ -392,7 +392,7 @@ declare global {
 
 	interface ILiveSyncSocket extends INetSocket {
 		uid: string;
-		writeAsync(data: Buffer): Promise<Boolean>;
+		writeAsync(data: Buffer): Promise<boolean>;
 	}
 
 	interface IAndroidLivesyncTool {

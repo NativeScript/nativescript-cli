@@ -109,7 +109,7 @@ export class HttpClient implements Server.IHttpClient {
 				},
 			});
 		}
-		let httpOptions: AxiosRequestConfig = {
+		const httpOptions: AxiosRequestConfig = {
 			url: options.url,
 			headers: options.headers,
 			method: options.method,

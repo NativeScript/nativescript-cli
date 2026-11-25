@@ -580,7 +580,6 @@ describe("helpers", () => {
 	});
 
 	describe("getPidFromiOSSimulatorLogs", () => {
-		// tslint:disable-next-line:interface-name
 		interface IiOSSimulatorPidTestData extends ITestData {
 			appId?: string;
 		}

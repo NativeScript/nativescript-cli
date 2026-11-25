@@ -211,7 +211,7 @@ describe("iOSLogFilter", () => {
 
 				assert.deepStrictEqual(
 					output,
-					data.infoExpectedArr.filter((item) => item !== null).join("\n")
+					data.infoExpectedArr.filter((item) => item !== null).join("\n"),
 				);
 			});
 
@@ -220,7 +220,7 @@ describe("iOSLogFilter", () => {
 				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(
 					data.originalDataArr.join("\n"),
-					{ logLevel: fullLogLevel, projectName: data.projectName }
+					{ logLevel: fullLogLevel, projectName: data.projectName },
 				);
 				const actualArr = actualData.split("\n").map((line) => line.trim());
 				const expectedArr = data.originalDataArr
@@ -252,7 +252,7 @@ describe("iOSLogFilter", () => {
 				const actualArr = actualData.split("\n").map((line) => line.trim());
 				assert.deepStrictEqual(
 					actualArr,
-					data.simulatorExpectedArr.filter((item) => item !== null)
+					data.simulatorExpectedArr.filter((item) => item !== null),
 				);
 			});
 
@@ -261,11 +261,11 @@ describe("iOSLogFilter", () => {
 				logFilter = testInjector.resolve(IOSLogFilter);
 				const actualData = logFilter.filterData(
 					data.originalDataArr.join("\n"),
-					{ logLevel: infoLogLevel, projectName: data.projectName }
+					{ logLevel: infoLogLevel, projectName: data.projectName },
 				);
 				const actualArr = actualData.split("\n").map((line) => line.trim());
 				const expectedArr = data.infoExpectedArr.filter(
-					(item) => item !== null
+					(item) => item !== null,
 				);
 				assert.deepStrictEqual(actualArr, expectedArr);
 			});

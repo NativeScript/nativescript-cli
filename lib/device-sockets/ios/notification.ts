@@ -15,28 +15,28 @@ export class IOSNotification extends EventEmitter implements IiOSNotification {
 		this.emit(ATTACH_REQUEST_EVENT_NAME, { deviceId, appId });
 		return this.formatNotification(
 			IOSNotification.ATTACH_REQUEST_NOTIFICATION_NAME,
-			appId
+			appId,
 		);
 	}
 
 	public getReadyForAttach(appId: string): string {
 		return this.formatNotification(
 			IOSNotification.READY_FOR_ATTACH_NOTIFICATION_NAME,
-			appId
+			appId,
 		);
 	}
 
 	public getRefreshRequest(appId: string): string {
 		return this.formatNotification(
 			IOSNotification.REFRESH_REQUEST_NOTIFICATION_NAME,
-			appId
+			appId,
 		);
 	}
 
 	public getAppRefreshStarted(appId: string): string {
 		return this.formatNotification(
 			IOSNotification.APP_REFRESH_STARTED_NOTIFICATION_NAME,
-			appId
+			appId,
 		);
 	}
 

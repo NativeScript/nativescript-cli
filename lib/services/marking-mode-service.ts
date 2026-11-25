@@ -21,14 +21,14 @@ export class MarkingModeService implements IMarkingModeService {
 		private $logger: ILogger,
 		private $projectConfigService: IProjectConfigService,
 		private $projectHelper: IProjectHelper,
-		private $projectDataService: IProjectDataService
+		private $projectDataService: IProjectDataService,
 	) {}
 
 	public async handleMarkingModeFullDeprecation(
-		options: IMarkingModeFullDeprecationOptions
+		options: IMarkingModeFullDeprecationOptions,
 	): Promise<void> {
 		const markingModeValue = this.$projectConfigService.getValue(
-			"android.markingMode"
+			"android.markingMode",
 		);
 
 		const { skipWarnings, forceSwitch } = options;
@@ -43,7 +43,7 @@ export class MarkingModeService implements IMarkingModeService {
 			// if version is null - we are about to add the latest runtime, so no need to warn
 			const { version } = this.$projectDataService.getRuntimePackage(
 				this.$projectHelper.projectDir,
-				PlatformTypes.android
+				PlatformTypes.android,
 			);
 			const isMarkingModeFullDefault =
 				version && semver.lt(semver.coerce(version), "7.0.0-rc.5");

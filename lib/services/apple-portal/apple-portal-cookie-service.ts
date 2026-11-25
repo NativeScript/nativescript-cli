@@ -20,12 +20,12 @@ export class ApplePortalCookieService implements IApplePortalCookieService {
 
 		const parsedCookies = this.parseCookiesData(
 			cookiesData,
-			this.validWebSessionCookieNames
+			this.validWebSessionCookieNames,
 		);
 		_.each(
 			parsedCookies,
 			(parsedCookie) =>
-				(webSessionCookies[parsedCookie.key] = parsedCookie.cookie)
+				(webSessionCookies[parsedCookie.key] = parsedCookie.cookie),
 		);
 
 		return _.values(webSessionCookies).join("; ");
@@ -38,18 +38,18 @@ export class ApplePortalCookieService implements IApplePortalCookieService {
 	public updateUserSessionCookie(cookiesData: string[]): void {
 		const parsedCookies = this.parseCookiesData(
 			cookiesData,
-			this.validUserSessionCookieNames
+			this.validUserSessionCookieNames,
 		);
 		_.each(
 			parsedCookies,
 			(parsedCookie) =>
-				(this.userSessionCookies[parsedCookie.key] = parsedCookie.cookie)
+				(this.userSessionCookies[parsedCookie.key] = parsedCookie.cookie),
 		);
 	}
 
 	private parseCookiesData(
 		cookiesData: string[],
-		validCookieNames: string[]
+		validCookieNames: string[],
 	): IDictionary<{ key: string; value: string; cookie: string }> {
 		const result: IDictionary<{
 			key: string;
@@ -65,7 +65,7 @@ export class ApplePortalCookieService implements IApplePortalCookieService {
 				if (
 					_.includes(validCookieNames, cookieKey) ||
 					_.some(validCookieNames, (validCookieName) =>
-						cookieKey.startsWith(validCookieName)
+						cookieKey.startsWith(validCookieName),
 					)
 				) {
 					result[cookieKey] = {

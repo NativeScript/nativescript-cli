@@ -3,14 +3,14 @@ import { injector } from "../common/yok";
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
 	// This looks for artifacts like: AppName[22432] or AppName(SomeTextHere)[23123]
-	private appOutputRegex: RegExp = /([^\s\(\)]+)(?:\(([^\s]+)\))?\[[0-9]+\]/;
+	private appOutputRegex: RegExp = /([^\s(\)]+)(?:\(([^\s]+)\))?\[[0-9]+\]/;
 
 	// Used to trim the passed messages to a simpler output
 	// Example:
 	// This: "May 24 15:54:52 Dragons-iPhone NativeScript250(NativeScript)[356] <Notice>: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:"
 	// Becomes: CONSOLE ERROR file:///app/tns_modules/@angular/core/bundles/core.umd.js:3477:36: ORIGINAL STACKTRACE:
 	protected infoFilterRegex = new RegExp(
-		`^.*(?:<Notice>:[ \t]?|<Error>:[ \t]?|<Warning>:[ \t]?|\\(NativeScript\\)[ \t]?|${this.appOutputRegex.source}:[ \t]?){1}`
+		`^.*(?:<Notice>:[ \t]?|<Error>:[ \t]?|<Warning>:[ \t]?|\\(NativeScript\\)[ \t]?|${this.appOutputRegex.source}:[ \t]?){1}`,
 	);
 
 	// Used to post filter messages that slip through but are not coming from NativeScript itself.
@@ -29,7 +29,7 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 
 	public filterData(
 		data: string,
-		loggingOptions: Mobile.IDeviceLogOptions = <any>{}
+		loggingOptions: Mobile.IDeviceLogOptions = <any>{},
 	): string {
 		const specifiedLogLevel = (loggingOptions.logLevel || "").toUpperCase();
 

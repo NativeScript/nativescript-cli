@@ -326,7 +326,7 @@ export class DoctorServiceImpl implements DoctorService {
 			// import * as text from "text";
 			// import { a } from "text";
 			// import {a } from "text/abc"
-			const subDirPart = `[\"\']${c}[\"\'/]`;
+			const subDirPart = `["\']${c}["\'/]`;
 			return `(\\brequire\\s*?\\(\\s*?${subDirPart})|(\\bimport\\b.*?from\\s*?${subDirPart})`;
 		});
 

@@ -58,7 +58,7 @@ defineCommand({
 		expectExactType<IsExact<typeof ctx.args, string[]>>();
 
 		// @ts-expect-error - the schema types ctx.options and nothing else
-		ctx.options.undeclared;
+		void ctx.options.undeclared;
 	},
 });
 
@@ -70,7 +70,7 @@ defineCommand({
 		expectExactType<IsExact<ReturnType<typeof ctx.fail>, never>>();
 
 		// @ts-expect-error - nothing is declared, so any access is a typo
-		ctx.options.anything;
+		void ctx.options.anything;
 	},
 });
 
@@ -275,7 +275,7 @@ class TypefixturePlatformClean extends Command({
 		expectExactType<IsExact<ReturnType<typeof fail>, never>>();
 
 		// @ts-expect-error - the schema types this.options and nothing else
-		this.options.undeclared;
+		void this.options.undeclared;
 	}
 }
 

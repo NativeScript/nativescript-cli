@@ -615,7 +615,7 @@ describeOnMacOS("Cocoapods support", () => {
 			const projectPodfilePath = join(platformsFolderPath, "Podfile");
 			assert.isTrue(fs.exists(projectPodfilePath));
 
-			let actualProjectPodfileContent = fs.readText(projectPodfilePath);
+			const actualProjectPodfileContent = fs.readText(projectPodfilePath);
 			const expectedPluginPodfileContent = [
 				"source 'https://github.com/CocoaPods/Specs.git'",
 				"# platform :ios, '8.1'",
@@ -832,7 +832,7 @@ describeOnMacOS("Source code support", () => {
 			const platformsFolderPath = join(projectPath, "platforms", "ios");
 			fs.createDirectory(platformsFolderPath);
 
-			const pbxProj = await await getProjectWithoutPlugins(sourceFileNames);
+			const pbxProj = await getProjectWithoutPlugins(sourceFileNames);
 
 			const pbxFileReference = pbxProj.hash.project.objects.PBXFileReference;
 			const pbxFileReferenceValues = Object.keys(pbxFileReference).map(

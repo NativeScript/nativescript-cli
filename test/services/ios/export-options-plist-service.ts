@@ -41,7 +41,7 @@ function expectPlistTemplateToContain(template: string, expected: string) {
 	const trimmedExpected = expected.replace(/\s/g, "");
 	assert.isTrue(
 		trimmedTemplate.indexOf(trimmedExpected) !== -1,
-		`Expected plist template to contain:\n\n${expected}\n\nbut it was:\n\n${template}`
+		`Expected plist template to contain:\n\n${expected}\n\nbut it was:\n\n${template}`,
 	);
 }
 
@@ -92,7 +92,7 @@ describe("ExportOptionsPlistService", () => {
 							provisioningJSON = testCase.provisioningJSON;
 						}
 						const exportOptionsPlistService = injector.resolve(
-							"exportOptionsPlistService"
+							"exportOptionsPlistService",
 						);
 						exportOptionsPlistService.getExportOptionsMethod = () =>
 							provisionType;
@@ -104,29 +104,29 @@ describe("ExportOptionsPlistService", () => {
 						await exportOptionsPlistService.createDevelopmentExportOptionsPlist(
 							archivePath,
 							projectData,
-							testCase.buildConfig
+							testCase.buildConfig,
 						);
 
 						expectPlistTemplateToContain(
 							actualPlistTemplate,
-							`<key>method</key><string>${provisionType}</string>`
+							`<key>method</key><string>${provisionType}</string>`,
 						);
 						expectPlistTemplateToContain(
 							actualPlistTemplate,
-							`<key>uploadBitcode</key><false/>`
+							`<key>uploadBitcode</key><false/>`,
 						);
 						expectPlistTemplateToContain(
 							actualPlistTemplate,
-							`<key>compileBitcode</key><false/>`
+							`<key>compileBitcode</key><false/>`,
 						);
 						if (testCase.expectedPlist) {
 							expectPlistTemplateToContain(
 								actualPlistTemplate,
-								testCase.expectedPlist
+								testCase.expectedPlist,
 							);
 						}
 					});
-				}
+				},
 			);
 		});
 	});
@@ -172,7 +172,7 @@ describe("ExportOptionsPlistService", () => {
 					provisioningJSON = testCase.provisioningJSON;
 				}
 				const exportOptionsPlistService = injector.resolve(
-					"exportOptionsPlistService"
+					"exportOptionsPlistService",
 				);
 				exportOptionsPlistService.getExportOptionsMethod = () => "app-store";
 
@@ -183,30 +183,30 @@ describe("ExportOptionsPlistService", () => {
 				await exportOptionsPlistService.createDistributionExportOptionsPlist(
 					projectRoot,
 					projectData,
-					testCase.buildConfig
+					testCase.buildConfig,
 				);
 
 				expectPlistTemplateToContain(
 					actualPlistTemplate,
-					`<key>method</key><string>app-store-connect</string>`
+					`<key>method</key><string>app-store-connect</string>`,
 				);
 				expectPlistTemplateToContain(
 					actualPlistTemplate,
-					`<key>uploadBitcode</key><false/>`
+					`<key>uploadBitcode</key><false/>`,
 				);
 				expectPlistTemplateToContain(
 					actualPlistTemplate,
-					`<key>compileBitcode</key><false/>`
+					`<key>compileBitcode</key><false/>`,
 				);
 				expectPlistTemplateToContain(
 					actualPlistTemplate,
-					`<key>uploadSymbols</key><false/>`
+					`<key>uploadSymbols</key><false/>`,
 				);
 
 				if (testCase.expectedPlist) {
 					expectPlistTemplateToContain(
 						actualPlistTemplate,
-						testCase.expectedPlist
+						testCase.expectedPlist,
 					);
 				}
 			});

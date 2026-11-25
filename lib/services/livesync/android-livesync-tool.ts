@@ -597,7 +597,7 @@ export class AndroidLivesyncTool implements IAndroidLivesyncTool {
 		return this.$mobileHelper.buildDevicePath(relativeFilePath);
 	}
 
-	private async writeToSocket(data: Buffer): Promise<Boolean> {
+	private async writeToSocket(data: Buffer): Promise<boolean> {
 		this.verifyActiveConnection();
 		const result = await this.socketConnection.writeAsync(data);
 		return result;

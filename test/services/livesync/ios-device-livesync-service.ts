@@ -21,7 +21,7 @@ describe("IOSDeviceLiveSyncService", () => {
 				_appId: string,
 				_projectName: string,
 				_projectDir: string,
-				ensureAppStarted: boolean
+				ensureAppStarted: boolean,
 			) => {
 				calls.push("socket");
 				ensureAppStartedValues.push(ensureAppStarted);
@@ -35,7 +35,7 @@ describe("IOSDeviceLiveSyncService", () => {
 			{},
 			{},
 			{},
-			device
+			device,
 		);
 
 		await service.restartApplication(projectData, {

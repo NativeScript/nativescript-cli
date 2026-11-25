@@ -17,7 +17,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 		protected $errors: IErrors,
 		protected $logger: ILogger,
 		protected $staticConfig: Config.IStaticConfig,
-		protected $androidDebugBridgeResultHandler: Mobile.IAndroidDebugBridgeResultHandler
+		protected $androidDebugBridgeResultHandler: Mobile.IAndroidDebugBridgeResultHandler,
 	) {}
 
 	@cache()
@@ -27,7 +27,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 
 	public async executeCommand(
 		args: string[],
-		options?: Mobile.IAndroidDebugBridgeCommandOptions
+		options?: Mobile.IAndroidDebugBridgeCommandOptions,
 	): Promise<any> {
 		let event = "close";
 		const deviceIdentifier = options && options.deviceIdentifier;
@@ -53,14 +53,14 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 			command.args,
 			event,
 			childProcessOptions,
-			{ throwError: false }
+			{ throwError: false },
 		);
 		const errors = this.$androidDebugBridgeResultHandler.checkForErrors(result);
 
 		if (errors && errors.length > 0) {
 			this.$androidDebugBridgeResultHandler.handleErrors(
 				errors,
-				treatErrorsAsWarnings
+				treatErrorsAsWarnings,
 			);
 		}
 
@@ -73,7 +73,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 	@invokeInit()
 	public getPropertyValue(
 		deviceId: string,
-		propertyName: string
+		propertyName: string,
 	): Promise<string> {
 		return this.$childProcess.execFile(this.adbFilePath, [
 			"-s",
@@ -125,7 +125,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 								!!line &&
 								line.indexOf("List of devices attached") === -1 &&
 								line.indexOf("* daemon ") === -1 &&
-								line.indexOf("adb server") === -1
+								line.indexOf("adb server") === -1,
 						);
 
 					resolve(adbDevices);
@@ -147,7 +147,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 
 	protected async composeCommand(
 		params: string[],
-		identifier?: string
+		identifier?: string,
 	): Promise<IComposeCommandResult> {
 		const command = await this.$staticConfig.getAdbFilePath();
 		let deviceIdentifier: string[] = [];
@@ -161,7 +161,7 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 
 	public async executeShellCommand(
 		args: string[],
-		options?: Mobile.IAndroidDebugBridgeCommandOptions
+		options?: Mobile.IAndroidDebugBridgeCommandOptions,
 	): Promise<any> {
 		args.unshift("shell");
 		const result = await this.executeCommand(args, options);
@@ -171,10 +171,10 @@ export class AndroidDebugBridge implements Mobile.IAndroidDebugBridge {
 
 	public async pushFile(
 		localFilePath: string,
-		deviceFilePath: string
+		deviceFilePath: string,
 	): Promise<void> {
 		const fileDirectory = fromWindowsRelativePathToUnix(
-			path.dirname(deviceFilePath)
+			path.dirname(deviceFilePath),
 		);
 		// starting from API level 28, the push command is returning an error if the directory does not exist
 		await this.executeShellCommand(["mkdir", "-p", fileDirectory]);
