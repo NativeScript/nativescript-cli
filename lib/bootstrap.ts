@@ -49,6 +49,10 @@ injector.require(
 	"./services/android/gradle-build-args-service",
 );
 injector.require(
+	"androidPluginMirrorService",
+	"./services/android/android-plugin-mirror-service",
+);
+injector.require(
 	"androidBundleToolService",
 	"./services/android/android-bundle-tool-service",
 );
@@ -653,6 +657,7 @@ injector.requirePublic(
 );
 
 injector.require("filesHashService", "./services/files-hash-service");
+injector.require("nativeFileHashesMemo", "./services/native-file-hashes-memo");
 injector.require("logParserService", "./services/log-parser-service");
 injector.require(
 	"iOSDebuggerPortService",

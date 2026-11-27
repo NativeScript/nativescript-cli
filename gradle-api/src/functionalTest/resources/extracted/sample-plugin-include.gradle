@@ -1,0 +1,8 @@
+dependencies {
+    if (project.hasProperty("tempBuild")) {
+        if (project.extensions.findByName("nativescript") == null) {
+            throw new GradleException("@nativescript/gradle-api-sample needs NativeScript CLI 9.2 or newer: npm i -D nativescript@latest")
+        }
+        compileOnly nativescript.plugin("@nativescript/core").artifacts
+    }
+}

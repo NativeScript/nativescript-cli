@@ -120,15 +120,23 @@ buildscript {
             }
         }
 
-        def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
-        def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
-        if (pluginBuildScriptGradle.exists()) {
-            outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
-            apply from: pathToPluginBuildScriptGradle, to: buildscript
+        def ownBuildScriptGradle = file("${getDepPlatformDir(pluginData)}/buildscript.gradle")
+        if (ownBuildScriptGradle.exists()) {
+            outLogger.withStyle(Style.SuccessHeader).println "\t + applying the plugin's own buildscript from ${ownBuildScriptGradle}"
+            apply from: ownBuildScriptGradle, to: buildscript
         }
     }
     applyBuildScriptConfigurations()
 
+}
+
+// Only the dependencies {} and repositories {} blocks of the plugin's include.gradle are copied
+// into this build, so its `apply plugin: "org.nativescript.api"` line never runs here. Those blocks
+// can use the library only if it is applied here, whenever a buildscript.gradle put it on the
+// classpath.
+try {
+    apply plugin: Class.forName("org.nativescript.gradle.NativeScriptPlugin", true, buildscript.classLoader)
+} catch (ClassNotFoundException ignored) {
 }
 
 def pluginDependencies

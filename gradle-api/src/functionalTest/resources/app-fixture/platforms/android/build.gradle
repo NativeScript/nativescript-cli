@@ -1,0 +1,13 @@
+// Mirrors the parts of the @nativescript/android app template's root build.gradle that its
+// app/build.gradle uses to apply plugins' Gradle files.
+import groovy.json.JsonSlurper
+
+buildscript {
+    def initialize = { ->
+        def dependenciesJson = file("$rootDir/dependencies.json")
+        project.ext.nativescriptDependencies = new JsonSlurper().parseText(dependenciesJson.text)
+        project.ext.PLATFORMS_ANDROID = "platforms/android"
+    }
+
+    initialize()
+}

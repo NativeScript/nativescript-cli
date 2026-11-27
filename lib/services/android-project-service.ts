@@ -6,9 +6,10 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { Configurations, LiveSyncPaths } from "../common/constants";
-import { hook } from "../common/helpers";
+import { getUniqueShortPluginNames, hook } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
 import {
+	AndroidPluginBuildLocation,
 	IProjectData,
 	IProjectDataService,
 	IValidatePlatformOutput,
@@ -37,9 +38,19 @@ import {
 } from "../common/declarations";
 import {
 	IAndroidPluginBuildService,
+	IAndroidPluginMirrorService,
 	IPluginBuildOptions,
 } from "../definitions/android-plugin-migrator";
-import { IFilesHashService } from "../definitions/files-hash-service";
+import { INodeModulesDependenciesBuilder } from "../definitions/platform";
+import {
+	createGradleFacts,
+	getGradleFactsFilePath,
+	serializeGradleFacts,
+} from "./android/gradle-facts";
+import {
+	IFilesHashService,
+	INativeFileHashesMemo,
+} from "../definitions/files-hash-service";
 import {
 	IGradleCommandService,
 	IGradleBuildService,
@@ -52,6 +63,30 @@ interface NativeDependency {
 	name: string;
 	directory: string;
 	dependencies: string[];
+}
+
+interface IAndroidPluginLocation {
+	aarName: string;
+	packageDir: string;
+	/**
+	 * Where Gradle reads the plugin's Android files and where its aar is built to.
+	 */
+	nativeDir: string;
+	/**
+	 * Set when plugins are built in platforms/android.
+	 */
+	mirrorDir?: string;
+}
+
+interface IAndroidPluginLayout {
+	key: string;
+	platformDir: string;
+	pluginBuildLocation: AndroidPluginBuildLocation;
+	plugins: Map<string, IAndroidPluginLocation>;
+	/**
+	 * Plugins whose mirror changed since they were last prepared.
+	 */
+	changedMirrors: Set<string>;
 }
 
 //
@@ -129,6 +164,31 @@ function topologicalSortNativeDependencies(
 	return sortedDeps;
 }
 
+/**
+ * Plugins may compile against @nativescript/core's aar without declaring a
+ * dependency on it (`nativescript.plugin("@nativescript/core").artifacts`), so
+ * core and its own native dependencies are prepared before everything else.
+ * Keeps the topological order within both groups.
+ */
+function withCoreFirst(sortedDeps: NativeDependency[]): NativeDependency[] {
+	const byName = new Map(sortedDeps.map((dep) => [dep.name, dep]));
+	const coreClosure = new Set<string>();
+	const visit = (name: string) => {
+		if (coreClosure.has(name) || !byName.has(name)) {
+			return;
+		}
+
+		coreClosure.add(name);
+		byName.get(name).dependencies.forEach(visit);
+	};
+	visit(constants.SCOPED_TNS_CORE_MODULES);
+
+	return [
+		...sortedDeps.filter((dep) => coreClosure.has(dep.name)),
+		...sortedDeps.filter((dep) => !coreClosure.has(dep.name)),
+	];
+}
+
 export class AndroidProjectService
 	extends projectServiceBaseLib.PlatformProjectServiceBase
 	implements IPlatformProjectService<IAndroidBuildData>
@@ -155,9 +215,14 @@ export class AndroidProjectService
 		private $gradleCommandService: IGradleCommandService,
 		private $gradleBuildService: IGradleBuildService,
 		private $analyticsService: IAnalyticsService,
+		private $androidPluginMirrorService: IAndroidPluginMirrorService,
+		private $staticConfig: Config.IStaticConfig,
+		private $nativeFileHashesMemo: INativeFileHashesMemo,
 	) {
 		super($fs, $projectDataService);
 	}
+
+	private pluginLayout: IAndroidPluginLayout = null;
 
 	private _platformData: IPlatformData = null;
 	public getPlatformData(projectData: IProjectData): IPlatformData {
@@ -694,23 +759,261 @@ export class AndroidProjectService
 			pluginData,
 			AndroidProjectService.ANDROID_PLATFORM_NAME,
 		);
-		if (this.$fs.exists(pluginPlatformsFolderPath)) {
-			const options: IPluginBuildOptions = {
-				gradlePath: this.$options.gradlePath,
-				gradleArgs: this.$options.gradleArgs,
-				projectDir: projectData.projectDir,
-				pluginName: pluginData.name,
-				platformsAndroidDirPath: pluginPlatformsFolderPath,
-				aarOutputDir: pluginPlatformsFolderPath,
-				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
-			};
+		if (!this.$fs.exists(pluginPlatformsFolderPath)) {
+			return;
+		}
 
-			if (await this.$androidPluginBuildService.buildAar(options)) {
-				this.$logger.info(`Built aar for ${options.pluginName}`);
+		const layout = this.getPluginLayout(projectData);
+		const plugin = layout.plugins.get(pluginData.name);
+		if (!plugin && layout.pluginBuildLocation === "platforms") {
+			// Gradle only reads the plugins listed in dependencies.json, and only
+			// those get a copy in platforms/android to build into.
+			this.$logger.trace(
+				`Skipping ${pluginData.name}: it does not declare Android support in its package.json.`,
+			);
+			return;
+		}
+
+		const options = this.getPluginBuildOptions(
+			pluginData,
+			pluginPlatformsFolderPath,
+			projectData,
+			layout,
+		);
+
+		if (await this.$androidPluginBuildService.buildAar(options)) {
+			this.$logger.info(`Built aar for ${options.pluginName}`);
+		}
+		layout.changedMirrors.delete(pluginData.name);
+
+		this.$androidPluginBuildService.migrateIncludeGradle({
+			...options,
+			platformsAndroidDirPath: options.aarOutputDir,
+		});
+	}
+
+	public shouldRepreparePlugin(
+		pluginData: IPluginData,
+		projectData: IProjectData,
+	): boolean {
+		const pluginPlatformsFolderPath = this.getPluginPlatformsFolderPath(
+			pluginData,
+			AndroidProjectService.ANDROID_PLATFORM_NAME,
+		);
+		const layout = this.getPluginLayout(projectData);
+		if (!layout.plugins.has(pluginData.name)) {
+			return false;
+		}
+
+		return (
+			layout.changedMirrors.has(pluginData.name) ||
+			this.$androidPluginBuildService.hasOutdatedAar(
+				this.getPluginBuildOptions(
+					pluginData,
+					pluginPlatformsFolderPath,
+					projectData,
+					layout,
+				),
+			)
+		);
+	}
+
+	private getPluginBuildOptions(
+		pluginData: IPluginData,
+		pluginPlatformsFolderPath: string,
+		projectData: IProjectData,
+		layout: IAndroidPluginLayout,
+	): IPluginBuildOptions {
+		const plugin = layout.plugins.get(pluginData.name);
+		const options: IPluginBuildOptions = {
+			gradlePath: this.$options.gradlePath,
+			gradleArgs: this.$options.gradleArgs,
+			projectDir: projectData.projectDir,
+			pluginName: pluginData.name,
+			platformsAndroidDirPath: pluginPlatformsFolderPath,
+			aarOutputDir:
+				layout.pluginBuildLocation === "platforms"
+					? plugin.nativeDir
+					: pluginPlatformsFolderPath,
+			tempPluginDirPath: this.getTempPluginDirPath(projectData),
+			gradleFactsFile: getGradleFactsFilePath(layout.platformDir),
+		};
+
+		if (plugin) {
+			options.aarName = plugin.aarName;
+		}
+
+		if (layout.pluginBuildLocation === "platforms") {
+			options.pluginBuildLocation = "platforms";
+		}
+
+		return options;
+	}
+
+	private getAndroidPlatformDir(projectData: IProjectData): string {
+		return this.$options.hostProjectPath
+			? this.$options.hostProjectPath
+			: path.join(
+					projectData.platformsDir,
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				);
+	}
+
+	private getPluginBuildLocation(
+		projectData: IProjectData,
+	): AndroidPluginBuildLocation {
+		const location =
+			projectData.nsConfig?.android?.pluginBuildLocation ?? "node_modules";
+		if (location !== "node_modules" && location !== "platforms") {
+			this.$errors.fail(
+				'Invalid value %s for android.pluginBuildLocation in nativescript.config: use "node_modules" or "platforms".',
+				JSON.stringify(location),
+			);
+		}
+
+		return location;
+	}
+
+	private getPluginLayoutKey(projectData: IProjectData): string {
+		return JSON.stringify([
+			projectData.projectDir,
+			this.getAndroidPlatformDir(projectData),
+			this.getPluginBuildLocation(projectData),
+		]);
+	}
+
+	/**
+	 * Normally computed by beforePrepareAllPlugins; computed here from the
+	 * project's production dependencies when a plugin is prepared without it.
+	 */
+	private getPluginLayout(projectData: IProjectData): IAndroidPluginLayout {
+		if (
+			!this.pluginLayout ||
+			this.pluginLayout.key !== this.getPluginLayoutKey(projectData)
+		) {
+			const dependencies = this.$injector
+				.resolve<INodeModulesDependenciesBuilder>(
+					"nodeModulesDependenciesBuilder",
+				)
+				.getProductionDependencies(
+					projectData.projectDir,
+					projectData.ignoredDependencies,
+				);
+			this.pluginLayout = this.createPluginLayout(
+				projectData,
+				this.filterUniqueDependencies(dependencies).filter(
+					AndroidProjectService.isNativeAndroidDependency,
+				),
+			);
+		}
+
+		return this.pluginLayout;
+	}
+
+	private createPluginLayout(
+		projectData: IProjectData,
+		nativeDependencyData: IDependencyData[],
+	): IAndroidPluginLayout {
+		this.$nativeFileHashesMemo.clear();
+		const platformDir = this.getAndroidPlatformDir(projectData);
+		const pluginBuildLocation = this.getPluginBuildLocation(projectData);
+		const mirrorsRoot = path.join(
+			platformDir,
+			constants.ANDROID_PLUGIN_MIRRORS_DIR_NAME,
+		);
+
+		let aarNames: Map<string, string>;
+		try {
+			aarNames = getUniqueShortPluginNames(
+				nativeDependencyData.map((dep) => dep.name),
+			);
+		} catch (err) {
+			this.$errors.fail(err.message);
+		}
+
+		const plugins = new Map<string, IAndroidPluginLocation>();
+		for (const dep of nativeDependencyData) {
+			const aarName = aarNames.get(dep.name);
+			const mirrorDir =
+				pluginBuildLocation === "platforms"
+					? path.join(mirrorsRoot, aarName)
+					: undefined;
+			plugins.set(dep.name, {
+				aarName,
+				packageDir: dep.directory,
+				mirrorDir,
+				nativeDir: path.join(
+					mirrorDir ?? dep.directory,
+					constants.PLATFORMS_DIR_NAME,
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				),
+			});
+		}
+
+		const key = this.getPluginLayoutKey(projectData);
+		const changedMirrors = new Set<string>();
+		if (pluginBuildLocation === "platforms") {
+			// A sync reports a mirror as changed only once, so a plugin whose build
+			// failed keeps its marker from the previous layout.
+			if (this.pluginLayout?.key === key) {
+				for (const name of this.pluginLayout.changedMirrors) {
+					if (plugins.has(name)) {
+						changedMirrors.add(name);
+					}
+				}
 			}
 
-			this.$androidPluginBuildService.migrateIncludeGradle(options);
+			const tempPluginDirPath = this.getTempPluginDirPath(projectData);
+			const synced = this.$androidPluginMirrorService.syncMirrors(
+				mirrorsRoot,
+				nativeDependencyData.map((dep) => {
+					const upstreamNativeDir = path.join(
+						dep.directory,
+						constants.PLATFORMS_DIR_NAME,
+						AndroidProjectService.ANDROID_PLATFORM_NAME,
+					);
+					const staleAars = this.$androidPluginBuildService.getStaleAars({
+						pluginName: dep.name,
+						aarName: aarNames.get(dep.name),
+						platformsAndroidDirPath: upstreamNativeDir,
+						aarOutputDir: upstreamNativeDir,
+						tempPluginDirPath,
+					});
+					for (const { aarPath, previousOutputPath, differs } of staleAars) {
+						this.$logger.trace(
+							differs
+								? `Not copying ${aarPath} into the plugin mirror: it has a name the CLI built ${dep.name}'s aar under before, and differs from that build's output at ${previousOutputPath}.`
+								: `Not copying ${aarPath} into the plugin mirror: it is an aar the CLI built for ${dep.name} under another name.`,
+						);
+					}
+					return {
+						pluginName: dep.name,
+						packageDir: dep.directory,
+						mirrorDir: plugins.get(dep.name).mirrorDir,
+						excludedNativeFiles: staleAars.map((staleAar) =>
+							path.basename(staleAar.aarPath),
+						),
+					};
+				}),
+			);
+			for (const name of synced) {
+				changedMirrors.add(name);
+			}
+		} else if (this.$fs.exists(mirrorsRoot)) {
+			this.$fs.deleteDirectory(mirrorsRoot);
 		}
+
+		return {
+			key,
+			platformDir,
+			pluginBuildLocation,
+			plugins,
+			changedMirrors,
+		};
+	}
+
+	private getTempPluginDirPath(projectData: IProjectData): string {
+		return path.join(projectData.platformsDir, "tempPlugin");
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -762,12 +1065,7 @@ export class AndroidProjectService
 		projectData: IProjectData,
 		dependencies: IDependencyData[],
 	): IDependencyData[] {
-		const platformDir = this.$options.hostProjectPath
-			? this.$options.hostProjectPath
-			: path.join(
-					projectData.platformsDir,
-					AndroidProjectService.ANDROID_PLATFORM_NAME,
-				);
+		const platformDir = this.getAndroidPlatformDir(projectData);
 		const dependenciesJsonPath = path.join(
 			platformDir,
 			constants.DEPENDENCIES_JSON_NAME,
@@ -776,11 +1074,17 @@ export class AndroidProjectService
 			AndroidProjectService.isNativeAndroidDependency,
 		);
 
+		const layout = this.createPluginLayout(projectData, nativeDependencyData);
+		this.pluginLayout = layout;
+
 		let nativeDependencies = nativeDependencyData.map(
 			({ name, directory, dependencies }) => {
 				return {
 					name,
-					directory: path.relative(platformDir, directory),
+					directory: path.relative(
+						platformDir,
+						layout.plugins.get(name).mirrorDir ?? directory,
+					),
 					dependencies: dependencies.filter((dep) => {
 						// filter out transient dependencies that don't have native dependencies
 						return (
@@ -795,14 +1099,57 @@ export class AndroidProjectService
 		nativeDependencies = topologicalSortNativeDependencies(nativeDependencies);
 		const jsonContent = JSON.stringify(nativeDependencies, null, 4);
 		this.$fs.writeFile(dependenciesJsonPath, jsonContent);
+		this.writeGradleFacts(projectData, layout, nativeDependencies, jsonContent);
 
 		// we sort all the dependencies to respect the topological sorting of the native dependencies
+		const buildOrder = withCoreFirst(nativeDependencies);
 		return dependencies.sort(function (a, b) {
 			return (
-				nativeDependencies.findIndex((n) => n.name === a.name) -
-				nativeDependencies.findIndex((n) => n.name === b.name)
+				buildOrder.findIndex((n) => n.name === a.name) -
+				buildOrder.findIndex((n) => n.name === b.name)
 			);
 		});
+	}
+
+	private writeGradleFacts(
+		projectData: IProjectData,
+		layout: IAndroidPluginLayout,
+		sortedNativeDependencies: NativeDependency[],
+		dependenciesJsonContent: string,
+	): void {
+		const runtimePackage = this.$projectDataService.getRuntimePackage(
+			projectData.projectDir,
+			constants.PlatformTypes.android,
+		);
+		const facts = createGradleFacts({
+			factsDir: path.resolve(layout.platformDir),
+			cliVersion: this.$staticConfig.version,
+			runtime: { name: runtimePackage?.name, version: runtimePackage?.version },
+			projectDir: path.resolve(projectData.projectDir),
+			appDir: path.resolve(projectData.getAppDirectoryPath()),
+			appResourcesDir: path.resolve(projectData.getAppResourcesDirectoryPath()),
+			dependenciesJsonContent,
+			plugins: sortedNativeDependencies.map((dep) => {
+				const plugin = layout.plugins.get(dep.name);
+				return {
+					name: dep.name,
+					packageDir: path.resolve(plugin.packageDir),
+					nativeDir: path.resolve(plugin.nativeDir),
+					aarName: plugin.aarName,
+					dependencies: dep.dependencies,
+				};
+			}),
+		});
+
+		// Rewritten only on change so Gradle tasks that take it as an input stay up to date.
+		const factsPath = getGradleFactsFilePath(layout.platformDir);
+		const content = serializeGradleFacts(facts);
+		if (
+			!this.$fs.exists(factsPath) ||
+			this.$fs.readText(factsPath) !== content
+		) {
+			this.$fs.writeFile(factsPath, content);
+		}
 	}
 
 	private static isNativeAndroidDependency({

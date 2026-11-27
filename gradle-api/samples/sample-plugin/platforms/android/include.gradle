@@ -1,0 +1,11 @@
+// The CLI builds this plugin's aar in a separate project that runs only the next block, not the
+// rest of this file. CLI 9.2+ loads org.nativescript:gradle-api there and applies it; older CLIs
+// don't, so the block stops with a clear message instead of failing on an unknown `nativescript`.
+dependencies {
+    if (project.hasProperty("tempBuild")) {
+        if (project.extensions.findByName("nativescript") == null) {
+            throw new GradleException("@nativescript/gradle-api-sample needs NativeScript CLI 9.2 or newer: npm i -D nativescript@latest")
+        }
+        compileOnly nativescript.plugin("@nativescript/core").artifacts
+    }
+}

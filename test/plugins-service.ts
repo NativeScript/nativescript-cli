@@ -19,6 +19,7 @@ import { ProjectDataService } from "../lib/services/project-data-service";
 import { ProjectFilesManager } from "../lib/common/services/project-files-manager";
 import { ResourceLoader } from "../lib/common/resource-loader";
 import { PluginsService } from "../lib/services/plugins-service";
+import { NativeFileHashesMemo } from "../lib/services/native-file-hashes-memo";
 import { addPluginCommandDefinition } from "../lib/commands/plugin/add-plugin";
 import { registerCommand } from "../lib/common/services/command-definition-adapter";
 import { MessagesService } from "../lib/common/services/messages-service";
@@ -180,6 +181,8 @@ function createTestInjector() {
 		"androidPluginBuildService",
 		stubs.AndroidPluginBuildServiceStub,
 	);
+	testInjector.register("androidPluginMirrorService", {});
+	testInjector.register("nativeFileHashesMemo", NativeFileHashesMemo);
 	testInjector.register("analyticsSettingsService", {});
 	testInjector.register(
 		"androidResourcesMigrationService",
@@ -701,6 +704,7 @@ describe("Plugins service", () => {
 				pluginsService: null,
 				isPreparePluginNativeCodeCalled: false,
 				dataPassedToWriteJson: null,
+				hashedFiles: [],
 			};
 
 			const unitTestsInjector = new Yok();
@@ -733,11 +737,13 @@ describe("Plugins service", () => {
 					oldPluginNativeHashes: IStringDictionary,
 					currentPluginNativeHashes: IStringDictionary,
 				) => !!opts.hasChangesInShasums,
-				generateHashes: async (files: string[]): Promise<IStringDictionary> =>
-					testData.isPreparePluginNativeCodeCalled &&
-					opts.pluginHashesAfterPrepare
+				generateHashes: async (files: string[]): Promise<IStringDictionary> => {
+					testData.hashedFiles.push(files);
+					return testData.isPreparePluginNativeCodeCalled &&
+						opts.pluginHashesAfterPrepare
 						? opts.pluginHashesAfterPrepare
-						: pluginHashes,
+						: pluginHashes;
+				},
 			});
 
 			unitTestsInjector.register("fs", {
@@ -773,10 +779,12 @@ describe("Plugins service", () => {
 			);
 			unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 			unitTestsInjector.register("tempService", stubs.TempServiceStub);
+			unitTestsInjector.register("nativeFileHashesMemo", NativeFileHashesMemo);
 
 			const pluginsService: PluginsService =
 				unitTestsInjector.resolve(PluginsService);
 			testData.pluginsService = pluginsService;
+			testData.memo = unitTestsInjector.resolve("nativeFileHashesMemo");
 			testData.pluginData = samplePluginData;
 			return testData;
 		};
@@ -830,6 +838,21 @@ describe("Plugins service", () => {
 			});
 		});
 
+		it("reuses hashes remembered earlier in the prepare only before preparing the plugin", async () => {
+			const testData = setupTest({ hasPluginPlatformsDir: true });
+			testData.memo.remember("some_file", "remembered");
+
+			await testData.pluginsService.preparePluginNativeCode({
+				pluginData: testData.pluginData,
+				platform,
+				projectData,
+			});
+
+			assert.isTrue(testData.isPreparePluginNativeCodeCalled);
+			assert.deepStrictEqual(testData.hashedFiles, [[], ["some_file"]]);
+			assert.isUndefined(testData.memo.take("some_file"));
+		});
+
 		it("does not prepare the files when plugin has platforms dir and files have not changed since then", async () => {
 			const testData = setupTest({
 				hasChangesInShasums: false,
@@ -866,6 +889,7 @@ describe("Plugins service", () => {
 		);
 		unitTestsInjector.register("nodeModulesDependenciesBuilder", {});
 		unitTestsInjector.register("tempService", stubs.TempServiceStub);
+		unitTestsInjector.register("nativeFileHashesMemo", NativeFileHashesMemo);
 		return unitTestsInjector;
 	};
 

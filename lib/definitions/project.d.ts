@@ -124,6 +124,7 @@ export interface IOSLocalSPMPackage extends IOSSPMPackageBase {
 
 export type IOSSPMPackage = IOSRemoteSPMPackage | IOSLocalSPMPackage;
 export type BundlerType = "webpack" | "rspack" | "vite";
+export type AndroidPluginBuildLocation = "node_modules" | "platforms";
 
 interface INsConfigIOS extends INsConfigPlaform {
 	discardUncaughtJsExceptions?: boolean;
@@ -179,6 +180,19 @@ interface INsConfigAndroid extends INsConfigPlaform {
 	 * Custom runtime package name
 	 */
 	runtimePackageName?: string;
+
+	/**
+	 * Where the CLI builds plugins' native Android code.
+	 *
+	 * - `"node_modules"` (default): each plugin's aar is built into its own
+	 *   `platforms/android` folder inside node_modules.
+	 * - `"platforms"`: node_modules is left untouched. Each plugin's Android files
+	 *   are copied to `platforms/android/.ns-plugins/` and its aar is built there.
+	 *
+	 * `"platforms"` is opt-in while plugins adopt `org.nativescript:gradle-api`,
+	 * and is expected to become the default in a future major version.
+	 */
+	pluginBuildLocation?: AndroidPluginBuildLocation;
 }
 
 interface INsConfigHooks {
