@@ -7,6 +7,7 @@ import {
 	IAndroidPluginMirrorService,
 } from "../../definitions/android-plugin-migrator";
 import { PACKAGE_JSON_FILE_NAME, PLATFORMS_DIR_NAME } from "../../constants";
+import { INativeFileHashesMemo } from "../../definitions/files-hash-service";
 
 interface IMirroredFile {
 	sha1: string;
@@ -34,6 +35,7 @@ export class AndroidPluginMirrorService implements IAndroidPluginMirrorService {
 	constructor(
 		private $fs: IFileSystem,
 		private $logger: ILogger,
+		private $nativeFileHashesMemo: INativeFileHashesMemo,
 	) {}
 
 	public syncMirrors(
@@ -76,22 +78,34 @@ export class AndroidPluginMirrorService implements IAndroidPluginMirrorService {
 				(file) => `${NATIVE_DIR}/${toPosix(file)}`,
 			),
 		);
+		const upstreamFiles = this.getUpstreamFiles(mirror.packageDir).filter(
+			(relativePath) => !excluded.has(relativePath),
+		);
 		let changed = false;
 
-		for (const relativePath of this.getUpstreamFiles(mirror.packageDir)) {
-			if (excluded.has(relativePath)) {
-				continue;
+		// Before copying, so a path that turned from a file into a directory (or
+		// back) upstream is free when its replacement is copied.
+		const upstream = new Set(upstreamFiles);
+		for (const relativePath of Object.keys(previous.files)) {
+			if (!upstream.has(relativePath)) {
+				this.deleteMirroredFile(mirror.mirrorDir, relativePath);
+				changed = true;
 			}
+		}
 
+		for (const relativePath of upstreamFiles) {
 			const source = path.join(mirror.packageDir, relativePath);
 			const destination = path.join(mirror.mirrorDir, relativePath);
-			const stat = this.$fs.getFsStats(source);
 			const known = previous.files[relativePath];
 			// Always hashed: some installers give every file the same fixed mtime, so a
 			// same-size edit (a version bump in include.gradle) would look unchanged.
 			const sha1 = this.getSha1(source);
+			if (relativePath !== PACKAGE_JSON_FILE_NAME) {
+				this.$nativeFileHashesMemo.remember(source, sha1);
+			}
 
 			if (!known || known.sha1 !== sha1 || !this.$fs.exists(destination)) {
+				const stat = this.$fs.getFsStats(source);
 				this.$fs.deleteFile(destination);
 				this.$fs.copyFile(source, destination);
 				// Read-only stores (pnpm, Nix, Bazel) ship 0444 files; the CLI rewrites
@@ -102,13 +116,6 @@ export class AndroidPluginMirrorService implements IAndroidPluginMirrorService {
 			}
 
 			next.files[relativePath] = { sha1 };
-		}
-
-		for (const relativePath of Object.keys(previous.files)) {
-			if (!next.files[relativePath]) {
-				this.deleteMirroredFile(mirror.mirrorDir, relativePath);
-				changed = true;
-			}
 		}
 
 		const manifestContent = JSON.stringify(next, null, "\t");

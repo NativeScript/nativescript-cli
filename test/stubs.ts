@@ -75,6 +75,7 @@ import {
 } from "../lib/common/declarations";
 import {
 	IAndroidPluginBuildService,
+	IStaleAar,
 	IPluginBuildOptions,
 } from "../lib/definitions/android-plugin-migrator";
 import { IInjector } from "../lib/common/definitions/yok";
@@ -753,6 +754,10 @@ export class AndroidPluginBuildServiceStub implements IAndroidPluginBuildService
 
 	hasOutdatedAar(options: IPluginBuildOptions): boolean {
 		return false;
+	}
+
+	getStaleAars(options: IPluginBuildOptions, dir?: string): IStaleAar[] {
+		return [];
 	}
 }
 

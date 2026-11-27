@@ -125,13 +125,6 @@ buildscript {
             outLogger.withStyle(Style.SuccessHeader).println "\t + applying the plugin's own buildscript from ${ownBuildScriptGradle}"
             apply from: ownBuildScriptGradle, to: buildscript
         }
-
-        def pathToPluginBuildScriptGradle = "$rootDir/buildscript.gradle"
-        def pluginBuildScriptGradle = file(pathToPluginBuildScriptGradle)
-        if (pluginBuildScriptGradle.exists()) {
-            outLogger.withStyle(Style.SuccessHeader).println "\t ~ applying user-defined buildscript from dependency ${pluginBuildScriptGradle}"
-            apply from: pathToPluginBuildScriptGradle, to: buildscript
-        }
     }
     applyBuildScriptConfigurations()
 

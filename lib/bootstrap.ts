@@ -657,6 +657,7 @@ injector.requirePublic(
 );
 
 injector.require("filesHashService", "./services/files-hash-service");
+injector.require("nativeFileHashesMemo", "./services/native-file-hashes-memo");
 injector.require("logParserService", "./services/log-parser-service");
 injector.require(
 	"iOSDebuggerPortService",

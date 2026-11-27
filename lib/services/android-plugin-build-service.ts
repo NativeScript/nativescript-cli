@@ -27,6 +27,7 @@ import {
 	IAndroidPluginBuildService,
 	IPluginBuildOptions,
 	IBuildAndroidPluginData,
+	IStaleAar,
 } from "../definitions/android-plugin-migrator";
 import {
 	IFileSystem,
@@ -239,12 +240,8 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			aarName,
 		);
 
-		if (
-			options.aarName &&
-			options.aarOutputDir &&
-			(manifestFilePath || androidSourceDirectories.length)
-		) {
-			this.removeStaleAars(options, aarName);
+		if (options.aarName && options.aarOutputDir) {
+			this.removeStaleAars(options);
 		}
 
 		const shouldBuildAar = await this.shouldBuildAar({
@@ -302,20 +299,94 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	}
 
 	public hasOutdatedAar(options: IPluginBuildOptions): boolean {
-		const aarOutputDir = this.getAarOutputDir(options);
-		if (
-			!this.$fs.exists(options.platformsAndroidDirPath) ||
-			(!this.getManifest(options.platformsAndroidDirPath) &&
-				!this.getAndroidSourceDirectories(options.platformsAndroidDirPath)
-					.length)
-		) {
+		if (!this.$fs.exists(options.platformsAndroidDirPath)) {
 			return false;
 		}
 
-		const aarName = this.getAarName(options);
+		if (this.getStaleAars(options).length) {
+			return true;
+		}
+
 		return (
-			!this.$fs.exists(path.join(aarOutputDir, `${aarName}.aar`)) ||
-			this.getStaleAarPaths(options, aarName).length > 0
+			!this.$fs.exists(
+				path.join(
+					this.getAarOutputDir(options),
+					`${this.getAarName(options)}.aar`,
+				),
+			) && this.hasSourcesToBuild(options.platformsAndroidDirPath)
+		);
+	}
+
+	/**
+	 * Gradle templates add every aar in a plugin's platforms/android to the app,
+	 * so an aar the CLI built for this plugin under another of its candidate
+	 * names duplicates its classes. Only plugins the CLI builds have such
+	 * leftovers:
+	 * - CLIs before unique aar names copied every build to `<short name>.aar`,
+	 *   replacing any file the package shipped under that name, so that file is
+	 *   always a leftover.
+	 * - `<scope>_<short name>.aar` is a leftover only when the temp project of
+	 *   that name was set up for this plugin and still has its build output;
+	 *   otherwise the package ships it.
+	 */
+	public getStaleAars(
+		options: IPluginBuildOptions,
+		dir: string = this.getAarOutputDir(options),
+	): IStaleAar[] {
+		const aarName = this.getAarName(options);
+		const shortName = getShortPluginName(options.pluginName);
+		const existing = getCandidateAarNames(options.pluginName)
+			.filter((candidate) => candidate !== aarName)
+			.map((candidate) => ({
+				candidate,
+				aarPath: path.join(dir, `${candidate}.aar`),
+			}))
+			.filter(({ aarPath }) => this.$fs.exists(aarPath));
+		if (
+			!existing.length ||
+			!this.hasSourcesToBuild(options.platformsAndroidDirPath)
+		) {
+			return [];
+		}
+
+		const staleAars: IStaleAar[] = [];
+		for (const { candidate, aarPath } of existing) {
+			if (candidate === shortName) {
+				staleAars.push({ aarPath, differs: false });
+				continue;
+			}
+
+			if (!options.tempPluginDirPath) {
+				continue;
+			}
+
+			const tempProjectDir = path.join(options.tempPluginDirPath, candidate);
+			const previousOutputPath = path.join(
+				tempProjectDir,
+				"build",
+				"outputs",
+				"aar",
+				`${candidate}-release.aar`,
+			);
+			if (
+				this.$fs.exists(previousOutputPath) &&
+				this.getTempProjectPluginName(tempProjectDir) === options.pluginName
+			) {
+				staleAars.push({
+					aarPath,
+					previousOutputPath,
+					differs: !this.isSameFileContent(aarPath, previousOutputPath),
+				});
+			}
+		}
+
+		return staleAars;
+	}
+
+	private hasSourcesToBuild(platformsAndroidDirPath: string): boolean {
+		return (
+			!!this.getManifest(platformsAndroidDirPath) ||
+			this.getAndroidSourceDirectories(platformsAndroidDirPath).length > 0
 		);
 	}
 
@@ -327,50 +398,48 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		return options.aarOutputDir || options.platformsAndroidDirPath;
 	}
 
-	private getStaleAarPaths(
-		options: IPluginBuildOptions,
-		aarName: string,
-	): string[] {
-		const aarOutputDir = this.getAarOutputDir(options);
-		return getCandidateAarNames(options.pluginName)
-			.filter((candidate) => candidate !== aarName)
-			.map((candidate) => path.join(aarOutputDir, `${candidate}.aar`))
-			.filter((candidatePath) => this.$fs.exists(candidatePath));
+	/**
+	 * The npm name setupGradle substituted into the temp project's build.gradle.
+	 * Temp projects are keyed by aar name, so another plugin may now build in the
+	 * one of this plugin's old name.
+	 */
+	private getTempProjectPluginName(tempProjectDir: string): string | null {
+		try {
+			const buildGradle = this.$fs.readText(
+				path.join(tempProjectDir, "build.gradle"),
+			);
+			return (
+				buildGradle.match(/project\.ext\.PLUGIN_NAME\s*=\s*"([^"]*)"/)?.[1] ??
+				null
+			);
+		} catch (err) {
+			return null;
+		}
 	}
 
-	/**
-	 * Gradle templates add every aar in a plugin's platforms/android to the app,
-	 * so an aar the CLI built for this plugin under another candidate name would
-	 * duplicate its classes.
-	 */
-	private removeStaleAars(options: IPluginBuildOptions, aarName: string): void {
-		for (const staleAarPath of this.getStaleAarPaths(options, aarName)) {
-			if (options.pluginBuildLocation !== "platforms") {
-				const staleName = path.basename(staleAarPath, ".aar");
-				const previousOutput = path.join(
-					options.tempPluginDirPath,
-					staleName,
-					"build",
-					"outputs",
-					"aar",
-					`${staleName}-release.aar`,
+	private removeStaleAars(options: IPluginBuildOptions): void {
+		const inMirror = options.pluginBuildLocation === "platforms";
+		for (const { aarPath, previousOutputPath, differs } of this.getStaleAars(
+			options,
+		)) {
+			// The mirror is CLI-owned, so nothing in it needs the user's decision.
+			if (differs && !inMirror) {
+				this.$errors.fail(
+					`${aarPath} has a name the CLI built ${options.pluginName}'s aar under before, but differs from that build's output at ${previousOutputPath}. If it is an old build it would add duplicate classes to the app. Delete it or run \`ns clean\`.`,
 				);
-				if (!this.isSameFileContent(staleAarPath, previousOutput)) {
-					this.$errors.fail(
-						`${staleAarPath} looks like an aar built for ${options.pluginName} under an older name and would add duplicate classes to the app. Delete it or run \`ns clean\`.`,
-					);
-				}
-
-				this.$watchIgnoreListService.addFileToIgnoreList(staleAarPath);
 			}
 
-			this.$logger.trace(`Removing stale plugin aar ${staleAarPath}`);
-			this.$fs.deleteFile(staleAarPath);
+			if (!inMirror) {
+				this.$watchIgnoreListService.addFileToIgnoreList(aarPath);
+			}
+
+			this.$logger.trace(`Removing stale plugin aar ${aarPath}`);
+			this.$fs.deleteFile(aarPath);
 		}
 	}
 
 	private isSameFileContent(first: string, second: string): boolean {
-		if (!this.$fs.exists(first) || !this.$fs.exists(second)) {
+		if (this.$fs.getFsStats(first).size !== this.$fs.getFsStats(second).size) {
 			return false;
 		}
 

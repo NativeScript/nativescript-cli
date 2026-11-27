@@ -6,11 +6,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { Configurations, LiveSyncPaths } from "../common/constants";
-import {
-	getCandidateAarNames,
-	getUniqueShortPluginNames,
-	hook,
-} from "../common/helpers";
+import { getUniqueShortPluginNames, hook } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
 import {
 	AndroidPluginBuildLocation,
@@ -51,7 +47,10 @@ import {
 	getGradleFactsFilePath,
 	serializeGradleFacts,
 } from "./android/gradle-facts";
-import { IFilesHashService } from "../definitions/files-hash-service";
+import {
+	IFilesHashService,
+	INativeFileHashesMemo,
+} from "../definitions/files-hash-service";
 import {
 	IGradleCommandService,
 	IGradleBuildService,
@@ -165,6 +164,31 @@ function topologicalSortNativeDependencies(
 	return sortedDeps;
 }
 
+/**
+ * Plugins may compile against @nativescript/core's aar without declaring a
+ * dependency on it (`nativescript.plugin("@nativescript/core").artifacts`), so
+ * core and its own native dependencies are prepared before everything else.
+ * Keeps the topological order within both groups.
+ */
+function withCoreFirst(sortedDeps: NativeDependency[]): NativeDependency[] {
+	const byName = new Map(sortedDeps.map((dep) => [dep.name, dep]));
+	const coreClosure = new Set<string>();
+	const visit = (name: string) => {
+		if (coreClosure.has(name) || !byName.has(name)) {
+			return;
+		}
+
+		coreClosure.add(name);
+		byName.get(name).dependencies.forEach(visit);
+	};
+	visit(constants.SCOPED_TNS_CORE_MODULES);
+
+	return [
+		...sortedDeps.filter((dep) => coreClosure.has(dep.name)),
+		...sortedDeps.filter((dep) => !coreClosure.has(dep.name)),
+	];
+}
+
 export class AndroidProjectService
 	extends projectServiceBaseLib.PlatformProjectServiceBase
 	implements IPlatformProjectService<IAndroidBuildData>
@@ -193,6 +217,7 @@ export class AndroidProjectService
 		private $analyticsService: IAnalyticsService,
 		private $androidPluginMirrorService: IAndroidPluginMirrorService,
 		private $staticConfig: Config.IStaticConfig,
+		private $nativeFileHashesMemo: INativeFileHashesMemo,
 	) {
 		super($fs, $projectDataService);
 	}
@@ -749,7 +774,6 @@ export class AndroidProjectService
 			return;
 		}
 
-		layout.changedMirrors.delete(pluginData.name);
 		const options = this.getPluginBuildOptions(
 			pluginData,
 			pluginPlatformsFolderPath,
@@ -760,6 +784,7 @@ export class AndroidProjectService
 		if (await this.$androidPluginBuildService.buildAar(options)) {
 			this.$logger.info(`Built aar for ${options.pluginName}`);
 		}
+		layout.changedMirrors.delete(pluginData.name);
 
 		this.$androidPluginBuildService.migrateIncludeGradle({
 			...options,
@@ -810,7 +835,7 @@ export class AndroidProjectService
 				layout.pluginBuildLocation === "platforms"
 					? plugin.nativeDir
 					: pluginPlatformsFolderPath,
-			tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+			tempPluginDirPath: this.getTempPluginDirPath(projectData),
 			gradleFactsFile: getGradleFactsFilePath(layout.platformDir),
 		};
 
@@ -889,6 +914,7 @@ export class AndroidProjectService
 		projectData: IProjectData,
 		nativeDependencyData: IDependencyData[],
 	): IAndroidPluginLayout {
+		this.$nativeFileHashesMemo.clear();
 		const platformDir = this.getAndroidPlatformDir(projectData);
 		const pluginBuildLocation = this.getPluginBuildLocation(projectData);
 		const mirrorsRoot = path.join(
@@ -924,33 +950,70 @@ export class AndroidProjectService
 			});
 		}
 
-		let changedMirrors: string[] = [];
+		const key = this.getPluginLayoutKey(projectData);
+		const changedMirrors = new Set<string>();
 		if (pluginBuildLocation === "platforms") {
-			changedMirrors = this.$androidPluginMirrorService.syncMirrors(
+			// A sync reports a mirror as changed only once, so a plugin whose build
+			// failed keeps its marker from the previous layout.
+			if (this.pluginLayout?.key === key) {
+				for (const name of this.pluginLayout.changedMirrors) {
+					if (plugins.has(name)) {
+						changedMirrors.add(name);
+					}
+				}
+			}
+
+			const tempPluginDirPath = this.getTempPluginDirPath(projectData);
+			const synced = this.$androidPluginMirrorService.syncMirrors(
 				mirrorsRoot,
 				nativeDependencyData.map((dep) => {
-					const aarName = aarNames.get(dep.name);
+					const upstreamNativeDir = path.join(
+						dep.directory,
+						constants.PLATFORMS_DIR_NAME,
+						AndroidProjectService.ANDROID_PLATFORM_NAME,
+					);
+					const staleAars = this.$androidPluginBuildService.getStaleAars({
+						pluginName: dep.name,
+						aarName: aarNames.get(dep.name),
+						platformsAndroidDirPath: upstreamNativeDir,
+						aarOutputDir: upstreamNativeDir,
+						tempPluginDirPath,
+					});
+					for (const { aarPath, previousOutputPath, differs } of staleAars) {
+						this.$logger.trace(
+							differs
+								? `Not copying ${aarPath} into the plugin mirror: it has a name the CLI built ${dep.name}'s aar under before, and differs from that build's output at ${previousOutputPath}.`
+								: `Not copying ${aarPath} into the plugin mirror: it is an aar the CLI built for ${dep.name} under another name.`,
+						);
+					}
 					return {
 						pluginName: dep.name,
 						packageDir: dep.directory,
 						mirrorDir: plugins.get(dep.name).mirrorDir,
-						excludedNativeFiles: getCandidateAarNames(dep.name)
-							.filter((candidate) => candidate !== aarName)
-							.map((candidate) => `${candidate}.aar`),
+						excludedNativeFiles: staleAars.map((staleAar) =>
+							path.basename(staleAar.aarPath),
+						),
 					};
 				}),
 			);
+			for (const name of synced) {
+				changedMirrors.add(name);
+			}
 		} else if (this.$fs.exists(mirrorsRoot)) {
 			this.$fs.deleteDirectory(mirrorsRoot);
 		}
 
 		return {
-			key: this.getPluginLayoutKey(projectData),
+			key,
 			platformDir,
 			pluginBuildLocation,
 			plugins,
-			changedMirrors: new Set(changedMirrors),
+			changedMirrors,
 		};
+	}
+
+	private getTempPluginDirPath(projectData: IProjectData): string {
+		return path.join(projectData.platformsDir, "tempPlugin");
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -1039,10 +1102,11 @@ export class AndroidProjectService
 		this.writeGradleFacts(projectData, layout, nativeDependencies, jsonContent);
 
 		// we sort all the dependencies to respect the topological sorting of the native dependencies
+		const buildOrder = withCoreFirst(nativeDependencies);
 		return dependencies.sort(function (a, b) {
 			return (
-				nativeDependencies.findIndex((n) => n.name === a.name) -
-				nativeDependencies.findIndex((n) => n.name === b.name)
+				buildOrder.findIndex((n) => n.name === a.name) -
+				buildOrder.findIndex((n) => n.name === b.name)
 			);
 		});
 	}

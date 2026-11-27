@@ -6,6 +6,10 @@
  */
 export interface INativeScriptGradleFacts {
 	schemaVersion: number;
+	/**
+	 * The lowest schemaVersion a reader must understand to use this file.
+	 */
+	minReaderSchemaVersion: number;
 	cli?: { version?: string };
 	runtime?: { name?: string; version?: string };
 	capabilities?: string[];

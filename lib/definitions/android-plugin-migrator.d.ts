@@ -33,10 +33,29 @@ interface IAndroidPluginBuildService {
 	buildAar(options: IPluginBuildOptions): Promise<boolean>;
 	migrateIncludeGradle(options: IPluginBuildOptions): boolean;
 	/**
-	 * Whether the plugin has sources to build but `aarOutputDir` lacks its aar
-	 * or still holds one under another of its candidate names.
+	 * Whether `aarOutputDir` lacks the aar of a plugin with sources to build, or
+	 * still holds one of `getStaleAars`.
 	 */
 	hasOutdatedAar(options: IPluginBuildOptions): boolean;
+	/**
+	 * Aars in `dir` (default: `aarOutputDir`) that the CLI built for this plugin
+	 * under another of its candidate aar names. Aars the package ships are not
+	 * included.
+	 */
+	getStaleAars(options: IPluginBuildOptions, dir?: string): IStaleAar[];
+}
+
+interface IStaleAar {
+	aarPath: string;
+	/**
+	 * The CLI's previous build output under that name, when the leftover is
+	 * recognised by it rather than by its name alone.
+	 */
+	previousOutputPath?: string;
+	/**
+	 * The file differs from `previousOutputPath`.
+	 */
+	differs: boolean;
 }
 
 interface IAndroidPluginMirror {

@@ -1,4 +1,5 @@
 import { AndroidProjectService } from "../../lib/services/android-project-service";
+import { NativeFileHashesMemo } from "../../lib/services/native-file-hashes-memo";
 import { Yok } from "../../lib/common/yok";
 import * as stubs from "../stubs";
 import { assert } from "chai";
@@ -63,6 +64,7 @@ const createTestInjector = (): IInjector => {
 		TRACK_FEATURE_USAGE_SETTING_NAME: "TrackFeatureUsage",
 	});
 	testInjector.register("androidPluginMirrorService", {});
+	testInjector.register("nativeFileHashesMemo", NativeFileHashesMemo);
 	return testInjector;
 };
 

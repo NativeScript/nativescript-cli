@@ -28,7 +28,10 @@ import {
 	IDictionary,
 	IStringDictionary,
 } from "../common/declarations";
-import { IFilesHashService } from "../definitions/files-hash-service";
+import {
+	IFilesHashService,
+	INativeFileHashesMemo,
+} from "../definitions/files-hash-service";
 import * as _ from "lodash";
 import { IInjector } from "../common/definitions/yok";
 import { injector } from "../common/yok";
@@ -81,6 +84,7 @@ export class PluginsService implements IPluginsService {
 		private $injector: IInjector,
 		private $mobileHelper: Mobile.IMobileHelper,
 		private $nodeModulesDependenciesBuilder: INodeModulesDependenciesBuilder,
+		private $nativeFileHashesMemo: INativeFileHashesMemo,
 	) {}
 
 	public async add(plugin: string, projectData: IProjectData): Promise<void> {
@@ -254,6 +258,7 @@ export class PluginsService implements IPluginsService {
 			const oldPluginNativeHashes = allPluginsNativeHashes[pluginData.name];
 			const currentPluginNativeHashes = await this.getPluginNativeHashes(
 				pluginPlatformsFolderPath,
+				{ useMemo: true },
 			);
 
 			const needsReprepare =
@@ -877,17 +882,39 @@ This framework comes from ${dependencyName} plugin, which is installed multiple 
 		return isValid;
 	}
 
+	/**
+	 * `useMemo` only before the platform prepares the plugin: preparing can
+	 * write into the plugin's platforms folder.
+	 */
 	private async getPluginNativeHashes(
 		pluginPlatformsDir: string,
+		opts?: { useMemo?: boolean },
 	): Promise<IStringDictionary> {
-		let data: IStringDictionary = {};
-		if (this.$fs.exists(pluginPlatformsDir)) {
-			const pluginNativeDataFiles =
-				this.$fs.enumerateFilesInDirectorySync(pluginPlatformsDir);
-			data = await this.$filesHashService.generateHashes(pluginNativeDataFiles);
+		if (!this.$fs.exists(pluginPlatformsDir)) {
+			return {};
 		}
 
-		return data;
+		const pluginNativeDataFiles =
+			this.$fs.enumerateFilesInDirectorySync(pluginPlatformsDir);
+		if (!opts?.useMemo) {
+			return this.$filesHashService.generateHashes(pluginNativeDataFiles);
+		}
+
+		const data: IStringDictionary = {};
+		const unknownFiles: string[] = [];
+		for (const file of pluginNativeDataFiles) {
+			const sha1 = this.$nativeFileHashesMemo.take(file);
+			if (sha1 === undefined) {
+				unknownFiles.push(file);
+			} else {
+				data[file] = sha1;
+			}
+		}
+
+		return {
+			...data,
+			...(await this.$filesHashService.generateHashes(unknownFiles)),
+		};
 	}
 
 	private getAllPluginsNativeHashes(

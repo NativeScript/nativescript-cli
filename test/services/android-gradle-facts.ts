@@ -8,11 +8,17 @@ import { Yok } from "../../lib/common/yok";
 import { FileSystem } from "../../lib/common/file-system";
 import { AndroidProjectService } from "../../lib/services/android-project-service";
 import { AndroidPluginMirrorService } from "../../lib/services/android/android-plugin-mirror-service";
+import { AndroidPluginBuildService } from "../../lib/services/android-plugin-build-service";
+import { NativeFileHashesMemo } from "../../lib/services/native-file-hashes-memo";
 import { IFileSystem } from "../../lib/common/declarations";
 import { IDependencyData } from "../../lib/declarations";
 import { IPluginData } from "../../lib/definitions/plugins";
 import { IProjectData } from "../../lib/definitions/project";
-import { IPluginBuildOptions } from "../../lib/definitions/android-plugin-migrator";
+import {
+	IAndroidPluginBuildService,
+	IPluginBuildOptions,
+} from "../../lib/definitions/android-plugin-migrator";
+import { INativeFileHashesMemo } from "../../lib/definitions/files-hash-service";
 import { INativeScriptGradleFacts } from "../../lib/definitions/gradle-facts";
 import * as stubs from "../stubs";
 
@@ -37,6 +43,8 @@ describe("android plugin layout and Gradle facts", () => {
 	let buildAarCalls: IPluginBuildOptions[];
 	let migrateIncludeGradleCalls: IPluginBuildOptions[];
 	let outdatedAar: boolean;
+	let buildAarError: Error;
+	let memo: INativeFileHashesMemo;
 
 	const validateFacts = (() => {
 		let validate: ValidateFunction;
@@ -121,6 +129,7 @@ describe("android plugin layout and Gradle facts", () => {
 		buildAarCalls = [];
 		migrateIncludeGradleCalls = [];
 		outdatedAar = false;
+		buildAarError = null;
 
 		const injector = new Yok();
 		injector.register("injector", injector);
@@ -141,6 +150,9 @@ describe("android plugin layout and Gradle facts", () => {
 		injector.register("androidPluginBuildService", {
 			buildAar: async (options: IPluginBuildOptions) => {
 				buildAarCalls.push(options);
+				if (buildAarError) {
+					throw buildAarError;
+				}
 				return false;
 			},
 			migrateIncludeGradle: (options: IPluginBuildOptions) => {
@@ -148,9 +160,24 @@ describe("android plugin layout and Gradle facts", () => {
 				return false;
 			},
 			hasOutdatedAar: () => outdatedAar,
+			getStaleAars: (options: IPluginBuildOptions, dir?: string) =>
+				(<IAndroidPluginBuildService>(
+					injector.resolve("realAndroidPluginBuildService")
+				)).getStaleAars(options, dir),
 		});
+		injector.register(
+			"realAndroidPluginBuildService",
+			AndroidPluginBuildService,
+		);
+		injector.register("nativeFileHashesMemo", NativeFileHashesMemo);
 		injector.register("androidPluginMirrorService", AndroidPluginMirrorService);
 		for (const unused of [
+			"childProcess",
+			"hostInfo",
+			"packageManager",
+			"projectData",
+			"hooksService",
+			"watchIgnoreListService",
 			"androidToolsInfo",
 			"devicePlatformsConstants",
 			"platformEnvironmentRequirements",
@@ -165,6 +192,7 @@ describe("android plugin layout and Gradle facts", () => {
 		injector.register("androidProjectService", AndroidProjectService);
 
 		fs = injector.resolve("fs");
+		memo = injector.resolve("nativeFileHashesMemo");
 		service = injector.resolve("androidProjectService");
 	});
 
@@ -236,6 +264,7 @@ describe("android plugin layout and Gradle facts", () => {
 			validateFacts(facts);
 			assert.deepStrictEqual(Object.keys(facts), [
 				"schemaVersion",
+				"minReaderSchemaVersion",
 				"cli",
 				"runtime",
 				"capabilities",
@@ -245,6 +274,7 @@ describe("android plugin layout and Gradle facts", () => {
 			]);
 			assert.deepStrictEqual(facts, {
 				schemaVersion: 1,
+				minReaderSchemaVersion: 1,
 				cli: { version: "9.9.9" },
 				runtime: { name: "@nativescript/android", version: "9.0.0" },
 				capabilities: [],
@@ -372,6 +402,65 @@ describe("android plugin layout and Gradle facts", () => {
 				service.beforePrepareAllPlugins(createProjectData(), dependencies),
 				/"@foo\/plugin-x" and "@foo\/plugin_x"/,
 			);
+		});
+
+		it("prepares @nativescript/core and its native dependencies first without changing dependencies.json", async () => {
+			const manifest = { "AndroidManifest.xml": "<manifest/>" };
+			addPlugin({ name: "peer-plugin", nativeFiles: manifest });
+			addPlugin({
+				name: "other-plugin",
+				dependencies: ["peer-plugin"],
+				nativeFiles: manifest,
+			});
+			addPlugin({
+				name: "@nativescript/core",
+				dependencies: ["core-native-dep"],
+				nativeFiles: { "include.gradle": "android {}" },
+			});
+			addPlugin({ name: "core-native-dep", nativeFiles: manifest });
+			addPlugin({ name: "lodash", native: false });
+
+			const prepareOrder = await service.beforePrepareAllPlugins(
+				createProjectData(),
+				dependencies,
+			);
+
+			assert.deepStrictEqual(
+				prepareOrder.map((dep) => dep.name),
+				[
+					"lodash",
+					"core-native-dep",
+					"@nativescript/core",
+					"peer-plugin",
+					"other-plugin",
+				],
+			);
+			assert.deepStrictEqual(
+				JSON.parse(readDependenciesJson()).map((dep: any) => dep.name),
+				[
+					"peer-plugin",
+					"other-plugin",
+					"core-native-dep",
+					"@nativescript/core",
+				],
+			);
+		});
+
+		it("forgets file hashes remembered by an earlier prepare", async () => {
+			addFixturePlugins();
+			const file = path.join(
+				projectDir,
+				"node_modules",
+				"@nativescript/core",
+				"platforms",
+				"android",
+				"include.gradle",
+			);
+			memo.remember(file, "stale");
+
+			await service.beforePrepareAllPlugins(createProjectData(), dependencies);
+
+			assert.isUndefined(memo.take(file));
 		});
 	});
 
@@ -519,6 +608,175 @@ describe("android plugin layout and Gradle facts", () => {
 				readFacts().plugins[0].nativeDir,
 				"../../node_modules/@nativescript/core/platforms/android",
 			);
+		});
+
+		it("remembers the hashes of the plugins' native files for this prepare", async () => {
+			addFixturePlugins();
+			const upstream = (...parts: string[]) =>
+				path.join(projectDir, "node_modules", "@foo", "plugin-x", ...parts);
+			const manifest = upstream("platforms", "android", "AndroidManifest.xml");
+
+			await service.beforePrepareAllPlugins(
+				createProjectData("platforms"),
+				dependencies,
+			);
+
+			assert.equal(memo.take(manifest), await fs.getFileShasum(manifest));
+			assert.isUndefined(memo.take(manifest));
+			assert.isUndefined(memo.take(upstream("package.json")));
+		});
+
+		it("rebuilds a plugin whose copy changed on the next prepare when its build failed", async () => {
+			addFixturePlugins();
+			const projectData = createProjectData("platforms");
+			const foo = pluginData("@foo/plugin-x");
+			await service.beforePrepareAllPlugins(projectData, dependencies);
+
+			buildAarError = new Error("Gradle failed");
+			await assert.isRejected(
+				service.preparePluginNativeCode(foo, projectData),
+				/Gradle failed/,
+			);
+			await service.beforePrepareAllPlugins(projectData, dependencies);
+			assert.isTrue(service.shouldRepreparePlugin(foo, projectData));
+
+			buildAarError = null;
+			await service.preparePluginNativeCode(foo, projectData);
+			await service.beforePrepareAllPlugins(projectData, dependencies);
+			assert.isFalse(service.shouldRepreparePlugin(foo, projectData));
+		});
+
+		describe("aars under another of a plugin's candidate names", () => {
+			const manifest = { "AndroidManifest.xml": "<manifest/>" };
+			const mirroredAar = (mirrorName: string, aar: string) =>
+				path.join(
+					platformDir,
+					".ns-plugins",
+					mirrorName,
+					"platforms",
+					"android",
+					aar,
+				);
+
+			function writeTempBuild(name: string, builtFor: string, content: string) {
+				const tempProjectDir = path.join(
+					projectDir,
+					"platforms",
+					"tempPlugin",
+					name,
+				);
+				fs.writeFile(
+					path.join(tempProjectDir, "build.gradle"),
+					`project.ext.PLUGIN_NAME = "${builtFor}"\n`,
+				);
+				fs.writeFile(
+					path.join(
+						tempProjectDir,
+						"build",
+						"outputs",
+						"aar",
+						`${name}-release.aar`,
+					),
+					content,
+				);
+			}
+
+			const prepare = () =>
+				service.beforePrepareAllPlugins(
+					createProjectData("platforms"),
+					dependencies,
+				);
+
+			it("copies the aar a prebuilt-only plugin ships under the name another plugin now builds", async () => {
+				addPlugin({
+					name: "@foo/plugin-x",
+					nativeFiles: { "plugin_x.aar": "shipped", "include.gradle": "" },
+				});
+				addPlugin({ name: "plugin-x", nativeFiles: manifest });
+				writeTempBuild("plugin_x", "plugin-x", "built for plugin-x");
+
+				await prepare();
+
+				assert.equal(
+					fs.readText(mirroredAar("foo_plugin_x", "plugin_x.aar")),
+					"shipped",
+				);
+			});
+
+			it("leaves out an aar under the short name of a plugin it builds", async () => {
+				addPlugin({
+					name: "@foo/plugin-x",
+					nativeFiles: { ...manifest, "plugin_x.aar": "shipped" },
+				});
+				addPlugin({ name: "plugin-x", nativeFiles: manifest });
+				writeTempBuild("plugin_x", "plugin-x", "built for plugin-x");
+
+				await prepare();
+
+				assert.isFalse(fs.exists(mirroredAar("foo_plugin_x", "plugin_x.aar")));
+				assert.isTrue(
+					fs.exists(mirroredAar("foo_plugin_x", "AndroidManifest.xml")),
+				);
+			});
+
+			it("leaves out every clashing plugin's old aar after an upgrade", async () => {
+				for (const name of ["@foo/plugin-x", "@bar/plugin-x"]) {
+					addPlugin({
+						name,
+						nativeFiles: { ...manifest, "plugin_x.aar": "old" },
+					});
+				}
+				writeTempBuild("plugin_x", "@bar/plugin-x", "old");
+
+				await prepare();
+
+				for (const mirrorName of ["foo_plugin_x", "bar_plugin_x"]) {
+					assert.isFalse(fs.exists(mirroredAar(mirrorName, "plugin_x.aar")));
+				}
+			});
+
+			for (const { title, previousBuild } of [
+				{ title: "identical to", previousBuild: "previous build" },
+				{ title: "different from", previousBuild: "another build" },
+			]) {
+				it(`leaves out a scope-qualified aar ${title} the plugin's previous build output`, async () => {
+					addPlugin({
+						name: "@foo/plugin-x",
+						nativeFiles: { ...manifest, "foo_plugin_x.aar": "previous build" },
+					});
+					writeTempBuild("foo_plugin_x", "@foo/plugin-x", previousBuild);
+
+					await prepare();
+
+					assert.isFalse(
+						fs.exists(mirroredAar("plugin_x", "foo_plugin_x.aar")),
+					);
+				});
+			}
+
+			for (const { title, writeTemp } of [
+				{ title: "without a previous build output", writeTemp: () => {} },
+				{
+					title: "whose temp project another plugin built",
+					writeTemp: () =>
+						writeTempBuild("foo_plugin_x", "@other/plugin", "shipped"),
+				},
+			]) {
+				it(`copies a scope-qualified aar ${title}`, async () => {
+					addPlugin({
+						name: "@foo/plugin-x",
+						nativeFiles: { ...manifest, "foo_plugin_x.aar": "shipped" },
+					});
+					writeTemp();
+
+					await prepare();
+
+					assert.equal(
+						fs.readText(mirroredAar("plugin_x", "foo_plugin_x.aar")),
+						"shipped",
+					);
+				});
+			}
 		});
 	});
 

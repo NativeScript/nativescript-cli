@@ -10,7 +10,7 @@ interface IFilesHashService {
 	 * A map with key file's path and value - file's hash
 	 */
 	generateHashesForProject(
-		platformData: IPlatformData
+		platformData: IPlatformData,
 	): Promise<IStringDictionary>;
 	/**
 	 * Generates hashes for all prepared files (all files from app folder under platforms folder)
@@ -21,15 +21,26 @@ interface IFilesHashService {
 	 */
 	saveHashesForProject(
 		platformData: IPlatformData,
-		hashesFileDirectory: string
+		hashesFileDirectory: string,
 	): Promise<IStringDictionary>;
 	saveHashes(hashes: IStringDictionary, hashesFileDirectory: string): void;
 	getChanges(
 		files: string[],
-		oldHashes: IStringDictionary
+		oldHashes: IStringDictionary,
 	): Promise<IStringDictionary>;
 	hasChangesInShasums(
 		oldHashes: IStringDictionary,
-		newHashes: IStringDictionary
+		newHashes: IStringDictionary,
 	): boolean;
+}
+
+/**
+ * sha1 hashes of plugins' native files computed earlier in the same prepare,
+ * so a later step does not read the same files again. Cleared when a prepare
+ * starts; each hash is served once.
+ */
+interface INativeFileHashesMemo {
+	clear(): void;
+	remember(filePath: string, sha1: string): void;
+	take(filePath: string): string | undefined;
 }

@@ -5,6 +5,7 @@ import { tmpdir } from "os";
 import { Yok } from "../../../lib/common/yok";
 import { FileSystem } from "../../../lib/common/file-system";
 import { AndroidPluginMirrorService } from "../../../lib/services/android/android-plugin-mirror-service";
+import { NativeFileHashesMemo } from "../../../lib/services/native-file-hashes-memo";
 import { IFileSystem } from "../../../lib/common/declarations";
 import { IAndroidPluginMirror } from "../../../lib/definitions/android-plugin-migrator";
 import * as stubs from "../../stubs";
@@ -28,6 +29,7 @@ describe("androidPluginMirrorService", () => {
 		injector.register("injector", injector);
 		injector.register("fs", FileSystem);
 		injector.register("logger", stubs.LoggerStub);
+		injector.register("nativeFileHashesMemo", NativeFileHashesMemo);
 		injector.register("androidPluginMirrorService", AndroidPluginMirrorService);
 		fs = injector.resolve("fs");
 		mirrorService = injector.resolve("androidPluginMirrorService");
@@ -160,6 +162,40 @@ describe("androidPluginMirrorService", () => {
 		assert.equal(
 			fs.readText(mirrored("platforms", "android", "include.gradle")),
 			"b",
+		);
+	});
+
+	it("follows a file that turned into a directory upstream", () => {
+		const config = upstream("platforms", "android", "assets", "config");
+		fs.writeFile(config, "file");
+		mirrorService.syncMirrors(mirrorsRoot, [mirror]);
+		fs.deleteFile(config);
+		fs.writeFile(path.join(config, "settings.json"), "{}");
+
+		assert.deepStrictEqual(mirrorService.syncMirrors(mirrorsRoot, [mirror]), [
+			"@foo/plugin-x",
+		]);
+		assert.equal(
+			fs.readText(
+				mirrored("platforms", "android", "assets", "config", "settings.json"),
+			),
+			"{}",
+		);
+	});
+
+	it("follows a directory that turned into a file upstream", () => {
+		const config = upstream("platforms", "android", "assets", "config");
+		fs.writeFile(path.join(config, "settings.json"), "{}");
+		mirrorService.syncMirrors(mirrorsRoot, [mirror]);
+		fs.deleteDirectory(config);
+		fs.writeFile(config, "file");
+
+		assert.deepStrictEqual(mirrorService.syncMirrors(mirrorsRoot, [mirror]), [
+			"@foo/plugin-x",
+		]);
+		assert.equal(
+			fs.readText(mirrored("platforms", "android", "assets", "config")),
+			"file",
 		);
 	});
 

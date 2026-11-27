@@ -7,6 +7,7 @@ import {
 } from "../../definitions/gradle-facts";
 
 export const GRADLE_FACTS_SCHEMA_VERSION = 1;
+export const GRADLE_FACTS_MIN_READER_SCHEMA_VERSION = 1;
 
 export interface IGradleFactsPluginInput {
 	name: string;
@@ -55,6 +56,7 @@ export function createGradleFacts(
 
 	return {
 		schemaVersion: GRADLE_FACTS_SCHEMA_VERSION,
+		minReaderSchemaVersion: GRADLE_FACTS_MIN_READER_SCHEMA_VERSION,
 		cli: { version: input.cliVersion },
 		runtime,
 		capabilities: [],
