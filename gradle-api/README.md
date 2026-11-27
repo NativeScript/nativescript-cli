@@ -64,25 +64,7 @@ Pin the **lowest** version that has what you need, never a range or `+`. Every p
 the library to the same classpath and Gradle keeps the highest version, which is always backwards
 compatible.
 
-**2. Declare the CLI requirement** in your `package.json`, so that apps find out when they install
-your plugin rather than when they build:
-
-```json
-"peerDependencies": {
-  "nativescript": ">=9.2.0-0"
-},
-"peerDependenciesMeta": {
-  "nativescript": { "optional": true }
-}
-```
-
-With this, npm 7+ refuses to install your plugin (`ERESOLVE`) into an app whose own `nativescript`
-dev dependency is older, until the app updates it or installs with `--legacy-peer-deps`.
-`optional` keeps npm from installing the CLI into apps that don't list it, which npm 7+ does for
-required peers. The `-0` lets 9.2.0's alphas and release candidates satisfy the range; prereleases
-of later versions, such as `9.3.0-rc.1`, still don't, as with any npm range.
-
-**3. If you use `nativescript` in the app build**, apply the library at the top of
+**2. If you use `nativescript` in the app build**, apply the library at the top of
 `platforms/android/include.gradle`. The whole file runs in the app build, including its
 `repositories {}` and `dependencies {}` blocks; only code inside the `tempBuild` check of
 [the next section](#your-plugins-own-aar-build) is skipped there.
@@ -93,7 +75,10 @@ apply plugin: "org.nativescript.api"
 
 Applying it again from several plugins is fine.
 
-**4. Use `nativescript`** (see [API](#api) and [Recipes](#recipes)).
+**3. Use `nativescript`** (see [API](#api) and [Recipes](#recipes)).
+
+Mention the CLI 9.2+ requirement in your plugin's README and changelog, and release it as a major
+version: apps on older CLIs find out at build time, from the check in the next section.
 
 Never refer to the library's classes from `include.gradle` (`import org.nativescript.gradle...`,
 `NativeScript.of(project)`): Gradle compiles applied scripts with a class loader that can't see
@@ -300,8 +285,8 @@ future major version of the CLI.
 
 ## Rules for plugin authors
 
-- Require NativeScript CLI 9.2+: declare it as an optional peer dependency, and start each copied
-  block that uses `nativescript` with the [check](#your-plugins-own-aar-build).
+- Require NativeScript CLI 9.2+: say so in your README and changelog, and start each copied block
+  that uses `nativescript` with the [check](#your-plugins-own-aar-build).
 - Pin the lowest library version you need; no ranges.
 - Everything in the version you pin is always there: an app may end up with a newer library, never
   an older one. To use something newer only when it's available, check `apiLevel` (or `has(...)`)
