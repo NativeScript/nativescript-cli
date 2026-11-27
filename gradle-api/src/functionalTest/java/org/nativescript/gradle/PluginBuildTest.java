@@ -65,7 +65,7 @@ class PluginBuildTest {
             "    println \"NS|pluginBuild|${nativescript.pluginBuild}\"",
             "    println \"NS|self|${nativescript.self?.name}\"",
             "    println \"NS|buildingSample|${nativescript.isBuildingPlugin('" + Fixtures.SAMPLE_NAME + "')}\"",
-            "    println \"NS|projectDir|${nativescript.projectDir}\"",
+            "    println \"NS|projectRoot|${nativescript.projectRoot}\"",
             "    println \"NS|appDir|${nativescript.appDir}\"",
             "    println \"NS|appResourcesDir|${nativescript.appResourcesDir}\"",
             "    println \"NS|corePackage|${nativescript.findPackage('@nativescript/core')}\"",
@@ -150,6 +150,7 @@ class PluginBuildTest {
             Path factsFile = Fixtures.write(platformsAndroid.resolve("nativescript-gradle.json"), String.join("\n",
                     "{",
                     "  \"schemaVersion\": 1,",
+                    "  \"minReaderSchemaVersion\": 1,",
                     "  \"dependenciesJson\": { \"sha256\": \"" + Fixtures.sha256(dependenciesJson) + "\" },",
                     "  \"capabilities\": [],",
                     "  \"project\": { \"root\": \"../..\", \"appDir\": \"../../src\", \"appResourcesDir\": \"../../src/App_Resources\" },",
@@ -195,7 +196,7 @@ class PluginBuildTest {
         assertEquals("true", probes.get("pluginBuild"));
         assertEquals(Fixtures.SAMPLE_NAME, probes.get("self"));
         assertEquals("true", probes.get("buildingSample"));
-        assertEquals(Fixtures.path(project), probes.get("projectDir"));
+        assertEquals(Fixtures.path(project), probes.get("projectRoot"));
         assertEquals(Fixtures.path(project.resolve("src")), probes.get("appDir"));
         assertEquals(Fixtures.path(project.resolve("src/App_Resources")), probes.get("appResourcesDir"));
         assertEquals(Fixtures.path(core), probes.get("corePackage"));

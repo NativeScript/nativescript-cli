@@ -4,10 +4,15 @@
 	"title": "NativeScript Gradle facts",
 	"description": "Written by the NativeScript CLI at prepare time to platforms/android/nativescript-gradle.json and read by org.nativescript:gradle-api. Fields are only ever added: readers must ignore unknown fields, and a field never changes meaning. Every path is relative to the directory containing this file and uses forward slashes.",
 	"type": "object",
-	"required": ["schemaVersion", "dependenciesJson", "project", "plugins"],
+	"required": ["schemaVersion", "minReaderSchemaVersion", "dependenciesJson", "project", "plugins"],
 	"properties": {
 		"schemaVersion": {
-			"description": "Bumped only when a field is added. Readers accept any version and read the fields they know.",
+			"description": "Bumped only when a field is added. Readers accept any version that minReaderSchemaVersion allows them to, and read the fields they know.",
+			"type": "integer",
+			"minimum": 1
+		},
+		"minReaderSchemaVersion": {
+			"description": "The lowest schemaVersion a reader must support to read this file; never greater than schemaVersion. A reader that supports only a lower schema version must refuse the file, rather than read it partially.",
 			"type": "integer",
 			"minimum": 1
 		},

@@ -1,6 +1,9 @@
 package org.nativescript.gradle.internal;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,5 +44,17 @@ final class FakeInputs implements BuildInputs {
     @Override
     public File rootDir() {
         return rootDir;
+    }
+
+    @Override
+    public byte[] fileContents(File file) {
+        if (!file.isFile()) {
+            return null;
+        }
+        try {
+            return Files.readAllBytes(file.toPath());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

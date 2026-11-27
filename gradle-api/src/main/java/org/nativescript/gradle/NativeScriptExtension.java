@@ -8,15 +8,18 @@ import java.io.File;
  *
  * <p>Answers come from the facts file ({@code platforms/android/nativescript-gradle.json}) that
  * NativeScript CLI 9.2 and newer write when preparing the project. {@link #getApiLevel()}, {@link
- * #isPluginBuild()} and {@link #isBuildingPlugin(String)} work without it. Every other member
- * needs it and throws a {@link org.gradle.api.GradleException} when it is used:
+ * #isPluginBuild()}, {@link #isBuildingPlugin(String)}, and {@link #getSelf()} outside a plugin
+ * build, work without it. Every other member needs it and throws a {@link
+ * org.gradle.api.GradleException} when it is used:
  *
  * <ul>
  *   <li>if there is no facts file, because a CLI before 9.2 prepared the project. The message says
  *       to update the project's CLI and prepare it again;
  *   <li>if the facts file no longer matches the {@code dependencies.json} next to it, because a
  *       different CLI prepared the project after the one that wrote it. The message says to
- *       prepare it again with the project's CLI.
+ *       prepare it again with the project's CLI;
+ *   <li>if the facts file needs a newer version of this library than the one on the classpath.
+ *       The message says to update the plugin that adds the library.
  * </ul>
  *
  * <p>Everything is worked out on first use, during configuration, and does not change afterwards.
@@ -66,6 +69,9 @@ public interface NativeScriptExtension {
      * Whether the CLI that prepared the project guarantees a behaviour. Capability names are listed
      * in the facts file's schema documentation.
      *
+     * <p>Names are dotted and lowercase, {@code area.feature}, such as {@code build.abis}. A CLI only
+     * ever adds capabilities: once a CLI version declares one, every later version does too.
+     *
      * @param capability the capability name
      * @return true if the CLI declared it
      * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
@@ -83,11 +89,12 @@ public interface NativeScriptExtension {
 
     /**
      * In a plugin build, the plugin whose aar is being built. A dependency's {@code include.gradle}
-     * applied there sees the plugin that depends on it, not itself. Needs the facts file in the app
-     * build too, where it returns null.
+     * applied there sees the plugin that depends on it, not itself. In the app build it is null
+     * and needs no facts file.
      *
      * @return that plugin, or null in the app build or if the CLI did not name the plugin
-     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
+     * @throws org.gradle.api.GradleException in a plugin build, if the project has no facts file or
+     *     it is out of date
      * @since API level 1
      */
     PluginInfo getSelf();
@@ -102,13 +109,14 @@ public interface NativeScriptExtension {
     boolean isBuildingPlugin(String npmName);
 
     /**
-     * The NativeScript project root: the directory with the app's {@code package.json}.
+     * The NativeScript project root: the directory with the app's {@code package.json}. Not to be
+     * confused with Gradle's {@code project.projectDir}.
      *
      * @return an absolute, normalized directory
      * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
-    File getProjectDir();
+    File getProjectRoot();
 
     /**
      * The app's source directory ({@code appPath} in the NativeScript config).

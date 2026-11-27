@@ -44,8 +44,12 @@ public interface PluginInfo {
      * Every {@code .aar} and {@code .jar} under the {@linkplain #getNativeDir() native directory},
      * including the aar the CLI builds from the plugin's sources once it exists. Evaluated lazily.
      *
-     * <p>Meant for {@code compileOnly} in a dependent plugin's build: the app build already
-     * packages these files.
+     * <p>Meant for {@code compileOnly} in a plugin's own aar build: the app build already packages
+     * these files. There, {@code compileOnly nativescript.plugin("...").artifacts} is reliable for
+     * the artifacts a package ships prebuilt, and for the plugins yours lists as dependencies in its
+     * {@code package.json}, whose aars the CLI builds first. The CLI also builds
+     * {@code @nativescript/core} first, so core is always fine. For any other plugin, an aar the CLI
+     * builds from its sources may not exist yet on a clean build.
      *
      * @return a live view of those files
      * @since API level 1
@@ -61,22 +65,4 @@ public interface PluginInfo {
      * @since API level 1
      */
     Map<String, Object> getOptions();
-
-    /**
-     * File name, without extension, of the aar the CLI builds from the plugin's sources; unique
-     * across the project.
-     *
-     * @return the name
-     * @since API level 1
-     */
-    String getAarName();
-
-    /**
-     * Where the CLI puts the aar it builds from the plugin's sources. The file only exists once
-     * built, and only if the plugin has sources.
-     *
-     * @return the file
-     * @since API level 1
-     */
-    File getAar();
 }

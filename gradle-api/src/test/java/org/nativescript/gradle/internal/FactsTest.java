@@ -26,7 +26,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class FactsTest {
+    private static final String MIN_READER = "\"minReaderSchemaVersion\": 1";
     private static final String SCHEMA = "\"schemaVersion\": 1";
+    private static final String DEPENDENCIES_JSON =
+            "\"dependenciesJson\": {\"sha256\": \"" + TestFiles.EMPTY_DEPENDENCIES_JSON_SHA256 + "\"}";
     private static final String PROJECT = "\"project\": {\"root\": \"../..\", \"appDir\": \"../../app\","
             + " \"appResourcesDir\": \"../../app/App_Resources\"}";
     private static final String NO_PLUGINS = "\"plugins\": []";
@@ -61,7 +64,7 @@ class FactsTest {
             Files.copy(in, factsFile.toPath());
         }
 
-        Facts facts = Facts.read(factsFile);
+        Facts facts = Facts.read(factsFile, Files.readAllBytes(factsFile.toPath()));
 
         assertEquals(Collections.singleton("some.future.capability"), facts.getCapabilities());
         assertEquals(projectDir.toFile(), facts.getProjectRoot());
@@ -69,7 +72,6 @@ class FactsTest {
         assertEquals(projectDir.resolve("app/App_Resources").toFile(), facts.getAppResourcesDir());
         assertEquals(Collections.singleton("nativescript-plugin"), facts.getPlugins().keySet());
         PluginData plugin = facts.getPlugins().get("nativescript-plugin");
-        assertEquals("nativescript_plugin", plugin.getAarName());
         assertEquals(Collections.singletonMap("someOption", Arrays.asList("a", "b")), plugin.getOptions());
         assertThrows(UnsupportedOperationException.class, () -> plugin.getOptions().put("k", "v"));
     }
@@ -88,7 +90,7 @@ class FactsTest {
         String project = "\"project\": {\"root\": \"" + elsewhere.toString().replace("\\", "\\\\") + "\","
                 + " \"appDir\": \"../../x/./y/../app\", \"appResourcesDir\": \"res/\"}";
 
-        Facts facts = parse(object(SCHEMA, project, NO_PLUGINS));
+        Facts facts = parse(object(MIN_READER, SCHEMA, DEPENDENCIES_JSON, project, NO_PLUGINS));
 
         assertEquals(elsewhere.toFile(), facts.getProjectRoot());
         assertEquals(projectDir.resolve("x/app").toFile(), facts.getAppDir());
@@ -101,17 +103,27 @@ class FactsTest {
                         "{\n  " + SCHEMA + ",\n}",
                         "Unexpected character '}', expected a string key at line 3, column 1"),
                 Arguments.of("[]", "the top level must be an object"),
-                Arguments.of(object(PROJECT, NO_PLUGINS), "schemaVersion must be an integer"),
+                Arguments.of(
+                        object(SCHEMA, DEPENDENCIES_JSON, PROJECT, NO_PLUGINS),
+                        "minReaderSchemaVersion must be an integer"),
+                Arguments.of(withMinReaderSchemaVersion("\"1\""), "minReaderSchemaVersion must be an integer"),
+                Arguments.of(withMinReaderSchemaVersion("0"), "minReaderSchemaVersion must be at least 1"),
+                Arguments.of(
+                        object(MIN_READER, DEPENDENCIES_JSON, PROJECT, NO_PLUGINS), "schemaVersion must be an integer"),
                 Arguments.of(withSchemaVersion("\"1\""), "schemaVersion must be an integer"),
                 Arguments.of(withSchemaVersion("1.5"), "schemaVersion must be an integer"),
                 Arguments.of(withSchemaVersion("0"), "schemaVersion must be at least 1"),
+                Arguments.of(
+                        object("\"minReaderSchemaVersion\": 3", "\"schemaVersion\": 2", DEPENDENCIES_JSON, PROJECT, NO_PLUGINS),
+                        "minReaderSchemaVersion must not be greater than schemaVersion"),
+                Arguments.of(object(MIN_READER, SCHEMA, PROJECT, NO_PLUGINS), "dependenciesJson must be an object"),
                 Arguments.of(withField("\"dependenciesJson\": \"x\""), "dependenciesJson must be an object"),
                 Arguments.of(withField("\"dependenciesJson\": {}"), "dependenciesJson.sha256 must be a string"),
                 Arguments.of(withSha256("A".repeat(64)), "dependenciesJson.sha256 must be 64 lowercase hex digits"),
                 Arguments.of(withSha256("37517e5f"), "dependenciesJson.sha256 must be 64 lowercase hex digits"),
                 Arguments.of(withField("\"capabilities\": \"a\""), "capabilities must be an array"),
                 Arguments.of(withField("\"capabilities\": [\"a\", 1]"), "capabilities[1] must be a string"),
-                Arguments.of(object(SCHEMA, NO_PLUGINS), "project must be an object"),
+                Arguments.of(object(MIN_READER, SCHEMA, DEPENDENCIES_JSON, NO_PLUGINS), "project must be an object"),
                 Arguments.of(
                         withProject("\"root\": 1, \"appDir\": \"a\", \"appResourcesDir\": \"r\""),
                         "project.root must be a string"),
@@ -121,7 +133,7 @@ class FactsTest {
                 Arguments.of(
                         withProject("\"root\": \".\", \"appDir\": \"a\", \"appResourcesDir\": \"\""),
                         "project.appResourcesDir must not be empty"),
-                Arguments.of(object(SCHEMA, PROJECT), "plugins must be an array"),
+                Arguments.of(object(MIN_READER, SCHEMA, DEPENDENCIES_JSON, PROJECT), "plugins must be an array"),
                 Arguments.of(withPlugins(plugin("a"), "\"b\""), "plugins[1] must be an object"),
                 Arguments.of(withPlugins(plugin("p", "name", null)), "plugins[0].name must be a string"),
                 Arguments.of(withPlugins(plugin("p", "packageDir", null)), "plugins[0].packageDir must be a string"),
@@ -149,16 +161,35 @@ class FactsTest {
     }
 
     @Test
-    void readReusesTheResultUntilTheContentChanges() throws IOException {
-        write(factsFile, withField("\"capabilities\": [\"a\"]"));
-        Facts first = Facts.read(factsFile);
-        assertSame(first, Facts.read(factsFile));
+    void refusesAFileThatNeedsANewerReaderBeforeValidatingIt() {
+        int needed = Facts.SUPPORTED_SCHEMA_VERSION + 1;
+        String text = object("\"minReaderSchemaVersion\": " + needed, "\"schemaVersion\": " + needed);
 
-        long lastModified = factsFile.lastModified();
-        write(factsFile, withField("\"capabilities\": [\"b\"]"));
-        assertTrue(factsFile.setLastModified(lastModified));
+        GradleException e = assertThrows(GradleException.class, () -> parse(text));
 
-        assertEquals(Collections.singleton("b"), Facts.read(factsFile).getCapabilities());
+        assertEquals(
+                "The NativeScript facts file " + factsFile + " needs org.nativescript:gradle-api supporting facts"
+                        + " schema " + needed + ", but this version of the library supports up to "
+                        + Facts.SUPPORTED_SCHEMA_VERSION + ". Update the plugins of this app that use"
+                        + " org.nativescript:gradle-api: any one that pins a newer version of the library is enough.",
+                e.getMessage());
+    }
+
+    @Test
+    void readsAFileThatNeedsExactlyThisReader() {
+        Facts facts = parse(withMinReaderSchemaVersion(String.valueOf(Facts.SUPPORTED_SCHEMA_VERSION)));
+
+        assertEquals(projectDir.toFile(), facts.getProjectRoot());
+    }
+
+    @Test
+    void readReusesTheResultUntilTheContentChanges() {
+        byte[] a = withField("\"capabilities\": [\"a\"]").getBytes(StandardCharsets.UTF_8);
+        Facts first = Facts.read(factsFile, a);
+        assertSame(first, Facts.read(factsFile, a.clone()));
+
+        byte[] b = withField("\"capabilities\": [\"b\"]").getBytes(StandardCharsets.UTF_8);
+        assertEquals(Collections.singleton("b"), Facts.read(factsFile, b).getCapabilities());
     }
 
     private static String plugin(String name) {
@@ -190,12 +221,17 @@ class FactsTest {
         return "\"plugins\": [" + String.join(", ", plugins) + "]";
     }
 
-    private static String withSchemaVersion(String version) {
-        return object("\"schemaVersion\": " + version, PROJECT, NO_PLUGINS);
+    private static String withMinReaderSchemaVersion(String version) {
+        return object("\"minReaderSchemaVersion\": " + version, SCHEMA, DEPENDENCIES_JSON, PROJECT, NO_PLUGINS);
     }
 
+    private static String withSchemaVersion(String version) {
+        return object(MIN_READER, "\"schemaVersion\": " + version, DEPENDENCIES_JSON, PROJECT, NO_PLUGINS);
+    }
+
+    /** Valid facts with {@code field} added, or replacing the field of the same name. */
     private static String withField(String field) {
-        return object(SCHEMA, field, PROJECT, NO_PLUGINS);
+        return object(MIN_READER, SCHEMA, DEPENDENCIES_JSON, field, PROJECT, NO_PLUGINS);
     }
 
     private static String withSha256(String sha256) {
@@ -203,11 +239,11 @@ class FactsTest {
     }
 
     private static String withProject(String fields) {
-        return object(SCHEMA, "\"project\": {" + fields + "}", NO_PLUGINS);
+        return object(MIN_READER, SCHEMA, DEPENDENCIES_JSON, "\"project\": {" + fields + "}", NO_PLUGINS);
     }
 
     private static String withPlugins(String... plugins) {
-        return object(SCHEMA, PROJECT, plugins(plugins));
+        return object(MIN_READER, SCHEMA, DEPENDENCIES_JSON, PROJECT, plugins(plugins));
     }
 
     private static String object(String... fields) {
@@ -216,9 +252,5 @@ class FactsTest {
 
     private Facts parse(String text) {
         return Facts.parse(factsFile, text);
-    }
-
-    private static void write(File file, String text) throws IOException {
-        Files.write(file.toPath(), text.getBytes(StandardCharsets.UTF_8));
     }
 }

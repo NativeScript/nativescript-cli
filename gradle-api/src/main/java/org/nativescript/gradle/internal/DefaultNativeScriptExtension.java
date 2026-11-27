@@ -68,6 +68,9 @@ public final class DefaultNativeScriptExtension implements NativeScriptExtension
 
     @Override
     public PluginInfo getSelf() {
+        if (!isPluginBuild()) {
+            return null;
+        }
         resolution();
         String name = pluginName();
         return name != null ? findPlugin(name) : null;
@@ -79,8 +82,8 @@ public final class DefaultNativeScriptExtension implements NativeScriptExtension
     }
 
     @Override
-    public File getProjectDir() {
-        return resolution().getProjectDir();
+    public File getProjectRoot() {
+        return resolution().getProjectRoot();
     }
 
     @Override
@@ -126,7 +129,7 @@ public final class DefaultNativeScriptExtension implements NativeScriptExtension
         File dir = findPackage(npmName);
         if (dir == null) {
             throw new GradleException("npm package '" + npmName + "' is not installed in "
-                    + new File(getProjectDir(), "node_modules") + " or a parent directory.");
+                    + new File(getProjectRoot(), "node_modules") + " or a parent directory.");
         }
         return dir;
     }

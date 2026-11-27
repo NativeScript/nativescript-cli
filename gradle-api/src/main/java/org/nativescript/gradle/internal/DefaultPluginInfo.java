@@ -43,16 +43,6 @@ final class DefaultPluginInfo implements PluginInfo {
     }
 
     @Override
-    public String getAarName() {
-        return data.getAarName();
-    }
-
-    @Override
-    public File getAar() {
-        return data.getAar();
-    }
-
-    @Override
     public String toString() {
         return "NativeScript plugin " + data;
     }

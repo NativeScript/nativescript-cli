@@ -26,36 +26,38 @@ public final class Resolution {
      * Reads the project's facts file.
      *
      * @throws GradleException if there is none, if it no longer matches the dependencies.json next
-     *     to it, or if it is invalid
+     *     to it, if it needs a newer version of this library, or if it is invalid
      */
     public static Resolution resolve(BuildInputs inputs) {
         List<File> searched = new ArrayList<>();
-        File factsFile = locateFacts(inputs, searched);
-        if (factsFile == null) {
+        Located located = locateFacts(inputs, searched);
+        if (located == null) {
             throw new GradleException("A plugin of this app uses org.nativescript:gradle-api, which needs the project"
                     + " to be prepared by NativeScript CLI 9.2 or newer, but there is no facts file at "
                     + searched.stream().map(File::toString).collect(Collectors.joining(" or "))
                     + ". Update the project's CLI with `npm i -D nativescript@latest`, then run `ns prepare android`.");
         }
-        Facts facts = Facts.read(factsFile);
-        facts.checkDependenciesJson();
+        Facts facts = Facts.read(located.file, located.content);
+        facts.checkDependenciesJson(inputs.fileContents(facts.getDependenciesJsonFile()));
         return new Resolution(facts);
     }
 
-    private static File locateFacts(BuildInputs inputs, List<File> searched) {
+    private static Located locateFacts(BuildInputs inputs, List<File> searched) {
         String explicit = asString(inputs.property(FACTS_FILE_PROPERTY));
         if (explicit != null) {
             File file = absolute(inputs.rootDir(), explicit);
-            if (!file.isFile()) {
+            Located located = Located.of(inputs, file);
+            if (located == null) {
                 throw new GradleException("-P" + FACTS_FILE_PROPERTY + " points to " + file + ", which does not exist.");
             }
-            return file;
+            return located;
         }
         // Lets the app build find the facts without -P, as when Android Studio opens platforms/android.
         File inRoot = absolute(inputs.rootDir(), FACTS_FILE_NAME);
         searched.add(inRoot);
-        if (inRoot.isFile()) {
-            return inRoot;
+        Located located = Located.of(inputs, inRoot);
+        if (located != null) {
+            return located;
         }
         // Only the plugin build template defines this; the CLI sets the variable when embedding the
         // app in a host project.
@@ -67,9 +69,7 @@ public final class Resolution {
             File file = new File(absolute(inputs.rootDir(), platformsAndroid), FACTS_FILE_NAME);
             if (!searched.contains(file)) {
                 searched.add(file);
-            }
-            if (file.isFile()) {
-                return file;
+                return Located.of(inputs, file);
             }
         }
         return null;
@@ -79,7 +79,7 @@ public final class Resolution {
         return facts;
     }
 
-    public File getProjectDir() {
+    public File getProjectRoot() {
         return facts.getProjectRoot();
     }
 
@@ -126,5 +126,20 @@ public final class Resolution {
 
     private static File absolute(File base, String path) {
         return base.toPath().resolve(path).toAbsolutePath().normalize().toFile();
+    }
+
+    private static final class Located {
+        final File file;
+        final byte[] content;
+
+        private Located(File file, byte[] content) {
+            this.file = file;
+            this.content = content;
+        }
+
+        static Located of(BuildInputs inputs, File file) {
+            byte[] content = inputs.fileContents(file);
+            return content != null ? new Located(file, content) : null;
+        }
     }
 }

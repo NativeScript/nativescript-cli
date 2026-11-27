@@ -1,5 +1,6 @@
 {
 	"schemaVersion": 2,
+	"minReaderSchemaVersion": 1,
 	"dependenciesJson": { "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570" },
 	"capabilities": ["some.future.capability"],
 	"someFutureSection": { "nested": [1, 2, { "deep": true }], "flag": null },

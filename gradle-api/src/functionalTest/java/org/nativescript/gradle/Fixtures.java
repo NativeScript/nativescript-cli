@@ -55,15 +55,45 @@ final class Fixtures {
         return Arrays.asList(requiredProperty("nativescript.gradleVersions").split(","));
     }
 
-    /** Makes every buildscript resolve the library from the test repository first. */
-    static Path writeInitScript(Path dir) {
-        String repo = testRepo().toUri().toString();
+    static Path libraryJar() {
+        return Path.of(requiredProperty("nativescript.libraryJar"));
+    }
+
+    /** A version of the library above any real one, published by {@link #writeHighVersionRepo(Path)}. */
+    static final String HIGH_LIBRARY_VERSION = "99.0.0";
+
+    /** Writes a Maven repository holding the library under test as {@link #HIGH_LIBRARY_VERSION}. */
+    static Path writeHighVersionRepo(Path dir) {
+        Path versionDir = dir.resolve("org/nativescript/gradle-api").resolve(HIGH_LIBRARY_VERSION);
+        String baseName = "gradle-api-" + HIGH_LIBRARY_VERSION;
+        try {
+            Files.createDirectories(versionDir);
+            Files.copy(libraryJar(), versionDir.resolve(baseName + ".jar"), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        write(versionDir.resolve(baseName + ".pom"), String.join("\n",
+                "<project xmlns=\"http://maven.apache.org/POM/4.0.0\">",
+                "  <modelVersion>4.0.0</modelVersion>",
+                "  <groupId>org.nativescript</groupId>",
+                "  <artifactId>gradle-api</artifactId>",
+                "  <version>" + HIGH_LIBRARY_VERSION + "</version>",
+                "</project>",
+                ""));
+        return dir;
+    }
+
+    /** Makes every buildscript resolve the library from the test repository, then {@code moreRepos}, first. */
+    static Path writeInitScript(Path dir, Path... moreRepos) {
+        StringBuilder repos = new StringBuilder();
+        for (Path repo : Stream.concat(Stream.of(testRepo()), Stream.of(moreRepos)).collect(Collectors.toList())) {
+            repos.append("            maven { url = '").append(repo.toUri()).append("' }\n");
+        }
         return write(dir.resolve("test-repo.init.gradle"), String.join("\n",
                 "allprojects {",
                 "    buildscript {",
                 "        repositories {",
-                "            maven { url = '" + repo + "' }",
-                "        }",
+                repos + "        }",
                 "    }",
                 "}",
                 ""));

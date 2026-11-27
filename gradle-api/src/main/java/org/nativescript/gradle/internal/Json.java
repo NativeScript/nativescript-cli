@@ -11,8 +11,8 @@ import java.util.Map;
 /**
  * Strict RFC 8259 JSON parser.
  *
- * <p>The library must not depend on a JSON library, nor on Groovy's: Gradle 7 ships Groovy 3 and
- * Gradle 8+ ship Groovy 4, under different package names.
+ * <p>Not {@code groovy.json}: the library does not compile against Groovy, and the facts reader
+ * relies on the number types below.
  *
  * <p>Objects become unmodifiable {@link LinkedHashMap}s (a repeated key keeps the last value, as
  * {@code JSON.parse} does), arrays unmodifiable lists, integers {@link Integer}, {@link Long} or

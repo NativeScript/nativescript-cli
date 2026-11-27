@@ -113,6 +113,7 @@ val functionalTestTask = tasks.register<Test>("functionalTest") {
 
     systemProperty("nativescript.testRepo", testRepo.get().asFile.absolutePath)
     systemProperty("nativescript.libraryVersion", providers.gradleProperty("VERSION_NAME").get())
+    systemProperty("nativescript.libraryJar", tasks.jar.get().archiveFile.get().asFile.absolutePath)
     systemProperty("nativescript.samplesDir", file("samples").absolutePath)
     systemProperty("nativescript.vendorGradlePluginDir", file("../vendor/gradle-plugin").absolutePath)
     val gradleVersions = providers.gradleProperty("functionalTestGradleVersions").orElse("7.5.1,8.14.3,9.8.1")

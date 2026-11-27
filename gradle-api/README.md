@@ -64,6 +64,13 @@ Pin the **lowest** version that has what you need, never a range or `+`. Every p
 the library to the same classpath and Gradle keeps the highest version, which is always backwards
 compatible.
 
+Add it **only** in `platforms/android/buildscript.gradle`, never on a root classpath: not in a
+plugin's `rootbuildscript.gradle`, not in the app's `App_Resources/Android/rootbuildscript.gradle`,
+and not in the root `build.gradle` of `platforms/android`. Gradle looks up classes in the root
+project's class loader before the app's, so a version on the root classpath wins over every
+plugin's `buildscript.gradle`, even one that asks for a newer version, and every plugin in the app
+gets that older version.
+
 **2. If you use `nativescript` in the app build**, apply the library at the top of
 `platforms/android/include.gradle`. The whole file runs in the app build, including its
 `repositories {}` and `dependencies {}` blocks; only code inside the `tempBuild` check of
@@ -124,9 +131,15 @@ never put a `buildscript {}` block in `include.gradle`.
 | What your plugin needs | What it writes |
 |---|---|
 | Another plugin it lists in its `package.json` `dependencies` | Nothing: in its own `.aar` build the CLI adds that plugin's `.aar`/`.jar` files as `implementation`, and in the app build every plugin is linked. |
-| A plugin it doesn't list (typically `@nativescript/core`, usually a peer) | `compileOnly nativescript.plugin("...").artifacts` inside the `tempBuild` check, as in [the block above](#your-plugins-own-aar-build). Not `implementation`: Android's library plugin rejects a local `.aar` as `implementation` when it packages yours ("Direct local .aar file dependencies are not supported when building an AAR"), and the app links that plugin anyway. |
+| A plugin it doesn't list (typically `@nativescript/core`, usually a peer) | `compileOnly nativescript.plugin("...").artifacts` inside the `tempBuild` check, as in [the block above](#your-plugins-own-aar-build), for the `.aar`/`.jar` files that plugin **ships prebuilt** in its package. Not `implementation`: Android's library plugin rejects a local `.aar` as `implementation` when it packages yours ("Direct local .aar file dependencies are not supported when building an AAR"), and the app links that plugin anyway. |
 | Its own prebuilt `.jar`/`.aar` | Nothing, if they're in `platforms/android` or `platforms/android/libs`: the app build links them. |
 | A Maven library | The usual `implementation "group:artifact:version"`. |
+
+The CLI builds plugins' `.aar`s one after the other: `@nativescript/core` first, then every plugin
+after the plugins it lists in its `dependencies`. The order between unrelated plugins is not
+defined, and `artifacts` only includes an `.aar` once it exists, so on a clean build
+`compileOnly nativescript.plugin(X).artifacts` can miss an `.aar` the CLI builds from X's sources.
+If you need such an `.aar`, list X in your `dependencies`. `@nativescript/core` is always fine.
 
 Never write `implementation files(...)` or `flatDir` pointing into another package or into
 `node_modules`: the CLI decides where plugins' files are (see
@@ -152,9 +165,9 @@ Known limits of the CLI's and runtime's templates today:
 | `nativescript.apiLevel` | No | The API level of the library on the classpath. |
 | `nativescript.pluginBuild` | No | `true` in the CLI's temporary build of some plugin's `.aar`. |
 | `nativescript.isBuildingPlugin(String)` | No | Whether the plugin build is building that npm package. |
-| `nativescript.has(String)` | Yes | Whether the CLI guarantees a capability. |
-| `nativescript.self` | Yes | In a plugin build, the plugin being built (see below). `null` in the app build. |
-| `nativescript.projectDir` | Yes | The NativeScript project root (the folder with the app's `package.json`). |
+| `nativescript.self` | In a plugin build | In a plugin build, the plugin being built (see below). `null` in the app build, without reading the facts file. |
+| `nativescript.has(String)` | Yes | Whether the CLI guarantees a capability (see [Capabilities](#capabilities)). |
+| `nativescript.projectRoot` | Yes | The NativeScript project root (the folder with the app's `package.json`; `project.root` in the facts file). |
 | `nativescript.appDir` | Yes | The app source folder (`appPath` in `nativescript.config`). |
 | `nativescript.appResourcesDir` | Yes | `App_Resources`. |
 | `nativescript.plugin(String)` | Yes | A plugin the CLI lists, by npm name. Throws if the app doesn't have it. |
@@ -163,7 +176,8 @@ Known limits of the CLI's and runtime's templates today:
 | `nativescript.findPackage(String)` | Yes | Same, or `null`. |
 
 "Needs facts" members read the facts file CLI 9.2+ writes, and throw one of the [errors](#errors)
-below when it is missing or out of date. Without it, only the first three work.
+below when it is missing or out of date. Without it, only the first three work, and `self` in the
+app build.
 
 A plugin (`PluginInfo`):
 
@@ -172,8 +186,7 @@ A plugin (`PluginInfo`):
 | `name` | The npm package name. |
 | `packageDir` | The installed package. Treat it as read-only. |
 | `nativeDir` | Where Gradle reads the plugin's Android files from. |
-| `artifacts` | Every `.aar` and `.jar` under `nativeDir`, as a lazy `FileCollection`. |
-| `aarName`, `aar` | The name and location of the `.aar` the CLI builds from the plugin's sources (the file only exists if it has sources). |
+| `artifacts` | Every `.aar` and `.jar` under `nativeDir`, as a lazy `FileCollection`. It includes the `.aar` the CLI builds from the plugin's sources once that exists (see [Depending on other plugins](#depending-on-other-plugins)). |
 | `options` | Per-plugin options. Reserved; empty for now. |
 
 `plugin` / `findPlugin` only know the plugins the CLI lists: packages that declare Android support
@@ -198,6 +211,12 @@ if (!nativescript.pluginBuild) {
 that don't hoist (pnpm's default layout) may not resolve packages your app doesn't depend on
 directly.
 
+### Capabilities
+
+`has(String)` answers from the facts file's `capabilities` list, which is empty today. Capability
+names are dotted lowercase `area.feature` (for example `build.abis`). Once a CLI version lists a
+capability, every later CLI lists it with the same meaning: names are only ever added.
+
 ## Errors
 
 The library reads the facts file on the first use of a member that needs it, and stops the build
@@ -219,6 +238,18 @@ with one of these messages when it can't:
 
   (Or, if `dependencies.json` is gone: "There is no `<…>/dependencies.json` next to the
   NativeScript facts file `<…>`." followed by the same advice.)
+
+- **Library too old for the facts file**, because the file's `minReaderSchemaVersion` is above the
+  schema version this library supports:
+
+  > The NativeScript facts file `<…>` needs org.nativescript:gradle-api supporting facts schema N,
+  > but this version of the library supports up to M. Update the plugins of this app that use
+  > org.nativescript:gradle-api: any one that pins a newer version of the library is enough.
+
+- **Invalid facts file** ("Invalid NativeScript facts file `<…>`: …"), when a required field such as
+  `minReaderSchemaVersion` or `dependenciesJson.sha256` is missing or has the wrong type, or
+  `minReaderSchemaVersion` is greater than `schemaVersion`. The CLI
+  never writes such a file; prepare again.
 
 ## Recipes
 
@@ -251,7 +282,7 @@ repositories {
 | | CLI 9.1 and older | CLI 9.2+ |
 |---|---|---|
 | Plugin not using the library | Unchanged | Its own `buildscript.gradle` also runs in its own `.aar` build |
-| Plugin using the library, app build | `apiLevel`, `pluginBuild` and `isBuildingPlugin` work; anything else stops the build with the [no facts file](#errors) error | Facts from the CLI |
+| Plugin using the library, app build | `apiLevel`, `pluginBuild`, `isBuildingPlugin` and `self` (null) work; anything else stops the build with the [no facts file](#errors) error | Facts from the CLI |
 | Plugin using the library, its own `.aar` build | Library not loaded, so the [check](#your-plugins-own-aar-build) stops the build with the plugin's message (or, if a plugin it depends on applied the library, the [no facts file](#errors) error) | Library loaded and applied, facts from the CLI |
 | Project prepared again by an older CLI after 9.2 | The [out-of-date facts file](#errors) error | |
 
@@ -321,6 +352,7 @@ built. The schema is [`schema/nativescript-gradle.schema.json`](schema/nativescr
 ```json
 {
   "schemaVersion": 1,
+  "minReaderSchemaVersion": 1,
   "cli": { "version": "9.2.0" },
   "runtime": { "name": "@nativescript/android", "version": "9.0.0" },
   "capabilities": [],
@@ -341,6 +373,10 @@ built. The schema is [`schema/nativescript-gradle.schema.json`](schema/nativescr
 ```
 
 - Paths are relative to the file, with forward slashes, so the folder can move.
+- `minReaderSchemaVersion` is the lowest `schemaVersion` a reader must understand to use the file,
+  never above the file's own `schemaVersion`.
+  A library that supports only older schema versions refuses it (see [Errors](#errors)) instead of
+  reading part of it. CLI 9.2 writes `1`.
 - `dependenciesJson.sha256` is the hash of the `dependencies.json` the CLI wrote next to it. A CLI
   that doesn't know about this file (9.1 and older, e.g. a global one used by mistake) still
   rewrites `dependencies.json` but leaves this file behind; the library notices the mismatch and
@@ -354,8 +390,10 @@ built. The schema is [`schema/nativescript-gradle.schema.json`](schema/nativescr
 These are what keep old plugins working on new CLIs, and new plugins working on CLIs from 9.2 on.
 
 **Facts file:** fields are only added. A field never changes meaning and is never removed.
-`schemaVersion` goes up when fields are added; readers accept any version and read what they know.
-Paths are relative. Anything a newer CLI does differently is expressed as data in the file, not as a
+`schemaVersion` goes up when fields are added; readers accept any version and read what they know,
+as long as it isn't below the file's `minReaderSchemaVersion`. A CLI raises `minReaderSchemaVersion`
+only for a change that old readers would get wrong if they ignored it, which should be never: it is
+the one way to tell libraries already published "you can't read this". Paths are relative. Anything a newer CLI does differently is expressed as data in the file, not as a
 rule readers must know. A facts file that doesn't match the `dependencies.json` next to it is an
 error, never used.
 
@@ -365,9 +403,12 @@ the CLI checks the facts file or a capability before relying on it. The library 
 
 ## Releasing
 
-Builds and tests run in `.github/workflows/gradle_api.yml`. Pushing a tag `gradle-api-v<version>`
-that matches `VERSION_NAME` in `gradle.properties` publishes to Maven Central, from the protected
-`maven-central` GitHub environment. It needs these environment secrets:
+Builds and tests run in `.github/workflows/gradle_api.yml`, on Linux (unit and functional tests)
+and Windows (unit tests). Pushing a tag `gradle-api-v<version>` on a commit of `main` that matches
+`VERSION_NAME` in `gradle.properties` (not a `-SNAPSHOT`) publishes to Maven Central and releases
+it at once, from the protected `maven-central` GitHub environment; the workflow refuses a tag on
+any other commit. Give that environment required reviewers, since a Maven Central release can't be
+undone. It needs these environment secrets:
 
 - `MAVEN_CENTRAL_USERNAME`, `MAVEN_CENTRAL_PASSWORD`: a Central Portal user token with publishing
   rights on the `org.nativescript` namespace.
@@ -386,3 +427,15 @@ cd gradle-api
 ./gradlew check                 # unit + functional tests (AGP tests need ANDROID_HOME)
 ./gradlew publishToMavenLocal   # try it from a local app
 ```
+
+### CLI release notes
+
+CLI changes from this work that affect plugins that don't use the library, for the CLI 9.2 release
+notes:
+
+- **A plugin's own `platforms/android/buildscript.gradle` now also runs in that plugin's own `.aar`
+  build.** Before 9.2 it ran only in the app build and in the `.aar` builds of plugins that depend
+  on it. A plugin whose `buildscript.gradle` adds classpath dependencies or repositories now gets
+  them in its own build too. Check that it doesn't assume the app build (for example by reading
+  properties only the app's Gradle project sets); `project.hasProperty("tempBuild")` tells the two
+  apart.

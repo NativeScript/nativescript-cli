@@ -1,9 +1,7 @@
 package org.nativescript.gradle.internal;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,11 +22,15 @@ import org.gradle.api.logging.Logging;
  * The CLI's {@code nativescript-gradle.json}, described by {@code schema/nativescript-gradle.schema.json}.
  *
  * <p>Fields are only ever added to the format, so unknown fields are ignored and a newer {@code
- * schemaVersion} is read like this one.
+ * schemaVersion} is read like this one, unless its {@code minReaderSchemaVersion} is newer than
+ * {@link #SUPPORTED_SCHEMA_VERSION}.
  */
 public final class Facts {
-    /** The newest schemaVersion this library knows every field of. */
-    public static final int KNOWN_SCHEMA_VERSION = 1;
+    /**
+     * The facts schema version this library supports: it knows every field up to this {@code
+     * schemaVersion}, and refuses files whose {@code minReaderSchemaVersion} is higher.
+     */
+    public static final int SUPPORTED_SCHEMA_VERSION = 1;
 
     private static final Logger LOGGER = Logging.getLogger(Facts.class);
 
@@ -62,19 +64,14 @@ public final class Facts {
     }
 
     /**
-     * Reads {@code file}, reusing the previous result while its content is unchanged.
+     * Parses {@code content}, read from {@code file}, reusing the previous result for that file while
+     * its content is unchanged.
      *
-     * @throws GradleException if the file cannot be read or is not valid facts
+     * @throws GradleException if {@code content} is not valid facts
      */
-    public static Facts read(File file) {
+    public static Facts read(File file, byte[] content) {
         File absolute = file.getAbsoluteFile();
         String key = absolute.getPath();
-        byte[] content;
-        try {
-            content = Files.readAllBytes(absolute.toPath());
-        } catch (IOException e) {
-            throw new GradleException("Could not read NativeScript facts file " + absolute + ": " + e, e);
-        }
         CachedFacts cached = CACHE.get(key);
         if (cached != null && Arrays.equals(cached.content, content)) {
             return cached.facts;
@@ -101,27 +98,39 @@ public final class Facts {
         Reader reader = new Reader(file, base);
         Map<String, Object> top = reader.object(root, "the top level");
 
+        // The two versions are checked before any other field, so that a file this library cannot
+        // read asks for a newer library rather than being reported as invalid.
+        int minReaderSchemaVersion = reader.integer(top, "minReaderSchemaVersion", "");
+        if (minReaderSchemaVersion < 1) {
+            throw invalid(file, "minReaderSchemaVersion must be at least 1");
+        }
         int schemaVersion = reader.integer(top, "schemaVersion", "");
         if (schemaVersion < 1) {
             throw invalid(file, "schemaVersion must be at least 1");
         }
-        if (schemaVersion > KNOWN_SCHEMA_VERSION) {
+        if (minReaderSchemaVersion > schemaVersion) {
+            throw invalid(file, "minReaderSchemaVersion must not be greater than schemaVersion");
+        }
+        if (minReaderSchemaVersion > SUPPORTED_SCHEMA_VERSION) {
+            throw new GradleException("The NativeScript facts file " + file + " needs org.nativescript:gradle-api"
+                    + " supporting facts schema " + minReaderSchemaVersion + ", but this version of the library"
+                    + " supports up to " + SUPPORTED_SCHEMA_VERSION + ". Update the plugins of this app that"
+                    + " use org.nativescript:gradle-api: any one that pins a newer version of the library is enough.");
+        }
+
+        if (schemaVersion > SUPPORTED_SCHEMA_VERSION) {
             LOGGER.info(
                     "{} has schemaVersion {}; this version of org.nativescript:gradle-api knows up to {}"
                             + " and ignores the fields it does not know.",
                     file,
                     schemaVersion,
-                    KNOWN_SCHEMA_VERSION);
+                    SUPPORTED_SCHEMA_VERSION);
         }
 
-        // Required by the schema, but a reader must stay usable if a later writer drops it.
-        String dependenciesJsonSha256 = null;
-        if (top.containsKey("dependenciesJson")) {
-            Map<String, Object> dependenciesJson = reader.object(top.get("dependenciesJson"), "dependenciesJson");
-            dependenciesJsonSha256 = reader.requiredString(dependenciesJson, "sha256", "dependenciesJson.");
-            if (!dependenciesJsonSha256.matches("[0-9a-f]{64}")) {
-                throw invalid(file, "dependenciesJson.sha256 must be 64 lowercase hex digits");
-            }
+        Map<String, Object> dependenciesJson = reader.object(top.get("dependenciesJson"), "dependenciesJson");
+        String dependenciesJsonSha256 = reader.requiredString(dependenciesJson, "sha256", "dependenciesJson.");
+        if (!dependenciesJsonSha256.matches("[0-9a-f]{64}")) {
+            throw invalid(file, "dependenciesJson.sha256 must be 64 lowercase hex digits");
         }
 
         Set<String> capabilities = new LinkedHashSet<>();
@@ -151,14 +160,12 @@ public final class Facts {
             }
             Map<String, Object> options =
                     entry.containsKey("options") ? reader.object(entry.get("options"), prefix + "options") : Collections.emptyMap();
-            PluginData plugin = new PluginData(
-                    name,
-                    reader.path(entry, "packageDir", prefix),
-                    reader.path(entry, "nativeDir", prefix),
-                    reader.requiredString(entry, "aarName", prefix),
-                    reader.path(entry, "aar", prefix),
-                    dependencies,
-                    options);
+            File packageDir = reader.path(entry, "packageDir", prefix);
+            File nativeDir = reader.path(entry, "nativeDir", prefix);
+            // Required by the schema but not exposed: where aars live is the CLI's business.
+            reader.requiredString(entry, "aarName", prefix);
+            reader.path(entry, "aar", prefix);
+            PluginData plugin = new PluginData(name, packageDir, nativeDir, dependencies, options);
             if (plugins.put(name, plugin) != null) {
                 throw invalid(file, "plugin '" + name + "' is listed more than once");
             }
@@ -172,29 +179,24 @@ public final class Facts {
         return new GradleException("Invalid NativeScript facts file " + file + ": " + problem);
     }
 
+    /** The dependencies.json these facts must match, next to the facts file. */
+    public File getDependenciesJsonFile() {
+        return new File(file.getAbsoluteFile().getParentFile(), "dependencies.json");
+    }
+
     /**
      * Fails if these facts no longer describe the project: a CLI that does not write facts rewrites
-     * the dependencies.json next to them but leaves them behind. Reads that file on every call, so
-     * the answer is never cached.
+     * the dependencies.json next to them but leaves them behind.
      *
-     * @throws GradleException if dependencies.json is missing, cannot be read or does not have the
-     *     recorded hash
+     * @param content the current bytes of {@link #getDependenciesJsonFile()}, null if it is missing
+     * @throws GradleException if dependencies.json is missing or does not have the recorded hash
      */
-    public void checkDependenciesJson() {
-        if (dependenciesJsonSha256 == null) {
-            return;
-        }
-        File dependenciesJson = new File(file.getAbsoluteFile().getParentFile(), "dependencies.json");
+    public void checkDependenciesJson(byte[] content) {
+        File dependenciesJson = getDependenciesJsonFile();
         String rerun = " Run `ns prepare android` again with the NativeScript CLI the project uses.";
-        if (!dependenciesJson.isFile()) {
+        if (content == null) {
             throw new GradleException(
                     "There is no " + dependenciesJson + " next to the NativeScript facts file " + file + "." + rerun);
-        }
-        byte[] content;
-        try {
-            content = Files.readAllBytes(dependenciesJson.toPath());
-        } catch (IOException e) {
-            throw new GradleException("Could not read " + dependenciesJson + ": " + e, e);
         }
         if (!sha256(content).equals(dependenciesJsonSha256)) {
             throw new GradleException("The NativeScript facts file " + file + " does not match " + dependenciesJson

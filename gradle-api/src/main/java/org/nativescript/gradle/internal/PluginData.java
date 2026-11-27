@@ -10,8 +10,6 @@ public final class PluginData {
     private final String name;
     private final File packageDir;
     private final File nativeDir;
-    private final String aarName;
-    private final File aar;
     private final List<String> dependencies;
     private final Map<String, Object> options;
 
@@ -19,15 +17,11 @@ public final class PluginData {
             String name,
             File packageDir,
             File nativeDir,
-            String aarName,
-            File aar,
             List<String> dependencies,
             Map<String, Object> options) {
         this.name = name;
         this.packageDir = packageDir;
         this.nativeDir = nativeDir;
-        this.aarName = aarName;
-        this.aar = aar;
         this.dependencies = Collections.unmodifiableList(dependencies);
         this.options = Collections.unmodifiableMap(options);
     }
@@ -42,14 +36,6 @@ public final class PluginData {
 
     public File getNativeDir() {
         return nativeDir;
-    }
-
-    public String getAarName() {
-        return aarName;
-    }
-
-    public File getAar() {
-        return aar;
     }
 
     public List<String> getDependencies() {

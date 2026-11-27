@@ -2,6 +2,7 @@ package org.nativescript.gradle.internal;
 
 import java.io.File;
 import org.gradle.api.Project;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.provider.ProviderFactory;
 
@@ -19,8 +20,12 @@ public interface BuildInputs {
     /** The root project's directory. */
     File rootDir();
 
+    /** The bytes of {@code file}, null if it is not a regular file. */
+    byte[] fileContents(File file);
+
     static BuildInputs of(Project project) {
         ProviderFactory providers = project.getProviders();
+        ProjectLayout layout = project.getLayout();
         File rootDir = project.getRootDir();
         return new BuildInputs() {
             // Not Project.findProperty: its implicit lookup in parent projects is deprecated since
@@ -45,6 +50,15 @@ public interface BuildInputs {
             @Override
             public File rootDir() {
                 return rootDir;
+            }
+
+            // Through providers so that the configuration cache tracks the file, including its absence.
+            @Override
+            public byte[] fileContents(File file) {
+                return providers
+                        .fileContents(layout.file(providers.provider(() -> file)))
+                        .getAsBytes()
+                        .getOrNull();
             }
         };
     }

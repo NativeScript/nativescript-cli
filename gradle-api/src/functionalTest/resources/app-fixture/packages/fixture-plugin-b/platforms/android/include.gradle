@@ -6,7 +6,9 @@ def nsFromB = project.extensions.getByName("nativescript")
 println "NS|b.sameExtension|${nativescript.is(nsFromB)}"
 // Printed before anything that needs the facts file, so that builds without one show it too.
 println "NS|b.pluginBuild|${nsFromB.pluginBuild}"
-println "NS|b.projectDir|${nsFromB.projectDir}"
+println "NS|b.self|${nsFromB.self}"
+println "NS|b.libraryJar|${new File(nsFromB.getClass().protectionDomain.codeSource.location.toURI()).name}"
+println "NS|b.projectRoot|${nsFromB.projectRoot}"
 
 // Scripts applied with `apply from` get their own class loader, which does not see the
 // classes buildscript.gradle put on the project's classpath, even though the plugin id resolves.

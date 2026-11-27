@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.stream.Stream;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
@@ -57,8 +58,11 @@ class AppBuildTest {
         Path platformsAndroid = project.resolve("platforms/android");
         Fixtures.copyTree(fixture().resolve("platforms/android"), platformsAndroid);
         Fixtures.copyTree(fixture().resolve("packages"), project.resolve("node_modules"));
+        // In one mode fixture-plugin-b pins a higher version than the sample, which Gradle must pick
+        // for the whole classpath. The other modes keep resolving the library as published.
+        String pluginBLibraryVersion = cli == Cli.FACTS_FOUND ? Fixtures.HIGH_LIBRARY_VERSION : Fixtures.libraryVersion();
         Path pluginB = project.resolve("node_modules/fixture-plugin-b/platforms/android/buildscript.gradle");
-        Fixtures.write(pluginB, Fixtures.read(pluginB).replace("@LIBRARY_VERSION@", Fixtures.libraryVersion()));
+        Fixtures.write(pluginB, Fixtures.read(pluginB).replace("@LIBRARY_VERSION@", pluginBLibraryVersion));
         Path core = Fixtures.installCore(project);
         Fixtures.installSample(project);
         Fixtures.write(project.resolve("package.json"), "{ \"name\": \"fixture-app\" }\n");
@@ -72,7 +76,8 @@ class AppBuildTest {
 
         List<String> arguments = new ArrayList<>(List.of(
                 "help", "--offline", "--stacktrace", "--warning-mode=fail",
-                "--init-script", Fixtures.path(Fixtures.writeInitScript(tempDir))));
+                "--init-script",
+                Fixtures.path(Fixtures.writeInitScript(tempDir, Fixtures.writeHighVersionRepo(tempDir.resolve("high-repo"))))));
         Path factsFile = platformsAndroid.resolve("nativescript-gradle.json");
         if (cli != Cli.NO_FACTS) {
             // fixture-plugin-b is left out: an installed package with platforms/android that the CLI
@@ -80,6 +85,7 @@ class AppBuildTest {
             Fixtures.write(factsFile, String.join("\n",
                     "{",
                     "  \"schemaVersion\": 1,",
+                    "  \"minReaderSchemaVersion\": 1,",
                     "  \"dependenciesJson\": { \"sha256\": \"" + Fixtures.sha256(dependenciesJson) + "\" },",
                     "  \"capabilities\": [\"fixture.capability\"],",
                     "  \"project\": { \"root\": \"../..\", \"appDir\": \"../../src\", \"appResourcesDir\": \"../../src/App_Resources\" },",
@@ -119,32 +125,35 @@ class AppBuildTest {
                             + " after the facts file was written. Run `ns prepare android` again with the NativeScript CLI"
                             + " the project uses.";
             assertTrue(result.getOutput().lines().anyMatch(line -> line.equals("> " + error)), result.getOutput());
-            assertEquals("false", Fixtures.probes(result).get("b.pluginBuild"), "pluginBuild needs no facts");
+            Map<String, String> probes = Fixtures.probes(result);
+            assertEquals("false", probes.get("b.pluginBuild"), "pluginBuild needs no facts");
+            assertEquals("null", probes.get("b.self"), "self needs no facts outside a plugin build");
+            assertHighestLibraryVersionWins(probes, pluginBLibraryVersion);
             return;
         }
 
         BuildResult result = runner.build();
         Map<String, String> probes = Fixtures.probes(result);
+        assertHighestLibraryVersionWins(probes, pluginBLibraryVersion);
 
         Path appDir = project.resolve("src");
         assertEquals("true", probes.get("typed"), "NativeScript.of returns the extension");
         assertEquals("true", probes.get("b.sameExtension"), "include.gradle reaches the extension by its name");
         assertEquals("false", probes.get("b.libraryClassVisible"), "include.gradle cannot see the library's classes");
         assertEquals("false", probes.get("b.pluginBuild"));
-        assertEquals(Fixtures.path(project), probes.get("b.projectDir"));
+        assertEquals("null", probes.get("b.self"));
+        assertEquals(Fixtures.path(project), probes.get("b.projectRoot"));
         assertEquals("1", probes.get("apiLevel"));
         assertEquals("false", probes.get("pluginBuild"));
         assertEquals("null", probes.get("self"));
         assertEquals("false", probes.get("buildingSample"));
-        assertEquals(Fixtures.path(project), probes.get("projectDir"));
+        assertEquals(Fixtures.path(project), probes.get("projectRoot"));
         assertEquals(Fixtures.path(appDir), probes.get("appDir"));
         assertEquals(Fixtures.path(appDir.resolve("App_Resources")), probes.get("appResourcesDir"));
         assertEquals("true", probes.get("has"));
         assertEquals(Fixtures.path(core), probes.get("core.packageDir"));
         assertEquals(Fixtures.path(core.resolve("platforms/android")), probes.get("core.nativeDir"));
         assertEquals("inner.aar,widgets-release.aar", probes.get("core.artifacts"));
-        assertEquals("core", probes.get("core.aarName"));
-        assertEquals(Fixtures.path(core.resolve("platforms/android/core.aar")), probes.get("core.aar"));
         assertEquals("[flag:true]", probes.get("core.options"));
         assertEquals(
                 Fixtures.path(platformsAndroid.resolve(".ns-plugins/sample/platforms/android")),
@@ -157,6 +166,22 @@ class AppBuildTest {
         String error = probes.get("pluginError");
         assertTrue(error.contains("'not-installed'") && error.contains("@nativescript/core, " + Fixtures.SAMPLE_NAME),
                 "error names the plugin and lists the known ones: " + error);
+    }
+
+    /** The sample pins the version under test; Gradle keeps the higher of it and fixture-plugin-b's. */
+    private static void assertHighestLibraryVersionWins(Map<String, String> probes, String pluginBLibraryVersion) {
+        assertEquals(
+                String.join(",", new TreeSet<>(List.of(Fixtures.libraryVersion(), pluginBLibraryVersion))),
+                probes.get("libraryRequested"));
+        if (pluginBLibraryVersion.equals(Fixtures.HIGH_LIBRARY_VERSION)) {
+            assertEquals(Fixtures.HIGH_LIBRARY_VERSION, probes.get("librarySelected"));
+            assertEquals(
+                    "gradle-api-" + Fixtures.HIGH_LIBRARY_VERSION + ".jar",
+                    probes.get("b.libraryJar"),
+                    "the extension's class comes from the higher version's jar");
+        } else {
+            assertEquals(Fixtures.libraryVersion(), probes.get("librarySelected"));
+        }
     }
 
     private static Path fixture() throws URISyntaxException {

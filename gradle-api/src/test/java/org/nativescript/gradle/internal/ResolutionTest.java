@@ -72,23 +72,21 @@ class ResolutionTest {
     // The hash recorded is that of "[]\n"; dependencies.json gets the given text plus a newline.
     @ParameterizedTest(name = "{0}")
     @CsvSource(delimiter = '|', value = {
-        // case | facts passed with -Pnativescript.factsFile | facts record the hash | dependencies.json | error
-        "hash matches                                 | false | true  | []  |",
-        "hash differs                                 | false | true  | [ ] | mismatch",
-        "dependencies.json missing                    | false | true  |     | missing",
-        "no hash recorded, dependencies.json changed  | false | false | [ ] |",
-        "stale -Pnativescript.factsFile               | true  | true  | [ ] | mismatch",
+        // case | facts passed with -Pnativescript.factsFile | dependencies.json | error
+        "hash matches                   | false | []  |",
+        "hash differs                   | false | [ ] | mismatch",
+        "dependencies.json missing      | false |     | missing",
+        "stale -Pnativescript.factsFile | true  | [ ] | mismatch",
     })
-    void checksFactsAgainstDependenciesJson(
-            String description, boolean explicit, boolean hashed, String dependenciesJson, String error)
+    void checksFactsAgainstDependenciesJson(String description, boolean explicit, String dependenciesJson, String error)
             throws IOException {
         Path dir = explicit ? base.resolve("explicit") : platformsAndroid;
         Path dependencies = dir.resolve("dependencies.json");
         if (dependenciesJson != null) {
             write(dependencies, dependenciesJson + "\n");
         }
-        String sha256 = hashed ? "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570" : null;
-        Path facts = writeFacts(dir.resolve(Resolution.FACTS_FILE_NAME), project, "[]", sha256);
+        Path facts = writeFacts(
+                dir.resolve(Resolution.FACTS_FILE_NAME), project, "[]", TestFiles.EMPTY_DEPENDENCIES_JSON_SHA256);
         FakeInputs inputs = appBuild().property(Resolution.FACTS_FILE_PROPERTY, explicit ? facts.toString() : null);
 
         if (error == null) {
@@ -106,8 +104,8 @@ class ResolutionTest {
 
     @Test
     void explicitFactsFileIsResolvedAgainstRootDirAndWins() throws IOException {
-        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]", null);
-        Path explicit = writeFacts(platformsAndroid.resolve("sub/facts.json"), project, "[]", null);
+        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]");
+        Path explicit = writeFacts(platformsAndroid.resolve("sub/facts.json"), project, "[]");
 
         Resolution resolution =
                 Resolution.resolve(appBuild().property(Resolution.FACTS_FILE_PROPERTY, "sub/facts.json"));
@@ -117,7 +115,7 @@ class ResolutionTest {
 
     @Test
     void reportsMissingExplicitFactsFile() throws IOException {
-        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]", null);
+        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]");
         Path missing = base.resolve("missing.json");
 
         GradleException e = assertThrows(
@@ -130,7 +128,7 @@ class ResolutionTest {
     @CsvSource({"plugin, property, true", "plugin, environment variable, true", "app, environment variable, false"})
     void looksForFactsInUserProjectPlatformsAndroid(String build, String source, boolean found) throws IOException {
         Path elsewhere = base.resolve("elsewhere");
-        Path facts = writeFacts(elsewhere.resolve(Resolution.FACTS_FILE_NAME), project, "[]", null);
+        Path facts = writeFacts(elsewhere.resolve(Resolution.FACTS_FILE_NAME), project, "[]");
         FakeInputs inputs = build.equals("plugin") ? pluginBuild() : appBuild();
         if (source.equals("property")) {
             inputs.property(PLATFORMS_ANDROID_VARIABLE, elsewhere.toString());
@@ -163,8 +161,7 @@ class ResolutionTest {
         writeFacts(
                 platformsAndroid.resolve(Resolution.FACTS_FILE_NAME),
                 project,
-                "[" + plugin("listed", "../../vendor/listed") + "]",
-                null);
+                "[" + plugin("listed", "../../vendor/listed") + "]");
 
         Resolution resolution = Resolution.resolve(appBuild());
 
@@ -182,7 +179,7 @@ class ResolutionTest {
         installPackage(base, "dup");
         Path near = installPackage(project, "dup");
         Files.createDirectories(project.resolve("node_modules/no-package-json"));
-        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]", null);
+        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]");
 
         Resolution resolution = Resolution.resolve(appBuild());
 
@@ -195,7 +192,7 @@ class ResolutionTest {
     void lookupStartsAtFactsProjectRoot() throws IOException {
         Path otherProject = Files.createDirectories(base.resolve("other"));
         Path pkg = installPackage(otherProject, "elsewhere");
-        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), otherProject, "[]", null);
+        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), otherProject, "[]");
 
         assertEquals(pkg.toFile(), Resolution.resolve(appBuild()).findPackage("elsewhere"));
     }
@@ -204,7 +201,7 @@ class ResolutionTest {
     @NullAndEmptySource
     @ValueSource(strings = {"../x", "@scope", "@scope/", "a/b", "@a/b/c", "a\\b", "..", ".", "@/x", "@s/..", "c:x"})
     void rejectsInvalidNames(String name) throws IOException {
-        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]", null);
+        writeFacts(platformsAndroid.resolve(Resolution.FACTS_FILE_NAME), project, "[]");
         Resolution resolution = Resolution.resolve(appBuild());
 
         assertThrows(IllegalArgumentException.class, () -> resolution.findPlugin(name));

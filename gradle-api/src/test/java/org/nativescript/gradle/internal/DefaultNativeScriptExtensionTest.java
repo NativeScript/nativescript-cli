@@ -54,8 +54,7 @@ class DefaultNativeScriptExtensionTest {
         NativeScriptExtension ns = extension(pluginBuild);
         Map<String, Consumer<NativeScriptExtension>> members = Map.of(
                 "has", e -> e.has("x"),
-                "self", NativeScriptExtension::getSelf,
-                "projectDir", NativeScriptExtension::getProjectDir,
+                "projectRoot", NativeScriptExtension::getProjectRoot,
                 "appDir", NativeScriptExtension::getAppDir,
                 "appResourcesDir", NativeScriptExtension::getAppResourcesDir,
                 "plugin", e -> e.plugin("@nativescript/core"),
@@ -75,13 +74,23 @@ class DefaultNativeScriptExtensionTest {
     }
 
     @Test
+    void selfNeedsFactsOnlyInAPluginBuild() {
+        assertNull(extension(false).getSelf());
+
+        GradleException e = assertThrows(GradleException.class, extension(true)::getSelf);
+        assertEquals(
+                ResolutionTest.noFactsMessage(project.resolve("platforms/tempPlugin/p"), platformsAndroid),
+                e.getMessage());
+    }
+
+    @Test
     void readsTheFactsAgainAfterAFailure() throws IOException {
         NativeScriptExtension ns = extension(false);
-        assertThrows(GradleException.class, ns::getProjectDir);
+        assertThrows(GradleException.class, ns::getProjectRoot);
 
-        writeFacts(factsFile, project, "[]", null);
+        writeFacts(factsFile, project, "[]");
 
-        assertEquals(project.toFile(), ns.getProjectDir());
+        assertEquals(project.toFile(), ns.getProjectRoot());
         assertEquals(project.resolve("src").toFile(), ns.getAppDir());
         assertEquals(project.resolve("src/App_Resources").toFile(), ns.getAppResourcesDir());
         assertTrue(ns.has("some.capability"));
@@ -89,7 +98,7 @@ class DefaultNativeScriptExtensionTest {
 
     @Test
     void selfIsTheListedPluginBeingBuilt() throws IOException {
-        writeFacts(factsFile, project, "[" + plugin("@scope/p", "../../node_modules/@scope/p") + "]", null);
+        writeFacts(factsFile, project, "[" + plugin("@scope/p", "../../node_modules/@scope/p") + "]");
 
         assertEquals("@scope/p", extension(true).getSelf().getName());
         assertNull(extension(false).getSelf());
@@ -97,7 +106,7 @@ class DefaultNativeScriptExtensionTest {
 
     @Test
     void pluginErrorListsTheListedPlugins() throws IOException {
-        writeFacts(factsFile, project, "[" + plugin("a", "../a") + ", " + plugin("@s/b", "../b") + "]", null);
+        writeFacts(factsFile, project, "[" + plugin("a", "../a") + ", " + plugin("@s/b", "../b") + "]");
 
         GradleException e = assertThrows(GradleException.class, () -> extension(false).plugin("c"));
 
