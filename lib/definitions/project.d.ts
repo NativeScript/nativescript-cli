@@ -465,6 +465,10 @@ interface IPlatformProjectServiceBase {
 
 interface IBuildForDevice {
 	buildForDevice: boolean;
+	/**
+	 * Build the iOS app for this Mac ("My Mac (Designed for iPad)").
+	 */
+	buildForMac?: boolean;
 }
 
 interface IiCloudContainerEnvironment {
