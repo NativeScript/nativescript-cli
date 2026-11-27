@@ -24,6 +24,8 @@ describe("androidPluginBuildService", () => {
 	const pluginName = "my-plugin";
 	const shortPluginName = getShortPluginName(pluginName);
 	let spawnFromEventCalled = false;
+	let ignoredFiles: string[] = [];
+	let hashedFiles: string[] = [];
 	let fs: IFileSystem;
 	let androidBuildPluginService: AndroidPluginBuildService;
 	let tempFolder: string;
@@ -75,15 +77,17 @@ describe("androidPluginBuildService", () => {
 		const testInjector: IInjector = new stubs.InjectorStub();
 		testInjector.register("fs", FsLib.FileSystem);
 		testInjector.register("childProcess", {
-			spawnFromEvent: async (command: string): Promise<ISpawnResult> => {
-				const finalAarName = `${shortPluginName}-release.aar`;
+			spawnFromEvent: async (
+				command: string,
+				args: string[],
+			): Promise<ISpawnResult> => {
+				const pluginDir = args[args.indexOf("-p") + 1];
 				const aar = path.join(
-					tempFolder,
-					shortPluginName,
+					pluginDir,
 					"build",
 					"outputs",
 					"aar",
-					finalAarName,
+					`${path.basename(pluginDir)}-release.aar`,
 				);
 				fs.writeFile(aar, "");
 				spawnFromEventCalled = command.indexOf("gradlew") !== -1;
@@ -93,9 +97,10 @@ describe("androidPluginBuildService", () => {
 		testInjector.register("packageManager", setupNpm(options));
 		testInjector.register("projectData", stubs.ProjectDataStub);
 		testInjector.register("filesHashService", <IFilesHashService>{
-			generateHashes: async (
-				files: string[],
-			): Promise<IStringDictionary> => ({}),
+			generateHashes: async (files: string[]): Promise<IStringDictionary> => {
+				hashedFiles = files;
+				return {};
+			},
 			getChanges: async (
 				files: string[],
 				oldHashes: IStringDictionary,
@@ -106,8 +111,9 @@ describe("androidPluginBuildService", () => {
 			): boolean => !!options.hasChangesInShasums,
 		});
 
+		ignoredFiles = [];
 		testInjector.register("watchIgnoreListService", {
-			addFileToIgnoreList: () => ({}),
+			addFileToIgnoreList: (file: string) => ignoredFiles.push(file),
 		});
 
 		fs = testInjector.resolve("fs");
@@ -412,6 +418,294 @@ dependencies {
 				AndroidBuildDefaults.GradleAndroidPluginVersion,
 			);
 			assert.isTrue(spawnFromEventCalled);
+		});
+	});
+
+	describe("aar names", () => {
+		const scopedPluginName = "@foo/my-plugin";
+		const qualifiedName = "foo_my_plugin";
+
+		function setupScoped(
+			overrides?: Partial<IPluginBuildOptions>,
+		): IPluginBuildOptions {
+			return {
+				...setup({ addManifest: true }),
+				pluginName: scopedPluginName,
+				aarName: qualifiedName,
+				...overrides,
+			};
+		}
+
+		function writePreviousOutput(
+			name: string,
+			content: string,
+			builtFor = scopedPluginName,
+		) {
+			fs.writeFile(
+				path.join(tempFolder, name, "build.gradle"),
+				`android {\n    project.ext.PLUGIN_NAME = "${builtFor}"\n}\n`,
+			);
+			fs.writeFile(
+				path.join(
+					tempFolder,
+					name,
+					"build",
+					"outputs",
+					"aar",
+					`${name}-release.aar`,
+				),
+				content,
+			);
+		}
+
+		it("uses aarName for the temp project, the aar and the namespace fallback", async () => {
+			const config = setupScoped();
+
+			assert.isTrue(await androidBuildPluginService.buildAar(config));
+
+			const buildGradle = fs.readText(
+				path.join(tempFolder, qualifiedName, "build.gradle"),
+			);
+			assert.include(
+				buildGradle,
+				`namespace "org.nativescript.${qualifiedName}"`,
+			);
+			assert.isTrue(fs.exists(path.join(pluginFolder, `${qualifiedName}.aar`)));
+			assert.isFalse(fs.exists(path.join(tempFolder, shortPluginName)));
+			assert.isFalse(
+				fs.exists(path.join(pluginFolder, `${shortPluginName}.aar`)),
+			);
+			assert.deepStrictEqual(ignoredFiles, [
+				path.join(pluginFolder, `${qualifiedName}.aar`),
+			]);
+		});
+
+		it("does not hash the aar it builds or one it built under its other name", async () => {
+			const config = setupScoped();
+			for (const name of [shortPluginName, qualifiedName, "unrelated"]) {
+				fs.writeFile(path.join(pluginFolder, `${name}.aar`), name);
+			}
+
+			await androidBuildPluginService.buildAar(config);
+
+			assert.include(hashedFiles, path.join(pluginFolder, "unrelated.aar"));
+			assert.notInclude(
+				hashedFiles,
+				path.join(pluginFolder, `${shortPluginName}.aar`),
+			);
+			assert.notInclude(
+				hashedFiles,
+				path.join(pluginFolder, `${qualifiedName}.aar`),
+			);
+		});
+
+		it("deletes an aar under the plugin's short name whatever its content", async () => {
+			const config = setupScoped();
+			const staleAar = path.join(pluginFolder, `${shortPluginName}.aar`);
+			fs.writeFile(staleAar, "not like any build output");
+			assert.isTrue(androidBuildPluginService.hasOutdatedAar(config));
+
+			await androidBuildPluginService.buildAar(config);
+
+			assert.isFalse(fs.exists(staleAar));
+			assert.include(ignoredFiles, staleAar);
+			assert.isTrue(fs.exists(path.join(pluginFolder, `${qualifiedName}.aar`)));
+			assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+		});
+
+		it("deletes the old short-name aars of clashing plugins built by an older CLI", async () => {
+			const foo = setupScoped({
+				pluginName: "@foo/plugin-x",
+				aarName: "foo_plugin_x",
+			});
+			const barFolder = mkdtempSync(
+				path.join(tmpdir(), "androidPluginBuildService-plugin-"),
+			);
+			fs.copyFile(
+				path.join(pluginFolder, "AndroidManifest.xml"),
+				path.join(barFolder, "AndroidManifest.xml"),
+			);
+			const bar: IPluginBuildOptions = {
+				...foo,
+				pluginName: "@bar/plugin-x",
+				aarName: "bar_plugin_x",
+				platformsAndroidDirPath: barFolder,
+				aarOutputDir: barFolder,
+			};
+			const fooOldAar = path.join(pluginFolder, "plugin_x.aar");
+			const barOldAar = path.join(barFolder, "plugin_x.aar");
+			fs.writeFile(fooOldAar, "foo build");
+			fs.writeFile(barOldAar, "bar build");
+			writePreviousOutput("plugin_x", "bar build", "@bar/plugin-x");
+
+			assert.isTrue(await androidBuildPluginService.buildAar(foo));
+			assert.isTrue(await androidBuildPluginService.buildAar(bar));
+
+			assert.isFalse(fs.exists(fooOldAar));
+			assert.isFalse(fs.exists(barOldAar));
+			assert.isTrue(fs.exists(path.join(pluginFolder, "foo_plugin_x.aar")));
+			assert.isTrue(fs.exists(path.join(barFolder, "bar_plugin_x.aar")));
+		});
+
+		it("deletes a short-name aar that a plugin with sources ships when another plugin now owns that name", async () => {
+			const config = setupScoped({
+				pluginName: "@foo/plugin-x",
+				aarName: "foo_plugin_x",
+			});
+			const shippedAar = path.join(pluginFolder, "plugin_x.aar");
+			fs.writeFile(shippedAar, "shipped");
+			writePreviousOutput("plugin_x", "built for plugin-x", "plugin-x");
+
+			assert.isTrue(await androidBuildPluginService.buildAar(config));
+
+			assert.isFalse(fs.exists(shippedAar));
+			assert.isTrue(fs.exists(path.join(pluginFolder, "foo_plugin_x.aar")));
+			assert.equal(
+				fs.readText(
+					path.join(
+						tempFolder,
+						"plugin_x",
+						"build",
+						"outputs",
+						"aar",
+						"plugin_x-release.aar",
+					),
+				),
+				"built for plugin-x",
+			);
+		});
+
+		it("keeps the aars of a plugin without sources to build", async () => {
+			const config: IPluginBuildOptions = {
+				...setup(),
+				pluginName: "@foo/plugin-x",
+				aarName: "foo_plugin_x",
+			};
+			const shippedAar = path.join(pluginFolder, "plugin_x.aar");
+			fs.writeFile(shippedAar, "shipped");
+
+			assert.isFalse(await androidBuildPluginService.buildAar(config));
+
+			assert.equal(fs.readText(shippedAar), "shipped");
+			assert.notInclude(ignoredFiles, shippedAar);
+			assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+		});
+
+		it("deletes a scope-qualified aar the CLI built for the plugin", async () => {
+			const config = setupScoped({ aarName: shortPluginName });
+			const staleAar = path.join(pluginFolder, `${qualifiedName}.aar`);
+			fs.writeFile(staleAar, "previous build");
+			writePreviousOutput(qualifiedName, "previous build");
+			assert.isTrue(androidBuildPluginService.hasOutdatedAar(config));
+
+			await androidBuildPluginService.buildAar(config);
+
+			assert.isFalse(fs.exists(staleAar));
+			assert.include(ignoredFiles, staleAar);
+			assert.isTrue(
+				fs.exists(path.join(pluginFolder, `${shortPluginName}.aar`)),
+			);
+			assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+		});
+
+		it("fails on a scope-qualified aar that differs from the CLI's build of the plugin under that name", async () => {
+			const config = setupScoped({ aarName: shortPluginName });
+			const staleAar = path.join(pluginFolder, `${qualifiedName}.aar`);
+			fs.writeFile(staleAar, "shipped");
+			writePreviousOutput(qualifiedName, "something else");
+			assert.isTrue(androidBuildPluginService.hasOutdatedAar(config));
+
+			let error: Error = null;
+			try {
+				await androidBuildPluginService.buildAar(config);
+			} catch (err) {
+				error = err;
+			}
+
+			assert.include(error?.message, staleAar);
+			assert.include(
+				error?.message,
+				path.join(
+					tempFolder,
+					qualifiedName,
+					"build",
+					"outputs",
+					"aar",
+					`${qualifiedName}-release.aar`,
+				),
+			);
+			assert.include(error?.message, "Delete it or run `ns clean`");
+			assert.isTrue(fs.exists(staleAar));
+			assert.isFalse(spawnFromEventCalled);
+		});
+
+		it("keeps a scope-qualified aar the CLI never built", async () => {
+			const config = setupScoped({ aarName: shortPluginName });
+			const shippedAar = path.join(pluginFolder, `${qualifiedName}.aar`);
+			fs.writeFile(shippedAar, "shipped");
+
+			assert.isTrue(await androidBuildPluginService.buildAar(config));
+
+			assert.equal(fs.readText(shippedAar), "shipped");
+			assert.notInclude(ignoredFiles, shippedAar);
+			assert.include(hashedFiles, shippedAar);
+			assert.isTrue(
+				fs.exists(path.join(pluginFolder, `${shortPluginName}.aar`)),
+			);
+			assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+		});
+
+		it("keeps a scope-qualified aar whose temp project was not set up for the plugin", async () => {
+			const config = setupScoped({ aarName: shortPluginName });
+			const shippedAar = path.join(pluginFolder, `${qualifiedName}.aar`);
+			fs.writeFile(shippedAar, "shipped");
+			writePreviousOutput(qualifiedName, "something else", "@other/my-plugin");
+
+			assert.isTrue(await androidBuildPluginService.buildAar(config));
+			assert.equal(fs.readText(shippedAar), "shipped");
+
+			assert.notInclude(ignoredFiles, shippedAar);
+			assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+
+			fs.deleteFile(path.join(tempFolder, qualifiedName, "build.gradle"));
+			assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+			await androidBuildPluginService.buildAar(config);
+			assert.equal(fs.readText(shippedAar), "shipped");
+		});
+
+		it("leaves other candidate aars alone when no aarName is given", async () => {
+			const config: IPluginBuildOptions = {
+				...setup({ addManifest: true }),
+				pluginName: scopedPluginName,
+			};
+			const otherAar = path.join(pluginFolder, `${qualifiedName}.aar`);
+			fs.writeFile(otherAar, "kept");
+			writePreviousOutput(qualifiedName, "kept");
+
+			await androidBuildPluginService.buildAar(config);
+
+			assert.isTrue(fs.exists(otherAar));
+			assert.isTrue(
+				fs.exists(path.join(pluginFolder, `${shortPluginName}.aar`)),
+			);
+		});
+
+		describe("hasOutdatedAar", () => {
+			it("is false for a plugin without sources to build", () => {
+				const config: IPluginBuildOptions = {
+					...setup({ addIncludeGradle: true }),
+					aarName: shortPluginName,
+				};
+				assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+			});
+
+			it("is true while the aar is missing", () => {
+				const config = setupScoped();
+				assert.isTrue(androidBuildPluginService.hasOutdatedAar(config));
+
+				fs.writeFile(path.join(pluginFolder, `${qualifiedName}.aar`), "");
+				assert.isFalse(androidBuildPluginService.hasOutdatedAar(config));
+			});
 		});
 	});
 
