@@ -23,13 +23,13 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class AppBuildTest {
     enum Cli {
-        /** CLI 9.1 and older: no facts file. */
-        LEGACY,
-        /** A facts-writing CLI, which passes the file's path. */
+        /** A CLI before 9.2, which writes no facts file. */
+        NO_FACTS,
+        /** CLI 9.2+, which passes the facts file's path. */
         FACTS_PROPERTY,
         /** platforms/android opened without the CLI, e.g. in Android Studio. */
         FACTS_FOUND,
-        /** An older CLI prepared the project after a facts-writing one: facts left behind. */
+        /** A CLI before 9.2 prepared the project after a 9.2+ one: facts left behind. */
         STALE_FACTS;
 
         boolean usesFacts() {
@@ -60,7 +60,7 @@ class AppBuildTest {
         Path pluginB = project.resolve("node_modules/fixture-plugin-b/platforms/android/buildscript.gradle");
         Fixtures.write(pluginB, Fixtures.read(pluginB).replace("@LIBRARY_VERSION@", Fixtures.libraryVersion()));
         Path core = Fixtures.installCore(project);
-        Path sample = Fixtures.installSample(project);
+        Fixtures.installSample(project);
         Fixtures.write(project.resolve("package.json"), "{ \"name\": \"fixture-app\" }\n");
         Path dependenciesJson = Fixtures.write(platformsAndroid.resolve("dependencies.json"), String.join("\n",
                 "[",
@@ -74,7 +74,9 @@ class AppBuildTest {
                 "help", "--offline", "--stacktrace", "--warning-mode=fail",
                 "--init-script", Fixtures.path(Fixtures.writeInitScript(tempDir))));
         Path factsFile = platformsAndroid.resolve("nativescript-gradle.json");
-        if (cli != Cli.LEGACY) {
+        if (cli != Cli.NO_FACTS) {
+            // fixture-plugin-b is left out: an installed package with platforms/android that the CLI
+            // does not list is not a plugin.
             Fixtures.write(factsFile, String.join("\n",
                     "{",
                     "  \"schemaVersion\": 1,",
@@ -100,22 +102,35 @@ class AppBuildTest {
             }
         }
 
-        BuildResult result = GradleRunner.create()
+        GradleRunner runner = GradleRunner.create()
                 .withGradleVersion(gradleVersion)
                 .withProjectDir(platformsAndroid.toFile())
                 .withArguments(arguments)
-                .forwardOutput()
-                .build();
+                .forwardOutput();
+
+        if (!cli.usesFacts()) {
+            BuildResult result = runner.buildAndFail();
+            String error = cli == Cli.NO_FACTS
+                    ? "A plugin of this app uses org.nativescript:gradle-api, which needs the project to be prepared by"
+                            + " NativeScript CLI 9.2 or newer, but there is no facts file at " + Fixtures.path(factsFile)
+                            + ". Update the project's CLI with `npm i -D nativescript@latest`, then run `ns prepare android`."
+                    : "The NativeScript facts file " + Fixtures.path(factsFile) + " does not match "
+                            + Fixtures.path(dependenciesJson) + ": a different NativeScript CLI rewrote dependencies.json"
+                            + " after the facts file was written. Run `ns prepare android` again with the NativeScript CLI"
+                            + " the project uses.";
+            assertTrue(result.getOutput().lines().anyMatch(line -> line.equals("> " + error)), result.getOutput());
+            assertEquals("false", Fixtures.probes(result).get("b.pluginBuild"), "pluginBuild needs no facts");
+            return;
+        }
+
+        BuildResult result = runner.build();
         Map<String, String> probes = Fixtures.probes(result);
 
-        boolean facts = cli.usesFacts();
-        String staleWarning = "Ignoring " + Fixtures.path(factsFile) + ": it does not match " + Fixtures.path(dependenciesJson)
-                + ", which a different NativeScript CLI wrote. Using the fallback rules.";
-        assertEquals(cli == Cli.STALE_FACTS, result.getOutput().contains(staleWarning), result.getOutput());
-        Path appDir = project.resolve(facts ? "src" : "app");
+        Path appDir = project.resolve("src");
         assertEquals("true", probes.get("typed"), "NativeScript.of returns the extension");
-        assertEquals("true", probes.get("b.sameExtension"), "a second plugin's include.gradle sees the same extension");
+        assertEquals("true", probes.get("b.sameExtension"), "include.gradle reaches the extension by its name");
         assertEquals("false", probes.get("b.libraryClassVisible"), "include.gradle cannot see the library's classes");
+        assertEquals("false", probes.get("b.pluginBuild"));
         assertEquals(Fixtures.path(project), probes.get("b.projectDir"));
         assertEquals("1", probes.get("apiLevel"));
         assertEquals("false", probes.get("pluginBuild"));
@@ -124,19 +139,19 @@ class AppBuildTest {
         assertEquals(Fixtures.path(project), probes.get("projectDir"));
         assertEquals(Fixtures.path(appDir), probes.get("appDir"));
         assertEquals(Fixtures.path(appDir.resolve("App_Resources")), probes.get("appResourcesDir"));
-        assertEquals(String.valueOf(facts), probes.get("has"));
+        assertEquals("true", probes.get("has"));
         assertEquals(Fixtures.path(core), probes.get("core.packageDir"));
         assertEquals(Fixtures.path(core.resolve("platforms/android")), probes.get("core.nativeDir"));
         assertEquals("inner.aar,widgets-release.aar", probes.get("core.artifacts"));
-        assertEquals(facts ? "core" : "null", probes.get("core.aarName"));
-        assertEquals(facts ? Fixtures.path(core.resolve("platforms/android/core.aar")) : "null", probes.get("core.aar"));
-        assertEquals(facts ? "[flag:true]" : "[:]", probes.get("core.options"));
+        assertEquals("core", probes.get("core.aarName"));
+        assertEquals(Fixtures.path(core.resolve("platforms/android/core.aar")), probes.get("core.aar"));
+        assertEquals("[flag:true]", probes.get("core.options"));
         assertEquals(
-                facts ? Fixtures.path(platformsAndroid.resolve(".ns-plugins/sample/platforms/android"))
-                        : Fixtures.path(sample.resolve("platforms/android")),
+                Fixtures.path(platformsAndroid.resolve(".ns-plugins/sample/platforms/android")),
                 probes.get("sample.nativeDir"));
         assertEquals(Fixtures.path(project.resolve("node_modules/js-only")), probes.get("jsOnly"));
         assertEquals("null", probes.get("jsOnlyPlugin"), "a package without native code is not a plugin");
+        assertEquals("null", probes.get("unlistedPlugin"), "a package the CLI does not list is not a plugin");
         assertEquals("null", probes.get("missingPlugin"));
         assertEquals("null", probes.get("missingPackage"));
         String error = probes.get("pluginError");

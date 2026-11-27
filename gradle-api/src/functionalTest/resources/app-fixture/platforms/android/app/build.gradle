@@ -57,6 +57,7 @@ println "NS|core.options|${core.options}"
 println "NS|sample.nativeDir|${ns.plugin('@nativescript/gradle-api-sample').nativeDir}"
 println "NS|jsOnly|${ns.findPackage('js-only')}"
 println "NS|jsOnlyPlugin|${ns.findPlugin('js-only')}"
+println "NS|unlistedPlugin|${ns.findPlugin('fixture-plugin-b')}"
 println "NS|missingPlugin|${ns.findPlugin('not-installed')}"
 println "NS|missingPackage|${ns.findPackage('not-installed')}"
 try {

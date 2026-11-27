@@ -173,19 +173,22 @@ public final class Facts {
     }
 
     /**
-     * Why these facts no longer describe the project, or null if they still do: a CLI that does not
-     * write facts rewrites the dependencies.json next to them but leaves them behind. Reads that
-     * file on every call, so the answer is never cached.
+     * Fails if these facts no longer describe the project: a CLI that does not write facts rewrites
+     * the dependencies.json next to them but leaves them behind. Reads that file on every call, so
+     * the answer is never cached.
      *
-     * @throws GradleException if dependencies.json exists but cannot be read
+     * @throws GradleException if dependencies.json is missing, cannot be read or does not have the
+     *     recorded hash
      */
-    public String staleness() {
+    public void checkDependenciesJson() {
         if (dependenciesJsonSha256 == null) {
-            return null;
+            return;
         }
         File dependenciesJson = new File(file.getAbsoluteFile().getParentFile(), "dependencies.json");
+        String rerun = " Run `ns prepare android` again with the NativeScript CLI the project uses.";
         if (!dependenciesJson.isFile()) {
-            return "there is no " + dependenciesJson + " next to it";
+            throw new GradleException(
+                    "There is no " + dependenciesJson + " next to the NativeScript facts file " + file + "." + rerun);
         }
         byte[] content;
         try {
@@ -193,10 +196,11 @@ public final class Facts {
         } catch (IOException e) {
             throw new GradleException("Could not read " + dependenciesJson + ": " + e, e);
         }
-        if (sha256(content).equals(dependenciesJsonSha256)) {
-            return null;
+        if (!sha256(content).equals(dependenciesJsonSha256)) {
+            throw new GradleException("The NativeScript facts file " + file + " does not match " + dependenciesJson
+                    + ": a different NativeScript CLI rewrote " + dependenciesJson.getName()
+                    + " after the facts file was written." + rerun);
         }
-        return "it does not match " + dependenciesJson + ", which a different NativeScript CLI wrote";
     }
 
     static String sha256(byte[] content) {

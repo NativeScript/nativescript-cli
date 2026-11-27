@@ -1,8 +1,11 @@
-// A second plugin applying the library to the same project, after the sample has.
+// A plugin that uses the library in the app build, so it applies it; the sample plugin uses it
+// only in its own aar build.
 apply plugin: "org.nativescript.api"
 
 def nsFromB = project.extensions.getByName("nativescript")
 println "NS|b.sameExtension|${nativescript.is(nsFromB)}"
+// Printed before anything that needs the facts file, so that builds without one show it too.
+println "NS|b.pluginBuild|${nsFromB.pluginBuild}"
 println "NS|b.projectDir|${nsFromB.projectDir}"
 
 // Scripts applied with `apply from` get their own class loader, which does not see the

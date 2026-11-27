@@ -12,6 +12,8 @@ import org.nativescript.gradle.PluginInfo;
 public final class DefaultNativeScriptExtension implements NativeScriptExtension {
     public static final int API_LEVEL = 1;
 
+    private static final String PLUGIN_NAME_PROPERTY = "PLUGIN_NAME";
+
     private final BuildInputs inputs;
     private final ObjectFactory objects;
     private final Map<String, PluginInfo> pluginInfos = new ConcurrentHashMap<>();
@@ -26,8 +28,9 @@ public final class DefaultNativeScriptExtension implements NativeScriptExtension
         this.objects = objects;
     }
 
-    // Resolved on first use rather than when applied: in the plugin build the library is applied
+    // Read on first use rather than when applied: in the plugin build the library is applied
     // reflectively, and plugins may apply it before the template has set its extra properties.
+    // Members that need no facts must not call this, and a failure is not kept.
     private Resolution resolution() {
         Resolution result = resolution;
         if (result == null) {
@@ -52,20 +55,27 @@ public final class DefaultNativeScriptExtension implements NativeScriptExtension
         return resolution().getCapabilities().contains(capability);
     }
 
+    // Every CLI since 8.4 passes -PtempBuild=true only to the throwaway project that builds a
+    // plugin's aar, whose template also sets PLUGIN_NAME.
     @Override
     public boolean isPluginBuild() {
-        return resolution().isPluginBuild();
+        return inputs.property(Resolution.TEMP_BUILD_PROPERTY) != null;
+    }
+
+    private String pluginName() {
+        return isPluginBuild() ? Resolution.asString(inputs.property(PLUGIN_NAME_PROPERTY)) : null;
     }
 
     @Override
     public PluginInfo getSelf() {
-        String name = resolution().getPluginName();
+        resolution();
+        String name = pluginName();
         return name != null ? findPlugin(name) : null;
     }
 
     @Override
     public boolean isBuildingPlugin(String npmName) {
-        return npmName != null && npmName.equals(resolution().getPluginName());
+        return npmName != null && npmName.equals(pluginName());
     }
 
     @Override
@@ -88,12 +98,11 @@ public final class DefaultNativeScriptExtension implements NativeScriptExtension
         PluginInfo plugin = findPlugin(npmName);
         if (plugin == null) {
             Resolution r = resolution();
-            String list = r.getFacts() != null ? r.getFacts().getFile().toString() : "dependencies.json";
-            throw new GradleException("NativeScript plugin '" + npmName + "' is not listed in " + list
-                    + ", nor installed with a platforms/android directory in "
-                    + new File(r.getProjectDir(), "node_modules") + " or a parent directory"
+            throw new GradleException("NativeScript plugin '" + npmName + "' is not listed in " + r.getFacts().getFile()
                     + ". Known plugins: "
-                    + (r.getPlugins().isEmpty() ? "none" : String.join(", ", r.getPlugins().keySet())) + ".");
+                    + (r.getPlugins().isEmpty() ? "none" : String.join(", ", r.getPlugins().keySet()))
+                    + ". Only packages that declare Android support in their package.json are plugins;"
+                    + " find any other package with resolvePackage.");
         }
         return plugin;
     }

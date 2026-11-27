@@ -1,15 +1,11 @@
-apply plugin: "org.nativescript.api"
-
 // The CLI builds this plugin's aar in a separate project that runs only the next block, not the
-// rest of this file. CLI 9.2+ applies the library there; older CLIs may not, so the block falls
-// back to what they provide when the extension is missing.
+// rest of this file. CLI 9.2+ loads org.nativescript:gradle-api there and applies it; older CLIs
+// don't, so the block stops with a clear message instead of failing on an unknown `nativescript`.
 dependencies {
     if (project.hasProperty("tempBuild")) {
-        def ns = project.extensions.findByName("nativescript")
-        if (ns != null) {
-            compileOnly ns.plugin("@nativescript/core").artifacts
-        } else {
-            compileOnly fileTree(dir: "$USER_PROJECT_ROOT/node_modules/@nativescript/core/platforms/android", include: ["**/*.aar", "**/*.jar"])
+        if (project.extensions.findByName("nativescript") == null) {
+            throw new GradleException("@nativescript/gradle-api-sample needs NativeScript CLI 9.2 or newer: npm i -D nativescript@latest")
         }
+        compileOnly nativescript.plugin("@nativescript/core").artifacts
     }
 }

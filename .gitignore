@@ -134,6 +134,6 @@ CLAUDE.local.md
 
 # org.nativescript:gradle-api
 gradle-api/build/
-gradle-api/.gradle/
+gradle-api/**/.gradle/
 gradle-api/.kotlin/
 gradle-api/samples/**/build/

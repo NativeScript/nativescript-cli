@@ -1,17 +1,18 @@
 # org.nativescript:gradle-api
 
 A small, versioned Gradle library that NativeScript plugins call from their Android Gradle files
-instead of guessing where things are on disk.
+instead of guessing where things are on disk. It needs **NativeScript CLI 9.2 or newer**.
 
 ```groovy
 // platforms/android/include.gradle
 apply plugin: "org.nativescript.api"
 
-def ns = nativescript
-logger.info("App_Resources: ${ns.appResourcesDir}")
+logger.info("App_Resources: ${nativescript.appResourcesDir}")
 ```
 
-- **For plugin authors:** [Why](#why), [Adopting it](#adopting-it), [API](#api),
+- **For plugin authors:** [Why](#why), [Adopting it](#adopting-it),
+  [Your plugin's own `.aar` build](#your-plugins-own-aar-build),
+  [Depending on other plugins](#depending-on-other-plugins), [API](#api), [Errors](#errors),
   [Recipes](#recipes), [Compatibility](#compatibility), [Rules](#rules-for-plugin-authors).
 - **For CLI/runtime maintainers:** [How it works](#how-it-works), [The facts file](#the-facts-file),
   [Versioning rules](#versioning-rules), [Releasing](#releasing).
@@ -31,16 +32,20 @@ if (!project.hasProperty("tempBuild")) { apply plugin: 'com.google.gms.google-se
 
 Every one of these bakes in a detail the CLI should be free to change: where `node_modules` is,
 where the CLI writes a plugin's built `.aar`, how many `../` lead to the project root, or what the
-`tempBuild` property means. This library answers those questions for you. The CLI tells the library
-where things are; on CLIs that don't, the library works it out the way those CLIs always did.
+`tempBuild` property means. This library answers those questions for you, from a file in which the
+CLI writes the answers down.
 
 ## Adopting it
 
-Minimum Android runtime: **8.4** (Gradle 7.5, JDK 11), the oldest toolchain the library is built
-for. If your plugin still supports older runtimes, keep your current Gradle code for them: adding the
-library to `buildscript.gradle` breaks their builds.
+Requirements:
 
-It works with every NativeScript CLI. CLI 9.2+ gives it exact answers; older CLIs use the fallback.
+- **NativeScript CLI 9.2 or newer** in the apps that use your plugin. The CLI is installed per
+  project (`npm i -D nativescript@latest`), and 9.2 builds projects made with older CLIs, so this
+  asks nothing of an app beyond updating that dev dependency. With an older CLI, the build stops
+  with a message that says so (see [Errors](#errors)).
+- **Android runtime 8.4 or newer** (Gradle 7.5, JDK 11), the oldest toolchain the library is built
+  for. If your plugin still supports older runtimes, keep your current Gradle code for them: adding
+  the library to `buildscript.gradle` breaks their builds.
 
 **1. Put the library on the build classpath** in `platforms/android/buildscript.gradle`:
 
@@ -59,7 +64,28 @@ Pin the **lowest** version that has what you need, never a range or `+`. Every p
 the library to the same classpath and Gradle keeps the highest version, which is always backwards
 compatible.
 
-**2. Apply it at the top of `platforms/android/include.gradle`:**
+**2. Declare the CLI requirement** in your `package.json`, so that apps find out when they install
+your plugin rather than when they build:
+
+```json
+"peerDependencies": {
+  "nativescript": ">=9.2.0-0"
+},
+"peerDependenciesMeta": {
+  "nativescript": { "optional": true }
+}
+```
+
+With this, npm 7+ refuses to install your plugin (`ERESOLVE`) into an app whose own `nativescript`
+dev dependency is older, until the app updates it or installs with `--legacy-peer-deps`.
+`optional` keeps npm from installing the CLI into apps that don't list it, which npm 7+ does for
+required peers. The `-0` lets 9.2.0's alphas and release candidates satisfy the range; prereleases
+of later versions, such as `9.3.0-rc.1`, still don't, as with any npm range.
+
+**3. If you use `nativescript` in the app build**, apply the library at the top of
+`platforms/android/include.gradle`. The whole file runs in the app build, including its
+`repositories {}` and `dependencies {}` blocks; only code inside the `tempBuild` check of
+[the next section](#your-plugins-own-aar-build) is skipped there.
 
 ```groovy
 apply plugin: "org.nativescript.api"
@@ -67,87 +93,92 @@ apply plugin: "org.nativescript.api"
 
 Applying it again from several plugins is fine.
 
-**3. Use `nativescript`** in the rest of the file (see [API](#api) and [Recipes](#recipes)).
-
-### The one thing to know: your plugin's own `.aar` build
-
-The CLI builds a plugin's own Android sources into an `.aar` in a separate, temporary Gradle build.
-In that build, **only the `dependencies {}` and `repositories {}` blocks of your `include.gradle`
-run**: the CLI copies them out of the file. Nothing else in the file runs there, including the
-`apply plugin:` line.
-
-CLI 9.2+ also runs your `buildscript.gradle` in that build and applies the library for you, so
-`nativescript` is available in those two blocks. Older CLIs don't, so if your plugin supports them,
-write those two blocks as shown in [Supporting CLIs before 9.2](#supporting-clis-before-92).
-
-Elsewhere in `include.gradle` (outside those two blocks) you can use `nativescript` directly.
+**4. Use `nativescript`** (see [API](#api) and [Recipes](#recipes)).
 
 Never refer to the library's classes from `include.gradle` (`import org.nativescript.gradle...`,
 `NativeScript.of(project)`): Gradle compiles applied scripts with a class loader that can't see
 them, even when the plugin itself is applied. Always go through the `nativescript` extension.
 `NativeScript.of(project)` is for Gradle code written in Java or Kotlin.
 
-The CLI finds those blocks by searching for the first occurrence of the words `dependencies` and
-`repositories` in the file, so keep those words out of comments and code above the real blocks, and
-never put a `buildscript {}` block in `include.gradle`.
+## Your plugin's own `.aar` build
 
-### Supporting CLIs before 9.2
+The CLI builds a plugin's own Android sources into an `.aar` in a separate, temporary Gradle build.
+In that build, **only the `repositories {}` and `dependencies {}` blocks of your `include.gradle`
+run**: the CLI copies them out of the file. Nothing else in the file runs there, including the
+`apply plugin:` line. CLI 9.2+ runs your `buildscript.gradle` in that build and applies the library
+itself, so `nativescript` is available in those two blocks.
 
-Before 9.2, the CLI doesn't run your own `buildscript.gradle` in your `.aar` build, so the
-extension is usually missing in your copied `dependencies {}` / `repositories {}` blocks. (It is
-there when a plugin yours depends on loaded the library, so don't treat its presence as a CLI
-version check.) Look it up, and fall back to what those CLIs provide when it's missing:
+CLIs before 9.2 don't load the library there, and Gradle would stop with "Could not get unknown
+property 'nativescript'", which doesn't tell the app developer what to do. Check for the extension
+first and give them a clear message instead:
 
 ```groovy
 dependencies {
     if (project.hasProperty("tempBuild")) {
-        def ns = project.extensions.findByName("nativescript")
-        if (ns != null) {
-            compileOnly ns.plugin("@nativescript/core").artifacts
-        } else {
-            compileOnly fileTree(dir: "$USER_PROJECT_ROOT/node_modules/@nativescript/core/platforms/android", include: ["**/*.aar", "**/*.jar"])
+        if (project.extensions.findByName("nativescript") == null) {
+            throw new GradleException("@nativescript/gradle-api-sample needs NativeScript CLI 9.2 or newer: npm i -D nativescript@latest")
         }
+        compileOnly nativescript.plugin("@nativescript/core").artifacts
     }
 }
 ```
 
 - `tempBuild` is set in every plugin `.aar` build by every CLI since 8.4: your own build, and the
-  builds of plugins that depend on yours, where your full `include.gradle` runs. It needs no
-  library, so it is the outer check.
-- Each copied block runs on its own, without the rest of the file: blocks can't share variables,
-  so each looks the extension up itself.
+  builds of plugins that depend on yours, where your full `include.gradle` runs. The check keeps
+  the block out of the app build, which runs it too but already links every plugin.
+- Each copied block runs on its own, without the rest of the file, and the CLI copies
+  `repositories {}` before `dependencies {}`. If both use `nativescript`, start both with the check.
+- With CLI 9.2+ the check always passes in your own build; it exists only for older CLIs.
 
-What older CLIs provide in those blocks:
+The CLI finds those blocks by searching for the first occurrence of the words `dependencies` and
+`repositories` in the file, so keep those words out of comments and code above the real blocks, and
+never put a `buildscript {}` block in `include.gradle`.
 
-| Library | CLIs before 9.2 |
+## Depending on other plugins
+
+| What your plugin needs | What it writes |
 |---|---|
-| `ns.pluginBuild` | `project.hasProperty("tempBuild")` |
-| `ns.projectDir` | `file(USER_PROJECT_ROOT)` |
-| `ns.appResourcesDir` | `file(getAppResourcesPath())` |
-| `ns.findPackage("<name>")` | `file("$USER_PROJECT_ROOT/node_modules/<name>")` |
-| `ns.plugin("<name>").artifacts` | `fileTree(dir: "$USER_PROJECT_ROOT/node_modules/<name>/platforms/android", include: ["**/*.aar", "**/*.jar"])` |
+| Another plugin it lists in its `package.json` `dependencies` | Nothing: in its own `.aar` build the CLI adds that plugin's `.aar`/`.jar` files as `implementation`, and in the app build every plugin is linked. |
+| A plugin it doesn't list (typically `@nativescript/core`, usually a peer) | `compileOnly nativescript.plugin("...").artifacts` inside the `tempBuild` check, as in [the block above](#your-plugins-own-aar-build). Not `implementation`: Android's library plugin rejects a local `.aar` as `implementation` when it packages yours ("Direct local .aar file dependencies are not supported when building an AAR"), and the app links that plugin anyway. |
+| Its own prebuilt `.jar`/`.aar` | Nothing, if they're in `platforms/android` or `platforms/android/libs`: the app build links them. |
+| A Maven library | The usual `implementation "group:artifact:version"`. |
 
-The right-hand column only holds in a plugin's `.aar` build, and assumes a hoisted `node_modules`
-at the project root.
+Never write `implementation files(...)` or `flatDir` pointing into another package or into
+`node_modules`: the CLI decides where plugins' files are (see
+[`pluginBuildLocation`](#for-app-developers-building-plugins-in-platformsandroid-opt-in)), and the
+app build already links them.
+
+Known limits of the CLI's and runtime's templates today:
+
+- A plugin's `.aar` files are found by name in `platforms/android` and `platforms/android/libs`
+  only. An `.aar` in any other subfolder fails to resolve ("Could not resolve :name.") in the app
+  build and in the `.aar` builds of plugins that depend on it.
+- In the `.aar` build of a plugin that depends on a plugin with `.jar` files, the CLI's template
+  fails with "Could not get unknown property 'pluginsJarLibraries'".
+- In your own `.aar` build, your own prebuilt `.jar`/`.aar` files are not on the compile classpath:
+  your Java/Kotlin sources can't use classes from them.
 
 ## API
 
 `apiLevel` is `1` for everything below. New methods raise it; nothing is ever removed or changed.
 
-| Member | Returns |
-|---|---|
-| `nativescript.apiLevel` | The API level of the library on the classpath. |
-| `nativescript.has(String)` | Whether the CLI guarantees a capability. Always `false` on CLIs before 9.2. |
-| `nativescript.pluginBuild` | `true` in the CLI's temporary build of some plugin's `.aar`. |
-| `nativescript.self` | In a plugin build, the plugin being built (see below). `null` in the app build. |
-| `nativescript.isBuildingPlugin(String)` | Whether the plugin build is building that npm package. |
-| `nativescript.projectDir` | The NativeScript project root (the folder with the app's `package.json`). |
-| `nativescript.appDir` | The app source folder (`appPath` in `nativescript.config`). |
-| `nativescript.appResourcesDir` | `App_Resources`. |
-| `nativescript.plugin(String)` | A native plugin by npm name. Throws if the app doesn't have it. |
-| `nativescript.findPlugin(String)` | Same, or `null`. |
-| `nativescript.resolvePackage(String)` | Any installed npm package's folder. Throws if not found. |
-| `nativescript.findPackage(String)` | Same, or `null`. |
+| Member | Needs facts | Returns |
+|---|---|---|
+| `nativescript.apiLevel` | No | The API level of the library on the classpath. |
+| `nativescript.pluginBuild` | No | `true` in the CLI's temporary build of some plugin's `.aar`. |
+| `nativescript.isBuildingPlugin(String)` | No | Whether the plugin build is building that npm package. |
+| `nativescript.has(String)` | Yes | Whether the CLI guarantees a capability. |
+| `nativescript.self` | Yes | In a plugin build, the plugin being built (see below). `null` in the app build. |
+| `nativescript.projectDir` | Yes | The NativeScript project root (the folder with the app's `package.json`). |
+| `nativescript.appDir` | Yes | The app source folder (`appPath` in `nativescript.config`). |
+| `nativescript.appResourcesDir` | Yes | `App_Resources`. |
+| `nativescript.plugin(String)` | Yes | A plugin the CLI lists, by npm name. Throws if the app doesn't have it. |
+| `nativescript.findPlugin(String)` | Yes | Same, or `null`. |
+| `nativescript.resolvePackage(String)` | Yes | Any installed npm package's folder. Throws if not found. |
+| `nativescript.findPackage(String)` | Yes | Same, or `null`. |
+
+"Needs facts" members read the facts file CLI 9.2+ writes, and throw one of the [errors](#errors)
+below when it is missing or out of date. Without it, only the first three work.
 
 A plugin (`PluginInfo`):
 
@@ -157,12 +188,13 @@ A plugin (`PluginInfo`):
 | `packageDir` | The installed package. Treat it as read-only. |
 | `nativeDir` | Where Gradle reads the plugin's Android files from. |
 | `artifacts` | Every `.aar` and `.jar` under `nativeDir`, as a lazy `FileCollection`. |
-| `aarName`, `aar` | The name and location of the `.aar` the CLI builds from the plugin's sources (the file only exists if it has sources). `null` on CLIs before 9.2, and for installed packages the CLI doesn't list as plugins. |
+| `aarName`, `aar` | The name and location of the `.aar` the CLI builds from the plugin's sources (the file only exists if it has sources). |
 | `options` | Per-plugin options. Reserved; empty for now. |
 
-`plugin` / `findPlugin` know the plugins the CLI lists (packages declaring Android support in their
-`package.json`) plus any installed package with a `platforms/android` folder, with every CLI version.
-For any other npm package, use `resolvePackage` / `findPackage`.
+`plugin` / `findPlugin` only know the plugins the CLI lists: packages that declare Android support
+in their `package.json` (`"nativescript": { "platforms": { "android": ... } }`), such as
+`@nativescript/core`. A package with a `platforms/android` folder but no such declaration is not a
+plugin. For any other npm package, use `resolvePackage` / `findPackage`.
 
 **`pluginBuild` and `self` in practice.** Your full `include.gradle` runs in the app build and in
 the `.aar` builds of plugins that *depend on you*. So a full `include.gradle` that sees
@@ -176,16 +208,37 @@ if (!nativescript.pluginBuild) {
 }
 ```
 
-`resolvePackage` looks for `node_modules/<name>` from the project root upwards, like Node. It's
-best effort: package managers that don't hoist (pnpm's default layout) may not resolve packages
-your app doesn't depend on directly.
+`resolvePackage` returns the folder the CLI recorded for a plugin, and otherwise looks for
+`node_modules/<name>` from the project root upwards, like Node. It's best effort: package managers
+that don't hoist (pnpm's default layout) may not resolve packages your app doesn't depend on
+directly.
+
+## Errors
+
+The library reads the facts file on the first use of a member that needs it, and stops the build
+with one of these messages when it can't:
+
+- **No facts file**, because a CLI before 9.2 prepared the project:
+
+  > A plugin of this app uses org.nativescript:gradle-api, which needs the project to be prepared
+  > by NativeScript CLI 9.2 or newer, but there is no facts file at
+  > `<project>/platforms/android/nativescript-gradle.json`. Update the project's CLI with
+  > `npm i -D nativescript@latest`, then run `ns prepare android`.
+
+- **Out-of-date facts file**, because a different CLI (such as an older global one) prepared the
+  project after the one that wrote it:
+
+  > The NativeScript facts file `<…>/nativescript-gradle.json` does not match
+  > `<…>/dependencies.json`: a different NativeScript CLI rewrote dependencies.json after the facts
+  > file was written. Run `ns prepare android` again with the NativeScript CLI the project uses.
+
+  (Or, if `dependencies.json` is gone: "There is no `<…>/dependencies.json` next to the
+  NativeScript facts file `<…>`." followed by the same advice.)
 
 ## Recipes
 
 **Compile against another plugin's Android library (e.g. core's widgets) in your own `.aar` build:**
-the block in [Supporting CLIs before 9.2](#supporting-clis-before-92).
-Use `compileOnly`, not `implementation`: an Android library can't bundle local `.aar` files, and the
-app build already links every plugin.
+the block in [Your plugin's own `.aar` build](#your-plugins-own-aar-build).
 
 **Read a file from App_Resources:**
 
@@ -196,10 +249,13 @@ def config = new File(nativescript.appResourcesDir, "Android/my-plugin.json")
 **Point at another npm package's Maven repository** (detox, react-native style):
 
 ```groovy
+apply plugin: "org.nativescript.api" // the block also runs in the app build
+
 repositories {
-    def ns = project.extensions.findByName("nativescript")
-    def detox = ns != null ? ns.findPackage("detox") : file("$USER_PROJECT_ROOT/node_modules/detox")
-    maven { url = new File(detox, "Detox-android") }
+    if (project.extensions.findByName("nativescript") == null) {
+        throw new GradleException("my-plugin needs NativeScript CLI 9.2 or newer: npm i -D nativescript@latest")
+    }
+    maven { url = new File(nativescript.resolvePackage("detox"), "Detox-android") }
 }
 ```
 
@@ -210,15 +266,12 @@ repositories {
 | | CLI 9.1 and older | CLI 9.2+ |
 |---|---|---|
 | Plugin not using the library | Unchanged | Its own `buildscript.gradle` also runs in its own `.aar` build |
-| Plugin using the library, app build | Fallback rules | Facts from the CLI |
-| Plugin using the library, its own `.aar` build | Library not applied unless a plugin it depends on loaded it: the [fallback branch](#supporting-clis-before-92) runs | Library applied |
+| Plugin using the library, app build | `apiLevel`, `pluginBuild` and `isBuildingPlugin` work; anything else stops the build with the [no facts file](#errors) error | Facts from the CLI |
+| Plugin using the library, its own `.aar` build | Library not loaded, so the [check](#your-plugins-own-aar-build) stops the build with the plugin's message (or, if a plugin it depends on applied the library, the [no facts file](#errors) error) | Library loaded and applied, facts from the CLI |
+| Project prepared again by an older CLI after 9.2 | The [out-of-date facts file](#errors) error | |
 
 With [`pluginBuildLocation: "platforms"`](#for-app-developers-building-plugins-in-platformsandroid-opt-in)
 (CLI 9.2+), Gradle also reads every plugin's files from a copy in `platforms/android/.ns-plugins/`.
-
-The fallback rules are exactly what CLIs up to 9.1 do: plugins live in
-`node_modules/<name>/platforms/android`, the project root is `USER_PROJECT_ROOT`, the app and
-App_Resources come from `-PappPath` / `-PappResourcesPath`, and `tempBuild` marks a plugin build.
 
 Building `platforms/android` from Android Studio works too: CLI 9.2+ leaves the facts file there
 after `ns prepare android`, so the library has the same answers without the CLI's command-line
@@ -247,13 +300,13 @@ future major version of the CLI.
 
 ## Rules for plugin authors
 
+- Require NativeScript CLI 9.2+: declare it as an optional peer dependency, and start each copied
+  block that uses `nativescript` with the [check](#your-plugins-own-aar-build).
 - Pin the lowest library version you need; no ranges.
 - Everything in the version you pin is always there: an app may end up with a newer library, never
   an older one. To use something newer only when it's available, check `apiLevel` (or `has(...)`)
   first.
 - Never build paths into `node_modules` or into the CLI's output folders; ask the library.
-- In `dependencies {}` / `repositories {}`, look the extension up and keep a fallback while you
-  support CLIs before 9.2 ([how](#supporting-clis-before-92)).
 
 ## How it works
 
@@ -266,14 +319,14 @@ App_Resources ──────────┘                          (and de
                                                               ▼
         plugin buildscript.gradle ─> org.nativescript:gradle-api ─> `nativescript` extension
                                                               │
-                                     no facts file (CLI ≤ 9.1)│
-                                                              ▼
-                                     fallback: dependencies.json, USER_PROJECT_ROOT, tempBuild
+                         no facts file, or it doesn't match   │
+                         dependencies.json                    ▼
+                                                    error: prepare with CLI 9.2+
 ```
 
 The CLI decides everything (where plugins are, what they're called, project layout) and writes the
-answers down. Gradle only reads them. The library hides whether the answer came from the facts file
-or from the fallback.
+answers down. Gradle only reads them. The library never guesses: without a facts file that matches
+the project, it stops the build and says what to run.
 
 ## The facts file
 
@@ -286,6 +339,7 @@ built. The schema is [`schema/nativescript-gradle.schema.json`](schema/nativescr
   "cli": { "version": "9.2.0" },
   "runtime": { "name": "@nativescript/android", "version": "9.0.0" },
   "capabilities": [],
+  "dependenciesJson": { "sha256": "…" },
   "project": { "root": "../..", "appDir": "../../src", "appResourcesDir": "../../App_Resources" },
   "plugins": [
     {
@@ -303,21 +357,22 @@ built. The schema is [`schema/nativescript-gradle.schema.json`](schema/nativescr
 
 - Paths are relative to the file, with forward slashes, so the folder can move.
 - `dependenciesJson.sha256` is the hash of the `dependencies.json` the CLI wrote next to it. A CLI
-  that doesn't know about this file (9.1 and older, e.g. after a downgrade) still rewrites
-  `dependencies.json` but leaves this file behind; the library notices the mismatch, warns, and uses
-  the fallback rules instead of outdated answers.
+  that doesn't know about this file (9.1 and older, e.g. a global one used by mistake) still
+  rewrites `dependencies.json` but leaves this file behind; the library notices the mismatch and
+  stops with the [out-of-date facts file](#errors) error rather than give outdated answers.
 - `capabilities` lists behaviours the CLI guarantees, so the library can tell "not set" apart from
   "this CLI doesn't know about it". Empty in version 1.
 - `options` is reserved for per-plugin settings from `nativescript.config`.
 
 ## Versioning rules
 
-These are what keep old plugins working on new CLIs and new plugins working on old ones.
+These are what keep old plugins working on new CLIs, and new plugins working on CLIs from 9.2 on.
 
 **Facts file:** fields are only added. A field never changes meaning and is never removed.
 `schemaVersion` goes up when fields are added; readers accept any version and read what they know.
 Paths are relative. Anything a newer CLI does differently is expressed as data in the file, not as a
-rule readers must know.
+rule readers must know. A facts file that doesn't match the `dependencies.json` next to it is an
+error, never used.
 
 **Library:** the public API only grows. Old methods keep working forever; behaviour that depends on
 the CLI checks the facts file or a capability before relying on it. The library compiles for Java

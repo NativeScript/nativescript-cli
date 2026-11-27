@@ -5,7 +5,8 @@ import java.util.Map;
 import org.gradle.api.file.FileCollection;
 
 /**
- * A plugin of the NativeScript project: an npm package with Android native code.
+ * A plugin of the NativeScript project: an npm package with Android native code, as listed in the
+ * facts file the CLI wrote.
  *
  * <p>Not intended to be implemented outside this library; methods may be added in later versions.
  *
@@ -56,7 +57,7 @@ public interface PluginInfo {
      * Boolean}, {@code Integer}, {@code Long}, {@code java.math.BigInteger}, {@code
      * java.math.BigDecimal}, {@code null}, and unmodifiable {@code List}s and {@code Map}s of them.
      *
-     * @return an unmodifiable map; empty with CLIs that do not write a facts file
+     * @return an unmodifiable map
      * @since API level 1
      */
     Map<String, Object> getOptions();
@@ -65,8 +66,7 @@ public interface PluginInfo {
      * File name, without extension, of the aar the CLI builds from the plugin's sources; unique
      * across the project.
      *
-     * @return the name, or null with CLIs that do not write a facts file, and for installed
-     *     packages the CLI does not list as plugins
+     * @return the name
      * @since API level 1
      */
     String getAarName();
@@ -75,8 +75,7 @@ public interface PluginInfo {
      * Where the CLI puts the aar it builds from the plugin's sources. The file only exists once
      * built, and only if the plugin has sources.
      *
-     * @return the file, or null with CLIs that do not write a facts file, and for installed
-     *     packages the CLI does not list as plugins
+     * @return the file
      * @since API level 1
      */
     File getAar();

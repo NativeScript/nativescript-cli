@@ -6,12 +6,18 @@ import java.io.File;
  * What a NativeScript plugin's Gradle code can ask about the project being built, registered as
  * the {@value #NAME} extension by {@link NativeScriptPlugin}.
  *
- * <p>Answers come from the facts file the NativeScript CLI writes ({@code
- * platforms/android/nativescript-gradle.json}) or, with CLIs that do not write one (9.1 and older),
- * from the same properties and files those CLIs' Gradle templates use. A facts file that such a CLI
- * left behind no longer matches the {@code dependencies.json} next to it, and is ignored with a
- * warning. A plugin written against
- * this API therefore builds with old and new CLIs alike.
+ * <p>Answers come from the facts file ({@code platforms/android/nativescript-gradle.json}) that
+ * NativeScript CLI 9.2 and newer write when preparing the project. {@link #getApiLevel()}, {@link
+ * #isPluginBuild()} and {@link #isBuildingPlugin(String)} work without it. Every other member
+ * needs it and throws a {@link org.gradle.api.GradleException} when it is used:
+ *
+ * <ul>
+ *   <li>if there is no facts file, because a CLI before 9.2 prepared the project. The message says
+ *       to update the project's CLI and prepare it again;
+ *   <li>if the facts file no longer matches the {@code dependencies.json} next to it, because a
+ *       different CLI prepared the project after the one that wrote it. The message says to
+ *       prepare it again with the project's CLI.
+ * </ul>
  *
  * <p>Everything is worked out on first use, during configuration, and does not change afterwards.
  * Read what a task needs while configuring it rather than calling this from a task action.
@@ -33,12 +39,12 @@ import java.io.File;
  * older one.
  *
  * <pre>{@code
- * apply plugin: "org.nativescript.api"
- *
  * dependencies {
- *     def ns = project.extensions.findByName("nativescript")
- *     if (ns != null && ns.pluginBuild) {
- *         compileOnly ns.plugin("@nativescript/core").artifacts
+ *     if (project.hasProperty("tempBuild")) {
+ *         if (project.extensions.findByName("nativescript") == null) {
+ *             throw new GradleException("my-plugin needs NativeScript CLI 9.2 or newer: npm i -D nativescript@latest")
+ *         }
+ *         compileOnly nativescript.plugin("@nativescript/core").artifacts
  *     }
  * }
  * }</pre>
@@ -61,7 +67,8 @@ public interface NativeScriptExtension {
      * in the facts file's schema documentation.
      *
      * @param capability the capability name
-     * @return true if the CLI declared it; always false with CLIs that do not write a facts file
+     * @return true if the CLI declared it
+     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
     boolean has(String capability);
@@ -76,9 +83,11 @@ public interface NativeScriptExtension {
 
     /**
      * In a plugin build, the plugin whose aar is being built. A dependency's {@code include.gradle}
-     * applied there sees the plugin that depends on it, not itself.
+     * applied there sees the plugin that depends on it, not itself. Needs the facts file in the app
+     * build too, where it returns null.
      *
      * @return that plugin, or null in the app build or if the CLI did not name the plugin
+     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
     PluginInfo getSelf();
@@ -96,6 +105,7 @@ public interface NativeScriptExtension {
      * The NativeScript project root: the directory with the app's {@code package.json}.
      *
      * @return an absolute, normalized directory
+     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
     File getProjectDir();
@@ -104,6 +114,7 @@ public interface NativeScriptExtension {
      * The app's source directory ({@code appPath} in the NativeScript config).
      *
      * @return an absolute, normalized directory
+     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
     File getAppDir();
@@ -112,21 +123,20 @@ public interface NativeScriptExtension {
      * The app's {@code App_Resources} directory ({@code appResourcesPath} in the NativeScript config).
      *
      * @return an absolute, normalized directory
+     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
     File getAppResourcesDir();
 
     /**
-     * A plugin of the project: a package the CLI lists as having Android native code or, failing
-     * that, an installed package (found as in {@link #findPackage(String)}) with a {@code
-     * platforms/android} directory. The same rule applies with every CLI version, so a plugin gets
-     * the same answer whichever CLI prepared the project; only the details of the CLI's list, such
-     * as {@link PluginInfo#getAarName()}, depend on the version.
+     * A plugin of the project: a package the CLI lists in the facts file because its {@code
+     * package.json} declares Android support. Any other package, even one with a {@code
+     * platforms/android} directory, is not a plugin; find it with {@link #findPackage(String)}.
      *
      * @param npmName the npm package name, such as {@code @nativescript/core}
      * @return the plugin
-     * @throws org.gradle.api.GradleException if there is no such plugin; the message lists the
-     *     plugins that are known
+     * @throws org.gradle.api.GradleException if there is no such plugin, in which case the message
+     *     lists the plugins that are known, or if the project has no facts file or it is out of date
      * @throws IllegalArgumentException if {@code npmName} is not an npm package name
      * @since API level 1
      */
@@ -138,6 +148,7 @@ public interface NativeScriptExtension {
      * @param npmName the npm package name, such as {@code @nativescript/core}
      * @return the plugin, or null
      * @throws IllegalArgumentException if {@code npmName} is not an npm package name
+     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
     PluginInfo findPlugin(String npmName);
@@ -153,7 +164,8 @@ public interface NativeScriptExtension {
      *
      * @param npmName the npm package name
      * @return the package directory
-     * @throws org.gradle.api.GradleException if the package is not found
+     * @throws org.gradle.api.GradleException if the package is not found, or if the project has no
+     *     facts file or it is out of date
      * @throws IllegalArgumentException if {@code npmName} is not an npm package name
      * @since API level 1
      */
@@ -165,6 +177,7 @@ public interface NativeScriptExtension {
      * @param npmName the npm package name
      * @return the package directory, or null
      * @throws IllegalArgumentException if {@code npmName} is not an npm package name
+     * @throws org.gradle.api.GradleException if the project has no facts file or it is out of date
      * @since API level 1
      */
     File findPackage(String npmName);

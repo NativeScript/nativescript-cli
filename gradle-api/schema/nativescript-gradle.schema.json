@@ -25,7 +25,7 @@
 			}
 		},
 		"dependenciesJson": {
-			"description": "The dependencies.json the CLI wrote next to this file, before this file. A CLI that does not write this file still rewrites dependencies.json but leaves this file behind, so readers ignore this file when dependencies.json no longer has this hash.",
+			"description": "The dependencies.json the CLI wrote next to this file, before this file. A CLI that does not write this file still rewrites dependencies.json but leaves this file behind, so readers report an error, rather than use this file, when dependencies.json is missing or no longer has this hash.",
 			"type": "object",
 			"required": ["sha256"],
 			"properties": {

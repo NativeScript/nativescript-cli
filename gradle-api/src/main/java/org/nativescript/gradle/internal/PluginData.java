@@ -44,12 +44,10 @@ public final class PluginData {
         return nativeDir;
     }
 
-    /** Null unless the CLI wrote facts. */
     public String getAarName() {
         return aarName;
     }
 
-    /** Null unless the CLI wrote facts. */
     public File getAar() {
         return aar;
     }
