@@ -8,7 +8,12 @@ import {
 	PLUGIN_BUILD_DATA_FILENAME,
 	SCOPED_ANDROID_RUNTIME_NAME,
 } from "../constants";
-import { getShortPluginName, hook, quoteString } from "../common/helpers";
+import {
+	getCandidateAarNames,
+	getShortPluginName,
+	hook,
+	quoteString,
+} from "../common/helpers";
 import { Builder, parseString } from "xml2js";
 import {
 	IRuntimeGradleVersions,
@@ -38,6 +43,15 @@ import { injector } from "../common/yok";
 import * as _ from "lodash";
 import { resolvePackageJSONPath } from "@rigor789/resolve-package-path";
 import { cwd } from "process";
+
+interface IStaleAar {
+	aarPath: string;
+	/**
+	 * The CLI's earlier build output the aar must match to be deleted. Absent
+	 * when the aar is deleted whatever its content.
+	 */
+	previousOutputPath?: string;
+}
 
 export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 	private get $platformsDataService(): IPlatformsDataService {
@@ -226,19 +240,26 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		const androidSourceDirectories = this.getAndroidSourceDirectories(
 			options.platformsAndroidDirPath,
 		);
-		const shortPluginName = getShortPluginName(options.pluginName);
-		const pluginTempDir = path.join(options.tempPluginDirPath, shortPluginName);
+		const aarName = this.getAarName(options);
+		const pluginTempDir = path.join(options.tempPluginDirPath, aarName);
+		const staleAars =
+			options.aarName && (manifestFilePath || androidSourceDirectories.length)
+				? this.getStaleAars(options, aarName)
+				: [];
 		const pluginSourceFileHashesInfo = await this.getSourceFilesHashes(
 			options.platformsAndroidDirPath,
-			shortPluginName,
+			[
+				path.join(options.platformsAndroidDirPath, `${aarName}.aar`),
+				...staleAars.map((staleAar) => staleAar.aarPath),
+			],
 		);
+		this.removeStaleAars(options.pluginName, staleAars);
 
 		const shouldBuildAar = await this.shouldBuildAar({
 			manifestFilePath,
 			androidSourceDirectories,
 			pluginTempDir,
-			pluginSourceDir: options.platformsAndroidDirPath,
-			shortPluginName,
+			aarPath: path.join(this.getAarOutputDir(options), `${aarName}.aar`),
 			fileHashesInfo: pluginSourceFileHashesInfo,
 		});
 
@@ -249,7 +270,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 			await this.updateManifest(
 				manifestFilePath,
 				pluginTempMainSrcDir,
-				shortPluginName,
+				aarName,
 			);
 			this.copySourceSetDirectories(
 				androidSourceDirectories,
@@ -260,6 +281,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				options.platformsAndroidDirPath,
 				options.projectDir,
 				options.pluginName,
+				aarName,
 			);
 			await this.buildPlugin({
 				gradlePath: options.gradlePath,
@@ -269,13 +291,132 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 				projectDir: options.projectDir,
 			});
 			this.$watchIgnoreListService.addFileToIgnoreList(
-				path.join(options.aarOutputDir, `${shortPluginName}.aar`),
+				path.join(options.aarOutputDir, `${aarName}.aar`),
 			);
-			this.copyAar(shortPluginName, pluginTempDir, options.aarOutputDir);
+			this.copyAar(aarName, pluginTempDir, options.aarOutputDir);
 			this.writePluginHashInfo(pluginSourceFileHashesInfo, pluginTempDir);
 		}
 
 		return shouldBuildAar;
+	}
+
+	public hasOutdatedAar(options: IPluginBuildOptions): boolean {
+		if (
+			!this.$fs.exists(options.platformsAndroidDirPath) ||
+			(!this.getManifest(options.platformsAndroidDirPath) &&
+				!this.getAndroidSourceDirectories(options.platformsAndroidDirPath)
+					.length)
+		) {
+			return false;
+		}
+
+		const aarName = this.getAarName(options);
+		return (
+			!this.$fs.exists(
+				path.join(this.getAarOutputDir(options), `${aarName}.aar`),
+			) || this.getStaleAars(options, aarName).length > 0
+		);
+	}
+
+	private getAarName(options: IPluginBuildOptions): string {
+		return options.aarName ?? getShortPluginName(options.pluginName);
+	}
+
+	private getAarOutputDir(options: IPluginBuildOptions): string {
+		return options.aarOutputDir || options.platformsAndroidDirPath;
+	}
+
+	/**
+	 * Aars in `aarOutputDir` under another of the plugin's candidate names that
+	 * the CLI built. Earlier CLIs copied every built plugin's aar to
+	 * `<short name>.aar`, overwriting any file the package shipped under that
+	 * name, so that file is always a leftover. A scope-qualified name is only
+	 * ever built by this plugin, so that file is a leftover only if the temp
+	 * project for the name was set up for this plugin and has a build output to
+	 * compare it with; otherwise the package ships it.
+	 */
+	private getStaleAars(
+		options: IPluginBuildOptions,
+		aarName: string,
+	): IStaleAar[] {
+		const aarOutputDir = this.getAarOutputDir(options);
+		const shortName = getShortPluginName(options.pluginName);
+		const staleAars: IStaleAar[] = [];
+		for (const candidate of getCandidateAarNames(options.pluginName)) {
+			const aarPath = path.join(aarOutputDir, `${candidate}.aar`);
+			if (candidate === aarName || !this.$fs.exists(aarPath)) {
+				continue;
+			}
+
+			if (candidate === shortName) {
+				staleAars.push({ aarPath });
+				continue;
+			}
+
+			const tempProjectDir = path.join(options.tempPluginDirPath, candidate);
+			const previousOutputPath = path.join(
+				tempProjectDir,
+				"build",
+				"outputs",
+				"aar",
+				`${candidate}-release.aar`,
+			);
+			if (
+				this.$fs.exists(previousOutputPath) &&
+				this.getTempProjectPluginName(tempProjectDir) === options.pluginName
+			) {
+				staleAars.push({ aarPath, previousOutputPath });
+			}
+		}
+
+		return staleAars;
+	}
+
+	/**
+	 * The npm name setupGradle substituted into the temp project's build.gradle.
+	 */
+	private getTempProjectPluginName(tempProjectDir: string): string | null {
+		try {
+			const buildGradle = this.$fs.readText(
+				path.join(tempProjectDir, "build.gradle"),
+			);
+			return (
+				buildGradle.match(/project\.ext\.PLUGIN_NAME\s*=\s*"([^"]*)"/)?.[1] ??
+				null
+			);
+		} catch (err) {
+			return null;
+		}
+	}
+
+	/**
+	 * Gradle templates add every aar in a plugin's platforms/android to the app,
+	 * so an aar the CLI built for this plugin under another candidate name would
+	 * duplicate its classes.
+	 */
+	private removeStaleAars(pluginName: string, staleAars: IStaleAar[]): void {
+		for (const { aarPath, previousOutputPath } of staleAars) {
+			if (
+				previousOutputPath &&
+				!this.isSameFileContent(aarPath, previousOutputPath)
+			) {
+				this.$errors.fail(
+					`${aarPath} has a name the CLI built ${pluginName}'s aar under before, but differs from that build's output at ${previousOutputPath}. If it is an old build it would add duplicate classes to the app. Delete it or run \`ns clean\`.`,
+				);
+			}
+		}
+
+		for (const { aarPath } of staleAars) {
+			this.$watchIgnoreListService.addFileToIgnoreList(aarPath);
+			this.$logger.trace(`Removing stale plugin aar ${aarPath}`);
+			this.$fs.deleteFile(aarPath);
+		}
+	}
+
+	private isSameFileContent(first: string, second: string): boolean {
+		const firstContent = this.$fs.readFile(first) as Buffer;
+		const secondContent = this.$fs.readFile(second) as Buffer;
+		return firstContent.equals(secondContent);
 	}
 
 	private cleanPluginDir(pluginTempDir: string): void {
@@ -286,15 +427,12 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 
 	private getSourceFilesHashes(
 		pluginTempPlatformsAndroidDir: string,
-		shortPluginName: string,
+		excludedAarPaths: string[],
 	): Promise<IStringDictionary> {
-		const pathToAar = path.join(
-			pluginTempPlatformsAndroidDir,
-			`${shortPluginName}.aar`,
-		);
+		const excluded = new Set(excludedAarPaths);
 		const pluginNativeDataFiles = this.$fs.enumerateFilesInDirectorySync(
 			pluginTempPlatformsAndroidDir,
-			(file: string, stat: IFsStats) => file !== pathToAar,
+			(file: string, stat: IFsStats) => !excluded.has(file),
 		);
 		return this.$filesHashService.generateHashes(pluginNativeDataFiles);
 	}
@@ -311,8 +449,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		manifestFilePath: string;
 		androidSourceDirectories: string[];
 		pluginTempDir: string;
-		pluginSourceDir: string;
-		shortPluginName: string;
+		aarPath: string;
 		fileHashesInfo: IStringDictionary;
 	}): Promise<boolean> {
 		let shouldBuildAar =
@@ -321,9 +458,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		if (
 			shouldBuildAar &&
 			this.$fs.exists(opts.pluginTempDir) &&
-			this.$fs.exists(
-				path.join(opts.pluginSourceDir, `${opts.shortPluginName}.aar`),
-			)
+			this.$fs.exists(opts.aarPath)
 		) {
 			const buildDataFile = this.getPathToPluginBuildDataFile(
 				opts.pluginTempDir,
@@ -401,6 +536,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		platformsAndroidDirPath: string,
 		projectDir: string,
 		pluginName: string,
+		aarName: string,
 	): Promise<void> {
 		const gradleTemplatePath = path.resolve(
 			path.join(__dirname, "../../vendor/gradle-plugin"),
@@ -424,9 +560,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		this.replaceFileContent(buildGradlePath, "{{pluginName}}", pluginName);
 		this.replaceFileContent(settingsGradlePath, "{{pluginName}}", pluginName);
 
-		// gets the package from the AndroidManifest to use as the namespace or fallback to the `org.nativescript.${shortPluginName}`
-		const shortPluginName = getShortPluginName(pluginName);
-
+		// gets the package from the AndroidManifest to use as the namespace or fallback to the `org.nativescript.${aarName}`
 		const manifestPath = path.join(
 			pluginTempDir,
 			"src",
@@ -435,7 +569,7 @@ export class AndroidPluginBuildService implements IAndroidPluginBuildService {
 		);
 		const manifestContent = this.$fs.readText(manifestPath);
 
-		let packageName = `org.nativescript.${shortPluginName}`;
+		let packageName = `org.nativescript.${aarName}`;
 		const xml = await this.getXml(manifestContent);
 		if (xml["manifest"]) {
 			if (xml["manifest"]["$"]["package"]) {

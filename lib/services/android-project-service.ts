@@ -6,7 +6,7 @@ import * as semver from "semver";
 import * as projectServiceBaseLib from "./platform-project-service-base";
 import { DeviceAndroidDebugBridge } from "../common/mobile/android/device-android-debug-bridge";
 import { Configurations, LiveSyncPaths } from "../common/constants";
-import { hook } from "../common/helpers";
+import { getUniqueShortPluginNames, hook } from "../common/helpers";
 import { performanceLog } from ".././common/decorators";
 import {
 	IProjectData,
@@ -16,6 +16,7 @@ import {
 import {
 	IPlatformData,
 	IBuildOutputOptions,
+	INodeModulesDependenciesBuilder,
 	IPlatformEnvironmentRequirements,
 	IValidBuildOutputData,
 } from "../definitions/platform";
@@ -158,6 +159,11 @@ export class AndroidProjectService
 	) {
 		super($fs, $projectDataService);
 	}
+
+	private pluginAarNames: {
+		projectDir: string;
+		names: Map<string, string>;
+	} = null;
 
 	private _platformData: IPlatformData = null;
 	public getPlatformData(projectData: IProjectData): IPlatformData {
@@ -695,15 +701,11 @@ export class AndroidProjectService
 			AndroidProjectService.ANDROID_PLATFORM_NAME,
 		);
 		if (this.$fs.exists(pluginPlatformsFolderPath)) {
-			const options: IPluginBuildOptions = {
-				gradlePath: this.$options.gradlePath,
-				gradleArgs: this.$options.gradleArgs,
-				projectDir: projectData.projectDir,
-				pluginName: pluginData.name,
-				platformsAndroidDirPath: pluginPlatformsFolderPath,
-				aarOutputDir: pluginPlatformsFolderPath,
-				tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
-			};
+			const options = this.getPluginBuildOptions(
+				pluginData,
+				pluginPlatformsFolderPath,
+				projectData,
+			);
 
 			if (await this.$androidPluginBuildService.buildAar(options)) {
 				this.$logger.info(`Built aar for ${options.pluginName}`);
@@ -711,6 +713,90 @@ export class AndroidProjectService
 
 			this.$androidPluginBuildService.migrateIncludeGradle(options);
 		}
+	}
+
+	public shouldRepreparePlugin(
+		pluginData: IPluginData,
+		projectData: IProjectData,
+	): boolean {
+		if (!this.getPluginAarNames(projectData).has(pluginData.name)) {
+			return false;
+		}
+
+		return this.$androidPluginBuildService.hasOutdatedAar(
+			this.getPluginBuildOptions(
+				pluginData,
+				this.getPluginPlatformsFolderPath(
+					pluginData,
+					AndroidProjectService.ANDROID_PLATFORM_NAME,
+				),
+				projectData,
+			),
+		);
+	}
+
+	private getPluginBuildOptions(
+		pluginData: IPluginData,
+		pluginPlatformsFolderPath: string,
+		projectData: IProjectData,
+	): IPluginBuildOptions {
+		const options: IPluginBuildOptions = {
+			gradlePath: this.$options.gradlePath,
+			gradleArgs: this.$options.gradleArgs,
+			projectDir: projectData.projectDir,
+			pluginName: pluginData.name,
+			platformsAndroidDirPath: pluginPlatformsFolderPath,
+			aarOutputDir: pluginPlatformsFolderPath,
+			tempPluginDirPath: path.join(projectData.platformsDir, "tempPlugin"),
+		};
+
+		const aarName = this.getPluginAarNames(projectData).get(pluginData.name);
+		if (aarName) {
+			options.aarName = aarName;
+		}
+
+		return options;
+	}
+
+	/**
+	 * Normally computed by beforePrepareAllPlugins; computed here from the
+	 * project's production dependencies when a plugin is prepared without it.
+	 */
+	private getPluginAarNames(projectData: IProjectData): Map<string, string> {
+		if (this.pluginAarNames?.projectDir !== projectData.projectDir) {
+			const dependencies = this.$injector
+				.resolve<INodeModulesDependenciesBuilder>(
+					"nodeModulesDependenciesBuilder",
+				)
+				.getProductionDependencies(
+					projectData.projectDir,
+					projectData.ignoredDependencies,
+				);
+			this.setPluginAarNames(
+				projectData,
+				this.filterUniqueDependencies(dependencies).filter(
+					AndroidProjectService.isNativeAndroidDependency,
+				),
+			);
+		}
+
+		return this.pluginAarNames.names;
+	}
+
+	private setPluginAarNames(
+		projectData: IProjectData,
+		nativeDependencyData: IDependencyData[],
+	): void {
+		let names: Map<string, string>;
+		try {
+			names = getUniqueShortPluginNames(
+				nativeDependencyData.map((dep) => dep.name),
+			);
+		} catch (err) {
+			this.$errors.fail(err.message);
+		}
+
+		this.pluginAarNames = { projectDir: projectData.projectDir, names };
 	}
 
 	public async processConfigurationFilesFromAppResources(): Promise<void> {
@@ -775,6 +861,7 @@ export class AndroidProjectService
 		let nativeDependencyData = dependencies.filter(
 			AndroidProjectService.isNativeAndroidDependency,
 		);
+		this.setPluginAarNames(projectData, nativeDependencyData);
 
 		let nativeDependencies = nativeDependencyData.map(
 			({ name, directory, dependencies }) => {

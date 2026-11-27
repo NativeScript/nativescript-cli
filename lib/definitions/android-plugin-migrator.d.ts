@@ -3,6 +3,11 @@ import { IProjectDir } from "../common/declarations";
 
 interface IPluginBuildOptions extends IAndroidBuildOptions {
 	projectDir?: string;
+	/**
+	 * File name (without extension) of the built aar and of its temp build dir.
+	 * Defaults to the plugin's short name.
+	 */
+	aarName?: string;
 }
 
 interface IAndroidBuildOptions {
@@ -17,6 +22,11 @@ interface IAndroidBuildOptions {
 interface IAndroidPluginBuildService {
 	buildAar(options: IPluginBuildOptions): Promise<boolean>;
 	migrateIncludeGradle(options: IPluginBuildOptions): boolean;
+	/**
+	 * Whether the plugin has sources to build but `aarOutputDir` lacks its aar
+	 * or still holds one the CLI built under another of its candidate names.
+	 */
+	hasOutdatedAar(options: IPluginBuildOptions): boolean;
 }
 
 /**
