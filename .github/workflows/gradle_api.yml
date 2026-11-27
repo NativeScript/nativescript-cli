@@ -67,10 +67,40 @@ jobs:
         working-directory: gradle-api
         run: ./gradlew check --console=plain
 
+  test-windows:
+    name: Unit tests (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # The Test job validates the wrappers.
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          validate-wrappers: false
+
+      - name: Test
+        working-directory: gradle-api
+        run: .\gradlew.bat test --console=plain
+
   publish:
     name: Publish to Maven Central
     if: startsWith(github.ref, 'refs/tags/gradle-api-v')
-    needs: test
+    needs: [ test, test-windows ]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: maven-central
@@ -84,6 +114,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history of every branch, for the main ancestry check.
+          fetch-depth: 0
+
+      # A tag can point at any commit, and publishing releases it immediately.
+      - name: Check the tagged commit is on main
+        run: |
+          commit="$(git rev-parse "$GITHUB_SHA^{commit}")"
+          if ! git merge-base --is-ancestor "$commit" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at $commit, which is not on main"
+            exit 1
+          fi
 
       - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
