@@ -63,6 +63,10 @@ import {
 	getCompilationCachePath,
 	getDerivedDataPath,
 } from "./ios/ios-build-paths";
+import {
+	metadataSectionFlag,
+	setMetadataSectionFlag,
+} from "./ios/embed-metadata-linker-flag";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -790,10 +794,13 @@ export class IOSProjectService
 					this.$options.hostProjectPath,
 					buildFolderPath,
 				);
-				project.addToOtherLinkerFlags(
-					JSON.stringify(
-						`-sectcreate __DATA __TNSMetadata "${metadataPath}/metadata-arm64.bin"`,
-					),
+				// Set the directive rather than append it: an embed forces a prepare
+				// on every run, so appending left one more copy in OTHER_LDFLAGS per
+				// run, and the linker concatenates the referenced files, adding a
+				// full metadata file to the host executable each time.
+				setMetadataSectionFlag(
+					project,
+					metadataSectionFlag(`${metadataPath}/metadata-arm64.bin`),
 				);
 
 				// // no shorthand way to get UUID of build phase that i can tell
@@ -827,8 +834,11 @@ export class IOSProjectService
 
 				this.savePbxProj(project, projectData);
 			} catch (err) {
-				this.$logger.trace(
-					"Error adding NativeScript group to host project",
+				// A failure here leaves the host project partially set up — the
+				// NativeScript group may exist without its linker flag. Trace-only
+				// logging hid that, so surface it as an error.
+				this.$logger.error(
+					`Error adding the NativeScript group to the host project ${this.$options.hostProjectPath}. The host project may be left partially configured.`,
 					err,
 				);
 			}
