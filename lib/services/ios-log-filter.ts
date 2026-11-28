@@ -1,5 +1,10 @@
 import { injector } from "../common/yok";
-import { IOS_LOG_PIECE_HEADER } from "../common/mobile/ios/ios-log-entry";
+import * as _ from "lodash";
+import {
+	getIOSLogScope,
+	IOS_LOG_PIECE_HEADER,
+	IOS_STDIO_SUBSYSTEM,
+} from "../common/mobile/ios/ios-log-entry";
 
 export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// Used to recognize output related to the current project
@@ -28,11 +33,20 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 	// lose the header and show as consecutive lines.
 	private pieceHeaderRegex: RegExp = IOS_LOG_PIECE_HEADER;
 
+	// Forwarded stdout and stderr lines carry their subsystem and category in
+	// front of the text, e.g. "[org.nativescript.stdio:stdout] printed".
+	private stdioTagRegex: RegExp = new RegExp(
+		`^\\[${_.escapeRegExp(IOS_STDIO_SUBSYSTEM)}:([^\\]]*)\\](?: |$)`,
+	);
+
 	private filterActive: boolean = true;
 
 	private partialLine: string = null;
 
-	constructor(private $loggingLevels: Mobile.ILoggingLevels) {}
+	constructor(
+		private $loggingLevels: Mobile.ILoggingLevels,
+		private $logger: ILogger,
+	) {}
 
 	public filterData(
 		data: string,
@@ -87,6 +101,21 @@ export class IOSLogFilter implements Mobile.IPlatformLogFilter {
 			const filteredLineInfo = currentLine.match(this.infoFilterRegex);
 			if (filteredLineInfo && filteredLineInfo.length > 0) {
 				currentLine = currentLine.replace(filteredLineInfo[0], "");
+			}
+
+			const stdioTag = this.stdioTagRegex.exec(currentLine);
+			if (stdioTag) {
+				// Like the structured logs, stdio shows along with native output.
+				if (!getIOSLogScope(this.$logger.getLevel(), false).includeNative) {
+					continue;
+				}
+
+				const text = currentLine
+					.slice(stdioTag[0].length)
+					.replace(this.pieceHeaderRegex, "")
+					.trimEnd();
+				output += `${stdioTag[1] || "stdout"}: ${text}\n`;
+				continue;
 			}
 
 			currentLine = currentLine
