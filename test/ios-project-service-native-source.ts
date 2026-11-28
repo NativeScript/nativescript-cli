@@ -28,7 +28,8 @@ describe("iOSProjectService getRootGroup", () => {
 	});
 
 	const getFiles = async (rootPath: string): Promise<string[]> => {
-		const { files } = await (<any>IOSProjectService.prototype).getRootGroup.call(
+		const proto = <any>IOSProjectService.prototype;
+		const { files } = await proto.getRootGroup.call(
 			{ $fs: new FileSystem(<any>{}) },
 			"Native",
 			rootPath,
@@ -50,29 +51,54 @@ describe("iOSProjectService getRootGroup", () => {
 		assert.deepEqual(await getFiles("../../libs/native"), [expectedSource()]);
 	});
 
-	describe("header search paths", () => {
-		const prepare = async (rootPath: string): Promise<string[]> => {
-			const searchPaths: string[] = [];
-			const proto = <any>IOSProjectService.prototype;
-			await proto.prepareNativeSourceCode.call(
-				{
-					$fs: new FileSystem(<any>{}),
-					$logger: { warn: () => {} },
-					getRootGroup: proto.getRootGroup,
-					savePbxProj: () => {},
-					createPbxProj: () => ({
-						addPbxGroup: () => {},
-						getFirstTarget: () => ({ uuid: "target" }),
-						addToHeaderSearchPaths: (searchPath: string) =>
-							searchPaths.push(searchPath),
-					}),
-				},
-				"Native",
-				rootPath,
-				{ projectDir },
-			);
-			return searchPaths.map((searchPath) => fs.realpathSync(searchPath));
+	const prepare = async (rootPath: string) => {
+		const groupPaths: string[] = [];
+		const groupFiles: string[] = [];
+		const searchPaths: string[] = [];
+		const proto = <any>IOSProjectService.prototype;
+		await proto.prepareNativeSourceCode.call(
+			{
+				$fs: new FileSystem(<any>{}),
+				$logger: { warn: () => {} },
+				getRootGroup: proto.getRootGroup,
+				savePbxProj: () => {},
+				createPbxProj: () => ({
+					addPbxGroup: (files: string[], name: string, groupPath: string) => {
+						groupPaths.push(groupPath);
+						groupFiles.push(...files);
+					},
+					getFirstTarget: () => ({ uuid: "target" }),
+					addToHeaderSearchPaths: (searchPath: string) =>
+						searchPaths.push(searchPath),
+				}),
+			},
+			"Native",
+			rootPath,
+			{ projectDir },
+		);
+		return {
+			groupPaths,
+			groupFiles: groupFiles.map((file) => fs.realpathSync(file)),
+			searchPaths: searchPaths.map((searchPath) => fs.realpathSync(searchPath)),
 		};
+	};
+
+	describe("pbxgroup", () => {
+		[".", path.join("apps", "app")].forEach((workingDir) => {
+			it(`keeps the configured folder as its key, run from ${workingDir}`, async () => {
+				process.chdir(path.join(root, workingDir));
+
+				const { groupPaths, groupFiles } = await prepare("../../libs/native");
+
+				assert.deepEqual(groupPaths, ["../../libs/native"]);
+				assert.deepEqual(groupFiles, [expectedSource()]);
+			});
+		});
+	});
+
+	describe("header search paths", () => {
+		const searchPathsFor = async (rootPath: string) =>
+			(await prepare(rootPath)).searchPaths;
 
 		it("uses the folders of the headers a glob matches", async () => {
 			const nested = path.join(sourcesDir, "nested");
@@ -80,17 +106,18 @@ describe("iOSProjectService getRootGroup", () => {
 			fs.writeFileSync(path.join(nested, "One.h"), "");
 			fs.writeFileSync(path.join(nested, "Two.h"), "");
 
-			assert.deepEqual(await prepare("../../libs/native/**/*.{h,swift}"), [
-				fs.realpathSync(nested),
-			]);
+			assert.deepEqual(
+				await searchPathsFor("../../libs/native/**/*.{h,swift}"),
+				[fs.realpathSync(nested)],
+			);
 		});
 
 		it("adds nothing for a glob without headers", async () => {
-			assert.deepEqual(await prepare("../../libs/native/*.swift"), []);
+			assert.deepEqual(await searchPathsFor("../../libs/native/*.swift"), []);
 		});
 
 		it("uses the folder itself, against the project", async () => {
-			assert.deepEqual(await prepare("../../libs/native"), [
+			assert.deepEqual(await searchPathsFor("../../libs/native"), [
 				fs.realpathSync(sourcesDir),
 			]);
 		});

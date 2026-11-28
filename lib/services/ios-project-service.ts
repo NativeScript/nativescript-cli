@@ -1537,6 +1537,7 @@ export class IOSProjectService
 			sourceFolderPath,
 			projectData.projectDir,
 		);
+		const sourceFolder = path.resolve(projectData.projectDir, sourceFolderPath);
 		// pin the sources to the main app target: without an explicit target the
 		// underlying xcode lib picks whichever "Sources" build phase it finds
 		// first, which can be an extension target (e.g. a widget) once one
@@ -1554,19 +1555,19 @@ export class IOSProjectService
 						.filter((file) => path.extname(file) === ".h")
 						.map((file) => path.dirname(file)),
 				)
-			: [group.path];
+			: [sourceFolder];
 		headerSearchPaths.forEach((searchPath) =>
 			project.addToHeaderSearchPaths(searchPath),
 		);
-		const headerFiles = this.$fs.exists(group.path)
+		const headerFiles = this.$fs.exists(sourceFolder)
 			? this.$fs.enumerateFilesInDirectorySync(
-					group.path,
+					sourceFolder,
 					(file, stat) => stat.isDirectory() || path.extname(file) === ".h",
 				)
 			: [];
 		if (
 			headerFiles.length > 0 &&
-			!this.$fs.exists(path.join(group.path, "module.modulemap"))
+			!this.$fs.exists(path.join(sourceFolder, "module.modulemap"))
 		) {
 			this.$logger.warn(
 				`warning: Directory ${sourceFolderPath} with native iOS source code doesn't contain a modulemap file. Metadata for it will not be generated and it will not be accessible from JavaScript. To learn more see https://docs.nativescript.org/guides/ios-source-code`,
@@ -1620,6 +1621,8 @@ export class IOSProjectService
 		const rootGroup: INativeSourceCodeGroup = {
 			name: name,
 			files: filePathsArr,
+			// nativescript-dev-xcode looks the group up by this exact string. Keep it
+			// as configured: resolving it duplicates the group in prepared projects.
 			path: rootPath,
 		};
 
@@ -1632,12 +1635,11 @@ export class IOSProjectService
 			}
 		} else {
 			const folderPath = path.resolve(projectRoot, rootPath);
-			rootGroup.path = folderPath;
 			if (this.$fs.exists(folderPath)) {
 				const stats = this.$fs.getFsStats(folderPath);
 				if (stats.isDirectory() && !this.$fs.isEmptyDir(folderPath)) {
 					this.$fs.readDirectory(folderPath).forEach((fileName) => {
-						const filePath = path.join(rootGroup.path, fileName);
+						const filePath = path.join(folderPath, fileName);
 						filePathsArr.push(filePath);
 					});
 				}
