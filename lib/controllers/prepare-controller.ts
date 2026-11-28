@@ -525,14 +525,18 @@ export class PrepareController
 					version: installedRuntimePackageJSON.version,
 				};
 			}
-			if (prepareData && !prepareData.release) {
-				packageData.logFormat = IOS_LOG_FORMAT;
-			}
 			if (packageData.ios && packageData.ios.discardUncaughtJsExceptions) {
 				packageData.discardUncaughtJsExceptions =
 					packageData.ios.discardUncaughtJsExceptions;
 			}
 			delete packageData.android;
+		}
+		if (
+			this.$mobileHelper.isApplePlatform(platform) &&
+			prepareData &&
+			!prepareData.release
+		) {
+			packageData.logFormat = IOS_LOG_FORMAT;
 		}
 		if (platform === PlatformTypes.android) {
 			if (installedRuntimePackageJSON) {
