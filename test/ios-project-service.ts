@@ -1567,6 +1567,172 @@ describe("workspace DerivedData location", () => {
 	});
 });
 
+describe("embed metadata linker flag", () => {
+	const projectName = "embedHost";
+	const targetName = "TNSBlank";
+
+	/**
+	 * A host project with a real pbxproj (test/files/project.pbxproj), wired so
+	 * the service reads and writes that file instead of a mock.
+	 */
+	function setup() {
+		const projectPath = mkdtempSync(
+			path.join(tmpdir(), "embedMetadataProject-"),
+		);
+		const hostProjectPath = mkdtempSync(
+			path.join(tmpdir(), "embedMetadataHost-"),
+		);
+		const pbxProjPath = path.join(
+			hostProjectPath,
+			`${targetName}.xcodeproj`,
+			"project.pbxproj",
+		);
+		require("fs").mkdirSync(path.dirname(pbxProjPath), { recursive: true });
+		require("fs").copyFileSync(
+			path.join(__dirname, "files", "project.pbxproj"),
+			pbxProjPath,
+		);
+
+		const testInjector = createTestInjector(projectPath, projectName, xcode);
+		const iOSProjectService: IOSProjectService =
+			testInjector.resolve("iOSProjectService");
+		(<any>testInjector.resolve("options")).hostProjectPath = hostProjectPath;
+
+		// `--hostProjectPath` moves the platform root into the host project.
+		iOSProjectService.getPlatformData(testInjector.resolve("projectData"));
+		testInjector.resolve("xcprojService").findXcodeProject = () =>
+			path.dirname(pbxProjPath);
+
+		const flagsOfTarget = (): any[] => {
+			const project = new xcode.project(pbxProjPath);
+			project.parseSync();
+			const configurations = project.pbxXCBuildConfigurationSection();
+			return Object.keys(configurations)
+				.filter((key) => !/_comment$/.test(key))
+				.map((key) => configurations[key].buildSettings)
+				.filter(
+					(buildSettings: any) =>
+						buildSettings && buildSettings.PRODUCT_NAME === targetName,
+				)
+				.map((buildSettings: any) => buildSettings.OTHER_LDFLAGS);
+		};
+
+		const seedFlags = (entries: string[]) => {
+			const project = new xcode.project(pbxProjPath);
+			project.parseSync();
+			const configurations = project.pbxXCBuildConfigurationSection();
+			for (const key of Object.keys(configurations)) {
+				if (/_comment$/.test(key)) {
+					continue;
+				}
+				const buildSettings = configurations[key].buildSettings;
+				if (buildSettings && buildSettings.PRODUCT_NAME === targetName) {
+					buildSettings.OTHER_LDFLAGS = entries;
+				}
+			}
+			require("fs").writeFileSync(pbxProjPath, project.writeSync({}));
+		};
+
+		const prepare = () =>
+			iOSProjectService.prepareProject(
+				testInjector.resolve("projectData"),
+				<any>{},
+			);
+
+		return { prepare, flagsOfTarget, seedFlags, projectName };
+	}
+
+	const metadataDirectives = (flags: any): string[] =>
+		(Array.isArray(flags) ? flags : [flags])
+			.filter((entry: any) => typeof entry === "string")
+			.filter((entry: string) => entry.includes("__TNSMetadata"));
+
+	it("keeps a single metadata directive no matter how often embed runs", async () => {
+		const { prepare, flagsOfTarget, projectName } = setup();
+
+		await prepare();
+		await prepare();
+		await prepare();
+
+		const configurations = flagsOfTarget();
+		assert.isNotEmpty(configurations);
+		for (const flags of configurations) {
+			const directives = metadataDirectives(flags);
+			assert.lengthOf(
+				directives,
+				1,
+				`expected one metadata directive, got ${JSON.stringify(flags)}`,
+			);
+			assert.include(directives[0], `${projectName}/metadata-arm64.bin`);
+		}
+	});
+
+	it("replaces duplicates left by earlier versions and keeps unrelated flags", async () => {
+		const stale = JSON.stringify(
+			'-sectcreate __DATA __TNSMetadata "../embedHost/metadata-arm64.bin"',
+		);
+		const unrelated = JSON.stringify("-ObjC");
+		const { prepare, flagsOfTarget, seedFlags, projectName } = setup();
+		seedFlags(['"$(inherited)"', unrelated, stale, stale]);
+
+		await prepare();
+
+		for (const flags of flagsOfTarget()) {
+			assert.lengthOf(metadataDirectives(flags), 1);
+			assert.include(flags, unrelated);
+			assert.include(flags, '"$(inherited)"');
+			assert.include(
+				JSON.stringify(flags),
+				`${projectName}/metadata-arm64.bin`,
+			);
+		}
+	});
+
+	it("reports a broken host project instead of hiding it at trace level", async () => {
+		const logged: any[] = [];
+		const testInjector = createTestInjector(
+			mkdtempSync(path.join(tmpdir(), "embedMetadataBroken-")),
+			projectName,
+			xcode,
+		);
+		// Registered before the service resolves its logger.
+		testInjector.register("logger", {
+			error: (...args: any[]) => logged.push(args),
+			warn: (): void => undefined,
+			info: (): void => undefined,
+			debug: (): void => undefined,
+			trace: (...args: any[]) => logged.push(["trace", ...args]),
+		});
+		const iOSProjectService: IOSProjectService =
+			testInjector.resolve("iOSProjectService");
+		(<any>testInjector.resolve("options")).hostProjectPath = mkdtempSync(
+			path.join(tmpdir(), "embedMetadataBrokenHost-"),
+		);
+		// The host project's pbxproj exists but the group cannot be added to it —
+		// the failure mode that used to leave a half-configured host.
+		testInjector.resolve("xcprojService").findXcodeProject = () =>
+			(<any>testInjector.resolve("options")).hostProjectPath;
+		(<any>iOSProjectService).createPbxProj = (): any => ({
+			addPbxGroup: () => {
+				throw new Error("host project is read-only");
+			},
+			pbxGroupByName: (): any => null,
+		});
+
+		await iOSProjectService.prepareProject(
+			testInjector.resolve("projectData"),
+			<any>{},
+		);
+
+		const reported = logged.filter((entry) => entry[0] !== "trace");
+		assert.isNotEmpty(
+			reported,
+			`host-project setup failures must not stay at trace level, got ${JSON.stringify(logged)}`,
+		);
+		assert.include(String(reported[0][0]), "host project");
+	});
+});
+
 describe("SPM Packages", () => {
 	it("should add SPM packages to the project", async () => {
 		// todo: add tests for SPM packages
