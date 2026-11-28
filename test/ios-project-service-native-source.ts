@@ -47,6 +47,12 @@ describe("iOSProjectService getRootGroup", () => {
 		]);
 	});
 
+	it("keeps an absolute glob as it is", async () => {
+		assert.deepEqual(await getFiles(path.join(sourcesDir, "*.swift")), [
+			expectedSource(),
+		]);
+	});
+
 	it("resolves a folder against the project, not the working directory", async () => {
 		assert.deepEqual(await getFiles("../../libs/native"), [expectedSource()]);
 	});

@@ -1630,8 +1630,7 @@ export class IOSProjectService
 			// Relative to the project: --path can run the CLI from anywhere.
 			const filePaths = await fastGlob(rootPath, { cwd: projectRoot });
 			for (const filePath of filePaths) {
-				const sourceFilePath = path.normalize(path.join(projectRoot, filePath));
-				filePathsArr.push(sourceFilePath);
+				filePathsArr.push(path.resolve(projectRoot, filePath));
 			}
 		} else {
 			const folderPath = path.resolve(projectRoot, rootPath);
