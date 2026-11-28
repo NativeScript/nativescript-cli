@@ -6,12 +6,13 @@ import { FileSystem } from "../lib/common/file-system";
 import { IOSProjectService } from "../lib/services/ios-project-service";
 
 describe("iOSProjectService getRootGroup", () => {
+	let root: string;
 	let projectDir: string;
 	let sourcesDir: string;
 	let cwd: string;
 
 	beforeEach(() => {
-		const root = fs.mkdtempSync(path.join(os.tmpdir(), "native-source-"));
+		root = fs.mkdtempSync(path.join(os.tmpdir(), "native-source-"));
 		projectDir = path.join(root, "apps", "app");
 		sourcesDir = path.join(root, "libs", "native");
 		fs.mkdirSync(projectDir, { recursive: true });
@@ -23,6 +24,7 @@ describe("iOSProjectService getRootGroup", () => {
 
 	afterEach(() => {
 		process.chdir(cwd);
+		fs.rmSync(root, { recursive: true, force: true });
 	});
 
 	const getFiles = async (rootPath: string): Promise<string[]> => {
