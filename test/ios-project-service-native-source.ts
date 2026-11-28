@@ -61,11 +61,12 @@ describe("iOSProjectService getRootGroup", () => {
 		const groupPaths: string[] = [];
 		const groupFiles: string[] = [];
 		const searchPaths: string[] = [];
+		const warnings: string[] = [];
 		const proto = <any>IOSProjectService.prototype;
 		await proto.prepareNativeSourceCode.call(
 			{
 				$fs: new FileSystem(<any>{}),
-				$logger: { warn: () => {} },
+				$logger: { warn: (message: string) => warnings.push(message) },
 				getRootGroup: proto.getRootGroup,
 				savePbxProj: () => {},
 				createPbxProj: () => ({
@@ -86,6 +87,7 @@ describe("iOSProjectService getRootGroup", () => {
 			groupPaths,
 			groupFiles: groupFiles.map((file) => fs.realpathSync(file)),
 			searchPaths: searchPaths.map((searchPath) => fs.realpathSync(searchPath)),
+			warnings,
 		};
 	};
 
@@ -126,6 +128,46 @@ describe("iOSProjectService getRootGroup", () => {
 			assert.deepEqual(await searchPathsFor("../../libs/native"), [
 				fs.realpathSync(sourcesDir),
 			]);
+		});
+	});
+
+	describe("module map", () => {
+		let headers: string;
+
+		beforeEach(() => {
+			headers = path.join(sourcesDir, "headers");
+			fs.mkdirSync(headers);
+			fs.writeFileSync(path.join(headers, "Header.h"), "");
+		});
+
+		it("warns when the headers a glob matches have no module map", async () => {
+			const { warnings } = await prepare("../../libs/native/**/*.h");
+
+			assert.lengthOf(warnings, 1);
+		});
+
+		it("finds a module map next to the headers a glob matches", async () => {
+			fs.writeFileSync(path.join(headers, "module.modulemap"), "");
+
+			const { warnings } = await prepare("../../libs/native/**/*.h");
+
+			assert.deepEqual(warnings, []);
+		});
+
+		it("adds the folder of a module map a glob matches to the search paths", async () => {
+			const modules = path.join(sourcesDir, "modules");
+			fs.mkdirSync(modules);
+			fs.writeFileSync(path.join(modules, "module.modulemap"), "");
+
+			const { searchPaths, warnings } = await prepare(
+				"../../libs/native/**/*.{h,modulemap}",
+			);
+
+			assert.deepEqual(searchPaths, [
+				fs.realpathSync(headers),
+				fs.realpathSync(modules),
+			]);
+			assert.deepEqual(warnings, []);
 		});
 	});
 });

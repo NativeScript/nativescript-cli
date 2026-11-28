@@ -1537,7 +1537,6 @@ export class IOSProjectService
 			sourceFolderPath,
 			projectData.projectDir,
 		);
-		const sourceFolder = path.resolve(projectData.projectDir, sourceFolderPath);
 		// pin the sources to the main app target: without an explicit target the
 		// underlying xcode lib picks whichever "Sources" build phase it finds
 		// first, which can be an extension target (e.g. a widget) once one
@@ -1548,27 +1547,38 @@ export class IOSProjectService
 			filesRelativeToProject: true,
 			target: project.getFirstTarget()?.uuid,
 		});
-		// A glob is no use as a search path, the folders of its headers are.
-		const headerSearchPaths = fastGlob.isDynamicPattern(sourceFolderPath)
-			? _.uniq(
-					group.files
-						.filter((file) => path.extname(file) === ".h")
-						.map((file) => path.dirname(file)),
-				)
-			: [sourceFolder];
+		let headerFiles: string[];
+		let headerSearchPaths: string[];
+		if (fastGlob.isDynamicPattern(sourceFolderPath)) {
+			// A glob is no use as a search path, the folders of its headers and
+			// module maps are.
+			headerFiles = group.files.filter((file) => path.extname(file) === ".h");
+			const moduleMaps = group.files.filter(
+				(file) => path.basename(file) === "module.modulemap",
+			);
+			headerSearchPaths = _.uniq(
+				headerFiles.concat(moduleMaps).map((file) => path.dirname(file)),
+			);
+		} else {
+			const sourceFolder = path.resolve(
+				projectData.projectDir,
+				sourceFolderPath,
+			);
+			headerFiles = this.$fs.exists(sourceFolder)
+				? this.$fs.enumerateFilesInDirectorySync(
+						sourceFolder,
+						(file, stat) => stat.isDirectory() || path.extname(file) === ".h",
+					)
+				: [];
+			headerSearchPaths = [sourceFolder];
+		}
 		headerSearchPaths.forEach((searchPath) =>
 			project.addToHeaderSearchPaths(searchPath),
 		);
-		const headerFiles = this.$fs.exists(sourceFolder)
-			? this.$fs.enumerateFilesInDirectorySync(
-					sourceFolder,
-					(file, stat) => stat.isDirectory() || path.extname(file) === ".h",
-				)
-			: [];
-		if (
-			headerFiles.length > 0 &&
-			!this.$fs.exists(path.join(sourceFolder, "module.modulemap"))
-		) {
+		const hasModuleMap = headerSearchPaths.some((searchPath) =>
+			this.$fs.exists(path.join(searchPath, "module.modulemap")),
+		);
+		if (headerFiles.length > 0 && !hasModuleMap) {
 			this.$logger.warn(
 				`warning: Directory ${sourceFolderPath} with native iOS source code doesn't contain a modulemap file. Metadata for it will not be generated and it will not be accessible from JavaScript. To learn more see https://docs.nativescript.org/guides/ios-source-code`,
 			);
