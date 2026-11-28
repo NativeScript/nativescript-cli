@@ -99,30 +99,23 @@ export class IOSDevice extends IOSDeviceBase {
 		const processName = this.$deviceLogProvider.getProjectNameForDevice(
 			this.deviceInfo.identifier,
 		);
-		if (processName && this.startStructuredDeviceLog(processName)) {
-			return;
+		if (processName) {
+			this.startStructuredDeviceLog(processName);
+		} else {
+			this.startSyslogDeviceLog();
 		}
-
-		this.startSyslogDeviceLog();
 	}
 
-	private startStructuredDeviceLog(processName: string): boolean {
+	private startStructuredDeviceLog(processName: string): void {
 		this._deviceLogEntryHandler = this.actionOnDeviceLogEntry.bind(this);
 		this.$iosDeviceOperations.on(
 			commonConstants.DEVICE_LOG_ENTRY_EVENT_NAME,
 			this._deviceLogEntryHandler,
 		);
-		if (
-			this.$iosDeviceOperations.startDeviceLogStream(
-				this.deviceInfo.identifier,
-				processName,
-			)
-		) {
-			return true;
-		}
-
-		this.removeDeviceLogEntryHandler();
-		return false;
+		this.$iosDeviceOperations.startDeviceLogStream(
+			this.deviceInfo.identifier,
+			processName,
+		);
 	}
 
 	private startSyslogDeviceLog(): void {

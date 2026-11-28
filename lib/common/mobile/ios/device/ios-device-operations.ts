@@ -139,12 +139,8 @@ export class IOSDeviceOperations
 	public startDeviceLogStream(
 		deviceIdentifier: string,
 		processName: string,
-	): boolean {
+	): void {
 		this.assertIsInitialized();
-		if (typeof this.deviceLib.startDeviceLogStream !== "function") {
-			return false;
-		}
-
 		this.setShouldDispose(false);
 		this.$logger.trace(
 			`Streaming structured logs of ${processName} on device with identifier: ${deviceIdentifier}.`,
@@ -155,7 +151,6 @@ export class IOSDeviceOperations
 		this.deviceLib.startDeviceLogStream([
 			{ deviceId: deviceIdentifier, processName },
 		]);
-		return true;
 	}
 
 	public async apps(

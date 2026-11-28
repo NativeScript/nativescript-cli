@@ -152,14 +152,11 @@ declare global {
 		}
 
 		/**
-		 * Describes log stream options
-		 */
-		/**
 		 * A structured unified logging (os_log) entry.
 		 */
 		interface IiOSLogEntry {
 			/**
-			 * Together with the thread, tells apart messages logged at the same time.
+			 * Scopes the ids of split messages, which are only unique per process.
 			 */
 			pid?: number;
 			thread?: number;
@@ -175,6 +172,9 @@ declare global {
 			message: string;
 		}
 
+		/**
+		 * Describes log stream options
+		 */
 		interface IiOSLogStreamOptions {
 			/**
 			 * This is the --predicate option which will be passed to `log stream` command
@@ -1369,12 +1369,8 @@ declare global {
 
 		/**
 		 * Streams structured logs of the process with the given executable name.
-		 * Returns false when the installed ios-device-lib cannot stream them.
 		 */
-		startDeviceLogStream(
-			deviceIdentifier: string,
-			processName: string,
-		): boolean;
+		startDeviceLogStream(deviceIdentifier: string, processName: string): void;
 
 		apps(
 			deviceIdentifiers: string[],
