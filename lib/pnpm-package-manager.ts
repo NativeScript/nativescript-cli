@@ -44,11 +44,6 @@ export class PnpmPackageManager extends BasePackageManager {
 		if (config.ignoreScripts) {
 			config["ignore-scripts"] = true;
 		}
-		// CLI-internal options must never reach the command line: pnpm, unlike
-		// npm, hard-fails on unknown options.
-		delete config.ignoreScripts;
-		delete config.path;
-		delete config.frameworkPath;
 
 		const packageJsonPath = path.join(pathToSave, "package.json");
 		const jsonContentBefore = this.$fs.readJson(packageJsonPath);
