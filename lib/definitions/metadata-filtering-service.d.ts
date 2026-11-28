@@ -1,4 +1,5 @@
 import { IProjectData } from "./project";
+import { IDeclaredMetadataRules } from "./metadata-trim-service";
 
 /**
  * Describes service used to generate necessary files to filter the native metadata generation.
@@ -45,4 +46,15 @@ interface IMetadataFilteringService {
 	 * @returns {void}
 	 */
 	generateMetadataFilters(projectData: IProjectData, platform: string): void;
+
+	/**
+	 * Reads the rules the app and its plugins declare in native-api-usage.json.
+	 * @param {IProjectData} projectData Information about the current project.
+	 * @param {string} platform The platform to read rules for.
+	 * @returns {IDeclaredMetadataRules} The patterns to keep and to remove.
+	 */
+	getDeclaredRules(
+		projectData: IProjectData,
+		platform: string,
+	): IDeclaredMetadataRules;
 }
