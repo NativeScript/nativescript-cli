@@ -15,9 +15,27 @@ const exportOptionsPlistOutput = {
 };
 let actualBuildArgs: string[] = [];
 let actualBuildOptions: IXcodebuildCommandOptions = null;
+let spawnedCommands: string[][] = [];
+let warnings: string[] = [];
+const legacyBuildOutputPath = path.join(projectRoot, "build", "archive");
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
+	spawnedCommands = [];
+	warnings = [];
+	injector.register("childProcess", {
+		spawnFromEvent: async (command: string, args: string[]) => {
+			spawnedCommands.push([command, ...args]);
+		},
+	});
+	injector.register("logger", {
+		warn: (message: string) => warnings.push(message),
+	});
+	injector.register("fs", {
+		createDirectory: (): void => undefined,
+		deleteDirectory: (): void => undefined,
+		deleteFile: (): void => undefined,
+	});
 	injector.register("exportOptionsPlistService", {
 		createDevelopmentExportOptionsPlist: async () => exportOptionsPlistOutput,
 		createDistributionExportOptionsPlist: async () => exportOptionsPlistOutput,
@@ -25,11 +43,13 @@ function createTestInjector(): IInjector {
 	injector.register("xcodebuildArgsService", {
 		getBuildForDeviceArgs: async () => <string[]>[],
 		getBuildForSimulatorArgs: async () => <string[]>[],
+		shouldArchiveDeviceBuild: (buildConfig: any) =>
+			!!(buildConfig.release || buildConfig.buildForAppStore),
 	});
 	injector.register("xcodebuildCommandService", {
 		executeCommand: async (
 			args: string[],
-			options: IXcodebuildCommandOptions
+			options: IXcodebuildCommandOptions,
 		) => {
 			actualBuildArgs = args;
 			actualBuildOptions = options;
@@ -43,7 +63,7 @@ function createTestInjector(): IInjector {
 
 describe("xcodebuildService", () => {
 	describe("buildForDevice", () => {
-		it("should build correctly for device", async () => {
+		it("packages the built .app as an .ipa for debug builds", async () => {
 			const injector = createTestInjector();
 			const xcodebuildService = injector.resolve("xcodebuildService");
 			const platformData = {
@@ -55,7 +75,54 @@ describe("xcodebuildService", () => {
 			const buildResult = await xcodebuildService.buildForDevice(
 				platformData,
 				projectData,
-				{}
+				{},
+			);
+
+			const payloadPath = path.join(buildOutputPath, "ipa-staging", "Payload");
+			assert.deepStrictEqual(spawnedCommands, [
+				[
+					"cp",
+					"-cR",
+					path.join(buildOutputPath, `${projectName}.app`),
+					payloadPath,
+				],
+				[
+					"ditto",
+					"-c",
+					"-k",
+					"--norsrc",
+					"--zlibCompressionLevel",
+					"0",
+					"--keepParent",
+					payloadPath,
+					path.join(buildOutputPath, `${projectName}.ipa`),
+				],
+				[
+					"cp",
+					"-cR",
+					path.join(buildOutputPath, `${projectName}.ipa`),
+					legacyBuildOutputPath,
+				],
+			]);
+			assert.deepStrictEqual(
+				buildResult,
+				path.join(buildOutputPath, `${projectName}.ipa`),
+			);
+		});
+
+		it("exports an archive for release builds", async () => {
+			const injector = createTestInjector();
+			const xcodebuildService = injector.resolve("xcodebuildService");
+			const platformData = {
+				getBuildOutputPath: () => buildOutputPath,
+				projectRoot,
+			};
+			const projectData = { projectName };
+
+			const buildResult = await xcodebuildService.buildForDevice(
+				platformData,
+				projectData,
+				{ release: true },
 			);
 
 			const expectedBuildArgs = [
@@ -63,7 +130,7 @@ describe("xcodebuildService", () => {
 				"-archivePath",
 				path.join(
 					platformData.getBuildOutputPath(),
-					`${projectName}.xcarchive`
+					`${projectName}.xcarchive`,
 				),
 				"-exportPath",
 				exportOptionsPlistOutput.exportFileDir,
@@ -77,7 +144,7 @@ describe("xcodebuildService", () => {
 			});
 			assert.deepStrictEqual(
 				buildResult,
-				exportOptionsPlistOutput.exportFilePath
+				exportOptionsPlistOutput.exportFilePath,
 			);
 		});
 	});
@@ -99,6 +166,51 @@ describe("xcodebuildService", () => {
 				stdio: undefined,
 			});
 		});
+
+		it("copies the .app to the pre-DerivedData build folder", async () => {
+			const injector = createTestInjector();
+			const xcodebuildService = injector.resolve("xcodebuildService");
+			const platformData = {
+				getBuildOutputPath: () => buildOutputPath,
+				projectRoot,
+			};
+
+			await xcodebuildService.buildForSimulator(
+				platformData,
+				{ projectName },
+				{},
+			);
+
+			assert.deepStrictEqual(spawnedCommands, [
+				[
+					"cp",
+					"-cR",
+					path.join(buildOutputPath, `${projectName}.app`),
+					legacyBuildOutputPath,
+				],
+			]);
+		});
+
+		it("only warns when that copy fails", async () => {
+			const injector = createTestInjector();
+			injector.resolve("childProcess").spawnFromEvent = async () => {
+				throw new Error("cp failed");
+			};
+			const xcodebuildService = injector.resolve("xcodebuildService");
+			const platformData = {
+				getBuildOutputPath: () => buildOutputPath,
+				projectRoot,
+			};
+
+			await xcodebuildService.buildForSimulator(
+				platformData,
+				{ projectName },
+				{},
+			);
+
+			assert.lengthOf(warnings, 1);
+			assert.include(warnings[0], "cp failed");
+		});
 	});
 	describe("buildForAppStore", () => {
 		it("should build correctly for Appstore", async () => {
@@ -113,7 +225,7 @@ describe("xcodebuildService", () => {
 			const buildResult = await xcodebuildService.buildForAppStore(
 				platformData,
 				projectData,
-				{}
+				{},
 			);
 
 			const expectedBuildArgs = [
@@ -121,7 +233,7 @@ describe("xcodebuildService", () => {
 				"-archivePath",
 				path.join(
 					platformData.getBuildOutputPath(),
-					`${projectName}.xcarchive`
+					`${projectName}.xcarchive`,
 				),
 				"-exportPath",
 				exportOptionsPlistOutput.exportFileDir,
@@ -133,7 +245,7 @@ describe("xcodebuildService", () => {
 			assert.deepStrictEqual(actualBuildOptions, { cwd: projectRoot });
 			assert.deepStrictEqual(
 				buildResult,
-				exportOptionsPlistOutput.exportFilePath
+				exportOptionsPlistOutput.exportFilePath,
 			);
 		});
 	});

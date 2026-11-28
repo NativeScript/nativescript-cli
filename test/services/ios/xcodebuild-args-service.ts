@@ -12,6 +12,8 @@ function createTestInjector(data: {
 	hasProjectWorkspace: boolean;
 	connectedDevices?: any[];
 	buildXcconfigContent?: string;
+	hostProjectPath?: string;
+	packageResolved?: any;
 }): IInjector {
 	const injector = new Yok();
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
@@ -20,15 +22,22 @@ function createTestInjector(data: {
 		getDevicesForPlatform: () => data.connectedDevices || [],
 	});
 	injector.register("fs", {
-		exists: (filePath: string) =>
-			filePath.endsWith("build.xcconfig")
-				? data.buildXcconfigContent !== undefined
-				: data.hasProjectWorkspace,
+		exists: (filePath: string) => {
+			if (filePath.endsWith("build.xcconfig")) {
+				return data.buildXcconfigContent !== undefined;
+			}
+			if (filePath.endsWith("Package.resolved")) {
+				return data.packageResolved !== undefined;
+			}
+			return data.hasProjectWorkspace;
+		},
 		readText: () => data.buildXcconfigContent || "",
+		readJson: () => data.packageResolved,
 	});
 	injector.register("logger", {
 		getLevel: () => data.logLevel,
 	});
+	injector.register("options", { hostProjectPath: data.hostProjectPath });
 	injector.register("xcodebuildArgsService", XcodebuildArgsService);
 	injector.register("childProcess", {});
 	injector.register("xcconfigService", XcconfigService);
@@ -45,20 +54,12 @@ const appResourcesDirectoryPath = "App_Resources";
 const projectName = "myApp";
 const buildOutputPath = path.join(projectRoot, projectName, "archive");
 
-function getCommonArgs() {
-	return [
-		"BUILD_DIR=" + path.join(projectRoot, "build"),
-		"SHARED_PRECOMPS_DIR=" + path.join(projectRoot, "build", "sharedpch"),
-	];
-}
-
 function getXcodeProjectArgs(data?: { hasProjectWorkspace: boolean }) {
 	const extraArgs = [
 		"-scheme",
 		projectName,
 		"-skipPackagePluginValidation",
 		"-skipMacroValidation",
-		"SWIFT_ENABLE_EXPLICIT_MODULES=NO",
 	];
 	return data && data.hasProjectWorkspace
 		? [
@@ -110,6 +111,110 @@ describe("xcodebuildArgsService", () => {
 
 			assert.include(actualArgs, "SWIFT_ENABLE_EXPLICIT_MODULES=YES");
 			assert.notInclude(actualArgs, "SWIFT_ENABLE_EXPLICIT_MODULES=NO");
+		});
+
+		it("leaves SWIFT_ENABLE_EXPLICIT_MODULES to Xcode when build.xcconfig doesn't set it", () => {
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = xcodebuildArgsService.getXcodeProjectArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+			);
+
+			assert.isUndefined(
+				actualArgs.find((arg) =>
+					arg.startsWith("SWIFT_ENABLE_EXPLICIT_MODULES="),
+				),
+			);
+		});
+
+		const getExplicitModulesArg = (data: {
+			buildXcconfigContent?: string;
+			packageResolved?: any;
+		}) => {
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+				...data,
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+			return xcodebuildArgsService
+				.getXcodeProjectArgs(
+					<any>{ projectRoot, normalizedPlatformName },
+					<any>{ projectName, appResourcesDirectoryPath },
+				)
+				.find((arg) => arg.startsWith("SWIFT_ENABLE_EXPLICIT_MODULES="));
+		};
+
+		it("turns off explicit modules when a package ships macros", () => {
+			assert.strictEqual(
+				getExplicitModulesArg({
+					packageResolved: {
+						version: 3,
+						pins: [
+							{
+								identity: "swift-syntax",
+								kind: "remoteSourceControl",
+								location: "https://github.com/swiftlang/swift-syntax.git",
+							},
+						],
+					},
+				}),
+				"SWIFT_ENABLE_EXPLICIT_MODULES=NO",
+			);
+		});
+
+		it("recognises swift-syntax in a version 1 Package.resolved", () => {
+			assert.strictEqual(
+				getExplicitModulesArg({
+					packageResolved: {
+						version: 1,
+						object: {
+							pins: [
+								{
+									package: "SwiftSyntax",
+									repositoryURL: "https://github.com/apple/swift-syntax",
+								},
+							],
+						},
+					},
+				}),
+				"SWIFT_ENABLE_EXPLICIT_MODULES=NO",
+			);
+		});
+
+		it("leaves explicit modules to Xcode when no package ships macros", () => {
+			assert.isUndefined(
+				getExplicitModulesArg({
+					packageResolved: {
+						version: 2,
+						pins: [
+							{
+								identity: "swift-collections",
+								location: "https://github.com/apple/swift-collections.git",
+							},
+						],
+					},
+				}),
+			);
+		});
+
+		it("prefers build.xcconfig's explicit modules setting over the macro default", () => {
+			assert.strictEqual(
+				getExplicitModulesArg({
+					buildXcconfigContent: "SWIFT_ENABLE_EXPLICIT_MODULES = YES",
+					packageResolved: { pins: [{ identity: "swift-syntax" }] },
+				}),
+				"SWIFT_ENABLE_EXPLICIT_MODULES=YES",
+			);
 		});
 
 		it("should include DEVELOPMENT_TEAM from build.xcconfig", () => {
@@ -166,6 +271,27 @@ describe("xcodebuildArgsService", () => {
 			);
 
 			assert.notInclude(actualArgs, "-packageAuthorizationProvider");
+		});
+
+		it("passes the DerivedData location only for host projects", () => {
+			const argsFor = (hostProjectPath?: string) =>
+				createTestInjector({
+					logLevel: "INFO",
+					hasProjectWorkspace: false,
+					hostProjectPath,
+				})
+					.resolve("xcodebuildArgsService")
+					.getXcodeProjectArgs(
+						<any>{ projectRoot, normalizedPlatformName },
+						<any>{ projectName, appResourcesDirectoryPath },
+					);
+
+			assert.notInclude(argsFor(), "-derivedDataPath");
+			const hostArgs = argsFor("path/to/host");
+			assert.strictEqual(
+				hostArgs[hostArgs.indexOf("-derivedDataPath") + 1],
+				path.join(projectRoot, "build", "DerivedData", projectName),
+			);
 		});
 
 		it("keeps the project path as the second argument", () => {
@@ -228,10 +354,7 @@ describe("xcodebuildArgsService", () => {
 								"build",
 								"-configuration",
 								configuration,
-								"-sdk",
-								platform === "visionOS" ? "xrsimulator" : "iphonesimulator",
 							]
-								.concat(getCommonArgs())
 								.concat(getBuildLoggingArgs(logLevel))
 								.concat(getXcodeProjectArgs({ hasProjectWorkspace }));
 
@@ -242,6 +365,100 @@ describe("xcodebuildArgsService", () => {
 			});
 		});
 	});
+	describe("getBuildForSimulatorArgs with a target simulator", () => {
+		it("builds for that simulator only, like Xcode does", async () => {
+			const injector = createTestInjector({
+				logLevel: "TRACE",
+				hasProjectWorkspace: false,
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = await xcodebuildArgsService.getBuildForSimulatorArgs(
+				<any>{ projectRoot, normalizedPlatformName },
+				<any>{ projectName, appResourcesDirectoryPath },
+				<any>{
+					buildForDevice: false,
+					platform: "iOS",
+					_device: { deviceInfo: { identifier: "SIM-UDID" } },
+				},
+			);
+
+			assert.deepStrictEqual(actualArgs.slice(0, 3), [
+				"CODE_SIGN_IDENTITY=",
+				"-destination",
+				"platform=iOS Simulator,id=SIM-UDID",
+			]);
+			assert.notInclude(actualArgs, "ONLY_ACTIVE_ARCH=NO");
+		});
+	});
+
+	describe("getBuildForDeviceArgs with a target device", () => {
+		it("builds for that device, like Xcode's Run", async () => {
+			let queriedDevices = false;
+			const injector = createTestInjector({
+				logLevel: "TRACE",
+				hasProjectWorkspace: false,
+			});
+			injector.resolve("devicesService").initialize = async () => {
+				queriedDevices = true;
+			};
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+
+			const actualArgs = await xcodebuildArgsService.getBuildForDeviceArgs(
+				<any>{
+					projectRoot,
+					normalizedPlatformName,
+					getBuildOutputPath: () => buildOutputPath,
+				},
+				<any>{ projectName, appResourcesDirectoryPath },
+				<any>{
+					buildForDevice: true,
+					platform: "ios",
+					_device: { deviceInfo: { identifier: "DEVICE-UDID" } },
+				},
+			);
+
+			assert.deepStrictEqual(actualArgs.slice(0, 3), [
+				"-destination",
+				"platform=iOS,id=DEVICE-UDID",
+				"build",
+			]);
+			assert.notInclude(actualArgs, "ONLY_ACTIVE_ARCH=NO");
+			assert.isFalse(queriedDevices);
+		});
+	});
+
+	describe("shouldArchiveDeviceBuild", () => {
+		const shouldArchive = (buildConfig: any) =>
+			(<IXcodebuildArgsService>(
+				createTestInjector({
+					logLevel: "INFO",
+					hasProjectWorkspace: false,
+				}).resolve("xcodebuildArgsService")
+			)).shouldArchiveDeviceBuild(buildConfig);
+
+		it("uses a plain build for debug device builds", () => {
+			assert.isFalse(shouldArchive({ buildForDevice: true }));
+		});
+
+		it("archives release and App Store builds", () => {
+			assert.isTrue(shouldArchive({ release: true }));
+			assert.isTrue(shouldArchive({ buildForAppStore: true }));
+		});
+
+		it("archives debug builds that need export options", () => {
+			assert.isTrue(shouldArchive({ provision: "AdHoc Profile" }));
+			assert.isTrue(shouldArchive({ mobileProvisionIdentifier: "UUID" }));
+			assert.isTrue(
+				shouldArchive({ iCloudContainerEnvironment: "Production" }),
+			);
+		});
+	});
+
 	describe("getBuildForDeviceArgs", () => {
 		const testCases = [
 			{
@@ -250,19 +467,17 @@ describe("xcodebuildArgsService", () => {
 					{ deviceInfo: { activeArchitecture: "arm64" } },
 					{ deviceInfo: { activeArchitecture: "armv7" } },
 				],
-				expectedArgs: ["ONLY_ACTIVE_ARCH=NO", "-sdk", "iphoneos"].concat(
-					getCommonArgs(),
-				),
+				expectedArgs: ["ONLY_ACTIVE_ARCH=NO"],
 			},
 			{
 				name: "should return correct args when there is only one connected device",
 				connectedDevices: [{ deviceInfo: { activeArchitecture: "arm64" } }],
-				expectedArgs: ["-sdk", "iphoneos"].concat(getCommonArgs()),
+				expectedArgs: [],
 			},
 			{
 				name: "should return correct args when no connected devices",
 				connectedDevices: [],
-				expectedArgs: ["-sdk", "iphoneos"].concat(getCommonArgs()),
+				expectedArgs: [],
 			},
 		];
 
@@ -303,9 +518,13 @@ describe("xcodebuildArgsService", () => {
 							const expectedArgs = [
 								"-destination",
 								"generic/platform=iOS",
-								"archive",
-								"-archivePath",
-								path.join(buildOutputPath, `${projectName}.xcarchive`),
+								...(configuration === "Release"
+									? [
+											"archive",
+											"-archivePath",
+											path.join(buildOutputPath, `${projectName}.xcarchive`),
+										]
+									: ["build"]),
 								"-configuration",
 								configuration,
 								"-allowProvisioningUpdates",

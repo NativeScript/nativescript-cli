@@ -1,6 +1,10 @@
 import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
 import { IPlatformData } from "../../definitions/platform";
+import {
+	getDerivedDataPath,
+	getPackageResolvedPaths,
+} from "./ios-build-paths";
 import { IFileSystem } from "../../common/declarations";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 import { color } from "../../color";
@@ -531,32 +535,27 @@ export class SPMService implements ISPMService {
 	}
 
 	/**
-	 * True when a Package.resolved already exists for the project — i.e. packages
-	 * have been resolved at least once, so the build's own resolve step will be a
-	 * fast no-op rather than a slow, silent first-time download.
+	 * True when a Package.resolved exists and packages were already fetched into
+	 * the build's DerivedData, so the build's own resolve step will be a fast
+	 * no-op rather than a slow, silent first-time download.
 	 */
 	private arePackagesResolved(
 		platformData: IPlatformData,
 		projectData: IProjectData,
 	): boolean {
-		const candidates = [
-			path.join(
-				platformData.projectRoot,
-				`${projectData.projectName}.xcworkspace`,
-				"xcshareddata",
-				"swiftpm",
-				"Package.resolved",
-			),
-			path.join(
-				platformData.projectRoot,
-				`${projectData.projectName}.xcodeproj`,
-				"project.xcworkspace",
-				"xcshareddata",
-				"swiftpm",
-				"Package.resolved",
-			),
-		];
-		return candidates.some((p) => this.$fs.exists(p));
+		const candidates = getPackageResolvedPaths(
+			platformData.projectRoot,
+			projectData.projectName,
+		);
+		return (
+			candidates.some((p) => this.$fs.exists(p)) &&
+			this.$fs.exists(
+				path.join(
+					getDerivedDataPath(platformData.projectRoot, projectData.projectName),
+					"SourcePackages",
+				),
+			)
+		);
 	}
 }
 injector.register("spmService", SPMService);
