@@ -58,6 +58,11 @@ import { injector } from "../common/yok";
 import { INotConfiguredEnvOptions } from "../common/definitions/commands";
 import { IProjectChangesInfo } from "../definitions/project-changes";
 import { ITempService } from "../definitions/temp-service";
+import {
+	DERIVED_DATA_RELATIVE_PATH,
+	getCompilationCachePath,
+	getDerivedDataPath,
+} from "./ios/ios-build-paths";
 
 interface INativeSourceCodeGroup {
 	name: string;
@@ -69,31 +74,6 @@ export const DevicePlatformSdkName = "iphoneos";
 export const SimulatorPlatformSdkName = "iphonesimulator";
 export const VisionDevicePlatformSdkName = "xros";
 export const VisionSimulatorPlatformSdkName = "xrsimulator";
-
-const DERIVED_DATA_RELATIVE_PATH = path.join(
-	constants.BUILD_DIR,
-	"DerivedData",
-);
-
-/**
- * With a workspace-relative DerivedData location, Xcode appends the workspace
- * name to it, so this matches what Xcode uses and lets CLI and Xcode builds
- * share one cache.
- */
-export const getDerivedDataPath = (
-	projectRoot: string,
-	projectName: string,
-): string => path.join(projectRoot, DERIVED_DATA_RELATIVE_PATH, projectName);
-
-/**
- * Lives next to the platform folder rather than in it, so regenerating
- * platforms/ios still reuses unchanged compiles; deleting platforms/ clears it.
- */
-export const getCompilationCachePath = (
-	platformsDir: string,
-	platformName: string,
-): string =>
-	path.join(platformsDir, ".cache", platformName, "CompilationCache");
 
 const FRAMEWORK_EXTENSIONS = [".framework", ".xcframework"];
 

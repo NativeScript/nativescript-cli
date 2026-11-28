@@ -3,12 +3,14 @@ import { IPlatformData } from "../../definitions/platform";
 import { IProjectData, IBuildConfig } from "../../definitions/project";
 import { injector } from "../../common/yok";
 import { IFileSystem, IChildProcess } from "../../common/declarations";
+import { getLegacyBuildOutputPath } from "./ios-build-paths";
 
 export class XcodebuildService implements IXcodebuildService {
 	constructor(
 		private $childProcess: IChildProcess,
 		private $exportOptionsPlistService: IExportOptionsPlistService,
 		private $fs: IFileSystem,
+		private $logger: ILogger,
 		private $xcodebuildArgsService: IXcodebuildArgsService,
 		private $xcodebuildCommandService: IXcodebuildCommandService,
 	) {}
@@ -27,15 +29,21 @@ export class XcodebuildService implements IXcodebuildService {
 			cwd: platformData.projectRoot,
 			stdio: buildConfig && buildConfig.buildOutputStdio,
 		});
-		if (!this.$xcodebuildArgsService.shouldArchiveDeviceBuild(buildConfig)) {
-			return this.packageDevelopmentIpa(platformData, projectData, buildConfig);
-		}
-		const archivePath = await this.createDevelopmentArchive(
-			platformData,
-			projectData,
+		const ipaPath = this.$xcodebuildArgsService.shouldArchiveDeviceBuild(
 			buildConfig,
-		);
-		return archivePath;
+		)
+			? await this.createDevelopmentArchive(
+					platformData,
+					projectData,
+					buildConfig,
+				)
+			: await this.packageDevelopmentIpa(
+					platformData,
+					projectData,
+					buildConfig,
+				);
+		await this.copyToLegacyBuildOutputPath(platformData, buildConfig, ipaPath);
+		return ipaPath;
 	}
 
 	public async buildForSimulator(
@@ -52,6 +60,14 @@ export class XcodebuildService implements IXcodebuildService {
 			cwd: platformData.projectRoot,
 			stdio: buildConfig.buildOutputStdio,
 		});
+		await this.copyToLegacyBuildOutputPath(
+			platformData,
+			buildConfig,
+			path.join(
+				platformData.getBuildOutputPath(buildConfig),
+				`${projectData.projectName}.app`,
+			),
+		);
 	}
 
 	public async buildForAppStore(
@@ -68,12 +84,50 @@ export class XcodebuildService implements IXcodebuildService {
 			cwd: platformData.projectRoot,
 			stdio: buildConfig && buildConfig.buildOutputStdio,
 		});
-		const archivePath = await this.createDistributionArchive(
+		const ipaPath = await this.createDistributionArchive(
 			platformData,
 			projectData,
 			buildConfig,
 		);
-		return archivePath;
+		await this.copyToLegacyBuildOutputPath(platformData, buildConfig, ipaPath);
+		return ipaPath;
+	}
+
+	/**
+	 * Mirrors the build artifact to the platforms/ios/build/<Config>-<sdk>
+	 * folder that builds used before DerivedData moved, so CI scripts and
+	 * Detox configs that point there keep working. cp -c clones on APFS, so
+	 * this costs almost nothing. The artifact the CLI installs stays the one
+	 * in DerivedData; a failed copy only warns.
+	 */
+	private async copyToLegacyBuildOutputPath(
+		platformData: IPlatformData,
+		buildConfig: IBuildConfig,
+		artifactPath: string,
+	): Promise<void> {
+		const legacyOutputPath = getLegacyBuildOutputPath(
+			platformData.projectRoot,
+			platformData.getBuildOutputPath(buildConfig),
+		);
+		const legacyArtifactPath = path.join(
+			legacyOutputPath,
+			path.basename(artifactPath),
+		);
+		try {
+			this.$fs.deleteDirectory(legacyArtifactPath);
+			this.$fs.createDirectory(legacyOutputPath);
+			await this.$childProcess.spawnFromEvent(
+				"cp",
+				["-cR", artifactPath, legacyOutputPath],
+				"close",
+				{},
+				{ throwError: true },
+			);
+		} catch (err) {
+			this.$logger.warn(
+				`Unable to copy ${artifactPath} to ${legacyOutputPath}: ${err.message}`,
+			);
+		}
 	}
 
 	/**

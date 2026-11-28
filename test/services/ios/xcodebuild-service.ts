@@ -16,14 +16,20 @@ const exportOptionsPlistOutput = {
 let actualBuildArgs: string[] = [];
 let actualBuildOptions: IXcodebuildCommandOptions = null;
 let spawnedCommands: string[][] = [];
+let warnings: string[] = [];
+const legacyBuildOutputPath = path.join(projectRoot, "build", "archive");
 
 function createTestInjector(): IInjector {
 	const injector = new Yok();
 	spawnedCommands = [];
+	warnings = [];
 	injector.register("childProcess", {
 		spawnFromEvent: async (command: string, args: string[]) => {
 			spawnedCommands.push([command, ...args]);
 		},
+	});
+	injector.register("logger", {
+		warn: (message: string) => warnings.push(message),
 	});
 	injector.register("fs", {
 		createDirectory: (): void => undefined,
@@ -91,6 +97,12 @@ describe("xcodebuildService", () => {
 					payloadPath,
 					path.join(buildOutputPath, `${projectName}.ipa`),
 				],
+				[
+					"cp",
+					"-cR",
+					path.join(buildOutputPath, `${projectName}.ipa`),
+					legacyBuildOutputPath,
+				],
 			]);
 			assert.deepStrictEqual(
 				buildResult,
@@ -153,6 +165,51 @@ describe("xcodebuildService", () => {
 				cwd: projectRoot,
 				stdio: undefined,
 			});
+		});
+
+		it("copies the .app to the pre-DerivedData build folder", async () => {
+			const injector = createTestInjector();
+			const xcodebuildService = injector.resolve("xcodebuildService");
+			const platformData = {
+				getBuildOutputPath: () => buildOutputPath,
+				projectRoot,
+			};
+
+			await xcodebuildService.buildForSimulator(
+				platformData,
+				{ projectName },
+				{},
+			);
+
+			assert.deepStrictEqual(spawnedCommands, [
+				[
+					"cp",
+					"-cR",
+					path.join(buildOutputPath, `${projectName}.app`),
+					legacyBuildOutputPath,
+				],
+			]);
+		});
+
+		it("only warns when that copy fails", async () => {
+			const injector = createTestInjector();
+			injector.resolve("childProcess").spawnFromEvent = async () => {
+				throw new Error("cp failed");
+			};
+			const xcodebuildService = injector.resolve("xcodebuildService");
+			const platformData = {
+				getBuildOutputPath: () => buildOutputPath,
+				projectRoot,
+			};
+
+			await xcodebuildService.buildForSimulator(
+				platformData,
+				{ projectName },
+				{},
+			);
+
+			assert.lengthOf(warnings, 1);
+			assert.include(warnings[0], "cp failed");
 		});
 	});
 	describe("buildForAppStore", () => {

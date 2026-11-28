@@ -522,9 +522,7 @@ export class DevicesService
 	}
 
 	/**
-	 * Returns device that matches an identifier.
-	 * The identifier is expected to be the same as the running device declares it (emulator-5554 for android or GUID for ios).
-	 * @param identifier running emulator or device identifier
+	 * Finds a device by identifier, display name or emulator image identifier.
 	 */
 	private findDevice(deviceOption: string): Mobile.IDevice {
 		return _.find(
@@ -538,6 +536,11 @@ export class DevicesService
 		);
 	}
 
+	/**
+	 * Returns device that matches an identifier.
+	 * The identifier is expected to be the same as the running device declares it (emulator-5554 for android or GUID for ios).
+	 * @param identifier running emulator or device identifier
+	 */
 	public getDeviceByIdentifier(identifier: string): Mobile.IDevice {
 		const searchedDevice = _.find(
 			this.getDeviceInstances(),

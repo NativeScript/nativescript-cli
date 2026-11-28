@@ -13,7 +13,10 @@ import { IFileSystem } from "../../common/declarations";
 import { injector } from "../../common/yok";
 import * as _ from "lodash";
 
-import { getDerivedDataPath } from "../ios-project-service";
+import {
+	getDerivedDataPath,
+	getPackageResolvedPaths,
+} from "./ios-build-paths";
 
 export class XcodebuildArgsService implements IXcodebuildArgsService {
 	constructor(
@@ -116,12 +119,21 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 
 	/**
 	 * Debug device builds use a plain build, like Xcode's Run, so both share
-	 * one set of intermediates; archives are only needed for release.
+	 * one set of intermediates. Archiving is still needed for release, and
+	 * whenever -exportArchive has to apply options a plain build can't: an
+	 * explicit provisioning profile (which also selects the export method and
+	 * the extensions' profiles) or an iCloud container environment.
 	 */
 	public shouldArchiveDeviceBuild(
 		buildConfig: IBuildConfig & { buildForAppStore?: boolean },
 	): boolean {
-		return !!(buildConfig.release || buildConfig.buildForAppStore);
+		return !!(
+			buildConfig.release ||
+			buildConfig.buildForAppStore ||
+			buildConfig.provision ||
+			buildConfig.mobileProvisionIdentifier ||
+			buildConfig.iCloudContainerEnvironment
+		);
 	}
 
 	private async getArchitecturesArgs(
@@ -220,17 +232,19 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 		// https://github.com/CocoaPods/CocoaPods/issues/7003
 
 		// Passed as a command-line build setting so it also reaches package
-		// targets, but only when the app sets it: any value Xcode wouldn't use
-		// itself stops CLI and Xcode builds from reusing each other's output.
-		// Early Xcode 26 releases fail on macro packages with explicit modules
-		// ("Unable to resolve module dependency: 'SwiftSyntax'"); setting it to
-		// NO in build.xcconfig works around that.
+		// targets. Xcode 26 builds macro packages with explicit modules and
+		// fails with "Unable to resolve module dependency: 'SwiftSyntax'", so
+		// those apps default to NO. Otherwise it is left to Xcode: any value
+		// Xcode wouldn't use itself stops CLI and Xcode builds from reusing
+		// each other's output.
 		// ref: https://forums.swift.org/t/xcode-26-unable-to-find-module-dependency/80516
 		const explicitModulesProperty = "SWIFT_ENABLE_EXPLICIT_MODULES";
-		const explicitModulesValue = this.$xcconfigService.readPropertyValue(
-			BUILD_SETTINGS_FILE_PATH,
-			explicitModulesProperty,
-		);
+		const explicitModulesValue =
+			this.$xcconfigService.readPropertyValue(
+				BUILD_SETTINGS_FILE_PATH,
+				explicitModulesProperty,
+			) ||
+			(this.hasSwiftMacroPackages(platformData, projectData) ? "NO" : null);
 		if (explicitModulesValue) {
 			extraArgs.push(`${explicitModulesProperty}=${explicitModulesValue}`);
 		}
@@ -265,6 +279,43 @@ export class XcodebuildArgsService implements IXcodebuildArgsService {
 			`${projectData.projectName}.xcodeproj`,
 		);
 		return ["-project", xcodeprojPath, ...extraArgs];
+	}
+
+	/**
+	 * Macro targets are built against swift-syntax, so a resolved swift-syntax
+	 * pin means at least one package ships macros.
+	 */
+	private hasSwiftMacroPackages(
+		platformData: IPlatformData,
+		projectData: IProjectData,
+	): boolean {
+		return getPackageResolvedPaths(
+			platformData.projectRoot,
+			projectData.projectName,
+		).some((packageResolvedPath) => {
+			if (!this.$fs.exists(packageResolvedPath)) {
+				return false;
+			}
+
+			let resolved: any;
+			try {
+				resolved = this.$fs.readJson(packageResolvedPath);
+			} catch (err) {
+				this.$logger.trace(`Unable to parse ${packageResolvedPath}: `, err);
+				return false;
+			}
+
+			// Package.resolved v1 nests pins under "object" and names the URL
+			// "repositoryURL"; v2 and later use top-level pins with "location".
+			const pins: any[] = resolved?.pins ?? resolved?.object?.pins ?? [];
+			return pins.some(
+				(pin) =>
+					pin?.identity?.toLowerCase() === "swift-syntax" ||
+					/\/swift-syntax(\.git)?\/?$/i.test(
+						pin?.location ?? pin?.repositoryURL ?? "",
+					),
+			);
+		});
 	}
 
 	private getBuildLoggingArgs(): string[] {

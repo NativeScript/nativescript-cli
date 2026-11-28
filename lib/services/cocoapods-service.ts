@@ -254,10 +254,12 @@ end`.trim();
 			(value, key) =>
 				`      config.build_settings[${toRubyString(key)}] = ${toRubyString(value)}`,
 		);
-		if (deploymentTarget) {
+		// Only numeric versions are compared: Gem::Version.new raises on values
+		// like $(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET), which are left alone.
+		if (deploymentTarget && /^\d+(\.\d+)*$/.test(deploymentTarget)) {
 			configLines.push(
 				`      current = config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"]`,
-				`      if current.nil? || Gem::Version.new(current) < Gem::Version.new(${toRubyString(deploymentTarget)})`,
+				`      if current.nil? || (Gem::Version.correct?(current) && Gem::Version.new(current) < Gem::Version.new(${toRubyString(deploymentTarget)}))`,
 				`        config.build_settings["IPHONEOS_DEPLOYMENT_TARGET"] = ${toRubyString(deploymentTarget)}`,
 				`      end`,
 			);
@@ -271,9 +273,15 @@ end`.trim();
 			buildSettingsPodfile,
 			[
 				"post_install do |installer|",
-				"  installer.pods_project.targets.each do |target|",
-				"    target.build_configurations.each do |config|",
-				...configLines,
+				// With generate_multiple_pod_projects, pod targets live in their
+				// own projects rather than in pods_project.
+				"  projects = installer.respond_to?(:generated_projects) ? installer.generated_projects.to_a : []",
+				"  projects = [installer.pods_project] if projects.empty?",
+				"  projects.compact.each do |project|",
+				"    project.targets.each do |target|",
+				"      target.build_configurations.each do |config|",
+				...configLines.map((line) => `  ${line}`),
+				"      end",
 				"    end",
 				"  end",
 				"end",

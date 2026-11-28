@@ -13,6 +13,7 @@ function createTestInjector(data: {
 	connectedDevices?: any[];
 	buildXcconfigContent?: string;
 	hostProjectPath?: string;
+	packageResolved?: any;
 }): IInjector {
 	const injector = new Yok();
 	injector.register("devicePlatformsConstants", DevicePlatformsConstants);
@@ -21,11 +22,17 @@ function createTestInjector(data: {
 		getDevicesForPlatform: () => data.connectedDevices || [],
 	});
 	injector.register("fs", {
-		exists: (filePath: string) =>
-			filePath.endsWith("build.xcconfig")
-				? data.buildXcconfigContent !== undefined
-				: data.hasProjectWorkspace,
+		exists: (filePath: string) => {
+			if (filePath.endsWith("build.xcconfig")) {
+				return data.buildXcconfigContent !== undefined;
+			}
+			if (filePath.endsWith("Package.resolved")) {
+				return data.packageResolved !== undefined;
+			}
+			return data.hasProjectWorkspace;
+		},
 		readText: () => data.buildXcconfigContent || "",
+		readJson: () => data.packageResolved,
 	});
 	injector.register("logger", {
 		getLevel: () => data.logLevel,
@@ -124,6 +131,89 @@ describe("xcodebuildArgsService", () => {
 				actualArgs.find((arg) =>
 					arg.startsWith("SWIFT_ENABLE_EXPLICIT_MODULES="),
 				),
+			);
+		});
+
+		const getExplicitModulesArg = (data: {
+			buildXcconfigContent?: string;
+			packageResolved?: any;
+		}) => {
+			const injector = createTestInjector({
+				logLevel: "INFO",
+				hasProjectWorkspace: false,
+				...data,
+			});
+			const xcodebuildArgsService: IXcodebuildArgsService = injector.resolve(
+				"xcodebuildArgsService",
+			);
+			return xcodebuildArgsService
+				.getXcodeProjectArgs(
+					<any>{ projectRoot, normalizedPlatformName },
+					<any>{ projectName, appResourcesDirectoryPath },
+				)
+				.find((arg) => arg.startsWith("SWIFT_ENABLE_EXPLICIT_MODULES="));
+		};
+
+		it("turns off explicit modules when a package ships macros", () => {
+			assert.strictEqual(
+				getExplicitModulesArg({
+					packageResolved: {
+						version: 3,
+						pins: [
+							{
+								identity: "swift-syntax",
+								kind: "remoteSourceControl",
+								location: "https://github.com/swiftlang/swift-syntax.git",
+							},
+						],
+					},
+				}),
+				"SWIFT_ENABLE_EXPLICIT_MODULES=NO",
+			);
+		});
+
+		it("recognises swift-syntax in a version 1 Package.resolved", () => {
+			assert.strictEqual(
+				getExplicitModulesArg({
+					packageResolved: {
+						version: 1,
+						object: {
+							pins: [
+								{
+									package: "SwiftSyntax",
+									repositoryURL: "https://github.com/apple/swift-syntax",
+								},
+							],
+						},
+					},
+				}),
+				"SWIFT_ENABLE_EXPLICIT_MODULES=NO",
+			);
+		});
+
+		it("leaves explicit modules to Xcode when no package ships macros", () => {
+			assert.isUndefined(
+				getExplicitModulesArg({
+					packageResolved: {
+						version: 2,
+						pins: [
+							{
+								identity: "swift-collections",
+								location: "https://github.com/apple/swift-collections.git",
+							},
+						],
+					},
+				}),
+			);
+		});
+
+		it("prefers build.xcconfig's explicit modules setting over the macro default", () => {
+			assert.strictEqual(
+				getExplicitModulesArg({
+					buildXcconfigContent: "SWIFT_ENABLE_EXPLICIT_MODULES = YES",
+					packageResolved: { pins: [{ identity: "swift-syntax" }] },
+				}),
+				"SWIFT_ENABLE_EXPLICIT_MODULES=YES",
 			);
 		});
 
@@ -339,6 +429,33 @@ describe("xcodebuildArgsService", () => {
 			]);
 			assert.notInclude(actualArgs, "ONLY_ACTIVE_ARCH=NO");
 			assert.isFalse(queriedDevices);
+		});
+	});
+
+	describe("shouldArchiveDeviceBuild", () => {
+		const shouldArchive = (buildConfig: any) =>
+			(<IXcodebuildArgsService>(
+				createTestInjector({
+					logLevel: "INFO",
+					hasProjectWorkspace: false,
+				}).resolve("xcodebuildArgsService")
+			)).shouldArchiveDeviceBuild(buildConfig);
+
+		it("uses a plain build for debug device builds", () => {
+			assert.isFalse(shouldArchive({ buildForDevice: true }));
+		});
+
+		it("archives release and App Store builds", () => {
+			assert.isTrue(shouldArchive({ release: true }));
+			assert.isTrue(shouldArchive({ buildForAppStore: true }));
+		});
+
+		it("archives debug builds that need export options", () => {
+			assert.isTrue(shouldArchive({ provision: "AdHoc Profile" }));
+			assert.isTrue(shouldArchive({ mobileProvisionIdentifier: "UUID" }));
+			assert.isTrue(
+				shouldArchive({ iCloudContainerEnvironment: "Production" }),
+			);
 		});
 	});
 

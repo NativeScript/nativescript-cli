@@ -1689,6 +1689,42 @@ describe("applyPodfileBuildSettings", () => {
 		);
 	});
 
+	it("leaves a pod's non-numeric deployment target alone", async () => {
+		const { fs, podfilePath, apply } = setup(
+			"IPHONEOS_DEPLOYMENT_TARGET = 18.0;",
+		);
+
+		await apply();
+
+		assert.include(
+			fs.readText(podfilePath),
+			"current.nil? || (Gem::Version.correct?(current) && Gem::Version.new(current) < Gem::Version.new('18.0'))",
+		);
+	});
+
+	it("ignores a non-numeric deployment target in build.xcconfig", async () => {
+		const { fs, podfilePath, apply } = setup(
+			"IPHONEOS_DEPLOYMENT_TARGET = $(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET);",
+		);
+
+		await apply({ COMPILATION_CACHE_ENABLE_CACHING: "YES" });
+
+		const podfile = fs.readText(podfilePath);
+		assert.notInclude(podfile, "Gem::Version");
+		assert.include(
+			podfile,
+			"config.build_settings['COMPILATION_CACHE_ENABLE_CACHING'] = 'YES'",
+		);
+	});
+
+	it("reaches pod targets in separate projects", async () => {
+		const { fs, podfilePath, apply } = setup("");
+
+		await apply({ COMPILATION_CACHE_ENABLE_CACHING: "YES" });
+
+		assert.include(fs.readText(podfilePath), "installer.generated_projects");
+	});
+
 	it("sets the given build settings on every pod target", async () => {
 		const { fs, podfilePath, apply } = setup("");
 

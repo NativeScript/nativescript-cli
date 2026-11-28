@@ -1,7 +1,10 @@
 import { injector } from "../../common/yok";
 import { IProjectConfigService, IProjectData } from "../../definitions/project";
 import { IPlatformData } from "../../definitions/platform";
-import { getDerivedDataPath } from "../ios-project-service";
+import {
+	getDerivedDataPath,
+	getPackageResolvedPaths,
+} from "./ios-build-paths";
 import { IFileSystem } from "../../common/declarations";
 import { ITerminalSpinnerService } from "../../definitions/terminal-spinner-service";
 import { color } from "../../color";
@@ -540,23 +543,10 @@ export class SPMService implements ISPMService {
 		platformData: IPlatformData,
 		projectData: IProjectData,
 	): boolean {
-		const candidates = [
-			path.join(
-				platformData.projectRoot,
-				`${projectData.projectName}.xcworkspace`,
-				"xcshareddata",
-				"swiftpm",
-				"Package.resolved",
-			),
-			path.join(
-				platformData.projectRoot,
-				`${projectData.projectName}.xcodeproj`,
-				"project.xcworkspace",
-				"xcshareddata",
-				"swiftpm",
-				"Package.resolved",
-			),
-		];
+		const candidates = getPackageResolvedPaths(
+			platformData.projectRoot,
+			projectData.projectName,
+		);
 		return (
 			candidates.some((p) => this.$fs.exists(p)) &&
 			this.$fs.exists(
