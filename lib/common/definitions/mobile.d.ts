@@ -152,6 +152,27 @@ declare global {
 		}
 
 		/**
+		 * A structured unified logging (os_log) entry.
+		 */
+		interface IiOSLogEntry {
+			/**
+			 * Scopes the ids of split messages, which are only unique per process.
+			 */
+			pid?: number;
+			thread?: number;
+			/**
+			 * Path of the executable of the process that logged the entry.
+			 */
+			process: string;
+			/**
+			 * Path of the binary (executable, framework or library) that logged the entry.
+			 */
+			image: string;
+			level: string;
+			message: string;
+		}
+
+		/**
 		 * Describes log stream options
 		 */
 		interface IiOSLogStreamOptions {
@@ -212,6 +233,21 @@ declare global {
 			 * @returns {void}
 			 */
 			logData(line: string, platform: string, deviceIdentifier: string): void;
+
+			/**
+			 * Logs a structured iOS log entry, when it belongs to the application
+			 * whose logs are shown on the device.
+			 */
+			logEntry(
+				entry: IiOSLogEntry,
+				platform: string,
+				deviceIdentifier: string,
+			): void;
+
+			/**
+			 * Returns the project name set for the device, if any.
+			 */
+			getProjectNameForDevice(deviceIdentifier: string): string;
 
 			/**
 			 * Sets the level of logging that will be used.
@@ -1330,6 +1366,11 @@ declare global {
 		): Promise<void>;
 
 		startDeviceLog(deviceIdentifier: string): void;
+
+		/**
+		 * Streams structured logs of the process with the given executable name.
+		 */
+		startDeviceLogStream(deviceIdentifier: string, processName: string): void;
 
 		apps(
 			deviceIdentifiers: string[],

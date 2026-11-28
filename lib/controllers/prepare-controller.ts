@@ -11,6 +11,7 @@ import {
 import { cache, performanceLog } from "../common/decorators";
 import { hook } from "../common/helpers";
 import { injector } from "../common/yok";
+import { IOS_LOG_FORMAT } from "../common/mobile/ios/ios-log-entry";
 import {
 	AnalyticsEventLabelDelimiter,
 	BUNDLER_COMPILATION_COMPLETE,
@@ -341,6 +342,7 @@ export class PrepareController
 			newNativeWatchStarted = await this.startNativeWatcher(
 				platformData,
 				projectData,
+				prepareData,
 			);
 		}
 
@@ -359,6 +361,7 @@ export class PrepareController
 	private async startNativeWatcher(
 		platformData: IPlatformData,
 		projectData: IProjectData,
+		prepareData: IPrepareData,
 	): Promise<boolean> {
 		if (
 			this.watchersData[projectData.projectDir][
@@ -388,7 +391,11 @@ export class PrepareController
 					this.$watchIgnoreListService.removeFileFromIgnoreList(filePath);
 				} else {
 					this.$logger.info(`Chokidar raised event ${event} for ${filePath}.`);
-					await this.writeRuntimePackageJson(projectData, platformData);
+					await this.writeRuntimePackageJson(
+						projectData,
+						platformData,
+						prepareData,
+					);
 					this.emitPrepareEvent({
 						files: [],
 						staleFiles: [],
@@ -524,6 +531,13 @@ export class PrepareController
 			}
 			delete packageData.android;
 		}
+		if (
+			this.$mobileHelper.isApplePlatform(platform) &&
+			prepareData &&
+			!prepareData.release
+		) {
+			packageData.logFormat = IOS_LOG_FORMAT;
+		}
 		if (platform === PlatformTypes.android) {
 			if (installedRuntimePackageJSON) {
 				packageData.android = packageData.android || {};
@@ -581,8 +595,14 @@ export class PrepareController
 			);
 		}
 
-		if (prepareData?.uniqueBundle) {
-			packageData.main = `${packageData.main}.${prepareData.uniqueBundle}`;
+		// The native watcher rewrites this file without a new bundler emit, so
+		// main can already carry the suffix.
+		const bundleSuffix = `.${prepareData?.uniqueBundle}`;
+		if (
+			prepareData?.uniqueBundle &&
+			!packageData.main?.endsWith(bundleSuffix)
+		) {
+			packageData.main = `${packageData.main}${bundleSuffix}`;
 		}
 
 		this.$fs.writeJson(packagePath, packageData);
